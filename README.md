@@ -67,7 +67,7 @@ cd ~/Projects/wave
 PATH="/opt/homebrew/opt/php@8.4/bin:$PATH" php bin/mercure-local.php
 ```
 
-The local Hub listens on `http://127.0.0.1:3000`. Keep the development URLs and shared local secret in `.env`; production must provide its own secret values through the deployment environment. For local Valet domains, set `MERCURE_URL` and `MERCURE_PUBLIC_URL` to a Hub URL on the same host as the app, update the Caddy `cors_origins`, and ensure the Hub is served over HTTPS if the Valet site is HTTPS.
+The local Hub listens on `http://127.0.0.1:3000`. It is a long-running process; start only one Hub against the same Bolt database. If startup reports that `./var/mercure.db` is already open, reuse the running Hub rather than starting another. Check it with `curl -i http://127.0.0.1:3000/`; a running local Hub responds with HTTP 200. Keep non-secret development URLs in `.env` and put `MERCURE_JWT_SECRET` in the ignored `.env.local`; never commit the shared secret. Production must use its own secret values. For local Valet domains, set `MERCURE_URL` and `MERCURE_PUBLIC_URL` to a Hub URL on the same host as the app, update the Caddy `cors_origins`, and ensure the Hub is served over HTTPS if the Valet site is HTTPS. See [the Hetzner server setup guide](docs/mercure-server-setup.md) for a production deployment outline.
 
 Browser push uses standard Web Push and a VAPID key pair. For local testing, keep the private key in the ignored `.env.local` file and never commit it. Generate a key pair once with:
 
@@ -76,6 +76,19 @@ PATH="/opt/homebrew/opt/php@8.4/bin:$PATH" php -r 'require "vendor/autoload.php"
 ```
 
 The app requests notification permission only when a signed-in user chooses **Enable device notifications**. In-app notification and message updates use private per-user Mercure topics; the Hub payload contains identifiers only, and the app reloads authorized details from Symfony. The service worker handles background push and notification clicks. It precaches static app assets only, not API responses or private content. The header's install button opens the native install prompt where available and provides the iOS Add to Home Screen hint.
+
+### Test campaign messaging locally
+
+The migration and frontend production build are part of the setup steps above. Start the Mercure Hub and Symfony server in separate terminals using the commands above. To use Vite hot reload instead of the built frontend, start Vite in another terminal and open <http://127.0.0.1:5173>; it proxies API requests to Symfony on port 8000.
+
+Use two separate browser profiles so you can stay signed in as a company and a creator at the same time. Both accounts must have verified email addresses and admin approval before they can use marketplace actions. For the application flow:
+
+1. Sign in as the company, create and publish a campaign.
+2. Sign in as the creator, open the campaign, and apply.
+3. Return to the company profile and shortlist the creator's application. This opens a private campaign/creator conversation.
+4. Send messages from both profiles. The conversation and in-app notification updates should arrive live through Mercure.
+
+You can also invite a creator from their profile; the private conversation opens only after that creator accepts the invitation. Offers are a separate step from chat and can be accepted or rejected. For device push, use the **Enable device notifications** control and grant browser permission; the VAPID keys must be configured in ignored `.env.local`. Localhost is treated as a secure context by browsers, so HTTPS is not required for local testing.
 
 Rebuild the frontend after changes with `npm --prefix frontend run build`. Vite emits the app shell, hashed assets, web app manifest, and service worker into Symfony's `public/` directory. The build intentionally does not empty that directory, so it won't delete Symfony's `index.php`.
 
