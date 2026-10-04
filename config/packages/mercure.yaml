@@ -1,8 +1,14 @@
 mercure:
     hubs:
         default:
-            url: '%env(default::MERCURE_URL)%'
-            public_url: '%env(default::MERCURE_PUBLIC_URL)%'
+            url: '%env(MERCURE_URL)%'
+            public_url: '%env(MERCURE_PUBLIC_URL)%'
+            protocol_version: '1.0'
+            cookie_name: mercureAuthorization
             jwt:
                 secret: '%env(MERCURE_JWT_SECRET)%'
                 publish: '*'
+                claims:
+                    iss: '%env(MERCURE_ISSUER)%'
+                    sub: wave-server
+                    client_id: wave-server

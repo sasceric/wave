@@ -9,6 +9,7 @@ use App\Api\JsonPayload;
 use App\Entity\Application;
 use App\Entity\Campaign;
 use App\Entity\CampaignConversation;
+use App\Entity\CampaignInvitation;
 use App\Entity\CampaignMessage;
 use App\Entity\Company;
 use App\Entity\Creator;
@@ -16,6 +17,7 @@ use App\Entity\Notification;
 use App\Entity\User;
 use App\Localization\ApiMessages;
 use App\Localization\LocaleContext;
+use App\Service\NotificationDelivery;
 use DateTimeImmutable;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\SecurityBundle\Security;
@@ -76,6 +78,7 @@ final class CampaignMessagingController
         EntityManagerInterface $entityManager,
         Security $security,
         CsrfTokenManagerInterface $tokenManager,
+        NotificationDelivery $notificationDelivery,
     ): JsonResponse {
         $locale = LocaleContext::fromRequest($request);
         if ($locale === null) {
@@ -104,10 +107,14 @@ final class CampaignMessagingController
         }
 
         $creator = $entityManager->getRepository(Creator::class)->find($creatorId);
+        $application = $creator instanceof Creator
+            ? $entityManager->getRepository(Application::class)->findOneBy(['campaign' => $campaign, 'creator' => $creator])
+            : null;
         if (!$creator instanceof Creator
             || !$creator->getOwner() instanceof User
             || !$creator->getOwner()->isApproved()
-            || !$entityManager->getRepository(Application::class)->findOneBy(['campaign' => $campaign, 'creator' => $creator]) instanceof Application
+            || !$application instanceof Application
+            || !in_array($application->getStatus(), ['shortlisted', 'offered', 'accepted'], true)
         ) {
             return new JsonResponse(['error' => ApiMessages::get('creator_not_found', $locale)], 404);
         }
@@ -120,66 +127,7 @@ final class CampaignMessagingController
             'chat_message',
             $locale,
             $entityManager,
-        );
-    }
-
-    #[Route('/api/company/campaigns/{slug}/invitations', name: 'api_company_campaign_invite', methods: ['POST'])]
-    public function invite(
-        string $slug,
-        Request $request,
-        EntityManagerInterface $entityManager,
-        Security $security,
-        CsrfTokenManagerInterface $tokenManager,
-    ): JsonResponse {
-        $locale = LocaleContext::fromRequest($request);
-        if ($locale === null) {
-            return new JsonResponse(['error' => ApiMessages::get('unsupported_language', 'bs')], 400);
-        }
-        if ($csrfError = ApiAccess::requireCsrf($request, $tokenManager, $locale)) {
-            return $csrfError;
-        }
-        $user = ApiAccess::requireRole($security, 'ROLE_COMPANY', $locale, requireVerified: true);
-        if ($user instanceof JsonResponse) {
-            return $user;
-        }
-
-        $company = $user->getCompany();
-        $campaign = $company instanceof Company
-            ? $entityManager->getRepository(Campaign::class)->findOneBy(['slug' => $slug, 'company' => $company])
-            : null;
-        if (!$campaign instanceof Campaign) {
-            return new JsonResponse(['error' => ApiMessages::get('campaign_not_found', $locale)], 404);
-        }
-        if ($campaign->getStatus() !== 'open' || $campaign->getClosesAt() < new DateTimeImmutable('today')) {
-            return new JsonResponse(['error' => ApiMessages::get('campaign_closed', $locale)], 409);
-        }
-
-        $data = JsonPayload::fromRequest($request);
-        $creatorId = is_array($data) ? ($data['creatorId'] ?? null) : null;
-        $body = is_array($data) && is_string($data['message'] ?? null) ? trim($data['message']) : '';
-        if (!is_int($creatorId) || mb_strlen($body) < 1 || mb_strlen($body) > 2000) {
-            return new JsonResponse(['error' => ApiMessages::get('invalid_request', $locale)], 400);
-        }
-
-        $creator = $entityManager->getRepository(Creator::class)->find($creatorId);
-        $creatorOwner = $creator instanceof Creator ? $creator->getOwner() : null;
-        if (!$creator instanceof Creator
-            || !$creatorOwner instanceof User
-            || !$creatorOwner->isApproved()
-            || !$creatorOwner->isEmailVerified()
-            || $creatorOwner->isHideMyAccount()
-        ) {
-            return new JsonResponse(['error' => ApiMessages::get('creator_not_found', $locale)], 404);
-        }
-
-        return $this->sendCompanyMessage(
-            $campaign,
-            $creator,
-            $user,
-            $body,
-            'campaign_invitation',
-            $locale,
-            $entityManager,
+            $notificationDelivery,
         );
     }
 
@@ -244,6 +192,7 @@ final class CampaignMessagingController
         EntityManagerInterface $entityManager,
         Security $security,
         CsrfTokenManagerInterface $tokenManager,
+        NotificationDelivery $notificationDelivery,
     ): JsonResponse {
         $locale = LocaleContext::fromRequest($request);
         if ($locale === null) {
@@ -268,12 +217,20 @@ final class CampaignMessagingController
 
         if ($user->getCreator() instanceof Creator) {
             $companyOwner = $conversation->getCampaign()->getCompany()->getOwner();
-            $companyStartedChat = $companyOwner instanceof User
-                && $entityManager->getRepository(CampaignMessage::class)->findOneBy([
-                    'conversation' => $conversation,
-                    'sender' => $companyOwner,
-                ]) instanceof CampaignMessage;
-            if (!$companyStartedChat) {
+            $application = $entityManager->getRepository(Application::class)->findOneBy([
+                'campaign' => $conversation->getCampaign(),
+                'creator' => $conversation->getCreator(),
+            ]);
+            $acceptedInvitation = $entityManager->getRepository(CampaignInvitation::class)->findOneBy([
+                'campaign' => $conversation->getCampaign(),
+                'creator' => $conversation->getCreator(),
+                'status' => 'accepted',
+            ]);
+            if (!$companyOwner instanceof User
+                || (!$application instanceof Application
+                    || !in_array($application->getStatus(), ['shortlisted', 'offered', 'accepted'], true))
+                    && !$acceptedInvitation instanceof CampaignInvitation
+            ) {
                 return new JsonResponse(['error' => ApiMessages::get('forbidden', $locale)], 403);
             }
         }
@@ -281,16 +238,21 @@ final class CampaignMessagingController
         $message = new CampaignMessage($conversation, $user, $body);
         $entityManager->persist($message);
         $recipient = $this->otherParticipant($conversation, $user);
+        $notification = null;
         if ($recipient instanceof User) {
-            $entityManager->persist(new Notification(
+            $notification = new Notification(
                 $recipient,
                 'chat_message',
                 $user,
                 $conversation->getCampaign(),
                 $conversation,
-            ));
+            );
+            $entityManager->persist($notification);
         }
         $entityManager->flush();
+        if ($notification instanceof Notification) {
+            $notificationDelivery->deliver($notification);
+        }
 
         return new JsonResponse(['data' => CampaignMessageResource::fromEntity($message)], 201);
     }
@@ -303,6 +265,7 @@ final class CampaignMessagingController
         string $notificationType,
         string $locale,
         EntityManagerInterface $entityManager,
+        \App\Service\NotificationDelivery $notificationDelivery,
     ): JsonResponse {
         $conversation = $entityManager->getRepository(CampaignConversation::class)->findOneBy([
             'campaign' => $campaign,
@@ -310,23 +273,28 @@ final class CampaignMessagingController
         ]);
         $isNew = !($conversation instanceof CampaignConversation);
         if ($isNew) {
-            $conversation = new CampaignConversation($campaign, $creator);
+            $conversation = new CampaignConversation($campaign, $creator, $sender);
             $entityManager->persist($conversation);
         }
 
         $message = new CampaignMessage($conversation, $sender, $body);
         $entityManager->persist($message);
         $creatorOwner = $creator->getOwner();
+        $notification = null;
         if ($creatorOwner instanceof User) {
-            $entityManager->persist(new Notification(
+            $notification = new Notification(
                 $creatorOwner,
                 $notificationType,
                 $sender,
                 $campaign,
                 $conversation,
-            ));
+            );
+            $entityManager->persist($notification);
         }
         $entityManager->flush();
+        if ($notification instanceof Notification) {
+            $notificationDelivery->deliver($notification);
+        }
 
         return new JsonResponse([
             'data' => CampaignConversationResource::fromEntity(

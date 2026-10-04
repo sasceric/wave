@@ -59,6 +59,16 @@ npm --prefix frontend run dev -- --host 127.0.0.1
 
 Then open <http://127.0.0.1:5173>; Vite proxies `/api` to Symfony on port 8000.
 
+Wave uses the self-hosted Mercure Hub for live campaign messages and in-app notification updates. Docker is not required for local development. In a third terminal, install the checksum-verified native Hub binary once and run it:
+
+```sh
+cd ~/Projects/wave
+./bin/install-mercure.sh
+PATH="/opt/homebrew/opt/php@8.4/bin:$PATH" php bin/mercure-local.php
+```
+
+The local Hub listens on `http://127.0.0.1:3000`. Keep the development URLs and shared local secret in `.env`; production must provide its own secret values through the deployment environment. For local Valet domains, set `MERCURE_URL` and `MERCURE_PUBLIC_URL` to a Hub URL on the same host as the app, update the Caddy `cors_origins`, and ensure the Hub is served over HTTPS if the Valet site is HTTPS.
+
 Rebuild the frontend after changes with `npm --prefix frontend run build`. Vite emits the app shell, hashed assets, web app manifest, and service worker into Symfony's `public/` directory. The build intentionally does not empty that directory, so it won't delete Symfony's `index.php`.
 
 ## API

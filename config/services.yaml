@@ -15,6 +15,10 @@ parameters:
     env(APPLE_OAUTH_KEY_ID): ''
     env(APPLE_OAUTH_PRIVATE_KEY): ''
     env(APPLE_OAUTH_REDIRECT_URI): ''
+    env(WEB_PUSH_PUBLIC_KEY): ''
+    env(WEB_PUSH_PRIVATE_KEY): ''
+    env(WEB_PUSH_SUBJECT): 'mailto:notifications@wave.ba'
+    env(WAVE_NOTIFICATIONS_ENABLED): 'true'
 
 services:
     # default configuration for services in *this* file
@@ -42,5 +46,29 @@ services:
             $applePrivateKey: '%env(string:APPLE_OAUTH_PRIVATE_KEY)%'
             $appleRedirectUri: '%env(string:APPLE_OAUTH_REDIRECT_URI)%'
 
+    App\Service\WebPushNotificationSender:
+        arguments:
+            $publicKey: '%env(string:WEB_PUSH_PUBLIC_KEY)%'
+            $privateKey: '%env(string:WEB_PUSH_PRIVATE_KEY)%'
+            $subject: '%env(string:WEB_PUSH_SUBJECT)%'
+
+    App\Service\NotificationDelivery:
+        arguments:
+            $enabled: '%env(bool:WAVE_NOTIFICATIONS_ENABLED)%'
+
+    App\Controller\Api\RealtimeController:
+        arguments:
+            $mercurePublicUrl: '%env(string:MERCURE_PUBLIC_URL)%'
+
+    App\Controller\Api\PushSubscriptionController:
+        arguments:
+            $webPushPublicKey: '%env(string:WEB_PUSH_PUBLIC_KEY)%'
+
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
+
+when@test:
+    services:
+        App\Service\NotificationDelivery:
+            arguments:
+                $enabled: false

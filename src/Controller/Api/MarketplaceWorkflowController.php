@@ -8,6 +8,7 @@ use App\Api\JsonPayload;
 use App\Api\OfferResource;
 use App\Entity\Application;
 use App\Entity\Campaign;
+use App\Entity\CampaignConversation;
 use App\Entity\Company;
 use App\Entity\Creator;
 use App\Entity\Notification;
@@ -15,6 +16,7 @@ use App\Entity\Offer;
 use App\Entity\User;
 use App\Localization\ApiMessages;
 use App\Localization\LocaleContext;
+use App\Service\NotificationDelivery;
 use DateTimeImmutable;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\SecurityBundle\Security;
@@ -32,6 +34,7 @@ final class MarketplaceWorkflowController
         EntityManagerInterface $entityManager,
         Security $security,
         CsrfTokenManagerInterface $tokenManager,
+        NotificationDelivery $notificationDelivery,
     ): JsonResponse {
         $locale = LocaleContext::fromRequest($request);
         if ($locale === null) {
@@ -78,15 +81,20 @@ final class MarketplaceWorkflowController
         $application = new Application($campaign, $creator, $message);
         $entityManager->persist($application);
         $companyOwner = $campaign->getCompany()->getOwner();
+        $notification = null;
         if ($companyOwner instanceof User) {
-            $entityManager->persist(new Notification(
+            $notification = new Notification(
                 $companyOwner,
                 'application_received',
                 $user,
                 $campaign,
-            ));
+            );
+            $entityManager->persist($notification);
         }
         $entityManager->flush();
+        if ($notification instanceof Notification) {
+            $notificationDelivery->deliver($notification);
+        }
 
         return new JsonResponse(['data' => ApplicationResource::fromEntity($application, $locale)], 201);
     }
@@ -132,6 +140,74 @@ final class MarketplaceWorkflowController
         return new JsonResponse(['data' => array_map(static fn (Application $application): array => ApplicationResource::fromEntity($application, $locale), $applications)]);
     }
 
+    #[Route('/api/company/applications/{id}/shortlist', name: 'api_company_application_shortlist', methods: ['POST'])]
+    public function shortlistApplication(
+        int $id,
+        Request $request,
+        EntityManagerInterface $entityManager,
+        Security $security,
+        CsrfTokenManagerInterface $tokenManager,
+        NotificationDelivery $notificationDelivery,
+    ): JsonResponse {
+        $locale = LocaleContext::fromRequest($request);
+        if ($locale === null) {
+            return new JsonResponse(['error' => ApiMessages::get('unsupported_language', 'bs')], 400);
+        }
+        if ($csrfError = ApiAccess::requireCsrf($request, $tokenManager, $locale)) {
+            return $csrfError;
+        }
+        $user = ApiAccess::requireRole($security, 'ROLE_COMPANY', $locale, requireVerified: true);
+        if ($user instanceof JsonResponse) {
+            return $user;
+        }
+        $application = $entityManager->getRepository(Application::class)->find($id);
+        $company = $user->getCompany();
+        if (!$application instanceof Application
+            || !$company instanceof Company
+            || $application->getCampaign()->getCompany()->getId() !== $company->getId()
+        ) {
+            return new JsonResponse(['error' => ApiMessages::get('application_not_found', $locale)], 404);
+        }
+        if ($application->getStatus() !== 'pending') {
+            return new JsonResponse(['error' => ApiMessages::get('application_not_pending', $locale)], 409);
+        }
+
+        $application->setStatus('shortlisted');
+        $conversation = $entityManager->getRepository(CampaignConversation::class)->findOneBy([
+            'campaign' => $application->getCampaign(),
+            'creator' => $application->getCreator(),
+        ]);
+        if (!$conversation instanceof CampaignConversation) {
+            $conversation = new CampaignConversation(
+                $application->getCampaign(),
+                $application->getCreator(),
+                $user,
+            );
+            $entityManager->persist($conversation);
+        }
+        $creatorOwner = $application->getCreator()->getOwner();
+        $notification = null;
+        if ($creatorOwner instanceof User) {
+            $notification = new Notification(
+                $creatorOwner,
+                'application_shortlisted',
+                $user,
+                $application->getCampaign(),
+                $conversation,
+            );
+            $entityManager->persist($notification);
+        }
+        $entityManager->flush();
+        if ($notification instanceof Notification) {
+            $notificationDelivery->deliver($notification);
+        }
+
+        return new JsonResponse([
+            'data' => ApplicationResource::fromEntity($application, $locale),
+            'conversationId' => $conversation->getId(),
+        ]);
+    }
+
     #[Route('/api/company/applications/{id}/reject', name: 'api_company_application_reject', methods: ['POST'])]
     public function rejectApplication(
         int $id,
@@ -139,6 +215,7 @@ final class MarketplaceWorkflowController
         EntityManagerInterface $entityManager,
         Security $security,
         CsrfTokenManagerInterface $tokenManager,
+        NotificationDelivery $notificationDelivery,
     ): JsonResponse {
         $locale = LocaleContext::fromRequest($request);
         if ($locale === null) {
@@ -161,15 +238,20 @@ final class MarketplaceWorkflowController
         }
         $application->setStatus('rejected');
         $creatorOwner = $application->getCreator()->getOwner();
+        $notification = null;
         if ($creatorOwner instanceof User) {
-            $entityManager->persist(new Notification(
+            $notification = new Notification(
                 $creatorOwner,
                 'application_rejected',
                 $user,
                 $application->getCampaign(),
-            ));
+            );
+            $entityManager->persist($notification);
         }
         $entityManager->flush();
+        if ($notification instanceof Notification) {
+            $notificationDelivery->deliver($notification);
+        }
 
         return new JsonResponse(['data' => ApplicationResource::fromEntity($application, $locale)]);
     }
@@ -181,6 +263,7 @@ final class MarketplaceWorkflowController
         EntityManagerInterface $entityManager,
         Security $security,
         CsrfTokenManagerInterface $tokenManager,
+        NotificationDelivery $notificationDelivery,
     ): JsonResponse {
         $locale = LocaleContext::fromRequest($request);
         if ($locale === null) {
@@ -198,7 +281,7 @@ final class MarketplaceWorkflowController
         if (!$application instanceof Application || !$company instanceof Company || $application->getCampaign()->getCompany()->getId() !== $company->getId()) {
             return new JsonResponse(['error' => ApiMessages::get('application_not_found', $locale)], 404);
         }
-        if ($application->getStatus() !== 'pending') {
+        if ($application->getStatus() !== 'shortlisted') {
             return new JsonResponse(['error' => ApiMessages::get('application_not_pending', $locale)], 409);
         }
         if ($application->getOffer() instanceof Offer) {
@@ -216,15 +299,20 @@ final class MarketplaceWorkflowController
         $application->setStatus('offered');
         $entityManager->persist($offer);
         $creatorOwner = $application->getCreator()->getOwner();
+        $notification = null;
         if ($creatorOwner instanceof User) {
-            $entityManager->persist(new Notification(
+            $notification = new Notification(
                 $creatorOwner,
                 'offer_received',
                 $user,
                 $campaign,
-            ));
+            );
+            $entityManager->persist($notification);
         }
         $entityManager->flush();
+        if ($notification instanceof Notification) {
+            $notificationDelivery->deliver($notification);
+        }
 
         return new JsonResponse(['data' => OfferResource::fromEntity($offer, $locale)], 201);
     }
@@ -264,6 +352,7 @@ final class MarketplaceWorkflowController
         EntityManagerInterface $entityManager,
         Security $security,
         CsrfTokenManagerInterface $tokenManager,
+        NotificationDelivery $notificationDelivery,
     ): JsonResponse {
         $locale = LocaleContext::fromRequest($request);
         if ($locale === null) {
@@ -306,15 +395,20 @@ final class MarketplaceWorkflowController
         }
         $offer->respond($decision === 'accept' ? 'accepted' : 'rejected');
         $companyOwner = $offer->getApplication()->getCampaign()->getCompany()->getOwner();
+        $notification = null;
         if ($companyOwner instanceof User) {
-            $entityManager->persist(new Notification(
+            $notification = new Notification(
                 $companyOwner,
                 $decision === 'accept' ? 'offer_accepted' : 'offer_declined',
                 $user,
                 $offer->getApplication()->getCampaign(),
-            ));
+            );
+            $entityManager->persist($notification);
         }
         $entityManager->flush();
+        if ($notification instanceof Notification) {
+            $notificationDelivery->deliver($notification);
+        }
 
         return new JsonResponse(['data' => OfferResource::fromEntity($offer, $locale)]);
     }

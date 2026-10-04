@@ -30,9 +30,11 @@ final class CampaignConversationResource
                 'slug' => $company->getSlug(),
                 'name' => $company->getName(),
             ],
-            'lastMessage' => $conversation->getLastMessagePreview(),
+            'lastMessage' => '' === $conversation->getLastMessagePreview() ? null : $conversation->getLastMessagePreview(),
             'lastMessageAt' => $conversation->getUpdatedAt()->format(DATE_ATOM),
-            'lastMessageSenderId' => $conversation->getLastMessageSender()->getId(),
+            'lastMessageSenderId' => '' === $conversation->getLastMessagePreview()
+                ? null
+                : $conversation->getLastMessageSender()->getId(),
             'unreadCount' => $unreadCount,
         ];
     }

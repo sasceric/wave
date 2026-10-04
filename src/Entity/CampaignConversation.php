@@ -36,13 +36,14 @@ class CampaignConversation
     #[ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')]
     private User $lastMessageSender;
 
-    public function __construct(Campaign $campaign, Creator $creator)
+    public function __construct(Campaign $campaign, Creator $creator, User $lastMessageSender)
     {
         $this->campaign = $campaign;
         $this->creator = $creator;
         $this->createdAt = new DateTimeImmutable();
         $this->updatedAt = $this->createdAt;
         $this->lastMessagePreview = '';
+        $this->lastMessageSender = $lastMessageSender;
     }
 
     public function getId(): ?int
