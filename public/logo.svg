@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="660" height="225" viewBox="48 55 660 225">
+  <text
+    x="70"
+    y="255"
+    fill="#173d36"
+    font-family="'DM Sans', sans-serif"
+    font-size="230"
+    font-weight="700"
+    letter-spacing="-1.7px"
+  >wave</text>
+  <circle cx="684" cy="238" r="18" fill="#d98368" />
+</svg>

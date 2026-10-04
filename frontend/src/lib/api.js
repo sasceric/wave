@@ -1,0 +1,116 @@
+import i18n from '../i18n'
+
+let csrfToken = ''
+
+function intlLocale() {
+  const locale = i18n.global.locale.value
+  if (locale === 'sr') return 'sr-Latn'
+  if (locale === 'cnr') return 'sr-Latn-ME'
+
+  return locale
+}
+
+function localizedPath(path, locale = i18n.global.locale.value) {
+  const separator = path.includes('?') ? '&' : '?'
+  return `${path}${separator}locale=${encodeURIComponent(locale)}`
+}
+
+async function getCsrfToken(locale = i18n.global.locale.value) {
+  const response = await fetch(localizedPath('/api/auth/csrf', locale), {
+    headers: { Accept: 'application/json' },
+    credentials: 'same-origin',
+  })
+  const payload = await response.json()
+  if (!response.ok || typeof payload.csrfToken !== 'string') {
+    throw new Error(payload.error || i18n.global.t('api.invalidResponse'))
+  }
+  csrfToken = payload.csrfToken
+}
+
+export async function apiRequest(path, { method = 'GET', body, locale } = {}) {
+  const unsafe = !['GET', 'HEAD', 'OPTIONS'].includes(method.toUpperCase())
+  if (unsafe && !csrfToken) await getCsrfToken(locale)
+
+  const headers = { Accept: 'application/json' }
+  if (body !== undefined) headers['Content-Type'] = 'application/json'
+  if (unsafe) headers['X-CSRF-Token'] = csrfToken
+
+  const response = await fetch(localizedPath(`/api${path}`, locale), {
+    method,
+    headers,
+    credentials: 'same-origin',
+    body: body === undefined ? undefined : JSON.stringify(body),
+  })
+
+  let payload
+  try {
+    payload = await response.json()
+  } catch {
+    throw new Error(i18n.global.t('api.invalidResponse'))
+  }
+
+  if (!response.ok) {
+    if (response.status === 403 && unsafe) csrfToken = ''
+    const error = new Error(payload.error || i18n.global.t('api.requestFailed', { status: response.status }))
+    error.status = response.status
+    error.fields = Array.isArray(payload.fields) ? payload.fields : []
+    throw error
+  }
+
+  if (typeof payload.csrfToken === 'string') csrfToken = payload.csrfToken
+  else if (path === '/auth/logout') csrfToken = ''
+
+  return payload
+}
+
+export async function apiUpload(path, file) {
+  if (!csrfToken) await getCsrfToken()
+  const formData = new FormData()
+  formData.append('file', file)
+
+  const response = await fetch(localizedPath(`/api${path}`), {
+    method: 'POST',
+    headers: {
+      Accept: 'application/json',
+      'X-CSRF-Token': csrfToken,
+    },
+    credentials: 'same-origin',
+    body: formData,
+  })
+
+  let payload
+  try {
+    payload = await response.json()
+  } catch {
+    throw new Error(i18n.global.t('api.invalidResponse'))
+  }
+
+  if (!response.ok) {
+    if (response.status === 403) csrfToken = ''
+    const error = new Error(payload.error || i18n.global.t('api.requestFailed', { status: response.status }))
+    error.status = response.status
+    throw error
+  }
+
+  if (typeof payload.csrfToken === 'string') csrfToken = payload.csrfToken
+
+  return payload
+}
+
+export async function apiGet(path, options) {
+  return apiRequest(path, options)
+}
+
+export function formatFollowers(value) {
+  if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(value % 1_000_000 === 0 ? 0 : 1)}m`
+  if (value >= 1_000) return `${(value / 1_000).toFixed(value % 1_000 === 0 ? 0 : 1)}k`
+  return String(value)
+}
+
+export function formatDate(value) {
+  return new Intl.DateTimeFormat(intlLocale(), { month: 'short', day: 'numeric', year: 'numeric' }).format(new Date(value))
+}
+
+export function formatMoney(value, currency = 'BAM') {
+  return new Intl.NumberFormat(intlLocale(), { style: 'currency', currency, maximumFractionDigits: 0 }).format(value)
+}

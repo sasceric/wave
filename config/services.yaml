@@ -1,0 +1,46 @@
+# yaml-language-server: $schema=../vendor/symfony/dependency-injection/Loader/schema/services.schema.json
+
+# This file is the entry point to configure your own services.
+# Files in the packages/ subdirectory configure your dependencies.
+# See also https://symfony.com/doc/current/service_container/import.html
+
+# Put parameters here that don't need to change on each machine where the app is deployed
+# https://symfony.com/doc/current/best_practices.html#use-parameters-for-application-configuration
+parameters:
+    env(GOOGLE_OAUTH_CLIENT_ID): ''
+    env(GOOGLE_OAUTH_CLIENT_SECRET): ''
+    env(GOOGLE_OAUTH_REDIRECT_URI): ''
+    env(APPLE_OAUTH_CLIENT_ID): ''
+    env(APPLE_OAUTH_TEAM_ID): ''
+    env(APPLE_OAUTH_KEY_ID): ''
+    env(APPLE_OAUTH_PRIVATE_KEY): ''
+    env(APPLE_OAUTH_REDIRECT_URI): ''
+
+services:
+    # default configuration for services in *this* file
+    _defaults:
+        autowire: true      # Automatically injects dependencies in your services.
+        autoconfigure: true # Automatically registers your services as commands, event subscribers, etc.
+
+    # makes classes in src/ available to be used as services
+    # this creates a service per class whose id is the fully-qualified class name
+    App\:
+        resource: '../src/'
+
+    App\Service\MediaStorage:
+        arguments:
+            $storagePath: '%kernel.project_dir%/var/media'
+
+    App\OAuth\OAuthProviderClient:
+        arguments:
+            $googleClientId: '%env(string:GOOGLE_OAUTH_CLIENT_ID)%'
+            $googleClientSecret: '%env(string:GOOGLE_OAUTH_CLIENT_SECRET)%'
+            $googleRedirectUri: '%env(string:GOOGLE_OAUTH_REDIRECT_URI)%'
+            $appleClientId: '%env(string:APPLE_OAUTH_CLIENT_ID)%'
+            $appleTeamId: '%env(string:APPLE_OAUTH_TEAM_ID)%'
+            $appleKeyId: '%env(string:APPLE_OAUTH_KEY_ID)%'
+            $applePrivateKey: '%env(string:APPLE_OAUTH_PRIVATE_KEY)%'
+            $appleRedirectUri: '%env(string:APPLE_OAUTH_REDIRECT_URI)%'
+
+    # add more service definitions when explicit configuration is needed
+    # please note that last definitions always *replace* previous ones

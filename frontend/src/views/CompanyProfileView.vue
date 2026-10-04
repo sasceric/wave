@@ -1,0 +1,97 @@
+<script setup>
+import { onMounted, ref, watch } from 'vue'
+import { useRoute } from 'vue-router'
+import RouterLink from '../components/shared/LocalizedLink.vue'
+import { useI18n } from 'vue-i18n'
+import CampaignCard from '../components/campaigns/CampaignCard.vue'
+import StatusMessage from '../components/shared/StatusMessage.vue'
+import WaveLogo from '../components/shared/WaveLogo.vue'
+import { apiGet } from '../lib/api'
+import { getSeoOrigin, updateSeo } from '../lib/seo'
+import { localizedPath } from '../routePaths'
+
+const route = useRoute()
+const company = ref(null)
+const campaigns = ref([])
+const error = ref('')
+const { t, locale } = useI18n()
+
+async function loadCompany() {
+  company.value = null
+  campaigns.value = []
+  error.value = ''
+  try {
+    const slug = encodeURIComponent(route.params.slug)
+    const [companyResponse, campaignResponse] = await Promise.all([
+      apiGet(`/companies/${slug}`),
+      apiGet(`/campaigns?company=${slug}&limit=50`),
+    ])
+    company.value = companyResponse.data
+    campaigns.value = campaignResponse.data
+  } catch (cause) {
+    error.value = cause.message
+  }
+}
+
+watch([() => route.params.slug, locale], loadCompany)
+watch(
+  [company, locale],
+  ([value]) => {
+    if (!value) return
+
+    const logo = value.logoUrl ? new URL(value.logoUrl, getSeoOrigin()).href : undefined
+    updateSeo({
+      route,
+      locale: locale.value,
+      title: t('seo.companyProfileTitle', { name: value.name }),
+      description: value.industry,
+      image: logo,
+      mainEntity: {
+        '@type': 'Organization',
+        name: value.name,
+        url: new URL(
+          localizedPath('company-profile', locale.value, { slug: value.slug }),
+          getSeoOrigin(),
+        ).href,
+        industry: value.industry,
+        ...(logo ? { logo } : {}),
+      },
+    })
+  },
+)
+onMounted(loadCompany)
+</script>
+
+<template>
+  <section v-if="error" class="page-width profile-error">
+    <StatusMessage variant="error">{{ error }}</StatusMessage>
+    <RouterLink class="text-link" to="/campaigns">
+      {{ t('companyProfile.back') }} ↗
+    </RouterLink>
+  </section>
+  <section v-else-if="!company" class="page-width profile-error">
+    <StatusMessage>{{ t('companyProfile.loading') }}</StatusMessage>
+  </section>
+  <template v-else>
+    <section class="company-cover">
+      <div class="page-width company-cover__inner">
+        <div class="company-logo"><WaveLogo mark /></div>
+        <p class="eyebrow">{{ company.industry }}</p>
+        <h1>{{ company.name }}<span v-if="company.verified" class="verified-mark" :aria-label="t('campaignCard.verified')">✓</span></h1>
+        <p>{{ t('companyProfile.profileLabel') }}</p>
+      </div>
+    </section>
+    <section class="page-width company-briefs">
+      <div class="section-heading">
+        <div><p class="eyebrow">{{ t('companyProfile.openCalls') }}</p><h2>{{ t('companyProfile.campaignsFrom', { company: company.name }) }}</h2></div>
+        <RouterLink class="text-link" to="/campaigns">{{ t('companyProfile.allBriefs') }} <span aria-hidden="true">↗</span></RouterLink>
+      </div>
+      <div v-if="campaigns.length" class="campaign-grid campaign-grid--directory">
+        <CampaignCard v-for="campaign in campaigns" :key="campaign.id" :campaign="campaign" />
+      </div>
+      <StatusMessage v-else variant="empty">
+        {{ t('companyProfile.empty') }}
+      </StatusMessage>
+    </section>
+  </template>
+</template>

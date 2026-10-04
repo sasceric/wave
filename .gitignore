@@ -1,0 +1,31 @@
+
+###> symfony/framework-bundle ###
+/.env.local
+/.env.local.php
+/.env.*.local
+/config/secrets/prod/prod.decrypt.private.php
+/public/bundles/
+/var/
+/vendor/
+/frontend/node_modules/
+/frontend/dist/
+/public/build/
+/public/assets/
+/public/sw.js
+/public/workbox-*.js
+/public/manifest.webmanifest
+/public/index.html
+/public/registerSW.js
+/public/favicon.svg
+/public/icons.svg
+/public/wave-icon.svg
+/public/pwa-192.png
+/public/pwa-512.png
+/var/data.db
+/var/test.db
+###< symfony/framework-bundle ###
+
+###> phpunit/phpunit ###
+/phpunit.xml
+/.phpunit.cache/
+###< phpunit/phpunit ###
