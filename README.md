@@ -57,7 +57,7 @@ export PATH="/opt/homebrew/opt/php@8.4/bin:$HOME/.nvm/versions/node/v22.20.0/bin
 npm --prefix frontend run dev -- --host 127.0.0.1
 ```
 
-Then open <http://127.0.0.1:5173>; Vite proxies `/api` to Symfony on port 8000.
+Then open <http://127.0.0.1:5173>; Vite proxies `/api` to Symfony on port 8000. Use `127.0.0.1` consistently rather than switching to `localhost`: browser authorization cookies are host-scoped, while the default Mercure public URL is also `127.0.0.1`. If the app is opened at `localhost:5173` but Mercure at `127.0.0.1:3000`, the private EventSource request will not receive its subscription cookie and live notifications will fail. Restart Vite after changing hosts and sign in again at the `127.0.0.1` address, since cookies are not shared between the two hostnames.
 
 Wave uses the self-hosted Mercure Hub for live campaign messages and in-app notification updates. Docker is not required for local development. In a third terminal, install the checksum-verified native Hub binary once and run it:
 
