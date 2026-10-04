@@ -27,6 +27,7 @@ export function routeNameFromCanonicalPath(path) {
     '/account/offers': 'account-offers',
     '/account/inquiries': 'account-inquiries',
     '/account/bookmarks': 'account-bookmarks',
+    '/account/invitations': 'account-invitations',
     '/account/campaigns': 'account-campaigns',
     '/messages': 'messages',
     '/verify-email': 'verify-email',

@@ -1,0 +1,26 @@
+{
+	auto_https off
+}
+
+http://:3000 {
+	mercure {
+		issuer {$MERCURE_TRUSTED_ISSUERS:https://wave.local} {
+			publisher {
+				jwt {env.MERCURE_PUBLISHER_JWT_KEY} HS256
+			}
+			subscriber {
+				jwt {env.MERCURE_SUBSCRIBER_JWT_KEY} HS256
+			}
+		}
+		cookie_name mercureAuthorization
+		cors_origins http://127.0.0.1:8000 http://127.0.0.1:5173 http://localhost:5173 http://wave.test
+		transport bolt {
+			path ./var/mercure.db
+			size 10000
+		}
+	}
+
+	header / Content-Type "text/html; charset=utf-8"
+	respond / "Wave local Mercure Hub"
+	respond "Not Found" 404
+}

@@ -23,6 +23,7 @@ const routeViews = {
   'account-offers': AccountView,
   'account-inquiries': AccountView,
   'account-bookmarks': AccountView,
+  'account-invitations': AccountView,
   'account-campaigns': AccountView,
   messages: MessagesView,
   'verify-email': VerifyEmailView,
@@ -59,6 +60,7 @@ const accountSections = {
   'account-offers': 'offers',
   'account-inquiries': 'inquiries',
   'account-bookmarks': 'bookmarks',
+  'account-invitations': 'invitations',
   'account-campaigns': 'campaigns',
 }
 
@@ -87,6 +89,7 @@ const legacyPaths = [
   ['/account/offers', 'account-offers'],
   ['/account/inquiries', 'account-inquiries'],
   ['/account/bookmarks', 'account-bookmarks'],
+  ['/account/invitations', 'account-invitations'],
   ['/account/campaigns', 'account-campaigns'],
   ['/messages', 'messages'],
   ['/verify-email', 'verify-email'],

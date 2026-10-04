@@ -31,6 +31,7 @@ const LEGACY_ACCOUNT_TABS = {
   offers: 'account-offers',
   inquiries: 'account-inquiries',
   bookmarks: 'account-bookmarks',
+  invitations: 'account-invitations',
 }
 const user = ref(null)
 const accountTab = ref(isAccountTab(route.query.tab) ? route.query.tab : 'about')
@@ -45,6 +46,7 @@ const tags = ref('')
 const campaigns = ref([])
 const applications = ref([])
 const offers = ref([])
+const invitations = ref([])
 const companyApplications = ref([])
 const inquiries = ref([])
 const inquiryMessages = ref({})
@@ -168,13 +170,15 @@ async function loadDashboard() {
         }
       }
       tags.value = (profile.value.tags || []).join(', ')
-      const [applicationResponse, offerResponse] = await Promise.all([
+      const [applicationResponse, offerResponse, invitationResponse] = await Promise.all([
         apiGet('/me/applications'),
         apiGet('/me/offers'),
+        apiGet('/me/invitations'),
         loadCampaignBookmarks(),
       ])
       applications.value = applicationResponse.data
       offers.value = offerResponse.data
+      invitations.value = invitationResponse.data
     } else {
       if (route.query.tab !== undefined) {
         const query = { ...route.query }
@@ -499,6 +503,10 @@ async function rejectApplication(application) {
   await runAction(`/company/applications/${application.id}/reject`, {})
 }
 
+async function shortlistApplication(application) {
+  await runAction(`/company/applications/${application.id}/shortlist`, {})
+}
+
 async function sendOffer(application) {
   await runAction(`/company/applications/${application.id}/offer`, {
     amount: Number(offerForms.value[application.id].amount),
@@ -508,6 +516,27 @@ async function sendOffer(application) {
 
 async function respondToOffer(offer, decision) {
   await runAction(`/me/offers/${offer.id}/respond`, { decision })
+}
+
+async function respondToInvitation(invitation, decision) {
+  error.value = ''
+  notice.value = ''
+  try {
+    const response = await apiRequest(`/me/invitations/${invitation.id}/respond`, {
+      method: 'POST',
+      body: { decision },
+    })
+    notice.value = t('account.invitationResponseSaved')
+    await loadDashboard()
+    if (response.conversation?.id) {
+      await router.push({
+        name: localizedRouteName('messages', locale.value),
+        query: { conversation: response.conversation.id },
+      })
+    }
+  } catch (cause) {
+    error.value = cause.message
+  }
 }
 
 async function respondToInquiry(inquiry, decision) {
@@ -1041,6 +1070,34 @@ onMounted(loadDashboard)
         </article>
       </section>
       <section
+        v-if="accountSection === 'invitations' && user.accountType === 'creator'"
+        id="account-panel-invitations"
+        class="form-card account-activity-panel"
+      >
+        <h2>{{ t('account.campaignInvitations') }}</h2>
+        <StatusMessage v-if="!invitations.length" variant="empty">
+          {{ t('account.noCampaignInvitations') }}
+        </StatusMessage>
+        <article v-for="invitation in invitations" :key="invitation.id" class="dashboard-card">
+          <div class="dashboard-card__heading">
+            <RouterLink :to="{ name: 'campaign-detail', params: { slug: invitation.campaign.slug } }">
+              {{ invitation.campaign.title }}
+            </RouterLink>
+            <span class="status-pill">{{ statusLabel(invitation.status) }}</span>
+          </div>
+          <p v-if="invitation.company" class="dashboard-card__subheading">{{ invitation.company.name }}</p>
+          <p>{{ invitation.message }}</p>
+          <div v-if="invitation.status === 'pending'" class="button-row">
+            <button class="button button--dark" type="button" :disabled="!user.emailVerified || !user.approved" @click="respondToInvitation(invitation, 'accept')">
+              {{ t('account.acceptInvitation') }}
+            </button>
+            <button class="button button--outline" type="button" :disabled="!user.emailVerified || !user.approved" @click="respondToInvitation(invitation, 'decline')">
+              {{ t('account.declineInvitation') }}
+            </button>
+          </div>
+        </article>
+      </section>
+      <section
         v-if="accountSection === 'offers' && user.accountType === 'creator'"
         id="account-panel-offers"
         class="form-card account-activity-panel"
@@ -1160,7 +1217,7 @@ onMounted(loadDashboard)
           <p class="dashboard-card__subheading">{{ application.campaign.title }}</p>
           <p><strong>{{ t('account.yourMessage') }}</strong><br />{{ application.message }}</p>
           <LocalizedLink
-            v-if="application.status !== 'rejected'"
+            v-if="['shortlisted', 'offered', 'accepted'].includes(application.status)"
             class="button button--outline"
             :to="{
               name: 'messages',
@@ -1171,12 +1228,19 @@ onMounted(loadDashboard)
               },
             }"
           >{{ t('campaignChat.messageApplicant') }}</LocalizedLink>
-          <div v-if="application.status === 'pending'" class="form-stack">
+          <div v-if="application.status === 'pending'" class="button-row">
+            <button class="button button--dark" type="button" :disabled="!user.emailVerified || !user.approved" @click="shortlistApplication(application)">
+              {{ t('account.shortlistForChat') }}
+            </button>
+            <button class="button button--outline" type="button" :disabled="!user.emailVerified || !user.approved" @click="rejectApplication(application)">
+              {{ t('account.reject') }}
+            </button>
+          </div>
+          <div v-if="application.status === 'shortlisted'" class="form-stack">
             <label class="form-field"><span>{{ t('account.offerAmount') }} ({{ application.campaign.currency }})</span><input v-model.number="offerForms[application.id].amount" type="number" :min="application.campaign.budgetMin" :max="application.campaign.budgetMax" required /></label>
             <label class="form-field"><span>{{ t('account.offerMessage') }}</span><textarea v-model.trim="offerForms[application.id].message" required minlength="10" maxlength="1500"></textarea></label>
             <div class="button-row">
               <button class="button button--dark" type="button" :disabled="!user.emailVerified || !user.approved || !offerForms[application.id].message.trim()" @click="sendOffer(application)">{{ t('account.sendOffer') }}</button>
-              <button class="button button--outline" type="button" :disabled="!user.emailVerified || !user.approved" @click="rejectApplication(application)">{{ t('account.reject') }}</button>
             </div>
           </div>
           <div v-else-if="application.offer" class="offer-summary">

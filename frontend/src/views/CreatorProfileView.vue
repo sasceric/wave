@@ -1,6 +1,6 @@
 <script setup>
 import { computed, nextTick, onMounted, ref, watch } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { useRoute } from 'vue-router'
 import RouterLink from '../components/shared/LocalizedLink.vue'
 import { useI18n } from 'vue-i18n'
 import { ChevronLeft, ChevronRight, X } from '@lucide/vue'
@@ -12,10 +12,9 @@ import { apiGet, apiRequest, formatDate, formatFollowers, formatMoney } from '..
 import { CURRENCIES, SOCIAL_PLATFORMS } from '../lib/marketplace'
 import { sanitizeRichText } from '../lib/richText'
 import { getSeoOrigin, updateSeo } from '../lib/seo'
-import { localizedPath, localizedRouteName } from '../routePaths'
+import { localizedPath } from '../routePaths'
 
 const route = useRoute()
-const router = useRouter()
 const creator = ref(null)
 const viewer = ref(null)
 const error = ref('')
@@ -138,7 +137,7 @@ async function sendCampaignInvitation() {
   inviteBusy.value = true
   inviteError.value = ''
   try {
-    const response = await apiRequest(
+    await apiRequest(
       `/company/campaigns/${encodeURIComponent(inviteForm.value.campaignSlug)}/invitations`,
       {
         method: 'POST',
@@ -148,10 +147,8 @@ async function sendCampaignInvitation() {
         },
       },
     )
-    await router.push({
-      name: localizedRouteName('messages', locale.value),
-      query: { conversation: response.data.id },
-    })
+    notice.value = t('campaignChat.invitationSent')
+    inviteForm.value.message = ''
   } catch (cause) {
     inviteError.value = cause.message
   } finally {
@@ -701,6 +698,7 @@ onMounted(loadCreator)
           <h4>{{ t('campaignChat.inviteTitle') }}</h4>
           <p>{{ t('campaignChat.inviteDescription') }}</p>
           <StatusMessage v-if="inviteError" variant="error">{{ inviteError }}</StatusMessage>
+          <StatusMessage v-if="notice">{{ notice }}</StatusMessage>
           <template v-if="inviteCampaigns.length">
             <label class="form-field">
               <span>{{ t('campaignChat.chooseCampaign') }}</span>

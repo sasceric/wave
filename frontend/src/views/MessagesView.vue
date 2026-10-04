@@ -2,7 +2,7 @@
 import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import { MessageCircle, Send } from '@lucide/vue'
+import { MessageCircle, RefreshCw, Send } from '@lucide/vue'
 import LocalizedLink from '../components/shared/LocalizedLink.vue'
 import StatusMessage from '../components/shared/StatusMessage.vue'
 import { currentUser } from '../composables/useCurrentUser'
@@ -22,7 +22,6 @@ const sending = ref(false)
 const error = ref('')
 const authRequired = ref(false)
 const messageList = ref(null)
-let refreshTimer = null
 
 const pendingStart = computed(() => {
   const campaign = route.query.campaign
@@ -59,16 +58,16 @@ const canSend = computed(() => (
 
 onMounted(() => {
   void loadInbox()
-  refreshTimer = window.setInterval(() => {
-    void refreshInbox()
-  }, 20000)
+  window.addEventListener('wave:realtime', handleRealtimeUpdate)
 })
 
 onBeforeUnmount(() => {
-  if (refreshTimer !== null) {
-    window.clearInterval(refreshTimer)
-  }
+  window.removeEventListener('wave:realtime', handleRealtimeUpdate)
 })
+
+function handleRealtimeUpdate() {
+  void refreshInbox()
+}
 
 async function loadInbox() {
   loading.value = true
@@ -255,7 +254,12 @@ function conversationName(conversation) {
         <h1>{{ t('campaignChat.title') }}</h1>
         <p>{{ t('campaignChat.subtitle') }}</p>
       </div>
-      <MessageCircle :size="28" stroke-width="1.5" aria-hidden="true" />
+      <div class="campaign-messages__heading-actions">
+        <button class="campaign-messages__refresh" type="button" :aria-label="t('campaignChat.refresh')" :title="t('campaignChat.refresh')" @click="refreshInbox">
+          <RefreshCw :size="18" stroke-width="1.7" aria-hidden="true" />
+        </button>
+        <MessageCircle :size="28" stroke-width="1.5" aria-hidden="true" />
+      </div>
     </header>
 
     <StatusMessage v-if="error" variant="error">{{ error }}</StatusMessage>

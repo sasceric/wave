@@ -22,6 +22,9 @@ final class CampaignInvitationResource
                 'slug' => $campaign->getSlug(),
                 'title' => $translation['title'] ?? $campaign->getTitle(),
             ],
+            'company' => [
+                'name' => $campaign->getCompany()->getName(),
+            ],
             'creator' => [
                 'id' => $invitation->getCreator()->getId(),
                 'slug' => $invitation->getCreator()->getSlug(),

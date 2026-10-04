@@ -84,7 +84,7 @@ final class CampaignInvitationController
             'campaign' => $campaign,
             'creator' => $creator,
         ]) instanceof CampaignInvitation) {
-            return new JsonResponse(['error' => ApiMessages::get('already_applied', $locale)], 409);
+            return new JsonResponse(['error' => ApiMessages::get('invitation_exists', $locale)], 409);
         }
 
         $invitation = new CampaignInvitation($campaign, $creator, $user, $message);

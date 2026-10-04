@@ -2,7 +2,7 @@
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { RouterView, useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import { Bell, Building2, House, LogOut, Menu, Megaphone, MessageCircle, UserRound, UsersRound, X } from '@lucide/vue'
+import { Bell, Building2, Download, House, LogOut, Menu, Megaphone, MessageCircle, UserRound, UsersRound, X } from '@lucide/vue'
 import LanguageSwitcher from './components/shared/LanguageSwitcher.vue'
 import HeaderCreatorSearch from './components/shared/HeaderCreatorSearch.vue'
 import LocalizedLink from './components/shared/LocalizedLink.vue'
@@ -28,8 +28,22 @@ const notificationsMenu = ref(null)
 const notifications = ref([])
 const notificationsError = ref('')
 const markingAllRead = ref(false)
+const pushConfig = ref({ enabled: false, publicKey: '' })
+const pushSupported = ref(false)
+const pushSubscribed = ref(false)
+const pushStatus = ref('')
+const pushBusy = ref(false)
+const installHelpVisible = ref(false)
+const installAvailable = ref(false)
+const installHint = computed(() => isIosDevice() ? t('app.installIosHint') : t('app.installHint'))
 const unreadNotificationCount = computed(() => notifications.value.filter((item) => !item.readAt).length)
-let notificationsTimer = null
+const canShowInstallButton = computed(() => (
+  installAvailable.value
+  || (isIosDevice() && !window.matchMedia('(display-mode: standalone)').matches)
+))
+let realtimeSource = null
+let realtimeRetryTimer = null
+let installPrompt = null
 watch(locale, setLocale)
 watch(() => route.fullPath, () => {
   mobileMenuOpen.value = false
@@ -42,9 +56,14 @@ watch(currentUser, (user) => {
     notificationsMenuOpen.value = false
     notifications.value = []
     notificationsError.value = ''
+    pushSubscribed.value = false
+    pushStatus.value = ''
+    closeRealtime()
     return
   }
   void loadNotifications()
+  void connectRealtime()
+  void loadPushSettings()
 })
 watch(
   () => [route.fullPath, locale.value],
@@ -76,15 +95,16 @@ watch(
 )
 onMounted(() => {
   loadCurrentUser().catch((cause) => console.error('Unable to load the current Wave account.', cause))
-  notificationsTimer = window.setInterval(() => {
-    if (currentUser.value) void loadNotifications()
-  }, 30000)
+  window.addEventListener('beforeinstallprompt', captureInstallPrompt)
+  window.addEventListener('appinstalled', onAppInstalled)
   document.addEventListener('pointerdown', closeMobileMenuOnOutsideClick)
   document.addEventListener('pointerdown', closeAuthMenuOnOutsideClick)
   document.addEventListener('pointerdown', closeNotificationsOnOutsideClick)
 })
 onBeforeUnmount(() => {
-  if (notificationsTimer !== null) window.clearInterval(notificationsTimer)
+  closeRealtime()
+  window.removeEventListener('beforeinstallprompt', captureInstallPrompt)
+  window.removeEventListener('appinstalled', onAppInstalled)
   document.removeEventListener('pointerdown', closeMobileMenuOnOutsideClick)
   document.removeEventListener('pointerdown', closeAuthMenuOnOutsideClick)
   document.removeEventListener('pointerdown', closeNotificationsOnOutsideClick)
@@ -103,6 +123,173 @@ async function loadNotifications() {
     }
     notificationsError.value = cause.message
   }
+}
+
+async function connectRealtime() {
+  if (!currentUser.value || realtimeSource) return
+  if (realtimeRetryTimer !== null) {
+    window.clearTimeout(realtimeRetryTimer)
+    realtimeRetryTimer = null
+  }
+
+  try {
+    const response = await apiGet('/me/realtime')
+    if (!currentUser.value) return
+    const { hubUrl, topic } = response.data
+    const url = new URL(hubUrl)
+    url.searchParams.append('match', topic)
+    const source = new EventSource(url, { withCredentials: true })
+    realtimeSource = source
+    source.onmessage = (event) => {
+      try {
+        const update = JSON.parse(event.data)
+        void loadNotifications()
+        window.dispatchEvent(new CustomEvent('wave:realtime', { detail: update }))
+      } catch (cause) {
+        console.error('Unable to read a Wave realtime update.', cause)
+      }
+    }
+    source.onerror = () => {
+      if (realtimeSource !== source) return
+      source.close()
+      realtimeSource = null
+      scheduleRealtimeRetry()
+    }
+  } catch (cause) {
+    if (cause.status !== 401) {
+      console.error('Unable to connect to Wave realtime updates.', cause)
+    }
+    scheduleRealtimeRetry()
+  }
+}
+
+function closeRealtime() {
+  if (realtimeRetryTimer !== null) {
+    window.clearTimeout(realtimeRetryTimer)
+    realtimeRetryTimer = null
+  }
+  realtimeSource?.close()
+  realtimeSource = null
+}
+
+function scheduleRealtimeRetry() {
+  if (currentUser.value && realtimeRetryTimer === null) {
+    realtimeRetryTimer = window.setTimeout(() => {
+      realtimeRetryTimer = null
+      void connectRealtime()
+    }, 5000)
+  }
+}
+
+async function loadPushSettings() {
+  pushSupported.value = 'Notification' in window && 'serviceWorker' in navigator && 'PushManager' in window
+  if (!pushSupported.value) {
+    pushStatus.value = 'pushUnsupported'
+    return
+  }
+
+  try {
+    const response = await apiGet('/me/push/config')
+    pushConfig.value = response.data
+    if (!pushConfig.value.enabled) {
+      pushStatus.value = 'pushNotConfigured'
+      return
+    }
+    const registration = await navigator.serviceWorker.ready
+    const subscription = await registration.pushManager.getSubscription()
+    pushSubscribed.value = subscription !== null
+    pushStatus.value = subscription ? 'pushEnabled' : ''
+  } catch (cause) {
+    pushStatus.value = cause.status === 401 ? '' : 'pushError'
+  }
+}
+
+async function togglePushNotifications() {
+  if (pushBusy.value) return
+  pushBusy.value = true
+  pushStatus.value = ''
+  if (!pushSupported.value || !pushConfig.value.enabled) {
+    pushBusy.value = false
+    return
+  }
+
+  try {
+    const registration = await navigator.serviceWorker.ready
+    const existing = await registration.pushManager.getSubscription()
+    if (existing) {
+      await apiRequest('/me/push-subscriptions', {
+        method: 'DELETE',
+        body: { endpoint: existing.endpoint },
+      })
+      await existing.unsubscribe()
+      pushSubscribed.value = false
+      pushStatus.value = 'pushDisabled'
+      return
+    }
+
+    const permission = await Notification.requestPermission()
+    if (permission !== 'granted') {
+      pushStatus.value = permission === 'denied' ? 'pushDenied' : 'pushPermissionNeeded'
+      return
+    }
+    const subscription = await registration.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: decodeApplicationServerKey(pushConfig.value.publicKey),
+    })
+    try {
+      await apiRequest('/me/push-subscriptions', {
+        method: 'POST',
+        body: {
+          endpoint: subscription.endpoint,
+          keys: subscription.toJSON().keys,
+        },
+      })
+    } catch (cause) {
+      await subscription.unsubscribe()
+      throw cause
+    }
+    pushSubscribed.value = true
+    pushStatus.value = 'pushEnabled'
+  } catch (cause) {
+    pushStatus.value = 'pushError'
+    notificationsError.value = cause.message
+  } finally {
+    pushBusy.value = false
+  }
+}
+
+function decodeApplicationServerKey(value) {
+  const padding = '='.repeat((4 - (value.length % 4)) % 4)
+  const base64 = (value + padding).replace(/-/g, '+').replace(/_/g, '/')
+  return Uint8Array.from(window.atob(base64), (character) => character.charCodeAt(0))
+}
+
+function isIosDevice() {
+  return /iPad|iPhone|iPod/.test(navigator.userAgent)
+    || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
+}
+
+function captureInstallPrompt(event) {
+  event.preventDefault()
+  installPrompt = event
+  installAvailable.value = true
+}
+
+function onAppInstalled() {
+  installPrompt = null
+  installAvailable.value = false
+  installHelpVisible.value = false
+}
+
+async function installWave() {
+  if (!installPrompt) {
+    installHelpVisible.value = !installHelpVisible.value
+    return
+  }
+  installPrompt.prompt()
+  await installPrompt.userChoice
+  installPrompt = null
+  installAvailable.value = false
 }
 
 async function markAllNotificationsRead() {
@@ -137,12 +324,14 @@ async function openNotification(notification) {
       })
       return
     }
-    await router.push({
-      path: localizedPath(
-        notification.type === 'offer_received' ? 'account-offers' : 'account',
-        locale.value,
-      ),
-    })
+    const destination = notification.type === 'offer_received'
+      ? 'account-offers'
+      : ['campaign_invitation', 'invitation_declined'].includes(notification.type)
+        ? 'account-invitations'
+        : ['application_received', 'application_rejected'].includes(notification.type)
+          ? 'account-applications'
+          : 'account'
+    await router.push({ path: localizedPath(destination, locale.value) })
   } catch (cause) {
     notificationsError.value = cause.message
   }
@@ -273,8 +462,17 @@ async function signOut() {
               <p v-if="notificationsError" class="header-notifications__error" role="alert">
                 {{ notificationsError }}
               </p>
-              <p v-else-if="!notifications.length">{{ t('app.noNotifications') }}</p>
-              <div v-else class="header-notifications__list">
+              <div v-if="currentUser" class="header-notifications__push">
+                <button
+                  v-if="pushSupported && pushConfig.enabled"
+                  type="button"
+                  :disabled="pushBusy"
+                  @click="togglePushNotifications"
+                >{{ t(pushSubscribed ? 'app.pushDisable' : 'app.pushEnable') }}</button>
+                <p v-if="pushStatus" role="status">{{ t(`app.${pushStatus}`) }}</p>
+              </div>
+              <p v-if="!notificationsError && !notifications.length">{{ t('app.noNotifications') }}</p>
+              <div v-else-if="!notificationsError" class="header-notifications__list">
                 <button
                   v-for="notification in notifications"
                   :key="notification.id"
@@ -302,6 +500,22 @@ async function signOut() {
           >
             <MessageCircle :size="19" stroke-width="1.8" aria-hidden="true" />
           </LocalizedLink>
+          <div v-if="canShowInstallButton" class="header-install">
+            <button
+              class="header-install__trigger"
+              type="button"
+              :aria-label="t('app.installApp')"
+              :aria-describedby="installHelpVisible ? 'install-wave-tooltip' : undefined"
+              :aria-expanded="installHelpVisible"
+              :title="installHint"
+              @click="installWave"
+            >
+              <Download :size="19" stroke-width="1.8" aria-hidden="true" />
+            </button>
+            <span v-if="installHelpVisible" id="install-wave-tooltip" class="header-install__tooltip" role="tooltip">
+              {{ installHint }}
+            </span>
+          </div>
           <div
             ref="authMenu"
             class="header-user-menu"

@@ -41,6 +41,7 @@ const navigationItems = computed(() => {
         { route: 'account-offers', labelKey: 'account.myOffers', icon: Mail },
         { route: 'account-inquiries', labelKey: 'account.directRequests', icon: MessageCircle },
         { route: 'account-bookmarks', labelKey: 'account.bookmarks', icon: House },
+        { route: 'account-invitations', labelKey: 'account.campaignInvitations', icon: Mail },
       ]
     : [
         { route: 'account', labelKey: 'account.companyProfile', icon: Building2 },

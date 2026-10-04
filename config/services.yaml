@@ -70,5 +70,6 @@ services:
 when@test:
     services:
         App\Service\NotificationDelivery:
+            autowire: true
             arguments:
                 $enabled: false

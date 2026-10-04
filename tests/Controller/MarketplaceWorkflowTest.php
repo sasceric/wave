@@ -7,6 +7,7 @@ use App\Entity\Company;
 use App\Entity\Creator;
 use App\Entity\Media;
 use App\Entity\User;
+use App\Entity\UserPushSubscription;
 use DateTimeImmutable;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Tools\SchemaTool;
@@ -539,6 +540,9 @@ final class MarketplaceWorkflowTest extends WebTestCase
         $this->client->request('GET', '/api/company/campaigns/small-table/applications?locale=bs');
         self::assertResponseIsSuccessful();
         self::assertSame('Avery Creator', $this->payload()['data'][0]['creator']['displayName']);
+        $this->jsonRequest('POST', '/api/company/applications/'.$applicationId.'/shortlist', [], $csrf);
+        self::assertResponseIsSuccessful();
+        self::assertSame('shortlisted', $this->payload()['data']['status']);
         $this->jsonRequest('POST', '/api/company/applications/'.$applicationId.'/offer', [
             'amount' => 500,
             'message' => 'We would love to work with you on this campaign.',
@@ -806,16 +810,27 @@ final class MarketplaceWorkflowTest extends WebTestCase
             'creatorId' => $creator->getId(),
             'message' => 'Your application looks like a great fit. Could we discuss the brief?',
         ], $this->csrfToken());
-        self::assertResponseStatusCodeSame(201);
+        self::assertResponseStatusCodeSame(404);
+
+        $this->jsonRequest('POST', '/api/company/applications/'.$application['id'].'/shortlist', [], $this->csrfToken());
+        self::assertResponseIsSuccessful();
+        $firstConversationId = $this->payload()['conversationId'];
+        $this->jsonRequest('POST', '/api/company/campaigns/chat-campaign-one/conversations', [
+            'creatorId' => $creator->getId(),
+            'message' => 'Your application looks like a great fit. Could we discuss the brief?',
+        ], $this->csrfToken());
+        self::assertResponseIsSuccessful();
         $firstConversation = $this->payload()['data'];
+        self::assertSame($firstConversationId, $firstConversation['id']);
 
         $this->jsonRequest('POST', '/api/company/campaigns/chat-campaign-two/invitations', [
             'creatorId' => $creator->getId(),
             'message' => 'We would love to invite you to create a short video for this campaign.',
         ], $this->csrfToken());
         self::assertResponseStatusCodeSame(201);
-        $secondConversation = $this->payload()['data'];
-        self::assertNotSame($firstConversation['id'], $secondConversation['id']);
+        $invitation = $this->payload()['data'];
+        self::assertSame('pending', $invitation['status']);
+        self::assertArrayNotHasKey('conversationId', $invitation);
 
         $this->jsonRequest('POST', '/api/company/campaigns/chat-campaign-one/conversations', [
             'creatorId' => $creator->getId(),
@@ -831,7 +846,7 @@ final class MarketplaceWorkflowTest extends WebTestCase
         $this->client->loginUser($creatorUser, 'main');
         $this->client->request('GET', '/api/me/conversations?locale=bs');
         self::assertResponseIsSuccessful();
-        self::assertCount(2, $this->payload()['data']);
+        self::assertCount(1, $this->payload()['data']);
         $this->client->request('GET', '/api/me/conversations/'.$firstConversation['id'].'/messages?locale=bs');
         self::assertResponseIsSuccessful();
         self::assertCount(2, $this->payload()['data']);
@@ -851,6 +866,22 @@ final class MarketplaceWorkflowTest extends WebTestCase
             'body' => 'Thanks, I would be happy to discuss the campaign.',
         ], $this->csrfToken());
         self::assertResponseStatusCodeSame(201);
+
+        $this->client->request('GET', '/api/me/invitations?locale=bs');
+        self::assertResponseIsSuccessful();
+        self::assertCount(1, $this->payload()['data']);
+        self::assertSame($invitation['id'], $this->payload()['data'][0]['id']);
+        $this->jsonRequest('POST', '/api/me/invitations/'.$invitation['id'].'/respond', [
+            'decision' => 'accept',
+        ], $this->csrfToken());
+        self::assertResponseIsSuccessful();
+        self::assertSame('accepted', $this->payload()['data']['status']);
+        $secondConversation = $this->payload()['conversation'];
+        self::assertNotSame($firstConversation['id'], $secondConversation['id']);
+        $this->client->request('GET', '/api/me/conversations?locale=bs');
+        self::assertResponseIsSuccessful();
+        self::assertCount(2, $this->payload()['data']);
+
         $this->jsonRequest('POST', '/api/company/campaigns/chat-campaign-one/conversations', [
             'creatorId' => $creator->getId(),
             'message' => 'Creators cannot initiate a company conversation.',
@@ -871,6 +902,7 @@ final class MarketplaceWorkflowTest extends WebTestCase
         $creatorNotificationTypes = array_column($this->payload()['data'], 'type');
         self::assertContains('campaign_invitation', $creatorNotificationTypes);
         self::assertContains('chat_message', $creatorNotificationTypes);
+        self::assertContains('application_shortlisted', $creatorNotificationTypes);
         self::assertContains('offer_received', $creatorNotificationTypes);
 
         $this->jsonRequest('POST', '/api/me/offers/'.$offerId.'/respond', [
@@ -884,6 +916,7 @@ final class MarketplaceWorkflowTest extends WebTestCase
         $companyNotificationTypes = array_column($this->payload()['data'], 'type');
         self::assertContains('application_received', $companyNotificationTypes);
         self::assertContains('chat_message', $companyNotificationTypes);
+        self::assertContains('invitation_accepted', $companyNotificationTypes);
         self::assertContains('offer_accepted', $companyNotificationTypes);
         $this->jsonRequest('POST', '/api/me/notifications/read-all', [], $this->csrfToken());
         self::assertResponseIsSuccessful();
@@ -892,6 +925,55 @@ final class MarketplaceWorkflowTest extends WebTestCase
         foreach ($this->payload()['data'] as $notification) {
             self::assertNotNull($notification['readAt']);
         }
+    }
+
+    public function testRealtimeAuthorizationAndBrowserPushSubscriptionsAreUserScoped(): void
+    {
+        $entityManager = static::getContainer()->get(EntityManagerInterface::class);
+        $user = new User('realtime-creator@example.test', 'ROLE_CREATOR');
+        $user->setPassword('unused-test-hash');
+        $user->setCreator(new Creator(
+            'realtime-creator',
+            'Realtime Creator',
+            'Lifestyle',
+            'Sarajevo',
+            'A creator profile for realtime tests.',
+            [],
+            [],
+        ));
+        $entityManager->persist($user);
+        $entityManager->flush();
+        $this->client->loginUser($user, 'main');
+
+        $this->client->request('GET', 'http://127.0.0.1/api/me/realtime?locale=bs');
+        self::assertResponseIsSuccessful();
+        self::assertSame('https://wave.local/users/'.$user->getId(), $this->payload()['data']['topic']);
+        self::assertSame('http://127.0.0.1:3000/.well-known/mercure', $this->payload()['data']['hubUrl']);
+        $cookies = $this->client->getResponse()->headers->getCookies();
+        self::assertCount(1, $cookies);
+        self::assertSame('mercureAuthorization', $cookies[0]->getName());
+        self::assertTrue($cookies[0]->isHttpOnly());
+
+        $csrf = $this->csrfToken();
+        $this->jsonRequest('POST', '/api/me/push-subscriptions', [
+            'endpoint' => 'http://127.0.0.1:9999/not-a-push-service',
+            'keys' => ['p256dh' => 'B'.str_repeat('a', 40), 'auth' => 'B'.str_repeat('b', 20)],
+        ], $csrf);
+        self::assertResponseStatusCodeSame(400);
+
+        $subscriptionPayload = [
+            'endpoint' => 'https://fcm.googleapis.com/fcm/send/test-endpoint',
+            'keys' => ['p256dh' => 'B'.str_repeat('a', 40), 'auth' => 'B'.str_repeat('b', 20)],
+        ];
+        $this->jsonRequest('POST', '/api/me/push-subscriptions', $subscriptionPayload, $this->csrfToken());
+        self::assertResponseStatusCodeSame(201);
+        self::assertSame(1, $entityManager->getRepository(UserPushSubscription::class)->count(['user' => $user]));
+
+        $this->jsonRequest('DELETE', '/api/me/push-subscriptions', [
+            'endpoint' => $subscriptionPayload['endpoint'],
+        ], $this->csrfToken());
+        self::assertResponseIsSuccessful();
+        self::assertSame(0, $entityManager->getRepository(UserPushSubscription::class)->count(['user' => $user]));
     }
 
     private function csrfToken(): string

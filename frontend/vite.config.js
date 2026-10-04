@@ -17,7 +17,15 @@ export default defineConfig({
     },
     vue(),
     VitePWA({
+      strategies: 'injectManifest',
+      srcDir: 'src',
+      filename: 'sw.js',
       registerType: 'autoUpdate',
+      devOptions: {
+        enabled: true,
+        type: 'module',
+        navigateFallback: '/index.html',
+      },
       manifest: {
         name: 'Wave — saradnje kreatora i brendova',
         short_name: 'Wave',
@@ -32,9 +40,7 @@ export default defineConfig({
           { src: '/pwa-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
         ],
       },
-      workbox: {
-        navigateFallback: '/index.html',
-        navigateFallbackDenylist: [/^\/api(?:\/|$)/],
+      injectManifest: {
         globPatterns: ['**/*.{css,html,ico,js,png,svg,webp}'],
       },
     }),
