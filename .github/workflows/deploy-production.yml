@@ -31,7 +31,7 @@ jobs:
             set -e
             cd /home/steelcodeweb/web/wave.ba/public_html/
             git pull --ff-only origin main
-            APP_ENV=prod php8.4 "$(command -v composer)" install --no-dev --prefer-dist --optimize-autoloader --no-interaction
+            COMPOSER_ALLOW_SUPERUSER=1 APP_ENV=prod php8.4 "$(command -v composer)" install --no-dev --prefer-dist --optimize-autoloader --no-interaction
             export NVM_DIR="${NVM_DIR:-$HOME/.nvm}"
             if [ ! -s "$NVM_DIR/nvm.sh" ]; then
               echo "nvm not found at $NVM_DIR/nvm.sh" >&2

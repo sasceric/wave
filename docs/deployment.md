@@ -40,12 +40,15 @@ pointing to this repository and a `main` branch.
 
 ## Deployment steps
 
-The workflow updates the checkout, runs Composer explicitly with PHP 8.4,
-loads NVM and selects Node 22 for `npm ci` and the Vue/PWA build, builds assets
-into Symfony's `public/` directory, applies Doctrine migrations with `php8.4`,
-and clears the production cache with `php8.4`. Each deployment runs serially
-and stops at the first failed command. The Vue build preserves Symfony's
-`public/index.php`.
+The workflow updates the checkout, runs Composer explicitly with PHP 8.4, and
+sets `COMPOSER_ALLOW_SUPERUSER=1` so Composer does not disable Symfony Flex
+when the SSH login is root. Keep the deployment checkout and locked
+dependencies trusted; using a dedicated non-root deployment user is safer.
+The workflow then loads NVM and selects Node 22 for `npm ci` and the Vue/PWA
+build, builds assets into Symfony's `public/` directory, applies Doctrine
+migrations with `php8.4`, and clears the production cache with `php8.4`. Each
+deployment runs serially and stops at the first failed command. The Vue build
+preserves Symfony's `public/index.php`.
 
 After configuring the secrets and server, run the workflow manually once to
 verify the deployment environment before relying on pushes to `main`.
