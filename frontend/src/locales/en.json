@@ -213,6 +213,9 @@
     "markAllRead": "Mark all as read"
   },
   "campaignChat": {
+    "today": "Today",
+    "yesterday": "Yesterday",
+    "justNow": "Just now",
     "title": "Messages",
     "subtitle": "Keep each conversation connected to its campaign.",
     "inbox": "Conversations",

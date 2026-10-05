@@ -214,6 +214,9 @@
     "markAllRead": "Označi sve kao pročitano"
   },
   "campaignChat": {
+    "today": "Danas",
+    "yesterday": "Jučer",
+    "justNow": "Upravo sada",
     "title":  "Poruke",
     "subtitle": "Svaki razgovor ostaje vezan za svoju kampanju.",
     "inbox": "Razgovori",

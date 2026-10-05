@@ -3382,7 +3382,14 @@ h1 em, h2 em { color: #c67f67; font-weight: 400; }
 .campaign-messages__thread-kind { display: inline-flex; align-items: center; gap: 7px; padding: 7px 10px; border-radius: 20px; color: #547064; background: #edf2e9; font-size: 9px; white-space: nowrap; }
 .campaign-messages__thread-kind::before { width: 7px; height: 7px; border-radius: 50%; background: #438267; content: ''; }
 .campaign-messages__timeline { display: flex; min-height: 260px; flex: 1; flex-direction: column; gap: 17px; overflow-y: auto; overscroll-behavior: contain; padding: 21px 2px; scroll-padding-bottom: 18px; }
+.campaign-messages__day { display: flex; flex-direction: column; gap: 17px; }
+.campaign-messages__day-divider { display: flex; align-items: center; gap: 12px; margin: 7px 0; color: var(--muted); font-size: 11px; text-align: center; }
+.campaign-messages__day-divider::before,
+.campaign-messages__day-divider::after { content: ''; flex: 1; height: 1px; background: var(--line); }
+.campaign-messages__day-divider span { max-width: 75%; padding: 5px 12px; border-radius: 20px; background: var(--paper); }
 .campaign-messages__message-row { display: flex; align-items: flex-end; gap: 8px; }
+.campaign-messages__message-row--grouped { margin-top: -11px; }
+.campaign-messages__avatar--grouped { visibility: hidden; }
 .campaign-messages__message-row--mine { justify-content: flex-end; }
 .campaign-messages__avatar--message { width: 37px; height: 37px; font-size: 9px; }
 .campaign-messages__message { width: fit-content; max-width: min(78%, 540px); padding: 12px 16px 8px; border: 1px solid #eee7dc; border-radius: 17px 17px 17px 5px; color: #303b36; background: #f4eee5; }

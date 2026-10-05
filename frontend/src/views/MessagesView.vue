@@ -23,6 +23,7 @@ import StatusMessage from '../components/shared/StatusMessage.vue'
 import { currentUser, loadCurrentUser } from '../composables/useCurrentUser'
 import { apiGet, apiRequest, formatDate, formatMoney } from '../lib/api'
 import { localizedRouteName } from '../routePaths'
+import { areChatMessagesGrouped, createChatTimeFormatter, groupChatMessages } from '../lib/chatTime'
 
 const route = useRoute()
 const router = useRouter()
@@ -30,6 +31,10 @@ const { t, locale } = useI18n()
 const conversations = ref([])
 const inquiries = ref([])
 const conversationMessages = ref([])
+const chatClock = ref(Date.now())
+const chatTime = computed(() => createChatTimeFormatter(locale.value, t))
+const messageDays = computed(() => groupChatMessages(conversationMessages.value))
+let chatClockTimer = 0
 const pendingDetails = ref(null)
 const selectedConversationId = ref(null)
 const selectedInquiryId = ref(null)
@@ -211,6 +216,8 @@ watch(
 
 onMounted(() => {
   updateViewport()
+  updateChatClock()
+  document.addEventListener('visibilitychange', updateChatClock)
   window.addEventListener('resize', updateViewport)
   window.visualViewport?.addEventListener('resize', updateViewport)
   window.visualViewport?.addEventListener('scroll', updateViewport)
@@ -224,6 +231,8 @@ onBeforeUnmount(() => {
   messagesRequestVersion += 1
   inboxRequestVersion += 1
   document.documentElement.classList.remove('wave-chat-open')
+  window.clearTimeout(chatClockTimer)
+  document.removeEventListener('visibilitychange', updateChatClock)
   window.removeEventListener('resize', updateViewport)
   window.visualViewport?.removeEventListener('resize', updateViewport)
   window.visualViewport?.removeEventListener('scroll', updateViewport)
@@ -233,6 +242,14 @@ onBeforeUnmount(() => {
     window.cancelAnimationFrame(messageScrollFrame)
   }
 })
+
+function updateChatClock() {
+  window.clearTimeout(chatClockTimer)
+  if (document.visibilityState !== 'visible' || unmounted) return
+  chatClock.value = Date.now()
+  // Refresh only the displayed clock. Messages continue to arrive through Mercure.
+  chatClockTimer = window.setTimeout(updateChatClock, 60_000 - Date.now() % 60_000)
+}
 
 function updateViewport() {
   isMobileView.value = window.matchMedia('(max-width: 760px)').matches
@@ -624,37 +641,10 @@ function initials(name) {
     .toLocaleUpperCase()
 }
 
-function messageTime(value) {
-  const intlLocale = locale.value === 'sr'
-    ? 'sr-Latn'
-    : locale.value === 'cnr'
-      ? 'sr-Latn-ME'
-      : locale.value
-
-  const time = new Intl.DateTimeFormat(intlLocale, {
-    hour: 'numeric',
-    minute: '2-digit',
-  }).format(new Date(value))
-
-  return `${formatDate(value)} ${time}`
-}
-
-function conversationTime(value) {
-  if (!value) return ''
-  const date = new Date(value)
-  const today = new Date()
-  const isToday = date.getFullYear() === today.getFullYear()
-    && date.getMonth() === today.getMonth()
-    && date.getDate() === today.getDate()
-  const intlLocale = locale.value === 'sr'
-    ? 'sr-Latn'
-    : locale.value === 'cnr'
-      ? 'sr-Latn-ME'
-      : locale.value
-
-  return isToday
-    ? new Intl.DateTimeFormat(intlLocale, { hour: 'numeric', minute: '2-digit' }).format(date)
-    : formatDate(value)
+function messageTimeDescription(value) {
+  return [chatTime.value.full(value), chatTime.value.ago(value, chatClock.value)]
+    .filter(Boolean)
+    .join(' · ')
 }
 </script>
 
@@ -749,7 +739,11 @@ function conversationTime(value) {
             <span class="campaign-messages__conversation-body">
               <span class="campaign-messages__conversation-top">
                 <strong>{{ conversationName(conversation) }}</strong>
-                <time :datetime="conversation.lastMessageAt">{{ conversationTime(conversation.lastMessageAt) }}</time>
+                <time
+                  :datetime="conversation.lastMessageAt"
+                  :title="chatTime.full(conversation.lastMessageAt)"
+                  aria-live="off"
+                >{{ chatTime.ago(conversation.lastMessageAt, chatClock) }}</time>
               </span>
               <span class="campaign-messages__conversation-meta">
                 <span class="campaign-messages__campaign">
@@ -811,35 +805,52 @@ function conversationTime(value) {
           <div
             ref="messageList"
             class="campaign-messages__timeline"
+            role="region"
+            tabindex="0"
             :aria-label="t('campaignChat.title')"
           >
-            <div
-              v-for="message in conversationMessages"
-              :key="message.id"
-              class="campaign-messages__message-row"
-              :class="{ 'campaign-messages__message-row--mine': isMessageMine(message) }"
-            >
-              <span
-                v-if="!isMessageMine(message)"
-                class="campaign-messages__avatar campaign-messages__avatar--message"
+            <div v-for="day in messageDays" :key="day.key" class="campaign-messages__day">
+              <div v-if="day.dateKey" class="campaign-messages__day-divider" aria-live="off">
+                <span>{{ chatTime.dayLabel(day.createdAt, chatClock) }}</span>
+              </div>
+              <div
+                v-for="(message, index) in day.messages"
+                :key="message.id"
+                class="campaign-messages__message-row"
+                :class="{
+                  'campaign-messages__message-row--mine': isMessageMine(message),
+                  'campaign-messages__message-row--grouped': areChatMessagesGrouped(day.messages[index - 1], message),
+                }"
               >
-                <img v-if="counterpartAvatar" :src="counterpartAvatar" alt="" loading="lazy">
-                <span v-else>{{ initials(counterpartName) }}</span>
-              </span>
-              <article
-                class="campaign-messages__message"
-                :class="{ 'campaign-messages__message--mine': isMessageMine(message) }"
-              >
-                <p>{{ message.body }}</p>
-                <time :datetime="message.createdAt">{{ messageTime(message.createdAt) }}</time>
-              </article>
-              <span
-                v-if="isMessageMine(message)"
-                class="campaign-messages__avatar campaign-messages__avatar--message"
-              >
-                <img v-if="currentAvatar" :src="currentAvatar" alt="" loading="lazy">
-                <span v-else>{{ initials(currentDisplayName) || 'W' }}</span>
-              </span>
+                <span
+                  v-if="!isMessageMine(message)"
+                  class="campaign-messages__avatar campaign-messages__avatar--message"
+                  :class="{ 'campaign-messages__avatar--grouped': areChatMessagesGrouped(message, day.messages[index + 1]) }"
+                >
+                  <img v-if="counterpartAvatar" :src="counterpartAvatar" alt="" loading="lazy">
+                  <span v-else>{{ initials(counterpartName) }}</span>
+                </span>
+                <article
+                  class="campaign-messages__message"
+                  :class="{ 'campaign-messages__message--mine': isMessageMine(message) }"
+                >
+                  <p>{{ message.body }}</p>
+                  <time
+                    :datetime="message.createdAt"
+                    :title="messageTimeDescription(message.createdAt)"
+                    :aria-label="messageTimeDescription(message.createdAt)"
+                    aria-live="off"
+                  >{{ chatTime.clock(message.createdAt) }}</time>
+                </article>
+                <span
+                  v-if="isMessageMine(message)"
+                  class="campaign-messages__avatar campaign-messages__avatar--message"
+                  :class="{ 'campaign-messages__avatar--grouped': areChatMessagesGrouped(message, day.messages[index + 1]) }"
+                >
+                  <img v-if="currentAvatar" :src="currentAvatar" alt="" loading="lazy">
+                  <span v-else>{{ initials(currentDisplayName) || 'W' }}</span>
+                </span>
+              </div>
             </div>
           </div>
           <form class="campaign-messages__composer" @submit.prevent="sendMessage">

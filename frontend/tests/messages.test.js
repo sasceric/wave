@@ -264,3 +264,34 @@ test('browser chrome, zoom, and desktop resizing do not remove the home inset', 
   state.updateViewport()
   assert.equal(state.keyboardOpen.value, false)
 })
+
+test('relative chat times refresh locally and stop their timer while the page is hidden', async () => {
+  let now = Date.parse('2026-10-05T19:00:20Z')
+  let requests = 0
+  const { state, documentTarget, windowTarget } = await setupView('../src/views/MessagesView.vue', {
+    '../lib/api': {
+      apiGet: () => { requests += 1 }, apiRequest: () => { requests += 1 },
+      formatDate: () => '', formatMoney: () => '',
+    },
+  }, {}, { Date: class extends Date { static now() { return now } } })
+  const scheduled = []
+  windowTarget.setTimeout = (callback, delay) => {
+    scheduled.push({ callback, delay })
+    return scheduled.length
+  }
+  state.updateChatClock()
+  assert.equal(scheduled[0].delay, 40_000)
+  now += 40_000
+  scheduled[0].callback()
+  assert.equal(state.chatClock.value, now)
+  assert.equal(scheduled[1].delay, 60_000)
+  documentTarget.visibilityState = 'hidden'
+  state.updateChatClock()
+  assert.equal(scheduled.length, 2)
+  documentTarget.visibilityState = 'visible'
+  now += 86_400_000
+  state.updateChatClock()
+  assert.equal(state.chatClock.value, now)
+  assert.equal(scheduled.length, 3)
+  assert.equal(requests, 0)
+})

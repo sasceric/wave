@@ -214,6 +214,9 @@
     "markAllRead": "Označi vsa kot prebrana"
   },
   "campaignChat": {
+    "today": "Danes",
+    "yesterday": "Včeraj",
+    "justNow": "Pravkar",
     "title": "Sporočila",
     "subtitle": "Vsak pogovor ostane povezan s svojo kampanjo.",
     "inbox": "Pogovori",
