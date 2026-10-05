@@ -10,9 +10,11 @@ import LocalizedLink from './components/shared/LocalizedLink.vue'
 import WaveWordmark from './components/shared/WaveWordmark.vue'
 import CookieConsentBanner from './components/shared/CookieConsentBanner.vue'
 import { currentUser, loadCurrentUser, setCurrentUser } from './composables/useCurrentUser'
+import { unreadMessageCount } from './composables/useUnreadMessages'
 import { mobileAccountSidebarOpen } from './composables/useMobileAccountSidebar'
 import { setLocale } from './i18n'
 import { apiGet, apiRequest, formatDate } from './lib/api'
+import { startInboxSync } from './lib/inboxSync'
 import { updateSeo } from './lib/seo'
 import { trackPageView } from './lib/privacyMetrics'
 import { localizedPath } from './routePaths'
@@ -36,7 +38,6 @@ const notifications = ref([])
 const notificationsError = ref('')
 const markingAllRead = ref(false)
 const optimisticUnreadNotificationIds = ref([])
-const unreadMessageCount = ref(0)
 const pushConfig = ref({ enabled: false, publicKey: '' })
 const pushSupported = ref(false)
 const pushSubscribed = ref(false)
@@ -74,6 +75,10 @@ const hideSiteFooter = computed(() => Boolean(
 ))
 let realtimeSource = null
 let realtimeRetryTimer = null
+let realtimeConnecting = false
+let realtimeConnectionVersion = 0
+let realtimeLastEventId = ''
+let inboxSync = null
 let notificationsRequestVersion = 0
 let unreadMessagesRequestVersion = 0
 const seenRealtimeNotificationIds = new Set()
@@ -107,8 +112,18 @@ watch(() => route.path, (path) => {
     trackPageView(path)
   }
 })
-watch(currentUser, (user) => {
+watch(currentUser, (user, previousUser) => {
   mobileMenuOpen.value = false
+  if (user?.id !== previousUser?.id) {
+    closeRealtime()
+    realtimeLastEventId = ''
+    seenRealtimeNotificationIds.clear()
+    notifications.value = []
+    optimisticUnreadNotificationIds.value = []
+    unreadMessageCount.value = 0
+    notificationsRequestVersion += 1
+    unreadMessagesRequestVersion += 1
+  }
   if (!user) {
     mobileAccountSidebarOpen.value = false
     notificationsMenuOpen.value = false
@@ -162,6 +177,14 @@ watch(
 )
 onMounted(() => {
   previousScrollY = window.scrollY
+  inboxSync = startInboxSync(async () => {
+    const userId = currentUser.value?.id
+    if (!userId) return
+    await Promise.all([loadNotifications(), loadUnreadMessages()])
+    if (currentUser.value?.id === userId) {
+      window.dispatchEvent(new Event('wave:inbox-refresh'))
+    }
+  })
   if (!import.meta.env.DEV && 'serviceWorker' in navigator) {
     updateServiceWorker = registerSW({
       immediate: true,
@@ -191,6 +214,7 @@ onMounted(() => {
   document.addEventListener('pointerdown', closeNotificationsOnOutsideClick)
 })
 onBeforeUnmount(() => {
+  inboxSync?.stop()
   closeRealtime()
   window.removeEventListener('scroll', handleMobileScroll)
   window.removeEventListener('resize', resetMobileChrome)
@@ -321,7 +345,10 @@ function toggleMobileNavigation() {
 }
 
 async function connectRealtime() {
-  if (!currentUser.value || realtimeSource) return
+  const userId = currentUser.value?.id
+  if (!userId || realtimeSource || realtimeConnecting) return
+  const connectionVersion = ++realtimeConnectionVersion
+  realtimeConnecting = true
   if (realtimeRetryTimer !== null) {
     window.clearTimeout(realtimeRetryTimer)
     realtimeRetryTimer = null
@@ -329,13 +356,19 @@ async function connectRealtime() {
 
   try {
     const response = await apiGet('/me/realtime')
-    if (!currentUser.value) return
+    if (currentUser.value?.id !== userId || connectionVersion !== realtimeConnectionVersion) return
     const { hubUrl, topic } = response.data
     const url = new URL(hubUrl)
     url.searchParams.append('match', topic)
+    if (realtimeLastEventId) url.searchParams.set('lastEventID', realtimeLastEventId)
     const source = new EventSource(url, { withCredentials: true })
     realtimeSource = source
+    source.onopen = () => {
+      if (realtimeSource === source) void inboxSync?.refresh()
+    }
     source.onmessage = (event) => {
+      if (realtimeSource !== source || currentUser.value?.id !== userId) return
+      if (event.lastEventId) realtimeLastEventId = event.lastEventId
       try {
         const update = JSON.parse(event.data)
         if (hasSeenRealtimeNotification(update.notificationId)) return
@@ -348,6 +381,7 @@ async function connectRealtime() {
           update.notificationType === 'chat_message'
           && route.meta.routeName === 'messages'
           && Number(route.query.conversation) === Number(update.conversationId)
+          && document.visibilityState === 'visible'
         )
         if (update.notificationType === 'chat_message') {
           const senderId = update.message?.senderId
@@ -372,10 +406,13 @@ async function connectRealtime() {
       scheduleRealtimeRetry()
     }
   } catch (cause) {
+    if (connectionVersion !== realtimeConnectionVersion) return
     if (cause.status !== 401) {
       console.error('Unable to connect to Wave realtime updates.', cause)
     }
     scheduleRealtimeRetry()
+  } finally {
+    if (connectionVersion === realtimeConnectionVersion) realtimeConnecting = false
   }
 }
 
@@ -409,6 +446,8 @@ function addOptimisticUnreadNotification(notificationId) {
 }
 
 function closeRealtime() {
+  realtimeConnectionVersion += 1
+  realtimeConnecting = false
   if (realtimeRetryTimer !== null) {
     window.clearTimeout(realtimeRetryTimer)
     realtimeRetryTimer = null
@@ -775,7 +814,7 @@ async function signOut() {
             class="header-messages__trigger"
             :class="{ 'is-active': route.meta.routeName === 'messages' }"
             :to="{ name: 'messages' }"
-            :aria-label="t('app.messages')"
+            :aria-label="unreadMessageCount ? `${t('app.messages')} (${unreadMessageCount})` : t('app.messages')"
             :title="t('app.messages')"
           >
             <MessageCircle :size="19" stroke-width="1.8" aria-hidden="true" />
@@ -1025,7 +1064,7 @@ async function signOut() {
         v-if="currentUser"
         :to="{ name: 'messages' }"
         class="mobile-bottom-nav__link"
-        :aria-label="t('app.messages')"
+        :aria-label="unreadMessageCount ? `${t('app.messages')} (${unreadMessageCount})` : t('app.messages')"
         :class="{ 'is-active': route.meta.routeName === 'messages' }"
       >
         <span class="mobile-bottom-nav__icon">

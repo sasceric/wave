@@ -15,6 +15,7 @@ import { useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import LocalizedLink from '../shared/LocalizedLink.vue'
 import { mobileAccountSidebarOpen } from '../../composables/useMobileAccountSidebar'
+import { unreadMessageCount } from '../../composables/useUnreadMessages'
 
 const props = defineProps({
   user: {
@@ -81,6 +82,10 @@ const navigationItems = computed(() => {
     )
   }
 
+  if (canUseMarketplace) {
+    items.push({ route: 'messages', labelKey: 'app.messages', icon: MessageCircle, badge: unreadMessageCount.value })
+  }
+
   if (props.user?.isModerator) {
     items.push({ route: 'moderation', labelKey: 'moderation.title', icon: ClipboardCheck })
   }
@@ -129,13 +134,13 @@ const navigationItems = computed(() => {
       :class="{ 'is-active': route.meta.routeName === item.route }"
       :to="{ name: item.route }"
       :title="item.label"
-      :aria-label="item.label"
+      :aria-label="item.badge ? `${item.label} (${item.badge})` : item.label"
       :aria-current="route.meta.routeName === item.route ? 'page' : undefined"
       @click="closeMobileSidebar"
     >
       <component :is="item.icon" :size="18" aria-hidden="true" />
       <span class="account-sidebar__text">{{ item.label }}</span>
-      <strong v-if="item.badge" class="account-sidebar__badge">{{ item.badge }}</strong>
+      <strong v-if="item.badge" class="account-sidebar__badge">{{ item.badge > 99 ? '99+' : item.badge }}</strong>
     </LocalizedLink>
   </nav>
 </template>

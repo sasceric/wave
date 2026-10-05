@@ -42,11 +42,14 @@ final class RealtimeUpdatePublisher
         ], JSON_THROW_ON_ERROR);
 
         try {
-            $this->hub->publish(new Update(
+            $eventId = $this->hub->publish(new Update(
                 $this->topicFor($notification->getRecipient()),
                 $payload,
                 true,
             ));
+            if ('' === trim($eventId)) {
+                throw new MercureRuntimeException('The Mercure publisher endpoint returned an empty event ID. Check the publisher URL and the Hub Host routing.');
+            }
         } catch (MercureRuntimeException $exception) {
             $this->logger->warning('Unable to publish a Wave realtime update.', [
                 'notification_id' => $notificationId,

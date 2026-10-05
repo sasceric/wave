@@ -20,12 +20,19 @@ self.addEventListener('push', (event) => {
     payload = { title: 'Wave', body: 'You have a new notification.' }
   }
 
-  event.waitUntil(self.registration.showNotification(payload.title || 'Wave', {
-    body: payload.body || 'You have a new notification.',
-    icon: '/pwa-192.png',
-    badge: '/pwa-192.png',
-    data: { url: payload.url || '/' },
-  }))
+  event.waitUntil(Promise.all([
+    self.registration.showNotification(payload.title || 'Wave', {
+      body: payload.body || 'You have a new notification.',
+      icon: '/pwa-192.png',
+      badge: '/pwa-192.png',
+      data: { url: payload.url || '/' },
+    }),
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((windows) => {
+      for (const client of windows) {
+        client.postMessage({ type: 'WAVE_PUSH_RECEIVED' })
+      }
+    }),
+  ]))
 })
 
 self.addEventListener('notificationclick', (event) => {

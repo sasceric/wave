@@ -65,7 +65,7 @@ Create `/etc/mercure/Caddyfile`:
 	auto_https off
 }
 
-http://mercure.wave.ba:3000 {
+http://mercure.wave.ba:3000, http://127.0.0.1:3000 {
 	bind 127.0.0.1
 	mercure {
 		issuer {$MERCURE_TRUSTED_ISSUERS} {
@@ -77,7 +77,7 @@ http://mercure.wave.ba:3000 {
 			}
 		}
 		cookie_name mercureAuthorization
-		cookie_name mercureAuthorization
+		resource_identifier https://mercure.wave.ba/.well-known/mercure
 		cors_origins https://wave.ba
 
 		transport bolt {
@@ -91,6 +91,10 @@ http://mercure.wave.ba:3000 {
 	respond "Not Found" 404
 }
 ```
+
+`resource_identifier` must exactly match Symfony's `MERCURE_PUBLIC_URL`. After
+changing the Caddyfile, restart the Hub with `sudo systemctl restart mercure`
+and check `sudo journalctl -u mercure -n 50 --no-pager` for startup errors.
 
 Allow the Mercure service account to read the Caddyfile:
 
@@ -175,9 +179,12 @@ sudo nginx -t && sudo systemctl reload nginx
 
 This routes only Mercure's endpoint to the Hub; other paths on the subdomain remain under Hestia's normal domain handling. If the Nginx template selected for this domain is custom, verify its SSL server block includes `/home/%user%/conf/web/%domain%/nginx.ssl.conf_*`; the Hestia default template does.
 
-The Nginx snippet forwards `Host: mercure.wave.ba`. The Caddy site address
-above must match that host; `bind 127.0.0.1` keeps the Hub private while
-allowing the matching host. The `cors_origins https://wave.ba` directive in
+The Nginx snippet forwards `Host: mercure.wave.ba`, while Symfony's private
+`MERCURE_URL` sends `Host: 127.0.0.1:3000`. The Caddy site addresses above
+must accept both hosts. Configuring only `http://mercure.wave.ba:3000`
+allows browser subscriptions but prevents Symfony's loopback publication
+requests from reaching Mercure. `bind 127.0.0.1` keeps the Hub private.
+The `cors_origins https://wave.ba` directive in
 the Caddyfile must match the Wave page's origin exactly. Because Hestia
 terminates HTTPS before proxying to the Hub over HTTP, pin
 `resource_identifier` to the same HTTPS Hub URL configured in Symfony; without
@@ -272,5 +279,25 @@ The app also needs a scheduled command to send the one-hour unread-chat email re
 2. Sign in to Wave as an approved user and open the browser's network tools. The `GET /api/me/realtime` response should set the `mercureAuthorization` cookie for the Hub; the EventSource request should stay open.
 3. Use two approved accounts to exercise the campaign flow in [the local test instructions](../README.md#test-campaign-messaging-locally). Shortlisting or accepting an invitation should open the private chat and deliver a Mercure update.
 4. Check `sudo journalctl -u mercure -f` and the web server logs if the SSE request fails. Verify the public origin in `cors_origins`, the issuer/secret values, the Hub public URL, TLS, and proxy buffering.
+
+5. Check the publisher's route separately, without overriding its Host header:
+
+   ```sh
+   curl -i --max-time 3 -X POST \
+     http://127.0.0.1:3000/.well-known/mercure
+   ```
+
+   An unauthenticated request must reach Mercure and be rejected with 401.
+   A response that bypasses Mercure (often an empty 200 from Caddy's
+   unmatched route) indicates a Host mismatch. Symfony treats such a 200
+   as a successful publish even though no update was delivered. A connected
+   browser EventSource alone does not prove publishing works; send a message
+   and verify that an actual event appears in its EventStream tab.
+
+Chrome device notifications also depend on the operating system's Chrome
+notification permission. A granted website permission and enabled push
+subscription cannot override macOS **System Settings → Notifications → Google
+Chrome → Allow notifications** being off. Live chat and unread badges use
+the application update path independently of OS notification banners.
 
 Web Push uses separate VAPID keys and remains opt-in per device. Configure its production keys separately in the Symfony environment; do not reuse development keys or put private keys in the repository.

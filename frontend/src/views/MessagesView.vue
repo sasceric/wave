@@ -20,7 +20,7 @@ import {
 } from '@lucide/vue'
 import LocalizedLink from '../components/shared/LocalizedLink.vue'
 import StatusMessage from '../components/shared/StatusMessage.vue'
-import { currentUser } from '../composables/useCurrentUser'
+import { currentUser, loadCurrentUser } from '../composables/useCurrentUser'
 import { apiGet, apiRequest, formatDate, formatMoney } from '../lib/api'
 import { localizedRouteName } from '../routePaths'
 
@@ -47,6 +47,9 @@ const authRequired = ref(false)
 const messageList = ref(null)
 let messageScrollFrame = 0
 let inboxRefreshInProgress = false
+let inboxRefreshPending = false
+let messagesRequestVersion = 0
+let unmounted = false
 
 const pendingStart = computed(() => {
   const campaign = route.query.campaign
@@ -198,18 +201,18 @@ onMounted(() => {
   window.visualViewport?.addEventListener('scroll', updateViewport)
   void loadInbox()
   window.addEventListener('wave:realtime', handleRealtimeUpdate)
-  window.addEventListener('focus', refreshInboxWhenVisible)
-  document.addEventListener('visibilitychange', refreshInboxWhenVisible)
+  window.addEventListener('wave:inbox-refresh', refreshInboxWhenVisible)
 })
 
 onBeforeUnmount(() => {
+  unmounted = true
+  messagesRequestVersion += 1
   document.documentElement.classList.remove('wave-chat-open')
   window.removeEventListener('resize', updateViewport)
   window.visualViewport?.removeEventListener('resize', updateViewport)
   window.visualViewport?.removeEventListener('scroll', updateViewport)
   window.removeEventListener('wave:realtime', handleRealtimeUpdate)
-  window.removeEventListener('focus', refreshInboxWhenVisible)
-  document.removeEventListener('visibilitychange', refreshInboxWhenVisible)
+  window.removeEventListener('wave:inbox-refresh', refreshInboxWhenVisible)
   if (messageScrollFrame) {
     window.cancelAnimationFrame(messageScrollFrame)
   }
@@ -223,6 +226,7 @@ function updateViewport() {
 }
 
 function handleRealtimeUpdate(event) {
+  if (document.visibilityState !== 'visible') return
   const update = event.detail
   const conversationId = Number(update?.conversationId)
   const message = update?.message
@@ -263,7 +267,7 @@ function handleRealtimeUpdate(event) {
 }
 
 function refreshInboxWhenVisible() {
-  if (document.visibilityState === 'visible' && currentUser.value) {
+  if (document.visibilityState === 'visible' && currentUser.value && !loading.value) {
     void refreshInbox()
   }
 }
@@ -273,6 +277,7 @@ async function loadInbox() {
   error.value = ''
   authRequired.value = false
   try {
+    if (!currentUser.value) await loadCurrentUser()
     const [conversationResponse, inquiryResponse] = await Promise.all([
       apiGet('/me/conversations'),
       apiGet('/me/inquiries'),
@@ -350,6 +355,8 @@ async function loadPendingDetails() {
 }
 
 async function selectConversation(thread, syncRoute = true) {
+  messagesRequestVersion += 1
+  if (selectedThreadKey.value !== thread.threadKey) conversationMessages.value = []
   selectedConversationId.value = thread.threadType === 'campaign' ? thread.id : null
   selectedInquiryId.value = thread.threadType === 'inquiry' ? thread.id : null
   pendingDetails.value = null
@@ -367,6 +374,7 @@ async function selectConversation(thread, syncRoute = true) {
 }
 
 function backToInbox() {
+  messagesRequestVersion += 1
   detailsOpen.value = false
   selectedConversationId.value = null
   selectedInquiryId.value = null
@@ -379,10 +387,19 @@ function backToInbox() {
 }
 
 async function loadMessages(thread, forceScroll = false) {
+  const requestVersion = ++messagesRequestVersion
+  const userId = currentUser.value?.id
+  const isCurrentRequest = () => (
+    !unmounted
+    && requestVersion === messagesRequestVersion
+    && currentUser.value?.id === userId
+    && (thread.threadType === 'inquiry' ? selectedInquiryId.value : selectedConversationId.value) === thread.id
+  )
   try {
     const previousLatestMessageId = conversationMessages.value.at(-1)?.id
     if (thread.threadType === 'inquiry') {
       const response = await apiGet(`/me/inquiries/${thread.id}/messages`)
+      if (!isCurrentRequest()) return
       conversationMessages.value = response.data
       error.value = ''
       if (forceScroll || response.data.at(-1)?.id !== previousLatestMessageId) {
@@ -395,6 +412,7 @@ async function loadMessages(thread, forceScroll = false) {
       (conversation) => conversation.id === thread.id,
     )?.unreadCount || 0
     const response = await apiGet(`/me/conversations/${thread.id}/messages`)
+    if (!isCurrentRequest()) return
     conversationMessages.value = response.data
     upsertConversation(response.conversation)
     if (previousUnreadCount > 0 && response.conversation.unreadCount === 0) {
@@ -405,7 +423,7 @@ async function loadMessages(thread, forceScroll = false) {
       await scrollToLatestMessage()
     }
   } catch (cause) {
-    handleLoadError(cause)
+    if (isCurrentRequest()) handleLoadError(cause)
   }
 }
 
@@ -424,15 +442,19 @@ async function scrollToLatestMessage() {
 }
 
 async function refreshInbox() {
+  if (unmounted || document.visibilityState !== 'visible') return
   if (inboxRefreshInProgress) {
+    inboxRefreshPending = true
     return
   }
   inboxRefreshInProgress = true
+  const userId = currentUser.value?.id
   try {
     const [conversationResponse, inquiryResponse] = await Promise.all([
       apiGet('/me/conversations'),
       apiGet('/me/inquiries'),
     ])
+    if (unmounted || currentUser.value?.id !== userId) return
     conversations.value = conversationResponse.data
     inquiries.value = inquiryResponse.data.filter((inquiry) => inquiry.canChat)
     error.value = ''
@@ -448,6 +470,10 @@ async function refreshInbox() {
     }
   } finally {
     inboxRefreshInProgress = false
+    if (inboxRefreshPending) {
+      inboxRefreshPending = false
+      void refreshInbox()
+    }
   }
 }
 
