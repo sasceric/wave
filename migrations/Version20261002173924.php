@@ -5,12 +5,12 @@ declare(strict_types=1);
 namespace DoctrineMigrations;
 
 use Doctrine\DBAL\Schema\Schema;
-use Doctrine\Migrations\AbstractMigration;
+use App\Migration\LegacySqlMigration;
 
 /**
  * Auto-generated Migration: Please modify to your needs!
  */
-final class Version20261002173924 extends AbstractMigration
+final class Version20261002173924 extends LegacySqlMigration
 {
     public function getDescription(): string
     {
@@ -19,6 +19,14 @@ final class Version20261002173924 extends AbstractMigration
 
     public function up(Schema $schema): void
     {
+        if ($this->isPostgreSQL()) {
+            $this->addSql('CREATE UNIQUE INDEX uniq_campaign_slug ON campaign (slug)');
+            $this->addSql('CREATE UNIQUE INDEX uniq_company_slug ON company (slug)');
+            $this->addSql('CREATE UNIQUE INDEX uniq_creator_slug ON creator (slug)');
+
+            return;
+        }
+
         // this up() migration is auto-generated, please modify it to your needs
         $this->addSql('CREATE TEMPORARY TABLE __temp__campaign AS SELECT id, slug, title, summary, description, category, channels, deliverables, budget_min, budget_max, location, creator_count, closes_at, published_at, status, featured, company_id FROM campaign');
         $this->addSql('DROP TABLE campaign');

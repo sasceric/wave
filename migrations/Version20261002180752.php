@@ -5,12 +5,12 @@ declare(strict_types=1);
 namespace DoctrineMigrations;
 
 use Doctrine\DBAL\Schema\Schema;
-use Doctrine\Migrations\AbstractMigration;
+use App\Migration\LegacySqlMigration;
 
 /**
  * Auto-generated Migration: Please modify to your needs!
  */
-final class Version20261002180752 extends AbstractMigration
+final class Version20261002180752 extends LegacySqlMigration
 {
     public function getDescription(): string
     {
@@ -19,6 +19,25 @@ final class Version20261002180752 extends AbstractMigration
 
     public function up(Schema $schema): void
     {
+        if ($this->isPostgreSQL()) {
+            $this->addSql('CREATE TABLE campaign_application (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, message CLOB NOT NULL, status VARCHAR(20) NOT NULL, created_at DATETIME NOT NULL, campaign_id INTEGER NOT NULL, creator_id INTEGER NOT NULL, CONSTRAINT FK_7C91E13BF639F774 FOREIGN KEY (campaign_id) REFERENCES campaign (id) ON DELETE CASCADE NOT DEFERRABLE INITIALLY IMMEDIATE, CONSTRAINT FK_7C91E13B61220EA6 FOREIGN KEY (creator_id) REFERENCES creator (id) ON DELETE CASCADE NOT DEFERRABLE INITIALLY IMMEDIATE)');
+            $this->addSql('CREATE UNIQUE INDEX uniq_application_campaign_creator ON campaign_application (campaign_id, creator_id)');
+            $this->addSql('CREATE INDEX IDX_7C91E13BF639F774 ON campaign_application (campaign_id)');
+            $this->addSql('CREATE INDEX IDX_7C91E13B61220EA6 ON campaign_application (creator_id)');
+            $this->addSql('CREATE TABLE campaign_offer (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, amount INTEGER NOT NULL, message CLOB NOT NULL, status VARCHAR(20) NOT NULL, created_at DATETIME NOT NULL, responded_at DATETIME DEFAULT NULL, application_id INTEGER NOT NULL, CONSTRAINT FK_67D3E3513E030ACD FOREIGN KEY (application_id) REFERENCES campaign_application (id) ON DELETE CASCADE NOT DEFERRABLE INITIALLY IMMEDIATE)');
+            $this->addSql('CREATE UNIQUE INDEX UNIQ_67D3E3513E030ACD ON campaign_offer (application_id)');
+            $this->addSql('CREATE TABLE wave_user (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, email VARCHAR(180) NOT NULL, password VARCHAR(255) NOT NULL, role VARCHAR(30) NOT NULL)');
+            $this->addSql('CREATE UNIQUE INDEX uniq_wave_user_email ON wave_user (email)');
+            $this->addSql('ALTER TABLE company ADD owner_id INTEGER DEFAULT NULL');
+            $this->addSql('ALTER TABLE company ADD CONSTRAINT FK_4FBF094F7E3C61F9 FOREIGN KEY (owner_id) REFERENCES wave_user (id) ON DELETE SET NULL');
+            $this->addSql('CREATE UNIQUE INDEX UNIQ_4FBF094F7E3C61F9 ON company (owner_id)');
+            $this->addSql('ALTER TABLE creator ADD owner_id INTEGER DEFAULT NULL');
+            $this->addSql('ALTER TABLE creator ADD CONSTRAINT FK_BC06EA637E3C61F9 FOREIGN KEY (owner_id) REFERENCES wave_user (id) ON DELETE SET NULL');
+            $this->addSql('CREATE UNIQUE INDEX UNIQ_BC06EA637E3C61F9 ON creator (owner_id)');
+
+            return;
+        }
+
         // this up() migration is auto-generated, please modify it to your needs
         $this->addSql('CREATE TABLE campaign_application (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, message CLOB NOT NULL, status VARCHAR(20) NOT NULL, created_at DATETIME NOT NULL, campaign_id INTEGER NOT NULL, creator_id INTEGER NOT NULL, CONSTRAINT FK_7C91E13BF639F774 FOREIGN KEY (campaign_id) REFERENCES campaign (id) ON DELETE CASCADE NOT DEFERRABLE INITIALLY IMMEDIATE, CONSTRAINT FK_7C91E13B61220EA6 FOREIGN KEY (creator_id) REFERENCES creator (id) ON DELETE CASCADE NOT DEFERRABLE INITIALLY IMMEDIATE)');
         $this->addSql('CREATE UNIQUE INDEX uniq_application_campaign_creator ON campaign_application (campaign_id, creator_id)');

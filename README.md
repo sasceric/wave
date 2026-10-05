@@ -35,7 +35,7 @@ From the project root, use the PHP 8.4 and Node 22 executables without changing 
 
 ```sh
 cd ~/Projects/wave
-export PATH="/opt/homebrew/opt/php@8.4/bin:$HOME/.nvm/versions/node/v22.20.0/bin:$PATH"
+export PATH="/opt/homebrew/opt/php@8.4/bin:$PATH"
 composer install
 npm --prefix frontend install
 php bin/console doctrine:migrations:migrate --no-interaction
@@ -49,7 +49,7 @@ The checked-in `.env.local` overrides `.env` and currently keeps this checkout o
 DATABASE_URL="postgresql://root:<url-encoded-password>@127.0.0.1:5432/wave?serverVersion=18&charset=utf8"
 ```
 
-The local `wave` database is owned by `root`, its schema matches the current Doctrine mappings, its migration table is baselined at the latest version, and existing SQLite rows were copied into it. The SQLite database and its pre-migration backup are retained. The historical migrations contain SQLite-specific SQL, so do not run them against a new empty PostgreSQL database; for PostgreSQL installations, create the schema from Doctrine mappings and baseline the existing migration versions once before applying future migrations.
+The local `wave` database is owned by `root`, its schema matches the current Doctrine mappings, its migration table is baselined at the latest version, and existing SQLite rows were copied into it. The SQLite database and its pre-migration backup are retained. Historical migrations were originally generated with SQLite-specific SQL; the migration compatibility layer now adapts them for PostgreSQL, including identity columns and PostgreSQL-specific table changes. Fresh PostgreSQL installations can run the regular migration chain; do not manually create the schema or baseline migration versions.
 
 Start Symfony's local PHP server:
 
@@ -61,7 +61,7 @@ Open <http://127.0.0.1:8000>. For frontend hot reload, leave Symfony running and
 
 ```sh
 cd ~/Projects/wave
-export PATH="/opt/homebrew/opt/php@8.4/bin:$HOME/.nvm/versions/node/v22.20.0/bin:$PATH"
+export PATH="/opt/homebrew/opt/php@8.4/bin:$PATH"
 npm --prefix frontend run dev -- --host 127.0.0.1
 ```
 

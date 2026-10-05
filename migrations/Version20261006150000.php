@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace DoctrineMigrations;
 
 use Doctrine\DBAL\Schema\Schema;
-use Doctrine\Migrations\AbstractMigration;
+use App\Migration\LegacySqlMigration;
 
-final class Version20261006150000 extends AbstractMigration
+final class Version20261006150000 extends LegacySqlMigration
 {
     public function getDescription(): string
     {

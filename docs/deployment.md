@@ -50,5 +50,14 @@ Doctrine migrations with `php8.4` and clears the production cache with
 `php8.4`. Each deployment runs serially and stops at the first failed command.
 The Vue build preserves Symfony's `public/index.php`.
 
+The historical migrations were generated with SQLite-specific SQL. The
+compatibility layer adapts those statements and table changes for PostgreSQL,
+so a new PostgreSQL installation should run the normal migration chain; do not
+create the schema manually or baseline unapplied migrations. If a PostgreSQL
+migration previously failed on `AUTOINCREMENT`, deploy the compatibility
+update, check `php8.4 bin/console doctrine:migrations:status`, then rerun
+`php8.4 bin/console doctrine:migrations:migrate --no-interaction`. Back up
+production data before applying migrations.
+
 After configuring the secrets and server, run the workflow manually once to
 verify the deployment environment before relying on pushes to `main`.
