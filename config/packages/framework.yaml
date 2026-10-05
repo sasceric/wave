@@ -4,9 +4,11 @@ framework:
 
     # Note that the session will be started ONLY if you read or write from it.
     session:
+        cookie_lifetime: 7776000
         cookie_httponly: true
         cookie_samesite: lax
         cookie_secure: auto
+        gc_maxlifetime: 7776000
 
     rate_limiter:
         wave_login_ip:

@@ -43,6 +43,14 @@ pointing to this repository and a `main` branch.
   daily application and deprecation log files Monolog retains in `var/log/`.
 - Write access for the PHP process to `var/cache/`, `var/log/`, and
   `var/media/`.
+- Symfony issues an HTTP-only session cookie with a 90-day lifetime and retains
+  server-side sessions for the same period. Make sure PHP-FPM uses a writable,
+  persistent session store and that any host-level session cleanup does not
+  delete sessions sooner. Users with an existing session cookie should sign in
+  once after deploying this change so the browser receives the persistent
+  cookie. Users can still be signed out after the retention period, by logout,
+  or if the account/session is revoked; do not treat this as permanent
+  authentication.
 
 Set `WAVE_NOTIFICATIONS_ENABLED=true` explicitly for production delivery. Configure matching Mercure issuer/JWT values and the existing production Web Push VAPID pair. The [server notification checklist](server-notifications.md) contains exact values, environment-refresh commands and verification steps; [Mercure server setup](mercure-server-setup.md) contains the full Hub/proxy configuration.
 

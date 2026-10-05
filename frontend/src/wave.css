@@ -1166,7 +1166,7 @@ h1 em, h2 em { color: #c67f67; font-weight: 400; }
   border-radius: 10px;
   color: #52665b;
   background: #fffefa;
-  font-size: 13px;
+  font-size: 14px;
   line-height: 1.2;
   cursor: pointer;
   transition: color .16s ease, border-color .16s ease, background-color .16s ease, box-shadow .16s ease;
@@ -3471,6 +3471,7 @@ h1 em, h2 em { color: #c67f67; font-weight: 400; }
     margin-right: auto;
     margin-left: auto;
   }
+  .account-page--dashboard.page-width { padding-top: 20px; }
   .account-layout { display: block; }
   .account-content { grid-column: auto; }
   .account-sidebar__backdrop {
@@ -3980,7 +3981,7 @@ h1 em, h2 em { color: #c67f67; font-weight: 400; }
     gap: 5px;
     padding: 7px 5px;
     border-radius: 9px;
-    font-size: 11px;
+    font-size: 14px;
   }
   .contact-role-option svg { width: 16px; height: 16px; }
   .contact-form .form-field input,
@@ -3989,7 +3990,7 @@ h1 em, h2 em { color: #c67f67; font-weight: 400; }
     min-height: 52px;
     padding: 12px 14px;
     border-radius: 9px;
-    font-size: 13px;
+    font-size: 14px;
   }
   .contact-form .form-field textarea { min-height: 118px; }
   .contact-form__submit .button {
@@ -5170,5 +5171,11 @@ h1 em, h2 em { color: #c67f67; font-weight: 400; }
   select,
   textarea {
     font-size: 16px !important;
+  }
+
+  #app .contact-form .form-field input,
+  #app .contact-form .form-field select,
+  #app .contact-form .form-field textarea {
+    font-size: 14px !important;
   }
 }

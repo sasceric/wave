@@ -132,7 +132,21 @@ const legacyRoutes = legacyPaths.map(([path, name]) => ({
 
 const router = createRouter({
   history: createWebHistory(),
-  scrollBehavior: () => ({ top: 0 }),
+  scrollBehavior(to, from, savedPosition) {
+    if (savedPosition) {
+      return savedPosition
+    }
+
+    if (
+      to.path === from.path
+      && to.meta.accountSection === 'profile'
+      && from.meta.accountSection === 'profile'
+    ) {
+      return false
+    }
+
+    return { top: 0 }
+  },
   routes: [
     ...localizedRoutes,
     ...legacyRoutes,

@@ -21,8 +21,10 @@ use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Symfony\Bundle\FrameworkBundle\Test\MailerAssertionsTrait;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Tester\CommandTester;
+use Symfony\Component\HttpFoundation\Cookie;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\Mime\Email;
+use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
 final class MarketplaceWorkflowTest extends WebTestCase
 {
@@ -56,6 +58,38 @@ final class MarketplaceWorkflowTest extends WebTestCase
         }
 
         parent::tearDown();
+    }
+
+    public function testAuthenticationSessionCookiePersistsForNinetyDays(): void
+    {
+        $sessionOptions = static::getContainer()->getParameter('session.storage.options');
+        self::assertSame(7776000, $sessionOptions['cookie_lifetime']);
+        self::assertSame(7776000, $sessionOptions['gc_maxlifetime']);
+
+        $entityManager = static::getContainer()->get(EntityManagerInterface::class);
+        $passwordHasher = static::getContainer()->get(UserPasswordHasherInterface::class);
+        $user = new User('session-persistence@example.test', 'ROLE_CREATOR');
+        $user->setPassword($passwordHasher->hashPassword($user, 'a-long-passphrase-for-wave'));
+        $entityManager->persist($user);
+        $entityManager->flush();
+
+        $csrf = $this->csrfToken();
+        $sessionCookies = array_values(array_filter(
+            $this->client->getResponse()->headers->getCookies(),
+            static fn (Cookie $cookie): bool => $cookie->getName() === 'MOCKSESSID',
+        ));
+        self::assertCount(1, $sessionCookies);
+        self::assertGreaterThanOrEqual(time() + (89 * 24 * 60 * 60), $sessionCookies[0]->getExpiresTime());
+        self::assertTrue($sessionCookies[0]->isHttpOnly());
+
+        $this->jsonRequest('POST', '/api/auth/login', [
+            'email' => 'session-persistence@example.test',
+            'password' => 'a-long-passphrase-for-wave',
+        ], $csrf);
+        self::assertResponseIsSuccessful();
+        $this->client->request('GET', '/api/auth/me?locale=bs');
+        self::assertResponseIsSuccessful();
+        self::assertSame('session-persistence@example.test', $this->payload()['data']['email']);
     }
 
     public function testRegistrationCreatesSessionAndProfileCanBeUpdated(): void
