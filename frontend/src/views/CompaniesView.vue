@@ -1,30 +1,20 @@
 <script setup>
-import { onMounted, ref, watch } from 'vue'
+import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import CompanyCard from '../components/companies/CompanyCard.vue'
+import DirectoryPagination from '../components/shared/DirectoryPagination.vue'
 import StatusMessage from '../components/shared/StatusMessage.vue'
-import { apiGet } from '../lib/api'
+import { useDirectoryData } from '../composables/useDirectoryData'
 
-const companies = ref([])
-const error = ref('')
-const loading = ref(true)
 const { locale, t } = useI18n()
-
-async function loadCompanies() {
-  loading.value = true
-  error.value = ''
-  try {
-    const response = await apiGet('/companies')
-    companies.value = response.data
-  } catch (cause) {
-    error.value = cause.message
-  } finally {
-    loading.value = false
-  }
-}
-
-watch(locale, loadCompanies)
-onMounted(loadCompanies)
+const page = ref(1)
+const pageSize = ref(30)
+const { items: companies, total, loading, error } = useDirectoryData(
+  '/companies',
+  locale,
+  page,
+  pageSize,
+)
 </script>
 
 <template>
@@ -42,5 +32,12 @@ onMounted(loadCompanies)
     <div v-else class="company-directory__grid">
       <CompanyCard v-for="company in companies" :key="company.id" :company="company" />
     </div>
+    <DirectoryPagination
+      :page="page"
+      :page-size="pageSize"
+      :total="total"
+      @update:page="page = $event"
+      @update:page-size="pageSize = $event"
+    />
   </section>
 </template>

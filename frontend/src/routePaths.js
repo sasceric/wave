@@ -29,6 +29,7 @@ export function routeNameFromCanonicalPath(path) {
     '/account/bookmarks': 'account-bookmarks',
     '/account/invitations': 'account-invitations',
     '/account/campaigns': 'account-campaigns',
+    '/account/campaigns/new': 'account-campaign-create',
     '/messages': 'messages',
     '/verify-email': 'verify-email',
     '/reset-password': 'reset-password',

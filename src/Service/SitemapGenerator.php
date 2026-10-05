@@ -25,6 +25,9 @@ final class SitemapGenerator
             ['creators', []],
             ['companies', []],
             ['campaigns', []],
+            ['imprint', []],
+            ['privacy-policy', []],
+            ['cookie-policy', []],
         ];
 
         $creators = $this->entityManager->getRepository(Creator::class)->createQueryBuilder('creator')
@@ -108,6 +111,7 @@ final class SitemapGenerator
         foreach ($this->routeMap->locales() as $locale) {
             foreach ([
                 'account',
+                'messages',
                 'verify-email',
                 'reset-password',
                 'moderation',
@@ -122,6 +126,7 @@ final class SitemapGenerator
         }
         foreach ([
             '/account',
+            '/messages',
             '/verify-email',
             '/reset-password',
             '/moderation',

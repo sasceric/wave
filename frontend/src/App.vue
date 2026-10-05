@@ -7,16 +7,22 @@ import LanguageSwitcher from './components/shared/LanguageSwitcher.vue'
 import HeaderCreatorSearch from './components/shared/HeaderCreatorSearch.vue'
 import LocalizedLink from './components/shared/LocalizedLink.vue'
 import WaveWordmark from './components/shared/WaveWordmark.vue'
+import CookieConsentBanner from './components/shared/CookieConsentBanner.vue'
 import { currentUser, loadCurrentUser, setCurrentUser } from './composables/useCurrentUser'
+import { mobileAccountSidebarOpen } from './composables/useMobileAccountSidebar'
 import { setLocale } from './i18n'
 import { apiGet, apiRequest, formatDate } from './lib/api'
 import { updateSeo } from './lib/seo'
+import { trackPageView } from './lib/privacyMetrics'
 import { localizedPath } from './routePaths'
 
 const route = useRoute()
 const router = useRouter()
 const { locale, t } = useI18n()
+const currentYear = new Date().getFullYear()
 const mobileMenuOpen = ref(false)
+const cookieConsentBanner = ref(null)
+const mobileChromeHidden = ref(false)
 const mobileMenu = ref(null)
 const authMenuOpen = ref(false)
 const authMenu = ref(null)
@@ -28,6 +34,7 @@ const notificationsMenu = ref(null)
 const notifications = ref([])
 const notificationsError = ref('')
 const markingAllRead = ref(false)
+const unreadMessageCount = ref(0)
 const pushConfig = ref({ enabled: false, publicKey: '' })
 const pushSupported = ref(false)
 const pushSubscribed = ref(false)
@@ -41,27 +48,66 @@ const canShowInstallButton = computed(() => (
   installAvailable.value
   || (isIosDevice() && !window.matchMedia('(display-mode: standalone)').matches)
 ))
+const isMobileAccountNavigationPage = computed(() => Boolean(
+  currentUser.value
+  && (route.meta.accountSection
+    || route.meta.adminSection
+    || (route.meta.routeName === 'moderation'
+      && (currentUser.value.isModerator || currentUser.value.isAdmin))),
+))
+const mobileNavigationOpen = computed(() => (
+  isMobileAccountNavigationPage.value ? mobileAccountSidebarOpen.value : mobileMenuOpen.value
+))
+const hideSiteFooter = computed(() => Boolean(
+  route.meta.accountSection
+  || route.meta.adminSection
+  || (route.meta.routeName === 'moderation'
+    && (currentUser.value?.isModerator || currentUser.value?.isAdmin)),
+))
 let realtimeSource = null
 let realtimeRetryTimer = null
 let installPrompt = null
+let previousScrollY = 0
+let scrollDirection = 0
+let scrollDirectionDistance = 0
+let scrollFrame = null
 watch(locale, setLocale)
 watch(() => route.fullPath, () => {
   mobileMenuOpen.value = false
+  mobileAccountSidebarOpen.value = false
   authMenuOpen.value = false
   notificationsMenuOpen.value = false
-  if (route.meta.routeName === 'messages' && currentUser.value) void loadNotifications()
+  resetMobileChrome()
+  if (route.meta.routeName === 'messages' && currentUser.value) {
+    void loadNotifications()
+    void loadUnreadMessages()
+  }
+})
+watch(() => route.path, (path) => {
+  if (
+    !route.meta.accountSection
+    && !route.meta.adminSection
+    && route.name !== 'legacy-not-found'
+    && !['messages', 'verify-email', 'reset-password', 'moderation', 'not-found'].includes(route.meta.routeName)
+  ) {
+    trackPageView(path)
+  }
 })
 watch(currentUser, (user) => {
+  mobileMenuOpen.value = false
   if (!user) {
+    mobileAccountSidebarOpen.value = false
     notificationsMenuOpen.value = false
     notifications.value = []
     notificationsError.value = ''
+    unreadMessageCount.value = 0
     pushSubscribed.value = false
     pushStatus.value = ''
     closeRealtime()
     return
   }
   void loadNotifications()
+  void loadUnreadMessages()
   void connectRealtime()
   void loadPushSettings()
 })
@@ -78,6 +124,9 @@ watch(
       'company-profile': ['companiesTitle', 'companiesDescription'],
       campaigns: ['campaignsTitle', 'campaignsDescription'],
       'campaign-detail': ['campaignsTitle', 'campaignsDescription'],
+      imprint: ['imprintTitle', 'imprintDescription'],
+      'privacy-policy': ['privacyTitle', 'privacyDescription'],
+      'cookie-policy': ['cookiesTitle', 'cookiesDescription'],
     }
     const [titleKey, descriptionKey] = pageKeys[routeName] || ['notFoundTitle', 'notFoundDescription']
     const noindex = ['account', 'messages', 'verify-email', 'reset-password', 'moderation', 'admin'].includes(routeName)
@@ -94,17 +143,25 @@ watch(
   { immediate: true },
 )
 onMounted(() => {
+  previousScrollY = window.scrollY
+  window.addEventListener('scroll', handleMobileScroll, { passive: true })
+  window.addEventListener('resize', resetMobileChrome)
   loadCurrentUser().catch((cause) => console.error('Unable to load the current Wave account.', cause))
   window.addEventListener('beforeinstallprompt', captureInstallPrompt)
   window.addEventListener('appinstalled', onAppInstalled)
+  window.addEventListener('wave:conversations-updated', handleConversationsUpdated)
   document.addEventListener('pointerdown', closeMobileMenuOnOutsideClick)
   document.addEventListener('pointerdown', closeAuthMenuOnOutsideClick)
   document.addEventListener('pointerdown', closeNotificationsOnOutsideClick)
 })
 onBeforeUnmount(() => {
   closeRealtime()
+  window.removeEventListener('scroll', handleMobileScroll)
+  window.removeEventListener('resize', resetMobileChrome)
+  if (scrollFrame !== null) window.cancelAnimationFrame(scrollFrame)
   window.removeEventListener('beforeinstallprompt', captureInstallPrompt)
   window.removeEventListener('appinstalled', onAppInstalled)
+  window.removeEventListener('wave:conversations-updated', handleConversationsUpdated)
   document.removeEventListener('pointerdown', closeMobileMenuOnOutsideClick)
   document.removeEventListener('pointerdown', closeAuthMenuOnOutsideClick)
   document.removeEventListener('pointerdown', closeNotificationsOnOutsideClick)
@@ -123,6 +180,86 @@ async function loadNotifications() {
     }
     notificationsError.value = cause.message
   }
+}
+
+async function loadUnreadMessages() {
+  const userId = currentUser.value?.id
+  if (!userId) {
+    unreadMessageCount.value = 0
+    return
+  }
+
+  try {
+    const response = await apiGet('/me/conversations')
+    if (currentUser.value?.id !== userId) return
+    unreadMessageCount.value = response.data.reduce(
+      (total, conversation) => total + conversation.unreadCount,
+      0,
+    )
+  } catch (cause) {
+    if (cause.status === 401) {
+      setCurrentUser(null)
+      return
+    }
+    console.error('Unable to load the unread Wave message count.', cause)
+  }
+}
+
+function handleConversationsUpdated() {
+  void loadUnreadMessages()
+}
+
+function handleMobileScroll() {
+  if (scrollFrame !== null) return
+  scrollFrame = window.requestAnimationFrame(() => {
+    scrollFrame = null
+    const currentScrollY = Math.max(0, window.scrollY)
+    const delta = currentScrollY - previousScrollY
+    previousScrollY = currentScrollY
+    const isAtBottom = currentScrollY + window.innerHeight >= document.documentElement.scrollHeight - 24
+
+    if (!window.matchMedia('(max-width: 760px)').matches || currentScrollY <= 20 || isAtBottom) {
+      mobileChromeHidden.value = false
+      scrollDirection = 0
+      scrollDirectionDistance = 0
+      return
+    }
+
+    const direction = Math.sign(delta)
+    if (direction === 0) return
+    if (direction !== scrollDirection) {
+      scrollDirection = direction
+      scrollDirectionDistance = 0
+    }
+    scrollDirectionDistance += Math.abs(delta)
+    if (scrollDirectionDistance < 12) return
+
+    mobileChromeHidden.value = direction > 0
+    scrollDirectionDistance = 0
+  })
+}
+
+function resetMobileChrome() {
+  if (scrollFrame !== null) {
+    window.cancelAnimationFrame(scrollFrame)
+    scrollFrame = null
+  }
+  previousScrollY = window.scrollY
+  scrollDirection = 0
+  scrollDirectionDistance = 0
+  mobileChromeHidden.value = false
+  if (!window.matchMedia('(max-width: 760px)').matches) {
+    mobileAccountSidebarOpen.value = false
+  }
+}
+
+function toggleMobileNavigation() {
+  if (isMobileAccountNavigationPage.value) {
+    mobileAccountSidebarOpen.value = !mobileAccountSidebarOpen.value
+    return
+  }
+
+  mobileMenuOpen.value = !mobileMenuOpen.value
 }
 
 async function connectRealtime() {
@@ -144,6 +281,7 @@ async function connectRealtime() {
       try {
         const update = JSON.parse(event.data)
         void loadNotifications()
+        void loadUnreadMessages()
         window.dispatchEvent(new CustomEvent('wave:realtime', { detail: update }))
       } catch (cause) {
         console.error('Unable to read a Wave realtime update.', cause)
@@ -328,9 +466,11 @@ async function openNotification(notification) {
       ? 'account-offers'
       : ['campaign_invitation', 'invitation_declined'].includes(notification.type)
         ? 'account-invitations'
-        : ['application_received', 'application_rejected'].includes(notification.type)
-          ? 'account-applications'
-          : 'account'
+        : ['creator_inquiry_received', 'creator_inquiry_accepted'].includes(notification.type)
+          ? 'account-inquiries'
+          : ['application_received', 'application_rejected'].includes(notification.type)
+            ? 'account-applications'
+            : 'account'
     await router.push({ path: localizedPath(destination, locale.value) })
   } catch (cause) {
     notificationsError.value = cause.message
@@ -388,9 +528,8 @@ async function signOut() {
   <div
     class="site-shell"
     :class="{
-      'site-shell--account': currentUser
-        && ['creator', 'company'].includes(currentUser.accountType)
-        && route.meta.accountSection,
+      'site-shell--mobile-chrome-hidden': mobileChromeHidden,
+      'site-shell--account': hideSiteFooter,
       'site-shell--registration': route.meta.routeName === 'account'
         && route.query.mode === 'register'
         && !currentUser,
@@ -499,6 +638,9 @@ async function signOut() {
             :title="t('app.messages')"
           >
             <MessageCircle :size="19" stroke-width="1.8" aria-hidden="true" />
+            <span v-if="unreadMessageCount" class="header-messages__badge" aria-hidden="true">
+              {{ unreadMessageCount > 99 ? '99+' : unreadMessageCount }}
+            </span>
           </LocalizedLink>
           <div v-if="canShowInstallButton" class="header-install">
             <button
@@ -583,12 +725,12 @@ async function signOut() {
           <button
             class="mobile-menu__toggle"
             type="button"
-            :aria-label="mobileMenuOpen ? t('app.closeMenu') : t('app.openMenu')"
-            :aria-expanded="mobileMenuOpen"
-            aria-controls="mobile-navigation-menu"
-            @click="mobileMenuOpen = !mobileMenuOpen"
+            :aria-label="mobileNavigationOpen ? t('app.closeMenu') : t('app.openMenu')"
+            :aria-expanded="mobileNavigationOpen"
+            :aria-controls="isMobileAccountNavigationPage ? 'account-sidebar-menu' : 'mobile-navigation-menu'"
+            @click="toggleMobileNavigation"
           >
-            <X v-if="mobileMenuOpen" :size="22" stroke-width="1.8" aria-hidden="true" />
+            <X v-if="mobileNavigationOpen" :size="22" stroke-width="1.8" aria-hidden="true" />
             <Menu v-else :size="22" stroke-width="1.8" aria-hidden="true" />
           </button>
           <div
@@ -633,17 +775,78 @@ async function signOut() {
       <RouterView />
     </main>
 
-    <footer class="site-footer" :class="{ 'site-footer--admin': route.meta.adminSection }">
-      <div class="site-footer__top">
-        <WaveWordmark :light="true" :aria-label="t('app.homeAria')" />
-        <p>{{ t('app.footerTagline') }}</p>
-        <a href="mailto:info@wave.ba">{{ t('app.sayHello') }} <span aria-hidden="true">↗</span></a>
+    <footer
+      v-if="!hideSiteFooter"
+      class="site-footer"
+      :class="{ 'site-footer--admin': route.meta.adminSection }"
+    >
+      <div class="site-footer__inner">
+        <div class="site-footer__brand">
+          <LocalizedLink to="/" class="site-footer__wordmark">
+            <WaveWordmark :light="true" :aria-label="t('app.homeAria')" />
+          </LocalizedLink>
+          <p>{{ t('app.footerTagline') }}</p>
+          <div
+            class="site-footer__social"
+            role="group"
+            :aria-label="t('app.socialLinks')"
+            aria-describedby="wave-social-note"
+          >
+            <span class="site-footer__social-icon site-footer__social-icon--instagram" aria-hidden="true">
+              <svg viewBox="0 0 24 24">
+                <rect x="3.5" y="3.5" width="17" height="17" rx="5" />
+                <circle cx="12" cy="12" r="4" />
+                <circle class="site-footer__social-dot" cx="17.7" cy="6.7" r="1" />
+              </svg>
+            </span>
+            <span class="site-footer__social-icon site-footer__social-icon--tiktok" aria-hidden="true">
+              ♪
+            </span>
+            <span class="site-footer__social-icon site-footer__social-icon--facebook" aria-hidden="true">
+              f
+            </span>
+            <span class="site-footer__social-icon site-footer__social-icon--x" aria-hidden="true">
+              X
+            </span>
+          </div>
+          <span id="wave-social-note" class="site-footer__social-note">
+            {{ t('app.socialComingSoon') }}
+          </span>
+        </div>
+
+        <nav class="site-footer__column" :aria-label="t('app.footerExplore')">
+          <h2>{{ t('app.footerExplore') }}</h2>
+          <LocalizedLink to="/creators">{{ t('app.creatorsNav') }}</LocalizedLink>
+          <LocalizedLink to="/companies">{{ t('app.companies') }}</LocalizedLink>
+          <LocalizedLink to="/campaigns">{{ t('app.campaigns') }}</LocalizedLink>
+        </nav>
+
+        <nav class="site-footer__column" :aria-label="t('app.footerLegal')">
+          <h2>{{ t('app.footerLegal') }}</h2>
+          <LocalizedLink :to="{ name: 'imprint' }">{{ t('legal.imprint.title') }}</LocalizedLink>
+          <LocalizedLink :to="{ name: 'privacy-policy' }">{{ t('legal.privacy.title') }}</LocalizedLink>
+          <LocalizedLink :to="{ name: 'cookie-policy' }">{{ t('legal.cookies.title') }}</LocalizedLink>
+          <button type="button" @click="cookieConsentBanner?.open()">
+            {{ t('legal.openCookieSettings') }}
+          </button>
+        </nav>
+
+        <div class="site-footer__column site-footer__contact">
+          <h2>{{ t('app.footerContact') }}</h2>
+          <p>{{ t('app.footerContactText') }}</p>
+          <a class="site-footer__email" href="mailto:info@wave.ba">
+            info@wave.ba <span aria-hidden="true">↗</span>
+          </a>
+          <span class="site-footer__operator">{{ t('app.footerOperator') }}</span>
+        </div>
       </div>
       <div class="site-footer__bottom">
-        <span>{{ t('app.copyright') }}</span>
+        <span>{{ t('app.copyright', { year: currentYear }) }}</span>
         <span>{{ t('app.footerMvp') }}</span>
       </div>
     </footer>
+
+    <CookieConsentBanner ref="cookieConsentBanner" />
 
     <nav class="mobile-bottom-nav" :aria-label="t('app.mainNavigation')">
       <LocalizedLink
@@ -660,9 +863,24 @@ async function signOut() {
         :class="{ 'is-active': ['creators', 'creator-profile'].includes(route.meta.routeName) }"
       >
         <UsersRound :size="21" stroke-width="1.8" aria-hidden="true" />
-        <span>{{ t('app.creators') }}</span>
+        <span>{{ t('app.creatorsNav') }}</span>
       </LocalizedLink>
       <LocalizedLink
+        v-if="currentUser"
+        :to="{ name: 'messages' }"
+        class="mobile-bottom-nav__link"
+        :class="{ 'is-active': route.meta.routeName === 'messages' }"
+      >
+        <span class="mobile-bottom-nav__icon">
+          <MessageCircle :size="21" stroke-width="1.8" aria-hidden="true" />
+          <span v-if="unreadMessageCount" class="mobile-bottom-nav__badge" aria-hidden="true">
+            {{ unreadMessageCount > 99 ? '99+' : unreadMessageCount }}
+          </span>
+        </span>
+        <span>{{ t('app.messages') }}</span>
+      </LocalizedLink>
+      <LocalizedLink
+        v-else
         to="/companies"
         class="mobile-bottom-nav__link"
         :class="{ 'is-active': ['companies', 'company-profile'].includes(route.meta.routeName) }"

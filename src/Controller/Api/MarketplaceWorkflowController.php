@@ -2,6 +2,7 @@
 
 namespace App\Controller\Api;
 
+use App\Account\AccountEmailSender;
 use App\Api\ApiAccess;
 use App\Api\ApplicationResource;
 use App\Api\JsonPayload;
@@ -35,6 +36,7 @@ final class MarketplaceWorkflowController
         Security $security,
         CsrfTokenManagerInterface $tokenManager,
         NotificationDelivery $notificationDelivery,
+        AccountEmailSender $accountEmailSender,
     ): JsonResponse {
         $locale = LocaleContext::fromRequest($request);
         if ($locale === null) {
@@ -95,6 +97,14 @@ final class MarketplaceWorkflowController
         if ($notification instanceof Notification) {
             $notificationDelivery->deliver($notification);
         }
+        if ($companyOwner instanceof User) {
+            $accountEmailSender->sendApplicationReceived(
+                $companyOwner,
+                $creator->getDisplayName(),
+                $campaign->getTitle(),
+                $application->getMessage(),
+            );
+        }
 
         return new JsonResponse(['data' => ApplicationResource::fromEntity($application, $locale)], 201);
     }
@@ -115,8 +125,26 @@ final class MarketplaceWorkflowController
             return new JsonResponse(['error' => ApiMessages::get('profile_unavailable', $locale)], 409);
         }
         $applications = $entityManager->getRepository(Application::class)->findBy(['creator' => $creator], ['createdAt' => 'DESC']);
+        $conversationIdsByCampaign = [];
+        foreach ($entityManager->getRepository(CampaignConversation::class)->findBy(['creator' => $creator]) as $conversation) {
+            $campaignId = $conversation->getCampaign()->getId();
+            $conversationId = $conversation->getId();
+            if ($campaignId !== null && $conversationId !== null) {
+                $conversationIdsByCampaign[$campaignId] = $conversationId;
+            }
+        }
 
-        return new JsonResponse(['data' => array_map(static fn (Application $application): array => ApplicationResource::fromEntity($application, $locale), $applications)]);
+        return new JsonResponse([
+            'data' => array_map(
+                static function (Application $application) use ($locale, $conversationIdsByCampaign): array {
+                    $campaignId = $application->getCampaign()->getId();
+                    $conversationId = $campaignId === null ? null : ($conversationIdsByCampaign[$campaignId] ?? null);
+
+                    return ApplicationResource::fromEntity($application, $locale, $conversationId);
+                },
+                $applications,
+            ),
+        ]);
     }
 
     #[Route('/api/company/campaigns/{slug}/applications', name: 'api_company_campaign_applications', methods: ['GET'])]
@@ -353,6 +381,7 @@ final class MarketplaceWorkflowController
         Security $security,
         CsrfTokenManagerInterface $tokenManager,
         NotificationDelivery $notificationDelivery,
+        AccountEmailSender $accountEmailSender,
     ): JsonResponse {
         $locale = LocaleContext::fromRequest($request);
         if ($locale === null) {
@@ -408,6 +437,17 @@ final class MarketplaceWorkflowController
         $entityManager->flush();
         if ($notification instanceof Notification) {
             $notificationDelivery->deliver($notification);
+        }
+        if ($decision === 'accept') {
+            $creatorOwner = $offer->getApplication()->getCreator()->getOwner();
+            if ($creatorOwner instanceof User) {
+                $campaign = $offer->getApplication()->getCampaign();
+                $accountEmailSender->sendCreatorHired(
+                    $creatorOwner,
+                    $campaign->getCompany()->getName(),
+                    $campaign->getTitle(),
+                );
+            }
         }
 
         return new JsonResponse(['data' => OfferResource::fromEntity($offer, $locale)]);

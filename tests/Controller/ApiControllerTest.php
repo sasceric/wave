@@ -225,6 +225,60 @@ final class ApiControllerTest extends WebTestCase
         );
     }
 
+    public function testDirectoriesReturnOffsetPagesAndTotalCounts(): void
+    {
+        $entityManager = static::getContainer()->get(EntityManagerInterface::class);
+        $company = new Company('page-test-company-01', 'Page Test Company 01', 'Lifestyle');
+        $entityManager->persist($company);
+
+        for ($index = 1; $index <= 31; $index++) {
+            $suffix = str_pad((string) $index, 2, '0', STR_PAD_LEFT);
+            $entityManager->persist(new Creator(
+                'page-test-creator-'.$suffix,
+                'Page Test Creator '.$suffix,
+                'Lifestyle',
+                'Sarajevo',
+                'A creator profile for directory pagination.',
+                [['platform' => 'Instagram', 'handle' => '@creator'.$suffix, 'followers' => 1000]],
+                ['Lifestyle'],
+            ));
+            if ($index > 1) {
+                $entityManager->persist(new Company(
+                    'page-test-company-'.$suffix,
+                    'Page Test Company '.$suffix,
+                    'Lifestyle',
+                ));
+            }
+            $entityManager->persist(new Campaign(
+                'page-test-campaign-'.$suffix,
+                'Page Test Campaign '.$suffix,
+                'A campaign brief for pagination.',
+                'An open campaign created to test directory pagination.',
+                'Lifestyle',
+                ['Instagram'],
+                ['1 post'],
+                100,
+                200,
+                'Sarajevo',
+                1,
+                new DateTimeImmutable('+14 days'),
+                new DateTimeImmutable('today'),
+                $company,
+            ));
+        }
+        $entityManager->flush();
+
+        foreach (['creators', 'companies', 'campaigns'] as $directory) {
+            $this->client->request('GET', '/api/'.$directory.'?limit=30&offset=30');
+
+            self::assertResponseIsSuccessful();
+            $payload = json_decode($this->client->getResponse()->getContent(), true, flags: JSON_THROW_ON_ERROR);
+            self::assertSame(1, $payload['meta']['count'], $directory);
+            self::assertSame(31, $payload['meta']['total'], $directory);
+            self::assertSame(30, $payload['meta']['offset'], $directory);
+        }
+    }
+
     public function testInvalidLimitAndUnknownProfilesReturnErrors(): void
     {
         $this->client->request('GET', '/api/creators?limit=500');

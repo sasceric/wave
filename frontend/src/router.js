@@ -13,6 +13,7 @@ import NotFoundView from './views/NotFoundView.vue'
 import AdminDashboardView from './views/AdminDashboardView.vue'
 import ResetPasswordView from './views/ResetPasswordView.vue'
 import VerifyEmailView from './views/VerifyEmailView.vue'
+import LegalView from './views/LegalView.vue'
 import { localeNames, setLocale } from './i18n'
 import { defaultLocale, localizedPath, localizedRouteName, routeSegments } from './routePaths'
 
@@ -25,6 +26,8 @@ const routeViews = {
   'account-bookmarks': AccountView,
   'account-invitations': AccountView,
   'account-campaigns': AccountView,
+  'account-campaign-create': AccountView,
+  'account-campaign-detail': AccountView,
   messages: MessagesView,
   'verify-email': VerifyEmailView,
   'reset-password': ResetPasswordView,
@@ -42,6 +45,9 @@ const routeViews = {
   'admin-companies': AdminDashboardView,
   'admin-campaigns': AdminDashboardView,
   'admin-email-templates': AdminDashboardView,
+  imprint: LegalView,
+  'privacy-policy': LegalView,
+  'cookie-policy': LegalView,
 }
 
 const adminSections = {
@@ -62,6 +68,13 @@ const accountSections = {
   'account-bookmarks': 'bookmarks',
   'account-invitations': 'invitations',
   'account-campaigns': 'campaigns',
+  'account-campaign-create': 'campaigns',
+  'account-campaign-detail': 'campaigns',
+}
+
+const accountCampaignPages = {
+  'account-campaign-create': 'create',
+  'account-campaign-detail': 'detail',
 }
 
 function preferredLocale() {
@@ -79,6 +92,7 @@ const localizedRoutes = Object.entries(routeSegments).flatMap(([locale, routes])
       routeName: name,
       adminSection: adminSections[name],
       accountSection: accountSections[name],
+      accountCampaignPage: accountCampaignPages[name],
     },
   }))
 ))
@@ -91,6 +105,8 @@ const legacyPaths = [
   ['/account/bookmarks', 'account-bookmarks'],
   ['/account/invitations', 'account-invitations'],
   ['/account/campaigns', 'account-campaigns'],
+  ['/account/campaigns/new', 'account-campaign-create'],
+  ['/account/campaigns/:slug', 'account-campaign-detail'],
   ['/messages', 'messages'],
   ['/verify-email', 'verify-email'],
   ['/reset-password', 'reset-password'],
@@ -108,6 +124,10 @@ const legacyPaths = [
   ['/admin/companies', 'admin-companies'],
   ['/admin/campaigns', 'admin-campaigns'],
   ['/admin/email-templates', 'admin-email-templates'],
+  ['/imprint', 'imprint'],
+  ['/impressum', 'imprint'],
+  ['/privacy-policy', 'privacy-policy'],
+  ['/cookies', 'cookie-policy'],
 ]
 
 const legacyRoutes = legacyPaths.map(([path, name]) => ({

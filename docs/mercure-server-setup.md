@@ -172,6 +172,12 @@ MERCURE_ISSUER=https://wave.ba
 
 Deploy the Symfony app, then clear its production cache and restart PHP-FPM or the application workers if required by the deployment. Apply database migrations as part of the normal Wave deployment process.
 
+The app also needs a scheduled command to send the one-hour unread-chat email reminder. After configuring Symfony's production mail transport, run it every five minutes as the deployment user; `flock` prevents overlapping executions:
+
+```cron
+*/5 * * * * cd /var/www/wave && /usr/bin/flock -n /var/lock/wave-unread-message-reminders.lock /usr/bin/php bin/console app:send-unread-message-reminders --env=prod --no-interaction >> var/log/unread-message-reminders.log 2>&1
+```
+
 ## 7. Verify end-to-end delivery
 
 1. Confirm `https://mercure.wave.ba/.well-known/mercure` is reachable and the browser receives a valid TLS certificate.

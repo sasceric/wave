@@ -108,9 +108,23 @@ export function formatFollowers(value) {
 }
 
 export function formatDate(value) {
-  return new Intl.DateTimeFormat(intlLocale(), { month: 'short', day: 'numeric', year: 'numeric' }).format(new Date(value))
+  const dateOnly = typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value)
+  const date = new Date(dateOnly ? `${value}T12:00:00` : value)
+  const parts = new Intl.DateTimeFormat('en-GB', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+  }).formatToParts(date)
+  const part = (type) => parts.find((item) => item.type === type)?.value
+
+  return `${part('day')}.${part('month')}.${part('year')}`
 }
 
 export function formatMoney(value, currency = 'BAM') {
+  if (currency === 'BAM') {
+    const formattedValue = new Intl.NumberFormat(intlLocale(), { maximumFractionDigits: 0 }).format(value)
+    return `${formattedValue} KM`
+  }
+
   return new Intl.NumberFormat(intlLocale(), { style: 'currency', currency, maximumFractionDigits: 0 }).format(value)
 }

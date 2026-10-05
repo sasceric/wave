@@ -24,8 +24,12 @@ final class CampaignController
         }
 
         $limit = $request->query->getInt('limit', 24);
-        if ($limit < 1 || $limit > 50) {
+        $offset = $request->query->getInt('offset', 0);
+        if ($limit < 1 || $limit > 90) {
             return new JsonResponse(['error' => ApiMessages::get('invalid_limit', $locale)], 400);
+        }
+        if ($offset < 0 || $offset > 100_000) {
+            return new JsonResponse(['error' => ApiMessages::get('invalid_offset', $locale)], 400);
         }
 
         $query = trim($request->query->getString('q'));
@@ -44,7 +48,7 @@ final class CampaignController
 
         if ($query !== '') {
             $builder
-                ->andWhere('LOWER(campaign.title) LIKE :query OR LOWER(campaign.summary) LIKE :query OR LOWER(campaign.description) LIKE :query OR LOWER(campaign.category) LIKE :query OR LOWER(company.name) LIKE :query')
+                ->andWhere('LOWER(campaign.title) LIKE :query OR LOWER(campaign.summary) LIKE :query OR LOWER(campaign.description) LIKE :query OR LOWER(campaign.category) LIKE :query OR LOWER(campaign.location) LIKE :query OR LOWER(company.name) LIKE :query OR LOWER(company.industry) LIKE :query')
                 ->setParameter('query', '%'.mb_strtolower($query).'%');
         }
         if ($category !== '') {
@@ -71,9 +75,15 @@ final class CampaignController
                 ->setParameter('featured', $featured);
         }
 
+        $total = (int) (clone $builder)
+            ->select('COUNT(DISTINCT campaign.id)')
+            ->getQuery()
+            ->getSingleScalarResult();
         $campaigns = $builder
             ->orderBy('campaign.featured', 'DESC')
             ->addOrderBy('campaign.closesAt', 'ASC')
+            ->addOrderBy('campaign.id', 'ASC')
+            ->setFirstResult($offset)
             ->setMaxResults($limit)
             ->getQuery()
             ->getResult();
@@ -88,7 +98,7 @@ final class CampaignController
                 ),
                 $campaigns,
             ),
-            'meta' => ['count' => count($campaigns), 'limit' => $limit],
+            'meta' => ['count' => count($campaigns), 'total' => $total, 'limit' => $limit, 'offset' => $offset],
         ]);
     }
 

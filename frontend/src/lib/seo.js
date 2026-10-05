@@ -66,6 +66,10 @@ export function updateSeo({
   setMeta('property', 'og:site_name', 'Wave')
   setMeta('property', 'og:title', title)
   setMeta('property', 'og:description', description)
+  const verificationToken = import.meta.env.VITE_GOOGLE_SITE_VERIFICATION?.trim()
+  if (verificationToken) {
+    setMeta('name', 'google-site-verification', verificationToken)
+  }
   setMeta('property', 'og:locale', ({
     bs: 'bs_BA',
     hr: 'hr_HR',
@@ -89,7 +93,7 @@ export function updateSeo({
   const ogImage = image ? new URL(image, origin).href : new URL('/pwa-512.png', origin).href
   setMeta('property', 'og:image', ogImage)
   setMeta('name', 'twitter:image', ogImage)
-  const alternates = document.head.querySelectorAll('link[data-wave-hreflang]')
+  const alternates = document.head.querySelectorAll('link[rel="alternate"][hreflang]')
   alternates.forEach((element) => element.remove())
   if (!noindex && routeSegments[locale]?.[routeName] !== undefined) {
     for (const alternateLocale of Object.keys(routeSegments)) {
@@ -135,9 +139,32 @@ export function updateSeo({
     '@context': 'https://schema.org',
     '@type': 'Organization',
     '@id': `${websiteUrl}#organization`,
-    name: 'Wave',
+    name: 'UD SteelCode',
+    legalName: 'UD SteelCode',
+    alternateName: 'SteelCode',
     url: websiteUrl,
     logo: new URL('/pwa-512.png', origin).href,
+    email: 'info@wave.ba',
+    taxID: '4320531730002',
+    vatID: '320531730002',
+    address: {
+      '@type': 'PostalAddress',
+      streetAddress: 'Školska 10',
+      addressLocality: 'Zenica',
+      postalCode: '72000',
+      addressCountry: 'BA',
+    },
+    brand: {
+      '@type': 'Brand',
+      name: 'Wave',
+      url: websiteUrl,
+    },
+    contactPoint: {
+      '@type': 'ContactPoint',
+      contactType: 'customer support',
+      email: 'info@wave.ba',
+      availableLanguage: ['bs', 'hr', 'sr-Latn', 'cnr-Latn-ME', 'sl', 'en'],
+    },
   }
   const page = {
     '@context': 'https://schema.org',

@@ -433,11 +433,17 @@ function changeMode(nextMode) {
               minlength="2"
               maxlength="120"
               autocomplete="organization"
+              :placeholder="t('auth.companyNamePlaceholder')"
             />
           </label>
           <label class="form-field form-field--wide">
             <span>{{ t('auth.industry') }}</span>
-            <input v-model.trim="form.industry" required maxlength="100" />
+            <input
+              v-model.trim="form.industry"
+              required
+              maxlength="100"
+              :placeholder="t('auth.industryPlaceholder')"
+            />
           </label>
         </template>
         <SearchableSelect

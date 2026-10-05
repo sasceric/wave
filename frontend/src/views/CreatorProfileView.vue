@@ -1,9 +1,9 @@
 <script setup>
-import { computed, nextTick, onMounted, ref, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import RouterLink from '../components/shared/LocalizedLink.vue'
 import { useI18n } from 'vue-i18n'
-import { ChevronLeft, ChevronRight, X } from '@lucide/vue'
+import { Camera, Check, ChevronLeft, ChevronRight, CirclePlay, MessageCircle, Music2, Plus, X } from '@lucide/vue'
 import FaqSection from '../components/shared/FaqSection.vue'
 import StatusMessage from '../components/shared/StatusMessage.vue'
 import WaveLogo from '../components/shared/WaveLogo.vue'
@@ -19,22 +19,64 @@ const creator = ref(null)
 const viewer = ref(null)
 const error = ref('')
 const notice = ref('')
-const copied = ref(false)
 const selectedPlatform = ref('All')
 const currentPortfolioIndex = ref(0)
 const lightboxIndex = ref(0)
 const mobileGallery = ref(null)
+const requestDialog = ref(null)
 const portfolioLightbox = ref(null)
 const portfolioGalleryDialog = ref(null)
-const requestForm = ref({ packageId: '', proposedAmount: '', currency: 'BAM', message: '' })
+const requestForm = ref({
+  packageIds: [],
+  other: false,
+  proposedAmount: '',
+  currency: 'BAM',
+  message: '',
+})
 const requestBusy = ref(false)
+const requestError = ref('')
+const requestSubmitted = ref(false)
+const viewerLoaded = ref(false)
+const packageDescriptionOverflow = ref(new Set())
 const inviteCampaigns = ref([])
 const inviteForm = ref({ campaignSlug: '', message: '' })
 const inviteBusy = ref(false)
 const inviteError = ref('')
-const expandedPackageIds = ref(new Set())
+const expandedDescriptionIds = ref(new Set())
+const packageDescriptionElements = new Map()
+let packageDescriptionObserver = null
 const { t, locale } = useI18n()
-const { categories, faqs, error: catalogError } = useMarketplaceCatalog(locale, { includeFaqs: true })
+const { categories, error: catalogError } = useMarketplaceCatalog(locale)
+const packagePlatformIcons = {
+  Instagram: Camera,
+  TikTok: Music2,
+  YouTube: CirclePlay,
+}
+
+const canOpenRequest = computed(() => (
+  viewerLoaded.value && (!viewer.value || viewer.value.accountType === 'company')
+))
+
+function campaignInviteStatus(campaign) {
+  const creatorId = creator.value?.id
+  if (creatorId == null) {
+    return ''
+  }
+  if (campaign.invitedCreatorIds?.includes(creatorId)) {
+    return t('campaignChat.alreadyInvited')
+  }
+  if (campaign.appliedCreatorIds?.includes(creatorId)) {
+    return t('campaignChat.alreadyApplied')
+  }
+
+  return ''
+}
+
+const canSubmitCampaignInvitation = computed(() => {
+  const campaign = inviteCampaigns.value.find(({ slug }) => slug === inviteForm.value.campaignSlug)
+
+  return Boolean(campaign && !campaignInviteStatus(campaign))
+})
 
 const availablePlatforms = computed(() => {
   if (!creator.value) {
@@ -74,6 +116,22 @@ const visiblePackages = computed(() => {
   return creator.value.packages.filter((item) => item.platform === selectedPlatform.value)
 })
 
+const profilePackages = computed(() => [
+  ...visiblePackages.value.map((packageItem) => ({
+    ...packageItem,
+    profileKey: `package-${packageItem.id}`,
+    expansionId: `package-${packageItem.id}`,
+    isNegotiationOption: false,
+  })),
+  {
+    profileKey: 'negotiation-package-option',
+    expansionId: 'negotiation-package-option',
+    isNegotiationOption: true,
+    title: t('creatorProfile.negotiatePackage'),
+    description: t('creatorProfile.negotiatePackageDescription'),
+  },
+])
+
 const categoryLabel = computed(() => (
   creator.value?.categoryLabel
   || categories.value.find(({ value }) => value === creator.value?.category)?.label
@@ -81,22 +139,21 @@ const categoryLabel = computed(() => (
   || ''
 ))
 
-const profileFaqs = computed(() => [
-  ...(creator.value?.faqs || []).map((faq, index) => ({
+const profileFaqs = computed(() => (
+  (creator.value?.faqs || []).map((faq, index) => ({
     id: `profile-${index}`,
     question: faq.question,
     answer: faq.answer,
-  })),
-  ...faqs.value.map((faq) => ({
-    id: `shared-${faq.id}`,
-    question: faq.question,
-    answer: faq.answer,
-  })),
-])
+  }))
+))
 
 async function loadCreator() {
+  if (requestDialog.value?.open) {
+    requestDialog.value.close()
+  }
   creator.value = null
   viewer.value = null
+  viewerLoaded.value = false
   inviteCampaigns.value = []
   inviteError.value = ''
   selectedPlatform.value = 'All'
@@ -106,24 +163,37 @@ async function loadCreator() {
   closePortfolioGallery()
   error.value = ''
   notice.value = ''
+  requestError.value = ''
+  requestSubmitted.value = false
   try {
     const response = await apiGet(`/creators/${encodeURIComponent(route.params.slug)}`)
     creator.value = response.data
-    requestForm.value = { packageId: '', proposedAmount: '', currency: 'BAM', message: '' }
+    requestForm.value = {
+      packageIds: [],
+      other: false,
+      proposedAmount: '',
+      currency: 'BAM',
+      message: '',
+    }
 
     try {
       const currentUser = await apiGet('/auth/me')
       viewer.value = currentUser.data
+      viewerLoaded.value = true
       if (viewer.value.accountType === 'company' && viewer.value.emailVerified && viewer.value.approved) {
         const campaignResponse = await apiGet('/me/campaigns')
         inviteCampaigns.value = campaignResponse.data.filter((campaign) => (
           campaign.status === 'open'
         ))
-        inviteForm.value.campaignSlug = inviteCampaigns.value[0]?.slug || ''
+        inviteForm.value.campaignSlug = (
+          inviteCampaigns.value.find((campaign) => !campaignInviteStatus(campaign))
+          || inviteCampaigns.value[0]
+        )?.slug || ''
       }
     } catch (cause) {
       if (cause.status === 401) {
         viewer.value = null
+        viewerLoaded.value = true
       } else {
         throw cause
       }
@@ -134,11 +204,16 @@ async function loadCreator() {
 }
 
 async function sendCampaignInvitation() {
+  if (!canSubmitCampaignInvitation.value) {
+    return
+  }
+
+  const campaignSlug = inviteForm.value.campaignSlug
   inviteBusy.value = true
   inviteError.value = ''
   try {
     await apiRequest(
-      `/company/campaigns/${encodeURIComponent(inviteForm.value.campaignSlug)}/invitations`,
+      `/company/campaigns/${encodeURIComponent(campaignSlug)}/invitations`,
       {
         method: 'POST',
         body: {
@@ -147,6 +222,18 @@ async function sendCampaignInvitation() {
         },
       },
     )
+    inviteCampaigns.value = inviteCampaigns.value.map((campaign) => (
+      campaign.slug === campaignSlug
+        ? {
+            ...campaign,
+            invitedCreatorIds: [...(campaign.invitedCreatorIds || []), creator.value.id],
+          }
+        : campaign
+    ))
+    inviteForm.value.campaignSlug = (
+      inviteCampaigns.value.find((campaign) => !campaignInviteStatus(campaign))
+      || inviteCampaigns.value.find(({ slug }) => slug === campaignSlug)
+    )?.slug || ''
     notice.value = t('campaignChat.invitationSent')
     inviteForm.value.message = ''
   } catch (cause) {
@@ -156,19 +243,60 @@ async function sendCampaignInvitation() {
   }
 }
 
-function openRequestForm(packageItem = null) {
+function openRequestForm(packageItem = null, preselectOther = false) {
+  if (!canOpenRequest.value) {
+    return
+  }
   requestForm.value = {
-    packageId: packageItem?.id || '',
+    packageIds: packageItem ? [packageItem.id] : [],
+    other: preselectOther,
     proposedAmount: '',
     currency: packageItem?.currency || 'BAM',
     message: '',
   }
-  document.querySelector('.profile-request')?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+  requestError.value = ''
+  requestSubmitted.value = false
+  nextTick(() => {
+    requestDialog.value?.showModal()
+    nextTick(measurePackageDescriptions)
+  })
 }
 
 function syncRequestCurrency() {
-  const packageItem = creator.value?.packages.find(({ id }) => id === requestForm.value.packageId)
+  const packageItem = requestForm.value.packageIds.length === 1
+    ? creator.value?.packages.find(({ id }) => id === requestForm.value.packageIds[0])
+    : null
   requestForm.value.currency = packageItem?.currency || 'BAM'
+}
+
+function toggleRequestPackage(packageId) {
+  requestError.value = ''
+  const selectedPackageIds = requestForm.value.packageIds
+  requestForm.value.packageIds = selectedPackageIds.includes(packageId)
+    ? selectedPackageIds.filter((selectedId) => selectedId !== packageId)
+    : [...selectedPackageIds, packageId]
+  syncRequestCurrency()
+}
+
+function toggleRequestOption(option) {
+  requestError.value = ''
+  requestForm.value[option] = !requestForm.value[option]
+}
+
+function toggleRequestPackageDescription(packageId) {
+  togglePackageDescription(`request:${packageId}`)
+}
+
+function closeRequestForm() {
+  if (!requestBusy.value && requestDialog.value?.open) {
+    requestDialog.value.close()
+  }
+}
+
+function handleRequestDialogCancel(event) {
+  if (requestBusy.value) {
+    event.preventDefault()
+  }
 }
 
 function selectPlatform(platform) {
@@ -240,55 +368,105 @@ function moveLightbox(direction) {
 }
 
 function togglePackageDescription(packageId) {
-  if (expandedPackageIds.value.has(packageId)) {
-    expandedPackageIds.value.delete(packageId)
+  if (expandedDescriptionIds.value.has(packageId)) {
+    expandedDescriptionIds.value.delete(packageId)
+    nextTick(() => {
+      const element = packageDescriptionElements.get(packageId)
+      if (element) {
+        updatePackageDescriptionOverflow(packageId, element)
+      }
+    })
     return
   }
 
-  expandedPackageIds.value.add(packageId)
+  expandedDescriptionIds.value.add(packageId)
+}
+
+function updatePackageDescriptionOverflow(packageId, element) {
+  if (expandedDescriptionIds.value.has(packageId)) {
+    return
+  }
+
+  const hasOverflow = element.scrollWidth > element.clientWidth + 1
+  const nextOverflow = new Set(packageDescriptionOverflow.value)
+  if (hasOverflow) {
+    nextOverflow.add(packageId)
+  } else {
+    nextOverflow.delete(packageId)
+  }
+  packageDescriptionOverflow.value = nextOverflow
+}
+
+function setPackageDescriptionElement(packageId, element) {
+  const previousElement = packageDescriptionElements.get(packageId)
+  if (previousElement === element) {
+    return
+  }
+  if (previousElement) {
+    packageDescriptionObserver?.unobserve(previousElement)
+  }
+  if (!element) {
+    packageDescriptionElements.delete(packageId)
+    const nextOverflow = new Set(packageDescriptionOverflow.value)
+    nextOverflow.delete(packageId)
+    packageDescriptionOverflow.value = nextOverflow
+    return
+  }
+
+  packageDescriptionElements.set(packageId, element)
+  packageDescriptionObserver?.observe(element)
+  nextTick(() => {
+    if (packageDescriptionElements.get(packageId) === element) {
+      updatePackageDescriptionOverflow(packageId, element)
+    }
+  })
+}
+
+function measurePackageDescriptions() {
+  for (const [packageId, element] of packageDescriptionElements) {
+    updatePackageDescriptionOverflow(packageId, element)
+  }
 }
 
 async function submitRequest() {
+  if (
+    requestForm.value.packageIds.length === 0
+    && !requestForm.value.other
+  ) {
+    requestError.value = t('creatorProfile.chooseAtLeastOnePackage')
+    return
+  }
+
+  const message = requestForm.value.message.trim()
+  if (Array.from(message).length < 10) {
+    requestError.value = t('creatorProfile.requestMessageTooShort')
+    return
+  }
+
   requestBusy.value = true
-  error.value = ''
-  notice.value = ''
+  requestError.value = ''
   try {
     await apiRequest(`/creators/${encodeURIComponent(creator.value.slug)}/inquiries`, {
       method: 'POST',
       body: {
-        packageId: requestForm.value.packageId || null,
+        packageIds: requestForm.value.packageIds,
+        servicePackage: false,
+        other: requestForm.value.other,
         proposedAmount: requestForm.value.proposedAmount === '' ? null : Number(requestForm.value.proposedAmount),
         currency: requestForm.value.currency,
-        message: requestForm.value.message.trim(),
+        message,
       },
     })
-    notice.value = t('creatorProfile.requestSent')
-    requestForm.value.message = ''
+    requestSubmitted.value = true
   } catch (cause) {
-    error.value = cause.message
+    requestError.value = cause.message
   } finally {
     requestBusy.value = false
   }
 }
 
-async function shareProfile() {
-  const url = window.location.href
-  try {
-    if (navigator.share) {
-      await navigator.share({ title: t('creatorProfile.shareTitle', { name: creator.value.displayName }), url })
-    } else {
-      await navigator.clipboard.writeText(url)
-      copied.value = true
-      setTimeout(() => (copied.value = false), 1800)
-    }
-  } catch (cause) {
-    if (cause.name !== 'AbortError') {
-      error.value = t('creatorProfile.shareError')
-    }
-  }
-}
-
 watch([() => route.params.slug, locale], loadCreator)
+watch(profilePackages, () => nextTick(measurePackageDescriptions), { flush: 'post' })
 watch(
   [creator, locale],
   ([value]) => {
@@ -317,7 +495,16 @@ watch(
     })
   },
 )
-onMounted(loadCreator)
+onMounted(() => {
+  if (typeof ResizeObserver !== 'undefined') {
+    packageDescriptionObserver = new ResizeObserver(measurePackageDescriptions)
+    for (const element of packageDescriptionElements.values()) {
+      packageDescriptionObserver.observe(element)
+    }
+  }
+  loadCreator()
+})
+onBeforeUnmount(() => packageDescriptionObserver?.disconnect())
 </script>
 
 <template>
@@ -380,6 +567,141 @@ onMounted(loadCreator)
         </div>
       </div>
     </dialog>
+    <dialog
+      ref="requestDialog"
+      class="profile-request-dialog"
+      aria-labelledby="profile-request-title"
+      @click.self="closeRequestForm"
+      @cancel="handleRequestDialogCancel"
+    >
+      <div class="profile-request-dialog__content">
+        <header class="profile-request-dialog__header">
+          <div>
+            <p class="eyebrow">{{ t('creatorProfile.requestEyebrow') }}</p>
+            <h2 id="profile-request-title">{{ t('creatorProfile.requestTitle') }}</h2>
+            <p>{{ t('creatorProfile.requestDescription') }}</p>
+          </div>
+          <button
+            class="profile-request-dialog__close"
+            type="button"
+            :aria-label="t('creatorProfile.closeRequest')"
+            :disabled="requestBusy"
+            @click="closeRequestForm"
+          >
+            <X :size="21" aria-hidden="true" />
+          </button>
+        </header>
+        <StatusMessage v-if="requestError" variant="error">{{ requestError }}</StatusMessage>
+        <StatusMessage v-if="requestSubmitted">{{ t('creatorProfile.requestSent') }}</StatusMessage>
+        <button
+          v-if="requestSubmitted"
+          class="button button--dark"
+          type="button"
+          @click="closeRequestForm"
+        >
+          {{ t('creatorProfile.closeRequest') }}
+        </button>
+        <div v-else-if="!viewer" class="profile-request__login">
+          <p>{{ t('creatorProfile.companyOnly') }}</p>
+          <RouterLink class="button button--dark" to="/account">
+            {{ t('creatorProfile.signInAsCompany') }} <span aria-hidden="true">↗</span>
+          </RouterLink>
+        </div>
+        <StatusMessage v-else-if="!viewer.approved" variant="error">
+          {{ t('creatorProfile.accountPendingApproval') }}
+        </StatusMessage>
+        <StatusMessage v-else-if="!viewer.emailVerified" variant="error">
+          {{ t('creatorProfile.verifyEmail') }}
+        </StatusMessage>
+        <form v-else class="profile-request-dialog__form" @submit.prevent="submitRequest">
+          <fieldset class="profile-request-dialog__packages">
+            <legend>{{ t('creatorProfile.choosePackages') }}</legend>
+            <p>{{ t('creatorProfile.choosePackagesHint') }}</p>
+            <article
+              v-for="packageItem in creator.packages"
+              :key="packageItem.id"
+              class="profile-request-choice"
+              :class="{ 'is-selected': requestForm.packageIds.includes(packageItem.id) }"
+            >
+              <div class="profile-request-choice__heading">
+                <component :is="packagePlatformIcons[packageItem.platform] || Camera" :size="23" aria-hidden="true" />
+                <h3>{{ packageItem.title }}</h3>
+                <strong>{{ packageItem.price ? formatMoney(packageItem.price, packageItem.currency) : t('creatorProfile.priceOnRequest') }}</strong>
+                <button
+                  class="profile-request-choice__toggle"
+                  type="button"
+                  :aria-pressed="requestForm.packageIds.includes(packageItem.id)"
+                  :aria-label="t(requestForm.packageIds.includes(packageItem.id) ? 'creatorProfile.removeSelection' : 'creatorProfile.addSelection', { package: packageItem.title })"
+                  @click="toggleRequestPackage(packageItem.id)"
+                >
+                  <Check v-if="requestForm.packageIds.includes(packageItem.id)" :size="19" aria-hidden="true" />
+                  <Plus v-else :size="19" aria-hidden="true" />
+                </button>
+              </div>
+              <div class="profile-request-choice__description-row">
+                <p
+                  :ref="(element) => setPackageDescriptionElement(`request:${packageItem.id}`, element)"
+                  class="profile-request-choice__description"
+                  :class="{ 'is-expanded': expandedDescriptionIds.has(`request:${packageItem.id}`) }"
+                >
+                  {{ packageItem.description }}
+                </p>
+                <button
+                  v-if="packageDescriptionOverflow.has(`request:${packageItem.id}`)"
+                  class="profile-request-choice__more"
+                  type="button"
+                  :aria-expanded="expandedDescriptionIds.has(`request:${packageItem.id}`)"
+                  @click="toggleRequestPackageDescription(packageItem.id)"
+                >
+                  {{ t(expandedDescriptionIds.has(`request:${packageItem.id}`) ? 'creatorProfile.showLess' : 'creatorProfile.showMore') }}
+                </button>
+              </div>
+            </article>
+            <article class="profile-request-choice" :class="{ 'is-selected': requestForm.other }">
+              <div class="profile-request-choice__heading profile-request-choice__heading--no-price">
+                <MessageCircle :size="23" aria-hidden="true" />
+                <h3>{{ t('creatorProfile.somethingElse') }}</h3>
+                <button
+                  class="profile-request-choice__toggle"
+                  type="button"
+                  :aria-pressed="requestForm.other"
+                  :aria-label="t(requestForm.other ? 'creatorProfile.removeSelection' : 'creatorProfile.addSelection', { package: t('creatorProfile.somethingElse') })"
+                  @click="toggleRequestOption('other')"
+                >
+                  <Check v-if="requestForm.other" :size="19" aria-hidden="true" />
+                  <Plus v-else :size="19" aria-hidden="true" />
+                </button>
+              </div>
+              <p class="profile-request-choice__description profile-request-choice__description--full">
+                {{ t('creatorProfile.somethingElseDescription') }}
+              </p>
+            </article>
+          </fieldset>
+          <div class="form-grid">
+            <label class="form-field">
+              <span>{{ t('creatorProfile.proposedAmount') }}</span>
+              <input v-model="requestForm.proposedAmount" type="number" min="1" max="10000000" />
+            </label>
+            <label class="form-field">
+              <span>{{ t('account.currency') }}</span>
+              <select v-model="requestForm.currency">
+                <option v-for="currency in CURRENCIES" :key="currency" :value="currency">
+                  {{ currency }}
+                </option>
+              </select>
+            </label>
+          </div>
+          <label class="form-field">
+            <span>{{ t('creatorProfile.requestMessage') }}</span>
+            <textarea v-model.trim="requestForm.message" required minlength="10" maxlength="2000"></textarea>
+          </label>
+          <button class="button button--dark" type="submit" :disabled="requestBusy">
+            {{ requestBusy ? t('campaignChat.sending') : t('creatorProfile.sendRequest') }}
+            <span aria-hidden="true">↗</span>
+          </button>
+        </form>
+      </div>
+    </dialog>
     <section class="profile-layout page-width">
       <div class="profile-main">
         <div class="profile-heading">
@@ -392,86 +714,99 @@ onMounted(loadCreator)
               <p class="eyebrow">{{ categoryLabel }} · {{ creator.location }}</p>
               <h1>{{ creator.displayName }}</h1>
               <p class="profile-tagline">{{ creator.tagline }}</p>
+              <div
+                v-if="creator.socialProfiles.length"
+                class="profile-stat-pills"
+                role="group"
+                :aria-label="t('creatorProfile.mediaKit')"
+              >
+                <span
+                  v-for="profile in creator.socialProfiles"
+                  :key="profile.platform"
+                  :title="t('creatorProfile.updated', { date: formatDate(profile.lastUpdated) })"
+                  :aria-label="`${formatFollowers(profile.followers)} ${profile.platform}. ${t('creatorProfile.updated', { date: formatDate(profile.lastUpdated) })}. ${t('creatorProfile.selfReported')}`"
+                >
+                  <strong>{{ formatFollowers(profile.followers) }}</strong>
+                  {{ profile.platform }}
+                </span>
+              </div>
             </div>
           </div>
-          <button class="button button--outline" type="button" @click="shareProfile">
-            {{ copied ? t('creatorProfile.copied') : `${t('creatorProfile.share')} ↗` }}
-          </button>
         </div>
         <div class="profile-bio" v-html="sanitizeRichText(creator.bio)"></div>
-        <div class="profile-tags profile-tags--categories">
-          <span v-for="category in creator.categoryLabels" :key="category">{{ category }}</span>
-        </div>
         <div class="profile-tags"><span v-for="tag in creator.tags" :key="tag">{{ tag }}</span></div>
         <StatusMessage v-if="catalogError" variant="error">{{ catalogError }}</StatusMessage>
 
-        <div v-if="creator.socialProfiles.length" class="profile-stat-pills">
-          <span v-for="profile in creator.socialProfiles" :key="profile.platform">
-            <strong>{{ formatFollowers(profile.followers) }}</strong>
-            {{ profile.platform }}
-          </span>
-        </div>
-
-        <section class="profile-content-section profile-community">
-          <div class="profile-section-heading">
-            <div><p class="eyebrow">{{ t('creatorProfile.mediaKit') }}</p><h2>{{ t('creatorProfile.community') }}</h2></div>
-            <span class="self-reported-note">{{ t('creatorProfile.selfReported') }}</span>
-          </div>
-          <div class="metric-grid">
-            <article v-for="profile in creator.socialProfiles" :key="profile.platform" class="metric-card">
-              <span class="metric-card__platform">{{ profile.platform }}</span>
-              <strong>{{ formatFollowers(profile.followers) }}</strong>
-              <span class="metric-card__handle">{{ profile.handle }}</span>
-              <span class="metric-card__updated">{{ t('creatorProfile.updated', { date: formatDate(profile.lastUpdated) }) }}</span>
-            </article>
-            <StatusMessage v-if="!creator.socialProfiles.length" variant="empty">
-              {{ t('creatorProfile.emptyChannels') }}
-            </StatusMessage>
-          </div>
-          <p class="profile-disclaimer">{{ t('creatorProfile.disclaimer') }}</p>
-        </section>
-
-        <div class="profile-platform-pills" role="tablist" :aria-label="t('creatorProfile.platforms')">
-          <button
-            v-for="platform in availablePlatforms"
-            :key="platform"
-            class="profile-platform-pills__item"
-            :class="{ 'is-active': selectedPlatform === platform }"
-            type="button"
-            role="tab"
-            :aria-selected="selectedPlatform === platform"
-            @click="selectPlatform(platform)"
-          >
-            {{ platform === 'All' ? t('creatorProfile.allPlatforms') : platform }}
-          </button>
-        </div>
-
-        <section v-if="visiblePackages.length" class="profile-content-section profile-packages">
+        <section class="profile-content-section profile-packages">
           <div class="profile-section-heading">
             <div><p class="eyebrow">{{ t('creatorProfile.collaborateEyebrow') }}</p><h2>{{ t('creatorProfile.packages') }}</h2></div>
-            <span>{{ t('creatorProfile.packagesNote') }}</span>
+          </div>
+          <div class="profile-platform-tabs" role="tablist" :aria-label="t('creatorProfile.platforms')">
+            <button
+              v-for="platform in availablePlatforms"
+              :key="platform"
+              class="profile-platform-tabs__item"
+              :class="{ 'is-active': selectedPlatform === platform }"
+              type="button"
+              role="tab"
+              :aria-selected="selectedPlatform === platform"
+              @click="selectPlatform(platform)"
+            >
+              {{ platform === 'All' ? t('creatorProfile.allPlatforms') : platform }}
+            </button>
           </div>
           <div class="profile-package-grid">
-            <article v-for="packageItem in visiblePackages" :key="packageItem.id" class="profile-package">
+            <article
+              v-for="packageItem in profilePackages"
+              :key="packageItem.profileKey"
+              class="profile-package"
+              :class="{ 'profile-package--negotiation': packageItem.isNegotiationOption }"
+            >
               <div class="profile-package__details">
-                <p class="eyebrow">{{ packageItem.platform }}</p>
-                <h3>{{ packageItem.title }}</h3>
-                <p :class="{ 'is-expanded': expandedPackageIds.has(packageItem.id) }">{{ packageItem.description }}</p>
-                <button
-                  v-if="packageItem.description.length > 90"
-                  class="profile-package__toggle"
-                  type="button"
-                  :aria-expanded="expandedPackageIds.has(packageItem.id)"
-                  @click="togglePackageDescription(packageItem.id)"
+                <div
+                  class="profile-package__heading"
+                  :class="{ 'profile-package__heading--no-action': !canOpenRequest }"
                 >
-                  {{ t(expandedPackageIds.has(packageItem.id) ? 'creatorProfile.showLess' : 'creatorProfile.showMore') }}
-                </button>
-              </div>
-              <div class="profile-package__actions">
-                <strong>{{ packageItem.price ? formatMoney(packageItem.price, packageItem.currency) : t('creatorProfile.priceOnRequest') }}</strong>
-                <button class="button button--dark button--full" type="button" @click="openRequestForm(packageItem)">
-                  {{ t('creatorProfile.requestPackage') }} <span aria-hidden="true">↗</span>
-                </button>
+                  <component
+                    :is="packageItem.isNegotiationOption ? MessageCircle : (packagePlatformIcons[packageItem.platform] || Camera)"
+                    :size="23"
+                    aria-hidden="true"
+                  />
+                  <h3>{{ packageItem.title }}</h3>
+                  <strong>
+                    {{ packageItem.isNegotiationOption
+                      ? t('creatorProfile.priceByAgreement')
+                      : !packageItem.price
+                        ? t('creatorProfile.priceOnRequest')
+                      : formatMoney(packageItem.price, packageItem.currency) }}
+                  </strong>
+                  <button
+                    v-if="canOpenRequest"
+                    class="profile-package__request"
+                    type="button"
+                    :aria-label="`${t('creatorProfile.requestPackage')}: ${packageItem.title}`"
+                    @click="openRequestForm(packageItem.isNegotiationOption ? null : packageItem, packageItem.isNegotiationOption)"
+                  >
+                    <Plus :size="20" aria-hidden="true" />
+                  </button>
+                </div>
+                <div class="profile-package__description-row">
+                  <p
+                    :ref="(element) => setPackageDescriptionElement(`profile:${packageItem.expansionId}`, element)"
+                    :class="{ 'is-expanded': expandedDescriptionIds.has(`profile:${packageItem.expansionId}`) }"
+                  >
+                    {{ packageItem.description }}
+                  </p>
+                  <button
+                    v-if="packageDescriptionOverflow.has(`profile:${packageItem.expansionId}`)"
+                    class="profile-package__toggle"
+                    type="button"
+                    :aria-expanded="expandedDescriptionIds.has(`profile:${packageItem.expansionId}`)"
+                    @click="togglePackageDescription(`profile:${packageItem.expansionId}`)"
+                  >
+                    {{ t(expandedDescriptionIds.has(`profile:${packageItem.expansionId}`) ? 'creatorProfile.showLess' : 'creatorProfile.showMore') }}
+                  </button>
+                </div>
               </div>
             </article>
           </div>
@@ -626,72 +961,22 @@ onMounted(loadCreator)
             </div>
           </div>
         </dialog>
-
-        <FaqSection
-          v-if="profileFaqs.length"
-          class="profile-content-section profile-faqs"
-          :eyebrow="t('creatorProfile.faqEyebrow')"
-          :title="t('creatorProfile.faqTitle')"
-          :items="profileFaqs"
-        />
-
-        <section class="profile-content-section profile-request">
-          <p class="eyebrow">{{ t('creatorProfile.requestEyebrow') }}</p>
-          <h2>{{ t('creatorProfile.requestTitle') }}</h2>
-          <p>{{ t('creatorProfile.requestDescription') }}</p>
-          <StatusMessage v-if="error" variant="error">{{ error }}</StatusMessage>
-          <StatusMessage v-if="notice">{{ notice }}</StatusMessage>
-          <div v-if="viewer?.accountType !== 'company'" class="profile-request__login">
-            <p>{{ t('creatorProfile.companyOnly') }}</p>
-            <RouterLink class="button button--dark" to="/account">{{ t('creatorProfile.signInAsCompany') }} <span aria-hidden="true">↗</span></RouterLink>
-          </div>
-          <StatusMessage v-else-if="!viewer.emailVerified" variant="error">
-            {{ t('creatorProfile.verifyEmail') }}
-          </StatusMessage>
-          <form v-else class="profile-request__form" @submit.prevent="submitRequest">
-            <label class="form-field">
-              <span>{{ t('creatorProfile.choosePackage') }}</span>
-              <select v-model="requestForm.packageId" @change="syncRequestCurrency">
-                <option value="">{{ t('creatorProfile.generalRequest') }}</option>
-                <option v-for="packageItem in creator.packages" :key="packageItem.id" :value="packageItem.id">
-                  {{ packageItem.title }} · {{ packageItem.price ? formatMoney(packageItem.price, packageItem.currency) : t('creatorProfile.priceOnRequest') }}
-                </option>
-              </select>
-            </label>
-            <div class="form-grid">
-              <label class="form-field">
-                <span>{{ t('creatorProfile.proposedAmount') }}</span>
-                <input v-model="requestForm.proposedAmount" type="number" min="1" max="10000000" />
-              </label>
-              <label class="form-field">
-                <span>{{ t('account.currency') }}</span>
-                <select v-model="requestForm.currency">
-                  <option v-for="currency in CURRENCIES" :key="currency" :value="currency">
-                    {{ currency }}
-                  </option>
-                </select>
-              </label>
-            </div>
-            <label class="form-field">
-              <span>{{ t('creatorProfile.requestMessage') }}</span>
-              <textarea v-model.trim="requestForm.message" required minlength="10" maxlength="2000"></textarea>
-            </label>
-            <button class="button button--dark" type="submit" :disabled="requestBusy">
-              {{ t('creatorProfile.sendRequest') }} <span aria-hidden="true">↗</span>
-            </button>
-          </form>
-        </section>
       </div>
       <aside class="profile-aside">
         <p class="eyebrow">{{ t('creatorProfile.goodFit') }}</p>
         <h3>{{ t('creatorProfile.brandsCategory', { category: categoryLabel.toLowerCase() }) }}</h3>
         <p>{{ t('creatorProfile.goodFitDescription') }}</p>
-        <button class="button button--dark button--full" type="button" @click="openRequestForm()">
+        <button
+          v-if="canOpenRequest"
+          class="button button--dark button--full"
+          type="button"
+          @click="openRequestForm()"
+        >
           {{ t('creatorProfile.requestCollaboration') }} <span aria-hidden="true">↗</span>
         </button>
-        <p class="profile-aside__note">{{ t('creatorProfile.chatNote') }}</p>
+        <p v-if="canOpenRequest" class="profile-aside__note">{{ t('creatorProfile.chatNote') }}</p>
         <form
-          v-if="viewer?.accountType === 'company' && viewer.emailVerified && viewer.approved"
+          v-if="viewer?.accountType === 'company' && viewer.emailVerified && viewer.approved && creator.canReceiveCampaignInvitations"
           class="campaign-invite-form"
           @submit.prevent="sendCampaignInvitation"
         >
@@ -703,8 +988,14 @@ onMounted(loadCreator)
             <label class="form-field">
               <span>{{ t('campaignChat.chooseCampaign') }}</span>
               <select v-model="inviteForm.campaignSlug" required>
-                <option v-for="campaign in inviteCampaigns" :key="campaign.id" :value="campaign.slug">
-                  {{ campaign.title }}
+                <option value="" disabled>{{ t('campaignChat.chooseCampaign') }}</option>
+                <option
+                  v-for="campaign in inviteCampaigns"
+                  :key="campaign.id"
+                  :value="campaign.slug"
+                  :disabled="Boolean(campaignInviteStatus(campaign))"
+                >
+                  {{ campaign.title }}{{ campaignInviteStatus(campaign) ? ` — ${campaignInviteStatus(campaign)}` : '' }}
                 </option>
               </select>
             </label>
@@ -712,13 +1003,35 @@ onMounted(loadCreator)
               <span>{{ t('campaignChat.invitationMessage') }}</span>
               <textarea v-model.trim="inviteForm.message" required minlength="1" maxlength="2000"></textarea>
             </label>
-            <button class="button button--outline button--full" type="submit" :disabled="inviteBusy">
+            <button
+              class="button button--outline button--full"
+              type="submit"
+              :disabled="inviteBusy || !canSubmitCampaignInvitation"
+            >
               {{ inviteBusy ? t('campaignChat.sending') : t('campaignChat.inviteButton') }}
             </button>
           </template>
           <StatusMessage v-else variant="empty">{{ t('campaignChat.noInviteCampaigns') }}</StatusMessage>
         </form>
       </aside>
+      <FaqSection
+        v-if="profileFaqs.length"
+        class="profile-content-section profile-faqs"
+        :eyebrow="t('creatorProfile.faqEyebrow')"
+        :title="t('creatorProfile.faqTitle')"
+        :items="profileFaqs"
+      />
+      <section
+        v-if="creator.categoryLabels.length"
+        class="profile-content-section profile-related-categories"
+      >
+        <div class="profile-section-heading">
+          <h2>{{ t('creatorProfile.relatedCategories') }}</h2>
+        </div>
+        <div class="profile-related-categories__items">
+          <span v-for="category in creator.categoryLabels" :key="category">{{ category }}</span>
+        </div>
+      </section>
     </section>
   </template>
 </template>

@@ -385,6 +385,122 @@ final class AccountEmailSender
         $this->send($user, null, $locale, 'approval', 'account');
     }
 
+    public function sendApplicationReceived(
+        User $recipient,
+        string $creatorName,
+        string $campaignTitle,
+        string $applicationMessage,
+    ): void {
+        $this->sendMarketplaceEmail($recipient, 'application_received', 'account-campaigns', [
+            'firstValue' => $creatorName,
+            'secondValue' => $campaignTitle,
+            'details' => $applicationMessage,
+        ]);
+    }
+
+    /**
+     * @param list<array<string, mixed>> $selectedPackages
+     */
+    public function sendCreatorInquiryReceived(
+        User $recipient,
+        string $companyName,
+        string $creatorName,
+        array $selectedPackages,
+        ?int $proposedAmount,
+        string $currency,
+        string $companyMessage,
+    ): void {
+        $locale = $this->normalizedLocale($recipient->getPreferredLocale());
+        $copy = $this->copyFor('creator_inquiry_received', $locale);
+        $packageLines = [];
+        foreach ($selectedPackages as $package) {
+            $type = $package['type'] ?? null;
+            if ($type === 'package') {
+                $title = is_string($package['title'] ?? null) ? $package['title'] : '';
+                $price = is_int($package['listedPrice'] ?? null) ? $package['listedPrice'] : null;
+                $packageCurrency = is_string($package['currency'] ?? null) ? $package['currency'] : $currency;
+                $packageLines[] = '- '.$title.($price === null
+                    ? ' — '.$copy['priceByAgreement']
+                    : ' — '.number_format($price, 0, ',', '.').' '.$packageCurrency);
+            } elseif ($type === 'service') {
+                $packageLines[] = '- '.$copy['servicePackage'];
+            } elseif ($type === 'other') {
+                $packageLines[] = '- '.$copy['otherOption'];
+            }
+        }
+        if ($packageLines === []) {
+            $packageLines[] = '- '.$copy['noPackages'];
+        }
+
+        $details = $copy['selectedPackagesLabel'].":\n".implode("\n", $packageLines);
+        if ($proposedAmount !== null) {
+            $details .= "\n\n".$copy['proposedAmountLabel'].': '.number_format($proposedAmount, 0, ',', '.').' '.$currency;
+        }
+        $details .= "\n\n".$copy['companyMessageLabel'].":\n".$companyMessage;
+
+        $this->sendMarketplaceEmail(
+            $recipient,
+            'creator_inquiry_received',
+            'account-inquiries',
+            [
+                'firstValue' => $companyName,
+                'secondValue' => $creatorName,
+                'details' => $details,
+            ],
+            locale: $locale,
+        );
+    }
+
+    public function sendCreatorInquiryAccepted(
+        User $recipient,
+        int $inquiryId,
+        string $creatorName,
+        string $companyName,
+        string $companyMessage,
+    ): void {
+        $this->sendMarketplaceEmail(
+            $recipient,
+            'creator_inquiry_accepted',
+            'messages',
+            [
+                'firstValue' => $creatorName,
+                'secondValue' => $companyName,
+                'details' => $companyMessage,
+            ],
+            '?inquiry='.$inquiryId,
+        );
+    }
+
+    public function sendCreatorHired(User $creator, string $companyName, string $campaignTitle): void
+    {
+        $this->sendMarketplaceEmail($creator, 'creator_hired', 'account-offers', [
+            'firstValue' => $campaignTitle,
+            'secondValue' => $companyName,
+        ]);
+    }
+
+    public function sendUnreadMessageReminder(
+        User $recipient,
+        string $senderName,
+        string $campaignTitle,
+        int $unreadCount,
+        int $conversationId,
+    ): void {
+        $locale = $this->normalizedLocale($recipient->getPreferredLocale());
+        $this->sendMarketplaceEmail(
+            $recipient,
+            'unread_message_reminder',
+            'messages',
+            [
+                'firstValue' => $campaignTitle,
+                'secondValue' => $senderName,
+                'details' => (string) $unreadCount,
+            ],
+            '?conversation='.$conversationId,
+            $locale,
+        );
+    }
+
     public function defaultSubject(string $template, string $locale): string
     {
         return $this->copyFor($template, $locale)['subject'];
@@ -395,7 +511,7 @@ final class AccountEmailSender
      */
     public function previewVariables(string $template, string $locale): array
     {
-        $locale = isset(self::COPY[$locale]) ? $locale : 'bs';
+        $locale = $this->normalizedLocale($locale);
         $variables = $this->copyFor($template, $locale);
         unset($variables['subject']);
         $variables['locale'] = match ($locale) {
@@ -404,13 +520,45 @@ final class AccountEmailSender
             default => $locale,
         };
         $variables['actionUrl'] = 'https://wave.ba/example-action';
+        if ($template === 'application_received') {
+            $variables += [
+                'firstValue' => 'Amina Creator',
+                'secondValue' => 'Summer campaign',
+                'details' => 'I would love to create a thoughtful story for this campaign.',
+            ];
+        } elseif ($template === 'creator_hired') {
+            $variables += [
+                'firstValue' => 'Summer campaign',
+                'secondValue' => 'Wave Studio',
+            ];
+        } elseif ($template === 'unread_message_reminder') {
+            $variables += [
+                'firstValue' => 'Summer campaign',
+                'secondValue' => 'Amina Creator',
+                'details' => '2',
+            ];
+        } elseif ($template === 'creator_inquiry_received') {
+            $variables += [
+                'firstValue' => 'Wave Studio',
+                'secondValue' => 'Amina Creator',
+                'details' => $variables['selectedPackagesLabel'].":\n- Recipe video — 500 BAM\n\n"
+                    .$variables['proposedAmountLabel'].":\n650 BAM\n\n"
+                    .$variables['companyMessageLabel'].":\nWe would love to collaborate.",
+            ];
+        } elseif ($template === 'creator_inquiry_accepted') {
+            $variables += [
+                'firstValue' => 'Amina Creator',
+                'secondValue' => 'Wave Studio',
+                'details' => 'We would love to collaborate on your next campaign.',
+            ];
+        }
 
         return $variables;
     }
 
     private function send(User $user, ?string $token, string $locale, string $type, string $routeName): void
     {
-        $locale = isset(self::COPY[$locale]) ? $locale : 'bs';
+        $locale = $this->normalizedLocale($locale);
         $copy = $this->copyFor($type, $locale);
         $url = rtrim($this->appBaseUrl, '/').$this->localizedRoutePath($routeName, $locale);
         if ($token !== null) {
@@ -426,22 +574,76 @@ final class AccountEmailSender
             },
             'actionUrl' => $url,
         ];
+        $this->deliver($user, $type, $locale, $copy['subject'], $url, $variables);
+    }
+
+    /**
+     * @param array<string, string> $values
+     */
+    private function sendMarketplaceEmail(
+        User $recipient,
+        string $template,
+        string $routeName,
+        array $values,
+        string $query = '',
+        ?string $locale = null,
+    ): void {
+        $locale = $this->normalizedLocale($locale ?? $recipient->getPreferredLocale());
+        $copy = $this->copyFor($template, $locale);
+        $url = rtrim($this->appBaseUrl, '/').$this->localizedRoutePath($routeName, $locale).$query;
+        $variables = array_merge($copy, $values, [
+            'locale' => match ($locale) {
+                'sr' => 'sr-Latn',
+                'cnr' => 'cnr-Latn-ME',
+                default => $locale,
+            },
+            'actionUrl' => $url,
+        ]);
+
+        $this->deliver($recipient, $template, $locale, $copy['subject'], $url, $variables);
+    }
+
+    /**
+     * @param array<string, string> $variables
+     */
+    private function deliver(
+        User $user,
+        string $type,
+        string $locale,
+        string $subject,
+        string $url,
+        array $variables,
+    ): void {
         $customization = $this->entityManager->getRepository(EmailTemplate::class)->findOneBy([
             'templateKey' => $type,
             'locale' => $locale,
         ]);
+        $text = [
+            $variables['greeting'],
+            $variables['message'],
+        ];
+        foreach ([
+            ['firstLabel', 'firstValue'],
+            ['secondLabel', 'secondValue'],
+            ['detailsLabel', 'details'],
+        ] as [$label, $value]) {
+            if (isset($variables[$label], $variables[$value]) && $variables[$value] !== '') {
+                $text[] = $variables[$label].":\n".$variables[$value];
+            }
+        }
+        $text[] = $variables['buttonLabel'].":\n".$url;
+        foreach (['expiration', 'security'] as $optionalField) {
+            if (isset($variables[$optionalField])) {
+                $text[] = $variables[$optionalField];
+            }
+        }
+        $text[] = $variables['footer'];
+
         $message = new Email()
             ->from(new Address($this->fromAddress, $this->fromName))
             ->to($user->getEmail())
-            ->subject($customization instanceof EmailTemplate ? $customization->getSubject() : $copy['subject'])
-            ->text(implode("\n\n", [
-                $copy['greeting'],
-                $copy['message'],
-                $copy['buttonLabel'].":\n".$url,
-                $copy['expiration'],
-                $copy['security'],
-                $copy['footer'],
-            ]))
+            ->subject($customization instanceof EmailTemplate ? $customization->getSubject() : $subject)
+            ->text(implode("\n\n", $text))
             ->html($this->templates->render(
                 $type,
                 $variables,
@@ -456,13 +658,20 @@ final class AccountEmailSender
      */
     private function copyFor(string $template, string $locale): array
     {
-        $locale = isset(self::COPY[$locale]) ? $locale : 'bs';
-        $copy = self::COPY[$locale][$template] ?? self::NOTIFICATION_COPY[$locale][$template] ?? null;
+        $locale = $this->normalizedLocale($locale);
+        $copy = self::COPY[$locale][$template]
+            ?? self::NOTIFICATION_COPY[$locale][$template]
+            ?? MarketplaceEmailCopy::forLocale($template, $locale);
         if (!is_array($copy)) {
             throw new \InvalidArgumentException(sprintf('Unknown account email template "%s".', $template));
         }
 
         return $copy;
+    }
+
+    private function normalizedLocale(string $locale): string
+    {
+        return isset(self::COPY[$locale]) ? $locale : 'bs';
     }
 
     private function localizedRoutePath(string $routeName, string $locale): string

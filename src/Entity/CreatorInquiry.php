@@ -30,6 +30,9 @@ class CreatorInquiry
     #[ORM\Column(length: 120, nullable: true)]
     private ?string $packageTitle;
 
+    #[ORM\Column(type: 'json', options: ['default' => '[]'])]
+    private array $selectedPackages = [];
+
     #[ORM\Column(nullable: true)]
     private ?int $listedPrice;
 
@@ -64,11 +67,13 @@ class CreatorInquiry
         string $message,
         string $currency = 'BAM',
         string $listedPriceCurrency = 'BAM',
+        array $selectedPackages = [],
     ) {
         $this->creator = $creator;
         $this->company = $company;
         $this->packageId = $packageId;
         $this->packageTitle = $packageTitle;
+        $this->selectedPackages = $selectedPackages;
         $this->listedPrice = $listedPrice;
         $this->listedPriceCurrency = $listedPriceCurrency;
         $this->proposedAmount = $proposedAmount;
@@ -100,6 +105,11 @@ class CreatorInquiry
     public function getPackageTitle(): ?string
     {
         return $this->packageTitle;
+    }
+
+    public function getSelectedPackages(): array
+    {
+        return $this->selectedPackages;
     }
 
     public function getListedPrice(): ?int

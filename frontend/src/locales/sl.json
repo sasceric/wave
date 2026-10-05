@@ -17,14 +17,161 @@
     "campaignProfileTitle": "{name} — kampanja na Waveu",
     "privateTitle": "Moj račun | Wave",
     "privateDescription": "Upravljajte svoj račun Wave.",
+    "imprintTitle": "Pravno obvestilo | Wave",
+    "imprintDescription": "Pravne informacije in kontaktni podatki za Wave.",
+    "privacyTitle": "Politika zasebnosti | Wave",
+    "privacyDescription": "Preberite, kako Wave obdeluje podatke računov, profilov in tržnice.",
+    "cookiesTitle": "Politika piškotkov | Wave",
+    "cookiesDescription": "Preberite o nujnih piškotkih in shrambi brskalnika, ki jo uporablja Wave.",
     "notFoundTitle": "Stran ni najdena | Wave",
     "notFoundDescription": "Zahtevane strani ni bilo mogoče najti."
+  },
+  "legal": {
+    "eyebrow": "PRAVNE INFORMACIJE",
+    "openCookieSettings": "Nastavitve piškotkov",
+    "cookieBannerEyebrow": "Kratko obvestilo",
+    "cookieBannerTitle": "Vaša zasebnost nam je pomembna",
+    "cookieBannerDescription": "Nujna shramba omogoča delovanje Wavea. Google Analytics je neobvezen in se naloži le, če ga dovolite. Svojo izbiro lahko kadar koli spremenite.",
+    "cookieBannerDismiss": "Razumem",
+    "essentialStorage": "Nujna shramba",
+    "essentialStorageDescription": "Potrebna je za prijavo, varnost, jezik in shranjevanje vaše izbire zasebnosti.",
+    "analyticsStorage": "Analitika",
+    "analyticsStorageDescription": "Dovolite storitvi Google Analytics merjenje uporabe spletnega mesta. Naloži se šele po vaši privolitvi.",
+    "rejectOptional": "Samo nujno",
+    "savePreferences": "Shrani izbiro",
+    "acceptAll": "Sprejmi vse",
+    "imprint": {
+      "title": "Pravno obvestilo",
+      "intro": "Informacije o upravljavcu Wavea in načinih za stik z nami.",
+      "sections": [
+        {
+          "heading": "Upravljavec storitve",
+          "paragraphs": [
+            "Wave upravlja UD SteelCode.",
+            "Direktor: Suad Asceric. Sedež: Školska 10, 72000 Zenica, Bosna in Hercegovina.",
+            "ID podjetja: 4320531730002. ID za DDV: 320531730002.",
+            "Za pravna obvestila in splošna vprašanja pišite na info{'@'}wave.ba."
+          ]
+        },
+        {
+          "heading": "O Waveu",
+          "paragraphs": [
+            "Wave je digitalna tržnica, ki ustvarjalcem in podjetjem pomaga pri iskanju partnerjev in pogovorih o možnostih sodelovanja.",
+            "Ustvarjalci in podjetja se o pogojih sodelovanja dogovorijo neposredno. Wave ne obdeluje plačil, ne ponuja skrbniških plačilnih storitev in ne zastopa uporabnikov kot pravni svetovalec."
+          ]
+        },
+        {
+          "heading": "Uporabniška vsebina",
+          "paragraphs": [
+            "Uporabniki so odgovorni za točnost in pravice za vsebino, ki jo objavijo. Javni profili, kampanje in druga vsebina, označena kot javna, so lahko vidni obiskovalcem."
+          ]
+        }
+      ]
+    },
+    "privacy": {
+      "title": "Politika zasebnosti",
+      "intro": "To obvestilo pojasnjuje, katere podatke Wave uporablja za delovanje tržnice in kako se lahko glede njih obrnete na nas.",
+      "sections": [
+        {
+          "heading": "Podatki, ki jih obdelujemo",
+          "paragraphs": [
+            "Glede na vašo uporabo Wavea lahko to vključuje podatke o računu in stikih, podatke o profilih ustvarjalcev ali podjetij, kampanje, prijave, sporočila, samoporočane statistične podatke družbenih omrežij ter tehnične in varnostne dnevnike."
+          ]
+        },
+        {
+          "heading": "Kako uporabljamo podatke",
+          "paragraphs": [
+            "Podatke uporabljamo za zagotavljanje računov in funkcij tržnice, prikaz vsebine, ki jo želite objaviti, povezovanje ustvarjalcev in podjetij, pošiljanje servisnih sporočil, preprečevanje zlorab ter zanesljivo in varno delovanje Wavea."
+          ]
+        },
+        {
+          "heading": "Javni podatki",
+          "paragraphs": [
+            "Podatki profila in kampanje, ki jih oddate za javni prikaz, so lahko vidni drugim uporabnikom in obiskovalcem. V javna polja ne vnašajte zasebnih ali občutljivih podatkov."
+          ]
+        },
+        {
+          "heading": "Ponudniki storitev in hramba",
+          "paragraphs": [
+            "Za gostovanje, pošiljanje e-pošte in varnost lahko uporabljamo ponudnike storitev. Prejmejo le podatke, ki jih potrebujejo za te storitve. Osebnih podatkov ne prodajamo.",
+            "Podatke hranimo, dokler so potrebni za zagotavljanje Wavea, zaščito storitve, reševanje sporov ali izpolnjevanje pravnih obveznosti. Zahtevo za izbris računa ali podatkov lahko pošljete na info{'@'}wave.ba; nekatere zapise bomo morda morali hraniti, kadar to zahteva zakon."
+          ]
+        },
+        {
+          "heading": "Vaše pravice in zahteve",
+          "paragraphs": [
+            "Kjer je to primerno, lahko zahtevate dostop do svojih osebnih podatkov, njihov popravek ali izbris ter informacije o omejitvi obdelave, prenosljivosti ali pravici do ugovora. Pišite na info{'@'}wave.ba. Pred ukrepanjem bomo morda morali preveriti vašo identiteto."
+          ]
+        },
+        {
+          "heading": "Zunanje storitve",
+          "paragraphs": [
+            "Wave naloži pisave iz storitve Google Fonts in lahko prikaže videoposnetke YouTube, dodane v profile. Ti ponudniki lahko prejmejo tehnične podatke zahteve, ko se vaš brskalnik poveže z njihovimi storitvami.",
+            "Če izberete prijavo z Googlom ali Applom, izbrani ponudnik obdeluje podatke za prijavo v skladu s svojimi pravili zasebnosti. Google Analytics lahko obdeluje podatke o uporabi le, če ga dovolite."
+          ],
+          "links": [
+            { "label": "Googlova politika zasebnosti", "url": "https://policies.google.com/privacy" },
+            { "label": "Applova politika zasebnosti", "url": "https://www.apple.com/legal/privacy/" }
+          ]
+        }
+      ]
+    },
+    "cookies": {
+      "title": "Politika piškotkov",
+      "intro": "Wave za osnovne funkcije uporablja nujno shrambo. Google Analytics je neobvezen in se naloži le po vaši privolitvi; Wave ne uporablja oglaševalskih piškotkov.",
+      "sections": [
+        {
+          "heading": "Nujni sejni piškotek",
+          "paragraphs": [
+            "Kadar je potrebna varna prijava, Wave uporablja lastni sejni piškotek, da ostanete prijavljeni in da so dejanja v računu zaščitena. Piškotek je označen kot HttpOnly in uporablja zaščito brskalnika za isto mesto. Ne uporablja se za oglaševanje."
+          ]
+        },
+        {
+          "heading": "Lokalna shramba brskalnika",
+          "paragraphs": [
+            "Wave lokalno shrani izbrani jezik in vaše nastavitve piškotkov. To niso piškotki in se ne uporabljajo za sledenje na drugih spletnih mestih."
+          ]
+        },
+        {
+          "heading": "Progresivna spletna aplikacija",
+          "paragraphs": [
+            "Če namestite Wave ali uporabljate brskalnik s podporo za service worker, lahko aplikacija shrani statične datoteke vmesnika za zanesljivejše nalaganje. Service worker vnaprej shrani datoteke aplikacije, ne pa zasebnih odgovorov API."
+          ]
+        },
+        {
+          "heading": "Upravljanje podatkov brskalnika",
+          "paragraphs": [
+            "Izbiro analitike lahko kadar koli spremenite ali prekličete v Nastavitvah piškotkov v nogi strani. Wave to izbiro shrani v lokalni shrambi brskalnika. Brisanje podatkov spletnega mesta vas lahko odjavi, ponastavi jezik ali znova prikaže to obvestilo."
+          ]
+        },
+        {
+          "heading": "Analitični piškotki",
+          "paragraphs": [
+            "Če je nastavljen identifikator za Google Analytics, Wave naloži Google Analytics šele, ko omogočite analitiko. Nato lahko uporablja lastne piškotke za merjenje obiskov in uporabe spletnega mesta. Če izberete Samo nujno, se analitična oznaka ne naloži.",
+            "Privolitev lahko prekličete v Nastavitvah piškotkov. Wave nato preneha pošiljati analitične dogodke in odstrani piškotke Google Analytics, nastavljene na tem spletnem mestu."
+          ],
+          "links": [
+            { "label": "Googlova politika zasebnosti", "url": "https://policies.google.com/privacy" }
+          ]
+        },
+        {
+          "heading": "Zunanje pisave in videoposnetki",
+          "paragraphs": [
+            "Wave naloži pisave vmesnika iz storitve Google Fonts. Ko se prikaže videoposnetek iz profila, se lahko brskalnik poveže z youtube-nocookie.com, ki ga upravlja Google. Ti ponudniki lahko obdelujejo tehnične podatke ali uporabljajo lastno shrambo brskalnika; Wave te shrambe ne upravlja."
+          ],
+          "links": [
+            { "label": "Googlova politika zasebnosti", "url": "https://policies.google.com/privacy" }
+          ]
+        }
+      ]
+    }
   },
   "app": {
     "homeAria": "Začetna stran Wave",
     "home": "Domov",
     "mainNavigation": "Glavna navigacija",
     "creators": "Odkrij ustvarjalce",
+    "creatorsNav": "Ustvarjalci",
     "companies": "Podjetja",
     "campaigns": "Kampanje",
     "earlyAccess": "Prijavi se za zgodnji dostop",
@@ -32,8 +179,15 @@
     "account": "Moj račun",
     "footerTagline": "Dobro sodelovanje se začne s pravim ujemanjem.",
     "sayHello": "Pozdravi nas",
-    "copyright": "© 2026 Wave. Za vse, ki ustvarjajo.",
+    "copyright": "© {year} Wave. Za vse, ki ustvarjajo.",
     "footerMvp": "Profili, kampanje in prijave · sodelovanja po dogovoru",
+    "footerExplore": "Raziščite",
+    "footerLegal": "Pravne informacije",
+    "footerContact": "Kontakt",
+    "footerContactText": "Imate vprašanje o Waveu ali potrebujete pomoč? Pišite nam.",
+    "footerOperator": "Upravlja UD SteelCode",
+    "socialLinks": "Wave na družbenih omrežjih",
+    "socialComingSoon": "Profili na omrežjih kmalu",
     "language": "Jezik",
     "openMenu": "Odpri navigacijo",
     "closeMenu": "Zapri navigacijo",
@@ -56,15 +210,38 @@
     "markAllRead": "Označi vsa kot prebrana"
   },
   "campaignChat": {
-    "title": "Sporočila kampanje",
+    "title": "Sporočila",
     "subtitle": "Vsak pogovor ostane povezan s svojo kampanjo.",
     "inbox": "Pogovori",
+    "newMessageCreator": "Poišči kampanje",
+    "newMessageCompany": "Preglej prijave",
+    "filterAll": "Vse",
+    "filterUnread": "Neprebrano",
+    "backToInbox": "Nazaj na pogovore",
+    "showDetails": "Podrobnosti o podjetju in kampanji",
+    "closeDetails": "Zapri podrobnosti",
+    "open": "V teku",
+    "closed": "Zaključena",
+    "fullBrief": "Celoten opis kampanje",
+    "searchPlaceholder": "Iskanje pogovorov",
+    "noSearchResults": "Noben pogovor ne ustreza iskanju.",
+    "detailsPrompt": "Izberite pogovor za prikaz podrobnosti kampanje in podjetja.",
+    "aboutCompany": "O podjetju",
+    "budget": "Proračun",
+    "location": "Lokacija",
+    "deadline": "Rok za prijavo",
+    "creatorCount": "Število ustvarjalcev",
+    "channels": "Kanali",
+    "deliverables": "Obseg dela",
+    "viewCampaign": "Prikaži kampanjo",
+    "messageHint": "Za pošiljanje pritisnite Enter.",
     "noConversations": "Pogovori o kampanjah bodo prikazani tukaj.",
     "selectConversation": "Izberite pogovor za branje in odgovor.",
     "newConversationTitle": "Pošljite sporočilo prijavljenemu ustvarjalcu",
     "newConversationDescription": "Začnite zaseben pogovor o tej kampanji.",
     "messageApplicant": "Pošlji sporočilo",
     "campaign": "Kampanja",
+    "directInquiry": "Povpraševanje za sodelovanje",
     "creator": "Ustvarjalec",
     "company": "Podjetje",
     "firstMessage": "Napišite prvo sporočilo",
@@ -74,6 +251,8 @@
     "inviteTitle": "Povabite tega ustvarjalca v kampanjo",
     "inviteDescription": "Izberite odprto kampanjo in pošljite povabilo. Zaseben pogovor se odpre, ko ustvarjalec povabilo sprejme.",
     "chooseCampaign": "Izberite kampanjo",
+    "alreadyInvited": "Povabilo je že poslano",
+    "alreadyApplied": "Prijava ustvarjalca že obstaja",
     "invitationMessage": "Sporočilo s povabilom",
     "inviteButton": "Pošlji povabilo",
     "invitationSent": "Povabilo je poslano. Pogovor se odpre, ko ga ustvarjalec sprejme.",
@@ -92,8 +271,18 @@
       "application_shortlisted": "{actor} se želi pogovoriti o vaši prijavi za {campaign}.",
       "invitation_accepted": "{actor} je sprejel/a povabilo za kampanjo {campaign}.",
       "invitation_declined": "{actor} je zavrnil/a povabilo za kampanjo {campaign}.",
+      "creator_inquiry_received": "{actor} ti je poslal povpraševanje za sodelovanje.",
+      "creator_inquiry_accepted": "{actor} je sprejel tvoje povpraševanje za sodelovanje.",
       "chat_message": "{actor} vam je poslal sporočilo o kampanji {campaign}."
     }
+  },
+  "directoryPagination": {
+    "itemsPerPage": "Elementov na stran",
+    "pageStatus": "Stran {current} od {total} · elementi: {count}",
+    "ariaLabel": "Oštevilčenje strani imenika",
+    "previous": "Prejšnja stran",
+    "next": "Naslednja stran",
+    "goToPage": "Pojdi na stran {page}"
   },
   "companyDirectory": {
     "eyebrow": "DOBRI POSLOVNI PARTNERJI",
@@ -242,10 +431,6 @@
   "creatorProfile": {
     "back": "Nazaj na ustvarjalce",
     "loading": "Nalagam profil …",
-    "share": "Deli profil",
-    "copied": "Povezava je kopirana!",
-    "shareTitle": "{name} na Wave",
-    "shareError": "Tega profila ni mogoče deliti v tem brskalniku.",
     "mediaKit": "Predstavitveni paket ustvarjalca",
     "community": "Skupnost in kanali",
     "selfReported": "Samoporočani podatki",
@@ -264,8 +449,9 @@
     "closeGallery": "Zapri galerijo",
     "collaborateEyebrow": "Sodelovanje po tvoji meri",
     "packages": "Paketi sodelovanja",
-    "packagesNote": "Pošlji povpraševanje brez obveznosti nakupa.",
+    "relatedCategories": "Sorodna področja",
     "priceOnRequest": "Cena na povpraševanje",
+    "priceByAgreement": "Po dogovoru",
     "requestPackage": "Pošlji povpraševanje",
     "showMore": "Pokaži več",
     "showLess": "Pokaži manj",
@@ -277,6 +463,19 @@
     "companyOnly": "Za pošiljanje povpraševanja potrebuješ račun podjetja.",
     "signInAsCompany": "Prijavi se ali ustvari račun",
     "verifyEmail": "Pred pošiljanjem povpraševanja potrdi e-poštni naslov.",
+    "accountPendingApproval": "Račun podjetja mora biti odobren pred pošiljanjem povpraševanja.",
+    "closeRequest": "Zapri povpraševanje",
+    "choosePackages": "Paketi, ki te zanimajo",
+    "choosePackagesHint": "Izberi enega ali več obstoječih paketov ali Nekaj drugega.",
+    "chooseAtLeastOnePackage": "Izberi vsaj en paket ali posebno možnost.",
+    "requestMessageTooShort": "Sporočilo mora vsebovati najmanj 10 znakov.",
+    "servicePackage": "Paket storitev",
+    "negotiatePackage": "Dogovori se za paket",
+    "negotiatePackageDescription": "Dogovorimo se o obsegu sodelovanja in ceni glede na tvoje potrebe.",
+    "somethingElse": "Nekaj drugega",
+    "somethingElseDescription": "V sporočilu predlagaj posebne pogoje, ceno ali zahteve.",
+    "addSelection": "Dodaj: {package}",
+    "removeSelection": "Odstrani: {package}",
     "choosePackage": "Paket",
     "generalRequest": "Splošno povpraševanje",
     "proposedAmount": "Predlagani znesek (neobvezno)",
@@ -338,6 +537,7 @@
     "location": "Lokacija",
     "closes": "Prijave se zaprejo",
     "applicationsNote": "Prijave v tej zgodnji različici še niso omogočene. Tukaj si lahko ogledaš javni brief.",
+    "alreadyApplied": "Na to kampanjo ste se že prijavili.",
     "verifyEmailInAccount": "Potrdi e-pošto v svojem računu",
     "askAbout": "Vprašaj nas o kampanji",
     "emailSubject": "Vprašanje o kampanji Wave"
@@ -396,6 +596,7 @@
     "firstName": "Ime",
     "lastName": "Priimek",
     "companyName": "Naziv podjetja",
+    "companyNamePlaceholder": "Npr. Studio Jadran",
     "phone": "Telefonska številka",
     "phonePlaceholder": "Številka brez klicne številke",
     "phoneCountry": "Klicna številka države",
@@ -412,6 +613,7 @@
     "city": "Mesto",
     "cityPlaceholder": "Vnesi ime svojega mesta",
     "industry": "Dejavnost",
+    "industryPlaceholder": "Npr. turizem, moda, hrana in pijača ali kozmetika",
     "signIn": "Prijava",
     "register": "Ustvari račun",
     "passwordHint": "Vsaj 12 znakov.",
@@ -508,6 +710,15 @@
     "remove": "Odstrani",
     "campaigns": "Tvoje kampanje",
     "campaignSaved": "Kampanja je shranjena.",
+    "addCampaign": "Dodaj kampanjo",
+    "viewCampaign": "Prikaži kampanjo",
+    "campaignDetails": "Podrobnosti kampanje",
+    "campaignApplicants": "Prijave na kampanjo",
+    "noCampaignApplications": "Na to kampanjo še ni prijav.",
+    "viewApplication": "Ogled",
+    "applicantDetails": "Podrobnosti prijave",
+    "closeApplicantDetails": "Zapri podrobnosti prijave",
+    "hired": "Izbran",
     "campaignFieldErrors": {
       "title": "Naslov mora vsebovati od 5 do 160 znakov.",
       "summary": "Povzetek mora vsebovati od 10 do 220 znakov.",
@@ -543,6 +754,7 @@
     "publish": "Objavi kampanjo",
     "updateCampaign": "Shrani kampanjo",
     "myApplications": "Moje prijave",
+    "openChat": "Odpri pogovor",
     "myOffers": "Moje ponudbe",
     "campaignInvitations": "Povabila za kampanje",
     "companyApplications": "Prijave ustvarjalcev",
@@ -578,6 +790,15 @@
     "signInToApply": "Za prijavo se prijavi ali ustvari račun.",
     "profileSetupHint": "Dopolni profil, da te bodo znamke lažje našle.",
     "companyName": "Naziv podjetja",
+    "companyAbout": "O podjetju",
+    "companyAboutPlaceholder": "Predstavi svoje podjetje, blagovne znamke in cilje sodelovanja z ustvarjalci.",
+    "addProfileImage": "Dodaj profilno sliko",
+    "changeProfileImage": "Spremeni sliko",
+    "removeProfileImage": "Odstrani profilno sliko",
+    "profileImageSaveHint": "JPEG, PNG ali WebP do 10 MB. Spremembe se shranijo ob shranjevanju profila.",
+    "profileImageRemoveTitle": "Odstranim profilno sliko?",
+    "profileImageRemoveMessage": "Slika bo odstranjena iz profila šele, ko shraniš spremembe.",
+    "profileImageCleanupFailed": "Profil je shranjen, prejšnje slike pa ni bilo mogoče izbrisati. Za ponovni poskus znova shrani profil.",
     "emailUnverified": "Potrdi e-poštni naslov kot dodaten varnostni korak. Na kampanje se lahko prijaviš in pošiljaš ponudbe po odobritvi računa.",
     "approvalPendingNotice": "E-poštni naslov je potrjen. Obvestili te bomo, ko bo skrbnik odobril tvoj račun; po odobritvi se lahko prijaviš na kampanje.",
     "resendVerification": "Pošlji novo potrditveno povezavo",
@@ -730,7 +951,7 @@
     "emailTemplatesPageTitle": "E-poštne predloge",
     "emailTemplatesEyebrow": "E-POŠTNA KOMUNIKACIJA",
     "emailTemplatesTitle": "Uredi odhodna sporočila",
-    "emailTemplatesDescription": "Upravljaj HTML in zadeve sporočil za registracijo, potrditev e-pošte, odobritev računa, ponastavitev gesla in kontakt.",
+    "emailTemplatesDescription": "Upravljaj predloge za račun, prijavo na kampanjo, sodelovanje z ustvarjalcem, neprebrana sporočila in kontakt.",
     "chooseEmailTemplate": "Izberi predlogo",
     "verifyEmailTemplate": "Potrditev e-pošte",
     "verifyEmailTemplateHint": "Pošlje se po registraciji za potrditev naslova in pojasni pregled računa.",
@@ -742,6 +963,16 @@
     "approvalEmailTemplateHint": "Pošlje se, ko skrbnik odobri račun.",
     "contactEmailTemplate": "Obvestilo kontaktnega obrazca",
     "contactEmailTemplateHint": "Pošlje se v Waveov nabiralnik po oddaji kontaktnega obrazca.",
+    "applicationReceivedEmailTemplate": "Prejeta prijava na kampanjo",
+    "applicationReceivedEmailTemplateHint": "Podjetju pošlje ime ustvarjalca in sporočilo prijave.",
+    "creatorInquiryEmailTemplate": "Povpraševanje za paket ustvarjalca",
+    "creatorInquiryEmailTemplateHint": "Ustvarjalcu pošlje izbrane pakete, predlagani proračun in sporočilo podjetja.",
+    "creatorInquiryAcceptedEmailTemplate": "Sprejeto povpraševanje za sodelovanje",
+    "creatorInquiryAcceptedEmailTemplateHint": "Podjetju se pošlje, ko ustvarjalec sprejme povpraševanje.",
+    "creatorHiredEmailTemplate": "Ustvarjalec je izbran",
+    "creatorHiredEmailTemplateHint": "Ustvarjalcu se pošlje, ko sprejme ponudbo za kampanjo.",
+    "unreadMessageReminderEmailTemplate": "Opomnik za neprebrano sporočilo",
+    "unreadMessageReminderEmailTemplateHint": "Pošlje se enkrat, ko sporočilo kampanje ostane neprebrano eno uro.",
     "emailTemplateSubject": "Zadeva e-pošte",
     "emailTemplateHtml": "HTML-koda",
     "emailTemplateVariables": "Razpoložljive spremenljivke",

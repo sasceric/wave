@@ -19,6 +19,7 @@ parameters:
     env(WEB_PUSH_PRIVATE_KEY): ''
     env(WEB_PUSH_SUBJECT): 'mailto:notifications@wave.ba'
     env(WAVE_NOTIFICATIONS_ENABLED): 'true'
+    env(GOOGLE_SITE_VERIFICATION): ''
 
 services:
     # default configuration for services in *this* file

@@ -6,7 +6,9 @@ use App\Localization\ApiMessages;
 use App\Localization\LocaleContext;
 use App\Service\SeoMetadataProvider;
 use App\Service\SiteOrigin;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\ServiceUnavailableHttpException;
@@ -14,6 +16,12 @@ use Symfony\Component\Routing\Attribute\Route;
 
 final class FrontendController
 {
+    public function __construct(
+        #[Autowire('%env(string:GOOGLE_SITE_VERIFICATION)%')]
+        private readonly string $googleSiteVerification,
+    ) {
+    }
+
     #[Route('/', name: 'frontend_home', methods: ['GET'])]
     #[Route('/{path}', name: 'frontend_route', requirements: ['path' => '.*'], methods: ['GET'], priority: -100)]
     public function __invoke(Request $request, SeoMetadataProvider $seoMetadataProvider, SiteOrigin $siteOrigin): Response
@@ -30,20 +38,43 @@ final class FrontendController
         }
 
         $seo = $seoMetadataProvider->forPath($request->getPathInfo());
+        if ($seo['canonical'] !== null) {
+            $canonicalPath = parse_url($seo['canonical'], PHP_URL_PATH);
+            if (is_string($canonicalPath) && $canonicalPath !== $request->getPathInfo()) {
+                $query = $request->getQueryString();
+                $location = $seo['canonical'].($query !== null ? '?'.$query : '');
+
+                return new RedirectResponse($location, Response::HTTP_MOVED_PERMANENTLY);
+            }
+        }
+
         $html = file_get_contents($indexPath);
         if (!is_string($html)) {
             throw new ServiceUnavailableHttpException(null, 'Unable to read the built Vue app.');
         }
 
         return new Response(
-            $this->injectSeoMetadata($html, $seo, $siteOrigin->base(), $siteOrigin->url('/pwa-512.png')),
+            $this->injectSeoMetadata(
+                $html,
+                $seo,
+                $siteOrigin->base(),
+                $siteOrigin->url('/pwa-512.png'),
+                $this->googleSiteVerification,
+            ),
             Response::HTTP_OK,
             ['Content-Type' => 'text/html; charset=UTF-8'],
         );
     }
 
-    private function injectSeoMetadata(string $html, array $seo, string $siteOrigin, string $defaultImage): string
+    private function injectSeoMetadata(
+        string $html,
+        array $seo,
+        string $siteOrigin,
+        string $defaultImage,
+        string $googleSiteVerification,
+    ): string
     {
+        $googleSiteVerification = trim($googleSiteVerification);
         $title = $this->escape($seo['title']);
         $description = $this->escape($seo['description']);
         $language = match ($seo['locale']) {
@@ -57,6 +88,9 @@ final class FrontendController
 
         $head = "\n    <meta name=\"description\" content=\"".$description."\" />";
         $head .= "\n    <meta name=\"wave:origin\" content=\"".$this->escape($siteOrigin)."\" />";
+        if ($googleSiteVerification !== '') {
+            $head .= "\n    <meta name=\"google-site-verification\" content=\"".$this->escape($googleSiteVerification)."\" />";
+        }
         $head .= "\n    <meta name=\"robots\" content=\"".($seo['noindex'] ? 'noindex, nofollow' : 'index, follow')."\" />";
         $head .= "\n    <meta property=\"og:type\" content=\"website\" />";
         $head .= "\n    <meta property=\"og:site_name\" content=\"Wave\" />";

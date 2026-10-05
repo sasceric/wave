@@ -6,7 +6,7 @@ Wave is a single-deployment creator–brand collaboration marketplace foundation
 
 The checked-in lockfiles resolve Symfony 8.1, Vue 3.5.43, Vue I18n 11, Vite 8.3.2, and `vite-plugin-pwa` 1.3. Symfony 8.1 requires PHP 8.4 or newer. Vite 8 requires Node 20.19 or newer; the setup was verified with Node 22.20.
 
-Local persistence uses SQLite. PHP needs the `pdo_sqlite` extension. Node and npm are used only to build and serve the Vue source.
+The default local database is SQLite, and PHP needs the `pdo_sqlite` extension when using it. PostgreSQL is also supported by Doctrine; PHP needs `pdo_pgsql` for PostgreSQL. Node and npm are used only to build and serve the Vue source.
 
 ## Project layout
 
@@ -42,6 +42,14 @@ php bin/console doctrine:migrations:migrate --no-interaction
 php bin/console app:seed-demo-data
 npm --prefix frontend run build
 ```
+
+The checked-in `.env.local` overrides `.env` and currently keeps this checkout on SQLite. To use the prepared local PostgreSQL database instead, set `DATABASE_URL` in `.env.local` to:
+
+```dotenv
+DATABASE_URL="postgresql://root:<url-encoded-password>@127.0.0.1:5432/wave?serverVersion=18&charset=utf8"
+```
+
+The local `wave` database is owned by `root`, its schema matches the current Doctrine mappings, its migration table is baselined at the latest version, and existing SQLite rows were copied into it. The SQLite database and its pre-migration backup are retained. The historical migrations contain SQLite-specific SQL, so do not run them against a new empty PostgreSQL database; for PostgreSQL installations, create the schema from Doctrine mappings and baseline the existing migration versions once before applying future migrations.
 
 Start Symfony's local PHP server:
 
@@ -89,6 +97,28 @@ Use two separate browser profiles so you can stay signed in as a company and a c
 4. Send messages from both profiles. The conversation and in-app notification updates should arrive live through Mercure.
 
 You can also invite a creator from their profile; the private conversation opens only after that creator accepts the invitation. Offers are a separate step from chat and can be accepted or rejected. For device push, use the **Enable device notifications** control and grant browser permission; the VAPID keys must be configured in ignored `.env.local`. Localhost is treated as a secure context by browsers, so HTTPS is not required for local testing.
+
+### Marketplace email notifications
+
+Outgoing email templates are editable in the admin dashboard for each supported language. A new campaign application emails the company owner with the creator's name and application message; accepting an offer emails the creator. Unread chat reminders contain the campaign and sender names, but never include private message text. The reminder is sent once after the oldest incoming message has been unread for an hour, coalesces other unread messages in that conversation, and does not repeat until the recipient opens the conversation and marks it read.
+
+Apply database migrations before using the new reminder tracking fields:
+
+```sh
+php bin/console doctrine:migrations:migrate --no-interaction
+```
+
+For local testing, run the reminder command manually after leaving a conversation unread for an hour:
+
+```sh
+php bin/console app:send-unread-message-reminders
+```
+
+On a server with a configured mail transport, schedule it every five minutes. Use `flock` to avoid overlapping runs:
+
+```cron
+*/5 * * * * cd /var/www/wave && /usr/bin/flock -n /var/lock/wave-unread-message-reminders.lock /usr/bin/php bin/console app:send-unread-message-reminders --env=prod --no-interaction >> var/log/unread-message-reminders.log 2>&1
+```
 
 Rebuild the frontend after changes with `npm --prefix frontend run build`. Vite emits the app shell, hashed assets, web app manifest, and service worker into Symfony's `public/` directory. The build intentionally does not empty that directory, so it won't delete Symfony's `index.php`.
 
@@ -175,9 +205,30 @@ The admin dashboard is limited to accounts granted `ROLE_ADMIN` by a trusted ope
 
 ### Search engine metadata
 
-Set `APP_BASE_URL` to the site's public origin (scheme and host, with no path) in each deployment. Symfony emits route-specific titles, descriptions, Open Graph/Twitter metadata, canonical URLs, and `hreflang` alternates in the initial HTML response; the Vue SEO helper keeps the same metadata current during in-app navigation. Bosnian is the `x-default` language, and Serbian alternates use `sr-Latn`. Public creator and company profiles and open, approved campaigns receive schema.org structured data; campaign briefs use `CreativeWork` rather than employment `JobPosting` markup.
+Set `APP_BASE_URL` to the site's public origin (scheme and host, with no path) in each deployment. Symfony emits route-specific titles, descriptions, Open Graph/Twitter metadata, canonical URLs, and `hreflang` alternates in the initial HTML response; the Vue SEO helper keeps the same metadata current during in-app navigation. Bosnian is the `x-default` language, and Serbian alternates use `sr-Latn`. Public creator and company profiles and open, approved campaigns receive schema.org structured data; campaign briefs use `CreativeWork` rather than employment `JobPosting` markup. Localized legal pages are indexable, included in the sitemap, and receive self-canonical URLs and language alternates. Legacy English aliases redirect to their canonical localized URLs.
 
 `GET /sitemap.xml` dynamically lists localized public landing pages and public profiles/campaigns with multilingual alternate links. `GET /robots.txt` advertises that sitemap, leaves public APIs available for crawler rendering, and disallows private account, authentication, moderation, and admin API routes. Private frontend routes also receive `noindex, nofollow` and are excluded from the sitemap.
+
+Configure optional Google integrations without committing local settings:
+
+| Setting | Location | Purpose |
+| --- | --- | --- |
+| `VITE_GA_MEASUREMENT_ID` | `frontend/.env.local` for local builds; frontend build environment for deployment | GA4 measurement ID (`G-...`). Google Analytics is not loaded until a visitor explicitly opts in through Cookie preferences. |
+| `GOOGLE_SITE_VERIFICATION` | root `.env.local` for local Symfony; deployment environment for production | Google Search Console HTML meta-tag verification token. |
+
+Example local settings:
+
+```dotenv
+# frontend/.env.local
+VITE_GA_MEASUREMENT_ID="G-XXXXXXXXXX"
+```
+
+```dotenv
+# .env.local (Symfony)
+GOOGLE_SITE_VERIFICATION="your-search-console-verification-token"
+```
+
+The Vite build also accepts `VITE_GOOGLE_SITE_VERIFICATION` if the frontend is served directly without Symfony. Search Console DNS verification can be used instead and does not require this setting. Analytics consent is stored separately from the earlier cookie-notice dismissal, can be changed from Cookie preferences, and is not enabled by default.
 
 Registration and login use hashed passwords, rate limits, and same-origin server sessions with HTTP-only, same-site cookies and CSRF validation on all writes. Obtain the current CSRF token from `/api/auth/csrf` and send it in the `X-CSRF-Token` header. Email/password registrations must verify their email before the admin can approve the account; verified accounts still wait for admin approval before participating in marketplace actions. The registration email explains both steps, and an approval email is sent when an admin approves the account. Google and Apple registration accept the provider's verified email, still collect all required creator/company profile fields, send a registration-pending email, and remain unapproved until an admin reviews them. Profile editing and reading remain available while approval is pending. Verification links expire after 24 hours, reset links after one hour, and both are single-use. Password-reset requests return the same response whether or not an account exists.
 
@@ -279,6 +330,6 @@ The sample-data command is safe to rerun; it inserts missing demo records, refre
 
 ## Deployment
 
-Build `frontend/` and deploy its generated `public/` files together with the Symfony application. Configure the web server document root to `public/`, serve existing files directly, and send other paths to `public/index.php`; this lets direct links such as `/creators/maya-chen` load the Vue app while `/api/*` stays in Symfony. Run Doctrine migrations during deployment. Ensure the PHP process can write to `var/media/`, and configure `upload_max_filesize` to at least `10M` and `post_max_size` above `10M`. Set a unique production `APP_SECRET` and an appropriate `DATABASE_URL` via the environment; do not use the development values from `.env`.
+Production deployment is configured in [the GitHub Actions deployment guide](docs/deployment.md). The deployment checkout is `/home/steelcodeweb/web/wave.ba/public_html/`; configure the web server document root to its `public/` directory, serve existing files directly, and send other paths to `public/index.php`. This lets direct links such as `/creators/maya-chen` load the Vue app while `/api/*` stays in Symfony. Deployments run Doctrine migrations. Ensure the PHP process can write to `var/media/`, and configure `upload_max_filesize` to at least `10M` and `post_max_size` above `10M`. Set a unique production `APP_SECRET` and an appropriate `DATABASE_URL` via the environment; do not use the development values from `.env`.
 
 The PWA is responsive and installable, and precaches its public app shell and static assets only. API routes are excluded from navigation fallback, and no API/private responses are added to a runtime cache.

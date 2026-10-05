@@ -36,6 +36,12 @@ class CampaignConversation
     #[ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')]
     private User $lastMessageSender;
 
+    #[ORM\Column(nullable: true)]
+    private ?DateTimeImmutable $creatorUnreadReminderSentAt = null;
+
+    #[ORM\Column(nullable: true)]
+    private ?DateTimeImmutable $companyUnreadReminderSentAt = null;
+
     public function __construct(Campaign $campaign, Creator $creator, User $lastMessageSender)
     {
         $this->campaign = $campaign;
@@ -81,10 +87,61 @@ class CampaignConversation
         return $this->lastMessageSender;
     }
 
+    public function getUnreadReminderSentAt(User $recipient): ?DateTimeImmutable
+    {
+        return $this->isCreator($recipient)
+            ? $this->creatorUnreadReminderSentAt
+            : $this->companyUnreadReminderSentAt;
+    }
+
+    public function markUnreadReminderSent(User $recipient): void
+    {
+        $sentAt = new DateTimeImmutable();
+        if ($this->isCreator($recipient)) {
+            $this->creatorUnreadReminderSentAt = $sentAt;
+
+            return;
+        }
+
+        $this->companyUnreadReminderSentAt = $sentAt;
+    }
+
+    public function clearUnreadReminder(User $recipient): bool
+    {
+        if ($this->isCreator($recipient)) {
+            if ($this->creatorUnreadReminderSentAt === null) {
+                return false;
+            }
+            $this->creatorUnreadReminderSentAt = null;
+
+            return true;
+        }
+        if ($this->companyUnreadReminderSentAt === null) {
+            return false;
+        }
+        $this->companyUnreadReminderSentAt = null;
+
+        return true;
+    }
+
     public function recordMessage(string $body, User $sender): void
     {
         $this->lastMessagePreview = mb_substr($body, 0, 240);
         $this->lastMessageSender = $sender;
         $this->updatedAt = new DateTimeImmutable();
+    }
+
+    private function isCreator(User $user): bool
+    {
+        $creatorOwner = $this->creator->getOwner();
+        if ($creatorOwner instanceof User && $creatorOwner->getId() === $user->getId()) {
+            return true;
+        }
+        $companyOwner = $this->campaign->getCompany()->getOwner();
+        if ($companyOwner instanceof User && $companyOwner->getId() === $user->getId()) {
+            return false;
+        }
+
+        throw new \InvalidArgumentException('Only a conversation participant can manage its unread reminder.');
     }
 }

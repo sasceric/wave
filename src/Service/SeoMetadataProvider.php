@@ -44,12 +44,19 @@ final class SeoMetadataProvider
         $locale = $route['locale'];
         $name = $route['name'];
         $params = $route['params'];
-        $private = in_array($name, ['account', 'verify-email', 'reset-password', 'moderation', 'admin'], true);
+        $private = $name === 'account'
+            || str_starts_with($name, 'account-')
+            || $name === 'admin'
+            || str_starts_with($name, 'admin-')
+            || in_array($name, ['messages', 'verify-email', 'reset-password', 'moderation'], true);
         $titleKey = match ($name) {
             'home' => 'homeTitle',
             'creators', 'creator-profile' => 'creatorsTitle',
             'companies', 'company-profile' => 'companiesTitle',
             'campaigns', 'campaign-detail' => 'campaignsTitle',
+            'imprint' => 'imprintTitle',
+            'privacy-policy' => 'privacyTitle',
+            'cookie-policy' => 'cookiesTitle',
             default => 'privateTitle',
         };
         $descriptionKey = match ($name) {
@@ -57,6 +64,9 @@ final class SeoMetadataProvider
             'creators', 'creator-profile' => 'creatorsDescription',
             'companies', 'company-profile' => 'companiesDescription',
             'campaigns', 'campaign-detail' => 'campaignsDescription',
+            'imprint' => 'imprintDescription',
+            'privacy-policy' => 'privacyDescription',
+            'cookie-policy' => 'cookiesDescription',
             default => 'privateDescription',
         };
         $title = $this->translation($locale, $titleKey);
@@ -210,9 +220,32 @@ final class SeoMetadataProvider
             '@context' => 'https://schema.org',
             '@type' => 'Organization',
             '@id' => $websiteUrl.'#organization',
-            'name' => 'Wave',
+            'name' => 'UD SteelCode',
+            'legalName' => 'UD SteelCode',
+            'alternateName' => 'SteelCode',
             'url' => $websiteUrl,
             'logo' => $this->siteOrigin->url('/pwa-512.png'),
+            'email' => 'info@wave.ba',
+            'taxID' => '4320531730002',
+            'vatID' => '320531730002',
+            'address' => [
+                '@type' => 'PostalAddress',
+                'streetAddress' => 'Školska 10',
+                'addressLocality' => 'Zenica',
+                'postalCode' => '72000',
+                'addressCountry' => 'BA',
+            ],
+            'brand' => [
+                '@type' => 'Brand',
+                'name' => 'Wave',
+                'url' => $websiteUrl,
+            ],
+            'contactPoint' => [
+                '@type' => 'ContactPoint',
+                'contactType' => 'customer support',
+                'email' => 'info@wave.ba',
+                'availableLanguage' => ['bs', 'hr', 'sr-Latn', 'cnr-Latn-ME', 'sl', 'en'],
+            ],
         ];
         $page = [
             '@context' => 'https://schema.org',

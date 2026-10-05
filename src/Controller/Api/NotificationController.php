@@ -28,11 +28,15 @@ final class NotificationController
         if ($user instanceof JsonResponse) {
             return $user;
         }
-        $notifications = $entityManager->getRepository(Notification::class)->findBy(
-            ['recipient' => $user],
-            ['createdAt' => 'DESC'],
-            30,
-        );
+        $notifications = $entityManager->getRepository(Notification::class)->createQueryBuilder('notification')
+            ->andWhere('notification.recipient = :recipient')
+            ->andWhere('notification.type <> :chatMessage')
+            ->setParameter('recipient', $user)
+            ->setParameter('chatMessage', 'chat_message')
+            ->orderBy('notification.createdAt', 'DESC')
+            ->setMaxResults(30)
+            ->getQuery()
+            ->getResult();
 
         return new JsonResponse([
             'data' => array_map(
@@ -96,9 +100,11 @@ final class NotificationController
             ->update(Notification::class, 'notification')
             ->set('notification.readAt', ':readAt')
             ->where('notification.recipient = :recipient')
+            ->andWhere('notification.type <> :chatMessage')
             ->andWhere('notification.readAt IS NULL')
             ->setParameter('readAt', new DateTimeImmutable())
             ->setParameter('recipient', $user)
+            ->setParameter('chatMessage', 'chat_message')
             ->getQuery()
             ->execute();
 

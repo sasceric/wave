@@ -23,6 +23,9 @@ class Company
     #[ORM\Column(length: 100)]
     private string $industry;
 
+    #[ORM\Column(type: 'text', nullable: true)]
+    private ?string $about = null;
+
     #[ORM\Column(length: 500, nullable: true)]
     private ?string $logoUrl;
 
@@ -50,6 +53,7 @@ class Company
         ?string $logoUrl = null,
         bool $verified = false,
         array $translations = [],
+        ?string $about = null,
     ) {
         $this->slug = $slug;
         $this->name = $name;
@@ -57,6 +61,7 @@ class Company
         $this->logoUrl = $logoUrl;
         $this->verified = $verified;
         $this->translations = $translations;
+        $this->about = $about;
     }
 
     public function getId(): ?int
@@ -77,6 +82,11 @@ class Company
     public function getIndustry(): string
     {
         return $this->industry;
+    }
+
+    public function getAbout(): ?string
+    {
+        return $this->about;
     }
 
     public function getLogoUrl(): ?string
@@ -129,11 +139,12 @@ class Company
         $this->owner = $owner;
     }
 
-    public function updateProfile(string $name, string $industry, ?string $logoUrl): void
+    public function updateProfile(string $name, string $industry, ?string $logoUrl, ?string $about): void
     {
         $this->name = $name;
         $this->industry = $industry;
         $this->logoUrl = $logoUrl;
+        $this->about = $about;
         $this->translations = [];
     }
 }

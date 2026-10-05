@@ -37,6 +37,26 @@ const templateLabels = computed(() => ({
     title: t('adminDashboard.contactEmailTemplate'),
     description: t('adminDashboard.contactEmailTemplateHint'),
   },
+  application_received: {
+    title: t('adminDashboard.applicationReceivedEmailTemplate'),
+    description: t('adminDashboard.applicationReceivedEmailTemplateHint'),
+  },
+  creator_inquiry_received: {
+    title: t('adminDashboard.creatorInquiryEmailTemplate'),
+    description: t('adminDashboard.creatorInquiryEmailTemplateHint'),
+  },
+  creator_inquiry_accepted: {
+    title: t('adminDashboard.creatorInquiryAcceptedEmailTemplate'),
+    description: t('adminDashboard.creatorInquiryAcceptedEmailTemplateHint'),
+  },
+  creator_hired: {
+    title: t('adminDashboard.creatorHiredEmailTemplate'),
+    description: t('adminDashboard.creatorHiredEmailTemplateHint'),
+  },
+  unread_message_reminder: {
+    title: t('adminDashboard.unreadMessageReminderEmailTemplate'),
+    description: t('adminDashboard.unreadMessageReminderEmailTemplateHint'),
+  },
 }))
 
 const selectedTemplate = computed(() => templates.value.find(({ key }) => key === selectedKey.value) ?? null)

@@ -1,5 +1,5 @@
 <script setup>
-import { onMounted, ref, watch } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import RouterLink from '../components/shared/LocalizedLink.vue'
 import { useI18n } from 'vue-i18n'
@@ -9,12 +9,29 @@ import WaveLogo from '../components/shared/WaveLogo.vue'
 import { apiGet } from '../lib/api'
 import { getSeoOrigin, updateSeo } from '../lib/seo'
 import { localizedPath } from '../routePaths'
+import { sanitizeRichText } from '../lib/richText'
 
 const route = useRoute()
 const company = ref(null)
 const campaigns = ref([])
 const error = ref('')
 const { t, locale } = useI18n()
+const countryDisplayLocale = computed(() => {
+  if (locale.value === 'cnr') return 'bs'
+  if (locale.value === 'sr') return 'sr-Latn'
+
+  return locale.value
+})
+const locationLabel = computed(() => {
+  if (!company.value) return ''
+
+  const countryName = company.value.countryCode
+    ? new Intl.DisplayNames([countryDisplayLocale.value], { type: 'region' }).of(company.value.countryCode)
+    : ''
+
+  return [company.value.city, countryName].filter(Boolean).join(', ')
+})
+const aboutHtml = computed(() => sanitizeRichText(company.value?.about || ''))
 
 async function loadCompany() {
   company.value = null
@@ -75,10 +92,15 @@ onMounted(loadCompany)
   <template v-else>
     <section class="company-cover">
       <div class="page-width company-cover__inner">
-        <div class="company-logo"><WaveLogo mark /></div>
+        <div class="company-logo">
+          <img v-if="company.logoUrl" :src="company.logoUrl" :alt="company.name" />
+          <WaveLogo v-else mark />
+        </div>
         <p class="eyebrow">{{ company.industry }}</p>
         <h1>{{ company.name }}<span v-if="company.verified" class="verified-mark" :aria-label="t('campaignCard.verified')">✓</span></h1>
+        <p v-if="locationLabel" class="company-cover__location">{{ locationLabel }}</p>
         <p>{{ t('companyProfile.profileLabel') }}</p>
+        <div v-if="aboutHtml" class="company-cover__about" v-html="aboutHtml"></div>
       </div>
     </section>
     <section class="page-width company-briefs">

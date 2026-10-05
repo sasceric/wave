@@ -15,20 +15,34 @@ const error = ref('')
 const applyError = ref('')
 const applicationMessage = ref('')
 const applicationSent = ref(false)
+const alreadyApplied = ref(false)
 const user = ref(null)
 const { t, locale } = useI18n()
 
 async function loadCampaign() {
+  const slug = route.params.slug
   campaign.value = null
   error.value = ''
   applyError.value = ''
   applicationSent.value = false
+  alreadyApplied.value = false
   try {
     const [response] = await Promise.all([
-      apiGet(`/campaigns/${encodeURIComponent(route.params.slug)}`),
+      apiGet(`/campaigns/${encodeURIComponent(slug)}`),
       apiGet('/auth/me').then(({ data }) => (user.value = data)).catch(() => (user.value = null)),
     ])
     campaign.value = response.data
+
+    if (user.value?.accountType === 'creator') {
+      try {
+        const applicationsResponse = await apiGet('/me/applications')
+        alreadyApplied.value = applicationsResponse.data.some(
+          (application) => application.campaign.slug === slug,
+        )
+      } catch (cause) {
+        applyError.value = cause.message
+      }
+    }
   } catch (cause) {
     error.value = cause.message
   }
@@ -140,6 +154,13 @@ onMounted(loadCampaign)
         </div>
         <div v-else-if="user?.accountType === 'creator' && !user.approved" class="brief-notice" role="status">
           {{ t('account.approvalPendingNotice') }}
+        </div>
+        <div
+          v-else-if="user?.accountType === 'creator' && alreadyApplied"
+          class="brief-notice"
+          role="status"
+        >
+          {{ t('campaignDetail.alreadyApplied') }}
         </div>
         <div v-else-if="user?.accountType === 'creator' && !applicationSent" class="brief-application">
           <label class="field-label" for="application-message">{{ t('account.applicationMessage') }}</label>

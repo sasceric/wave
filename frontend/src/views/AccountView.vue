@@ -1,30 +1,50 @@
 <script setup>
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { parsePhoneNumberFromString } from 'libphonenumber-js/min'
 import RouterLink from '../components/shared/LocalizedLink.vue'
 import { useI18n } from 'vue-i18n'
-import { Plus, Trash2 } from '@lucide/vue'
+import { Eye, MessageCircle, Plus, Trash2, X } from '@lucide/vue'
 import AccountAccessPanel from '../components/account/AccountAccessPanel.vue'
 import AccountSidebar from '../components/account/AccountSidebar.vue'
 import MultiSelect from '../components/shared/MultiSelect.vue'
 import MediaUploadField from '../components/shared/MediaUploadField.vue'
+import PhoneNumberField from '../components/shared/PhoneNumberField.vue'
+import ProfileImageField from '../components/shared/ProfileImageField.vue'
 import RichTextEditor from '../components/shared/RichTextEditor.vue'
+import SearchableSelect from '../components/shared/SearchableSelect.vue'
 import StatusMessage from '../components/shared/StatusMessage.vue'
 import SwitchField from '../components/shared/SwitchField.vue'
 import WaveLogo from '../components/shared/WaveLogo.vue'
 import CampaignCard from '../components/campaigns/CampaignCard.vue'
+import DirectoryPagination from '../components/shared/DirectoryPagination.vue'
 import { apiGet, apiRequest, formatDate, formatMoney } from '../lib/api'
 import { useMarketplaceCatalog } from '../composables/useMarketplaceCatalog'
 import { setCurrentUser } from '../composables/useCurrentUser'
 import { useCampaignBookmarks } from '../composables/useCampaignBookmarks'
 import { CURRENCIES, SOCIAL_PLATFORMS } from '../lib/marketplace'
+import { formatInternationalPhoneNumber } from '../lib/phoneNumbers'
 import { localizedRouteName } from '../routePaths'
+import countries from '../data/countries.json'
 
 const { t, locale } = useI18n()
 const route = useRoute()
 const router = useRouter()
 const { categories, error: catalogError } = useMarketplaceCatalog(locale)
 const { bookmarks, loadCampaignBookmarks } = useCampaignBookmarks()
+const countryDisplayLocale = computed(() => {
+  if (locale.value === 'cnr') return 'bs'
+  if (locale.value === 'sr') return 'sr-Latn'
+
+  return locale.value
+})
+const companyCountryOptions = computed(() => {
+  const countryNames = new Intl.DisplayNames([countryDisplayLocale.value], { type: 'region' })
+
+  return countries
+    .map((code) => ({ value: code, label: countryNames.of(code) || code }))
+    .sort((first, second) => first.label.localeCompare(second.label, countryDisplayLocale.value))
+})
 const PROFILE_TABS = ['about', 'social', 'portfolio', 'packages', 'faqs']
 const LEGACY_ACCOUNT_TABS = {
   applications: 'account-applications',
@@ -42,6 +62,8 @@ const notice = ref('')
 const resendingVerification = ref(false)
 const visibilitySaving = ref(false)
 const profile = ref(null)
+const profileImageField = ref(null)
+const companyPhoneCountry = ref('BA')
 const tags = ref('')
 const campaigns = ref([])
 const applications = ref([])
@@ -49,11 +71,43 @@ const offers = ref([])
 const invitations = ref([])
 const companyApplications = ref([])
 const inquiries = ref([])
-const inquiryMessages = ref({})
-const inquiryMessageDrafts = ref({})
 const editingCampaignId = ref(null)
 const campaignForm = ref(emptyCampaign())
+const companyCampaignPage = ref(1)
+const companyCampaignPageSize = ref(10)
 const offerForms = ref({})
+const applicantDialog = ref(null)
+const selectedApplication = ref(null)
+let noticeTimeout = null
+const campaignPage = computed(() => route.meta.accountCampaignPage ?? 'list')
+const selectedCampaign = computed(() => campaigns.value.find((campaign) => campaign.slug === route.params.slug) ?? null)
+const paginatedCompanyCampaigns = computed(() => {
+  const start = (companyCampaignPage.value - 1) * companyCampaignPageSize.value
+
+  return campaigns.value.slice(start, start + companyCampaignPageSize.value)
+})
+const selectedCampaignApplications = computed(() => selectedCampaign.value
+  ? companyApplications.value.filter((application) => application.campaign.slug === selectedCampaign.value.slug)
+  : [])
+
+watch(notice, (message) => {
+  if (noticeTimeout) {
+    window.clearTimeout(noticeTimeout)
+    noticeTimeout = null
+  }
+  if (!message) return
+
+  noticeTimeout = window.setTimeout(() => {
+    notice.value = ''
+    noticeTimeout = null
+  }, 4000)
+})
+
+onBeforeUnmount(() => {
+  if (noticeTimeout) {
+    window.clearTimeout(noticeTimeout)
+  }
+})
 
 watch(catalogError, (value) => {
   if (value) {
@@ -152,6 +206,17 @@ async function loadDashboard() {
     user.value = response.data
     setCurrentUser(response.data)
     profile.value = structuredClone(response.data.profile)
+    if (response.data.accountType === 'company') {
+      profile.value = {
+        ...profile.value,
+        phone: response.data.phone || '',
+        city: response.data.city || '',
+        countryCode: response.data.countryCode || '',
+      }
+      companyPhoneCountry.value = parsePhoneNumberFromString(profile.value.phone)?.country
+        || profile.value.countryCode
+        || 'BA'
+    }
     if (route.query.bookmark) {
       pendingBookmarkRedirect = await completePendingBookmark(response.data)
     }
@@ -191,6 +256,11 @@ async function loadDashboard() {
         campaigns.value.map((campaign) => apiGet(`/company/campaigns/${encodeURIComponent(campaign.slug)}/applications`)),
       )
       companyApplications.value = applicationResponses.flatMap((response) => response.data)
+      if (selectedApplication.value) {
+        selectedApplication.value = companyApplications.value.find(
+          (application) => application.id === selectedApplication.value.id,
+        ) ?? selectedApplication.value
+      }
       offerForms.value = Object.fromEntries(companyApplications.value.map((application) => [
         application.id,
         { amount: application.campaign.budgetMin, message: '' },
@@ -198,20 +268,11 @@ async function loadDashboard() {
     }
     const inquiryResponse = await apiGet('/me/inquiries')
     inquiries.value = inquiryResponse.data
-    const acceptedInquiries = inquiries.value.filter((inquiry) => inquiry.canChat)
-    const messageResponses = await Promise.all(
-      acceptedInquiries.map((inquiry) => apiGet(`/me/inquiries/${inquiry.id}/messages`)),
-    )
-    inquiryMessages.value = Object.fromEntries(acceptedInquiries.map((inquiry, index) => [
-      inquiry.id,
-      messageResponses[index].data,
-    ]))
   } catch (cause) {
     if (cause.status === 401) {
       user.value = null
       profile.value = null
       inquiries.value = []
-      inquiryMessages.value = {}
       setCurrentUser(null)
       return
     }
@@ -323,7 +384,20 @@ async function saveProfile() {
   busy.value = true
   error.value = ''
   notice.value = ''
-  const body = user.value.accountType === 'creator'
+  const isCreator = user.value.accountType === 'creator'
+  const companyPhone = isCreator ? null : profile.value.phone.trim()
+  const normalizedPhone = companyPhone
+    ? formatInternationalPhoneNumber(companyPhone, companyPhoneCountry.value)
+    : null
+  if (companyPhone && !normalizedPhone) {
+    error.value = t('auth.phoneInvalid')
+    busy.value = false
+    return
+  }
+
+  let imageChange = null
+  let profileSaved = false
+  const body = isCreator
     ? {
         displayName: profile.value.displayName,
         category: profile.value.categories[0] || profile.value.category,
@@ -361,15 +435,63 @@ async function saveProfile() {
     : {
         name: profile.value.name,
         industry: profile.value.industry,
-        logoMediaId: profile.value.logoMediaId || null,
-        logoUrl: profile.value.logoMediaId ? null : profile.value.logoUrl || null,
+        about: profile.value.about || '',
+        city: profile.value.city?.trim() || null,
+        countryCode: profile.value.countryCode || null,
+        phone: normalizedPhone,
       }
   try {
+    imageChange = await profileImageField.value?.prepareSave()
+    if (imageChange) {
+      if (isCreator) {
+        body.avatarMediaId = imageChange.mediaId
+        body.avatarUrl = imageChange.url
+      } else {
+        body.logoMediaId = imageChange.mediaId
+        body.logoUrl = imageChange.url
+      }
+    } else if (isCreator) {
+      body.avatarMediaId = profile.value.avatarMediaId || null
+      body.avatarUrl = profile.value.avatarMediaId ? null : profile.value.avatarUrl || null
+    } else {
+      body.logoMediaId = profile.value.logoMediaId || null
+      body.logoUrl = profile.value.logoMediaId ? null : profile.value.logoUrl || null
+    }
+
     await apiRequest('/me/profile', { method: 'PUT', body })
+    profileSaved = true
+    if (imageChange) {
+      if (isCreator) {
+        profile.value.avatarMediaId = imageChange.mediaId
+        profile.value.avatarUrl = imageChange.url
+      } else {
+        profile.value.logoMediaId = imageChange.mediaId
+        profile.value.logoUrl = imageChange.url
+      }
+    }
+    if (imageChange?.previousMediaId) {
+      try {
+        await apiRequest(`/media/${imageChange.previousMediaId}`, { method: 'DELETE' })
+      } catch (cause) {
+        error.value = `${t('account.profileImageCleanupFailed')} ${cause.message}`
+        notice.value = t('account.profileSaved')
+        return
+      }
+    }
+    profileImageField.value?.commit()
     notice.value = t('account.profileSaved')
     await loadDashboard()
   } catch (cause) {
-    error.value = cause.message
+    if (!profileSaved && imageChange?.uploadedMediaId) {
+      try {
+        await profileImageField.value?.rollback(imageChange)
+      } catch (cleanupCause) {
+        error.value = `${cause.message} ${t('account.profileImageCleanupFailed')} ${cleanupCause.message}`
+      }
+    }
+    if (!error.value) {
+      error.value = cause.message
+    }
   } finally {
     busy.value = false
   }
@@ -458,7 +580,10 @@ function setCampaignForm(campaign = null) {
     closesAt: campaign.closesAt.slice(0, 10),
     status: campaign.status,
   }
-  document.querySelector('.account-campaign-form')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+}
+
+function cancelCampaignEditing() {
+  setCampaignForm()
 }
 
 async function saveCampaign() {
@@ -483,10 +608,18 @@ async function saveCampaign() {
   }
   const path = editingCampaignId.value ? `/company/campaigns/${editingCampaignId.value}` : '/company/campaigns'
   try {
-    await apiRequest(path, { method: editingCampaignId.value ? 'PUT' : 'POST', body })
+    const response = await apiRequest(path, { method: editingCampaignId.value ? 'PUT' : 'POST', body })
+    const savedCampaign = response.data
+    const isNewCampaign = !editingCampaignId.value
     notice.value = t('account.campaignSaved')
     setCampaignForm()
     await loadDashboard()
+    if (isNewCampaign && savedCampaign?.slug) {
+      await router.replace({
+        name: localizedRouteName('account-campaign-detail', locale.value),
+        params: { slug: savedCampaign.slug },
+      })
+    }
   } catch (cause) {
     const fieldErrors = cause.fields
       .filter((field) => typeof field === 'string' && t(`account.campaignFieldErrors.${field}`) !== `account.campaignFieldErrors.${field}`)
@@ -499,12 +632,22 @@ async function saveCampaign() {
   }
 }
 
-async function rejectApplication(application) {
-  await runAction(`/company/applications/${application.id}/reject`, {})
-}
-
 async function shortlistApplication(application) {
   await runAction(`/company/applications/${application.id}/shortlist`, {})
+}
+
+function applicationCount(campaign) {
+  return companyApplications.value.filter((application) => application.campaign.slug === campaign.slug).length
+}
+
+function openApplicant(application) {
+  selectedApplication.value = application
+  applicantDialog.value?.showModal()
+}
+
+function closeApplicant() {
+  applicantDialog.value?.close()
+  selectedApplication.value = null
 }
 
 async function sendOffer(application) {
@@ -540,21 +683,21 @@ async function respondToInvitation(invitation, decision) {
 }
 
 async function respondToInquiry(inquiry, decision) {
-  await runAction(`/me/inquiries/${inquiry.id}/decision`, { decision })
-}
-
-async function sendInquiryMessage(inquiry) {
-  const body = inquiryMessageDrafts.value[inquiry.id]?.trim()
-  if (!body) {
-    return
-  }
+  error.value = ''
+  notice.value = ''
   try {
-    await apiRequest(`/me/inquiries/${inquiry.id}/messages`, {
+    await apiRequest(`/me/inquiries/${inquiry.id}/decision`, {
       method: 'POST',
-      body: { body },
+      body: { decision },
     })
-    inquiryMessageDrafts.value[inquiry.id] = ''
+    notice.value = t('account.actionSaved')
     await loadDashboard()
+    if (decision === 'accept') {
+      await router.push({
+        name: localizedRouteName('messages', locale.value),
+        query: { inquiry: inquiry.id },
+      })
+    }
   } catch (cause) {
     error.value = cause.message
   }
@@ -604,10 +747,36 @@ watch([user, accountSection], ([account, section]) => {
 
   const unavailableForRole = account.accountType === 'creator'
     ? section === 'campaigns'
-    : section === 'offers' || section === 'bookmarks'
+    : section === 'offers' || section === 'bookmarks' || section === 'applications'
 
   if (unavailableForRole) {
     void router.replace({ name: localizedRouteName('account', locale.value) })
+  }
+})
+
+watch(() => [route.meta.accountCampaignPage, route.params.slug], ([page]) => {
+  if (page === 'create') {
+    setCampaignForm()
+  } else {
+    editingCampaignId.value = null
+  }
+
+  if (applicantDialog.value?.open) {
+    closeApplicant()
+  }
+})
+
+watch(campaigns, () => {
+  companyCampaignPage.value = 1
+})
+
+watch([campaigns, () => route.params.slug], ([campaignList, slug]) => {
+  if (user.value?.accountType === 'creator' || typeof slug !== 'string' || campaignList.length === 0) {
+    return
+  }
+
+  if (!campaignList.some((campaign) => campaign.slug === slug)) {
+    void router.replace({ name: localizedRouteName('account-campaigns', locale.value) })
   }
 })
 
@@ -692,6 +861,25 @@ onMounted(loadDashboard)
             <span aria-hidden="true">↗</span>
           </button>
         </header>
+
+        <div class="profile-image-editor">
+          <ProfileImageField
+            ref="profileImageField"
+            :folder="user.accountType === 'creator' ? 'creator-avatar' : 'company-logo'"
+            :model-value="user.accountType === 'creator' ? profile.avatarMediaId : profile.logoMediaId"
+            :preview-url="user.accountType === 'creator' ? profile.avatarUrl : profile.logoUrl"
+            :alt="user.accountType === 'creator' ? profile.displayName : profile.name"
+            :add-label="t('account.addProfileImage')"
+            :change-label="t('account.changeProfileImage')"
+            :remove-label="t('account.removeProfileImage')"
+            :helper-text="t('account.profileImageSaveHint')"
+            :remove-title="t('account.profileImageRemoveTitle')"
+            :remove-message="t('account.profileImageRemoveMessage')"
+            :confirm-label="t('account.remove')"
+            :cancel-label="t('account.richTextCancel')"
+            :disabled="busy"
+          />
+        </div>
 
         <nav
           v-if="user.accountType === 'creator'"
@@ -787,14 +975,6 @@ onMounted(loadDashboard)
                 <span>{{ t('account.tags') }}</span>
                 <input v-model="tags" maxlength="500" />
               </label>
-              <div class="form-field--wide">
-                <MediaUploadField
-                  v-model="profile.avatarMediaId"
-                  folder="creator-avatar"
-                  :preview-url="profile.avatarUrl"
-                  @uploaded="profile.avatarUrl = $event.url"
-                />
-              </div>
             </div>
           </section>
 
@@ -1031,20 +1211,66 @@ onMounted(loadDashboard)
           </section>
         </template>
         <section v-else class="profile-tab-panel">
-          <label class="form-field">
-            <span>{{ t('account.companyName') }}</span>
-            <input v-model.trim="profile.name" required maxlength="120" autocomplete="organization" />
-          </label>
-          <label class="form-field">
-            <span>{{ t('auth.industry') }}</span>
-            <input v-model.trim="profile.industry" required maxlength="100" />
-          </label>
-          <MediaUploadField
-            v-model="profile.logoMediaId"
-            folder="company-logo"
-            :preview-url="profile.logoUrl"
-            @uploaded="profile.logoUrl = $event.url"
-          />
+          <div class="form-grid">
+            <label class="form-field">
+              <span>{{ t('account.companyName') }}</span>
+              <input
+                v-model.trim="profile.name"
+                required
+                maxlength="120"
+                autocomplete="organization"
+                :placeholder="t('auth.companyNamePlaceholder')"
+              />
+            </label>
+            <label class="form-field">
+              <span>{{ t('auth.industry') }}</span>
+              <input
+                v-model.trim="profile.industry"
+                required
+                maxlength="100"
+                :placeholder="t('auth.industryPlaceholder')"
+              />
+            </label>
+            <SearchableSelect
+              class="form-field--wide"
+              :model-value="profile.countryCode || ''"
+              :options="companyCountryOptions"
+              :label="t('auth.country')"
+              :placeholder="t('auth.selectCountry')"
+              :search-placeholder="t('auth.searchCountry')"
+              :no-results-label="t('auth.noCountriesFound')"
+              @update:model-value="profile.countryCode = $event"
+            />
+            <label class="form-field">
+              <span>{{ t('auth.city') }}</span>
+              <input
+                v-model.trim="profile.city"
+                maxlength="70"
+                autocomplete="address-level2"
+                :placeholder="t('auth.cityPlaceholder')"
+              />
+            </label>
+            <PhoneNumberField
+              v-model="profile.phone"
+              v-model:country-code="companyPhoneCountry"
+              :label="t('auth.phone')"
+              :placeholder="t('auth.phonePlaceholder')"
+              :country-label="t('auth.phoneCountry')"
+              :country-placeholder="t('auth.selectCountry')"
+              :country-search-placeholder="t('auth.searchPhoneCountry')"
+              :no-countries-found-label="t('auth.noPhoneCountriesFound')"
+              :optional="true"
+            />
+          </div>
+          <div class="form-field form-field--wide company-about-field">
+            <span>{{ t('account.companyAbout') }}</span>
+            <RichTextEditor
+              v-model="profile.about"
+              :label="t('account.companyAbout')"
+              :placeholder="t('account.companyAboutPlaceholder')"
+              :maxlength="1500"
+            />
+          </div>
         </section>
       </form>
 
@@ -1057,17 +1283,41 @@ onMounted(loadDashboard)
         <StatusMessage v-if="!applications.length" variant="empty">
           {{ t('account.noApplications') }}
         </StatusMessage>
-        <article v-for="application in applications" :key="application.id" class="dashboard-card">
-          <div class="dashboard-card__heading">
-            <RouterLink :to="{ name: 'campaign-detail', params: { slug: application.campaign.slug } }">{{ application.campaign.title }}</RouterLink>
-            <span class="status-pill">{{ statusLabel(application.status) }}</span>
-          </div>
-          <p>{{ application.message }}</p>
-          <div v-if="application.offer" class="offer-summary">
-            <strong>{{ t('account.offerAmount') }}: {{ formatMoney(application.offer.amount, application.campaign.currency) }}</strong>
-            <p>{{ application.offer.message }}</p>
-          </div>
-        </article>
+        <div v-else class="application-list">
+          <article v-for="application in applications" :key="application.id" class="application-row">
+            <div class="application-row__main">
+              <div class="application-row__heading">
+                <RouterLink
+                  class="application-row__title"
+                  :to="{ name: 'campaign-detail', params: { slug: application.campaign.slug } }"
+                >
+                  {{ application.campaign.title }}
+                </RouterLink>
+                <span class="status-pill">{{ statusLabel(application.status) }}</span>
+              </div>
+              <div class="application-row__meta">
+                <span>{{ application.campaign.company.name }}</span>
+                <time :datetime="application.createdAt">{{ formatDate(application.createdAt) }}</time>
+              </div>
+              <p class="application-row__message">{{ application.message }}</p>
+              <div v-if="application.offer" class="application-row__offer">
+                <strong>{{ formatMoney(application.offer.amount, application.campaign.currency) }}</strong>
+                <span>{{ application.offer.message }}</span>
+              </div>
+            </div>
+            <RouterLink
+              v-if="application.conversationId"
+              class="button button--outline application-row__chat"
+              :to="{
+                name: localizedRouteName('messages', locale),
+                query: { conversation: application.conversationId },
+              }"
+            >
+              <MessageCircle :size="15" aria-hidden="true" />
+              {{ t('account.openChat') }}
+            </RouterLink>
+          </article>
+        </div>
       </section>
       <section
         v-if="accountSection === 'invitations' && user.accountType === 'creator'"
@@ -1131,9 +1381,90 @@ onMounted(loadDashboard)
         <StatusMessage v-else variant="empty">{{ t('account.noBookmarks') }}</StatusMessage>
       </section>
 
+      <section
+        v-if="user.accountType !== 'creator' && accountSection === 'campaigns' && campaignPage === 'list'"
+        class="form-card account-activity-panel"
+      >
+        <header class="company-campaigns__header">
+          <div>
+            <p class="eyebrow">{{ t('account.companyProfile') }}</p>
+            <h2>{{ t('account.campaigns') }}</h2>
+          </div>
+          <RouterLink
+            class="button button--dark"
+            :to="{ name: localizedRouteName('account-campaign-create', locale) }"
+          >
+            <Plus :size="16" aria-hidden="true" />
+            {{ t('account.addCampaign') }}
+          </RouterLink>
+        </header>
+        <StatusMessage v-if="!campaigns.length" variant="empty">
+          {{ t('account.noCampaigns') }}
+        </StatusMessage>
+        <div v-else class="company-campaign-list" role="list">
+          <article
+            v-for="campaign in paginatedCompanyCampaigns"
+            :key="campaign.id"
+            class="company-campaign-row"
+            role="listitem"
+          >
+            <div class="company-campaign-row__main">
+              <RouterLink
+                class="company-campaign-row__title"
+                :to="{ name: localizedRouteName('account-campaign-detail', locale), params: { slug: campaign.slug } }"
+              >
+                {{ campaign.title }}
+              </RouterLink>
+              <p>{{ campaign.summary }}</p>
+            </div>
+            <span class="status-pill">{{ t(`account.${campaign.status}`) }}</span>
+            <span class="company-campaign-row__applicants">
+              {{ t('account.campaignApplicants') }}: <strong>{{ applicationCount(campaign) }}</strong>
+            </span>
+            <RouterLink
+              class="button button--outline company-campaign-row__view"
+              :to="{ name: localizedRouteName('account-campaign-detail', locale), params: { slug: campaign.slug } }"
+            >
+              {{ t('account.viewCampaign') }}
+            </RouterLink>
+          </article>
+        </div>
+        <DirectoryPagination
+          :page="companyCampaignPage"
+          :page-size="companyCampaignPageSize"
+          :page-sizes="[10, 25, 50]"
+          :total="campaigns.length"
+          @update:page="companyCampaignPage = $event"
+          @update:page-size="companyCampaignPageSize = $event"
+        />
+      </section>
+
       <template v-if="user.accountType !== 'creator' && accountSection === 'campaigns'">
-        <section class="form-card account-campaign-form">
-          <h2>{{ editingCampaignId ? t('account.editCampaign') : t('account.createCampaign') }}</h2>
+        <section
+          v-if="campaignPage === 'create' || editingCampaignId"
+          class="form-card account-activity-panel account-campaign-form"
+        >
+          <header class="company-campaigns__header">
+            <div>
+              <p class="eyebrow">{{ t('account.campaigns') }}</p>
+              <h2>{{ editingCampaignId ? t('account.editCampaign') : t('account.createCampaign') }}</h2>
+            </div>
+            <button
+              v-if="editingCampaignId && selectedCampaign"
+              class="button button--outline"
+              type="button"
+              @click="cancelCampaignEditing"
+            >
+              {{ t('account.cancelEdit') }}
+            </button>
+            <RouterLink
+              v-else
+              class="button button--outline"
+              :to="{ name: localizedRouteName('account-campaigns', locale) }"
+            >
+              {{ t('account.cancelEdit') }}
+            </RouterLink>
+          </header>
           <form class="form-stack" @submit.prevent="saveCampaign">
             <label class="form-field"><span>{{ t('account.campaignTitle') }}</span><input v-model.trim="campaignForm.title" required minlength="5" maxlength="160" /></label>
             <label class="form-field"><span>{{ t('account.summary') }}</span><input v-model.trim="campaignForm.summary" required minlength="10" maxlength="220" /></label>
@@ -1152,11 +1483,7 @@ onMounted(loadDashboard)
               <label class="form-field">
                 <span>{{ t('auth.category') }}</span>
                 <select v-model="campaignForm.category">
-                  <option
-                    v-for="category in categories"
-                    :key="category.value"
-                    :value="category.value"
-                  >
+                  <option v-for="category in categories" :key="category.value" :value="category.value">
                     {{ category.label }}
                   </option>
                 </select>
@@ -1179,76 +1506,208 @@ onMounted(loadDashboard)
               <label class="form-field"><span>{{ t('account.creatorCount') }}</span><input v-model.number="campaignForm.creatorCount" type="number" min="1" max="100" required /></label>
               <label class="form-field"><span>{{ t('account.closesAt') }}</span><input v-model="campaignForm.closesAt" type="date" required /></label>
             </div>
-            <label v-if="editingCampaignId" class="form-field"><span>{{ t('account.status') }}</span><select v-model="campaignForm.status"><option value="open">{{ t('account.open') }}</option><option value="closed">{{ t('account.closed') }}</option></select></label>
+            <label v-if="editingCampaignId" class="form-field">
+              <span>{{ t('account.status') }}</span>
+              <select v-model="campaignForm.status">
+                <option value="open">{{ t('account.open') }}</option>
+                <option value="closed">{{ t('account.closed') }}</option>
+              </select>
+            </label>
             <div class="button-row">
-              <button class="button button--dark" type="submit" :disabled="busy || !user.emailVerified || !user.approved">{{ editingCampaignId ? t('account.updateCampaign') : t('account.publish') }} <span aria-hidden="true">↗</span></button>
-              <button v-if="editingCampaignId" class="button button--outline" type="button" @click="setCampaignForm()">{{ t('account.cancelEdit') }}</button>
+              <button class="button button--dark" type="submit" :disabled="busy || !user.emailVerified || !user.approved">
+                {{ editingCampaignId ? t('account.updateCampaign') : t('account.publish') }}
+                <span aria-hidden="true">↗</span>
+              </button>
             </div>
           </form>
         </section>
-        <section class="form-card account-activity-panel">
-          <h2>{{ t('account.campaigns') }}</h2>
-          <StatusMessage v-if="!campaigns.length" variant="empty">
-            {{ t('account.noCampaigns') }}
-          </StatusMessage>
-          <article v-for="campaign in campaigns" :key="campaign.id" class="dashboard-card">
-            <div class="dashboard-card__heading">
-              <RouterLink :to="{ name: 'campaign-detail', params: { slug: campaign.slug } }">{{ campaign.title }}</RouterLink>
-              <span class="status-pill">{{ t(`account.${campaign.status}`) }}</span>
+
+        <template v-else-if="campaignPage === 'detail' && selectedCampaign">
+          <section class="form-card account-activity-panel account-campaign-detail">
+            <header class="company-campaigns__header">
+              <div>
+                <p class="eyebrow">{{ t('account.campaignDetails') }}</p>
+                <h2>{{ selectedCampaign.title }}</h2>
+              </div>
+              <div class="button-row">
+                <span class="status-pill">{{ t(`account.${selectedCampaign.status}`) }}</span>
+                <button class="button button--outline" type="button" @click="setCampaignForm(selectedCampaign)">
+                  {{ t('account.editCampaign') }}
+                </button>
+              </div>
+            </header>
+            <img
+              v-if="selectedCampaign.coverImageUrl"
+              class="company-campaign-detail__cover"
+              :src="selectedCampaign.coverImageUrl"
+              :alt="selectedCampaign.title"
+            />
+            <p class="company-campaign-detail__summary">{{ selectedCampaign.summary }}</p>
+            <p class="company-campaign-detail__description">{{ selectedCampaign.description }}</p>
+            <dl class="company-campaign-detail__facts">
+              <div><dt>{{ t('auth.category') }}</dt><dd>{{ selectedCampaign.category }}</dd></div>
+              <div><dt>{{ t('campaignDetail.location') }}</dt><dd>{{ selectedCampaign.location }}</dd></div>
+              <div><dt>{{ t('account.budgetMin') }} – {{ t('account.budgetMax') }}</dt><dd>{{ formatMoney(selectedCampaign.budgetMin, selectedCampaign.currency) }} – {{ formatMoney(selectedCampaign.budgetMax, selectedCampaign.currency) }}</dd></div>
+              <div><dt>{{ t('account.creatorCount') }}</dt><dd>{{ selectedCampaign.creatorCount }}</dd></div>
+              <div><dt>{{ t('account.closesAt') }}</dt><dd>{{ formatDate(selectedCampaign.closesAt) }}</dd></div>
+              <div><dt>{{ t('account.channels') }}</dt><dd>{{ selectedCampaign.channels.join(', ') }}</dd></div>
+              <div><dt>{{ t('account.deliverables') }}</dt><dd>{{ selectedCampaign.deliverables.join(', ') }}</dd></div>
+            </dl>
+          </section>
+
+          <section class="form-card account-activity-panel company-applicants">
+            <header class="company-campaigns__header">
+              <div>
+                <p class="eyebrow">{{ selectedCampaign.title }}</p>
+                <h2>{{ t('account.campaignApplicants') }}</h2>
+              </div>
+              <span class="company-applicants__count">{{ selectedCampaignApplications.length }}</span>
+            </header>
+            <StatusMessage v-if="!selectedCampaignApplications.length" variant="empty">
+              {{ t('account.noCampaignApplications') }}
+            </StatusMessage>
+            <div v-else class="company-applicants__list" role="list">
+              <article
+                v-for="application in selectedCampaignApplications"
+                :key="application.id"
+                class="company-applicant-row"
+                role="listitem"
+              >
+                <button
+                  class="company-applicant-row__identity"
+                  type="button"
+                  @click="openApplicant(application)"
+                >
+                  <img
+                    v-if="application.creator.avatarUrl"
+                    :src="application.creator.avatarUrl"
+                    :alt="application.creator.displayName"
+                  />
+                  <span v-else>{{ application.creator.displayName.slice(0, 1) }}</span>
+                  <span class="company-applicant-row__creator">
+                    <strong>{{ application.creator.displayName }}</strong>
+                    <small>
+                      {{ application.creator.categoryLabel || application.creator.category }}
+                      <template v-if="application.creator.location"> · {{ application.creator.location }}</template>
+                    </small>
+                  </span>
+                </button>
+                <div class="company-applicant-card__statuses">
+                  <span class="status-pill">{{ statusLabel(application.status) }}</span>
+                  <span v-if="application.status === 'accepted'" class="status-pill company-applicant-card__hired">
+                    {{ t('account.hired') }}
+                  </span>
+                </div>
+                <button class="button button--outline company-applicant-row__view" type="button" @click="openApplicant(application)">
+                  <Eye :size="15" aria-hidden="true" />
+                  {{ t('account.viewApplication') }}
+                </button>
+              </article>
             </div>
-            <p>{{ campaign.summary }}</p>
-            <button class="text-link" type="button" @click="setCampaignForm(campaign)">{{ t('account.editCampaign') }} ↗</button>
-          </article>
-        </section>
-      </template>
-      <section
-        v-if="user.accountType !== 'creator' && accountSection === 'applications'"
-        class="form-card account-activity-panel"
-      >
-        <h2>{{ t('account.companyApplications') }}</h2>
-        <StatusMessage v-if="!companyApplications.length" variant="empty">
-          {{ t('account.noApplications') }}
+          </section>
+        </template>
+        <StatusMessage v-else-if="campaignPage === 'detail'" variant="empty">
+          {{ t('account.noCampaigns') }}
         </StatusMessage>
-        <article v-for="application in companyApplications" :key="application.id" class="dashboard-card">
-          <div class="dashboard-card__heading">
-            <RouterLink :to="{ name: 'creator-profile', params: { slug: application.creator.slug } }">{{ application.creator.displayName }}</RouterLink>
-            <span class="status-pill">{{ statusLabel(application.status) }}</span>
-          </div>
-          <p class="dashboard-card__subheading">{{ application.campaign.title }}</p>
-          <p><strong>{{ t('account.yourMessage') }}</strong><br />{{ application.message }}</p>
-          <LocalizedLink
-            v-if="['shortlisted', 'offered', 'accepted'].includes(application.status)"
-            class="button button--outline"
-            :to="{
-              name: 'messages',
-              query: {
-                campaign: application.campaign.slug,
-                creatorId: application.creator.id,
-                creatorSlug: application.creator.slug,
-              },
-            }"
-          >{{ t('campaignChat.messageApplicant') }}</LocalizedLink>
-          <div v-if="application.status === 'pending'" class="button-row">
-            <button class="button button--dark" type="button" :disabled="!user.emailVerified || !user.approved" @click="shortlistApplication(application)">
-              {{ t('account.shortlistForChat') }}
+      </template>
+
+      <dialog
+        ref="applicantDialog"
+        class="company-applicant-dialog"
+        @close="selectedApplication = null"
+        @click.self="closeApplicant"
+      >
+        <div v-if="selectedApplication" class="company-applicant-dialog__content">
+          <header class="company-applicant-dialog__header">
+            <div>
+              <p class="eyebrow">{{ t('account.applicantDetails') }}</p>
+              <h2>{{ selectedApplication.creator.displayName }}</h2>
+            </div>
+            <button class="company-applicant-dialog__close" type="button" :aria-label="t('account.closeApplicantDetails')" @click="closeApplicant">
+              <X :size="19" aria-hidden="true" />
             </button>
-            <button class="button button--outline" type="button" :disabled="!user.emailVerified || !user.approved" @click="rejectApplication(application)">
-              {{ t('account.reject') }}
-            </button>
-          </div>
-          <div v-if="application.status === 'shortlisted'" class="form-stack">
-            <label class="form-field"><span>{{ t('account.offerAmount') }} ({{ application.campaign.currency }})</span><input v-model.number="offerForms[application.id].amount" type="number" :min="application.campaign.budgetMin" :max="application.campaign.budgetMax" required /></label>
-            <label class="form-field"><span>{{ t('account.offerMessage') }}</span><textarea v-model.trim="offerForms[application.id].message" required minlength="10" maxlength="1500"></textarea></label>
-            <div class="button-row">
-              <button class="button button--dark" type="button" :disabled="!user.emailVerified || !user.approved || !offerForms[application.id].message.trim()" @click="sendOffer(application)">{{ t('account.sendOffer') }}</button>
+          </header>
+          <div class="company-applicant-dialog__profile">
+            <img
+              v-if="selectedApplication.creator.avatarUrl"
+              :src="selectedApplication.creator.avatarUrl"
+              :alt="selectedApplication.creator.displayName"
+            />
+            <div>
+              <strong>{{ selectedApplication.creator.categoryLabel || selectedApplication.creator.category }}</strong>
+              <span v-if="selectedApplication.creator.location">{{ selectedApplication.creator.location }}</span>
             </div>
           </div>
-          <div v-else-if="application.offer" class="offer-summary">
-            <strong>{{ formatMoney(application.offer.amount, application.campaign.currency) }}</strong>
-            <p>{{ application.offer.message }}</p>
+          <p v-if="selectedApplication.creator.bio" class="company-applicant-dialog__bio">
+            {{ selectedApplication.creator.bio }}
+          </p>
+          <div class="company-applicant-dialog__message">
+            <strong>{{ t('account.yourMessage') }}</strong>
+            <p>{{ selectedApplication.message }}</p>
           </div>
-        </article>
-      </section>
+          <div class="company-applicant-dialog__actions">
+            <button
+              v-if="selectedApplication.status === 'pending'"
+              class="button button--dark"
+              type="button"
+              :disabled="!user.emailVerified || !user.approved"
+              @click="shortlistApplication(selectedApplication)"
+            >
+              {{ t('account.accept') }}
+            </button>
+            <RouterLink
+              v-if="['shortlisted', 'offered', 'accepted'].includes(selectedApplication.status)"
+              class="button button--outline"
+              :to="{
+                name: localizedRouteName('messages', locale),
+                query: {
+                  campaign: selectedApplication.campaign.slug,
+                  creatorId: selectedApplication.creator.id,
+                  creatorSlug: selectedApplication.creator.slug,
+                },
+              }"
+              @click="closeApplicant"
+            >
+              {{ t('campaignChat.messageApplicant') }}
+            </RouterLink>
+            <RouterLink
+              class="button button--outline"
+              :to="{ name: localizedRouteName('creator-profile', locale), params: { slug: selectedApplication.creator.slug } }"
+              @click="closeApplicant"
+            >
+              {{ t('account.viewPublicProfile') }} ↗
+            </RouterLink>
+          </div>
+          <div v-if="selectedApplication.status === 'shortlisted'" class="form-stack company-applicant-card__offer">
+            <label class="form-field">
+              <span>{{ t('account.offerAmount') }} ({{ selectedApplication.campaign.currency }})</span>
+              <input
+                v-model.number="offerForms[selectedApplication.id].amount"
+                type="number"
+                :min="selectedApplication.campaign.budgetMin"
+                :max="selectedApplication.campaign.budgetMax"
+                required
+              />
+            </label>
+            <label class="form-field">
+              <span>{{ t('account.offerMessage') }}</span>
+              <textarea v-model.trim="offerForms[selectedApplication.id].message" required minlength="10" maxlength="1500"></textarea>
+            </label>
+            <button
+              class="button button--dark"
+              type="button"
+              :disabled="!user.emailVerified || !user.approved || !offerForms[selectedApplication.id]?.message.trim()"
+              @click="sendOffer(selectedApplication)"
+            >
+              {{ t('account.sendOffer') }}
+            </button>
+          </div>
+          <div v-else-if="selectedApplication.offer" class="offer-summary">
+            <strong>{{ formatMoney(selectedApplication.offer.amount, selectedApplication.campaign.currency) }}</strong>
+            <p>{{ selectedApplication.offer.message }}</p>
+          </div>
+        </div>
+      </dialog>
       <section
         v-if="accountSection === 'inquiries'"
         id="account-panel-inquiries"
@@ -1263,7 +1722,16 @@ onMounted(loadDashboard)
             <strong>{{ user.accountType === 'creator' ? inquiry.company.name : inquiry.creator.displayName }}</strong>
             <span class="status-pill">{{ t(`account.inquiry${inquiry.status[0].toUpperCase()}${inquiry.status.slice(1)}`) }}</span>
           </div>
-          <p v-if="inquiry.packageTitle" class="dashboard-card__subheading">{{ inquiry.packageTitle }}</p>
+          <p v-if="inquiry.selectedPackages?.length" class="dashboard-card__subheading">
+            <span v-for="(selection, index) in inquiry.selectedPackages" :key="index">
+              {{ index ? ' · ' : '' }}{{ selection.type === 'service'
+                ? t('creatorProfile.servicePackage')
+                : selection.type === 'other'
+                  ? t('creatorProfile.somethingElse')
+                  : selection.title }}
+            </span>
+          </p>
+          <p v-else-if="inquiry.packageTitle" class="dashboard-card__subheading">{{ inquiry.packageTitle }}</p>
           <p v-if="!inquiry.canChat">{{ inquiry.message }}</p>
           <p v-if="inquiry.proposedAmount || inquiry.listedPrice" class="inquiry-card__price">
             {{ t('account.proposedPrice') }}:
@@ -1273,20 +1741,17 @@ onMounted(loadDashboard)
             <button class="button button--dark" type="button" :disabled="!user.emailVerified || !user.approved" @click="respondToInquiry(inquiry, 'accept')">{{ t('account.accept') }}</button>
             <button class="button button--outline" type="button" :disabled="!user.emailVerified || !user.approved" @click="respondToInquiry(inquiry, 'reject')">{{ t('account.reject') }}</button>
           </div>
-          <div v-if="inquiry.canChat" class="inquiry-chat">
-            <div class="inquiry-chat__messages">
-              <p v-for="message in inquiryMessages[inquiry.id] || []" :key="message.id" :class="{ 'inquiry-chat__message--mine': message.senderRole === user.accountType }" class="inquiry-chat__message">
-                {{ message.body }}
-              </p>
-            </div>
-            <form class="inquiry-chat__form" @submit.prevent="sendInquiryMessage(inquiry)">
-              <label class="form-field">
-                <span class="sr-only">{{ t('account.writeMessage') }}</span>
-                <textarea v-model="inquiryMessageDrafts[inquiry.id]" required maxlength="2000" :placeholder="t('account.writeMessage')"></textarea>
-              </label>
-              <button class="button button--dark" type="submit">{{ t('account.sendMessage') }}</button>
-            </form>
-          </div>
+          <RouterLink
+            v-if="inquiry.canChat"
+            class="button button--outline inquiry-chat-link"
+            :to="{
+              name: localizedRouteName('messages', locale),
+              query: { inquiry: inquiry.id },
+            }"
+          >
+            <MessageCircle :size="15" aria-hidden="true" />
+            {{ t('account.openChat') }}
+          </RouterLink>
         </article>
       </section>
       </div>

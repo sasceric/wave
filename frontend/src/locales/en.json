@@ -17,14 +17,160 @@
     "campaignProfileTitle": "{name} — campaign on Wave",
     "privateTitle": "My account | Wave",
     "privateDescription": "Manage your Wave account.",
+    "imprintTitle": "Legal notice | Wave",
+    "imprintDescription": "Legal information and contact details for Wave.",
+    "privacyTitle": "Privacy policy | Wave",
+    "privacyDescription": "Learn how Wave handles account, profile, and marketplace information.",
+    "cookiesTitle": "Cookie policy | Wave",
+    "cookiesDescription": "Learn about essential cookies and browser storage used by Wave.",
     "notFoundTitle": "Page not found | Wave",
     "notFoundDescription": "The requested page could not be found."
+  },
+  "legal": {
+    "eyebrow": "LEGAL",
+    "openCookieSettings": "Cookie preferences",
+    "cookieBannerEyebrow": "A quick note",
+    "cookieBannerTitle": "Your privacy matters",
+    "cookieBannerDescription": "Essential storage keeps Wave working. Google Analytics is optional and loads only after you allow it. You can change your choice at any time.",
+    "essentialStorage": "Essential storage",
+    "essentialStorageDescription": "Needed for sign-in, security, language, and saving your privacy choice.",
+    "analyticsStorage": "Analytics",
+    "analyticsStorageDescription": "Allow Google Analytics to measure site usage. It loads only after you opt in.",
+    "rejectOptional": "Only necessary",
+    "savePreferences": "Save choices",
+    "acceptAll": "Accept all",
+    "imprint": {
+      "title": "Legal notice",
+      "intro": "Who operates Wave and how to contact us.",
+      "sections": [
+        {
+          "heading": "Service operator",
+          "paragraphs": [
+            "Wave is operated by UD SteelCode.",
+            "Director: Suad Asceric. Registered address: Školska 10, 72000 Zenica, Bosnia and Herzegovina.",
+            "Company ID: 4320531730002. VAT ID: 320531730002.",
+            "For legal notices and general enquiries, contact info{'@'}wave.ba."
+          ]
+        },
+        {
+          "heading": "About Wave",
+          "paragraphs": [
+            "Wave is a digital marketplace that helps creators and companies discover one another and discuss collaboration opportunities.",
+            "Creators and companies agree the terms of any collaboration directly. Wave does not provide payment processing, escrow, or legal representation."
+          ]
+        },
+        {
+          "heading": "User content",
+          "paragraphs": [
+            "Users are responsible for the accuracy and rights clearance of the content they submit. Public profiles, campaigns, and other content marked public may be visible to visitors."
+          ]
+        }
+      ]
+    },
+    "privacy": {
+      "title": "Privacy policy",
+      "intro": "This notice explains what information Wave uses to operate the marketplace and how you can contact us about it.",
+      "sections": [
+        {
+          "heading": "Information we handle",
+          "paragraphs": [
+            "Depending on how you use Wave, this can include account and contact details, creator or company profile information, campaigns, applications, messages, self-reported social metrics, and technical or security logs."
+          ]
+        },
+        {
+          "heading": "How information is used",
+          "paragraphs": [
+            "We use information to provide accounts and marketplace features, display content you choose to make public, connect creators and companies, send service messages, prevent abuse, and keep Wave reliable and secure."
+          ]
+        },
+        {
+          "heading": "Public information",
+          "paragraphs": [
+            "Profile and campaign details submitted for public display can be viewed by other users and visitors. Do not include private or sensitive information in public fields."
+          ]
+        },
+        {
+          "heading": "Service providers and retention",
+          "paragraphs": [
+            "We may use providers for hosting, email delivery, and security operations. They receive information only as needed to provide those services. We do not sell personal information.",
+            "We keep information while it is needed to provide Wave, protect the service, resolve disputes, or meet legal obligations. You may request account or data deletion by emailing info{'@'}wave.ba; some records may need to be retained where required by law."
+          ]
+        },
+        {
+          "heading": "Your choices and requests",
+          "paragraphs": [
+            "Where applicable, you may request access to, correction or deletion of your personal information, or ask about restriction, portability, or objection rights. Contact info{'@'}wave.ba. We may need to verify your request before acting."
+          ]
+        },
+        {
+          "heading": "External services",
+          "paragraphs": [
+            "Wave loads fonts from Google Fonts and may display privacy-enhanced YouTube videos added to profiles. Those providers may receive technical request data when your browser connects to their services. Google Analytics may process usage data only if you opt in.",
+            "If you choose Google or Apple sign-in, the selected provider processes authentication information under its own privacy terms."
+          ],
+          "links": [
+            { "label": "Google Privacy Policy", "url": "https://policies.google.com/privacy" },
+            { "label": "Apple Privacy Policy", "url": "https://www.apple.com/legal/privacy/" }
+          ]
+        }
+      ]
+    },
+    "cookies": {
+      "title": "Cookie policy",
+      "intro": "Wave uses essential storage for core features. Google Analytics is optional and is loaded only after you enable analytics; Wave does not use advertising cookies.",
+      "sections": [
+        {
+          "heading": "Essential session cookie",
+          "paragraphs": [
+            "When a secure account session is needed, Wave uses a first-party session cookie to keep you signed in and protect account actions. It is marked HttpOnly and uses the browser's same-site protections. It is not used for advertising."
+          ]
+        },
+        {
+          "heading": "Local browser storage",
+          "paragraphs": [
+            "Wave stores your chosen language and cookie preferences in local browser storage. These values are not cookies and are not used to track you across other websites."
+          ]
+        },
+        {
+          "heading": "Progressive web app",
+          "paragraphs": [
+            "If you install Wave or use a browser with service-worker support, the app may cache static interface files so it can load reliably. The service worker precaches app assets and does not cache private API responses."
+          ]
+        },
+        {
+          "heading": "Manage browser data",
+          "paragraphs": [
+            "You can change or withdraw your analytics choice at any time using Cookie preferences in the footer. Wave stores this choice in local browser storage. Clearing Wave's site data may sign you out, reset your language, or show this notice again."
+          ]
+        },
+        {
+          "heading": "Analytics cookies",
+          "paragraphs": [
+            "If a Google Analytics measurement ID is configured, Wave loads Google Analytics only after you enable Analytics. It may then use first-party analytics cookies to measure visits and site usage. If you choose Only necessary, the Analytics tag is not loaded.",
+            "You can withdraw consent later from Cookie preferences. Wave then stops sending analytics events and removes Google Analytics cookies set on this site."
+          ],
+          "links": [
+            { "label": "Google Privacy Policy", "url": "https://policies.google.com/privacy" }
+          ]
+        },
+        {
+          "heading": "External fonts and video",
+          "paragraphs": [
+            "Wave loads interface fonts from Google Fonts. When a profile video is displayed, your browser may connect to youtube-nocookie.com, operated by Google. These providers may process technical data or use their own browser storage; Wave does not control that storage."
+          ],
+          "links": [
+            { "label": "Google Privacy Policy", "url": "https://policies.google.com/privacy" }
+          ]
+        }
+      ]
+    }
   },
   "app": {
     "homeAria": "Wave home",
     "home": "Home",
     "mainNavigation": "Main navigation",
     "creators": "Discover creators",
+    "creatorsNav": "Creators",
     "companies": "Companies",
     "campaigns": "Campaigns",
     "earlyAccess": "Get early access",
@@ -32,8 +178,15 @@
     "account": "My account",
     "footerTagline": "Good partnerships start with a good fit.",
     "sayHello": "Say hello",
-    "copyright": "© 2026 Wave. Made for the people who make things.",
+    "copyright": "© {year} Wave. Made for the people who make things.",
     "footerMvp": "Profiles, campaigns & applications · collaborations by agreement",
+    "footerExplore": "Explore",
+    "footerLegal": "Legal",
+    "footerContact": "Get in touch",
+    "footerContactText": "Questions about Wave or need help? Send us a note.",
+    "footerOperator": "Operated by UD SteelCode",
+    "socialLinks": "Wave social media",
+    "socialComingSoon": "Social profiles coming soon",
     "language": "Language",
     "openMenu": "Open navigation",
     "closeMenu": "Close navigation",
@@ -56,15 +209,38 @@
     "markAllRead": "Mark all as read"
   },
   "campaignChat": {
-    "title": "Campaign messages",
+    "title": "Messages",
     "subtitle": "Keep each conversation connected to its campaign.",
     "inbox": "Conversations",
+    "newMessageCreator": "Find campaigns",
+    "newMessageCompany": "Review applications",
+    "filterAll": "All",
+    "filterUnread": "Unread",
+    "backToInbox": "Back to conversations",
+    "showDetails": "Company and campaign details",
+    "closeDetails": "Close details",
+    "open": "In progress",
+    "closed": "Closed",
+    "fullBrief": "Full campaign brief",
+    "searchPlaceholder": "Search conversations",
+    "noSearchResults": "No conversations match your search.",
+    "detailsPrompt": "Choose a conversation to see its campaign and company details.",
+    "aboutCompany": "About the company",
+    "budget": "Budget",
+    "location": "Location",
+    "deadline": "Application deadline",
+    "creatorCount": "Creators needed",
+    "channels": "Channels",
+    "deliverables": "Deliverables",
+    "viewCampaign": "View campaign",
+    "messageHint": "Press Enter to send.",
     "noConversations": "Campaign conversations will appear here.",
     "selectConversation": "Choose a conversation to read and reply.",
     "newConversationTitle": "Message this applicant",
     "newConversationDescription": "Start a private conversation about this campaign.",
     "messageApplicant": "Message applicant",
     "campaign": "Campaign",
+    "directInquiry": "Collaboration inquiry",
     "creator": "Creator",
     "company": "Company",
     "firstMessage": "Write your first message",
@@ -74,6 +250,8 @@
     "inviteTitle": "Invite this creator to a campaign",
     "inviteDescription": "Choose an open campaign and send an invitation. A private chat opens only after the creator accepts.",
     "chooseCampaign": "Choose a campaign",
+    "alreadyInvited": "Already invited",
+    "alreadyApplied": "Already applied",
     "invitationMessage": "Invitation message",
     "inviteButton": "Send invitation",
     "invitationSent": "Invitation sent. The chat will open when the creator accepts.",
@@ -92,8 +270,18 @@
       "application_shortlisted": "{actor} wants to discuss your application for {campaign}.",
       "invitation_accepted": "{actor} accepted your invitation to {campaign}.",
       "invitation_declined": "{actor} declined your invitation to {campaign}.",
+      "creator_inquiry_received": "{actor} sent you a collaboration inquiry.",
+      "creator_inquiry_accepted": "{actor} accepted your collaboration inquiry.",
       "chat_message": "{actor} sent a message about {campaign}."
     }
+  },
+  "directoryPagination": {
+    "itemsPerPage": "Items per page",
+    "pageStatus": "Page {current} of {total} · {count} items",
+    "ariaLabel": "Directory pagination",
+    "previous": "Previous page",
+    "next": "Next page",
+    "goToPage": "Go to page {page}"
   },
   "companyDirectory": {
     "eyebrow": "GOOD PEOPLE TO WORK WITH",
@@ -242,10 +430,6 @@
   "creatorProfile": {
     "back": "Back to creators",
     "loading": "Loading profile…",
-    "share": "Share profile",
-    "copied": "Link copied!",
-    "shareTitle": "{name} on Wave",
-    "shareError": "Could not share this profile from your browser.",
     "mediaKit": "Creator media kit",
     "community": "Community & channels",
     "selfReported": "Self-reported metrics",
@@ -264,8 +448,9 @@
     "closeGallery": "Close gallery",
     "collaborateEyebrow": "A collaboration that fits",
     "packages": "Collaboration packages",
-    "packagesNote": "Send a request with no purchase obligation.",
+    "relatedCategories": "Related Categories",
     "priceOnRequest": "Price on request",
+    "priceByAgreement": "By agreement",
     "requestPackage": "Send a request",
     "showMore": "Show more",
     "showLess": "Show less",
@@ -277,6 +462,19 @@
     "companyOnly": "A company account is required to send a request.",
     "signInAsCompany": "Sign in or create an account",
     "verifyEmail": "Verify your email address before sending a request.",
+    "accountPendingApproval": "Your company account must be approved before sending a request.",
+    "closeRequest": "Close request",
+    "choosePackages": "Packages you are interested in",
+    "choosePackagesHint": "Choose one or more existing packages or Something else.",
+    "chooseAtLeastOnePackage": "Choose at least one package or a special option.",
+    "requestMessageTooShort": "Your message must be at least 10 characters long.",
+    "servicePackage": "Service package",
+    "negotiatePackage": "Negotiate a Package",
+    "negotiatePackageDescription": "Discuss a custom scope and price that work for your needs.",
+    "somethingElse": "Something else",
+    "somethingElseDescription": "Suggest custom terms, pricing, or requirements in your message.",
+    "addSelection": "Add: {package}",
+    "removeSelection": "Remove: {package}",
     "choosePackage": "Package",
     "generalRequest": "General request",
     "proposedAmount": "Proposed amount (optional)",
@@ -338,6 +536,7 @@
     "location": "Location",
     "closes": "Applications close",
     "applicationsNote": "Applications are not open in this early MVP. This public brief is here to explore.",
+    "alreadyApplied": "You have already applied to this campaign.",
     "verifyEmailInAccount": "Verify your email in your account",
     "askAbout": "Ask us about this brief",
     "emailSubject": "Question about a Wave brief"
@@ -396,6 +595,7 @@
     "firstName": "First name",
     "lastName": "Last name",
     "companyName": "Company name",
+    "companyNamePlaceholder": "e.g. North Shore Studio",
     "phone": "Phone number",
     "phonePlaceholder": "Number without country code",
     "phoneCountry": "Country calling code",
@@ -412,6 +612,7 @@
     "city": "City",
     "cityPlaceholder": "Enter your city",
     "industry": "Industry",
+    "industryPlaceholder": "e.g. travel, fashion, food and beverage, or beauty",
     "signIn": "Sign in",
     "register": "Create account",
     "passwordHint": "At least 12 characters.",
@@ -508,6 +709,15 @@
     "remove": "Remove",
     "campaigns": "Your campaigns",
     "campaignSaved": "Campaign saved.",
+    "addCampaign": "Add campaign",
+    "viewCampaign": "View campaign",
+    "campaignDetails": "Campaign details",
+    "campaignApplicants": "Applicants",
+    "noCampaignApplications": "No one has applied to this campaign yet.",
+    "viewApplication": "View",
+    "applicantDetails": "Applicant details",
+    "closeApplicantDetails": "Close applicant details",
+    "hired": "Hired",
     "campaignFieldErrors": {
       "title": "Title must be 5–160 characters.",
       "summary": "Summary must be 10–220 characters.",
@@ -543,6 +753,7 @@
     "publish": "Publish campaign",
     "updateCampaign": "Save campaign",
     "myApplications": "My applications",
+    "openChat": "Open conversation",
     "myOffers": "Offers for me",
     "campaignInvitations": "Campaign invitations",
     "companyApplications": "Creator applications",
@@ -578,6 +789,15 @@
     "signInToApply": "Sign in or create an account to apply.",
     "profileSetupHint": "Complete your profile so brands can find you.",
     "companyName": "Company name",
+    "companyAbout": "About the company",
+    "companyAboutPlaceholder": "Introduce your company, its brands, and what you hope to achieve by working with creators.",
+    "addProfileImage": "Add profile image",
+    "changeProfileImage": "Change image",
+    "removeProfileImage": "Remove profile image",
+    "profileImageSaveHint": "JPEG, PNG, or WebP up to 10 MB. Changes are saved when you save your profile.",
+    "profileImageRemoveTitle": "Remove profile image?",
+    "profileImageRemoveMessage": "The image will be removed from your profile only after you save your changes.",
+    "profileImageCleanupFailed": "Your profile was saved, but the previous image could not be deleted. Save your profile again to retry.",
     "emailUnverified": "Verify your email as an additional security step. You can apply to campaigns and send offers after an admin approves your account.",
     "approvalPendingNotice": "Your email is verified. We’ll notify you when an admin approves your account; you can apply to campaigns once approved.",
     "resendVerification": "Resend verification link",
@@ -730,7 +950,7 @@
     "emailTemplatesPageTitle": "Email templates",
     "emailTemplatesEyebrow": "EMAIL COMMUNICATION",
     "emailTemplatesTitle": "Edit outgoing messages",
-    "emailTemplatesDescription": "Manage the HTML and subject for registration, email verification, account approval, password reset, and contact emails.",
+    "emailTemplatesDescription": "Manage account, campaign application, hiring, unread-message, and contact email templates.",
     "chooseEmailTemplate": "Choose a template",
     "verifyEmailTemplate": "Verify email",
     "verifyEmailTemplateHint": "Sent after registration to verify the address and explain the account review.",
@@ -742,6 +962,16 @@
     "approvalEmailTemplateHint": "Sent when an administrator approves an account.",
     "contactEmailTemplate": "Contact form notification",
     "contactEmailTemplateHint": "Sent to the Wave inbox after a contact form submission.",
+    "applicationReceivedEmailTemplate": "Campaign application received",
+    "applicationReceivedEmailTemplateHint": "Sent to the company with the creator's name and application message.",
+    "creatorInquiryEmailTemplate": "Creator package inquiry",
+    "creatorInquiryEmailTemplateHint": "Sent to the creator with the selected packages, proposed budget, and company message.",
+    "creatorInquiryAcceptedEmailTemplate": "Collaboration inquiry accepted",
+    "creatorInquiryAcceptedEmailTemplateHint": "Sent to the company when a creator accepts an inquiry.",
+    "creatorHiredEmailTemplate": "Creator hired",
+    "creatorHiredEmailTemplateHint": "Sent to the creator after they accept a campaign offer.",
+    "unreadMessageReminderEmailTemplate": "Unread message reminder",
+    "unreadMessageReminderEmailTemplateHint": "Sent once after a campaign message remains unread for one hour.",
     "emailTemplateSubject": "Email subject",
     "emailTemplateHtml": "HTML source",
     "emailTemplateVariables": "Available variables",

@@ -13,6 +13,7 @@ const props = defineProps({
   countryPlaceholder: { type: String, required: true },
   countrySearchPlaceholder: { type: String, required: true },
   noCountriesFoundLabel: { type: String, required: true },
+  optional: { type: Boolean, default: false },
 })
 
 const emit = defineEmits(['update:modelValue', 'update:countryCode'])
@@ -69,7 +70,7 @@ function updatePhone(event) {
         :value="props.modelValue"
         type="tel"
         inputmode="tel"
-        required
+        :required="!optional"
         maxlength="40"
         autocomplete="tel-national"
         :placeholder="placeholder"

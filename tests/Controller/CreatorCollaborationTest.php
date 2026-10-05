@@ -10,11 +10,15 @@ use App\Entity\User;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Tools\SchemaTool;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
+use Symfony\Bundle\FrameworkBundle\Test\MailerAssertionsTrait;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
+use Symfony\Component\Mime\Email;
 
 final class CreatorCollaborationTest extends WebTestCase
 {
+    use MailerAssertionsTrait;
+
     private KernelBrowser $client;
     private array $uploadedMediaIds = [];
 
@@ -110,6 +114,7 @@ final class CreatorCollaborationTest extends WebTestCase
         $entityManager = static::getContainer()->get(EntityManagerInterface::class);
         $creatorUser = new User('inquiry-creator@example.test', 'ROLE_CREATOR');
         $creatorUser->setPassword('unused-test-hash');
+        $creatorUser->setPreferredLocale('en');
         $creator = new Creator(
             'inquiry-creator',
             'Inquiry Creator',
@@ -151,7 +156,60 @@ final class CreatorCollaborationTest extends WebTestCase
         self::assertSame('pending', $inquiry['status']);
         self::assertSame(500, $inquiry['listedPrice']);
         self::assertSame(650, $inquiry['proposedAmount']);
+        self::assertSame('food-package', $inquiry['selectedPackages'][0]['id']);
+        self::assertEmailCount(1);
+        $inquiryEmail = self::getMailerMessage();
+        self::assertInstanceOf(Email::class, $inquiryEmail);
+        self::assertSame('inquiry-creator@example.test', $inquiryEmail->getTo()[0]->getAddress());
+        self::assertEmailHtmlBodyContains($inquiryEmail, 'Recipe video');
+        self::assertEmailHtmlBodyContains($inquiryEmail, '500 BAM');
+        self::assertEmailHtmlBodyContains($inquiryEmail, '650 BAM');
+        self::assertEmailHtmlBodyContains(
+            $inquiryEmail,
+            'We would love to feature our new local ingredients in your recipe series.',
+        );
+        $this->client->loginUser($creatorUser, 'main');
+        $this->client->request('GET', '/api/me/notifications?locale=en');
+        self::assertResponseIsSuccessful();
+        self::assertContains(
+            'creator_inquiry_received',
+            array_column($this->payload()['data'], 'type'),
+        );
+        $this->client->loginUser($companyUser, 'main');
         $inquiryId = $inquiry['id'];
+
+        $this->jsonRequest('POST', '/api/creators/inquiry-creator/inquiries', [
+            'packageIds' => ['food-package'],
+            'servicePackage' => true,
+            'other' => true,
+            'proposedAmount' => 850,
+            'message' => 'We are interested in several options for a seasonal campaign.',
+        ], $this->csrfToken());
+        self::assertResponseStatusCodeSame(201);
+        $multiPackageInquiry = $this->payload()['data'];
+        self::assertCount(3, $multiPackageInquiry['selectedPackages']);
+        self::assertSame(['package', 'service', 'other'], array_column($multiPackageInquiry['selectedPackages'], 'type'));
+        self::assertNull($multiPackageInquiry['packageId']);
+        self::assertNull($multiPackageInquiry['listedPrice']);
+        self::assertEmailCount(1);
+        $multiPackageEmail = self::getMailerMessage();
+        self::assertInstanceOf(Email::class, $multiPackageEmail);
+        self::assertEmailHtmlBodyContains($multiPackageEmail, 'Recipe video');
+        self::assertEmailHtmlBodyContains($multiPackageEmail, 'Service package');
+        self::assertEmailHtmlBodyContains($multiPackageEmail, 'Something else');
+        self::assertEmailHtmlBodyContains($multiPackageEmail, '850 BAM');
+        self::assertEmailHtmlBodyContains(
+            $multiPackageEmail,
+            'We are interested in several options for a seasonal campaign.',
+        );
+
+        $this->jsonRequest('POST', '/api/creators/inquiry-creator/inquiries', [
+            'packageIds' => ['not-a-creator-package'],
+            'servicePackage' => false,
+            'other' => false,
+            'message' => 'We would like to explore another campaign option.',
+        ], $this->csrfToken());
+        self::assertResponseStatusCodeSame(400);
 
         $this->client->request('GET', '/api/me/inquiries/'.$inquiryId.'/messages?locale=bs');
         self::assertResponseStatusCodeSame(409);
@@ -163,6 +221,16 @@ final class CreatorCollaborationTest extends WebTestCase
         $this->jsonRequest('POST', '/api/me/inquiries/'.$inquiryId.'/decision', ['decision' => 'accept'], $this->csrfToken());
         self::assertResponseIsSuccessful();
         self::assertSame('accepted', $this->payload()['data']['status']);
+        self::assertEmailCount(1);
+        $acceptedEmail = self::getMailerMessage();
+        self::assertInstanceOf(Email::class, $acceptedEmail);
+        self::assertSame('inquiry-company@example.test', $acceptedEmail->getTo()[0]->getAddress());
+        self::assertEmailHtmlBodyContains($acceptedEmail, 'Inquiry Creator');
+        self::assertEmailHtmlBodyContains(
+            $acceptedEmail,
+            'We would love to feature our new local ingredients in your recipe series.',
+        );
+        self::assertEmailHtmlBodyContains($acceptedEmail, '?inquiry='.$inquiryId);
         $this->client->request('GET', '/api/me/inquiries/'.$inquiryId.'/messages?locale=bs');
         self::assertResponseIsSuccessful();
         self::assertCount(1, $this->payload()['data']);
@@ -170,6 +238,17 @@ final class CreatorCollaborationTest extends WebTestCase
         $this->jsonRequest('POST', '/api/me/inquiries/'.$inquiryId.'/messages', ['body' => 'Thanks, let us discuss the timeline.'], $this->csrfToken());
         self::assertResponseStatusCodeSame(201);
         $this->client->loginUser($companyUser, 'main');
+        $this->client->request('GET', '/api/me/inquiries?locale=en');
+        self::assertResponseIsSuccessful();
+        $acceptedInquiry = $this->payload()['data'][0];
+        self::assertSame('Thanks, let us discuss the timeline.', $acceptedInquiry['lastMessage']);
+        self::assertTrue($acceptedInquiry['canChat']);
+        $this->client->request('GET', '/api/me/notifications?locale=en');
+        self::assertResponseIsSuccessful();
+        self::assertContains(
+            'creator_inquiry_accepted',
+            array_column($this->payload()['data'], 'type'),
+        );
         $this->client->request('GET', '/api/me/inquiries/'.$inquiryId.'/messages?locale=bs');
         self::assertResponseIsSuccessful();
         self::assertCount(2, $this->payload()['data']);

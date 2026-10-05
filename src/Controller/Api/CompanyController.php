@@ -23,6 +23,15 @@ final class CompanyController
             return new JsonResponse(['error' => ApiMessages::get('unsupported_language', 'bs')], 400);
         }
 
+        $limit = $request->query->getInt('limit', 50);
+        $offset = $request->query->getInt('offset', 0);
+        if ($limit < 1 || $limit > 90) {
+            return new JsonResponse(['error' => ApiMessages::get('invalid_limit', $locale)], 400);
+        }
+        if ($offset < 0 || $offset > 100_000) {
+            return new JsonResponse(['error' => ApiMessages::get('invalid_offset', $locale)], 400);
+        }
+
         $campaignCountQuery = $entityManager->createQueryBuilder()
             ->select('COUNT(availableCampaign.id)')
             ->from(Campaign::class, 'availableCampaign')
@@ -30,7 +39,7 @@ final class CompanyController
             ->andWhere('availableCampaign.status = :availableStatus')
             ->andWhere('availableCampaign.closesAt >= :availableToday');
 
-        $companies = $entityManager->getRepository(Company::class)->createQueryBuilder('company')
+        $builder = $entityManager->getRepository(Company::class)->createQueryBuilder('company')
             ->leftJoin('company.owner', 'owner')
             ->andWhere('owner.id IS NULL OR (owner.approved = :approved AND owner.hideMyAccount = :visible)')
             ->setParameter('approved', true)
@@ -40,8 +49,18 @@ final class CompanyController
             ->addOrderBy('availableCampaignCount', 'DESC')
             ->addOrderBy('company.name', 'ASC')
             ->setParameter('availableStatus', 'open')
-            ->setParameter('availableToday', new \DateTimeImmutable('today'))
-            ->setMaxResults(50)
+            ->setParameter('availableToday', new \DateTimeImmutable('today'));
+        $total = (int) $entityManager->getRepository(Company::class)->createQueryBuilder('company')
+            ->select('COUNT(DISTINCT company.id)')
+            ->leftJoin('company.owner', 'owner')
+            ->andWhere('owner.id IS NULL OR (owner.approved = :approved AND owner.hideMyAccount = :visible)')
+            ->setParameter('approved', true)
+            ->setParameter('visible', false)
+            ->getQuery()
+            ->getSingleScalarResult();
+        $companies = $builder
+            ->setFirstResult($offset)
+            ->setMaxResults($limit)
             ->getQuery()
             ->getResult();
 
@@ -81,7 +100,7 @@ final class CompanyController
                 ),
                 $companies,
             ),
-            'meta' => ['count' => count($companies)],
+            'meta' => ['count' => count($companies), 'total' => $total, 'limit' => $limit, 'offset' => $offset],
         ]);
     }
 

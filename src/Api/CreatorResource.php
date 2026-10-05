@@ -3,6 +3,7 @@
 namespace App\Api;
 
 use App\Entity\Creator;
+use App\Entity\User;
 use App\Localization\ApiMessages;
 use App\Localization\DemoTranslations;
 
@@ -16,6 +17,7 @@ final class CreatorResource
     ): array
     {
         $translation = $creator->getTranslations()[$locale] ?? [];
+        $owner = $creator->getOwner();
         $categories = $creator->getCategories();
         $portfolioMedia = [];
         foreach ($creator->getPortfolioMedia() as $portfolioItem) {
@@ -46,6 +48,10 @@ final class CreatorResource
 
         return [
             'id' => $creator->getId(),
+            'canReceiveCampaignInvitations' => $owner instanceof User
+                && $owner->isApproved()
+                && $owner->isEmailVerified()
+                && !$owner->isHideMyAccount(),
             'slug' => $creator->getSlug(),
             'featured' => $creator->isFeatured(),
             'displayName' => $creator->getDisplayName(),

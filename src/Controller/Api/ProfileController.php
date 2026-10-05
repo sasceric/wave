@@ -134,17 +134,40 @@ final class ProfileController
         }
         $name = $this->text($data, 'name', 2, 120);
         $industry = $this->text($data, 'industry', 2, 100);
+        $about = array_key_exists('about', $data)
+            ? $this->optionalRichText($data, 'about', $richTextSanitizer)
+            : $company->getAbout();
+        $phone = array_key_exists('phone', $data)
+            ? $this->optionalText($data, 'phone', 40)
+            : $user->getPhone();
+        $city = array_key_exists('city', $data)
+            ? $this->optionalText($data, 'city', 70)
+            : $user->getCity();
+        $countryCode = array_key_exists('countryCode', $data)
+            ? $this->optionalCountryCode($data['countryCode'])
+            : $user->getCountryCode();
         $logoMedia = array_key_exists('logoMediaId', $data)
             ? $this->ownedMedia($data['logoMediaId'], $user, 'company-logo', $entityManager)
             : $company->getLogoMedia();
         $logoUrl = $logoMedia instanceof Media
             ? null
             : $this->imageUrl($data, 'logoUrl');
-        if ($name === null || $industry === null || $logoUrl === false || $logoMedia === false) {
+        if ($name === null
+            || $industry === null
+            || $about === false
+            || $phone === false
+            || $city === false
+            || $countryCode === false
+            || $logoUrl === false
+            || $logoMedia === false
+        ) {
             return new JsonResponse(['error' => ApiMessages::get('invalid_profile', $locale)], 400);
         }
-        $company->updateProfile($name, $industry, $logoUrl);
+        $company->updateProfile($name, $industry, $logoUrl, $about);
         $company->setLogoMedia($logoMedia);
+        $user->setPhone($phone);
+        $user->setCity($city);
+        $user->setCountryCode($countryCode);
         $entityManager->flush();
 
         return new JsonResponse(['data' => UserResource::fromEntity($user, $locale)]);
@@ -158,6 +181,44 @@ final class ProfileController
         $value = trim($data[$key]);
 
         return mb_strlen($value) >= $minLength && mb_strlen($value) <= $maxLength ? $value : null;
+    }
+
+    private function optionalText(array $data, string $key, int $maxLength): string|null|false
+    {
+        $value = $data[$key] ?? null;
+        if ($value === null) {
+            return null;
+        }
+        if (!is_string($value)) {
+            return false;
+        }
+        $value = trim($value);
+
+        return mb_strlen($value) <= $maxLength ? ($value !== '' ? $value : null) : false;
+    }
+
+    private function optionalCountryCode(mixed $value): string|null|false
+    {
+        if ($value === null || (is_string($value) && trim($value) === '')) {
+            return null;
+        }
+        if (!is_string($value)) {
+            return false;
+        }
+        $countryCode = strtoupper(trim($value));
+
+        return preg_match('/^[A-Z]{2}$/', $countryCode) === 1 ? $countryCode : false;
+    }
+
+    private function optionalRichText(array $data, string $key, RichTextSanitizer $sanitizer): string|false
+    {
+        if (!is_string($data[$key] ?? null)) {
+            return false;
+        }
+
+        $value = $sanitizer->sanitize(trim($data[$key]));
+
+        return mb_strlen($sanitizer->plainText($value)) <= 1500 ? $value : false;
     }
 
     private function richText(array $data, string $key, RichTextSanitizer $sanitizer): ?string

@@ -171,7 +171,8 @@ final class CampaignMessagingController
             $notification->markRead();
             $hasChanges = true;
         }
-        if ($hasChanges) {
+        $reminderCleared = $conversation->clearUnreadReminder($user);
+        if ($hasChanges || $reminderCleared) {
             $entityManager->flush();
         }
 

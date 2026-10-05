@@ -24,11 +24,16 @@ final class CreatorController
         }
 
         $limit = $request->query->getInt('limit', 24);
-        if ($limit < 1 || $limit > 50) {
+        $offset = $request->query->getInt('offset', 0);
+        if ($limit < 1 || $limit > 90) {
             return new JsonResponse(['error' => ApiMessages::get('invalid_limit', $locale)], 400);
+        }
+        if ($offset < 0 || $offset > 100_000) {
+            return new JsonResponse(['error' => ApiMessages::get('invalid_offset', $locale)], 400);
         }
 
         $query = trim($request->query->getString('q'));
+        $platform = trim($request->query->getString('platform'));
         $category = trim($request->query->getString('category'));
         $builder = $entityManager->getRepository(Creator::class)->createQueryBuilder('creator')
             ->leftJoin('creator.owner', 'owner')
@@ -37,8 +42,18 @@ final class CreatorController
             ->setParameter('visible', false);
 
         if ($query !== '') {
+            $matchingTagIds = $entityManager->getConnection()->executeQuery(
+                'SELECT id FROM creator WHERE LOWER(CAST(tags AS TEXT)) LIKE ?',
+                ['%'.mb_strtolower($query).'%'],
+            )->fetchFirstColumn();
+
+            $searchCondition = 'LOWER(creator.displayName) LIKE :query OR LOWER(creator.bio) LIKE :query OR LOWER(creator.location) LIKE :query OR LOWER(creator.category) LIKE :query';
+            if ($matchingTagIds !== []) {
+                $searchCondition .= ' OR creator.id IN (:matchingTagIds)';
+                $builder->setParameter('matchingTagIds', $matchingTagIds);
+            }
             $builder
-                ->andWhere('LOWER(creator.displayName) LIKE :query OR LOWER(creator.bio) LIKE :query OR LOWER(creator.location) LIKE :query OR LOWER(creator.category) LIKE :query')
+                ->andWhere('('.$searchCondition.')')
                 ->setParameter('query', '%'.mb_strtolower($query).'%');
         }
         if ($category !== '') {
@@ -49,9 +64,29 @@ final class CreatorController
                 ->setParameter('category', mb_strtolower($category))
                 ->setParameter('categoryJson', '%'.$categoryJson.'%');
         }
+        if ($platform !== '') {
+            $normalizedPlatform = mb_strtolower($platform);
+            $matchingPlatformIds = $entityManager->getConnection()->executeQuery(
+                'SELECT id FROM creator WHERE LOWER(CAST(social_profiles AS TEXT)) LIKE ? OR LOWER(CAST(social_profiles AS TEXT)) LIKE ?',
+                ['%"platform":"'.$normalizedPlatform.'"%', '%"platform": "'.$normalizedPlatform.'"%'],
+            )->fetchFirstColumn();
+            if ($matchingPlatformIds === []) {
+                $builder->andWhere('1 = 0');
+            } else {
+                $builder
+                    ->andWhere('creator.id IN (:matchingPlatformIds)')
+                    ->setParameter('matchingPlatformIds', $matchingPlatformIds);
+            }
+        }
 
+        $total = (int) (clone $builder)
+            ->select('COUNT(DISTINCT creator.id)')
+            ->getQuery()
+            ->getSingleScalarResult();
         $creators = $builder
             ->orderBy('creator.displayName', 'ASC')
+            ->addOrderBy('creator.id', 'ASC')
+            ->setFirstResult($offset)
             ->setMaxResults($limit)
             ->getQuery()
             ->getResult();
@@ -67,7 +102,7 @@ final class CreatorController
                 ),
                 $creators,
             ),
-            'meta' => ['count' => count($creators), 'limit' => $limit],
+            'meta' => ['count' => count($creators), 'total' => $total, 'limit' => $limit, 'offset' => $offset],
         ]);
     }
 

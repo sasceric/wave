@@ -118,6 +118,7 @@ final class LocalizedRouteMap
     {
         $legacyRoutes = [
             '/account' => 'account',
+            '/messages' => 'messages',
             '/verify-email' => 'verify-email',
             '/reset-password' => 'reset-password',
             '/creators' => 'creators',
@@ -129,6 +130,10 @@ final class LocalizedRouteMap
             '/admin/creators' => 'admin-creators',
             '/admin/companies' => 'admin-companies',
             '/admin/campaigns' => 'admin-campaigns',
+            '/imprint' => 'imprint',
+            '/impressum' => 'imprint',
+            '/privacy-policy' => 'privacy-policy',
+            '/cookies' => 'cookie-policy',
         ];
         foreach (['creators' => 'creator-profile', 'companies' => 'company-profile', 'campaigns' => 'campaign-detail'] as $prefix => $routeName) {
             if (preg_match('~^/'.$prefix.'/([^/]+)$~', $path, $matches) === 1) {

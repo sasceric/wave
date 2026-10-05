@@ -6,7 +6,9 @@ use App\Api\ApiAccess;
 use App\Api\CampaignResource;
 use App\Api\Currency;
 use App\Api\JsonPayload;
+use App\Entity\Application;
 use App\Entity\Campaign;
+use App\Entity\CampaignInvitation;
 use App\Entity\Company;
 use App\Entity\Media;
 use App\Entity\User;
@@ -38,8 +40,38 @@ final class CampaignManagementController
             return new JsonResponse(['error' => ApiMessages::get('profile_unavailable', $locale)], 409);
         }
         $campaigns = $entityManager->getRepository(Campaign::class)->findBy(['company' => $company], ['publishedAt' => 'DESC']);
+        $invitations = $campaigns === []
+            ? []
+            : $entityManager->getRepository(CampaignInvitation::class)->findBy(['campaign' => $campaigns]);
+        $applications = $campaigns === []
+            ? []
+            : $entityManager->getRepository(Application::class)->findBy(['campaign' => $campaigns]);
+        $invitedCreatorIdsByCampaign = [];
+        foreach ($invitations as $invitation) {
+            $campaignId = $invitation->getCampaign()->getId();
+            $creatorId = $invitation->getCreator()->getId();
+            if ($campaignId !== null && $creatorId !== null) {
+                $invitedCreatorIdsByCampaign[$campaignId][] = $creatorId;
+            }
+        }
+        $appliedCreatorIdsByCampaign = [];
+        foreach ($applications as $application) {
+            $campaignId = $application->getCampaign()->getId();
+            $creatorId = $application->getCreator()->getId();
+            if ($campaignId !== null && $creatorId !== null) {
+                $appliedCreatorIdsByCampaign[$campaignId][] = $creatorId;
+            }
+        }
+        $campaignResources = [];
+        foreach ($campaigns as $campaign) {
+            $campaignId = $campaign->getId();
+            $resource = CampaignResource::fromEntity($campaign, $locale);
+            $resource['invitedCreatorIds'] = null !== $campaignId ? ($invitedCreatorIdsByCampaign[$campaignId] ?? []) : [];
+            $resource['appliedCreatorIds'] = null !== $campaignId ? ($appliedCreatorIdsByCampaign[$campaignId] ?? []) : [];
+            $campaignResources[] = $resource;
+        }
 
-        return new JsonResponse(['data' => array_map(static fn (Campaign $campaign): array => CampaignResource::fromEntity($campaign, $locale), $campaigns)]);
+        return new JsonResponse(['data' => $campaignResources]);
     }
 
     #[Route('/api/company/campaigns', name: 'api_company_campaign_create', methods: ['POST'])]

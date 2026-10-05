@@ -1,5 +1,5 @@
 <script setup>
-import { computed } from 'vue'
+import { computed, onBeforeUnmount, onMounted, watch } from 'vue'
 import {
   Building2,
   ClipboardCheck,
@@ -14,6 +14,7 @@ import {
 import { useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import LocalizedLink from '../shared/LocalizedLink.vue'
+import { mobileAccountSidebarOpen } from '../../composables/useMobileAccountSidebar'
 
 const props = defineProps({
   user: {
@@ -33,6 +34,27 @@ const props = defineProps({
 const route = useRoute()
 const { t } = useI18n()
 
+function closeMobileSidebar() {
+  mobileAccountSidebarOpen.value = false
+}
+
+function handleSidebarKeydown(event) {
+  if (event.key === 'Escape') {
+    closeMobileSidebar()
+  }
+}
+
+watch(() => route.fullPath, closeMobileSidebar)
+
+onMounted(() => {
+  window.addEventListener('keydown', handleSidebarKeydown)
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('keydown', handleSidebarKeydown)
+  closeMobileSidebar()
+})
+
 const navigationItems = computed(() => {
   const items = props.user?.accountType === 'creator'
     ? [
@@ -46,7 +68,6 @@ const navigationItems = computed(() => {
     : [
         { route: 'account', labelKey: 'account.companyProfile', icon: Building2 },
         { route: 'account-campaigns', labelKey: 'account.campaigns', icon: Megaphone },
-        { route: 'account-applications', labelKey: 'account.companyApplications', icon: Users },
         { route: 'account-inquiries', labelKey: 'account.directRequests', icon: MessageCircle },
       ]
 
@@ -74,9 +95,20 @@ const navigationItems = computed(() => {
 </script>
 
 <template>
+  <button
+    v-if="mobileAccountSidebarOpen"
+    class="account-sidebar__backdrop"
+    type="button"
+    :aria-label="t('app.closeMenu')"
+    @click="closeMobileSidebar"
+  />
   <nav
+    id="account-sidebar-menu"
     class="account-sidebar"
-    :class="{ 'account-sidebar--admin': adminLayout }"
+    :class="{
+      'account-sidebar--admin': adminLayout,
+      'account-sidebar--mobile-open': mobileAccountSidebarOpen,
+    }"
     :aria-label="t('account.navigation')"
   >
     <p class="account-sidebar__label">{{ t('account.navigation') }}</p>
@@ -89,6 +121,7 @@ const navigationItems = computed(() => {
       :title="item.label"
       :aria-label="item.label"
       :aria-current="route.meta.routeName === item.route ? 'page' : undefined"
+      @click="closeMobileSidebar"
     >
       <component :is="item.icon" :size="18" aria-hidden="true" />
       <span class="account-sidebar__text">{{ item.label }}</span>

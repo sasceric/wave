@@ -187,7 +187,7 @@ onMounted(loadHome)
       </div>
     </LocalizedLink>
 
-    <LocalizedLink class="audience-promo__card" to="/creators">
+    <LocalizedLink class="audience-promo__card audience-promo__card--brands" to="/creators">
       <img src="/images/minimalist-wave.webp" alt="" loading="lazy" decoding="async" />
       <div class="audience-promo__copy">
         <p class="audience-promo__eyebrow">{{ t('home.brandsPromoEyebrow') }}</p>

@@ -102,6 +102,11 @@ final class SeoControllerTest extends WebTestCase
         self::assertStringContainsString('<loc>http://127.0.0.1:8000/en/companies/field-notes</loc>', $xml);
         self::assertStringContainsString('<loc>http://127.0.0.1:8000/en/campaigns/scenic-route</loc>', $xml);
         self::assertStringContainsString('<loc>http://127.0.0.1:8000/en/campaigns/second-open-brief</loc>', $xml);
+        self::assertStringContainsString('<loc>http://127.0.0.1:8000/impresum</loc>', $xml);
+        self::assertStringContainsString('<loc>http://127.0.0.1:8000/en/imprint</loc>', $xml);
+        self::assertStringContainsString('<loc>http://127.0.0.1:8000/en/privacy-policy</loc>', $xml);
+        self::assertStringContainsString('<loc>http://127.0.0.1:8000/en/cookies</loc>', $xml);
+        self::assertStringContainsString('href="http://127.0.0.1:8000/politika-privatnosti"', $xml);
         self::assertStringNotContainsString('closed-brief', $xml);
         self::assertStringNotContainsString('/account', $xml);
         self::assertStringNotContainsString('/api/', $xml);
@@ -159,6 +164,39 @@ final class SeoControllerTest extends WebTestCase
         self::assertStringContainsString('rel="canonical" href="http://127.0.0.1:8000/en/"', $html);
         self::assertStringContainsString('hreflang="x-default" href="http://127.0.0.1:8000/"', $html);
         self::assertStringContainsString('"@type":"WebSite"', $html);
+    }
+
+    public function testLegalPagesAreIndexableWithLocalizedCanonicalAlternatesAndOrganizationSchema(): void
+    {
+        $this->client->request('GET', '/en/privacy-policy');
+
+        self::assertResponseIsSuccessful();
+        $html = $this->client->getResponse()->getContent();
+        self::assertStringContainsString('<title>Privacy policy | Wave</title>', $html);
+        self::assertStringContainsString('name="robots" content="index, follow"', $html);
+        self::assertStringContainsString('rel="canonical" href="http://127.0.0.1:8000/en/privacy-policy"', $html);
+        self::assertStringContainsString('hreflang="sr-Latn" href="http://127.0.0.1:8000/sr/politika-privatnosti"', $html);
+        self::assertStringContainsString('hreflang="x-default" href="http://127.0.0.1:8000/politika-privatnosti"', $html);
+        self::assertStringContainsString('"@type":"Organization"', $html);
+        self::assertStringContainsString('"vatID":"320531730002"', $html);
+        self::assertStringNotContainsString('"telephone"', $html);
+
+        foreach ([
+            ['/en/imprint', 'Legal notice | Wave'],
+            ['/en/cookies', 'Cookie policy | Wave'],
+        ] as [$path, $title]) {
+            $this->client->request('GET', $path);
+
+            self::assertResponseIsSuccessful();
+            $legalHtml = $this->client->getResponse()->getContent();
+            self::assertStringContainsString('<title>'.$title.'</title>', $legalHtml);
+            self::assertStringContainsString('name="robots" content="index, follow"', $legalHtml);
+            self::assertStringContainsString('rel="canonical" href="http://127.0.0.1:8000'.$path.'"', $legalHtml);
+        }
+
+        $this->client->request('GET', '/privacy-policy');
+
+        self::assertResponseRedirects('http://127.0.0.1:8000/politika-privatnosti', 301);
     }
 
     public function testPrivateAndMissingPagesAreMarkedNoindexWithoutStructuredData(): void

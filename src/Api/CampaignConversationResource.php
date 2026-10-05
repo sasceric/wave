@@ -10,26 +10,18 @@ final class CampaignConversationResource
     {
         $campaign = $conversation->getCampaign();
         $company = $campaign->getCompany();
-        $campaignTranslation = $campaign->getTranslations()[$locale] ?? [];
         $creator = $conversation->getCreator();
 
         return [
             'id' => $conversation->getId(),
-            'campaign' => [
-                'id' => $campaign->getId(),
-                'slug' => $campaign->getSlug(),
-                'title' => $campaignTranslation['title'] ?? $campaign->getTitle(),
-            ],
+            'campaign' => CampaignResource::fromEntity($campaign, $locale),
             'creator' => [
                 'id' => $creator->getId(),
                 'slug' => $creator->getSlug(),
                 'displayName' => $creator->getDisplayName(),
+                'avatarUrl' => $creator->getAvatarMedia()?->getUrl() ?? $creator->getAvatarUrl(),
             ],
-            'company' => [
-                'id' => $company->getId(),
-                'slug' => $company->getSlug(),
-                'name' => $company->getName(),
-            ],
+            'company' => CompanyResource::fromEntity($company, $locale),
             'lastMessage' => '' === $conversation->getLastMessagePreview() ? null : $conversation->getLastMessagePreview(),
             'lastMessageAt' => $conversation->getUpdatedAt()->format(DATE_ATOM),
             'lastMessageSenderId' => '' === $conversation->getLastMessagePreview()

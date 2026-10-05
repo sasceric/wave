@@ -13,6 +13,9 @@ final class UserResource
         return [
             'id' => $user->getId(),
             'email' => $user->getEmail(),
+            'phone' => $user->getPhone(),
+            'city' => $user->getCity(),
+            'countryCode' => $user->getCountryCode(),
             'accountType' => $user->hasRole('ROLE_CREATOR') ? 'creator' : 'company',
             'emailVerified' => $user->isEmailVerified(),
             'approved' => $user->isApproved(),

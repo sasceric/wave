@@ -6,6 +6,7 @@ use App\Entity\Campaign;
 use App\Entity\Company;
 use App\Entity\Creator;
 use App\Entity\Media;
+use App\Entity\Notification;
 use App\Entity\User;
 use App\Entity\UserPushSubscription;
 use DateTimeImmutable;
@@ -14,12 +15,16 @@ use Doctrine\ORM\Tools\SchemaTool;
 use Symfony\Bundle\FrameworkBundle\Console\Application;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
+use Symfony\Bundle\FrameworkBundle\Test\MailerAssertionsTrait;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Tester\CommandTester;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
+use Symfony\Component\Mime\Email;
 
 final class MarketplaceWorkflowTest extends WebTestCase
 {
+    use MailerAssertionsTrait;
+
     private KernelBrowser $client;
     private array $uploadedMediaIds = [];
 
@@ -289,12 +294,38 @@ final class MarketplaceWorkflowTest extends WebTestCase
         $this->jsonRequest('PUT', '/api/me/profile', [
             'name' => 'Media Company',
             'industry' => 'Food',
+            'about' => '<p>We make <strong>thoughtful</strong> food products.</p>',
+            'phone' => '+38761123456',
+            'city' => 'Sarajevo',
+            'countryCode' => 'ba',
             'logoMediaId' => $logo['data']['id'],
             'logoUrl' => null,
         ], $companyCsrf);
         self::assertResponseIsSuccessful();
         self::assertSame($logo['data']['id'], $this->payload()['data']['profile']['logoMediaId']);
         self::assertSame($logo['data']['url'], $this->payload()['data']['profile']['logoUrl']);
+        self::assertSame('<p>We make <strong>thoughtful</strong> food products.</p>', $this->payload()['data']['profile']['about']);
+        self::assertSame('+38761123456', $this->payload()['data']['phone']);
+        self::assertSame('Sarajevo', $this->payload()['data']['city']);
+        self::assertSame('BA', $this->payload()['data']['countryCode']);
+
+        $this->client->request('GET', '/api/companies/media-company?locale=en');
+        self::assertResponseIsSuccessful();
+        self::assertSame('Sarajevo', $this->payload()['data']['city']);
+        self::assertSame('BA', $this->payload()['data']['countryCode']);
+        self::assertSame('<p>We make <strong>thoughtful</strong> food products.</p>', $this->payload()['data']['about']);
+        self::assertArrayNotHasKey('phone', $this->payload()['data']);
+
+        $this->jsonRequest('PUT', '/api/me/profile', [
+            'name' => 'Media Company',
+            'industry' => 'Food',
+            'about' => '',
+            'logoMediaId' => null,
+            'logoUrl' => null,
+        ], $this->csrfToken());
+        self::assertResponseIsSuccessful();
+        $this->jsonRequest('DELETE', '/api/media/'.$logo['data']['id'], [], $this->csrfToken());
+        self::assertResponseIsSuccessful();
     }
 
     public function testAccountsCanHideTheirPublicProfilesAndCompanyCampaigns(): void
@@ -534,6 +565,24 @@ final class MarketplaceWorkflowTest extends WebTestCase
         ], $csrf);
         self::assertResponseStatusCodeSame(201);
         $applicationId = $this->payload()['data']['id'];
+        self::assertEmailCount(1);
+        $applicationEmail = self::getMailerMessage();
+        self::assertInstanceOf(Email::class, $applicationEmail);
+        self::assertSame('brand@example.test', $applicationEmail->getTo()[0]->getAddress());
+        self::assertEmailHtmlBodyContains($applicationEmail, 'Avery Creator');
+        self::assertEmailHtmlBodyContains($applicationEmail, 'I create welcoming recipes');
+
+        $this->jsonRequest('POST', '/api/campaigns/small-table/applications', [
+            'message' => 'I create welcoming recipes and this campaign fits my community.',
+        ], $csrf);
+        self::assertResponseStatusCodeSame(409);
+        self::assertSame('Već si se prijavio/la na ovu kampanju.', $this->payload()['error']);
+        self::assertEmailCount(0);
+
+        $this->client->request('GET', '/api/me/applications?locale=bs');
+        self::assertResponseIsSuccessful();
+        self::assertCount(1, $this->payload()['data']);
+        self::assertNull($this->payload()['data'][0]['conversationId']);
 
         $this->client->loginUser($companyUser, 'main');
         $csrf = $this->csrfToken();
@@ -543,6 +592,7 @@ final class MarketplaceWorkflowTest extends WebTestCase
         $this->jsonRequest('POST', '/api/company/applications/'.$applicationId.'/shortlist', [], $csrf);
         self::assertResponseIsSuccessful();
         self::assertSame('shortlisted', $this->payload()['data']['status']);
+        $conversationId = $this->payload()['conversationId'];
         $this->jsonRequest('POST', '/api/company/applications/'.$applicationId.'/offer', [
             'amount' => 500,
             'message' => 'We would love to work with you on this campaign.',
@@ -555,10 +605,17 @@ final class MarketplaceWorkflowTest extends WebTestCase
         $this->jsonRequest('POST', '/api/me/offers/'.$offerId.'/respond', ['decision' => 'accept'], $csrf);
         self::assertResponseIsSuccessful();
         self::assertSame('accepted', $this->payload()['data']['status']);
+        self::assertEmailCount(1);
+        $hiredEmail = self::getMailerMessage();
+        self::assertInstanceOf(Email::class, $hiredEmail);
+        self::assertSame('artist@example.test', $hiredEmail->getTo()[0]->getAddress());
+        self::assertEmailHtmlBodyContains($hiredEmail, 'Maker Brand');
+        self::assertEmailHtmlBodyContains($hiredEmail, 'A Small Table');
 
         $this->client->request('GET', '/api/me/applications?locale=bs');
         self::assertResponseIsSuccessful();
         self::assertSame('accepted', $this->payload()['data'][0]['status']);
+        self::assertSame($conversationId, $this->payload()['data'][0]['conversationId']);
 
         $this->client->loginUser($companyUser, 'main');
         $this->jsonRequest('POST', '/api/company/applications/'.$applicationId.'/reject', [], $this->csrfToken());
@@ -752,6 +809,18 @@ final class MarketplaceWorkflowTest extends WebTestCase
         $creatorUser->setPassword('unused-test-hash');
         $creator = new Creator('chat-creator', 'Chat Creator', 'Food', 'Sarajevo', 'A creator profile.', [], []);
         $creatorUser->setCreator($creator);
+        $unverifiedCreatorUser = new User('unverified-chat-creator@example.test', 'ROLE_CREATOR');
+        $unverifiedCreatorUser->setPassword('unused-test-hash');
+        $unverifiedCreatorUser->setEmailVerified(false);
+        $unverifiedCreatorUser->setCreator(new Creator(
+            'unverified-chat-creator',
+            'Unverified Chat Creator',
+            'Food',
+            'Sarajevo',
+            'A public profile that cannot receive campaign invitations.',
+            [],
+            [],
+        ));
         $otherCompanyUser = new User('other-chat-company@example.test', 'ROLE_COMPANY');
         $otherCompanyUser->setPassword('unused-test-hash');
         $otherCompanyUser->setCompany(new Company('other-chat-company', 'Other Chat Company', 'Retail'));
@@ -789,6 +858,7 @@ final class MarketplaceWorkflowTest extends WebTestCase
         );
         $entityManager->persist($companyUser);
         $entityManager->persist($creatorUser);
+        $entityManager->persist($unverifiedCreatorUser);
         $entityManager->persist($otherCompanyUser);
         $entityManager->persist($campaignOne);
         $entityManager->persist($campaignTwo);
@@ -802,6 +872,13 @@ final class MarketplaceWorkflowTest extends WebTestCase
         $application = $this->payload()['data'];
 
         $this->client->loginUser($companyUser, 'main');
+        $this->client->request('GET', '/api/creators/chat-creator?locale=bs');
+        self::assertResponseIsSuccessful();
+        self::assertTrue($this->payload()['data']['canReceiveCampaignInvitations']);
+        $this->client->request('GET', '/api/creators/unverified-chat-creator?locale=bs');
+        self::assertResponseIsSuccessful();
+        self::assertFalse($this->payload()['data']['canReceiveCampaignInvitations']);
+
         $this->client->request('GET', '/api/me/notifications?locale=bs');
         self::assertResponseIsSuccessful();
         self::assertSame('application_received', $this->payload()['data'][0]['type']);
@@ -832,6 +909,18 @@ final class MarketplaceWorkflowTest extends WebTestCase
         self::assertSame('pending', $invitation['status']);
         self::assertArrayNotHasKey('conversationId', $invitation);
 
+        $this->client->request('GET', '/api/me/campaigns?locale=bs');
+        self::assertResponseIsSuccessful();
+        $campaignsBySlug = array_column($this->payload()['data'], null, 'slug');
+        self::assertContains($creator->getId(), $campaignsBySlug['chat-campaign-two']['invitedCreatorIds']);
+        self::assertContains($creator->getId(), $campaignsBySlug['chat-campaign-one']['appliedCreatorIds']);
+
+        $this->jsonRequest('POST', '/api/company/campaigns/chat-campaign-two/invitations', [
+            'creatorId' => $creator->getId(),
+            'message' => 'We would love to invite you again.',
+        ], $this->csrfToken());
+        self::assertResponseStatusCodeSame(409);
+
         $this->jsonRequest('POST', '/api/company/campaigns/chat-campaign-one/conversations', [
             'creatorId' => $creator->getId(),
             'message' => 'Here is one more detail about the campaign timeline.',
@@ -847,26 +936,32 @@ final class MarketplaceWorkflowTest extends WebTestCase
         $this->client->request('GET', '/api/me/conversations?locale=bs');
         self::assertResponseIsSuccessful();
         self::assertCount(1, $this->payload()['data']);
+        self::assertSame('A full campaign brief for a private creator conversation.', $this->payload()['data'][0]['campaign']['description']);
+        self::assertSame('Chat Company', $this->payload()['data'][0]['company']['name']);
+        self::assertArrayHasKey('avatarUrl', $this->payload()['data'][0]['creator']);
         $this->client->request('GET', '/api/me/conversations/'.$firstConversation['id'].'/messages?locale=bs');
         self::assertResponseIsSuccessful();
         self::assertCount(2, $this->payload()['data']);
         self::assertSame(0, $this->payload()['conversation']['unreadCount']);
         $this->client->request('GET', '/api/me/notifications?locale=bs');
         self::assertResponseIsSuccessful();
-        $readConversationNotifications = array_filter(
-            $this->payload()['data'],
-            static fn (array $notification): bool => $notification['conversationId'] === $firstConversation['id'],
-        );
-        self::assertNotEmpty($readConversationNotifications);
-        foreach ($readConversationNotifications as $notification) {
-            self::assertNotNull($notification['readAt']);
-        }
+        self::assertNotContains('chat_message', array_column($this->payload()['data'], 'type'));
 
         $this->jsonRequest('POST', '/api/me/conversations/'.$firstConversation['id'].'/messages', [
             'body' => 'Thanks, I would be happy to discuss the campaign.',
         ], $this->csrfToken());
         self::assertResponseStatusCodeSame(201);
 
+        $this->client->loginUser($companyUser, 'main');
+        $this->client->request('GET', '/api/me/conversations?locale=bs');
+        self::assertResponseIsSuccessful();
+        self::assertSame('Thanks, I would be happy to discuss the campaign.', $this->payload()['data'][0]['lastMessage']);
+        self::assertSame(1, $this->payload()['data'][0]['unreadCount']);
+        $this->client->request('GET', '/api/me/notifications?locale=bs');
+        self::assertResponseIsSuccessful();
+        self::assertNotContains('chat_message', array_column($this->payload()['data'], 'type'));
+
+        $this->client->loginUser($creatorUser, 'main');
         $this->client->request('GET', '/api/me/invitations?locale=bs');
         self::assertResponseIsSuccessful();
         self::assertCount(1, $this->payload()['data']);
@@ -901,7 +996,7 @@ final class MarketplaceWorkflowTest extends WebTestCase
         self::assertResponseIsSuccessful();
         $creatorNotificationTypes = array_column($this->payload()['data'], 'type');
         self::assertContains('campaign_invitation', $creatorNotificationTypes);
-        self::assertContains('chat_message', $creatorNotificationTypes);
+        self::assertNotContains('chat_message', $creatorNotificationTypes);
         self::assertContains('application_shortlisted', $creatorNotificationTypes);
         self::assertContains('offer_received', $creatorNotificationTypes);
 
@@ -915,7 +1010,7 @@ final class MarketplaceWorkflowTest extends WebTestCase
         self::assertResponseIsSuccessful();
         $companyNotificationTypes = array_column($this->payload()['data'], 'type');
         self::assertContains('application_received', $companyNotificationTypes);
-        self::assertContains('chat_message', $companyNotificationTypes);
+        self::assertNotContains('chat_message', $companyNotificationTypes);
         self::assertContains('invitation_accepted', $companyNotificationTypes);
         self::assertContains('offer_accepted', $companyNotificationTypes);
         $this->jsonRequest('POST', '/api/me/notifications/read-all', [], $this->csrfToken());
@@ -925,6 +1020,11 @@ final class MarketplaceWorkflowTest extends WebTestCase
         foreach ($this->payload()['data'] as $notification) {
             self::assertNotNull($notification['readAt']);
         }
+        self::assertNotEmpty($entityManager->getRepository(Notification::class)->findBy([
+            'recipient' => $companyUser,
+            'type' => 'chat_message',
+            'readAt' => null,
+        ]));
     }
 
     public function testRealtimeAuthorizationAndBrowserPushSubscriptionsAreUserScoped(): void

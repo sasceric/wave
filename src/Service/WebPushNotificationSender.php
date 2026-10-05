@@ -119,6 +119,7 @@ final class WebPushNotificationSender
 
         return match ($notification->getType()) {
             'campaign_invitation', 'invitation_accepted', 'invitation_declined' => '/account/invitations',
+            'creator_inquiry_received', 'creator_inquiry_accepted' => '/account/inquiries',
             'offer_received' => '/account/offers',
             default => '/account',
         };

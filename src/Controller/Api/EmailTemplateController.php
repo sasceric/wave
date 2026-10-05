@@ -19,7 +19,18 @@ use Symfony\Bundle\SecurityBundle\Security;
 
 final class EmailTemplateController
 {
-    private const TEMPLATE_KEYS = ['verify', 'reset', 'registered', 'approval', 'contact'];
+    private const TEMPLATE_KEYS = [
+        'verify',
+        'reset',
+        'registered',
+        'approval',
+        'contact',
+        'application_received',
+        'creator_inquiry_received',
+        'creator_inquiry_accepted',
+        'creator_hired',
+        'unread_message_reminder',
+    ];
     #[Route('/api/admin/email-templates', name: 'api_admin_email_templates', methods: ['GET'])]
     public function list(
         Request $request,
