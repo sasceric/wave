@@ -1025,6 +1025,13 @@ final class MarketplaceWorkflowTest extends WebTestCase
             'type' => 'chat_message',
             'readAt' => null,
         ]));
+        $this->client->request('GET', '/api/me/conversations/'.$firstConversation['id'].'/messages?locale=bs');
+        self::assertResponseIsSuccessful();
+        self::assertSame(
+            'Thanks, I would be happy to discuss the campaign.',
+            $this->payload()['data'][2]['body'],
+        );
+        self::assertSame(0, $this->payload()['conversation']['unreadCount']);
     }
 
     public function testRealtimeAuthorizationAndBrowserPushSubscriptionsAreUserScoped(): void

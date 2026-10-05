@@ -917,7 +917,14 @@ h1 em, h2 em { color: #c67f67; font-weight: 400; }
   min-height: clamp(760px, 100svh, 960px);
   background-color: #f4f0e7;
   background-image:
-    linear-gradient(90deg, rgba(249, 247, 240, .1), rgba(249, 247, 240, .07)),
+    linear-gradient(
+      90deg,
+      rgba(249, 247, 240, .96) 0%,
+      rgba(249, 247, 240, .91) 27%,
+      rgba(249, 247, 240, .78) 46%,
+      rgba(249, 247, 240, .2) 72%,
+      rgba(249, 247, 240, .08) 100%
+    ),
     url('/images/tropical-palm.webp');
   background-position: center;
   background-size: cover;
@@ -3333,8 +3340,15 @@ h1 em, h2 em { color: #c67f67; font-weight: 400; }
 .campaign-messages__conversation-top strong { overflow: hidden; color: #202b28; font-size: 13px; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
 .campaign-messages__conversation-top time { flex: 0 0 auto; color: #7c8680; font-size: 10px; }
 .campaign-messages__unread { min-width: 23px; height: 23px; display: inline-grid; flex: 0 0 auto; place-items: center; padding: 0 5px; border-radius: 50%; color: #fffefa; background: var(--coral); font-size: 10px; font-weight: 700; text-align: center; }
-.campaign-messages__campaign,
-.campaign-messages__preview { overflow: hidden; color: #839087; font-size: 9px; text-overflow: ellipsis; white-space: nowrap; }
+.campaign-messages__preview {
+  display: -webkit-box;
+  overflow: hidden;
+  color: #839087;
+  font-size: 9px;
+  line-height: 1.45;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
 .campaign-messages__conversation-meta .campaign-messages__campaign { color: #78837c; font-size: 10px; font-weight: 600; }
 .campaign-messages__preview { color: #78817c; font-size: 11px; }
 .campaign-messages__no-results { margin: 17px 8px; color: #78817c; font-size: 11px; line-height: 1.5; }
@@ -3867,7 +3881,16 @@ h1 em, h2 em { color: #c67f67; font-weight: 400; }
   .step:last-child { padding-bottom: 0; border-bottom: 0; }
   .contact-block {
     min-height: auto;
-    background-position: left center;
+    background-image:
+      linear-gradient(
+        180deg,
+        rgba(249, 247, 240, .96) 0%,
+        rgba(249, 247, 240, .92) 34%,
+        rgba(249, 247, 240, .58) 64%,
+        rgba(249, 247, 240, .18) 100%
+      ),
+      url('/images/tropical-palm.webp');
+    background-position: center;
   }
   .contact-block__inner {
     width: min(100%, 640px);

@@ -253,7 +253,7 @@ final class CampaignMessagingController
         }
         $entityManager->flush();
         if ($notification instanceof Notification) {
-            $notificationDelivery->deliver($notification);
+            $notificationDelivery->deliver($notification, $message);
         }
 
         return new JsonResponse(['data' => CampaignMessageResource::fromEntity($message)], 201);
@@ -295,7 +295,7 @@ final class CampaignMessagingController
         }
         $entityManager->flush();
         if ($notification instanceof Notification) {
-            $notificationDelivery->deliver($notification);
+            $notificationDelivery->deliver($notification, $message);
         }
 
         return new JsonResponse([

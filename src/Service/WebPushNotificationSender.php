@@ -2,6 +2,7 @@
 
 namespace App\Service;
 
+use App\Entity\CampaignMessage;
 use App\Entity\Notification;
 use App\Entity\UserPushSubscription;
 use Doctrine\ORM\EntityManagerInterface;
@@ -64,8 +65,8 @@ final class WebPushNotificationSender
                         'contentEncoding' => 'aes128gcm',
                     ]),
                     json_encode([
-                        'title' => 'Wave',
-                        'body' => $this->messageForLocale($subscription->getLocale()),
+                        'title' => $this->titleFor($notification),
+                        'body' => $this->bodyFor($notification, $subscription->getLocale()),
                         'url' => $this->targetFor($notification),
                     ], JSON_THROW_ON_ERROR),
                     ['TTL' => 86400],
@@ -97,6 +98,49 @@ final class WebPushNotificationSender
         if ([] !== $expiredSubscriptions) {
             $this->entityManager->flush();
         }
+    }
+
+    private function titleFor(Notification $notification): string
+    {
+        $actor = $notification->getActor();
+        $actorName = $actor?->getCreator()?->getDisplayName()
+            ?? $actor?->getCompany()?->getName()
+            ?? 'Wave';
+
+        return '' !== trim($actorName) ? $actorName : 'Wave';
+    }
+
+    private function bodyFor(Notification $notification, string $locale): string
+    {
+        $conversation = $notification->getConversation();
+        $sender = $notification->getActor();
+        if ($conversation !== null && $sender !== null) {
+            $message = $this->entityManager->getRepository(CampaignMessage::class)->findOneBy(
+                ['conversation' => $conversation, 'sender' => $sender],
+                ['createdAt' => 'DESC', 'id' => 'DESC'],
+            );
+            if ($message instanceof CampaignMessage) {
+                return $this->trimPreview($message->getBody());
+            }
+        }
+
+        return $this->messageForLocale($locale);
+    }
+
+    private function trimPreview(string $message): string
+    {
+        $preview = trim(preg_replace('/\s+/u', ' ', $message) ?? $message);
+        if (mb_strlen($preview) <= 160) {
+            return $preview;
+        }
+
+        $preview = mb_substr($preview, 0, 159);
+        $lastSpace = mb_strrpos($preview, ' ');
+        if ($lastSpace !== false && $lastSpace > 100) {
+            $preview = mb_substr($preview, 0, $lastSpace);
+        }
+
+        return rtrim($preview).'…';
     }
 
     private function messageForLocale(string $locale): string

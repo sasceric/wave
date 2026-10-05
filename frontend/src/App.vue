@@ -35,6 +35,7 @@ const notificationsMenu = ref(null)
 const notifications = ref([])
 const notificationsError = ref('')
 const markingAllRead = ref(false)
+const optimisticUnreadNotificationIds = ref([])
 const unreadMessageCount = ref(0)
 const pushConfig = ref({ enabled: false, publicKey: '' })
 const pushSupported = ref(false)
@@ -47,7 +48,10 @@ const updateError = ref('')
 const installHelpVisible = ref(false)
 const installAvailable = ref(false)
 const installHint = computed(() => isIosDevice() ? t('app.installIosHint') : t('app.installHint'))
-const unreadNotificationCount = computed(() => notifications.value.filter((item) => !item.readAt).length)
+const unreadNotificationCount = computed(() => (
+  notifications.value.filter((item) => !item.readAt).length
+  + optimisticUnreadNotificationIds.value.length
+))
 const canShowInstallButton = computed(() => (
   installAvailable.value
   || (isIosDevice() && !window.matchMedia('(display-mode: standalone)').matches)
@@ -70,6 +74,9 @@ const hideSiteFooter = computed(() => Boolean(
 ))
 let realtimeSource = null
 let realtimeRetryTimer = null
+let notificationsRequestVersion = 0
+let unreadMessagesRequestVersion = 0
+const seenRealtimeNotificationIds = new Set()
 let installPrompt = null
 let updateServiceWorker = null
 let serviceWorkerRegistration = null
@@ -107,7 +114,11 @@ watch(currentUser, (user) => {
     notificationsMenuOpen.value = false
     notifications.value = []
     notificationsError.value = ''
+    optimisticUnreadNotificationIds.value = []
     unreadMessageCount.value = 0
+    seenRealtimeNotificationIds.clear()
+    notificationsRequestVersion += 1
+    unreadMessagesRequestVersion += 1
     pushSubscribed.value = false
     pushStatus.value = ''
     closeRealtime()
@@ -195,12 +206,25 @@ onBeforeUnmount(() => {
 })
 
 async function loadNotifications() {
-  if (!currentUser.value) return
+  const userId = currentUser.value?.id
+  if (!userId) return
+  const requestVersion = ++notificationsRequestVersion
   try {
     const response = await apiGet('/me/notifications')
+    if (
+      currentUser.value?.id !== userId
+      || requestVersion !== notificationsRequestVersion
+    ) {
+      return
+    }
     notifications.value = response.data
+    const loadedIds = new Set(response.data.map((notification) => notification.id))
+    optimisticUnreadNotificationIds.value = optimisticUnreadNotificationIds.value.filter(
+      (id) => !loadedIds.has(id),
+    )
     notificationsError.value = ''
   } catch (cause) {
+    if (requestVersion !== notificationsRequestVersion) return
     if (cause.status === 401) {
       setCurrentUser(null)
       return
@@ -215,15 +239,22 @@ async function loadUnreadMessages() {
     unreadMessageCount.value = 0
     return
   }
+  const requestVersion = ++unreadMessagesRequestVersion
 
   try {
     const response = await apiGet('/me/conversations')
-    if (currentUser.value?.id !== userId) return
+    if (
+      currentUser.value?.id !== userId
+      || requestVersion !== unreadMessagesRequestVersion
+    ) {
+      return
+    }
     unreadMessageCount.value = response.data.reduce(
       (total, conversation) => total + conversation.unreadCount,
       0,
     )
   } catch (cause) {
+    if (requestVersion !== unreadMessagesRequestVersion) return
     if (cause.status === 401) {
       setCurrentUser(null)
       return
@@ -307,8 +338,28 @@ async function connectRealtime() {
     source.onmessage = (event) => {
       try {
         const update = JSON.parse(event.data)
-        void loadNotifications()
-        void loadUnreadMessages()
+        if (hasSeenRealtimeNotification(update.notificationId)) return
+
+        if (update.notificationType !== 'chat_message') {
+          addOptimisticUnreadNotification(update.notificationId)
+          void loadNotifications()
+        }
+        const isOpenConversation = (
+          update.notificationType === 'chat_message'
+          && route.meta.routeName === 'messages'
+          && Number(route.query.conversation) === Number(update.conversationId)
+        )
+        if (update.notificationType === 'chat_message') {
+          const senderId = update.message?.senderId
+          if (senderId === undefined || senderId !== currentUser.value?.id) {
+            if (!isOpenConversation) {
+              unreadMessageCount.value += 1
+            }
+          }
+        }
+        if (!isOpenConversation) {
+          void loadUnreadMessages()
+        }
         window.dispatchEvent(new CustomEvent('wave:realtime', { detail: update }))
       } catch (cause) {
         console.error('Unable to read a Wave realtime update.', cause)
@@ -325,6 +376,35 @@ async function connectRealtime() {
       console.error('Unable to connect to Wave realtime updates.', cause)
     }
     scheduleRealtimeRetry()
+  }
+}
+
+function hasSeenRealtimeNotification(notificationId) {
+  const id = Number(notificationId)
+  if (!Number.isInteger(id) || id < 1 || seenRealtimeNotificationIds.has(id)) {
+    return true
+  }
+
+  seenRealtimeNotificationIds.add(id)
+  if (seenRealtimeNotificationIds.size > 500) {
+    seenRealtimeNotificationIds.delete(seenRealtimeNotificationIds.values().next().value)
+  }
+
+  return false
+}
+
+function addOptimisticUnreadNotification(notificationId) {
+  const id = Number(notificationId)
+  if (
+    Number.isInteger(id)
+    && id > 0
+    && !notifications.value.some((notification) => notification.id === id)
+    && !optimisticUnreadNotificationIds.value.includes(id)
+  ) {
+    optimisticUnreadNotificationIds.value = [
+      ...optimisticUnreadNotificationIds.value,
+      id,
+    ]
   }
 }
 
@@ -486,11 +566,15 @@ async function applyWaveUpdate() {
 async function markAllNotificationsRead() {
   markingAllRead.value = true
   notificationsError.value = ''
+  const pendingIds = new Set(optimisticUnreadNotificationIds.value)
   try {
     await apiRequest('/me/notifications/read-all', { method: 'POST', body: {} })
     notifications.value = notifications.value.map((notification) => (
       notification.readAt ? notification : { ...notification, readAt: new Date().toISOString() }
     ))
+    optimisticUnreadNotificationIds.value = optimisticUnreadNotificationIds.value.filter(
+      (id) => !pendingIds.has(id),
+    )
   } catch (cause) {
     notificationsError.value = cause.message
   } finally {
@@ -507,6 +591,9 @@ async function openNotification(notification) {
     })
     const index = notifications.value.findIndex((item) => item.id === notification.id)
     if (index !== -1) notifications.value.splice(index, 1, response.data)
+    optimisticUnreadNotificationIds.value = optimisticUnreadNotificationIds.value.filter(
+      (id) => id !== notification.id,
+    )
     notificationsMenuOpen.value = false
     if (notification.conversationId) {
       await router.push({

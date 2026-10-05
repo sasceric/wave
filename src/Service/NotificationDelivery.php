@@ -2,6 +2,7 @@
 
 namespace App\Service;
 
+use App\Entity\CampaignMessage;
 use App\Entity\Notification;
 
 final class NotificationDelivery
@@ -13,13 +14,13 @@ final class NotificationDelivery
     ) {
     }
 
-    public function deliver(Notification $notification): void
+    public function deliver(Notification $notification, ?CampaignMessage $message = null): void
     {
         if (!$this->enabled) {
             return;
         }
 
-        $this->realtimeUpdatePublisher->publish($notification);
+        $this->realtimeUpdatePublisher->publish($notification, $message);
         $this->webPushNotificationSender->send($notification);
     }
 }

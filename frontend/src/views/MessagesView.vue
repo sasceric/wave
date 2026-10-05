@@ -46,6 +46,7 @@ const error = ref('')
 const authRequired = ref(false)
 const messageList = ref(null)
 let messageScrollFrame = 0
+let inboxRefreshInProgress = false
 
 const pendingStart = computed(() => {
   const campaign = route.query.campaign
@@ -197,6 +198,8 @@ onMounted(() => {
   window.visualViewport?.addEventListener('scroll', updateViewport)
   void loadInbox()
   window.addEventListener('wave:realtime', handleRealtimeUpdate)
+  window.addEventListener('focus', refreshInboxWhenVisible)
+  document.addEventListener('visibilitychange', refreshInboxWhenVisible)
 })
 
 onBeforeUnmount(() => {
@@ -205,6 +208,8 @@ onBeforeUnmount(() => {
   window.visualViewport?.removeEventListener('resize', updateViewport)
   window.visualViewport?.removeEventListener('scroll', updateViewport)
   window.removeEventListener('wave:realtime', handleRealtimeUpdate)
+  window.removeEventListener('focus', refreshInboxWhenVisible)
+  document.removeEventListener('visibilitychange', refreshInboxWhenVisible)
   if (messageScrollFrame) {
     window.cancelAnimationFrame(messageScrollFrame)
   }
@@ -217,8 +222,50 @@ function updateViewport() {
   visualViewportTop.value = Math.round(viewport?.offsetTop || 0)
 }
 
-function handleRealtimeUpdate() {
-  void refreshInbox()
+function handleRealtimeUpdate(event) {
+  const update = event.detail
+  const conversationId = Number(update?.conversationId)
+  const message = update?.message
+  if (
+    update?.notificationType !== 'chat_message'
+    || !Number.isInteger(conversationId)
+    || !message
+    || typeof message !== 'object'
+  ) {
+    void refreshInbox()
+    return
+  }
+
+  const conversation = conversations.value.find((item) => item.id === conversationId)
+  if (!conversation) {
+    void refreshInbox()
+    return
+  }
+
+  const isIncoming = message.senderId !== currentUser.value?.id
+  const updatedConversation = {
+    ...conversation,
+    lastMessage: message.body,
+    lastMessageAt: message.createdAt,
+    lastMessageSenderId: message.senderId,
+    unreadCount: conversation.unreadCount + (isIncoming ? 1 : 0),
+  }
+  upsertConversation(updatedConversation)
+
+  if (selectedConversationId.value === conversationId) {
+    if (!conversationMessages.value.some((existing) => existing.id === message.id)) {
+      conversationMessages.value.push(message)
+    }
+    void loadMessages({ ...updatedConversation, threadType: 'campaign' })
+  } else if (isIncoming) {
+    window.dispatchEvent(new Event('wave:conversations-updated'))
+  }
+}
+
+function refreshInboxWhenVisible() {
+  if (document.visibilityState === 'visible' && currentUser.value) {
+    void refreshInbox()
+  }
 }
 
 async function loadInbox() {
@@ -316,7 +363,7 @@ async function selectConversation(thread, syncRoute = true) {
       query,
     })
   }
-  await loadMessages(thread)
+  await loadMessages(thread, true)
 }
 
 function backToInbox() {
@@ -331,13 +378,16 @@ function backToInbox() {
   })
 }
 
-async function loadMessages(thread) {
+async function loadMessages(thread, forceScroll = false) {
   try {
+    const previousLatestMessageId = conversationMessages.value.at(-1)?.id
     if (thread.threadType === 'inquiry') {
       const response = await apiGet(`/me/inquiries/${thread.id}/messages`)
       conversationMessages.value = response.data
       error.value = ''
-      await scrollToLatestMessage()
+      if (forceScroll || response.data.at(-1)?.id !== previousLatestMessageId) {
+        await scrollToLatestMessage()
+      }
       return
     }
 
@@ -351,7 +401,9 @@ async function loadMessages(thread) {
       window.dispatchEvent(new Event('wave:conversations-updated'))
     }
     error.value = ''
-    await scrollToLatestMessage()
+    if (forceScroll || response.data.at(-1)?.id !== previousLatestMessageId) {
+      await scrollToLatestMessage()
+    }
   } catch (cause) {
     handleLoadError(cause)
   }
@@ -372,6 +424,10 @@ async function scrollToLatestMessage() {
 }
 
 async function refreshInbox() {
+  if (inboxRefreshInProgress) {
+    return
+  }
+  inboxRefreshInProgress = true
   try {
     const [conversationResponse, inquiryResponse] = await Promise.all([
       apiGet('/me/conversations'),
@@ -390,6 +446,8 @@ async function refreshInbox() {
     if (cause.status !== 401) {
       error.value = cause.message
     }
+  } finally {
+    inboxRefreshInProgress = false
   }
 }
 

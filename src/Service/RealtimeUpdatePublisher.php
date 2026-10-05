@@ -2,6 +2,8 @@
 
 namespace App\Service;
 
+use App\Api\CampaignMessageResource;
+use App\Entity\CampaignMessage;
 use App\Entity\Notification;
 use App\Entity\User;
 use Psr\Log\LoggerInterface;
@@ -18,7 +20,7 @@ final class RealtimeUpdatePublisher
     ) {
     }
 
-    public function publish(Notification $notification): void
+    public function publish(Notification $notification, ?CampaignMessage $message = null): void
     {
         if (!$this->enabled) {
             return;
@@ -34,7 +36,9 @@ final class RealtimeUpdatePublisher
         $payload = json_encode([
             'type' => 'notification',
             'notificationId' => $notificationId,
+            'notificationType' => $notification->getType(),
             'conversationId' => $conversation?->getId(),
+            'message' => $message === null ? null : CampaignMessageResource::fromEntity($message),
         ], JSON_THROW_ON_ERROR);
 
         try {
