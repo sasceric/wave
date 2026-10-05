@@ -15,6 +15,10 @@ use App\Entity\User;
 use App\Localization\ApiMessages;
 use App\Localization\LocaleContext;
 use App\Service\NotificationDelivery;
+use App\Service\ChatMessageHistory;
+use App\Service\ChatReadReceipt;
+use App\Service\UnreadInboxCounter;
+use App\Service\RealtimeUpdatePublisher;
 use DateTimeInterface;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\SecurityBundle\Security;
@@ -188,7 +192,7 @@ final class CreatorInquiryController
     }
 
     #[Route('/api/me/inquiries', name: 'api_my_inquiries', methods: ['GET'])]
-    public function index(Request $request, EntityManagerInterface $entityManager, Security $security): JsonResponse
+    public function index(Request $request, EntityManagerInterface $entityManager, Security $security, UnreadInboxCounter $counter): JsonResponse
     {
         $locale = LocaleContext::fromRequest($request);
         if ($locale === null) {
@@ -210,7 +214,7 @@ final class CreatorInquiryController
 
         return new JsonResponse([
             'data' => array_map(
-                static function (CreatorInquiry $inquiry) use ($entityManager, $user): array {
+                static function (CreatorInquiry $inquiry) use ($entityManager, $user, $counter): array {
                     $lastMessage = $inquiry->getStatus() === 'accepted'
                         ? $entityManager->getRepository(InquiryMessage::class)->findOneBy(
                             ['inquiry' => $inquiry],
@@ -218,7 +222,7 @@ final class CreatorInquiryController
                         )
                         : null;
 
-                    return self::inquiryResource($inquiry, $user, $lastMessage);
+                    return [...self::inquiryResource($inquiry, $user, $lastMessage), 'unreadCount' => $counter->inquiryMessages($user, $inquiry->getId())];
                 },
                 $inquiries,
             ),
@@ -301,6 +305,7 @@ final class CreatorInquiryController
         Request $request,
         EntityManagerInterface $entityManager,
         Security $security,
+        ChatMessageHistory $history,
     ): JsonResponse {
         $locale = LocaleContext::fromRequest($request);
         if ($locale === null) {
@@ -321,14 +326,56 @@ final class CreatorInquiryController
             return new JsonResponse(['error' => ApiMessages::get('invalid_request', $locale)], 409);
         }
 
-        $messages = $entityManager->getRepository(InquiryMessage::class)->findBy(
-            ['inquiry' => $inquiry],
-            ['createdAt' => 'ASC', 'id' => 'ASC'],
-        );
+        try {
+            $page = $history->page(InquiryMessage::class, 'inquiry', $inquiry, $request, $user);
+        } catch (\InvalidArgumentException) {
+            return new JsonResponse(['error' => ApiMessages::get('invalid_request', $locale)], 400);
+        }
 
         return new JsonResponse([
-            'data' => array_map(static fn (InquiryMessage $message): array => self::messageResource($message, $inquiry), $messages),
+            'data' => array_map(static fn (InquiryMessage $message): array => self::messageResource($message, $inquiry), $page['messages']),
+            'meta' => $page['meta'],
+            'readReceipt' => $page['readReceipt'],
         ]);
+    }
+
+    #[Route('/api/me/inquiries/{id}/read', name: 'api_creator_inquiry_read', methods: ['POST'])]
+    public function read(
+        int $id,
+        Request $request,
+        EntityManagerInterface $entityManager,
+        Security $security,
+        CsrfTokenManagerInterface $tokenManager,
+        ChatReadReceipt $receipts,
+    ): JsonResponse {
+        $locale = LocaleContext::fromRequest($request);
+        if ($locale === null) {
+            return new JsonResponse(['error' => ApiMessages::get('unsupported_language', 'bs')], 400);
+        }
+        if ($csrfError = ApiAccess::requireCsrf($request, $tokenManager, $locale)) {
+            return $csrfError;
+        }
+        $user = $security->getUser();
+        if (!$user instanceof User) {
+            return new JsonResponse(['error' => ApiMessages::get('authentication_required', $locale)], 401);
+        }
+        $inquiry = $entityManager->getRepository(CreatorInquiry::class)->find($id);
+        if (!$inquiry instanceof CreatorInquiry) {
+            return new JsonResponse(['error' => ApiMessages::get('invalid_request', $locale)], 404);
+        }
+        if (!self::isParticipant($inquiry, $user)) {
+            return new JsonResponse(['error' => ApiMessages::get('forbidden', $locale)], 403);
+        }
+        if ($inquiry->getStatus() !== 'accepted') {
+            return new JsonResponse(['error' => ApiMessages::get('invalid_request', $locale)], 409);
+        }
+
+        $data = JsonPayload::fromRequest($request);
+        try {
+            return new JsonResponse(['data' => $receipts->acknowledge($inquiry, $user, $data['throughId'] ?? null)]);
+        } catch (\InvalidArgumentException) {
+            return new JsonResponse(['error' => ApiMessages::get('invalid_request', $locale)], 400);
+        }
     }
 
     #[Route('/api/me/inquiries/{id}/messages', name: 'api_creator_inquiry_message_create', methods: ['POST'])]
@@ -338,6 +385,7 @@ final class CreatorInquiryController
         EntityManagerInterface $entityManager,
         Security $security,
         CsrfTokenManagerInterface $tokenManager,
+        RealtimeUpdatePublisher $publisher,
     ): JsonResponse {
         $locale = LocaleContext::fromRequest($request);
         if ($locale === null) {
@@ -371,7 +419,17 @@ final class CreatorInquiryController
         $entityManager->persist($message);
         $entityManager->flush();
 
-        return new JsonResponse(['data' => self::messageResource($message, $inquiry)], 201);
+        $resource = self::messageResource($message, $inquiry);
+        $creatorOwner = $inquiry->getCreator()->getOwner();
+        $recipient = $creatorOwner?->getId() === $user->getId()
+            ? $inquiry->getCompany()->getOwner() : $creatorOwner;
+        if ($recipient instanceof User) {
+            $publisher->publishEvent($recipient, [
+                'type' => 'chat_message', 'notificationType' => 'chat_message', 'inquiryId' => $inquiry->getId(), 'message' => $resource,
+            ]);
+        }
+
+        return new JsonResponse(['data' => $resource], 201);
     }
 
     private static function isParticipant(CreatorInquiry $inquiry, User $user): bool
@@ -428,6 +486,8 @@ final class CreatorInquiryController
 
         return [
             'id' => $message->getId(),
+            'senderId' => $sender->getId(),
+            'readAt' => $message->getReadAt()?->format(DateTimeInterface::ATOM),
             'senderRole' => $sender->getId() === $creatorOwnerId ? 'creator' : 'company',
             'body' => $message->getBody(),
             'createdAt' => $message->getCreatedAt()->format(DateTimeInterface::ATOM),

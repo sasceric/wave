@@ -214,6 +214,14 @@
     "markAllRead": "Označi sve kao pročitano"
   },
   "campaignChat": {
+    "unreadDivider": "Nove poruke",
+    "loadEarlierUnread": "Učitaj ranije nepročitane poruke",
+    "loadingMessages": "Učitavanje poruka…",
+    "loadingOlder": "Učitavanje ranijih poruka…",
+    "loadOlder": "Učitaj ranije poruke",
+    "seen": "Viđeno",
+    "sent": "Poslato",
+    "newMessages": "Nove poruke ({count})",
     "today": "Danas",
     "yesterday": "Juče",
     "justNow": "Upravo sada",

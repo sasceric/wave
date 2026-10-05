@@ -46,7 +46,7 @@ function changePageSize(event) {
 </script>
 
 <template>
-  <div v-if="total > pageSize" class="directory-pagination">
+  <div v-if="total > 0" class="directory-pagination">
     <label class="directory-pagination__page-size">
       <span>{{ t('directoryPagination.itemsPerPage') }}</span>
       <select :value="pageSize" :aria-label="t('directoryPagination.itemsPerPage')" @change="changePageSize">
@@ -56,7 +56,7 @@ function changePageSize(event) {
     <p class="directory-pagination__status">
       {{ t('directoryPagination.pageStatus', { current: page, total: pageCount, count: total }) }}
     </p>
-    <nav class="directory-pagination__controls" :aria-label="t('directoryPagination.ariaLabel')">
+    <nav v-if="pageCount > 1" class="directory-pagination__controls" :aria-label="t('directoryPagination.ariaLabel')">
       <button
         type="button"
         :aria-label="t('directoryPagination.previous')"

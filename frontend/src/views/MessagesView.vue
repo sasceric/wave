@@ -7,6 +7,7 @@ import {
   Building2,
   CalendarDays,
   Check,
+  CheckCheck,
   ChevronLeft,
   FileText,
   MapPin,
@@ -31,6 +32,24 @@ const { t, locale } = useI18n()
 const conversations = ref([])
 const inquiries = ref([])
 const conversationMessages = ref([])
+// Keep this visit's boundary after the server acknowledges reads.
+const firstUnreadMessageId = ref(null)
+let unreadBoundaryAcknowledged = false
+const unreadDividerMessageId = computed(() => firstUnreadMessageId.value === null ? null
+  : conversationMessages.value.find((message) => !isMessageMine(message) && message.id >= firstUnreadMessageId.value)?.id || null)
+const hasEarlierUnreadMessages = computed(() => firstUnreadMessageId.value !== null
+  && (conversationMessages.value[0]?.id || 0) > firstUnreadMessageId.value)
+const hasOlderMessages = ref(false)
+const loadingOlderMessages = ref(false)
+const historyError = ref('')
+const atLatestMessage = ref(true)
+const unseenNewMessages = ref(0)
+const loadingMessages = ref(false)
+const PAGE_SIZE = 50
+let readInProgress = false
+let historyRequestVersion = 0
+let counterpartReadCursor = 0
+let counterpartReadAt = null
 const chatClock = ref(Date.now())
 const chatTime = computed(() => createChatTimeFormatter(locale.value, t))
 const messageDays = computed(() => groupChatMessages(conversationMessages.value))
@@ -114,7 +133,7 @@ const threads = computed(() => [
       campaign: { title: inquiry.packageTitle || t('campaignChat.directInquiry') },
       lastMessage: inquiry.lastMessage || inquiry.message,
       lastMessageAt: inquiry.lastMessageAt || inquiry.createdAt,
-      unreadCount: 0,
+      unreadCount: inquiry.unreadCount || 0,
     })),
 ].sort((first, second) => new Date(second.lastMessageAt) - new Date(first.lastMessageAt)))
 
@@ -204,13 +223,12 @@ watch(
 
 watch(
   [
-    () => conversationMessages.value.length,
     selectedConversationId,
     selectedInquiryId,
     mobileThreadOpen,
     visualViewportHeight,
   ],
-  scrollToLatestMessage,
+  () => { if (atLatestMessage.value) void scrollToLatestMessage() },
   { flush: 'post' },
 )
 
@@ -224,11 +242,13 @@ onMounted(() => {
   void loadInbox()
   window.addEventListener('wave:realtime', handleRealtimeUpdate)
   window.addEventListener('wave:inbox-refresh', refreshInboxWhenVisible)
+  document.addEventListener('visibilitychange', acknowledgeVisibleMessages)
 })
 
 onBeforeUnmount(() => {
   unmounted = true
   messagesRequestVersion += 1
+  historyRequestVersion += 1
   inboxRequestVersion += 1
   document.documentElement.classList.remove('wave-chat-open')
   window.clearTimeout(chatClockTimer)
@@ -238,6 +258,7 @@ onBeforeUnmount(() => {
   window.visualViewport?.removeEventListener('scroll', updateViewport)
   window.removeEventListener('wave:realtime', handleRealtimeUpdate)
   window.removeEventListener('wave:inbox-refresh', refreshInboxWhenVisible)
+  document.removeEventListener('visibilitychange', acknowledgeVisibleMessages)
   if (messageScrollFrame) {
     window.cancelAnimationFrame(messageScrollFrame)
   }
@@ -265,42 +286,48 @@ function updateViewport() {
 }
 
 function handleRealtimeUpdate(event) {
-  if (document.visibilityState !== 'visible') return
   const update = event.detail
-  const conversationId = Number(update?.conversationId)
+  const isInquiry = update?.inquiryId !== undefined
+  const id = Number(isInquiry ? update.inquiryId : update?.conversationId)
+  const isSelected = (isInquiry ? selectedInquiryId.value : selectedConversationId.value) === id
+  if (update?.type === 'chat_read') {
+    if (isSelected && update.readerId !== currentUser.value?.id && update.throughId > counterpartReadCursor) {
+      counterpartReadCursor = update.throughId
+      counterpartReadAt = update.readAt
+      mergeMessages([])
+    }
+    return
+  }
+  if (document.visibilityState !== 'visible') return
   const message = update?.message
-  if (
-    update?.notificationType !== 'chat_message'
-    || !Number.isInteger(conversationId)
-    || !message
-    || typeof message !== 'object'
-  ) {
+  if ((update?.notificationType !== 'chat_message' && update?.type !== 'chat_message') || !message || !Number.isInteger(id)) {
     void refreshInbox()
     return
   }
-
-  const conversation = conversations.value.find((item) => item.id === conversationId)
-  if (!conversation) {
+  const collection = isInquiry ? inquiries.value : conversations.value
+  const thread = collection.find((item) => item.id === id)
+  if (!thread) {
     void refreshInbox()
     return
   }
-
   const isIncoming = message.senderId !== currentUser.value?.id
-  const updatedConversation = {
-    ...conversation,
+  const duplicate = isSelected && conversationMessages.value.some((existing) => existing.id === message.id)
+  if (duplicate) return
+  Object.assign(thread, {
     lastMessage: message.body,
     lastMessageAt: message.createdAt,
     lastMessageSenderId: message.senderId,
-    unreadCount: conversation.unreadCount + (isIncoming ? 1 : 0),
-  }
-  upsertConversation(updatedConversation)
-
-  if (selectedConversationId.value === conversationId) {
-    if (!conversationMessages.value.some((existing) => existing.id === message.id)) {
-      conversationMessages.value.push(message)
+    unreadCount: (thread.unreadCount || 0) + (isIncoming ? 1 : 0),
+  })
+  if (isSelected) {
+    if (isIncoming && !atLatestMessage.value) rememberUnreadBoundary([message])
+    mergeMessages([message])
+    if (atLatestMessage.value) {
+      void scrollToLatestMessage()
+    } else {
+      unseenNewMessages.value += 1
     }
-    void loadMessages({ ...updatedConversation, threadType: 'campaign' })
-  } else if (isIncoming) {
+  } else if (isIncoming && !isInquiry) {
     window.dispatchEvent(new Event('wave:conversations-updated'))
   }
 }
@@ -405,7 +432,7 @@ async function loadPendingDetails() {
 
 async function selectConversation(thread, syncRoute = true) {
   messagesRequestVersion += 1
-  if (selectedThreadKey.value !== thread.threadKey) conversationMessages.value = []
+  if (selectedThreadKey.value !== thread.threadKey) resetHistory()
   selectedConversationId.value = thread.threadType === 'campaign' ? thread.id : null
   selectedInquiryId.value = thread.threadType === 'inquiry' ? thread.id : null
   pendingDetails.value = null
@@ -428,7 +455,7 @@ function backToInbox(syncRoute = true) {
   selectedConversationId.value = null
   selectedInquiryId.value = null
   pendingDetails.value = null
-  conversationMessages.value = []
+  resetHistory()
   if (!syncRoute) return
   void router.replace({
     name: localizedRouteName('messages', locale.value),
@@ -436,57 +463,197 @@ function backToInbox(syncRoute = true) {
   })
 }
 
+function resetHistory() {
+  historyRequestVersion += 1
+  conversationMessages.value = []
+  firstUnreadMessageId.value = null
+  unreadBoundaryAcknowledged = false
+  hasOlderMessages.value = false
+  loadingOlderMessages.value = false
+  loadingMessages.value = false
+  historyError.value = ''
+  atLatestMessage.value = true
+  unseenNewMessages.value = 0
+  counterpartReadCursor = 0
+  counterpartReadAt = null
+}
+
+function threadPath(thread) {
+  return `/me/${thread.threadType === 'inquiry' ? 'inquiries' : 'conversations'}/${thread.id}`
+}
+
+function activeThread() {
+  return selectedThread.value && {
+    ...selectedThread.value,
+    threadType: selectedInquiryId.value === null ? 'campaign' : 'inquiry',
+  }
+}
+
+function rememberUnreadBoundary(messages, serverFirstUnreadId = null) {
+  const firstIncoming = messages.find((message) => !isMessageMine(message) && !message.readAt)
+  const boundary = serverFirstUnreadId || firstIncoming?.id
+  if (!boundary) return
+  firstUnreadMessageId.value = firstUnreadMessageId.value === null || unreadBoundaryAcknowledged
+    ? boundary : Math.min(firstUnreadMessageId.value, boundary)
+  unreadBoundaryAcknowledged = false
+}
+
+function chatMessagesAreGrouped(previous, message) {
+  return message?.id !== unreadDividerMessageId.value && areChatMessagesGrouped(previous, message)
+}
+
+function mergeMessages(messages) {
+  const merged = new Map(conversationMessages.value.map((message) => [message.id, message]))
+  for (const message of messages) {
+    const existing = merged.get(message.id)
+    merged.set(message.id, { ...existing, ...message, readAt: message.readAt || existing?.readAt || null })
+  }
+  conversationMessages.value = [...merged.values()].sort((left, right) => left.id - right.id)
+    .map((message) => (isMessageMine(message) && message.id <= counterpartReadCursor
+      ? { ...message, readAt: message.readAt || counterpartReadAt }
+      : message))
+}
+
 async function loadMessages(thread, forceScroll = false) {
   const requestVersion = ++messagesRequestVersion
   const userId = currentUser.value?.id
   const isCurrentRequest = () => (
-    !unmounted
-    && requestVersion === messagesRequestVersion
-    && currentUser.value?.id === userId
+    !unmounted && requestVersion === messagesRequestVersion && currentUser.value?.id === userId
     && (thread.threadType === 'inquiry' ? selectedInquiryId.value : selectedConversationId.value) === thread.id
   )
+  const initial = conversationMessages.value.length === 0
+  loadingMessages.value = true
   try {
-    const previousLatestMessageId = conversationMessages.value.at(-1)?.id
-    if (thread.threadType === 'inquiry') {
-      const response = await apiGet(`/me/inquiries/${thread.id}/messages`)
+    let cursor = initial ? null : conversationMessages.value.at(-1)?.id
+    let hasMore = false
+    do {
+      const response = await apiGet(`${threadPath(thread)}/messages?limit=${PAGE_SIZE}${cursor ? `&after=${cursor}` : ''}`)
       if (!isCurrentRequest()) return
-      conversationMessages.value = response.data
-      error.value = ''
-      if (forceScroll || response.data.at(-1)?.id !== previousLatestMessageId) {
-        await scrollToLatestMessage()
+      if (response.readReceipt?.throughId > counterpartReadCursor) {
+        counterpartReadCursor = response.readReceipt.throughId
+        counterpartReadAt = response.readReceipt.readAt
       }
-      return
-    }
-
-    const previousUnreadCount = conversations.value.find(
-      (conversation) => conversation.id === thread.id,
-    )?.unreadCount || 0
-    const response = await apiGet(`/me/conversations/${thread.id}/messages`)
-    if (!isCurrentRequest()) return
-    conversationMessages.value = response.data
-    upsertConversation(response.conversation)
-    if (previousUnreadCount > 0 && response.conversation.unreadCount === 0) {
-      window.dispatchEvent(new Event('wave:conversations-updated'))
-    }
+      rememberUnreadBoundary(response.data, response.meta?.firstUnreadId)
+      mergeMessages(response.data)
+      if (initial) hasOlderMessages.value = Boolean(response.meta?.hasMoreOlder)
+      if (response.conversation) upsertConversation(response.conversation)
+      hasMore = Boolean(response.meta?.hasMoreNewer)
+      const nextCursor = response.data.at(-1)?.id
+      if (!nextCursor || nextCursor === cursor) break
+      cursor = nextCursor
+    } while (hasMore)
     error.value = ''
-    if (forceScroll || response.data.at(-1)?.id !== previousLatestMessageId) {
-      await scrollToLatestMessage()
-    }
+    if (initial && unreadDividerMessageId.value !== null) await scrollToUnreadMessage()
+    else if (forceScroll || atLatestMessage.value) await scrollToLatestMessage()
   } catch (cause) {
     if (isCurrentRequest()) handleLoadError(cause)
+  } finally {
+    if (isCurrentRequest()) loadingMessages.value = false
   }
+}
+
+async function loadOlderMessages() {
+  const thread = activeThread()
+  if (!thread || !hasOlderMessages.value || loadingOlderMessages.value || loadingMessages.value) return
+  const requestVersion = ++historyRequestVersion
+  const selectionVersion = messagesRequestVersion
+  const userId = currentUser.value?.id
+  const isCurrent = () => !unmounted && requestVersion === historyRequestVersion
+    && selectionVersion === messagesRequestVersion && currentUser.value?.id === userId
+  const timeline = messageList.value
+  const anchor = timeline?.querySelector('[data-message-id]')
+  const anchorTop = anchor?.getBoundingClientRect().top
+  const anchorId = anchor?.dataset.messageId
+  loadingOlderMessages.value = true
+  atLatestMessage.value = false
+  historyError.value = ''
+  try {
+    const response = await apiGet(`${threadPath(thread)}/messages?limit=${PAGE_SIZE}&before=${conversationMessages.value[0].id}`)
+    if (!isCurrent()) return
+    rememberUnreadBoundary(response.data, response.meta?.firstUnreadId)
+    mergeMessages(response.data)
+    hasOlderMessages.value = Boolean(response.meta?.hasMoreOlder)
+    await nextTick()
+    if (!isCurrent()) return
+    const retained = anchorId && timeline?.querySelector(`[data-message-id="${anchorId}"]`)
+    if (retained) timeline.scrollTop += retained.getBoundingClientRect().top - anchorTop
+  } catch (cause) {
+    if (isCurrent()) historyError.value = cause.message
+  } finally {
+    if (requestVersion === historyRequestVersion) loadingOlderMessages.value = false
+  }
+}
+
+function handleTimelineScroll() {
+  const timeline = messageList.value
+  if (!timeline || loadingOlderMessages.value) return
+  atLatestMessage.value = timeline.scrollHeight - timeline.scrollTop - timeline.clientHeight < 60
+  if (atLatestMessage.value) {
+    unseenNewMessages.value = 0
+    void acknowledgeVisibleMessages()
+  }
+  if (timeline.scrollTop < 120) void loadOlderMessages()
+}
+
+async function acknowledgeVisibleMessages() {
+  const thread = activeThread()
+  const throughId = conversationMessages.value.at(-1)?.id
+  if (!thread || !messageList.value || document.visibilityState !== 'visible' || !atLatestMessage.value
+    || loadingMessages.value || readInProgress || !throughId) return
+  if (!conversationMessages.value.some((message) => !isMessageMine(message) && !message.readAt)) {
+    return
+  }
+  const key = selectedThreadKey.value
+  const userId = currentUser.value?.id
+  readInProgress = true
+  let acknowledged = false
+  try {
+    const response = await apiRequest(`${threadPath(thread)}/read`, { method: 'POST', body: { throughId } })
+    if (unmounted || selectedThreadKey.value !== key || currentUser.value?.id !== userId) return
+    acknowledged = true
+    if (firstUnreadMessageId.value !== null && throughId >= firstUnreadMessageId.value) unreadBoundaryAcknowledged = true
+    conversationMessages.value = conversationMessages.value.map((message) => (
+      !isMessageMine(message) && message.id <= throughId
+        ? { ...message, readAt: message.readAt || response.data.readAt } : message
+    ))
+    if (!atLatestMessage.value) rememberUnreadBoundary(conversationMessages.value.filter((message) => message.id > throughId))
+    if (response.conversation) upsertConversation(response.conversation)
+    else if (selectedInquiry.value) selectedInquiry.value.unreadCount = 0
+    window.dispatchEvent(new Event('wave:conversations-updated'))
+  } catch (cause) {
+    // Retry on the next scroll/visibility/message event, without a polling timer.
+    if (selectedThreadKey.value === key) error.value = cause.message
+  } finally {
+    readInProgress = false
+    if (acknowledged || selectedThreadKey.value !== key) void acknowledgeVisibleMessages()
+  }
+}
+
+async function scrollToUnreadMessage() {
+  await nextTick()
+  if (messageScrollFrame) window.cancelAnimationFrame(messageScrollFrame)
+  messageScrollFrame = window.requestAnimationFrame(() => {
+    messageScrollFrame = 0
+    const timeline = messageList.value
+    const divider = timeline?.querySelector('.campaign-messages__unread-divider')
+    if (!timeline || !divider) return
+    timeline.scrollTop += divider.getBoundingClientRect().top - timeline.getBoundingClientRect().top - 12
+    atLatestMessage.value = timeline.scrollHeight - timeline.scrollTop - timeline.clientHeight < 60
+    if (atLatestMessage.value) void acknowledgeVisibleMessages()
+  })
 }
 
 async function scrollToLatestMessage() {
   await nextTick()
-  if (messageScrollFrame) {
-    window.cancelAnimationFrame(messageScrollFrame)
-  }
+  if (messageScrollFrame) window.cancelAnimationFrame(messageScrollFrame)
   messageScrollFrame = window.requestAnimationFrame(() => {
     messageScrollFrame = 0
     const timeline = messageList.value
     if (timeline) {
       timeline.scrollTop = timeline.scrollHeight
+      atLatestMessage.value = true
+      unseenNewMessages.value = 0
+      void acknowledgeVisibleMessages()
     }
   })
 }
@@ -543,6 +710,9 @@ async function sendMessage() {
   sending.value = true
   error.value = ''
   const body = draft.value.trim()
+  const senderId = currentUser.value?.id
+  const threadKey = selectedThreadKey.value
+  const isCurrentSend = () => !unmounted && currentUser.value?.id === senderId && selectedThreadKey.value === threadKey
   try {
     if (pendingStart.value && !selectedConversation.value) {
       const target = pendingStart.value
@@ -553,6 +723,8 @@ async function sendMessage() {
           body: { creatorId: target.creatorId, message: body },
         },
       )
+      if (!isCurrentSend()) return
+      resetHistory()
       upsertConversation(response.data)
       conversationMessages.value = [response.message]
       selectedConversationId.value = response.data.id
@@ -567,7 +739,8 @@ async function sendMessage() {
         `/me/inquiries/${selectedInquiryId.value}/messages`,
         { method: 'POST', body: { body } },
       )
-      conversationMessages.value.push(response.data)
+      if (!isCurrentSend()) return
+      mergeMessages([response.data])
       const inquiry = inquiries.value.find((item) => item.id === selectedInquiryId.value)
       if (inquiry) {
         inquiry.lastMessage = body
@@ -579,7 +752,8 @@ async function sendMessage() {
         `/me/conversations/${selectedConversationId.value}/messages`,
         { method: 'POST', body: { body } },
       )
-      conversationMessages.value.push(response.data)
+      if (!isCurrentSend()) return
+      mergeMessages([response.data])
       const conversation = selectedConversation.value
       if (conversation) {
         upsertConversation({
@@ -594,7 +768,7 @@ async function sendMessage() {
     }
     draft.value = ''
   } catch (cause) {
-    error.value = cause.message
+    if (isCurrentSend()) error.value = cause.message
   } finally {
     sending.value = false
   }
@@ -808,51 +982,74 @@ function messageTimeDescription(value) {
             role="region"
             tabindex="0"
             :aria-label="t('campaignChat.title')"
+            :aria-busy="loadingMessages || loadingOlderMessages"
+            @scroll.passive="handleTimelineScroll"
           >
+            <p v-if="loadingMessages" class="campaign-messages__history-status" role="status">{{ t('campaignChat.loadingMessages') }}</p>
+            <button v-if="hasOlderMessages" class="campaign-messages__history-button" type="button" :disabled="loadingOlderMessages || loadingMessages" @click="loadOlderMessages">
+              {{ t(loadingOlderMessages ? 'campaignChat.loadingOlder' : hasEarlierUnreadMessages ? 'campaignChat.loadEarlierUnread' : 'campaignChat.loadOlder') }}
+            </button>
+            <p v-if="historyError" class="campaign-messages__history-status" role="alert">{{ historyError }}</p>
             <div v-for="day in messageDays" :key="day.key" class="campaign-messages__day">
               <div v-if="day.dateKey" class="campaign-messages__day-divider" aria-live="off">
                 <span>{{ chatTime.dayLabel(day.createdAt, chatClock) }}</span>
               </div>
-              <div
-                v-for="(message, index) in day.messages"
-                :key="message.id"
-                class="campaign-messages__message-row"
-                :class="{
-                  'campaign-messages__message-row--mine': isMessageMine(message),
-                  'campaign-messages__message-row--grouped': areChatMessagesGrouped(day.messages[index - 1], message),
-                }"
-              >
-                <span
-                  v-if="!isMessageMine(message)"
-                  class="campaign-messages__avatar campaign-messages__avatar--message"
-                  :class="{ 'campaign-messages__avatar--grouped': areChatMessagesGrouped(message, day.messages[index + 1]) }"
+              <template v-for="(message, index) in day.messages" :key="message.id">
+                <div
+                  v-if="message.id === unreadDividerMessageId"
+                  class="campaign-messages__unread-divider"
+                  role="separator"
+                  :aria-label="t('campaignChat.unreadDivider')"
                 >
-                  <img v-if="counterpartAvatar" :src="counterpartAvatar" alt="" loading="lazy">
-                  <span v-else>{{ initials(counterpartName) }}</span>
-                </span>
-                <article
-                  class="campaign-messages__message"
-                  :class="{ 'campaign-messages__message--mine': isMessageMine(message) }"
+                  <span>{{ t('campaignChat.unreadDivider') }}</span>
+                </div>
+                <div
+                  :data-message-id="message.id"
+                  class="campaign-messages__message-row"
+                  :class="{
+                    'campaign-messages__message-row--mine': isMessageMine(message),
+                    'campaign-messages__message-row--grouped': chatMessagesAreGrouped(day.messages[index - 1], message),
+                  }"
                 >
-                  <p>{{ message.body }}</p>
-                  <time
-                    :datetime="message.createdAt"
-                    :title="messageTimeDescription(message.createdAt)"
-                    :aria-label="messageTimeDescription(message.createdAt)"
-                    aria-live="off"
-                  >{{ chatTime.clock(message.createdAt) }}</time>
-                </article>
-                <span
-                  v-if="isMessageMine(message)"
-                  class="campaign-messages__avatar campaign-messages__avatar--message"
-                  :class="{ 'campaign-messages__avatar--grouped': areChatMessagesGrouped(message, day.messages[index + 1]) }"
-                >
-                  <img v-if="currentAvatar" :src="currentAvatar" alt="" loading="lazy">
-                  <span v-else>{{ initials(currentDisplayName) || 'W' }}</span>
-                </span>
-              </div>
+                  <span
+                    v-if="!isMessageMine(message)"
+                    class="campaign-messages__avatar campaign-messages__avatar--message"
+                    :class="{ 'campaign-messages__avatar--grouped': chatMessagesAreGrouped(message, day.messages[index + 1]) }"
+                  >
+                    <img v-if="counterpartAvatar" :src="counterpartAvatar" alt="" loading="lazy">
+                    <span v-else>{{ initials(counterpartName) }}</span>
+                  </span>
+                  <article
+                    class="campaign-messages__message"
+                    :class="{ 'campaign-messages__message--mine': isMessageMine(message) }"
+                  >
+                    <p>{{ message.body }}</p>
+                    <div class="campaign-messages__message-meta">
+                      <time
+                        :datetime="message.createdAt"
+                        :title="messageTimeDescription(message.createdAt)"
+                        :aria-label="messageTimeDescription(message.createdAt)"
+                        aria-live="off"
+                      >{{ chatTime.clock(message.createdAt) }}</time>
+                      <span v-if="isMessageMine(message)" class="campaign-messages__receipt" :class="{ 'campaign-messages__receipt--seen': message.readAt }" :title="t(message.readAt ? 'campaignChat.seen' : 'campaignChat.sent')" :aria-label="t(message.readAt ? 'campaignChat.seen' : 'campaignChat.sent')">
+                        <CheckCheck v-if="message.readAt" :size="15" aria-hidden="true" />
+                        <Check v-else :size="15" aria-hidden="true" />
+                      </span>
+                    </div>
+                  </article>
+                  <span
+                    v-if="isMessageMine(message)"
+                    class="campaign-messages__avatar campaign-messages__avatar--message"
+                    :class="{ 'campaign-messages__avatar--grouped': chatMessagesAreGrouped(message, day.messages[index + 1]) }"
+                  >
+                    <img v-if="currentAvatar" :src="currentAvatar" alt="" loading="lazy">
+                    <span v-else>{{ initials(currentDisplayName) || 'W' }}</span>
+                  </span>
+                </div>
+              </template>
             </div>
           </div>
+          <button v-if="unseenNewMessages" type="button" class="campaign-messages__new-messages" @click="scrollToLatestMessage">{{ t('campaignChat.newMessages', { count: unseenNewMessages }) }}</button>
           <form class="campaign-messages__composer" @submit.prevent="sendMessage">
             <label class="campaign-messages__composer-field">
               <span class="sr-only">{{ t('campaignChat.replyPlaceholder') }}</span>
@@ -916,6 +1113,7 @@ function messageTimeDescription(value) {
             </button>
           </header>
           <p class="campaign-messages__empty">{{ t('campaignChat.newConversationDescription') }}</p>
+          <button v-if="unseenNewMessages" type="button" class="campaign-messages__new-messages" @click="scrollToLatestMessage">{{ t('campaignChat.newMessages', { count: unseenNewMessages }) }}</button>
           <form class="campaign-messages__composer" @submit.prevent="sendMessage">
             <label class="campaign-messages__composer-field">
               <span class="sr-only">{{ t('campaignChat.firstMessage') }}</span>

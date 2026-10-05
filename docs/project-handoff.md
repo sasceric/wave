@@ -42,7 +42,7 @@ Controller filenames in this table are under `src/Controller/Api/` unless a full
 - Authentication uses session cookies. Mutating API calls require `X-CSRF-Token`; use the existing API client and backend access helpers. Enforce ownership and participant checks on the server.
 - Marketplace actions generally require admin approval and verified email. `ApiAccess` centralizes role/approval checks, with verification requested by the relevant endpoint.
 - Shortlisting an application opens a campaign/creator conversation. An invitation opens its conversation after the creator accepts. Offers have their own acceptance/rejection flow.
-- Mercure delivers private per-user live events containing notification identifiers and, for campaign chat, the new message. The frontend applies messages immediately and fetches authorized details/read acknowledgements through Symfony. Web Push provides background device notifications and signals open app windows to reconcile their inbox. There is no periodic inbox polling.
+- Mercure delivers private per-user live events containing notification identifiers and, for campaign chat, the new message. The frontend applies messages immediately; explicit CSRF-protected POST `/api/me/conversations/{id}/read` and `/api/me/inquiries/{id}/read` acknowledge the latest rendered message only in a visible chat at the bottom. Private `chat_read` events update outgoing seen checks. Direct inquiry message events also use the private user stream. Web Push provides background device notifications and signals open app windows to reconcile their inbox. There is no periodic inbox polling.
 - Unread chat reminder emails omit message text. The scheduled command is `app:send-unread-message-reminders`; the README explains timing and deduplication.
 - The PWA caches static app assets, not private API content. Preserve the service worker's API exclusions.
 - Supported frontend locales are `bs` (default), `hr`, `sr` (Latin), `sl`, `en`, and `cnr` (Montenegrin). Older documentation lists only five; the current `i18n.js` loads all six. Keep new interface copy in the catalogs and update localized routes consistently when adding pages.
@@ -93,3 +93,24 @@ The production workflow deploys on pushes to `main`, as well as manual dispatch.
 At the start of the orientation review, there were existing uncommitted changes to `docs/mercure-server-setup.md` and a staged addition with a working-tree deletion of `frontend/public/favicon.svg` (`AD` in `git status`). Preserve user work and recheck status before editing or committing. The subsequent notification investigation changed application code and added tests; see `docs/notification-investigation.md` for findings, validation, and the remaining production configuration work.
 
 For the next Codex app session, use the repository root as the project directory. Project instructions live in `AGENTS.md`. Read this handoff and the relevant README sections when orientation is needed, then inspect `git status` and the files for the requested feature before changing code.
+
+### Cursor-based chat history
+
+`ChatMessageHistory` loads at most 50 messages by default (maximum 100). Both chat GET
+endpoints accept exclusive `before` or `after` message-ID cursors and return ascending
+messages, paging `meta`, and the latest outgoing `readReceipt` watermark. GET requests
+are read-only. `ChatReadReceipt` bulk-updates incoming unread messages through a cursor
+that belongs to the authorized thread; it does not create notifications for seen events.
+The Vue Messages view prepends older pages with a retained DOM anchor, merges by ID,
+and catches up with bounded `after` pages after a reconnect. New incoming messages do
+not force scroll while reading history. There is no online/away/offline presence service.
+Creators and campaigns directories use two columns on phones and desktop with existing
+server pagination (30/60/90); homepage carousels are separate from directory grids.
+
+The history `meta.firstUnreadId` identifies the viewer's first incoming unread message
+across all pages. The Messages view preserves a visit's unread divider after read
+acknowledgement, opens at its first loaded unread message, and offers “Load earlier
+unread messages” if the boundary is outside the loaded page. Lazy-loaded older
+pages move that divider back to the actual boundary without losing the scroll anchor.
+Unread divider boundaries reset when switching/leaving a thread, and a later unseen
+batch gets a fresh boundary. Migration `Version20261006170000` indexes unread lookups.

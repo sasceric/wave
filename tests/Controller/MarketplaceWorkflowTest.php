@@ -7,6 +7,8 @@ use App\Entity\CampaignConversation;
 use App\Entity\CampaignMessage;
 use App\Entity\Company;
 use App\Entity\Creator;
+use App\Entity\CreatorInquiry;
+use App\Entity\InquiryMessage;
 use App\Entity\Media;
 use App\Entity\Notification;
 use App\Entity\User;
@@ -979,6 +981,9 @@ final class MarketplaceWorkflowTest extends WebTestCase
         $this->client->request('GET', '/api/me/conversations/'.$firstConversation['id'].'/messages?locale=bs');
         self::assertResponseIsSuccessful();
         self::assertCount(2, $this->payload()['data']);
+        $throughId = $this->payload()['data'][array_key_last($this->payload()['data'])]['id'];
+        $this->jsonRequest('POST', '/api/me/conversations/'.$firstConversation['id'].'/read', ['throughId' => $throughId], $this->csrfToken());
+        self::assertResponseIsSuccessful();
         self::assertSame(0, $this->payload()['conversation']['unreadCount']);
         $this->client->request('GET', '/api/me/notifications?locale=bs');
         self::assertResponseIsSuccessful();
@@ -1068,6 +1073,9 @@ final class MarketplaceWorkflowTest extends WebTestCase
             'Thanks, I would be happy to discuss the campaign.',
             $this->payload()['data'][2]['body'],
         );
+        $throughId = $this->payload()['data'][array_key_last($this->payload()['data'])]['id'];
+        $this->jsonRequest('POST', '/api/me/conversations/'.$firstConversation['id'].'/read', ['throughId' => $throughId], $this->csrfToken());
+        self::assertResponseIsSuccessful();
         self::assertSame(0, $this->payload()['conversation']['unreadCount']);
     }
 
@@ -1122,11 +1130,103 @@ final class MarketplaceWorkflowTest extends WebTestCase
         self::assertSame(32, $this->payload()['unreadCount']);
         $this->client->request('GET', '/api/me/conversations/'.$conversation->getId().'/messages?locale=bs');
         self::assertResponseIsSuccessful();
+        $throughId = $this->payload()['data'][array_key_last($this->payload()['data'])]['id'];
+        $this->jsonRequest('POST', '/api/me/conversations/'.$conversation->getId().'/read', ['throughId' => $throughId], $this->csrfToken());
+        self::assertResponseIsSuccessful();
         self::assertSame(32, static::getContainer()->get(UnreadInboxCounter::class)->total($creatorUser));
         $this->jsonRequest('POST', '/api/me/notifications/read-all', [], $this->csrfToken());
         self::assertResponseIsSuccessful();
         self::assertSame(0, static::getContainer()->get(UnreadInboxCounter::class)->total($creatorUser));
         self::assertSame(1, static::getContainer()->get(UnreadInboxCounter::class)->total($companyUser));
+    }
+
+    public function testChatHistoryUsesBoundedCursorsAndExplicitParticipantReadReceipts(): void
+    {
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $creatorUser = new User('history-creator@example.test', 'ROLE_CREATOR');
+        $creatorUser->setPassword('unused-test-hash');
+        $creator = new Creator('history-creator', 'History Creator', 'Food', 'Sarajevo', 'Bio', [], []);
+        $creatorUser->setCreator($creator);
+        $companyUser = new User('history-company@example.test', 'ROLE_COMPANY');
+        $companyUser->setPassword('unused-test-hash');
+        $company = new Company('history-company', 'History Company', 'Food');
+        $companyUser->setCompany($company);
+        $outsider = new User('history-outsider@example.test', 'ROLE_COMPANY');
+        $outsider->setPassword('unused-test-hash');
+        $outsider->setCompany(new Company('history-outsider', 'Outsider', 'Food'));
+        $campaign = new Campaign(
+            'history-campaign', 'History Campaign', 'Summary', 'Brief', 'Food', ['Instagram'],
+            ['1 post'], 300, 700, 'Sarajevo', 2, new DateTimeImmutable('+20 days'), new DateTimeImmutable(), $company,
+        );
+        $conversation = new CampaignConversation($campaign, $creator, $companyUser);
+        $inquiry = new CreatorInquiry($creator, $company, null, null, null, null, 'Initial inquiry');
+        $inquiry->respond('accepted');
+        foreach ([$creatorUser, $companyUser, $outsider, $campaign, $conversation, $inquiry] as $entity) $em->persist($entity);
+        $messages = [];
+        $inquiryMessages = [];
+        for ($index = 1; $index <= 125; ++$index) {
+            $messages[] = $message = new CampaignMessage($conversation, $companyUser, 'Message '.$index);
+            $inquiryMessages[] = $direct = new InquiryMessage($inquiry, $companyUser, 'Message '.$index);
+            $em->persist($message);
+            $em->persist($direct);
+        }
+        $notification = new Notification($creatorUser, 'chat_message', $companyUser, $campaign, $conversation);
+        $em->persist($notification);
+        $em->flush();
+        $this->client->loginUser($creatorUser, 'main');
+        foreach ([['conversations', $conversation->getId(), $messages], ['inquiries', $inquiry->getId(), $inquiryMessages]] as [$kind, $id, $history]) {
+            $base = '/api/me/'.$kind.'/'.$id;
+            $this->client->request('GET', $base.'/messages?locale=en');
+            self::assertResponseIsSuccessful();
+            self::assertCount(50, $this->payload()['data']);
+            self::assertSame('Message 76', $this->payload()['data'][0]['body']);
+            self::assertSame($history[0]->getId(), $this->payload()['meta']['firstUnreadId']);
+            self::assertTrue($this->payload()['meta']['hasMoreOlder']);
+            self::assertNull($this->payload()['data'][0]['readAt']);
+            $this->client->request('GET', $base.'/messages?locale=en&before='.$history[75]->getId());
+            self::assertCount(50, $this->payload()['data']);
+            self::assertSame('Message 26', $this->payload()['data'][0]['body']);
+            $this->client->request('GET', $base.'/messages?locale=en&before='.$history[25]->getId());
+            self::assertCount(25, $this->payload()['data']);
+            self::assertFalse($this->payload()['meta']['hasMoreOlder']);
+            foreach (['limit=0', 'limit=101', 'before=-1', 'before=1&after=2'] as $query) {
+                $this->client->request('GET', $base.'/messages?locale=en&'.$query);
+                self::assertResponseStatusCodeSame(400);
+            }
+            $this->client->request('GET', $base.'/messages?locale=en&after='.$history[24]->getId());
+            self::assertCount(50, $this->payload()['data']);
+            self::assertSame('Message 26', $this->payload()['data'][0]['body']);
+            self::assertTrue($this->payload()['meta']['hasMoreNewer']);
+            $this->jsonRequest('POST', $base.'/read', ['throughId' => $history[74]->getId()], $this->csrfToken());
+            self::assertResponseIsSuccessful();
+            if ($kind === 'conversations') {
+                self::assertNull(static::getContainer()->get(EntityManagerInterface::class)->getConnection()->fetchOne('SELECT read_at FROM wave_notification WHERE id = ?', [$notification->getId()]));
+            }
+            $this->client->request('GET', $base.'/messages?locale=en&after='.$history[73]->getId());
+            self::assertNotNull($this->payload()['data'][0]['readAt']);
+            self::assertNull($this->payload()['data'][1]['readAt']);
+            self::assertSame($history[75]->getId(), $this->payload()['meta']['firstUnreadId']);
+            $this->client->loginUser($companyUser, 'main');
+            $this->client->request('GET', $base.'/messages?locale=en');
+            self::assertSame($history[74]->getId(), $this->payload()['readReceipt']['throughId']);
+            self::assertNull($this->payload()['meta']['firstUnreadId']);
+            $this->client->loginUser($outsider, 'main');
+            $this->jsonRequest('POST', $base.'/read', ['throughId' => $history[124]->getId()], $this->csrfToken());
+            self::assertResponseStatusCodeSame($kind === 'conversations' ? 404 : 403);
+            $this->client->loginUser($creatorUser, 'main');
+            $this->jsonRequest('POST', $base.'/read', ['throughId' => PHP_INT_MAX], $this->csrfToken());
+            self::assertResponseStatusCodeSame(400);
+            $this->jsonRequest('POST', $base.'/read', ['throughId' => $history[124]->getId()], 'invalid-token');
+            self::assertResponseStatusCodeSame(403);
+            $this->jsonRequest('POST', $base.'/read', ['throughId' => $history[124]->getId()], $this->csrfToken());
+            self::assertResponseIsSuccessful();
+            $this->client->request('GET', $base.'/messages?locale=en');
+            self::assertNotNull($this->payload()['data'][49]['readAt']);
+            self::assertNull($this->payload()['meta']['firstUnreadId']);
+            if ($kind === 'conversations') {
+                self::assertNotNull(static::getContainer()->get(EntityManagerInterface::class)->getConnection()->fetchOne('SELECT read_at FROM wave_notification WHERE id = ?', [$notification->getId()]));
+            }
+        }
     }
 
     public function testRealtimeAuthorizationAndBrowserPushSubscriptionsAreUserScoped(): void

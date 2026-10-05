@@ -18,6 +18,9 @@ use App\Entity\User;
 use App\Localization\ApiMessages;
 use App\Localization\LocaleContext;
 use App\Service\NotificationDelivery;
+use App\Service\ChatMessageHistory;
+use App\Service\ChatReadReceipt;
+use App\Service\UnreadInboxCounter;
 use DateTimeImmutable;
 use Doctrine\ORM\EntityManagerInterface;
 use SortDirection;
@@ -30,7 +33,7 @@ use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
 final class CampaignMessagingController
 {
     #[Route('/api/me/conversations', name: 'api_my_campaign_conversations', methods: ['GET'])]
-    public function index(Request $request, EntityManagerInterface $entityManager, Security $security): JsonResponse
+    public function index(Request $request, EntityManagerInterface $entityManager, Security $security, UnreadInboxCounter $counter): JsonResponse
     {
         $locale = LocaleContext::fromRequest($request);
         if ($locale === null) {
@@ -69,7 +72,7 @@ final class CampaignMessagingController
             $conversations,
         );
 
-        return new JsonResponse(['data' => $data]);
+        return new JsonResponse(['data' => $data, 'unreadInquiryCount' => $counter->inquiryMessages($user)]);
     }
 
     #[Route('/api/company/campaigns/{slug}/conversations', name: 'api_company_campaign_conversation_start', methods: ['POST'])]
@@ -138,6 +141,7 @@ final class CampaignMessagingController
         Request $request,
         EntityManagerInterface $entityManager,
         Security $security,
+        ChatMessageHistory $history,
     ): JsonResponse {
         $locale = LocaleContext::fromRequest($request);
         if ($locale === null) {
@@ -152,37 +156,59 @@ final class CampaignMessagingController
             return new JsonResponse(['error' => ApiMessages::get('forbidden', $locale)], 404);
         }
 
-        $messages = $entityManager->getRepository(CampaignMessage::class)->findBy(
-            ['conversation' => $conversation],
-            ['createdAt' => 'ASC'],
-        );
-        $hasChanges = false;
-        foreach ($messages as $message) {
-            if ($message->getSender()->getId() !== $user->getId() && $message->getReadAt() === null) {
-                $message->markRead();
-                $hasChanges = true;
-            }
-        }
-        $notifications = $entityManager->getRepository(Notification::class)->findBy([
-            'recipient' => $user,
-            'conversation' => $conversation,
-            'readAt' => null,
-        ]);
-        foreach ($notifications as $notification) {
-            $notification->markRead();
-            $hasChanges = true;
-        }
-        $reminderCleared = $conversation->clearUnreadReminder($user);
-        if ($hasChanges || $reminderCleared) {
-            $entityManager->flush();
+        try {
+            $page = $history->page(CampaignMessage::class, 'conversation', $conversation, $request, $user);
+        } catch (\InvalidArgumentException) {
+            return new JsonResponse(['error' => ApiMessages::get('invalid_request', $locale)], 400);
         }
 
         return new JsonResponse([
-            'data' => array_map(CampaignMessageResource::fromEntity(...), $messages),
+            'data' => array_map(CampaignMessageResource::fromEntity(...), $page['messages']),
+            'meta' => $page['meta'],
+            'readReceipt' => $page['readReceipt'],
             'conversation' => CampaignConversationResource::fromEntity(
                 $conversation,
                 $this->unreadCount($entityManager, $conversation, $user),
                 $locale,
+            ),
+        ]);
+    }
+
+    #[Route('/api/me/conversations/{id}/read', name: 'api_campaign_conversation_read', methods: ['POST'])]
+    public function read(
+        int $id,
+        Request $request,
+        EntityManagerInterface $entityManager,
+        Security $security,
+        CsrfTokenManagerInterface $tokenManager,
+        ChatReadReceipt $receipts,
+    ): JsonResponse {
+        $locale = LocaleContext::fromRequest($request);
+        if ($locale === null) {
+            return new JsonResponse(['error' => ApiMessages::get('unsupported_language', 'bs')], 400);
+        }
+        if ($csrfError = ApiAccess::requireCsrf($request, $tokenManager, $locale)) {
+            return $csrfError;
+        }
+        $user = ApiAccess::requireParticipant($security, $locale, requireVerified: true);
+        if ($user instanceof JsonResponse) {
+            return $user;
+        }
+        $conversation = $entityManager->getRepository(CampaignConversation::class)->find($id);
+        if (!$conversation instanceof CampaignConversation || !$this->canAccess($conversation, $user)) {
+            return new JsonResponse(['error' => ApiMessages::get('forbidden', $locale)], 404);
+        }
+        $data = JsonPayload::fromRequest($request);
+        try {
+            $receipt = $receipts->acknowledge($conversation, $user, $data['throughId'] ?? null);
+        } catch (\InvalidArgumentException) {
+            return new JsonResponse(['error' => ApiMessages::get('invalid_request', $locale)], 400);
+        }
+
+        return new JsonResponse([
+            'data' => $receipt,
+            'conversation' => CampaignConversationResource::fromEntity(
+                $conversation, $this->unreadCount($entityManager, $conversation, $user), $locale,
             ),
         ]);
     }

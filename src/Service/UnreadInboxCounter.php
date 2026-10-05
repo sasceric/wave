@@ -4,6 +4,7 @@ namespace App\Service;
 
 use App\Entity\CampaignMessage;
 use App\Entity\Notification;
+use App\Entity\InquiryMessage;
 use App\Entity\User;
 use Doctrine\ORM\EntityManagerInterface;
 
@@ -26,6 +27,23 @@ final class UnreadInboxCounter
             ->getQuery()->getSingleScalarResult();
     }
 
+    public function inquiryMessages(User $user, ?int $inquiryId = null): int
+    {
+        $query = $this->entityManager->createQueryBuilder()
+            ->select('COUNT(message.id)')->from(InquiryMessage::class, 'message')
+            ->join('message.inquiry', 'inquiry')->join('inquiry.creator', 'creator')
+            ->join('inquiry.company', 'company')
+            ->where('(creator.owner = :user OR company.owner = :user)')
+            ->andWhere('inquiry.status = :accepted')->setParameter('accepted', 'accepted')
+            ->andWhere('message.sender <> :user')->andWhere('message.readAt IS NULL')
+            ->setParameter('user', $user);
+        if ($inquiryId !== null) {
+            $query->andWhere('inquiry.id = :inquiryId')->setParameter('inquiryId', $inquiryId);
+        }
+
+        return (int) $query->getQuery()->getSingleScalarResult();
+    }
+
     public function total(User $user): int
     {
         $messages = (int) $this->entityManager->createQueryBuilder()
@@ -42,6 +60,6 @@ final class UnreadInboxCounter
             ->getQuery()->getSingleScalarResult();
 
         // Chat notification records describe these same messages; do not count them twice.
-        return $messages + $this->notifications($user);
+        return $messages + $this->inquiryMessages($user) + $this->notifications($user);
     }
 }

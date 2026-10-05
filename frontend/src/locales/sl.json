@@ -214,6 +214,14 @@
     "markAllRead": "Označi vsa kot prebrana"
   },
   "campaignChat": {
+    "unreadDivider": "Nova sporočila",
+    "loadEarlierUnread": "Naloži starejša neprebrana sporočila",
+    "loadingMessages": "Nalaganje sporočil…",
+    "loadingOlder": "Nalaganje starejših sporočil…",
+    "loadOlder": "Naloži starejša sporočila",
+    "seen": "Videno",
+    "sent": "Poslano",
+    "newMessages": "Nova sporočila ({count})",
     "today": "Danes",
     "yesterday": "Včeraj",
     "justNow": "Pravkar",

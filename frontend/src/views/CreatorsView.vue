@@ -78,7 +78,7 @@ function normalizePlatform(value) {
     <StatusMessage v-else-if="!creators.length" variant="empty">
       {{ t('creatorsPage.empty') }}
     </StatusMessage>
-    <div v-else class="creator-grid">
+    <div v-else class="creator-grid creator-grid--directory">
       <CreatorCard
         v-for="creator in creators"
         :key="creator.id"

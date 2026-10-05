@@ -240,7 +240,7 @@ final class CreatorCollaborationTest extends WebTestCase
         $this->client->loginUser($companyUser, 'main');
         $this->client->request('GET', '/api/me/inquiries?locale=en');
         self::assertResponseIsSuccessful();
-        $acceptedInquiry = $this->payload()['data'][0];
+        $acceptedInquiry = array_values(array_filter($this->payload()['data'], static fn (array $item): bool => $item['id'] === $inquiryId))[0];
         self::assertSame('Thanks, let us discuss the timeline.', $acceptedInquiry['lastMessage']);
         self::assertTrue($acceptedInquiry['canChat']);
         $this->client->request('GET', '/api/me/notifications?locale=en');

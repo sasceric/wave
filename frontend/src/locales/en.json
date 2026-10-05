@@ -213,6 +213,14 @@
     "markAllRead": "Mark all as read"
   },
   "campaignChat": {
+    "unreadDivider": "New messages",
+    "loadEarlierUnread": "Load earlier unread messages",
+    "loadingMessages": "Loading messages…",
+    "loadingOlder": "Loading older messages…",
+    "loadOlder": "Load older messages",
+    "seen": "Seen",
+    "sent": "Sent",
+    "newMessages": "New messages ({count})",
     "today": "Today",
     "yesterday": "Yesterday",
     "justNow": "Just now",

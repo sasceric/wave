@@ -54,6 +54,37 @@ pointing to this repository and a `main` branch.
 
 Set `WAVE_NOTIFICATIONS_ENABLED=true` explicitly for production delivery. Configure matching Mercure issuer/JWT values and the existing production Web Push VAPID pair. The [server notification checklist](server-notifications.md) contains exact values, environment-refresh commands and verification steps; [Mercure server setup](mercure-server-setup.md) contains the full Hub/proxy configuration.
 
+## Chat history and seen receipts
+
+Migration `Version20261006160000` adds `(conversation_id, id)` and
+`(inquiry_id, id)` history indexes, partial indexes for outgoing read watermarks, and nullable
+`inquiry_message.read_at`.
+The normal production workflow builds the SPA and runs this migration; no new
+`.env.local` or Caddy settings are needed. Keep the existing Mercure configuration
+working: seen receipts and direct inquiry messages use the same private user topics.
+Migration `Version20261006170000` adds partial unread-message indexes for the
+new-message divider, so finding the first unread message uses an index rather than
+loading the whole chat. The workflow applies both migrations.
+After deployment, reopen installed PWAs so they receive the updated app bundle.
+
+For a manual deployment, apply the migration with
+`APP_ENV=prod php8.4 bin/console doctrine:migrations:migrate --no-interaction`
+before allowing requests using the new API. The indexes are ordinary transactional
+indexes; PostgreSQL may briefly block writes on large message tables while creating
+them. Schedule a maintenance window if message tables are already large.
+
+The UI loads the latest 50 messages and another 50 when scrolling up. The API caps
+pages at 100. New messages and seen events arrive via Mercure, with cursor catch-up
+on reconnect/visibility changes and no periodic message polling. Fetching history
+never marks messages read: the visible chat acknowledges its rendered latest message
+via a CSRF-protected `/read` request. An open chat scrolled into older history leaves
+new messages unread until the user returns to the bottom.
+
+Online/away/offline presence is not enabled. There is no shared presence store in the
+current deployment. Adding it for many users requires shared expiring session leases
+(e.g. Redis), multiple-device handling, and bounded activity updates; filesystem cache
+and per-contact polling should not be used for this feature.
+
 ## Deployment steps
 
 The workflow updates the checkout, runs Composer explicitly with PHP 8.4, and

@@ -33,18 +33,28 @@ final class RealtimeUpdatePublisher
         }
 
         $conversation = $notification->getConversation();
-        $payload = json_encode([
+        $this->publishPayload($notification->getRecipient(), [
             'type' => 'notification',
             'notificationId' => $notificationId,
             'notificationType' => $notification->getType(),
             'conversationId' => $conversation?->getId(),
             'message' => $message === null ? null : CampaignMessageResource::fromEntity($message),
-        ], JSON_THROW_ON_ERROR);
+        ], ['notification_id' => $notificationId]);
+    }
 
+    public function publishEvent(User $recipient, array $payload): void
+    {
+        if ($this->enabled) {
+            $this->publishPayload($recipient, $payload);
+        }
+    }
+
+    private function publishPayload(User $recipient, array $payload, array $context = []): void
+    {
         try {
             $eventId = $this->hub->publish(new Update(
-                $this->topicFor($notification->getRecipient()),
-                $payload,
+                $this->topicFor($recipient),
+                json_encode($payload, JSON_THROW_ON_ERROR),
                 true,
             ));
             if ('' === trim($eventId)) {
@@ -52,7 +62,7 @@ final class RealtimeUpdatePublisher
             }
         } catch (MercureRuntimeException $exception) {
             $this->logger->warning('Unable to publish a Wave realtime update.', [
-                'notification_id' => $notificationId,
+                ...$context,
                 'exception' => $exception,
             ]);
         }

@@ -311,7 +311,7 @@ async function loadUnreadMessages() {
     unreadMessageCount.value = response.data.reduce(
       (total, conversation) => total + conversation.unreadCount,
       0,
-    )
+    ) + (response.unreadInquiryCount || 0)
     unreadMessagesLoaded.value = true
   } catch (cause) {
     if (requestVersion !== unreadMessagesRequestVersion) return
@@ -407,7 +407,16 @@ async function connectRealtime() {
       if (event.lastEventId) realtimeLastEventId = event.lastEventId
       try {
         const update = JSON.parse(event.data)
-        if (hasSeenRealtimeNotification(update.notificationId)) return
+        if (update.type === 'chat_read') {
+          window.dispatchEvent(new CustomEvent('wave:realtime', { detail: update }))
+          return
+        }
+        if (update.type === 'chat_message') {
+          const key = `inquiry-${update.inquiryId}-message-${update.message?.id}`
+          if (seenRealtimeNotificationIds.has(key)) return
+          seenRealtimeNotificationIds.add(key)
+          if (seenRealtimeNotificationIds.size > 500) seenRealtimeNotificationIds.delete(seenRealtimeNotificationIds.values().next().value)
+        } else if (hasSeenRealtimeNotification(update.notificationId)) return
 
         if (update.notificationType !== 'chat_message') {
           addOptimisticUnreadNotification(update.notificationId)
@@ -416,15 +425,15 @@ async function connectRealtime() {
         const isOpenConversation = (
           update.notificationType === 'chat_message'
           && route.meta.routeName === 'messages'
-          && Number(route.query.conversation) === Number(update.conversationId)
+          && (update.inquiryId !== undefined
+            ? Number(route.query.inquiry) === Number(update.inquiryId)
+            : Number(route.query.conversation) === Number(update.conversationId))
           && document.visibilityState === 'visible'
         )
         if (update.notificationType === 'chat_message') {
           const senderId = update.message?.senderId
           if (senderId === undefined || senderId !== currentUser.value?.id) {
-            if (!isOpenConversation) {
-              unreadMessageCount.value += 1
-            }
+            unreadMessageCount.value += 1
           }
         }
         if (!isOpenConversation) {
