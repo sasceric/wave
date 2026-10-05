@@ -32,13 +32,10 @@ jobs:
             cd /home/steelcodeweb/web/wave.ba/public_html/
             git pull --ff-only origin main
             COMPOSER_ALLOW_SUPERUSER=1 APP_ENV=prod php8.4 "$(command -v composer)" install --no-dev --prefer-dist --optimize-autoloader --no-interaction
-            bash -ic '
-              set -e
-              nvm use 22
-              cd /home/steelcodeweb/web/wave.ba/public_html/frontend
-              npm ci
-              npm run build
-            '
+            node -e 'const [major, minor] = process.versions.node.split(".").map(Number); if (major !== 22 || minor < 12) { console.error("Node.js 22.12+ is required"); process.exit(1); }'
+            cd frontend
+            npm ci
+            npm run build
             cd ..
             APP_ENV=prod php8.4 bin/console doctrine:migrations:migrate --no-interaction
             APP_ENV=prod php8.4 bin/console cache:clear

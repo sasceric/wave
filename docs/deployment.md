@@ -26,8 +26,8 @@ pointing to this repository and a `main` branch.
 ## Server requirements
 
 - PHP 8.4 available as `php8.4`, with the extensions required by
-  `composer.json`, and Node.js 22.12 or newer installed through NVM. NVM must
-  be initialized by the deployment user's Bash startup configuration.
+  `composer.json`, Composer, and Node.js 22.12+ with npm available directly on
+  the SSH deployment user's `PATH`.
 - A PHP-capable web server configured with document root
   `/home/steelcodeweb/web/wave.ba/public_html/public`. Do not expose the
   repository root as the web document root.
@@ -44,8 +44,8 @@ The workflow updates the checkout, runs Composer explicitly with PHP 8.4, and
 sets `COMPOSER_ALLOW_SUPERUSER=1` so Composer does not disable Symfony Flex
 when the SSH login is root. Keep the deployment checkout and locked
 dependencies trusted; using a dedicated non-root deployment user is safer.
-It starts an interactive Bash shell to load the deployment user's NVM setup,
-runs `nvm use 22`, and executes `npm ci` and the Vue/PWA build. It then applies
+It verifies that the active Node version is 22.12+, then executes `npm ci` and
+the Vue/PWA build directly from the deployment user's `PATH`. It then applies
 Doctrine migrations with `php8.4` and clears the production cache with
 `php8.4`. Each deployment runs serially and stops at the first failed command.
 The Vue build preserves Symfony's `public/index.php`.
