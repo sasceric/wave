@@ -11,6 +11,7 @@ use App\Entity\Company;
 use App\Entity\Creator;
 use App\Entity\OAuthIdentity;
 use App\Entity\User;
+use App\OAuth\OAuthAccountFactory;
 use App\Localization\ApiMessages;
 use App\Localization\LocaleContext;
 use App\OAuth\OAuthProviderClient;
@@ -30,6 +31,7 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
 use Symfony\Component\RateLimiter\RateLimiterFactoryInterface;
 use Symfony\Component\DependencyInjection\Attribute\Target;
+use Symfony\Component\Mime\Exception\RfcComplianceException;
 
 final class OAuthController extends AbstractController
 {
@@ -95,6 +97,9 @@ final class OAuthController extends AbstractController
         EntityManagerInterface $entityManager,
         Security $security,
         LoggerInterface $logger,
+        OAuthAccountFactory $accountFactory,
+        AccountEmailSender $emailSender,
+        #[Target('wave_register_ip')] RateLimiterFactoryInterface $registrationLimiter,
         #[Autowire('%kernel.project_dir%/config/localized_routes.json')] string $localizedRoutesFile,
     ): RedirectResponse {
         $flowKey = 'wave_oauth_flow_'.$provider;
@@ -162,17 +167,33 @@ final class OAuthController extends AbstractController
             return $this->accountRedirect($localizedRoutesFile, $locale, 'login', 'success');
         }
 
-        $request->getSession()->set('wave_oauth_registration', [
-            'provider' => $provider,
-            'subject' => $identity['subject'],
-            'email' => $identity['email'],
-            'givenName' => $identity['givenName'],
-            'familyName' => $identity['familyName'],
-            'accountType' => $mode === 'register' ? ($flow['accountType'] ?? null) : null,
-            'createdAt' => time(),
-        ]);
+        $limit = $registrationLimiter->create($request->getClientIp() ?? 'unknown')->consume();
+        if (!$limit->isAccepted()) {
+            return $this->accountRedirect($localizedRoutesFile, $locale, $mode, 'error');
+        }
 
-        return $this->accountRedirect($localizedRoutesFile, $locale, 'register', 'complete');
+        $accountType = in_array($flow['accountType'] ?? null, ['creator', 'company'], true)
+            ? $flow['accountType']
+            : 'creator';
+        $user = $accountFactory->create($identity, $accountType, $locale);
+
+        $entityManager->persist($user);
+        $entityManager->persist(new OAuthIdentity($user, $provider, $identity['subject']));
+        $entityManager->flush();
+        $request->getSession()->remove('wave_oauth_registration');
+
+        try {
+            $emailSender->sendRegistrationReceived($user, $locale);
+        } catch (TransportExceptionInterface|RfcComplianceException $exception) {
+            $logger->warning('Unable to send the Wave social registration email.', [
+                'userId' => $user->getId(),
+                'exception' => $exception,
+            ]);
+        }
+
+        $security->login($user, SessionAuthenticator::class, 'main');
+
+        return $this->accountRedirect($localizedRoutesFile, $locale, 'login', 'success');
     }
 
     #[Route('/api/auth/oauth/pending', name: 'api_auth_oauth_pending', methods: ['GET'])]

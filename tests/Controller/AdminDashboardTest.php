@@ -148,6 +148,9 @@ final class AdminDashboardTest extends WebTestCase
         $creatorUser->setEmailVerified(true);
         $creatorUser->setApproved(false);
         $creatorUser->setPreferredLocale('en');
+        $creatorUser->setPhone('+38761123456');
+        $creatorUser->setCity('Sarajevo');
+        $creatorUser->setCountryCode('BA');
         $creator = new Creator('new-creator', 'New Creator', 'Travel', 'Sarajevo', 'A new account.', []);
         $creatorUser->setCreator($creator);
         $company = new Company('bulk-company', 'Bulk Company', 'Food');
@@ -267,6 +270,9 @@ final class AdminDashboardTest extends WebTestCase
         $creatorUser->setEmailVerified(true);
         $creatorUser->setApproved(false);
         $creatorUser->setPreferredLocale('en');
+        $creatorUser->setPhone('+38761123456');
+        $creatorUser->setCity('Sarajevo');
+        $creatorUser->setCountryCode('BA');
         $creator = new Creator('pending-creator', 'Pending Creator', 'Travel', 'Sarajevo', 'Private profile.', []);
         $creatorUser->setCreator($creator);
 
@@ -275,8 +281,17 @@ final class AdminDashboardTest extends WebTestCase
         $companyUser->setEmailVerified(true);
         $companyUser->setApproved(false);
         $companyUser->setPreferredLocale('en');
+        $companyUser->setPhone('+385911234567');
+        $companyUser->setCity('Zagreb');
+        $companyUser->setCountryCode('HR');
         $company = new Company('pending-company', 'Pending Company', 'Food');
         $companyUser->setCompany($company);
+
+        $incompleteUser = new User('incomplete@example.test', 'ROLE_CREATOR');
+        $incompleteUser->setPassword('unused-test-hash');
+        $incompleteUser->setEmailVerified(true);
+        $incompleteUser->setApproved(false);
+        $incompleteUser->setCreator(new Creator('incomplete-creator', 'Incomplete Creator', '', '', '', []));
 
         $unverifiedUser = new User('unverified@example.test', 'ROLE_CREATOR');
         $unverifiedUser->setPassword('unused-test-hash');
@@ -303,7 +318,7 @@ final class AdminDashboardTest extends WebTestCase
             $company,
         );
 
-        foreach ([$admin, $creatorUser, $companyUser, $unverifiedUser, $campaign] as $entity) {
+        foreach ([$admin, $creatorUser, $companyUser, $incompleteUser, $unverifiedUser, $campaign] as $entity) {
             $entityManager->persist($entity);
         }
         $entityManager->flush();
@@ -331,9 +346,20 @@ final class AdminDashboardTest extends WebTestCase
         self::assertResponseIsSuccessful();
         $this->client->request('GET', '/api/admin/dashboard?locale=en');
         self::assertResponseIsSuccessful();
-        self::assertCount(3, $this->payload()['data']['registrations']);
+        self::assertCount(4, $this->payload()['data']['registrations']);
         self::assertSame([], $this->payload()['data']['creators']);
         self::assertSame([], $this->payload()['data']['companies']);
+
+        $this->client->request(
+            'POST',
+            '/api/admin/registrations/'.$incompleteUser->getId().'/approve?locale=en',
+            server: [
+                'HTTP_ACCEPT' => 'application/json',
+                'HTTP_X_CSRF_TOKEN' => $this->csrfToken(),
+            ],
+        );
+        self::assertResponseStatusCodeSame(400);
+        self::assertFalse($incompleteUser->isApproved());
 
         $this->client->request(
             'POST',
@@ -344,22 +370,24 @@ final class AdminDashboardTest extends WebTestCase
                 'HTTP_X_CSRF_TOKEN' => $this->csrfToken(),
             ],
             content: json_encode([
-                'ids' => [$creatorUser->getId(), $companyUser->getId(), $unverifiedUser->getId()],
+                'ids' => [$creatorUser->getId(), $companyUser->getId(), $unverifiedUser->getId(), $incompleteUser->getId()],
             ], JSON_THROW_ON_ERROR),
         );
         self::assertResponseIsSuccessful();
         self::assertSame(2, $this->payload()['data']['approved']);
         self::assertSame(1, $this->payload()['data']['skippedUnverified']);
+        self::assertSame(1, $this->payload()['data']['skippedIncomplete']);
         self::assertEmailCount(2);
 
         $this->client->request('GET', '/api/admin/dashboard?locale=en');
         self::assertResponseIsSuccessful();
-        self::assertSame(
-            [$unverifiedUser->getId()],
+        self::assertEqualsCanonicalizing(
+            [$unverifiedUser->getId(), $incompleteUser->getId()],
             array_column($this->payload()['data']['registrations'], 'id'),
         );
         self::assertContains('pending-creator', array_column($this->payload()['data']['creators'], 'slug'));
         self::assertContains('pending-company', array_column($this->payload()['data']['companies'], 'slug'));
+        self::assertNotContains('incomplete-creator', array_column($this->payload()['data']['creators'], 'slug'));
 
         $this->client->request('GET', '/api/creators/pending-creator?locale=en');
         self::assertResponseIsSuccessful();

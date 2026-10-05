@@ -313,7 +313,9 @@ async function approveRegistration(registration) {
 
 function requestBulkApproval(selectedIds) {
   const selected = (dashboard.value?.registrations ?? []).filter(({ id }) => selectedIds.includes(id))
-  const eligible = selected.filter(({ approved, emailVerified }) => !approved && emailVerified)
+  const eligible = selected.filter(({ approved, emailVerified, profileComplete }) => (
+    !approved && emailVerified && profileComplete
+  ))
   if (eligible.length === 0) {
     notice.value = t('adminDashboard.bulkApproveNoEligible')
     return
@@ -342,7 +344,7 @@ async function confirmBulkApproval() {
       body: { ids: request.ids },
     })
     await loadDashboard()
-    const skipped = request.skipped + data.skippedUnverified
+    const skipped = request.skipped + data.skippedUnverified + data.skippedIncomplete
     notice.value = skipped > 0
       ? t('adminDashboard.bulkApprovedWithSkipped', { count: data.approved, skipped })
       : t('adminDashboard.bulkApproved', { count: data.approved })
@@ -607,7 +609,7 @@ onMounted(loadDashboard)
                   {{ t('adminDashboard.view') }}
                 </LocalizedLink>
                 <button
-                  v-else-if="section === 'registrations' && !row.approved && row.emailVerified"
+                  v-else-if="section === 'registrations' && !row.approved && row.emailVerified && row.profileComplete"
                   class="admin-row-actions__item"
                   type="button"
                   role="menuitem"
@@ -616,6 +618,13 @@ onMounted(loadDashboard)
                   <Check :size="15" aria-hidden="true" />
                   {{ t('adminDashboard.approve') }}
                 </button>
+                <span
+                  v-else-if="section === 'registrations' && !row.approved && !row.profileComplete"
+                  class="admin-row-actions__item"
+                  aria-disabled="true"
+                >
+                  {{ t('account.profileIncomplete') }}
+                </span>
                 <button
                   class="admin-row-actions__item admin-row-actions__item--danger"
                   type="button"

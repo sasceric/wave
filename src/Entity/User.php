@@ -172,6 +172,35 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this->approved;
     }
 
+    public function hasCompleteProfile(): bool
+    {
+        if (trim($this->phone ?? '') === ''
+            || trim($this->city ?? '') === ''
+            || preg_match('/^[A-Z]{2}$/', $this->countryCode ?? '') !== 1
+        ) {
+            return false;
+        }
+
+        if ($this->hasRole('ROLE_CREATOR')) {
+            $creator = $this->creator;
+
+            return $creator instanceof Creator
+                && mb_strlen(trim($creator->getDisplayName())) >= 2
+                && array_filter($creator->getCategories(), static fn (string $category): bool => trim($category) !== '') !== []
+                && mb_strlen(trim($creator->getLocation())) >= 2;
+        }
+
+        if ($this->hasRole('ROLE_COMPANY')) {
+            $company = $this->company;
+
+            return $company instanceof Company
+                && mb_strlen(trim($company->getName())) >= 2
+                && mb_strlen(trim($company->getIndustry())) >= 2;
+        }
+
+        return false;
+    }
+
     public function setApproved(bool $approved): void
     {
         $this->approved = $approved;

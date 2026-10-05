@@ -7,6 +7,7 @@ import { useI18n } from 'vue-i18n'
 import { Eye, MessageCircle, Plus, Trash2, X } from '@lucide/vue'
 import AccountAccessPanel from '../components/account/AccountAccessPanel.vue'
 import AccountSidebar from '../components/account/AccountSidebar.vue'
+import RequiredProfileModal from '../components/account/RequiredProfileModal.vue'
 import MultiSelect from '../components/shared/MultiSelect.vue'
 import MediaUploadField from '../components/shared/MediaUploadField.vue'
 import PhoneNumberField from '../components/shared/PhoneNumberField.vue'
@@ -38,7 +39,7 @@ const countryDisplayLocale = computed(() => {
 
   return locale.value
 })
-const companyCountryOptions = computed(() => {
+const countryOptions = computed(() => {
   const countryNames = new Intl.DisplayNames([countryDisplayLocale.value], { type: 'region' })
 
   return countries
@@ -63,7 +64,7 @@ const resendingVerification = ref(false)
 const visibilitySaving = ref(false)
 const profile = ref(null)
 const profileImageField = ref(null)
-const companyPhoneCountry = ref('BA')
+const profilePhoneCountry = ref('BA')
 const tags = ref('')
 const campaigns = ref([])
 const applications = ref([])
@@ -160,15 +161,33 @@ function selectAccountTab(tab) {
   }
 }
 
+function updateProfileCountry(countryCode) {
+  profile.value.countryCode = countryCode
+  profilePhoneCountry.value = countryCode || 'BA'
+}
+
 function incompleteProfileTab() {
-  if (user.value.accountType !== 'creator') {
-    return ''
-  }
-  if (!profile.value.displayName.trim()
-    || profile.value.categories.length === 0
-    || !profile.value.location.trim()
+  if (user.value.accountType === 'creator'
+    && (!profile.value.displayName.trim()
+      || profile.value.categories.length === 0
+      || !profile.value.location.trim()
+      || !profile.value.city.trim()
+      || !profile.value.countryCode
+      || !profile.value.phone.trim())
   ) {
     return 'about'
+  }
+  if (user.value.accountType === 'company'
+    && (!profile.value.name.trim()
+      || !profile.value.industry.trim()
+      || !profile.value.city.trim()
+      || !profile.value.countryCode
+      || !profile.value.phone.trim())
+  ) {
+    return 'about'
+  }
+  if (user.value.accountType !== 'creator') {
+    return ''
   }
   if (profile.value.socialProfiles.some((social) => (
     !social.platform.trim()
@@ -213,18 +232,19 @@ async function loadDashboard() {
     user.value = response.data
     setCurrentUser(response.data)
     profile.value = structuredClone(response.data.profile)
-    if (response.data.accountType === 'company') {
+    if (response.data.profile) {
       profile.value = {
         ...profile.value,
         phone: response.data.phone || '',
         city: response.data.city || '',
         countryCode: response.data.countryCode || '',
       }
-      companyPhoneCountry.value = parsePhoneNumberFromString(profile.value.phone)?.country
+      profilePhoneCountry.value = parsePhoneNumberFromString(profile.value.phone)?.country
         || profile.value.countryCode
         || 'BA'
     }
-    if (route.query.bookmark) {
+    const canAccessMarketplace = response.data.approved || response.data.isAdmin
+    if (route.query.bookmark && canAccessMarketplace) {
       pendingBookmarkRedirect = await completePendingBookmark(response.data)
     }
     if (user.value.accountType === 'creator') {
@@ -242,39 +262,52 @@ async function loadDashboard() {
         }
       }
       tags.value = (profile.value.tags || []).join(', ')
-      const [applicationResponse, offerResponse, invitationResponse] = await Promise.all([
-        apiGet('/me/applications'),
-        apiGet('/me/offers'),
-        apiGet('/me/invitations'),
-        loadCampaignBookmarks(),
-      ])
-      applications.value = applicationResponse.data
-      offers.value = offerResponse.data
-      invitations.value = invitationResponse.data
+      applications.value = []
+      offers.value = []
+      invitations.value = []
+      if (canAccessMarketplace) {
+        const [applicationResponse, offerResponse, invitationResponse] = await Promise.all([
+          apiGet('/me/applications'),
+          apiGet('/me/offers'),
+          apiGet('/me/invitations'),
+          loadCampaignBookmarks(),
+        ])
+        applications.value = applicationResponse.data
+        offers.value = offerResponse.data
+        invitations.value = invitationResponse.data
+      }
     } else {
       if (route.query.tab !== undefined) {
         const query = { ...route.query }
         delete query.tab
         void router.replace({ query })
       }
-      const campaignResponse = await apiGet('/me/campaigns')
-      campaigns.value = campaignResponse.data
-      const applicationResponses = await Promise.all(
-        campaigns.value.map((campaign) => apiGet(`/company/campaigns/${encodeURIComponent(campaign.slug)}/applications`)),
-      )
-      companyApplications.value = applicationResponses.flatMap((response) => response.data)
-      if (selectedApplication.value) {
-        selectedApplication.value = companyApplications.value.find(
-          (application) => application.id === selectedApplication.value.id,
-        ) ?? selectedApplication.value
+      campaigns.value = []
+      companyApplications.value = []
+      if (canAccessMarketplace) {
+        const campaignResponse = await apiGet('/me/campaigns')
+        campaigns.value = campaignResponse.data
+        const applicationResponses = await Promise.all(
+          campaigns.value.map((campaign) => apiGet(`/company/campaigns/${encodeURIComponent(campaign.slug)}/applications`)),
+        )
+        companyApplications.value = applicationResponses.flatMap((response) => response.data)
+        if (selectedApplication.value) {
+          selectedApplication.value = companyApplications.value.find(
+            (application) => application.id === selectedApplication.value.id,
+          ) ?? selectedApplication.value
+        }
+        offerForms.value = Object.fromEntries(companyApplications.value.map((application) => [
+          application.id,
+          { amount: application.campaign.budgetMin, message: '' },
+        ]))
       }
-      offerForms.value = Object.fromEntries(companyApplications.value.map((application) => [
-        application.id,
-        { amount: application.campaign.budgetMin, message: '' },
-      ]))
     }
-    const inquiryResponse = await apiGet('/me/inquiries')
-    inquiries.value = inquiryResponse.data
+    if (canAccessMarketplace) {
+      const inquiryResponse = await apiGet('/me/inquiries')
+      inquiries.value = inquiryResponse.data
+    } else {
+      inquiries.value = []
+    }
   } catch (cause) {
     if (cause.status === 401) {
       user.value = null
@@ -392,11 +425,11 @@ async function saveProfile() {
   error.value = ''
   notice.value = ''
   const isCreator = user.value.accountType === 'creator'
-  const companyPhone = isCreator ? null : profile.value.phone.trim()
-  const normalizedPhone = companyPhone
-    ? formatInternationalPhoneNumber(companyPhone, companyPhoneCountry.value)
+  const enteredPhone = profile.value.phone.trim()
+  const normalizedPhone = enteredPhone
+    ? formatInternationalPhoneNumber(enteredPhone, profilePhoneCountry.value)
     : null
-  if (companyPhone && !normalizedPhone) {
+  if (!normalizedPhone) {
     error.value = t('auth.phoneInvalid')
     busy.value = false
     return
@@ -410,6 +443,9 @@ async function saveProfile() {
         category: profile.value.categories[0] || profile.value.category,
         categories: profile.value.categories,
         location: profile.value.location,
+        phone: normalizedPhone,
+        city: profile.value.city.trim(),
+        countryCode: profile.value.countryCode,
         bio: profile.value.bio,
         tagline: profile.value.tagline,
         avatarMediaId: profile.value.avatarMediaId || null,
@@ -845,7 +881,7 @@ onMounted(loadDashboard)
       <button class="button button--outline" type="button" :disabled="resendingVerification" @click="resendVerification">{{ t('account.resendVerification') }}</button>
     </div>
     <div v-else-if="!user.approved" class="verification-banner" role="status">
-      <p>{{ t('account.approvalPendingNotice') }}</p>
+      <p>{{ user.profileComplete ? t('account.approvalPendingNotice') : t('account.profileIncomplete') }}</p>
     </div>
 
     <div class="account-layout">
@@ -884,7 +920,7 @@ onMounted(loadDashboard)
             :remove-message="t('account.profileImageRemoveMessage')"
             :confirm-label="t('account.remove')"
             :cancel-label="t('account.richTextCancel')"
-            :disabled="busy"
+            :disabled="busy || !user.approved"
           />
         </div>
 
@@ -965,6 +1001,29 @@ onMounted(loadDashboard)
                 <span>{{ t('auth.location') }}</span>
                 <input v-model.trim="profile.location" required maxlength="120" autocomplete="address-level2" />
               </label>
+              <SearchableSelect
+                :model-value="profile.countryCode || ''"
+                :options="countryOptions"
+                :label="t('auth.country')"
+                :placeholder="t('auth.selectCountry')"
+                :search-placeholder="t('auth.searchCountry')"
+                :no-results-label="t('auth.noCountriesFound')"
+                @update:model-value="updateProfileCountry"
+              />
+              <label class="form-field">
+                <span>{{ t('auth.city') }}</span>
+                <input v-model.trim="profile.city" required maxlength="70" autocomplete="address-level2" />
+              </label>
+              <PhoneNumberField
+                v-model="profile.phone"
+                v-model:country-code="profilePhoneCountry"
+                :label="t('auth.phone')"
+                :placeholder="t('auth.phonePlaceholder')"
+                :country-label="t('auth.phoneCountry')"
+                :country-placeholder="t('auth.selectCountry')"
+                :country-search-placeholder="t('auth.searchPhoneCountry')"
+                :no-countries-found-label="t('auth.noPhoneCountriesFound')"
+              />
               <label class="form-field form-field--wide">
                 <span>{{ t('account.tagline') }}</span>
                 <input v-model.trim="profile.tagline" maxlength="180" />
@@ -1241,17 +1300,18 @@ onMounted(loadDashboard)
             <SearchableSelect
               class="form-field--wide"
               :model-value="profile.countryCode || ''"
-              :options="companyCountryOptions"
+              :options="countryOptions"
               :label="t('auth.country')"
               :placeholder="t('auth.selectCountry')"
               :search-placeholder="t('auth.searchCountry')"
               :no-results-label="t('auth.noCountriesFound')"
-              @update:model-value="profile.countryCode = $event"
+              @update:model-value="updateProfileCountry"
             />
             <label class="form-field">
               <span>{{ t('auth.city') }}</span>
               <input
                 v-model.trim="profile.city"
+                required
                 maxlength="70"
                 autocomplete="address-level2"
                 :placeholder="t('auth.cityPlaceholder')"
@@ -1259,14 +1319,13 @@ onMounted(loadDashboard)
             </label>
             <PhoneNumberField
               v-model="profile.phone"
-              v-model:country-code="companyPhoneCountry"
+              v-model:country-code="profilePhoneCountry"
               :label="t('auth.phone')"
               :placeholder="t('auth.phonePlaceholder')"
               :country-label="t('auth.phoneCountry')"
               :country-placeholder="t('auth.selectCountry')"
               :country-search-placeholder="t('auth.searchPhoneCountry')"
               :no-countries-found-label="t('auth.noPhoneCountriesFound')"
-              :optional="true"
             />
           </div>
           <div class="form-field form-field--wide company-about-field">
@@ -1764,5 +1823,17 @@ onMounted(loadDashboard)
       </div>
       </main>
     </div>
+    <RequiredProfileModal
+      v-if="profile && !user.profileComplete"
+      :user="user"
+      :profile="profile"
+      :categories="categories"
+      :country-options="countryOptions"
+      :phone-country="profilePhoneCountry"
+      :busy="busy"
+      :error="error"
+      @update:phone-country="profilePhoneCountry = $event"
+      @save="saveProfile"
+    />
   </section>
 </template>

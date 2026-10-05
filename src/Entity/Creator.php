@@ -218,7 +218,7 @@ class Creator
 
     public function getCategories(): array
     {
-        return $this->categories !== [] ? $this->categories : [$this->category];
+        return $this->categories !== [] ? $this->categories : ($this->category !== '' ? [$this->category] : []);
     }
 
     public function hasStoredCategories(): bool

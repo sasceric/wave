@@ -56,20 +56,30 @@ onBeforeUnmount(() => {
 })
 
 const navigationItems = computed(() => {
-  const items = props.user?.accountType === 'creator'
-    ? [
-        { route: 'account', labelKey: 'account.creatorProfile', icon: UserRound },
-        { route: 'account-applications', labelKey: 'account.myApplications', icon: ClipboardCheck },
-        { route: 'account-offers', labelKey: 'account.myOffers', icon: Mail },
-        { route: 'account-inquiries', labelKey: 'account.directRequests', icon: MessageCircle },
-        { route: 'account-bookmarks', labelKey: 'account.bookmarks', icon: House },
-        { route: 'account-invitations', labelKey: 'account.campaignInvitations', icon: Mail },
-      ]
-    : [
-        { route: 'account', labelKey: 'account.companyProfile', icon: Building2 },
-        { route: 'account-campaigns', labelKey: 'account.campaigns', icon: Megaphone },
-        { route: 'account-inquiries', labelKey: 'account.directRequests', icon: MessageCircle },
-      ]
+  const canUseMarketplace = props.user?.approved || props.user?.isAdmin
+  const creator = props.user?.accountType === 'creator'
+  const items = [
+    {
+      route: 'account',
+      labelKey: creator ? 'account.creatorProfile' : 'account.companyProfile',
+      icon: creator ? UserRound : Building2,
+    },
+  ]
+
+  if (canUseMarketplace && creator) {
+    items.push(
+      { route: 'account-applications', labelKey: 'account.myApplications', icon: ClipboardCheck },
+      { route: 'account-offers', labelKey: 'account.myOffers', icon: Mail },
+      { route: 'account-inquiries', labelKey: 'account.directRequests', icon: MessageCircle },
+      { route: 'account-bookmarks', labelKey: 'account.bookmarks', icon: House },
+      { route: 'account-invitations', labelKey: 'account.campaignInvitations', icon: Mail },
+    )
+  } else if (canUseMarketplace) {
+    items.push(
+      { route: 'account-campaigns', labelKey: 'account.campaigns', icon: Megaphone },
+      { route: 'account-inquiries', labelKey: 'account.directRequests', icon: MessageCircle },
+    )
+  }
 
   if (props.user?.isModerator) {
     items.push({ route: 'moderation', labelKey: 'moderation.title', icon: ClipboardCheck })

@@ -74,6 +74,7 @@ final class OAuthRegistrationFlowTest extends WebTestCase
         self::assertInstanceOf(User::class, $user);
         self::assertTrue($user->isEmailVerified());
         self::assertFalse($user->isApproved());
+        self::assertTrue($user->hasCompleteProfile());
         self::assertSame('en', $user->getPreferredLocale());
         self::assertInstanceOf(OAuthIdentity::class, $entityManager->getRepository(OAuthIdentity::class)
             ->findOneBy(['provider' => 'google', 'subject' => 'provider-user-1']));

@@ -94,6 +94,15 @@ final class ProfileController
             $location = $this->text($data, 'location', 2, 120);
             $bio = $this->richText($data, 'bio', $richTextSanitizer);
             $bioText = $bio === null ? null : $richTextSanitizer->plainText($bio);
+            $phone = array_key_exists('phone', $data)
+                ? $this->optionalText($data, 'phone', 40)
+                : $user->getPhone();
+            $city = array_key_exists('city', $data)
+                ? $this->optionalText($data, 'city', 70)
+                : $user->getCity();
+            $countryCode = array_key_exists('countryCode', $data)
+                ? $this->optionalCountryCode($data['countryCode'])
+                : $user->getCountryCode();
             $tagline = array_key_exists('tagline', $data)
                 ? $this->text($data, 'tagline', 0, 180)
                 : ($bioText === null ? null : mb_substr($bioText, 0, 180));
@@ -108,11 +117,14 @@ final class ProfileController
             $portfolio = $this->portfolio($data['portfolio'] ?? [], $creator, $user, $entityManager);
             $packages = $this->packages($data['packages'] ?? []);
             $faqs = $this->faqs($data['faqs'] ?? []);
-            if ($name === null || $category === null || $categories === null || $categories === [] || $location === null || $bio === null || $tagline === null || $avatarUrl === false || $avatarMedia === false || $tags === null || $socialProfiles === null || $portfolio === null || $packages === null || $faqs === null) {
+            if ($name === null || $category === null || $categories === null || $categories === [] || $location === null || $bio === null || $phone === false || $city === false || $countryCode === false || $tagline === null || $avatarUrl === false || $avatarMedia === false || $tags === null || $socialProfiles === null || $portfolio === null || $packages === null || $faqs === null) {
                 return new JsonResponse(['error' => ApiMessages::get('invalid_profile', $locale)], 400);
             }
             $creator->updateProfile($name, $category, $location, $bio, $socialProfiles, $tags, $avatarUrl, $tagline, $portfolio['items'], $packages, $categories, $faqs);
             $creator->setAvatarMedia($avatarMedia);
+            $user->setPhone($phone);
+            $user->setCity($city);
+            $user->setCountryCode($countryCode);
             $creator->clearPortfolioMedia();
             foreach ($portfolio['associations'] as $association) {
                 $creator->addPortfolioMedia(new CreatorPortfolioMedia(

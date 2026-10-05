@@ -171,6 +171,7 @@ final class HomepageController
                     'profileSlug' => $user->getCreator()?->getSlug() ?? $user->getCompany()?->getSlug(),
                     'emailVerified' => $user->isEmailVerified(),
                     'approved' => $user->isApproved(),
+                    'profileComplete' => $user->hasCompleteProfile(),
                 ], $registrations),
             ],
         ]);
@@ -287,6 +288,9 @@ final class HomepageController
         if (!$user->isEmailVerified()) {
             return new JsonResponse(['error' => ApiMessages::get('approval_requires_verified_email', $locale)], 400);
         }
+        if (!$user->hasCompleteProfile()) {
+            return new JsonResponse(['error' => ApiMessages::get('profile_incomplete', $locale)], 400);
+        }
         if ($user->isApproved()) {
             return new JsonResponse(['data' => ['id' => $id, 'approved' => true]]);
         }
@@ -346,6 +350,7 @@ final class HomepageController
 
         $approved = 0;
         $skippedUnverified = 0;
+        $skippedIncomplete = 0;
         $alreadyApproved = 0;
         $emailFailures = false;
         foreach ($users as $user) {
@@ -355,6 +360,10 @@ final class HomepageController
             }
             if (!$user->isEmailVerified()) {
                 ++$skippedUnverified;
+                continue;
+            }
+            if (!$user->hasCompleteProfile()) {
+                ++$skippedIncomplete;
                 continue;
             }
 
@@ -379,6 +388,7 @@ final class HomepageController
         $summary = [
             'approved' => $approved,
             'skippedUnverified' => $skippedUnverified,
+            'skippedIncomplete' => $skippedIncomplete,
             'alreadyApproved' => $alreadyApproved,
         ];
         if ($emailFailures) {
