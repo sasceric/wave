@@ -26,7 +26,8 @@ pointing to this repository and a `main` branch.
 ## Server requirements
 
 - PHP 8.4 available as `php8.4`, with the extensions required by
-  `composer.json`, Composer, Node.js 22.12 or newer, and npm.
+  `composer.json`, Composer, NVM installed for the deployment user, and Node.js
+  22.12 or newer installed through NVM.
 - A PHP-capable web server configured with document root
   `/home/steelcodeweb/web/wave.ba/public_html/public`. Do not expose the
   repository root as the web document root.
@@ -39,10 +40,11 @@ pointing to this repository and a `main` branch.
 
 ## Deployment steps
 
-The workflow updates the checkout, installs production Composer dependencies,
-builds the Vue/PWA assets into Symfony's `public/` directory, applies Doctrine
-migrations, and clears the production cache. Each deployment runs serially and
-stops at the first failed command. The Vue build preserves Symfony's
+The workflow updates the checkout, runs Composer explicitly with PHP 8.4,
+loads NVM and selects Node 22 for `npm ci` and the Vue/PWA build, builds assets
+into Symfony's `public/` directory, applies Doctrine migrations with `php8.4`,
+and clears the production cache with `php8.4`. Each deployment runs serially
+and stops at the first failed command. The Vue build preserves Symfony's
 `public/index.php`.
 
 After configuring the secrets and server, run the workflow manually once to
