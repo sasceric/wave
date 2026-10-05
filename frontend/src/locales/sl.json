@@ -291,6 +291,12 @@
       "chat_message": "{actor} vam je poslal sporočilo o kampanji {campaign}."
     }
   },
+  "directoryLoading": {
+    "loading": "Nalaganje rezultatov…",
+    "loadMore": "Naloži več",
+    "retry": "Poskusi znova",
+    "end": "Ni več rezultatov."
+  },
   "directoryPagination": {
     "itemsPerPage": "Elementov na stran",
     "pageStatus": "Stran {current} od {total} · elementi: {count}",

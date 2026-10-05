@@ -59,6 +59,7 @@ export async function setupView(path, extraModules = {}, props = {}, globals = {
     }, { context })
   })
   await module.evaluate()
-  const state = module.namespace.default.setup(props, { expose: () => {} })
-  return { state, currentUser, unreadMessageCount, windowTarget, documentTarget }
+  const emitted = []
+  const state = module.namespace.default.setup(props, { expose: () => {}, emit: (...args) => emitted.push(args) })
+  return { state, currentUser, unreadMessageCount, windowTarget, documentTarget, emitted }
 }

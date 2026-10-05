@@ -1,28 +1,20 @@
 <script setup>
-import { ref, watch } from 'vue'
+import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import CampaignCard from '../components/campaigns/CampaignCard.vue'
 import DirectoryFilters from '../components/shared/DirectoryFilters.vue'
-import DirectoryPagination from '../components/shared/DirectoryPagination.vue'
+import DirectoryLoadMore from '../components/shared/DirectoryLoadMore.vue'
 import StatusMessage from '../components/shared/StatusMessage.vue'
-import { useDirectoryData } from '../composables/useDirectoryData'
+import { useInfiniteDirectory } from '../composables/useInfiniteDirectory'
 
 const { t, locale } = useI18n()
 const search = ref('')
 const category = ref('')
-const page = ref(1)
-const pageSize = ref(30)
-const { items: campaigns, total, loading, error } = useDirectoryData(
+const { items: campaigns, total, loading, error, hasMore, loadMore } = useInfiniteDirectory(
   '/campaigns',
   locale,
-  page,
-  pageSize,
   { q: search, category },
 )
-
-watch([search, category], () => {
-  page.value = 1
-})
 </script>
 
 <template>
@@ -44,26 +36,22 @@ watch([search, category], () => {
       :category-label="t('campaignsPage.categoryLabel')"
       :count-label="t('campaignsPage.campaignCount', { count: total })"
     />
-    <StatusMessage v-if="error" variant="error">{{ error }}</StatusMessage>
-    <StatusMessage v-else-if="loading && !campaigns.length">
-      {{ t('campaignsPage.loading') }}
-    </StatusMessage>
-    <StatusMessage v-else-if="!campaigns.length" variant="empty">
+    <StatusMessage v-if="!loading && !error && !campaigns.length" variant="empty">
       {{ t('campaignsPage.empty') }}
     </StatusMessage>
-    <div v-else class="campaign-grid campaign-grid--directory">
+    <div v-if="campaigns.length" class="campaign-grid campaign-grid--directory">
       <CampaignCard
         v-for="campaign in campaigns"
         :key="campaign.id"
         :campaign="campaign"
       />
     </div>
-    <DirectoryPagination
-      :page="page"
-      :page-size="pageSize"
-      :total="total"
-      @update:page="page = $event"
-      @update:page-size="pageSize = $event"
+    <DirectoryLoadMore
+      :loading="loading"
+      :error="error"
+      :has-more="hasMore"
+      :count="campaigns.length"
+      @load="loadMore"
     />
   </section>
 </template>

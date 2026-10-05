@@ -49,6 +49,7 @@ final class CompanyController
             ->orderBy('company.featured', SortDirection::Descending)
             ->addOrderBy('availableCampaignCount', SortDirection::Descending)
             ->addOrderBy('company.name', SortDirection::Ascending)
+            ->addOrderBy('company.id', SortDirection::Ascending)
             ->setParameter('availableStatus', 'open')
             ->setParameter('availableToday', new \DateTimeImmutable('today'));
         $total = (int) $entityManager->getRepository(Company::class)->createQueryBuilder('company')

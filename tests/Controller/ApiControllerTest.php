@@ -5,6 +5,7 @@ namespace App\Tests\Controller;
 use App\Entity\Campaign;
 use App\Entity\Company;
 use App\Entity\Creator;
+use App\Entity\User;
 use DateTimeImmutable;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Tools\SchemaTool;
@@ -276,6 +277,72 @@ final class ApiControllerTest extends WebTestCase
             self::assertSame(1, $payload['meta']['count'], $directory);
             self::assertSame(31, $payload['meta']['total'], $directory);
             self::assertSame(30, $payload['meta']['offset'], $directory);
+        }
+    }
+
+    public function testPublicDirectoryBatchesExcludeFinishedCampaignsAndHiddenAccounts(): void
+    {
+        $entityManager = static::getContainer()->get(EntityManagerInterface::class);
+        $makeCampaign = static fn (string $slug, Company $company, string $closesAt = '+14 days', string $status = 'open'): Campaign => new Campaign(
+            $slug, 'Directory campaign', 'Summary', 'Brief', 'Travel', ['Instagram'], ['One post'],
+            300, 700, 'Sarajevo', 1, new DateTimeImmutable($closesAt), new DateTimeImmutable('today'),
+            $company, status: $status,
+        );
+
+        foreach (['hidden', 'unapproved'] as $visibility) {
+            $creatorOwner = new User($visibility.'-creator@example.test', 'ROLE_CREATOR');
+            $companyOwner = new User($visibility.'-company@example.test', 'ROLE_COMPANY');
+            foreach ([$creatorOwner, $companyOwner] as $owner) {
+                $owner->setPassword('unused-test-hash');
+                $owner->setHideMyAccount($visibility === 'hidden');
+                $owner->setApproved($visibility !== 'unapproved');
+                $entityManager->persist($owner);
+            }
+            $creatorOwner->setCreator(new Creator($visibility.'-creator', 'Directory creator', 'Travel', 'Sarajevo', 'Bio', [], []));
+            $company = new Company($visibility.'-company', 'Directory Brand', 'Travel');
+            $companyOwner->setCompany($company);
+            $entityManager->persist($makeCampaign($visibility.'-campaign', $company));
+        }
+
+        $expected = ['creators' => [], 'companies' => [], 'campaigns' => []];
+        for ($index = 1; $index <= 61; ++$index) {
+            $suffix = sprintf('%03d', $index);
+            $creator = new Creator('creator-'.$suffix, 'Directory creator', 'Travel', 'Sarajevo', 'Bio', [], []);
+            // Equal ranking and names must still produce stable batches by ID.
+            $company = new Company('company-'.$suffix, 'Directory Brand', 'Travel');
+            $campaign = $makeCampaign('campaign-'.$suffix, $company);
+            foreach ([$creator, $company, $campaign] as $entity) {
+                $entityManager->persist($entity);
+            }
+            $expected['creators'][] = $creator->getSlug();
+            $expected['companies'][] = $company->getSlug();
+            $expected['campaigns'][] = $campaign->getSlug();
+            if ($index === 1) {
+                $entityManager->persist($makeCampaign('closed-campaign', $company, status: 'closed'));
+                $entityManager->persist($makeCampaign('expired-campaign', $company, '-1 day'));
+            }
+        }
+        $entityManager->flush();
+
+        foreach ($expected as $directory => $slugs) {
+            $loaded = [];
+            foreach ([0 => 30, 30 => 30, 60 => 1, 90 => 0] as $offset => $count) {
+                $this->client->request('GET', '/api/'.$directory.'?limit=30&offset='.$offset);
+                self::assertResponseIsSuccessful();
+                $payload = json_decode($this->client->getResponse()->getContent(), true, flags: JSON_THROW_ON_ERROR);
+                self::assertSame(61, $payload['meta']['total']);
+                self::assertSame($count, $payload['meta']['count']);
+                self::assertSame($offset, $payload['meta']['offset']);
+                self::assertSame(array_slice($slugs, $offset, 30), array_column($payload['data'], 'slug'));
+                $loaded = [...$loaded, ...array_column($payload['data'], 'slug')];
+                if ($directory === 'companies') {
+                    foreach ($payload['data'] as $company) {
+                        self::assertSame(1, $company['availableCampaignCount']);
+                    }
+                }
+            }
+            self::assertSame($slugs, $loaded);
+            self::assertCount(61, array_unique($loaded));
         }
     }
 

@@ -104,8 +104,9 @@ that belongs to the authorized thread; it does not create notifications for seen
 The Vue Messages view prepends older pages with a retained DOM anchor, merges by ID,
 and catches up with bounded `after` pages after a reconnect. New incoming messages do
 not force scroll while reading history. There is no online/away/offline presence service.
-Creators and campaigns directories use two columns on phones and desktop with existing
-server pagination (30/60/90); homepage carousels are separate from directory grids.
+Creators and campaigns directories use two columns on phones and desktop; homepage
+carousels are separate from directory grids. Public directories load batches as described
+below; account campaign management retains its own pagination.
 
 The history `meta.firstUnreadId` identifies the viewer's first incoming unread message
 across all pages. The Messages view preserves a visit's unread divider after read
@@ -140,3 +141,28 @@ send several messages with the keyboard open, switch between text and emoji, dis
 and reopen the keyboard, and send the first message in a new conversation. Verify
 focus, visible controls, and restoration of the bottom inset. This frontend fix needs
 the normal production build/deployment; no environment or database changes.
+
+### Lazy-loaded public directories
+
+Creators, campaigns and companies use `useInfiniteDirectory.js` and the shared
+`DirectoryLoadMore.vue` sentinel. The first request loads 30 records; approaching
+200px from the list's end loads the next 30 through the existing API's `limit` and
+`offset` parameters. The loader retains existing cards during loading or errors,
+prevents overlapping requests, deduplicates by ID, and advances offsets by the
+received batch size. Filters and locale changes restart at zero and invalidate
+responses from previous requests. An empty batch or the filtered server total
+ends loading and shows the localized “No more results” message in all six locales.
+The Load more/retry button provides keyboard access and a fallback when intersection
+observation is unavailable. There is no periodic directory polling. The observer
+re-measures the end after each render and disconnects while loading, on errors,
+at completion, and on unmount.
+
+Public APIs enforce visibility before counting and paging: hidden or unapproved
+creator/company owners are excluded, and campaigns must be open, unexpired and
+belong to a visible approved company (ownerless seeded catalog entries retain their
+existing public behavior). Company ranking now uses the ID as its final tie-breaker,
+as creator and campaign ordering already did. No schema or environment changes are
+needed. Frontend regressions cover appending, stale responses, retries, deduplication,
+and observer lifecycle. `ApiControllerTest` covers 61 visible entries per directory
+across 30/30/1/empty batches, including hidden/unapproved accounts and closed/expired
+campaigns, against a separate temporary PostgreSQL database.

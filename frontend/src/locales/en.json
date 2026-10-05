@@ -290,6 +290,12 @@
       "chat_message": "{actor} sent a message about {campaign}."
     }
   },
+  "directoryLoading": {
+    "loading": "Loading results…",
+    "loadMore": "Load more",
+    "retry": "Try again",
+    "end": "No more results."
+  },
   "directoryPagination": {
     "itemsPerPage": "Items per page",
     "pageStatus": "Page {current} of {total} · {count} items",

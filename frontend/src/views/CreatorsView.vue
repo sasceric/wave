@@ -4,9 +4,9 @@ import { useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import CreatorCard from '../components/creators/CreatorCard.vue'
 import DirectoryFilters from '../components/shared/DirectoryFilters.vue'
-import DirectoryPagination from '../components/shared/DirectoryPagination.vue'
+import DirectoryLoadMore from '../components/shared/DirectoryLoadMore.vue'
 import StatusMessage from '../components/shared/StatusMessage.vue'
-import { useDirectoryData } from '../composables/useDirectoryData'
+import { useInfiniteDirectory } from '../composables/useInfiniteDirectory'
 import { SOCIAL_PLATFORMS } from '../lib/marketplace'
 
 const { t, locale } = useI18n()
@@ -14,13 +14,9 @@ const route = useRoute()
 const search = ref(queryString(route.query.q))
 const category = ref('')
 const platform = ref(normalizePlatform(route.query.platform))
-const page = ref(1)
-const pageSize = ref(30)
-const { items: creators, total, loading, error } = useDirectoryData(
+const { items: creators, total, loading, error, hasMore, loadMore } = useInfiniteDirectory(
   '/creators',
   locale,
-  page,
-  pageSize,
   { q: search, category, platform },
 )
 
@@ -29,9 +25,6 @@ watch(() => route.query.q, (value) => {
 })
 watch(() => route.query.platform, (value) => {
   platform.value = normalizePlatform(value)
-})
-watch([search, category, platform], () => {
-  page.value = 1
 })
 
 function queryString(value) {
@@ -71,26 +64,22 @@ function normalizePlatform(value) {
       :platform-options="SOCIAL_PLATFORMS"
       :count-label="t('creatorsPage.creatorCount', { count: total })"
     />
-    <StatusMessage v-if="error" variant="error">{{ error }}</StatusMessage>
-    <StatusMessage v-else-if="loading && !creators.length">
-      {{ t('creatorsPage.loading') }}
-    </StatusMessage>
-    <StatusMessage v-else-if="!creators.length" variant="empty">
+    <StatusMessage v-if="!loading && !error && !creators.length" variant="empty">
       {{ t('creatorsPage.empty') }}
     </StatusMessage>
-    <div v-else class="creator-grid creator-grid--directory">
+    <div v-if="creators.length" class="creator-grid creator-grid--directory">
       <CreatorCard
         v-for="creator in creators"
         :key="creator.id"
         :creator="creator"
       />
     </div>
-    <DirectoryPagination
-      :page="page"
-      :page-size="pageSize"
-      :total="total"
-      @update:page="page = $event"
-      @update:page-size="pageSize = $event"
+    <DirectoryLoadMore
+      :loading="loading"
+      :error="error"
+      :has-more="hasMore"
+      :count="creators.length"
+      @load="loadMore"
     />
   </section>
 </template>
