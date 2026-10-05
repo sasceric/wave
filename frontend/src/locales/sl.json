@@ -641,6 +641,11 @@
     "companyInvite": "Predstavi svoje podjetje in objavi kampanje za prave ustvarjalce."
   },
   "account": {
+    "editProfile": "Uredi profil",
+    "welcomeBack": "Dobrodošli, {name}!",
+    "welcomeIntro": "Tukaj lahko pregledate in uredite podatke svojega profila.",
+    "profileDetailsIntro": "Pregled podatkov na vašem javnem profilu.",
+    "notProvided": "Ni navedeno",
     "profileBasics": "Osnovno",
     "profileEditorIntro": "Uredi informacije, ki jih blagovne znamke vidijo na tvojem javnem profilu.",
     "profileIncomplete": "Pred shranjevanjem izpolni obvezna polja v označenem delu profila.",

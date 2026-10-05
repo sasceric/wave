@@ -1,68 +1,9 @@
 import assert from 'node:assert/strict'
 import { readFile } from 'node:fs/promises'
-import { test } from 'node:test'
 import vm from 'node:vm'
-import { compileScript, parse } from '@vue/compiler-sfc'
+import { test } from 'node:test'
 import * as vue from 'vue'
-
-async function setupView(path, extraModules = {}, props = {}, globals = {}) {
-  const currentUser = vue.ref({ id: 1, accountType: 'creator' })
-  const unreadMessageCount = vue.ref(0)
-  const windowTarget = new EventTarget()
-  windowTarget.requestAnimationFrame = () => 1
-  windowTarget.cancelAnimationFrame = () => {}
-  windowTarget.setTimeout = () => 1
-  windowTarget.clearTimeout = () => {}
-  const documentTarget = {
-    visibilityState: 'visible',
-    documentElement: { classList: { toggle: () => {} } },
-  }
-  const context = vm.createContext({
-    window: windowTarget, document: documentTarget, navigator: {}, console, Event, URL,
-    CustomEvent: class extends Event {
-      constructor(type, options) { super(type); this.detail = options?.detail }
-    },
-    ...globals,
-  })
-  const modules = {
-    vue: { ...vue, onMounted: () => {}, onBeforeUnmount: () => {} },
-    'vue-router': { isNavigationFailure: () => false, NavigationFailureType: { duplicated: 16 }, RouterView: {}, useRoute: () => ({ query: {}, meta: {}, fullPath: '/poruke' }), useRouter: () => ({ replace: async () => {} }) },
-    'vue-i18n': { useI18n: () => ({ locale: vue.ref('bs'), t: (key) => key }) },
-    '../composables/useCurrentUser': { currentUser, loadCurrentUser: async () => currentUser.value },
-    './composables/useCurrentUser': { currentUser, loadCurrentUser: async () => currentUser.value, setCurrentUser: (user) => { currentUser.value = user } },
-    './composables/useUnreadMessages': { unreadMessageCount },
-    '../../composables/useUnreadMessages': { unreadMessageCount },
-    '../../composables/useMobileAccountSidebar': { mobileAccountSidebarOpen: vue.ref(false) },
-    ...extraModules,
-  }
-  const source = await readFile(new URL(path, import.meta.url), 'utf8')
-  const { descriptor } = parse(source)
-  const script = compileScript(descriptor, { id: 'wave-test' })
-  const module = new vm.SourceTextModule(script.content, {
-    context, initializeImportMeta: (meta) => { meta.env = { DEV: true } },
-  })
-  await module.link((specifier, referencingModule) => {
-    const requested = referencingModule.dependencySpecifiers.includes(specifier)
-    assert.ok(requested)
-    const values = modules[specifier]
-    if (values) {
-      return new vm.SyntheticModule(Object.keys(values), function () {
-        for (const [key, value] of Object.entries(values)) this.setExport(key, value)
-      }, { context })
-    }
-    // Components, icons, and formatting are unrelated to the inbox state tests.
-    const importedNames = [...script.content.matchAll(/import\s*\{([^}]+)\}\s*from\s*['"]([^'"]+)['"]/g)]
-      .filter((match) => match[2] === specifier)
-      .flatMap((match) => match[1].split(',').map((name) => name.trim().split(/\s+as\s+/)[0]))
-    return new vm.SyntheticModule(['default', ...importedNames], function () {
-      this.setExport('default', {})
-      for (const name of importedNames) this.setExport(name, () => {})
-    }, { context })
-  })
-  await module.evaluate()
-  const state = module.namespace.default.setup(props, { expose: () => {} })
-  return { state, currentUser, unreadMessageCount, windowTarget, documentTarget }
-}
+import { setupView } from './setupView.js'
 
 test('a slow response for the previous conversation cannot replace the newly opened chat', async () => {
   const pending = new Map()
@@ -283,4 +224,43 @@ test('the app badge waits for authorized counts, follows reads, and clears on lo
   currentUser.value = null
   await vue.nextTick()
   assert.equal(badges.at(-1), 0)
+})
+
+test('mobile keyboard spacing clears the home inset and restores it on close', async () => {
+  const { state, windowTarget, documentTarget } = await setupView('../src/views/MessagesView.vue')
+  windowTarget.matchMedia = () => ({ matches: true })
+  windowTarget.innerHeight = 844
+  documentTarget.documentElement.clientHeight = 844
+  windowTarget.visualViewport = { height: 844, offsetTop: 0, scale: 1 }
+  state.updateViewport()
+  assert.equal(state.viewportStyle.value['--chat-bottom-inset'], 'env(safe-area-inset-bottom, 0px)')
+
+  // iOS can resize innerHeight as well; the layout viewport still identifies the keyboard.
+  windowTarget.innerHeight = 480
+  windowTarget.visualViewport.height = 480
+  state.updateViewport()
+  assert.equal(state.viewportStyle.value['--chat-bottom-inset'], '0px')
+  assert.equal(state.viewportStyle.value['--chat-viewport-height'], '480px')
+
+  windowTarget.innerHeight = 844
+  windowTarget.visualViewport.height = 844
+  state.updateViewport()
+  assert.equal(state.viewportStyle.value['--chat-bottom-inset'], 'env(safe-area-inset-bottom, 0px)')
+})
+
+test('browser chrome, zoom, and desktop resizing do not remove the home inset', async () => {
+  const { state, windowTarget, documentTarget } = await setupView('../src/views/MessagesView.vue')
+  windowTarget.matchMedia = () => ({ matches: true })
+  windowTarget.innerHeight = 844
+  documentTarget.documentElement.clientHeight = 844
+  windowTarget.visualViewport = { height: 780, offsetTop: 0, scale: 1 }
+  state.updateViewport()
+  assert.equal(state.keyboardOpen.value, false)
+  windowTarget.visualViewport = { height: 480, offsetTop: 0, scale: 2 }
+  state.updateViewport()
+  assert.equal(state.keyboardOpen.value, false)
+  windowTarget.matchMedia = () => ({ matches: false })
+  windowTarget.visualViewport.scale = 1
+  state.updateViewport()
+  assert.equal(state.keyboardOpen.value, false)
 })

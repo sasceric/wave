@@ -640,6 +640,11 @@
     "companyInvite": "Introduce your company and post campaigns for the right creators."
   },
   "account": {
+    "editProfile": "Edit profile",
+    "welcomeBack": "Welcome back, {name}!",
+    "welcomeIntro": "View and edit your profile details here.",
+    "profileDetailsIntro": "The information shown on your public profile.",
+    "notProvided": "Not provided",
     "profileBasics": "Basics",
     "profileEditorIntro": "Edit the information brands see on your public profile.",
     "profileIncomplete": "Complete the required fields in the highlighted profile section before saving.",

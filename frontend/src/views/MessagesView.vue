@@ -37,6 +37,7 @@ const detailsOpen = ref(false)
 const isMobileView = ref(false)
 const visualViewportHeight = ref(0)
 const visualViewportTop = ref(0)
+const keyboardOpen = ref(false)
 const conversationQuery = ref('')
 const conversationFilter = ref('all')
 const draft = ref('')
@@ -90,6 +91,7 @@ const mobileThreadOpen = computed(() => Boolean(
 const viewportStyle = computed(() => ({
   '--chat-viewport-height': `${visualViewportHeight.value}px`,
   '--chat-viewport-top': `${visualViewportTop.value}px`,
+  '--chat-bottom-inset': keyboardOpen.value ? '0px' : 'env(safe-area-inset-bottom, 0px)',
 }))
 
 const threads = computed(() => [
@@ -237,6 +239,12 @@ function updateViewport() {
   const viewport = window.visualViewport
   visualViewportHeight.value = Math.round(viewport?.height || window.innerHeight)
   visualViewportTop.value = Math.round(viewport?.offsetTop || 0)
+  // iOS keeps the home indicator inset when the keyboard shrinks the visual viewport.
+  const layoutHeight = Math.max(window.innerHeight, document.documentElement.clientHeight || 0)
+  keyboardOpen.value = isMobileView.value
+    && Boolean(viewport)
+    && Math.abs((viewport.scale || 1) - 1) < 0.01
+    && layoutHeight - visualViewportHeight.value > 120
 }
 
 function handleRealtimeUpdate(event) {

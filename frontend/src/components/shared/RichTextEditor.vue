@@ -90,7 +90,8 @@ function syncToolbar(event) {
   } else if (lastSelection.value) {
     currentFormats.value = quill.getFormat(lastSelection.value)
   } else {
-    currentFormats.value = quill.getFormat()
+    // Calling getFormat without a range focuses Quill and scrolls to the editor.
+    currentFormats.value = {}
   }
 }
 

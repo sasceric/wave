@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { parsePhoneNumberFromString } from 'libphonenumber-js/min'
 import RouterLink from '../components/shared/LocalizedLink.vue'
@@ -7,6 +7,7 @@ import { useI18n } from 'vue-i18n'
 import { Eye, MessageCircle, Plus, Trash2, X } from '@lucide/vue'
 import AccountAccessPanel from '../components/account/AccountAccessPanel.vue'
 import AccountSidebar from '../components/account/AccountSidebar.vue'
+import AccountProfileDetails from '../components/account/AccountProfileDetails.vue'
 import RequiredProfileModal from '../components/account/RequiredProfileModal.vue'
 import MultiSelect from '../components/shared/MultiSelect.vue'
 import MediaUploadField from '../components/shared/MediaUploadField.vue'
@@ -63,6 +64,8 @@ const notice = ref('')
 const resendingVerification = ref(false)
 const visibilitySaving = ref(false)
 const profile = ref(null)
+const editingProfile = ref(false)
+let profileBeforeEdit = null
 const profileImageField = ref(null)
 const profilePhoneCountry = ref('BA')
 const tags = ref('')
@@ -120,6 +123,8 @@ watch(currentUser, (authenticatedUser) => {
   if (!authenticatedUser) {
     user.value = null
     profile.value = null
+    editingProfile.value = false
+    profileBeforeEdit = null
   }
 })
 
@@ -164,6 +169,37 @@ function selectAccountTab(tab) {
 function updateProfileCountry(countryCode) {
   profile.value.countryCode = countryCode
   profilePhoneCountry.value = countryCode || 'BA'
+}
+
+function startProfileEdit() {
+  profileBeforeEdit = {
+    profile: JSON.parse(JSON.stringify(profile.value)),
+    tags: tags.value,
+    phoneCountry: profilePhoneCountry.value,
+  }
+  error.value = ''
+  notice.value = ''
+  editingProfile.value = true
+}
+
+function cancelProfileEdit() {
+  if (busy.value || !profileBeforeEdit) return
+
+  profile.value = profileBeforeEdit.profile
+  tags.value = profileBeforeEdit.tags
+  profilePhoneCountry.value = profileBeforeEdit.phoneCountry
+  profileBeforeEdit = null
+  editingProfile.value = false
+  error.value = ''
+  notice.value = ''
+}
+
+async function handleAuthenticated() {
+  document.activeElement?.blur()
+  await loadDashboard()
+  await nextTick()
+  // Login replaces this view in place, so the login form's scroll position survives.
+  window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
 }
 
 function incompleteProfileTab() {
@@ -413,6 +449,8 @@ async function updateAccountVisibility(value) {
 }
 
 async function saveProfile() {
+  if (busy.value) return
+
   const invalidTab = incompleteProfileTab()
   if (invalidTab) {
     selectAccountTab(invalidTab)
@@ -518,10 +556,8 @@ async function saveProfile() {
       } catch (cause) {
         error.value = `${t('account.profileImageCleanupFailed')} ${cause.message}`
         notice.value = t('account.profileSaved')
-        return
       }
     }
-    profileImageField.value?.commit()
     notice.value = t('account.profileSaved')
     await loadDashboard()
   } catch (cause) {
@@ -536,6 +572,11 @@ async function saveProfile() {
       error.value = cause.message
     }
   } finally {
+    if (profileSaved) {
+      profileImageField.value?.commit()
+      editingProfile.value = false
+      profileBeforeEdit = null
+    }
     busy.value = false
   }
 }
@@ -830,9 +871,13 @@ onMounted(loadDashboard)
 </script>
 
 <template>
-  <AccountAccessPanel v-if="!user" @authenticated="loadDashboard" />
+  <AccountAccessPanel v-if="!user" @authenticated="handleAuthenticated" />
 
   <section v-else class="account-page account-page--dashboard page-width">
+    <div v-if="accountSection === 'profile'" class="account-welcome">
+      <p class="account-welcome__title">{{ t('account.welcomeBack', { name: (user.accountType === 'creator' ? profile?.displayName : profile?.name) || t('account.title') }) }}</p>
+      <p>{{ t('account.welcomeIntro') }}</p>
+    </div>
     <div class="account-heading">
       <div class="account-heading__identity">
         <div
@@ -897,15 +942,21 @@ onMounted(loadDashboard)
           <div>
             <p class="eyebrow">{{ user.accountType === 'creator' ? t('account.creatorProfile') : t('account.companyProfile') }}</p>
             <h2>{{ user.accountType === 'creator' ? t('account.creatorProfile') : t('account.companyProfile') }}</h2>
-            <p>{{ t('account.profileEditorIntro') }}</p>
+            <p>{{ editingProfile ? t('account.profileEditorIntro') : t('account.profileDetailsIntro') }}</p>
           </div>
-          <button class="button button--dark profile-form__save" type="submit" :disabled="busy">
-            {{ t('account.saveProfile') }}
-            <span aria-hidden="true">↗</span>
-          </button>
+          <div class="profile-form__actions">
+            <template v-if="editingProfile">
+              <button class="button button--outline" type="button" :disabled="busy" @click="cancelProfileEdit">{{ t('account.richTextCancel') }}</button>
+              <button class="button button--dark profile-form__save" type="submit" :disabled="busy">
+                {{ t('account.saveProfile') }}
+                <span aria-hidden="true">↗</span>
+              </button>
+            </template>
+            <button v-else class="button button--dark profile-form__save" type="button" @click="startProfileEdit">{{ t('account.editProfile') }}</button>
+          </div>
         </header>
 
-        <div class="profile-image-editor">
+        <div v-if="editingProfile" class="profile-image-editor">
           <ProfileImageField
             ref="profileImageField"
             :folder="user.accountType === 'creator' ? 'creator-avatar' : 'company-logo'"
@@ -973,7 +1024,15 @@ onMounted(loadDashboard)
           >{{ t('account.creatorFaqs') }} <span>{{ profile.faqs.length }}</span></button>
         </nav>
 
-        <template v-if="user.accountType === 'creator'">
+        <AccountProfileDetails
+          v-if="!editingProfile"
+          :profile="profile"
+          :account-type="user.accountType"
+          :tab="accountTab"
+          :country-options="countryOptions"
+          :categories="categories"
+        />
+        <template v-else-if="user.accountType === 'creator'">
           <section
             v-if="accountTab === 'about'"
             id="account-panel-about"
