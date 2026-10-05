@@ -36,5 +36,5 @@ jobs:
             npm ci
             npm run build
             cd ..
-            APP_ENV=prod php bin/console doctrine:migrations:migrate --no-interaction
-            APP_ENV=prod php bin/console cache:clear
+            APP_ENV=prod php8.4 bin/console doctrine:migrations:migrate --no-interaction
+            APP_ENV=prod php8.4 bin/console cache:clear

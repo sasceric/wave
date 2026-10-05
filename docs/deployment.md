@@ -19,14 +19,14 @@ Actions**:
 
 Install the matching public key in the deployment user's
 `~/.ssh/authorized_keys`. The user must be able to run `git pull`, Composer,
-PHP CLI, npm, and Doctrine migrations in the deployment directory without an
-interactive password prompt. The checkout must have `origin` pointing to this
-repository and a `main` branch.
+`php8.4 bin/console`, npm, and Doctrine migrations in the deployment directory
+without an interactive password prompt. The checkout must have `origin`
+pointing to this repository and a `main` branch.
 
 ## Server requirements
 
-- PHP 8.4 with the extensions required by `composer.json`, Composer, Node.js
-  22.12 or newer, and npm.
+- PHP 8.4 available as `php8.4`, with the extensions required by
+  `composer.json`, Composer, Node.js 22.12 or newer, and npm.
 - A PHP-capable web server configured with document root
   `/home/steelcodeweb/web/wave.ba/public_html/public`. Do not expose the
   repository root as the web document root.
