@@ -1,6 +1,7 @@
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
 import { Check, ChevronDown, Search, X } from '@lucide/vue'
+import { getDropdownPlacement } from '../../utils/dropdownPlacement'
 
 const props = defineProps({
   label: { type: String, required: true },
@@ -11,6 +12,10 @@ const props = defineProps({
 
 const emit = defineEmits(['update:modelValue'])
 const search = ref('')
+const dropdown = ref(null)
+const trigger = ref(null)
+const menu = ref(null)
+const opensAbove = ref(false)
 
 const visibleOptions = computed(() => {
   const query = search.value.trim().toLocaleLowerCase()
@@ -30,6 +35,32 @@ const visibleIds = computed(() => visibleOptions.value.map(({ id }) => id))
 const allVisibleSelected = computed(() => (
   visibleIds.value.length > 0 && visibleIds.value.every((id) => props.modelValue.includes(id))
 ))
+
+function updateMenuPlacement() {
+  if (!dropdown.value?.open || !trigger.value || !menu.value) {
+    return
+  }
+
+  menu.value.style.removeProperty('--dropdown-available-height')
+  const placement = getDropdownPlacement(trigger.value, menu.value)
+  if (!placement) {
+    return
+  }
+
+  opensAbove.value = placement.opensAbove
+  menu.value.style.setProperty('--dropdown-available-height', `${placement.maxHeight}px`)
+}
+
+async function handleDropdownToggle() {
+  if (!dropdown.value?.open) {
+    opensAbove.value = false
+    menu.value?.style.removeProperty('--dropdown-available-height')
+    return
+  }
+
+  await nextTick()
+  updateMenuPlacement()
+}
 
 function toggleOption(id, checked) {
   const selectedIds = new Set(props.modelValue)
@@ -51,17 +82,35 @@ function toggleVisible() {
 function clearSelection() {
   emit('update:modelValue', [])
 }
+
+onMounted(() => {
+  window.addEventListener('resize', updateMenuPlacement)
+  window.addEventListener('scroll', updateMenuPlacement, true)
+  window.visualViewport?.addEventListener('resize', updateMenuPlacement)
+  window.visualViewport?.addEventListener('scroll', updateMenuPlacement)
+})
+onBeforeUnmount(() => {
+  window.removeEventListener('resize', updateMenuPlacement)
+  window.removeEventListener('scroll', updateMenuPlacement, true)
+  window.visualViewport?.removeEventListener('resize', updateMenuPlacement)
+  window.visualViewport?.removeEventListener('scroll', updateMenuPlacement)
+})
 </script>
 
 <template>
   <div class="admin-multi-select">
     <label class="admin-multi-select__label">{{ label }}</label>
-    <details class="admin-multi-select__dropdown">
-      <summary :aria-label="label">
+    <details
+      ref="dropdown"
+      class="admin-multi-select__dropdown"
+      :class="{ 'is-above': opensAbove }"
+      @toggle="handleDropdownToggle"
+    >
+      <summary ref="trigger" :aria-label="label">
         <span>{{ labels.selectedCount(modelValue.length) }}</span>
         <ChevronDown :size="16" aria-hidden="true" />
       </summary>
-      <div class="admin-multi-select__menu">
+      <div ref="menu" class="admin-multi-select__menu">
         <label class="admin-multi-select__search">
           <Search :size="15" aria-hidden="true" />
           <input v-model="search" type="search" :aria-label="labels.search" :placeholder="labels.search" />

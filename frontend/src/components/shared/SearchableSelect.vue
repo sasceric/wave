@@ -2,6 +2,7 @@
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { Search } from '@lucide/vue'
+import { getDropdownPlacement } from '../../utils/dropdownPlacement'
 
 let nextId = 0
 
@@ -20,7 +21,9 @@ const { locale } = useI18n()
 const id = `searchable-select-${++nextId}`
 const root = ref(null)
 const searchInput = ref(null)
+const menu = ref(null)
 const isOpen = ref(false)
+const opensAbove = ref(false)
 const query = ref('')
 const activeIndex = ref(-1)
 
@@ -39,6 +42,21 @@ const normalizationLocale = computed(() => {
 
   return locale.value
 })
+
+function updateMenuPlacement() {
+  if (!isOpen.value || !root.value || !menu.value) {
+    return
+  }
+
+  menu.value.style.removeProperty('--dropdown-available-height')
+  const placement = getDropdownPlacement(root.value, menu.value)
+  if (!placement) {
+    return
+  }
+
+  opensAbove.value = placement.opensAbove
+  menu.value.style.setProperty('--dropdown-available-height', `${placement.maxHeight}px`)
+}
 
 function normalize(value) {
   return String(value || '')
@@ -67,14 +85,18 @@ async function openMenu() {
     isOpen.value = true
     setActiveIndex(Math.max(0, filteredOptions.value.findIndex((option) => option.value === props.modelValue)))
     await nextTick()
+    updateMenuPlacement()
     searchInput.value?.focus()
+    updateMenuPlacement()
   }
 }
 
 function closeMenu(restoreFocus = false) {
   isOpen.value = false
+  opensAbove.value = false
   query.value = ''
   activeIndex.value = -1
+  menu.value?.style.removeProperty('--dropdown-available-height')
   if (restoreFocus) {
     nextTick(() => root.value?.querySelector('button')?.focus())
   }
@@ -138,14 +160,26 @@ watch(() => props.disabled, (disabled) => {
   }
 })
 
-onMounted(() => document.addEventListener('pointerdown', closeOnOutsideClick))
-onBeforeUnmount(() => document.removeEventListener('pointerdown', closeOnOutsideClick))
+onMounted(() => {
+  document.addEventListener('pointerdown', closeOnOutsideClick)
+  window.addEventListener('resize', updateMenuPlacement)
+  window.addEventListener('scroll', updateMenuPlacement, true)
+  window.visualViewport?.addEventListener('resize', updateMenuPlacement)
+  window.visualViewport?.addEventListener('scroll', updateMenuPlacement)
+})
+onBeforeUnmount(() => {
+  document.removeEventListener('pointerdown', closeOnOutsideClick)
+  window.removeEventListener('resize', updateMenuPlacement)
+  window.removeEventListener('scroll', updateMenuPlacement, true)
+  window.visualViewport?.removeEventListener('resize', updateMenuPlacement)
+  window.visualViewport?.removeEventListener('scroll', updateMenuPlacement)
+})
 </script>
 
 <template>
   <div class="form-field searchable-select">
     <label class="searchable-select__label" :for="id">{{ label }}</label>
-    <div ref="root" class="searchable-select__control">
+    <div ref="root" class="searchable-select__control" :class="{ 'is-above': opensAbove }">
       <button
         :id="id"
         class="searchable-select__trigger"
@@ -162,7 +196,7 @@ onBeforeUnmount(() => document.removeEventListener('pointerdown', closeOnOutside
         <span>{{ selectedOption?.label || placeholder }}</span>
         <span class="searchable-select__chevron" aria-hidden="true">⌄</span>
       </button>
-      <div v-if="isOpen" class="searchable-select__menu">
+      <div v-if="isOpen" ref="menu" class="searchable-select__menu">
         <label class="searchable-select__search">
           <Search :size="15" stroke-width="1.8" aria-hidden="true" />
           <input

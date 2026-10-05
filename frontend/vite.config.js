@@ -30,7 +30,7 @@ export default defineConfig({
         name: 'Wave — saradnje kreatora i brendova',
         short_name: 'Wave',
         description: 'Mirno mjesto gdje kreatori i brendovi pronalaze prave partnere.',
-        theme_color: '#173c35',
+        theme_color: '#173d36',
         background_color: '#f8f7f4',
         display: 'standalone',
         start_url: '/',

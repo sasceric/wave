@@ -1,6 +1,7 @@
 <script setup>
 import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
 import { Check, ChevronDown, Search, X } from '@lucide/vue'
+import { getDropdownPlacement } from '../../utils/dropdownPlacement'
 
 let nextId = 0
 
@@ -22,7 +23,9 @@ const id = `multi-select-${++nextId}`
 const root = ref(null)
 const trigger = ref(null)
 const searchInput = ref(null)
+const menu = ref(null)
 const isOpen = ref(false)
+const opensAbove = ref(false)
 const query = ref('')
 
 const selectedOptions = computed(() => props.options.filter(
@@ -39,6 +42,21 @@ const filteredOptions = computed(() => {
 const isAtLimit = computed(() => (
   props.maxSelections > 0 && props.modelValue.length >= props.maxSelections
 ))
+
+function updateMenuPlacement() {
+  if (!isOpen.value || !root.value || !menu.value) {
+    return
+  }
+
+  menu.value.style.removeProperty('--dropdown-available-height')
+  const placement = getDropdownPlacement(root.value, menu.value)
+  if (!placement) {
+    return
+  }
+
+  opensAbove.value = placement.opensAbove
+  menu.value.style.setProperty('--dropdown-available-height', `${placement.maxHeight}px`)
+}
 
 function normalize(value) {
   return String(value || '')
@@ -79,12 +97,16 @@ async function openMenu() {
   query.value = ''
   isOpen.value = true
   await nextTick()
+  updateMenuPlacement()
   searchInput.value?.focus()
+  updateMenuPlacement()
 }
 
 function closeMenu(restoreFocus = false) {
   isOpen.value = false
+  opensAbove.value = false
   query.value = ''
+  menu.value?.style.removeProperty('--dropdown-available-height')
   if (restoreFocus) {
     nextTick(() => trigger.value?.focus())
   }
@@ -121,8 +143,20 @@ function closeOnOutsideClick(event) {
   }
 }
 
-onMounted(() => document.addEventListener('pointerdown', closeOnOutsideClick))
-onBeforeUnmount(() => document.removeEventListener('pointerdown', closeOnOutsideClick))
+onMounted(() => {
+  document.addEventListener('pointerdown', closeOnOutsideClick)
+  window.addEventListener('resize', updateMenuPlacement)
+  window.addEventListener('scroll', updateMenuPlacement, true)
+  window.visualViewport?.addEventListener('resize', updateMenuPlacement)
+  window.visualViewport?.addEventListener('scroll', updateMenuPlacement)
+})
+onBeforeUnmount(() => {
+  document.removeEventListener('pointerdown', closeOnOutsideClick)
+  window.removeEventListener('resize', updateMenuPlacement)
+  window.removeEventListener('scroll', updateMenuPlacement, true)
+  window.visualViewport?.removeEventListener('resize', updateMenuPlacement)
+  window.visualViewport?.removeEventListener('scroll', updateMenuPlacement)
+})
 </script>
 
 <template>
@@ -132,7 +166,7 @@ onBeforeUnmount(() => document.removeEventListener('pointerdown', closeOnOutside
     <div
       ref="root"
       class="multi-select__control"
-      :class="{ 'is-open': isOpen, 'is-disabled': disabled }"
+      :class="{ 'is-open': isOpen, 'is-disabled': disabled, 'is-above': opensAbove }"
     >
       <span v-for="option in selectedOptions" :key="option.value" class="multi-select__value">
         <span :title="option.label">{{ option.label }}</span>
@@ -161,7 +195,7 @@ onBeforeUnmount(() => document.removeEventListener('pointerdown', closeOnOutside
         <span>{{ selectedOptions.length ? searchPlaceholder : placeholder }}</span>
         <ChevronDown :size="16" aria-hidden="true" />
       </button>
-      <div v-if="isOpen" class="multi-select__menu">
+      <div v-if="isOpen" ref="menu" class="multi-select__menu">
         <label class="multi-select__search">
           <Search :size="15" aria-hidden="true" />
           <input
