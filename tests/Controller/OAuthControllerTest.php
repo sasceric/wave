@@ -36,6 +36,16 @@ final class OAuthControllerTest extends WebTestCase
         self::assertResponseRedirects('/racun?mode=login&oauth=error');
     }
 
+    public function testAppleFormPostCallbackWithoutSessionStateIsRejected(): void
+    {
+        $this->client->request('POST', '/api/auth/oauth/apple/callback', [
+            'state' => 'forged',
+            'code' => 'unused',
+        ]);
+
+        self::assertResponseRedirects('/racun?mode=login&oauth=error');
+    }
+
     private function payload(): array
     {
         return json_decode((string) $this->client->getResponse()->getContent(), true, 32, JSON_THROW_ON_ERROR);

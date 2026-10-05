@@ -1514,7 +1514,7 @@ h1 em, h2 em { color: #c67f67; font-weight: 400; }
   display: block;
   margin-top: 9px;
   color: #99aca1;
-  font-size: 9px;
+  font-size: 12px;
 }
 .site-footer__column {
   display: flex;
@@ -1525,7 +1525,7 @@ h1 em, h2 em { color: #c67f67; font-weight: 400; }
 .site-footer__column h2 {
   margin: 4px 0 5px;
   color: #f0c078;
-  font-size: 10px;
+  font-size: 14px;
   font-weight: 700;
   letter-spacing: .13em;
   text-transform: uppercase;
@@ -1536,7 +1536,7 @@ h1 em, h2 em { color: #c67f67; font-weight: 400; }
   border: 0;
   color: #d3ded6;
   background: transparent;
-  font-size: 11px;
+  font-size: 12px;
   line-height: 1.5;
   text-align: left;
   text-decoration: none;
@@ -1548,10 +1548,10 @@ h1 em, h2 em { color: #c67f67; font-weight: 400; }
   color: #f0c078;
 }
 .site-footer__contact > p {
-  max-width: 210px;
+  max-width: 250px;
   margin: 0;
   color: #bdc9c0;
-  font-size: 11px;
+  font-size: 12px;
   line-height: 1.65;
 }
 .site-footer__email {
@@ -1560,14 +1560,14 @@ h1 em, h2 em { color: #c67f67; font-weight: 400; }
   gap: 8px;
   margin-top: 4px;
   color: #f0c078;
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 600;
   text-decoration: none;
 }
 .site-footer__operator {
   margin-top: 2px;
   color: #99aca1;
-  font-size: 9px;
+  font-size: 12px;
 }
 .site-footer__bottom {
   max-width: 1160px;
@@ -1578,7 +1578,7 @@ h1 em, h2 em { color: #c67f67; font-weight: 400; }
   margin: 0 auto;
   border-top: 1px solid rgba(231, 239, 231, .19);
   color: #99aca1;
-  font-size: 9px;
+  font-size: 12px;
 }
 
 .legal-page {
@@ -3625,13 +3625,13 @@ h1 em, h2 em { color: #c67f67; font-weight: 400; }
     z-index: 10;
     bottom: calc(8px + env(safe-area-inset-bottom));
     left: 50%;
-    width: min(360px, calc(100% - 52px));
+    width: min(440px, calc(100% - 24px));
     display: grid;
     grid-template-columns: repeat(5, minmax(0, 1fr));
-    padding: 4px;
+    padding: 6px;
     transform: translateX(-50%);
     border: 1px solid rgba(255, 255, 255, .78);
-    border-radius: 29px;
+    border-radius: 34px;
     background: rgba(255, 254, 250, .76);
     box-shadow:
       0 10px 32px rgba(31, 42, 40, .15),
@@ -3639,10 +3639,12 @@ h1 em, h2 em { color: #c67f67; font-weight: 400; }
     -webkit-backdrop-filter: blur(24px) saturate(1.35);
     backdrop-filter: blur(24px) saturate(1.35);
   }
-  .mobile-bottom-nav__link { min-width: 0; min-height: 48px; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 2px; border-radius: 25px; color: #7b8982; font-size: 9px; font-weight: 600; text-decoration: none; transition: color .18s ease, background-color .18s ease; }
+  .mobile-bottom-nav__link { min-width: 0; min-height: 56px; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 4px; border-radius: 29px; color: #7b8982; font-size: 11px; font-weight: 600; text-decoration: none; transition: color .18s ease, background-color .18s ease; }
   .mobile-bottom-nav__link.is-active { color: var(--forest); background: rgba(23, 61, 54, .08); }
   .mobile-bottom-nav__link.is-active svg { color: #d98368; }
-  .mobile-bottom-nav__icon { position: relative; width: 21px; height: 21px; display: block; }
+  .mobile-bottom-nav__link > svg,
+  .mobile-bottom-nav__icon > svg { width: 24px; height: 24px; }
+  .mobile-bottom-nav__icon { position: relative; width: 24px; height: 24px; display: block; }
   .mobile-bottom-nav__badge { position: absolute; top: -4px; right: -12px; min-width: 16px; padding: 2px 4px; border-radius: 9px; color: #fffefa; background: #a44c42; font-size: 8px; line-height: 1.2; text-align: center; }
   .site-shell--mobile-chrome-hidden .site-header { transform: translateY(-105%); }
   .site-shell--mobile-chrome-hidden .mobile-bottom-nav {
@@ -4367,7 +4369,7 @@ h1 em, h2 em { color: #c67f67; font-weight: 400; }
 }
 
 .site-shell--registration .account-page--registration {
-  width: min(100%, 1480px);
+  width: 100%;
   max-width: none;
   min-height: 100vh;
   display: grid;
@@ -4569,7 +4571,7 @@ h1 em, h2 em { color: #c67f67; font-weight: 400; }
 .site-shell--auth-splash .account-page--auth-splash {
   position: relative;
   isolation: isolate;
-  width: min(100%, 1480px);
+  width: 100%;
   max-width: none;
   min-height: calc(100vh - 82px);
   display: grid;
@@ -4750,7 +4752,7 @@ h1 em, h2 em { color: #c67f67; font-weight: 400; }
 
 .site-shell--auth-splash .auth-form--splash {
   width: 100%;
-  max-width: none;
+  max-width: 500px;
   padding: clamp(24px, 2.4vw, 35px);
   border: 1px solid rgba(229, 225, 216, .95);
   border-radius: 12px;

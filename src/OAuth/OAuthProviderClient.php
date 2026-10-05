@@ -53,7 +53,7 @@ final class OAuthProviderClient
             'client_id' => $this->appleClientId,
             'redirect_uri' => $this->appleRedirectUri,
             'response_type' => 'code',
-            'response_mode' => 'query',
+            'response_mode' => 'form_post',
             'scope' => 'name email',
             'state' => $state,
             'nonce' => $nonce,

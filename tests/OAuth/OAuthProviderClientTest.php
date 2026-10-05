@@ -11,6 +11,27 @@ use Symfony\Component\HttpClient\Response\MockResponse;
 
 final class OAuthProviderClientTest extends TestCase
 {
+    public function testAppleAuthorizationUsesFormPostForNameAndEmailScopes(): void
+    {
+        $client = new OAuthProviderClient(
+            new MockHttpClient(),
+            '',
+            '',
+            '',
+            'apple-services-id',
+            'WAVE-TEAM',
+            'APPLE-KEY',
+            'private-key',
+            'https://wave.example/api/auth/oauth/apple/callback',
+        );
+
+        parse_str((string) parse_url($client->authorizationUrl('apple', 'state', 'nonce'), PHP_URL_QUERY), $query);
+
+        self::assertSame('form_post', $query['response_mode']);
+        self::assertSame('name email', $query['scope']);
+        self::assertSame('https://wave.example/api/auth/oauth/apple/callback', $query['redirect_uri']);
+    }
+
     public function testGoogleIdentityTokenIsVerifiedBeforeReturningIdentity(): void
     {
         [$privateKey, $jwk] = $this->rsaKeys();

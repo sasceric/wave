@@ -1,5 +1,12 @@
 DirectoryIndex index.php
 
+<IfModule mod_headers.c>
+    <FilesMatch "^(index\.html|sw\.js|sw\.mjs|registerSW\.js|manifest\.webmanifest)$">
+        Header set Cache-Control "no-cache, must-revalidate, max-age=0"
+        Header set Expires "0"
+    </FilesMatch>
+</IfModule>
+
 <IfModule mod_rewrite.c>
     RewriteEngine On
     RewriteCond %{REQUEST_FILENAME} !-f

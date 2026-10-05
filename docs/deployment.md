@@ -39,8 +39,10 @@ pointing to this repository and a `main` branch.
   `APP_ENV=prod`, `APP_DEBUG=0`, a unique `APP_SECRET`, `DATABASE_URL`, and
   the production mail, public-origin, Mercure, OAuth, and Web Push settings
   that are enabled for the site. Keep secrets out of GitHub workflow YAML and
-  the repository.
-- Write access for the PHP process to `var/cache/` and `var/media/`.
+  the repository. `LOG_RETENTION_DAYS` defaults to `14`; it controls how many
+  daily application and deprecation log files Monolog retains in `var/log/`.
+- Write access for the PHP process to `var/cache/`, `var/log/`, and
+  `var/media/`.
 
 ## Deployment steps
 
@@ -52,10 +54,51 @@ It verifies that the active Node version is 22.12+, then executes `npm ci` and
 the Vue/PWA build directly from the deployment user's `PATH`. It then applies
 Doctrine migrations with `php8.4` and clears the production cache with
 `php8.4`. Each deployment runs serially and stops at the first failed command.
-The Vue build preserves Symfony's `public/index.php`. The GA4 measurement ID
-is configured in the tracked `frontend/.env.production` file and loaded only
-after Analytics consent; setup and verification steps are in the README's
-Search engine metadata section.
+The Vue build preserves Symfony's `public/index.php`. The public GA4 measurement
+ID is configured in `frontend/.env.production` on the production server and is
+embedded during the Vite build; changing that file alone does not update the
+served bundle. Google Analytics loads only after Analytics consent; setup and
+verification steps are in the README's Search engine metadata section.
+
+The app shell and service-worker scripts must be revalidated rather than cached
+as immutable assets. Apache deployments get `Cache-Control: no-cache,
+must-revalidate, max-age=0` from `public/.htaccess` for `index.html`, `sw.js`,
+`sw.mjs`, `registerSW.js`, and `manifest.webmanifest`. If Nginx serves or
+overrides those files, configure the equivalent response headers there and
+disable any long `expires` rule for those paths. For example, in the domain's
+Nginx server block, exact-match locations can override a generic static-file
+cache rule:
+
+```nginx
+location = /index.html {
+    expires off;
+    add_header Cache-Control "no-cache, must-revalidate, max-age=0" always;
+}
+
+location = /sw.js {
+    expires off;
+    add_header Cache-Control "no-cache, must-revalidate, max-age=0" always;
+}
+
+location = /sw.mjs {
+    expires off;
+    add_header Cache-Control "no-cache, must-revalidate, max-age=0" always;
+}
+
+location = /registerSW.js {
+    expires off;
+    add_header Cache-Control "no-cache, must-revalidate, max-age=0" always;
+}
+
+location = /manifest.webmanifest {
+    expires off;
+    add_header Cache-Control "no-cache, must-revalidate, max-age=0" always;
+}
+```
+
+Verify the live response headers after changing Nginx. In particular,
+`/index.html` and `/sw.js` must not return a long `max-age`. Hashed files under
+`public/build/assets/` can retain long-lived immutable caching.
 
 After configuring the web server, verify that
 `https://wave.ba/api/health` returns JSON such as
@@ -63,6 +106,13 @@ After configuring the web server, verify that
 `/api/health` returns the hosting provider's HTML 404 page, PHP is running but
 the web server is not applying the front-controller rewrite. Fix the rewrite
 before troubleshooting API routes or the database.
+
+Symfony application logs are written to daily files under `var/log/`, separated
+by environment (`dev-YYYY-MM-DD.log` and `prod-YYYY-MM-DD.log`). Production
+application warnings and errors, including OAuth callback failures, are written
+to the `prod` log. The rotating handler removes older files when it rotates;
+set a positive `LOG_RETENTION_DAYS` value in `.env.local` or the server
+environment to change the retention window.
 
 The historical migrations were generated with SQLite-specific SQL. The
 compatibility layer adapts those statements and table changes for PostgreSQL,

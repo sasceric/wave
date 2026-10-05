@@ -213,7 +213,7 @@ Configure optional Google integrations without committing local settings:
 
 | Setting | Location | Purpose |
 | --- | --- | --- |
-| `VITE_GA_MEASUREMENT_ID` | `frontend/.env.production` for production builds; `frontend/.env.local` to override locally | GA4 measurement ID (`G-...`). Google Analytics is not loaded until a visitor explicitly opts in through Cookie preferences. |
+| `VITE_GA_MEASUREMENT_ID` | `frontend/.env.production` on the production server; `frontend/.env.local` for local builds | GA4 measurement ID (`G-...`). It is embedded at Vite build time. Google Analytics is not loaded until a visitor explicitly opts in through Cookie preferences. |
 | `GOOGLE_SITE_VERIFICATION` | root `.env.local` for local Symfony; deployment environment for production | Google Search Console HTML meta-tag verification token. |
 
 Example local settings:
@@ -236,7 +236,7 @@ The Vite build also accepts `VITE_GOOGLE_SITE_VERIFICATION` if the frontend is s
 2. Open **Admin** (gear, lower left). Choose **Create account** if you do not have an Analytics account yet, name it `Wave`, then choose **Create property**. Name the property `Wave`, set the reporting time zone to Bosnia and Herzegovina and currency to BAM, and complete the business details.
 3. Under **Data collection and modification → Data streams**, select **Add stream → Web**. Enter `https://wave.ba` as the website URL and `Wave website` as the stream name, then create the stream.
 4. Open the new web stream and copy its **Measurement ID** (format `G-XXXXXXXXXX`). GA4 does not require separate domain verification to collect website data.
-5. The Measurement ID is configured for production in `frontend/.env.production`; replace its value with the copied ID, then deploy the change. To override it for a local build, put `VITE_GA_MEASUREMENT_ID="G-XXXXXXXXXX"` in `frontend/.env.local` and rebuild.
+5. Set `VITE_GA_MEASUREMENT_ID="G-XXXXXXXXXX"` in `frontend/.env.production` on the production server, then rebuild the frontend. For local builds, use `frontend/.env.local`. Changing either file does not update the live tag until Vite rebuilds the bundle.
 6. In the web stream's **Enhanced measurement** settings, turn off **Page views → Page changes based on browser history events**. Wave sends its own page-view events for public SPA routes; leaving this automatic option enabled can count navigations twice. Analytics does not load or send events until a visitor opts in using the cookie banner.
 7. After deployment, open `https://wave.ba` in a private browser window, accept Analytics in the cookie banner, then visit a few public pages. In Analytics, open **Reports → Realtime** and check that the visit and page views appear. If not, check the browser Network panel for `googletagmanager.com/gtag/js?id=G-...` and confirm analytics consent was accepted. Use [Google Tag Assistant](https://tagassistant.google.com/) to inspect the tag if needed.
 
@@ -259,7 +259,7 @@ Google and Apple buttons are always visible on the login and registration screen
 | `APPLE_OAUTH_PRIVATE_KEY` | Apple | Contents of the `.p8` signing key |
 | `APPLE_OAUTH_REDIRECT_URI` | Apple | Exact registered callback URL |
 
-Register callbacks at `https://your-domain/api/auth/oauth/google/callback` and `https://your-domain/api/auth/oauth/apple/callback`. For local development, use the exact Symfony origin and callback path (for example, `http://127.0.0.1:8000/api/auth/oauth/google/callback`). Apple client assertions are signed server-side from the private key and short-lived; Google and Apple ID tokens are checked for signature, issuer, audience, expiry, nonce, and verified email. The provider identity is stored separately from the Wave email/password login. Existing accounts are linked only after the provider confirms the matching email address. New social accounts retain the normal profile requirements and moderation queue.
+Register production callbacks at `https://wave.ba/api/auth/oauth/google/callback` and `https://wave.ba/api/auth/oauth/apple/callback`; enter the exact same URLs in the server's `GOOGLE_OAUTH_REDIRECT_URI` and `APPLE_OAUTH_REDIRECT_URI`. For local development, use the exact Symfony origin and callback path (for example, `http://127.0.0.1:8000/api/auth/oauth/google/callback`). Apple uses `response_mode=form_post` for its name and email scopes, so the production session cookie is configured with `SameSite=None; Secure` to preserve the OAuth state on Apple's cross-site POST callback. Apple client assertions are signed server-side from the private key and short-lived; Google and Apple ID tokens are checked for signature, issuer, audience, expiry, nonce, and verified email. The provider identity is stored separately from the Wave email/password login. Existing accounts are linked only after the provider confirms the matching email address. New social accounts retain the normal profile requirements and moderation queue.
 
 #### Google setup
 
@@ -289,6 +289,15 @@ paste-the-key-body-here
 -----END PRIVATE KEY-----"
 APPLE_OAUTH_REDIRECT_URI="https://your-domain/api/auth/oauth/apple/callback"
 ```
+
+For the production server's root `.env.local`, set both redirect URIs to the exact production callbacks registered with Google and Apple:
+
+```dotenv
+GOOGLE_OAUTH_REDIRECT_URI="https://wave.ba/api/auth/oauth/google/callback"
+APPLE_OAUTH_REDIRECT_URI="https://wave.ba/api/auth/oauth/apple/callback"
+```
+
+The Google start URL must contain that production Google callback as `redirect_uri`; if it still shows `http://127.0.0.1:8000/...`, the production environment value is wrong. Clear the production cache after changing server environment settings with `php8.4 bin/console cache:clear`.
 
 Use the same callback URL in the provider console and Wave configuration. Restart Symfony after changing local environment values. Check `GET /api/auth/oauth/providers`; it should report `true` for each configured provider, and those buttons will then be enabled.
 

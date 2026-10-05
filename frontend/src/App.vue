@@ -512,7 +512,7 @@ async function signOut() {
     await apiRequest('/auth/logout', { method: 'POST', body: {} })
     setCurrentUser(null)
     authMenuOpen.value = false
-    await router.push({
+    await router.replace({
       path: localizedPath('account', locale.value),
       query: { mode: 'login' },
     })

@@ -20,7 +20,7 @@ import CampaignCard from '../components/campaigns/CampaignCard.vue'
 import DirectoryPagination from '../components/shared/DirectoryPagination.vue'
 import { apiGet, apiRequest, formatDate, formatMoney } from '../lib/api'
 import { useMarketplaceCatalog } from '../composables/useMarketplaceCatalog'
-import { setCurrentUser } from '../composables/useCurrentUser'
+import { currentUser, setCurrentUser } from '../composables/useCurrentUser'
 import { useCampaignBookmarks } from '../composables/useCampaignBookmarks'
 import { CURRENCIES, SOCIAL_PLATFORMS } from '../lib/marketplace'
 import { formatInternationalPhoneNumber } from '../lib/phoneNumbers'
@@ -112,6 +112,13 @@ onBeforeUnmount(() => {
 watch(catalogError, (value) => {
   if (value) {
     error.value = value
+  }
+})
+
+watch(currentUser, (authenticatedUser) => {
+  if (!authenticatedUser) {
+    user.value = null
+    profile.value = null
   }
 })
 

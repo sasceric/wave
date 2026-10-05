@@ -87,7 +87,7 @@ final class OAuthController extends AbstractController
         }
     }
 
-    #[Route('/api/auth/oauth/{provider}/callback', name: 'api_auth_oauth_callback', methods: ['GET'])]
+    #[Route('/api/auth/oauth/{provider}/callback', name: 'api_auth_oauth_callback', methods: ['GET', 'POST'])]
     public function callback(
         string $provider,
         Request $request,
@@ -99,7 +99,8 @@ final class OAuthController extends AbstractController
     ): RedirectResponse {
         $flowKey = 'wave_oauth_flow_'.$provider;
         $flow = $request->getSession()->get($flowKey);
-        $state = $request->query->getString('state');
+        $parameters = $request->isMethod('POST') ? $request->request : $request->query;
+        $state = $parameters->getString('state');
         $nonce = is_array($flow) && is_string($flow['nonce'] ?? null) ? $flow['nonce'] : null;
         if (!in_array($provider, ['google', 'apple'], true)
             || !is_array($flow)
@@ -115,8 +116,8 @@ final class OAuthController extends AbstractController
 
         $locale = $this->flowLocale($flow);
         $mode = $this->flowMode($flow);
-        $code = $request->query->getString('code');
-        if ($request->query->has('error') || $code === '' || mb_strlen($code) > 4096) {
+        $code = $parameters->getString('code');
+        if ($parameters->has('error') || $code === '' || mb_strlen($code) > 4096) {
             return $this->accountRedirect($localizedRoutesFile, $locale, $mode, 'error');
         }
 
@@ -129,6 +130,16 @@ final class OAuthController extends AbstractController
             ]);
 
             return $this->accountRedirect($localizedRoutesFile, $locale, $mode, 'error');
+        }
+
+        if ($provider === 'apple' && $request->isMethod('POST')) {
+            $appleUser = json_decode($parameters->getString('user'), true);
+            if (is_array($appleUser) && is_array($appleUser['name'] ?? null)) {
+                $givenName = $appleUser['name']['firstName'] ?? null;
+                $familyName = $appleUser['name']['lastName'] ?? null;
+                $identity['givenName'] = is_string($givenName) ? mb_substr(trim($givenName), 0, 60) : null;
+                $identity['familyName'] = is_string($familyName) ? mb_substr(trim($familyName), 0, 60) : null;
+            }
         }
 
         $identityRecord = $entityManager->getRepository(OAuthIdentity::class)->findOneBy([
