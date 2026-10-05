@@ -111,7 +111,11 @@ final class MediaController
             $entityManager->persist($folder);
         }
 
-        $stored = $storage->store($file, $folder, $user);
+        try {
+            $stored = $storage->store($file, $folder, $user);
+        } catch (\InvalidArgumentException) {
+            return new JsonResponse(['error' => ApiMessages::get('invalid_media', $locale)], 400);
+        }
         $originalName = preg_replace('~[\\\\/]+~', '_', basename($file->getClientOriginalName())) ?? 'image';
         $media = new Media(
             $folder,

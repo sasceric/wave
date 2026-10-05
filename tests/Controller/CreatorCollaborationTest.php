@@ -381,10 +381,7 @@ final class CreatorCollaborationTest extends WebTestCase
     {
         $path = tempnam(sys_get_temp_dir(), 'wave-upload-');
         self::assertNotFalse($path);
-        file_put_contents(
-            $path,
-            base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/r6sAAAAASUVORK5CYII=', true),
-        );
+        imagepng(imagecreatetruecolor(1, 1), $path);
         $this->client->request(
             'POST',
             '/api/media?folder='.$folder.'&locale=bs',

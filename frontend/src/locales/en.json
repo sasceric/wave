@@ -840,7 +840,7 @@
     "mediaUrl": "YouTube or Vimeo URL",
     "mediaUpload": "Upload image",
     "mediaUploading": "Uploading image…",
-    "mediaUploadHint": "JPEG, PNG, or WebP, up to 10 MB. Images are stored in your Wave media library.",
+    "mediaUploadHint": "JPEG, PNG, or WebP, up to 10 MB. Images are saved as WebP, up to 600 px wide, keeping their proportions without cropping.",
     "selectCategories": "Select up to 5 categories",
     "searchCategories": "Search categories",
     "noCategoriesFound": "No categories match your search.",

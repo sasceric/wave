@@ -841,7 +841,7 @@
     "mediaUrl": "Povezava YouTube ali Vimeo",
     "mediaUpload": "Naloži sliko",
     "mediaUploading": "Nalaganje slike…",
-    "mediaUploadHint": "JPEG, PNG ali WebP, do 10 MB. Slike so shranjene v tvoji Waveovi medijski knjižnici.",
+    "mediaUploadHint": "JPEG, PNG ali WebP, do 10 MB. Slike se shranijo kot WebP, široke največ 600 px, z ohranjenim razmerjem stranic in brez obrezovanja.",
     "selectCategories": "Izberi do 5 področij",
     "searchCategories": "Išči področja",
     "noCategoriesFound": "Ni področij, ki bi ustrezala iskanju.",

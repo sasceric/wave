@@ -28,6 +28,15 @@ pointing to this repository and a `main` branch.
 - PHP 8.4 available as `php8.4`, with the extensions required by
   `composer.json`, Composer, and Node.js 22.12+ with npm available directly on
   the SSH deployment user's `PATH`.
+- PHP GD with JPEG, PNG and WebP support, the `IMG_WEBP_LOSSLESS` constant,
+  and EXIF enabled for both the deployment CLI and the website's PHP-FPM
+  version. Composer checks the GD/EXIF extensions; the GD build must also
+  include WebP encoding support. New avatars, portfolio images, company logos
+  and campaign covers are saved as lossless WebP with a maximum width of
+  600px, proportional height and no cropping or upscaling. JPEG EXIF rotation
+  is applied before resizing; transparency is preserved. Existing uploads
+  retain their original files. No new environment variables or database
+  migrations are needed for this processing change.
 - A PHP-capable web server configured with document root
   `/home/steelcodeweb/web/wave.ba/public_html/public`. Do not expose the
   repository root as the web document root. Apache uses the checked-in
@@ -53,6 +62,27 @@ pointing to this repository and a `main` branch.
   authentication.
 
 Set `WAVE_NOTIFICATIONS_ENABLED=true` explicitly for production delivery. Configure matching Mercure issuer/JWT values and the existing production Web Push VAPID pair. The [server notification checklist](server-notifications.md) contains exact values, environment-refresh commands and verification steps; [Mercure server setup](mercure-server-setup.md) contains the full Hub/proxy configuration.
+
+Before deploying image processing, check the CLI capabilities:
+
+```bash
+php8.4 -r 'var_export(["gd" => extension_loaded("gd"), "exif" => extension_loaded("exif"), "jpeg" => function_exists("gd_info") && (gd_info()["JPEG Support"] ?? false), "png" => function_exists("gd_info") && (gd_info()["PNG Support"] ?? false), "webp" => function_exists("gd_info") && (gd_info()["WebP Support"] ?? false), "lossless" => defined("IMG_WEBP_LOSSLESS")]);'
+```
+
+All entries must be `true`. Have the hosting provider enable missing extensions
+for PHP 8.4 CLI and PHP-FPM and reload PHP-FPM when its configuration changes.
+Once those capabilities are present, the normal push/deploy workflow is enough.
+Keep `upload_max_filesize` at least `10M` and `post_max_size` above `10M`.
+Use a PHP-FPM `memory_limit` of at least `256M` for typical 12-megapixel phone
+photos; higher-resolution sources may require more processing memory.
+Uploads above 64 megapixels, images exceeding available PHP processing memory,
+and proportional outputs taller than WebP's 16,383px limit are rejected before
+decoding rather than cropped. A 10 MB compressed file can still require much
+more memory when decoded. Animated WebP uploads are not supported by GD and
+are rejected. After deployment, upload a large JPEG/PNG and verify that its
+`/api/media/{id}/file` response is `image/webp`, at most 600px wide and uncropped.
+See [PHP's WebP constants](https://www.php.net/manual/en/image.constants.php)
+for the lossless encoding mode; resizing itself still reduces pixel resolution.
 
 ## Chat history and seen receipts
 

@@ -198,6 +198,55 @@ final class MarketplaceWorkflowTest extends WebTestCase
         self::assertResponseStatusCodeSame(401);
     }
 
+    public function testEveryUploadFolderStoresResizedWebpAndRejectsBrokenImages(): void
+    {
+        $entityManager = static::getContainer()->get(EntityManagerInterface::class);
+        $creator = new User('webp-creator@example.test', 'ROLE_CREATOR');
+        $company = new User('webp-company@example.test', 'ROLE_COMPANY');
+        foreach ([$creator, $company] as $user) {
+            $user->setPassword('unused-test-hash');
+            $entityManager->persist($user);
+        }
+        $entityManager->flush();
+
+        foreach ([[$creator, 'creator-avatar'], [$creator, 'creator-portfolio'], [$company, 'company-logo'], [$company, 'campaign-cover']] as [$owner, $folder]) {
+            $this->client->loginUser($owner, 'main');
+            $csrf = $this->csrfToken();
+            $path = tempnam(sys_get_temp_dir(), 'wave-upload-');
+            self::assertNotFalse($path);
+            imagepng(imagecreatetruecolor(1200, 800), $path);
+            try {
+                $this->client->request('POST', '/api/media?folder='.$folder.'&locale=en', [], [
+                    'file' => new UploadedFile($path, 'large.png', 'image/png', null, true),
+                ], ['HTTP_X_CSRF_TOKEN' => $csrf, 'HTTP_ACCEPT' => 'application/json']);
+                self::assertResponseStatusCodeSame(201);
+                $uploaded = $this->payload()['data'];
+                $this->uploadedMediaIds[] = $uploaded['id'];
+                self::assertSame('image/webp', $uploaded['mimeType']);
+                $entityManager = static::getContainer()->get(EntityManagerInterface::class);
+                $media = $entityManager->find(Media::class, $uploaded['id']);
+                $storage = static::getContainer()->get(\App\Service\MediaStorage::class);
+                $storedPath = $storage->absolutePath($media->getStoragePath());
+                self::assertSame([600, 400, IMAGETYPE_WEBP], array_slice(getimagesize($storedPath), 0, 3));
+                self::assertSame(filesize($storedPath), $uploaded['fileSize']);
+                $this->client->request('GET', $uploaded['url']);
+                self::assertResponseIsSuccessful();
+                self::assertSame('image/webp', $this->client->getResponse()->headers->get('Content-Type'));
+
+                file_put_contents($path, substr(file_get_contents($path), 0, 33));
+                $this->client->request('POST', '/api/media?folder='.$folder.'&locale=en', [], [
+                    'file' => new UploadedFile($path, 'broken.png', 'image/png', null, true),
+                ], ['HTTP_X_CSRF_TOKEN' => $csrf, 'HTTP_ACCEPT' => 'application/json']);
+                self::assertResponseStatusCodeSame(400);
+                self::assertArrayHasKey('error', $this->payload());
+            } finally {
+                unlink($path);
+            }
+        }
+        $entityManager = static::getContainer()->get(EntityManagerInterface::class);
+        self::assertSame(4, $entityManager->getRepository(Media::class)->count([]));
+    }
+
     public function testUploadedMediaIsOwnedAndCreatorProfileStoresMediaReferences(): void
     {
         $entityManager = static::getContainer()->get(EntityManagerInterface::class);
@@ -266,7 +315,7 @@ final class MarketplaceWorkflowTest extends WebTestCase
 
         $this->client->request('GET', $portfolioItem['url']);
         self::assertResponseIsSuccessful();
-        self::assertSame('image/png', $this->client->getResponse()->headers->get('Content-Type'));
+        self::assertSame('image/webp', $this->client->getResponse()->headers->get('Content-Type'));
 
         $privateUpload = $this->uploadImage('creator-portfolio', $csrf, 'private.png');
         self::assertResponseStatusCodeSame(201);
@@ -1290,10 +1339,7 @@ final class MarketplaceWorkflowTest extends WebTestCase
     {
         $path = tempnam(sys_get_temp_dir(), 'wave-upload-');
         self::assertNotFalse($path);
-        file_put_contents(
-            $path,
-            base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/r6sAAAAASUVORK5CYII=', true),
-        );
+        imagepng(imagecreatetruecolor(1, 1), $path);
         $this->client->request(
             'POST',
             '/api/media?folder='.$folder.'&locale=bs',

@@ -27,6 +27,7 @@ Declared dependencies: PHP 8.4+, Symfony 8.1, Doctrine ORM 3, Vue 3, Vue Router,
 | Reusable UI | `frontend/src/components/shared/`, domain component directories |
 | Session and shared frontend state | `frontend/src/composables/useCurrentUser.js` and other composables |
 | API requests, CSRF, uploads, formatting | `frontend/src/lib/api.js` |
+| Image uploads and resizing | `MediaController.php`, `src/Service/MediaStorage.php`, `ImageUploadProcessor.php`; GD/EXIF requirements in `docs/deployment.md` |
 | Visual styles | `frontend/src/wave.css`, existing component styles |
 | Localized navigation | `config/localized_routes.json`, `frontend/src/routePaths.js`, `frontend/src/router.js` |
 | Translations | `frontend/src/locales/`, `src/Localization/` |
@@ -47,6 +48,7 @@ Controller filenames in this table are under `src/Controller/Api/` unless a full
 - The PWA caches static app assets, not private API content. Preserve the service worker's API exclusions.
 - Supported frontend locales are `bs` (default), `hr`, `sr` (Latin), `sl`, `en`, and `cnr` (Montenegrin). Older documentation lists only five; the current `i18n.js` loads all six. Keep new interface copy in the catalogs and update localized routes consistently when adding pages.
 - Reuse existing UI components and design styles before adding new patterns.
+- New JPEG/PNG/WebP uploads are processed centrally into lossless WebP, at most 600px wide, with proportional height, no cropping and no upscaling. Preserve alpha and apply JPEG EXIF orientation before measuring. Record the encoded MIME type and byte size. Existing media stays unchanged; preserve media ownership and public visibility checks.
 - Schema changes need Doctrine migrations. Historical SQLite migrations have a PostgreSQL compatibility layer in `src/Migration/`; avoid manual schema baselining.
 - Edit source assets in `frontend/public/` and frontend source files, then rebuild. The Vite build writes into `public/` and preserves Symfony's entry point; generated bundles are not the place to edit features.
 

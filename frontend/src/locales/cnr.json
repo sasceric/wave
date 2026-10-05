@@ -841,7 +841,7 @@
     "mediaUrl": "YouTube ili Vimeo link",
     "mediaUpload": "Otpremi sliku",
     "mediaUploading": "Otpremanje slike…",
-    "mediaUploadHint": "JPEG, PNG ili WebP, do 10 MB. Slike se čuvaju u tvojoj Wave biblioteci.",
+    "mediaUploadHint": "JPEG, PNG ili WebP, do 10 MB. Slike se čuvaju kao WebP, širine do 600 px, uz očuvane proporcije i bez izrezivanja.",
     "selectCategories": "Izaberi do 5 oblasti",
     "searchCategories": "Pretraži oblasti",
     "noCategoriesFound": "Nema oblasti koje odgovaraju pretrazi.",
