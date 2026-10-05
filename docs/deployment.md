@@ -30,7 +30,11 @@ pointing to this repository and a `main` branch.
   the SSH deployment user's `PATH`.
 - A PHP-capable web server configured with document root
   `/home/steelcodeweb/web/wave.ba/public_html/public`. Do not expose the
-  repository root as the web document root.
+  repository root as the web document root. Apache uses the checked-in
+  `public/.htaccess` front-controller rewrite. Nginx must route missing files
+  to `index.php` (for example, `try_files $uri /index.php$is_args$args;` in
+  the existing request location); keep the existing PHP handler for
+  `index.php`.
 - A production environment file or server environment variables with
   `APP_ENV=prod`, `APP_DEBUG=0`, a unique `APP_SECRET`, `DATABASE_URL`, and
   the production mail, public-origin, Mercure, OAuth, and Web Push settings
@@ -48,7 +52,17 @@ It verifies that the active Node version is 22.12+, then executes `npm ci` and
 the Vue/PWA build directly from the deployment user's `PATH`. It then applies
 Doctrine migrations with `php8.4` and clears the production cache with
 `php8.4`. Each deployment runs serially and stops at the first failed command.
-The Vue build preserves Symfony's `public/index.php`.
+The Vue build preserves Symfony's `public/index.php`. The GA4 measurement ID
+is configured in the tracked `frontend/.env.production` file and loaded only
+after Analytics consent; setup and verification steps are in the README's
+Search engine metadata section.
+
+After configuring the web server, verify that
+`https://wave.ba/api/health` returns JSON such as
+`{"status":"ok","service":"wave-api"}`. If `/index.php/api/health` works but
+`/api/health` returns the hosting provider's HTML 404 page, PHP is running but
+the web server is not applying the front-controller rewrite. Fix the rewrite
+before troubleshooting API routes or the database.
 
 The historical migrations were generated with SQLite-specific SQL. The
 compatibility layer adapts those statements and table changes for PostgreSQL,

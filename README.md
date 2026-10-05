@@ -213,13 +213,13 @@ Configure optional Google integrations without committing local settings:
 
 | Setting | Location | Purpose |
 | --- | --- | --- |
-| `VITE_GA_MEASUREMENT_ID` | `frontend/.env.local` for local builds; frontend build environment for deployment | GA4 measurement ID (`G-...`). Google Analytics is not loaded until a visitor explicitly opts in through Cookie preferences. |
+| `VITE_GA_MEASUREMENT_ID` | `frontend/.env.production` for production builds; `frontend/.env.local` to override locally | GA4 measurement ID (`G-...`). Google Analytics is not loaded until a visitor explicitly opts in through Cookie preferences. |
 | `GOOGLE_SITE_VERIFICATION` | root `.env.local` for local Symfony; deployment environment for production | Google Search Console HTML meta-tag verification token. |
 
 Example local settings:
 
 ```dotenv
-# frontend/.env.local
+# frontend/.env.production
 VITE_GA_MEASUREMENT_ID="G-XXXXXXXXXX"
 ```
 
@@ -229,6 +229,18 @@ GOOGLE_SITE_VERIFICATION="your-search-console-verification-token"
 ```
 
 The Vite build also accepts `VITE_GOOGLE_SITE_VERIFICATION` if the frontend is served directly without Symfony. Search Console DNS verification can be used instead and does not require this setting. Analytics consent is stored separately from the earlier cookie-notice dismissal, can be changed from Cookie preferences, and is not enabled by default.
+
+#### Create and connect a Google Analytics 4 property
+
+1. Sign in at [Google Analytics](https://analytics.google.com/) with the Google account that should own Wave's analytics.
+2. Open **Admin** (gear, lower left). Choose **Create account** if you do not have an Analytics account yet, name it `Wave`, then choose **Create property**. Name the property `Wave`, set the reporting time zone to Bosnia and Herzegovina and currency to BAM, and complete the business details.
+3. Under **Data collection and modification → Data streams**, select **Add stream → Web**. Enter `https://wave.ba` as the website URL and `Wave website` as the stream name, then create the stream.
+4. Open the new web stream and copy its **Measurement ID** (format `G-XXXXXXXXXX`). GA4 does not require separate domain verification to collect website data.
+5. The Measurement ID is configured for production in `frontend/.env.production`; replace its value with the copied ID, then deploy the change. To override it for a local build, put `VITE_GA_MEASUREMENT_ID="G-XXXXXXXXXX"` in `frontend/.env.local` and rebuild.
+6. In the web stream's **Enhanced measurement** settings, turn off **Page views → Page changes based on browser history events**. Wave sends its own page-view events for public SPA routes; leaving this automatic option enabled can count navigations twice. Analytics does not load or send events until a visitor opts in using the cookie banner.
+7. After deployment, open `https://wave.ba` in a private browser window, accept Analytics in the cookie banner, then visit a few public pages. In Analytics, open **Reports → Realtime** and check that the visit and page views appear. If not, check the browser Network panel for `googletagmanager.com/gtag/js?id=G-...` and confirm analytics consent was accepted. Use [Google Tag Assistant](https://tagassistant.google.com/) to inspect the tag if needed.
+
+Google Search Console is separate and does require property ownership verification. Add a **Domain** property in [Search Console](https://search.google.com/search-console), verify it by adding Google's DNS TXT record at the domain's DNS provider, then submit `https://wave.ba/sitemap.xml`. To link verified Search Console data into GA4, use **GA4 Admin → Product links → Search Console links → Link** and select the `wave.ba` Search Console property and Wave web stream.
 
 Registration and login use hashed passwords, rate limits, and same-origin server sessions with HTTP-only, same-site cookies and CSRF validation on all writes. Obtain the current CSRF token from `/api/auth/csrf` and send it in the `X-CSRF-Token` header. Email/password registrations must verify their email before the admin can approve the account; verified accounts still wait for admin approval before participating in marketplace actions. The registration email explains both steps, and an approval email is sent when an admin approves the account. Google and Apple registration accept the provider's verified email, still collect all required creator/company profile fields, send a registration-pending email, and remain unapproved until an admin reviews them. Profile editing and reading remain available while approval is pending. Verification links expire after 24 hours, reset links after one hour, and both are single-use. Password-reset requests return the same response whether or not an account exists.
 
