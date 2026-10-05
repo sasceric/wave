@@ -50,6 +50,11 @@ The workflow updates the checkout, runs Composer explicitly with PHP 8.4, and
 sets `COMPOSER_ALLOW_SUPERUSER=1` so Composer does not disable Symfony Flex
 when the SSH login is root. Keep the deployment checkout and locked
 dependencies trusted; using a dedicated non-root deployment user is safer.
+The deploy step preserves server-local frontend environment files such as
+`frontend/.env.production`. If `composer.lock` has local edits, it saves a patch
+under the ignored `var/deploy-backups/` directory and restores the tracked
+lockfile before pulling; production dependency changes belong in Git, not in a
+server-side `composer update`.
 It verifies that the active Node version is 22.12+, then executes `npm ci` and
 the Vue/PWA build directly from the deployment user's `PATH`. It then applies
 Doctrine migrations with `php8.4` and clears the production cache with
