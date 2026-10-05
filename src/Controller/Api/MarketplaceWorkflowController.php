@@ -20,6 +20,7 @@ use App\Localization\LocaleContext;
 use App\Service\NotificationDelivery;
 use DateTimeImmutable;
 use Doctrine\ORM\EntityManagerInterface;
+use SortDirection;
 use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -366,7 +367,7 @@ final class MarketplaceWorkflowController
             ->join('offer.application', 'application')
             ->where('application.creator = :creator')
             ->setParameter('creator', $creator)
-            ->orderBy('offer.createdAt', 'DESC')
+            ->orderBy('offer.createdAt', SortDirection::Descending)
             ->getQuery()
             ->getResult();
 

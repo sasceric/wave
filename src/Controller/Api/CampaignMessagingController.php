@@ -20,6 +20,7 @@ use App\Localization\LocaleContext;
 use App\Service\NotificationDelivery;
 use DateTimeImmutable;
 use Doctrine\ORM\EntityManagerInterface;
+use SortDirection;
 use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -52,7 +53,7 @@ final class CampaignMessagingController
                 ->join('conversation.campaign', 'campaign')
                 ->where('campaign.company = :company')
                 ->setParameter('company', $user->getCompany())
-                ->orderBy('conversation.updatedAt', 'DESC')
+                ->orderBy('conversation.updatedAt', SortDirection::Descending)
                 ->getQuery()
                 ->getResult();
         } else {

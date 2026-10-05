@@ -8,6 +8,7 @@ use App\Entity\Creator;
 use App\Localization\LocalizedRouteMap;
 use DateTimeImmutable;
 use Doctrine\ORM\EntityManagerInterface;
+use SortDirection;
 
 final class SitemapGenerator
 {
@@ -35,7 +36,7 @@ final class SitemapGenerator
             ->andWhere('owner.id IS NULL OR (owner.approved = :approved AND owner.hideMyAccount = :visible)')
             ->setParameter('approved', true)
             ->setParameter('visible', false)
-            ->orderBy('creator.slug', 'ASC')
+            ->orderBy('creator.slug', SortDirection::Ascending)
             ->getQuery()
             ->getResult();
         foreach ($creators as $creator) {
@@ -48,7 +49,7 @@ final class SitemapGenerator
             ->andWhere('owner.id IS NULL OR (owner.approved = :approved AND owner.hideMyAccount = :visible)')
             ->setParameter('approved', true)
             ->setParameter('visible', false)
-            ->orderBy('company.slug', 'ASC')
+            ->orderBy('company.slug', SortDirection::Ascending)
             ->getQuery()
             ->getResult();
         foreach ($companies as $company) {
@@ -66,7 +67,7 @@ final class SitemapGenerator
             ->setParameter('today', new DateTimeImmutable('today'))
             ->setParameter('approved', true)
             ->setParameter('visible', false)
-            ->orderBy('campaign.slug', 'ASC')
+            ->orderBy('campaign.slug', SortDirection::Ascending)
             ->getQuery()
             ->getResult();
         foreach ($campaigns as $campaign) {

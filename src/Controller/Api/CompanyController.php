@@ -8,6 +8,7 @@ use App\Entity\Company;
 use App\Localization\ApiMessages;
 use App\Localization\LocaleContext;
 use Doctrine\ORM\EntityManagerInterface;
+use SortDirection;
 use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -45,9 +46,9 @@ final class CompanyController
             ->setParameter('approved', true)
             ->setParameter('visible', false)
             ->addSelect('('.$campaignCountQuery->getDQL().') AS HIDDEN availableCampaignCount')
-            ->orderBy('company.featured', 'DESC')
-            ->addOrderBy('availableCampaignCount', 'DESC')
-            ->addOrderBy('company.name', 'ASC')
+            ->orderBy('company.featured', SortDirection::Descending)
+            ->addOrderBy('availableCampaignCount', SortDirection::Descending)
+            ->addOrderBy('company.name', SortDirection::Ascending)
             ->setParameter('availableStatus', 'open')
             ->setParameter('availableToday', new \DateTimeImmutable('today'));
         $total = (int) $entityManager->getRepository(Company::class)->createQueryBuilder('company')

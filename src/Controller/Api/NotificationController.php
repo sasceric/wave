@@ -9,6 +9,7 @@ use App\Localization\ApiMessages;
 use App\Localization\LocaleContext;
 use DateTimeImmutable;
 use Doctrine\ORM\EntityManagerInterface;
+use SortDirection;
 use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -33,7 +34,7 @@ final class NotificationController
             ->andWhere('notification.type <> :chatMessage')
             ->setParameter('recipient', $user)
             ->setParameter('chatMessage', 'chat_message')
-            ->orderBy('notification.createdAt', 'DESC')
+            ->orderBy('notification.createdAt', SortDirection::Descending)
             ->setMaxResults(30)
             ->getQuery()
             ->getResult();

@@ -7,6 +7,7 @@ use App\Entity\CampaignConversation;
 use App\Entity\CampaignMessage;
 use App\Entity\User;
 use Doctrine\ORM\EntityManagerInterface;
+use SortDirection;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
@@ -34,7 +35,7 @@ final class SendUnreadMessageRemindersCommand extends Command
             ->where('message.readAt IS NULL')
             ->andWhere('message.createdAt <= :cutoff')
             ->setParameter('cutoff', $cutoff)
-            ->orderBy('message.createdAt', 'ASC')
+            ->orderBy('message.createdAt', SortDirection::Ascending)
             ->getQuery()
             ->getResult();
 

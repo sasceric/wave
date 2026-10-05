@@ -9,6 +9,7 @@ use App\Localization\ApiMessages;
 use App\Localization\LocaleContext;
 use DateTimeImmutable;
 use Doctrine\ORM\EntityManagerInterface;
+use SortDirection;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Attribute\Route;
@@ -80,9 +81,9 @@ final class CampaignController
             ->getQuery()
             ->getSingleScalarResult();
         $campaigns = $builder
-            ->orderBy('campaign.featured', 'DESC')
-            ->addOrderBy('campaign.closesAt', 'ASC')
-            ->addOrderBy('campaign.id', 'ASC')
+            ->orderBy('campaign.featured', SortDirection::Descending)
+            ->addOrderBy('campaign.closesAt', SortDirection::Ascending)
+            ->addOrderBy('campaign.id', SortDirection::Ascending)
             ->setFirstResult($offset)
             ->setMaxResults($limit)
             ->getQuery()

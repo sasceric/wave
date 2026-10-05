@@ -12,6 +12,7 @@ use App\Localization\ApiMessages;
 use App\Localization\LocaleContext;
 use DateTimeImmutable;
 use Doctrine\ORM\EntityManagerInterface;
+use SortDirection;
 use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -48,7 +49,7 @@ final class CampaignBookmarkController
             ->setParameter('today', new DateTimeImmutable('today'))
             ->setParameter('approved', true)
             ->setParameter('visible', false)
-            ->orderBy('bookmark.createdAt', 'DESC')
+            ->orderBy('bookmark.createdAt', SortDirection::Descending)
             ->getQuery()
             ->getResult();
         $categoryLabels = MarketplaceCategoryLabels::forLocale($entityManager, $locale);

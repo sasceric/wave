@@ -8,6 +8,7 @@ use App\Entity\Creator;
 use App\Localization\ApiMessages;
 use App\Localization\LocaleContext;
 use Doctrine\ORM\EntityManagerInterface;
+use SortDirection;
 use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -84,8 +85,8 @@ final class CreatorController
             ->getQuery()
             ->getSingleScalarResult();
         $creators = $builder
-            ->orderBy('creator.displayName', 'ASC')
-            ->addOrderBy('creator.id', 'ASC')
+            ->orderBy('creator.displayName', SortDirection::Ascending)
+            ->addOrderBy('creator.id', SortDirection::Ascending)
             ->setFirstResult($offset)
             ->setMaxResults($limit)
             ->getQuery()

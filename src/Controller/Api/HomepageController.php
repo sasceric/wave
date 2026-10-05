@@ -20,6 +20,7 @@ use App\Localization\LocaleContext;
 use DateTimeImmutable;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
+use SortDirection;
 use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -47,8 +48,8 @@ final class HomepageController
             $creatorQuery->andWhere('creator.featured = :featured')->setParameter('featured', true);
         }
         $creators = $creatorQuery
-            ->orderBy('creator.createdAt', 'DESC')
-            ->addOrderBy('creator.id', 'DESC')
+            ->orderBy('creator.createdAt', SortDirection::Descending)
+            ->addOrderBy('creator.id', SortDirection::Descending)
             ->setMaxResults(4)
             ->getQuery()
             ->getResult();
@@ -63,9 +64,9 @@ final class HomepageController
             ->setParameter('today', new DateTimeImmutable('today'))
             ->setParameter('approved', true)
             ->setParameter('visible', false)
-            ->orderBy('campaign.featured', 'DESC')
-            ->addOrderBy('campaign.publishedAt', 'DESC')
-            ->addOrderBy('campaign.id', 'DESC')
+            ->orderBy('campaign.featured', SortDirection::Descending)
+            ->addOrderBy('campaign.publishedAt', SortDirection::Descending)
+            ->addOrderBy('campaign.id', SortDirection::Descending)
             ->setMaxResults(4)
             ->getQuery()
             ->getResult();
@@ -104,16 +105,16 @@ final class HomepageController
             ->leftJoin('creator.owner', 'owner')
             ->andWhere('owner.id IS NULL OR owner.approved = :approved')
             ->setParameter('approved', true)
-            ->orderBy('creator.createdAt', 'DESC')
-            ->addOrderBy('creator.id', 'DESC')
+            ->orderBy('creator.createdAt', SortDirection::Descending)
+            ->addOrderBy('creator.id', SortDirection::Descending)
             ->getQuery()
             ->getResult();
         $companies = $entityManager->getRepository(Company::class)->createQueryBuilder('company')
             ->leftJoin('company.owner', 'owner')
             ->andWhere('owner.id IS NULL OR owner.approved = :approved')
             ->setParameter('approved', true)
-            ->orderBy('company.featured', 'DESC')
-            ->addOrderBy('company.name', 'ASC')
+            ->orderBy('company.featured', SortDirection::Descending)
+            ->addOrderBy('company.name', SortDirection::Ascending)
             ->getQuery()
             ->getResult();
         $campaigns = $entityManager->getRepository(Campaign::class)->findBy([], ['publishedAt' => 'DESC']);
@@ -126,7 +127,7 @@ final class HomepageController
             ->setParameter('notAdmin', false)
             ->setParameter('notModerator', false)
             ->setParameter('notApproved', false)
-            ->orderBy('user.id', 'DESC')
+            ->orderBy('user.id', SortDirection::Descending)
             ->getQuery()
             ->getResult();
 
