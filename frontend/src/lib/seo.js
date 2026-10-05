@@ -66,6 +66,7 @@ export function updateSeo({
   setMeta('property', 'og:site_name', 'Wave')
   setMeta('property', 'og:title', title)
   setMeta('property', 'og:description', description)
+  const routeName = route.meta?.routeName
   const verificationToken = import.meta.env.VITE_GOOGLE_SITE_VERIFICATION?.trim()
   if (verificationToken) {
     setMeta('name', 'google-site-verification', verificationToken)
@@ -78,11 +79,11 @@ export function updateSeo({
     sl: 'sl_SI',
     en: 'en_US',
   })[locale] || 'en_US')
-  setMeta('name', 'twitter:card', image ? 'summary_large_image' : 'summary')
+  const hasShareImage = Boolean(image) || routeName === 'home'
+  setMeta('name', 'twitter:card', hasShareImage ? 'summary_large_image' : 'summary')
   setMeta('name', 'twitter:title', title)
   setMeta('name', 'twitter:description', description)
 
-  const routeName = route.meta?.routeName
   const canonicalPath = routeSegments[locale]?.[routeName] !== undefined
     ? localizedPath(routeName, locale, route.params)
     : route.path
@@ -90,7 +91,12 @@ export function updateSeo({
   setCanonical(canonicalUrl)
   setMeta('property', 'og:url', canonicalUrl)
 
-  const ogImage = image ? new URL(image, origin).href : new URL('/pwa-512.png', origin).href
+  const fallbackImage = routeName === 'home'
+    ? '/images/share.webp'
+    : ['creator-profile', 'company-profile'].includes(routeName)
+      ? '/images/logo-icon.svg'
+      : '/pwa-512.png'
+  const ogImage = image ? new URL(image, origin).href : new URL(fallbackImage, origin).href
   setMeta('property', 'og:image', ogImage)
   setMeta('name', 'twitter:image', ogImage)
   const alternates = document.head.querySelectorAll('link[rel="alternate"][hreflang]')

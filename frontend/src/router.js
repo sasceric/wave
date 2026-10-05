@@ -1,53 +1,43 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import CampaignDetailView from './views/CampaignDetailView.vue'
-import AccountView from './views/AccountView.vue'
-import CampaignsView from './views/CampaignsView.vue'
-import CompaniesView from './views/CompaniesView.vue'
-import CompanyProfileView from './views/CompanyProfileView.vue'
-import CreatorProfileView from './views/CreatorProfileView.vue'
-import CreatorsView from './views/CreatorsView.vue'
-import HomeView from './views/HomeView.vue'
-import ModerationView from './views/ModerationView.vue'
-import MessagesView from './views/MessagesView.vue'
-import NotFoundView from './views/NotFoundView.vue'
-import AdminDashboardView from './views/AdminDashboardView.vue'
-import ResetPasswordView from './views/ResetPasswordView.vue'
-import VerifyEmailView from './views/VerifyEmailView.vue'
-import LegalView from './views/LegalView.vue'
 import { localeNames, setLocale } from './i18n'
 import { defaultLocale, localizedPath, localizedRouteName, routeSegments } from './routePaths'
 
+const accountView = () => import('./views/AccountView.vue')
+const adminDashboardView = () => import('./views/AdminDashboardView.vue')
+const legalView = () => import('./views/LegalView.vue')
+const notFoundView = () => import('./views/NotFoundView.vue')
+
 const routeViews = {
-  home: HomeView,
-  account: AccountView,
-  'account-applications': AccountView,
-  'account-offers': AccountView,
-  'account-inquiries': AccountView,
-  'account-bookmarks': AccountView,
-  'account-invitations': AccountView,
-  'account-campaigns': AccountView,
-  'account-campaign-create': AccountView,
-  'account-campaign-detail': AccountView,
-  messages: MessagesView,
-  'verify-email': VerifyEmailView,
-  'reset-password': ResetPasswordView,
-  creators: CreatorsView,
-  'creator-profile': CreatorProfileView,
-  companies: CompaniesView,
-  'company-profile': CompanyProfileView,
-  campaigns: CampaignsView,
-  'campaign-detail': CampaignDetailView,
-  moderation: ModerationView,
-  admin: AdminDashboardView,
-  'admin-registrations': AdminDashboardView,
-  'admin-homepage': AdminDashboardView,
-  'admin-creators': AdminDashboardView,
-  'admin-companies': AdminDashboardView,
-  'admin-campaigns': AdminDashboardView,
-  'admin-email-templates': AdminDashboardView,
-  imprint: LegalView,
-  'privacy-policy': LegalView,
-  'cookie-policy': LegalView,
+  home: () => import('./views/HomeView.vue'),
+  account: accountView,
+  'account-applications': accountView,
+  'account-offers': accountView,
+  'account-inquiries': accountView,
+  'account-bookmarks': accountView,
+  'account-invitations': accountView,
+  'account-campaigns': accountView,
+  'account-campaign-create': accountView,
+  'account-campaign-detail': accountView,
+  messages: () => import('./views/MessagesView.vue'),
+  'verify-email': () => import('./views/VerifyEmailView.vue'),
+  'reset-password': () => import('./views/ResetPasswordView.vue'),
+  creators: () => import('./views/CreatorsView.vue'),
+  'creator-profile': () => import('./views/CreatorProfileView.vue'),
+  companies: () => import('./views/CompaniesView.vue'),
+  'company-profile': () => import('./views/CompanyProfileView.vue'),
+  campaigns: () => import('./views/CampaignsView.vue'),
+  'campaign-detail': () => import('./views/CampaignDetailView.vue'),
+  moderation: () => import('./views/ModerationView.vue'),
+  admin: adminDashboardView,
+  'admin-registrations': adminDashboardView,
+  'admin-homepage': adminDashboardView,
+  'admin-creators': adminDashboardView,
+  'admin-companies': adminDashboardView,
+  'admin-campaigns': adminDashboardView,
+  'admin-email-templates': adminDashboardView,
+  imprint: legalView,
+  'privacy-policy': legalView,
+  'cookie-policy': legalView,
 }
 
 const adminSections = {
@@ -149,10 +139,10 @@ const router = createRouter({
     ...Object.keys(localeNames).filter((locale) => locale !== defaultLocale).map((locale) => ({
       path: `/${locale}/:pathMatch(.*)*`,
       name: localizedRouteName('not-found', locale),
-      component: NotFoundView,
+      component: notFoundView,
       meta: { locale, routeName: 'not-found' },
     })),
-    { path: '/:pathMatch(.*)*', name: 'legacy-not-found', component: NotFoundView },
+    { path: '/:pathMatch(.*)*', name: 'legacy-not-found', component: notFoundView },
   ],
 })
 

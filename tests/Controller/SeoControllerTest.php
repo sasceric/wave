@@ -147,8 +147,10 @@ final class SeoControllerTest extends WebTestCase
         $html = $this->client->getResponse()->getContent();
         self::assertStringContainsString('<html lang="sr-Latn">', $html);
         self::assertStringContainsString('name="wave:origin" content="http://127.0.0.1:8000"', $html);
+        self::assertStringNotContainsString('rel="preload" as="image"', $html);
         self::assertStringContainsString('<title>Maya Chen — kreator/ka na Waveu</title>', $html);
         self::assertStringContainsString('rel="canonical" href="http://127.0.0.1:8000/sr/kreatori/maya-chen"', $html);
+        self::assertStringContainsString('property="og:image" content="http://127.0.0.1:8000/images/logo-icon.svg"', $html);
         self::assertStringContainsString('hreflang="x-default" href="http://127.0.0.1:8000/kreatori/maya-chen"', $html);
         self::assertStringContainsString('"@type":"Person"', $html);
         self::assertStringContainsString('Slow travel and local guides.', $html);
@@ -161,9 +163,26 @@ final class SeoControllerTest extends WebTestCase
         self::assertResponseIsSuccessful();
         $html = $this->client->getResponse()->getContent();
         self::assertStringContainsString('<html lang="en">', $html);
+        self::assertStringContainsString('<link rel="preload" as="image" href="/images/banner-girl.webp" fetchpriority="high" />', $html);
         self::assertStringContainsString('rel="canonical" href="http://127.0.0.1:8000/en/"', $html);
+        self::assertStringContainsString('property="og:image" content="http://127.0.0.1:8000/images/share.webp"', $html);
         self::assertStringContainsString('hreflang="x-default" href="http://127.0.0.1:8000/"', $html);
         self::assertStringContainsString('"@type":"WebSite"', $html);
+    }
+
+    public function testCompanyProfileUsesItsLogoOrTheWavePlaceholderForSharing(): void
+    {
+        $entityManager = static::getContainer()->get(EntityManagerInterface::class);
+        $entityManager->persist(new Company('field-notes', 'Field Notes', 'Travel'));
+        $entityManager->flush();
+
+        $this->client->request('GET', '/en/companies/field-notes');
+
+        self::assertResponseIsSuccessful();
+        self::assertStringContainsString(
+            'property="og:image" content="http://127.0.0.1:8000/images/logo-icon.svg"',
+            $this->client->getResponse()->getContent(),
+        );
     }
 
     public function testLegalPagesAreIndexableWithLocalizedCanonicalAlternatesAndOrganizationSchema(): void

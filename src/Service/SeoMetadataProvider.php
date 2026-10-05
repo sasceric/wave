@@ -71,7 +71,7 @@ final class SeoMetadataProvider
         };
         $title = $this->translation($locale, $titleKey);
         $description = $this->translation($locale, $descriptionKey);
-        $image = null;
+        $image = $name === 'home' ? $this->absoluteUrl('/images/share.webp') : null;
         $entitySchema = null;
         $indexable = !$private;
 
@@ -96,7 +96,8 @@ final class SeoMetadataProvider
                     ['{name}' => $creator->getDisplayName()],
                 );
                 $description = $this->plainDescription($translation['bio'] ?? $creator->getBio(), $description);
-                $image = $this->absoluteUrl($creator->getAvatarMedia()?->getUrl() ?? $creator->getAvatarUrl());
+                $image = $this->absoluteUrl($creator->getAvatarMedia()?->getUrl() ?? $creator->getAvatarUrl())
+                    ?? $this->absoluteUrl('/images/logo-icon.svg');
                 $entitySchema = $this->creatorSchema($creator, $locale, $params, $image);
             }
         } elseif ($name === 'company-profile') {
@@ -120,7 +121,8 @@ final class SeoMetadataProvider
                     ['{name}' => $company->getName()],
                 );
                 $description = $translation['industry'] ?? $company->getIndustry();
-                $image = $this->absoluteUrl($company->getLogoMedia()?->getUrl() ?? $company->getLogoUrl());
+                $image = $this->absoluteUrl($company->getLogoMedia()?->getUrl() ?? $company->getLogoUrl())
+                    ?? $this->absoluteUrl('/images/logo-icon.svg');
                 $entitySchema = $this->companySchema($company, $locale, $params, $image);
             }
         } elseif ($name === 'campaign-detail') {
@@ -168,6 +170,7 @@ final class SeoMetadataProvider
             'canonical' => $canonicalUrl,
             'alternates' => $alternates,
             'image' => $image,
+            'preloadImage' => $name === 'home' ? '/images/banner-girl.webp' : null,
             'noindex' => !$indexable,
             'structuredData' => $indexable ? $this->structuredData($title, $description, $canonicalUrl, $locale, $name, $entitySchema) : [],
         ];
@@ -344,6 +347,7 @@ final class SeoMetadataProvider
             'canonical' => null,
             'alternates' => [],
             'image' => null,
+            'preloadImage' => null,
             'noindex' => true,
             'structuredData' => [],
         ];

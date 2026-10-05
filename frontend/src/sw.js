@@ -3,7 +3,12 @@ import { precacheAndRoute } from 'workbox-precaching'
 
 clientsClaim()
 precacheAndRoute(self.__WB_MANIFEST)
-self.skipWaiting()
+
+self.addEventListener('message', (event) => {
+  if (event.data?.type === 'SKIP_WAITING') {
+    self.skipWaiting()
+  }
+})
 
 self.addEventListener('push', (event) => {
   if (!event.data) return

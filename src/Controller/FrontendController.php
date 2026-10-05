@@ -88,6 +88,10 @@ final class FrontendController
 
         $head = "\n    <meta name=\"description\" content=\"".$description."\" />";
         $head .= "\n    <meta name=\"wave:origin\" content=\"".$this->escape($siteOrigin)."\" />";
+        $preloadImage = $seo['preloadImage'] ?? null;
+        if (is_string($preloadImage) && $preloadImage !== '') {
+            $head .= "\n    <link rel=\"preload\" as=\"image\" href=\"".$this->escape($preloadImage)."\" fetchpriority=\"high\" />";
+        }
         if ($googleSiteVerification !== '') {
             $head .= "\n    <meta name=\"google-site-verification\" content=\"".$this->escape($googleSiteVerification)."\" />";
         }

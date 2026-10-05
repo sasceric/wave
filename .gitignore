@@ -22,9 +22,12 @@
 /public/manifest.webmanifest
 /public/index.html
 /public/registerSW.js
-/public/favicon.svg
+/public/favicon-96x96.png
+/public/favicon.ico
+/public/apple-touch-icon.png
+/public/images/logo-icon.svg
+/public/images/share.webp
 /public/icons.svg
-/public/wave-icon.svg
 /public/pwa-192.png
 /public/pwa-512.png
 /var/data.db
@@ -39,3 +42,4 @@
 # Local editor settings
 /.idea/
 /.vscode/
+/AuthKey_45RW2GFCVU.p8

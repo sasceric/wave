@@ -3,6 +3,7 @@ import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { RouterView, useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { Bell, Building2, Download, House, LogOut, Menu, Megaphone, MessageCircle, UserRound, UsersRound, X } from '@lucide/vue'
+import { registerSW } from 'virtual:pwa-register'
 import LanguageSwitcher from './components/shared/LanguageSwitcher.vue'
 import HeaderCreatorSearch from './components/shared/HeaderCreatorSearch.vue'
 import LocalizedLink from './components/shared/LocalizedLink.vue'
@@ -40,6 +41,9 @@ const pushSupported = ref(false)
 const pushSubscribed = ref(false)
 const pushStatus = ref('')
 const pushBusy = ref(false)
+const updateAvailable = ref(false)
+const updateInProgress = ref(false)
+const updateError = ref('')
 const installHelpVisible = ref(false)
 const installAvailable = ref(false)
 const installHint = computed(() => isIosDevice() ? t('app.installIosHint') : t('app.installHint'))
@@ -67,6 +71,9 @@ const hideSiteFooter = computed(() => Boolean(
 let realtimeSource = null
 let realtimeRetryTimer = null
 let installPrompt = null
+let updateServiceWorker = null
+let serviceWorkerRegistration = null
+let serviceWorkerUpdateTimer = null
 let previousScrollY = 0
 let scrollDirection = 0
 let scrollDirectionDistance = 0
@@ -144,6 +151,24 @@ watch(
 )
 onMounted(() => {
   previousScrollY = window.scrollY
+  if (!import.meta.env.DEV && 'serviceWorker' in navigator) {
+    updateServiceWorker = registerSW({
+      immediate: true,
+      onNeedRefresh() {
+        updateAvailable.value = true
+        updateError.value = ''
+      },
+      onRegisteredSW(scriptUrl, registration) {
+        void scriptUrl
+        serviceWorkerRegistration = registration ?? null
+      },
+      onRegisterError(cause) {
+        console.error('Unable to register the Wave service worker.', cause)
+      },
+    })
+    document.addEventListener('visibilitychange', checkForWaveUpdate)
+    serviceWorkerUpdateTimer = window.setInterval(checkForWaveUpdate, 30 * 60 * 1000)
+  }
   window.addEventListener('scroll', handleMobileScroll, { passive: true })
   window.addEventListener('resize', resetMobileChrome)
   loadCurrentUser().catch((cause) => console.error('Unable to load the current Wave account.', cause))
@@ -162,6 +187,8 @@ onBeforeUnmount(() => {
   window.removeEventListener('beforeinstallprompt', captureInstallPrompt)
   window.removeEventListener('appinstalled', onAppInstalled)
   window.removeEventListener('wave:conversations-updated', handleConversationsUpdated)
+  document.removeEventListener('visibilitychange', checkForWaveUpdate)
+  if (serviceWorkerUpdateTimer !== null) window.clearInterval(serviceWorkerUpdateTimer)
   document.removeEventListener('pointerdown', closeMobileMenuOnOutsideClick)
   document.removeEventListener('pointerdown', closeAuthMenuOnOutsideClick)
   document.removeEventListener('pointerdown', closeNotificationsOnOutsideClick)
@@ -419,6 +446,16 @@ function onAppInstalled() {
   installHelpVisible.value = false
 }
 
+function checkForWaveUpdate() {
+  if (!serviceWorkerRegistration || document.visibilityState !== 'visible') {
+    return
+  }
+
+  void serviceWorkerRegistration.update().catch((cause) => {
+    console.error('Unable to check for a Wave update.', cause)
+  })
+}
+
 async function installWave() {
   if (!installPrompt) {
     installHelpVisible.value = !installHelpVisible.value
@@ -428,6 +465,22 @@ async function installWave() {
   await installPrompt.userChoice
   installPrompt = null
   installAvailable.value = false
+}
+
+async function applyWaveUpdate() {
+  if (!updateServiceWorker || updateInProgress.value) {
+    return
+  }
+
+  updateInProgress.value = true
+  updateError.value = ''
+  try {
+    await updateServiceWorker(true)
+  } catch (cause) {
+    console.error('Unable to apply the available Wave update.', cause)
+    updateError.value = t('app.updateFailed')
+    updateInProgress.value = false
+  }
 }
 
 async function markAllNotificationsRead() {
@@ -530,6 +583,7 @@ async function signOut() {
     :class="{
       'site-shell--mobile-chrome-hidden': mobileChromeHidden,
       'site-shell--account': hideSiteFooter,
+      'site-shell--footer-visible': !hideSiteFooter,
       'site-shell--registration': route.meta.routeName === 'account'
         && route.query.mode === 'register'
         && !currentUser,
@@ -848,27 +902,43 @@ async function signOut() {
 
     <CookieConsentBanner ref="cookieConsentBanner" />
 
+    <aside
+      v-if="updateAvailable"
+      class="pwa-update-notice"
+      role="status"
+      aria-live="polite"
+    >
+      <div>
+        <p>{{ t('app.updateReady') }}</p>
+        <p v-if="updateError" class="pwa-update-notice__error" role="alert">{{ updateError }}</p>
+      </div>
+      <button type="button" :disabled="updateInProgress" @click="applyWaveUpdate">
+        {{ t(updateInProgress ? 'app.updating' : 'app.updateNow') }}
+      </button>
+    </aside>
+
     <nav class="mobile-bottom-nav" :aria-label="t('app.mainNavigation')">
       <LocalizedLink
         to="/"
         class="mobile-bottom-nav__link"
+        :aria-label="t('app.home')"
         :class="{ 'is-active': route.meta.routeName === 'home' }"
       >
         <House :size="21" stroke-width="1.8" aria-hidden="true" />
-        <span>{{ t('app.home') }}</span>
       </LocalizedLink>
       <LocalizedLink
         to="/creators"
         class="mobile-bottom-nav__link"
+        :aria-label="t('app.creatorsNav')"
         :class="{ 'is-active': ['creators', 'creator-profile'].includes(route.meta.routeName) }"
       >
         <UsersRound :size="21" stroke-width="1.8" aria-hidden="true" />
-        <span>{{ t('app.creatorsNav') }}</span>
       </LocalizedLink>
       <LocalizedLink
         v-if="currentUser"
         :to="{ name: 'messages' }"
         class="mobile-bottom-nav__link"
+        :aria-label="t('app.messages')"
         :class="{ 'is-active': route.meta.routeName === 'messages' }"
       >
         <span class="mobile-bottom-nav__icon">
@@ -877,34 +947,33 @@ async function signOut() {
             {{ unreadMessageCount > 99 ? '99+' : unreadMessageCount }}
           </span>
         </span>
-        <span>{{ t('app.messages') }}</span>
       </LocalizedLink>
       <LocalizedLink
         v-else
         to="/companies"
         class="mobile-bottom-nav__link"
+        :aria-label="t('app.companies')"
         :class="{ 'is-active': ['companies', 'company-profile'].includes(route.meta.routeName) }"
       >
         <Building2 :size="21" stroke-width="1.8" aria-hidden="true" />
-        <span>{{ t('app.companies') }}</span>
       </LocalizedLink>
       <LocalizedLink
         to="/campaigns"
         class="mobile-bottom-nav__link"
+        :aria-label="t('app.campaigns')"
         :class="{ 'is-active': ['campaigns', 'campaign-detail'].includes(route.meta.routeName) }"
       >
         <Megaphone :size="21" stroke-width="1.8" aria-hidden="true" />
-        <span>{{ t('app.campaigns') }}</span>
       </LocalizedLink>
       <LocalizedLink
         to="/account"
         class="mobile-bottom-nav__link"
+        :aria-label="t('app.account')"
         :class="{
           'is-active': ['account', 'verify-email', 'reset-password'].includes(route.meta.routeName),
         }"
       >
         <UserRound :size="21" stroke-width="1.8" aria-hidden="true" />
-        <span>{{ t('app.account') }}</span>
       </LocalizedLink>
     </nav>
   </div>
