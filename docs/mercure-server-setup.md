@@ -2,6 +2,8 @@
 
 This guide describes a single-server Debian deployment where Symfony and Mercure run on the same HestiaCP server. It assumes the Wave site is served at `https://wave.ba`, with Mercure on `https://mercure.wave.ba`.
 
+For an existing server, start with the [server notification checklist](server-notifications.md): required settings, services to refresh, end-to-end checks and troubleshooting.
+
 Mercure is self-hosted and has no per-message service fee. It still uses the VM's CPU, memory, and disk. The Hub accepts publisher traffic only on loopback; browsers reach it through HTTPS on the Mercure subdomain.
 
 ```text
@@ -222,6 +224,7 @@ Keep the existing certificate configuration for the Nginx virtual host. After ch
 Set these production values in the server's secret/environment configuration for the Symfony application. If using a `.env.local` file on the server, keep it outside version control and restrict its permissions:
 
 ```dotenv
+WAVE_NOTIFICATIONS_ENABLED=true
 MERCURE_URL=http://127.0.0.1:3000/.well-known/mercure
 MERCURE_PUBLIC_URL=https://mercure.wave.ba/.well-known/mercure
 MERCURE_JWT_SECRET=<same-production-secret>
@@ -229,6 +232,8 @@ MERCURE_ISSUER=https://wave.ba
 ```
 
 `MERCURE_URL` is the private server-to-Hub address. `MERCURE_PUBLIC_URL` is the HTTPS address returned to browsers. `MERCURE_ISSUER` must exactly match `MERCURE_TRUSTED_ISSUERS`; the JWT secret must match both Hub keys. Keep the Mercure bundle configured for protocol `1.0`.
+
+Set `WAVE_NOTIFICATIONS_ENABLED=true` explicitly in production. It gates both Mercure publication and Web Push delivery; false still allows messages to save but sends neither live events nor device pushes. Current code defaults to true if absent, so check compiled/process values when the file and runtime disagree. The [notification checklist](server-notifications.md#required-symfony-settings) includes the separate Web Push settings.
 
 For this Hestia deployment, put these values in
 `/home/steelcodeweb/web/wave.ba/public_html/.env.local`, preserving the other
@@ -241,6 +246,8 @@ cd /home/steelcodeweb/web/wave.ba/public_html
 COMPOSER_ALLOW_SUPERUSER=1 APP_ENV=prod php8.4 "$(command -v composer)" dump-env prod
 APP_ENV=prod php8.4 bin/console cache:clear
 ```
+
+Editing `.env.local` or clearing cache alone does not regenerate `.env.local.php`. Run both commands after environment changes. The [notification checklist](server-notifications.md#apply-configuration-changes) includes the non-secret flag check and cache ownership steps for root deployments.
 
 The Symfony Mercure component automatically scopes the subscriber cookie to
 `.wave.ba` when the app origin is `wave.ba` and the Hub is on

@@ -7,6 +7,7 @@ use App\Api\NotificationResource;
 use App\Entity\Notification;
 use App\Localization\ApiMessages;
 use App\Localization\LocaleContext;
+use App\Service\UnreadInboxCounter;
 use DateTimeImmutable;
 use Doctrine\ORM\EntityManagerInterface;
 use SortDirection;
@@ -19,8 +20,12 @@ use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
 final class NotificationController
 {
     #[Route('/api/me/notifications', name: 'api_my_notifications', methods: ['GET'])]
-    public function index(Request $request, EntityManagerInterface $entityManager, Security $security): JsonResponse
-    {
+    public function index(
+        Request $request,
+        EntityManagerInterface $entityManager,
+        Security $security,
+        UnreadInboxCounter $unreadInboxCounter,
+    ): JsonResponse {
         $locale = LocaleContext::fromRequest($request);
         if ($locale === null) {
             return new JsonResponse(['error' => ApiMessages::get('unsupported_language', 'bs')], 400);
@@ -40,6 +45,7 @@ final class NotificationController
             ->getResult();
 
         return new JsonResponse([
+            'unreadCount' => $unreadInboxCounter->notifications($user),
             'data' => array_map(
                 static fn (Notification $notification): array => NotificationResource::fromEntity($notification, $locale),
                 $notifications,

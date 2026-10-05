@@ -49,6 +49,7 @@ let messageScrollFrame = 0
 let inboxRefreshInProgress = false
 let inboxRefreshPending = false
 let messagesRequestVersion = 0
+let inboxRequestVersion = 0
 let unmounted = false
 
 const pendingStart = computed(() => {
@@ -183,6 +184,18 @@ watch([isMobileView, mobileThreadOpen], ([mobile, threadOpen]) => {
 })
 
 watch(
+  () => [route.query.conversation, route.query.inquiry],
+  () => {
+    if (unmounted) return
+    const conversationId = Number(route.query.conversation)
+    const inquiryId = Number(route.query.inquiry)
+    if (conversationId === selectedConversationId.value || inquiryId === selectedInquiryId.value) return
+    // Vue Router reuses this view when only the notification's chat query changes.
+    void loadInbox()
+  },
+)
+
+watch(
   [
     () => conversationMessages.value.length,
     selectedConversationId,
@@ -207,6 +220,7 @@ onMounted(() => {
 onBeforeUnmount(() => {
   unmounted = true
   messagesRequestVersion += 1
+  inboxRequestVersion += 1
   document.documentElement.classList.remove('wave-chat-open')
   window.removeEventListener('resize', updateViewport)
   window.visualViewport?.removeEventListener('resize', updateViewport)
@@ -273,15 +287,18 @@ function refreshInboxWhenVisible() {
 }
 
 async function loadInbox() {
+  const requestVersion = ++inboxRequestVersion
   loading.value = true
   error.value = ''
   authRequired.value = false
   try {
     if (!currentUser.value) await loadCurrentUser()
+    const userId = currentUser.value?.id
     const [conversationResponse, inquiryResponse] = await Promise.all([
       apiGet('/me/conversations'),
       apiGet('/me/inquiries'),
     ])
+    if (unmounted || requestVersion !== inboxRequestVersion || currentUser.value?.id !== userId) return
     conversations.value = conversationResponse.data
     inquiries.value = inquiryResponse.data.filter((inquiry) => inquiry.canChat)
 
@@ -304,6 +321,12 @@ async function loadInbox() {
         threadType: 'inquiry',
         threadKey: `inquiry-${requestedInquiry.id}`,
       }, false)
+      return
+    }
+
+    if (route.query.conversation !== undefined || route.query.inquiry !== undefined) {
+      // An inaccessible or removed target must not silently open an unrelated chat.
+      backToInbox(false)
       return
     }
 
@@ -332,9 +355,10 @@ async function loadInbox() {
       conversationMessages.value = []
     }
   } catch (cause) {
+    if (unmounted || requestVersion !== inboxRequestVersion) return
     handleLoadError(cause)
   } finally {
-    loading.value = false
+    if (requestVersion === inboxRequestVersion) loading.value = false
   }
 }
 
@@ -373,13 +397,14 @@ async function selectConversation(thread, syncRoute = true) {
   await loadMessages(thread, true)
 }
 
-function backToInbox() {
+function backToInbox(syncRoute = true) {
   messagesRequestVersion += 1
   detailsOpen.value = false
   selectedConversationId.value = null
   selectedInquiryId.value = null
   pendingDetails.value = null
   conversationMessages.value = []
+  if (!syncRoute) return
   void router.replace({
     name: localizedRouteName('messages', locale.value),
     query: {},

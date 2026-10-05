@@ -3,12 +3,15 @@
 namespace App\Tests\Controller;
 
 use App\Entity\Campaign;
+use App\Entity\CampaignConversation;
+use App\Entity\CampaignMessage;
 use App\Entity\Company;
 use App\Entity\Creator;
 use App\Entity\Media;
 use App\Entity\Notification;
 use App\Entity\User;
 use App\Entity\UserPushSubscription;
+use App\Service\UnreadInboxCounter;
 use DateTimeImmutable;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Tools\SchemaTool;
@@ -1032,6 +1035,64 @@ final class MarketplaceWorkflowTest extends WebTestCase
             $this->payload()['data'][2]['body'],
         );
         self::assertSame(0, $this->payload()['conversation']['unreadCount']);
+    }
+
+    public function testUnreadBadgesCountAllNotificationsAndOnlyIncomingParticipantMessages(): void
+    {
+        $entityManager = static::getContainer()->get(EntityManagerInterface::class);
+        $creatorUser = new User('badge-creator@example.test', 'ROLE_CREATOR');
+        $creatorUser->setPassword('unused-test-hash');
+        $creator = new Creator('badge-creator', 'Badge Creator', 'Food', 'Sarajevo', 'A creator.', [], []);
+        $creatorUser->setCreator($creator);
+        $companyUser = new User('badge-company@example.test', 'ROLE_COMPANY');
+        $companyUser->setPassword('unused-test-hash');
+        $company = new Company('badge-company', 'Badge Company', 'Food');
+        $companyUser->setCompany($company);
+        $otherUser = new User('badge-other@example.test', 'ROLE_COMPANY');
+        $otherUser->setPassword('unused-test-hash');
+        $otherUser->setCompany(new Company('badge-other', 'Other Company', 'Food'));
+        $campaign = new Campaign(
+            'badge-campaign', 'Badge Campaign', 'A campaign.', 'A full campaign brief.',
+            'Food', ['Instagram'], ['1 post'], 300, 700, 'Sarajevo', 2,
+            new DateTimeImmutable('+20 days'), new DateTimeImmutable('today'), $company,
+        );
+        $conversation = new CampaignConversation($campaign, $creator, $companyUser);
+        $incoming = new CampaignMessage($conversation, $companyUser, 'An unread incoming message');
+        $outgoing = new CampaignMessage($conversation, $creatorUser, 'An unread outgoing message');
+        $alreadyRead = new CampaignMessage($conversation, $companyUser, 'Already read');
+        $alreadyRead->markRead();
+        foreach ([$creatorUser, $companyUser, $otherUser, $campaign, $conversation, $incoming, $outgoing, $alreadyRead] as $entity) {
+            $entityManager->persist($entity);
+        }
+        for ($index = 0; $index < 32; ++$index) {
+            $entityManager->persist(new Notification($creatorUser, 'offer_received', $companyUser));
+        }
+        $readNotification = new Notification($creatorUser, 'offer_received', $companyUser);
+        $readNotification->markRead();
+        $entityManager->persist($readNotification);
+        $entityManager->persist(new Notification($creatorUser, 'chat_message', $companyUser, $campaign, $conversation));
+        $entityManager->persist(new Notification($companyUser, 'chat_message', $creatorUser, $campaign, $conversation));
+        $entityManager->persist(new Notification($otherUser, 'offer_received', $creatorUser));
+        $entityManager->flush();
+
+        $counter = static::getContainer()->get(UnreadInboxCounter::class);
+        self::assertSame(32, $counter->notifications($creatorUser));
+        self::assertSame(33, $counter->total($creatorUser));
+        self::assertSame(1, $counter->total($companyUser));
+        self::assertSame(1, $counter->total($otherUser));
+
+        $this->client->loginUser($creatorUser, 'main');
+        $this->client->request('GET', '/api/me/notifications?locale=bs');
+        self::assertResponseIsSuccessful();
+        self::assertCount(30, $this->payload()['data']);
+        self::assertSame(32, $this->payload()['unreadCount']);
+        $this->client->request('GET', '/api/me/conversations/'.$conversation->getId().'/messages?locale=bs');
+        self::assertResponseIsSuccessful();
+        self::assertSame(32, static::getContainer()->get(UnreadInboxCounter::class)->total($creatorUser));
+        $this->jsonRequest('POST', '/api/me/notifications/read-all', [], $this->csrfToken());
+        self::assertResponseIsSuccessful();
+        self::assertSame(0, static::getContainer()->get(UnreadInboxCounter::class)->total($creatorUser));
+        self::assertSame(1, static::getContainer()->get(UnreadInboxCounter::class)->total($companyUser));
     }
 
     public function testRealtimeAuthorizationAndBrowserPushSubscriptionsAreUserScoped(): void

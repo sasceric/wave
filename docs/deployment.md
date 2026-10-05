@@ -44,6 +44,8 @@ pointing to this repository and a `main` branch.
 - Write access for the PHP process to `var/cache/`, `var/log/`, and
   `var/media/`.
 
+Set `WAVE_NOTIFICATIONS_ENABLED=true` explicitly for production delivery. Configure matching Mercure issuer/JWT values and the existing production Web Push VAPID pair. The [server notification checklist](server-notifications.md) contains exact values, environment-refresh commands and verification steps; [Mercure server setup](mercure-server-setup.md) contains the full Hub/proxy configuration.
+
 ## Deployment steps
 
 The workflow updates the checkout, runs Composer explicitly with PHP 8.4, and

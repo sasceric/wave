@@ -26,7 +26,7 @@ async function setupView(path, extraModules = {}, props = {}, globals = {}) {
   })
   const modules = {
     vue: { ...vue, onMounted: () => {}, onBeforeUnmount: () => {} },
-    'vue-router': { RouterView: {}, useRoute: () => ({ query: {}, meta: {}, fullPath: '/poruke' }), useRouter: () => ({ replace: async () => {} }) },
+    'vue-router': { isNavigationFailure: () => false, NavigationFailureType: { duplicated: 16 }, RouterView: {}, useRoute: () => ({ query: {}, meta: {}, fullPath: '/poruke' }), useRouter: () => ({ replace: async () => {} }) },
     'vue-i18n': { useI18n: () => ({ locale: vue.ref('bs'), t: (key) => key }) },
     '../composables/useCurrentUser': { currentUser, loadCurrentUser: async () => currentUser.value },
     './composables/useCurrentUser': { currentUser, loadCurrentUser: async () => currentUser.value, setCurrentUser: (user) => { currentUser.value = user } },
@@ -187,7 +187,13 @@ test('the service worker displays a push and tells open windows to reload author
   const context = vm.createContext({ self })
   const source = await readFile(new URL('../src/sw.js', import.meta.url), 'utf8')
   const module = new vm.SourceTextModule(source, { context })
-  await module.link((specifier) => {
+  await module.link(async (specifier) => {
+    if (specifier === './lib/appBadge') {
+      return new vm.SourceTextModule(await readFile(new URL('../src/lib/appBadge.js', import.meta.url), 'utf8'), { context })
+    }
+    if (specifier === './lib/notificationNavigation') {
+      return new vm.SourceTextModule(await readFile(new URL('../src/lib/notificationNavigation.js', import.meta.url), 'utf8'), { context })
+    }
     const name = specifier === 'workbox-core' ? 'clientsClaim' : 'precacheAndRoute'
     return new vm.SyntheticModule([name], function () { this.setExport(name, () => {}) }, { context })
   })
@@ -199,4 +205,82 @@ test('the service worker displays a push and tells open windows to reload author
   assert.equal(displayed[0][1].body, 'Hello')
   assert.equal(posted[0].type, 'WAVE_PUSH_RECEIVED')
   assert.equal(Object.keys(posted[0]).length, 1)
+})
+
+test('a notification chat query switches the already mounted Messages view', async () => {
+  const route = vue.reactive({ query: { conversation: '1' } })
+  const requests = []
+  const { state } = await setupView('../src/views/MessagesView.vue', {
+    'vue-router': { useRoute: () => route, useRouter: () => ({ replace: async () => {} }) },
+    '../lib/api': {
+      apiGet: async (path) => {
+        requests.push(path)
+        if (path === '/me/conversations') return { data: [{ id: 1, unreadCount: 0 }, { id: 2, unreadCount: 1 }] }
+        if (path === '/me/inquiries') return { data: [] }
+        return { data: [{ id: 20, body: 'notification target' }], conversation: { id: 2, unreadCount: 0 } }
+      },
+      apiRequest: async () => {}, formatDate: () => '', formatMoney: () => '',
+    },
+  })
+  state.selectedConversationId.value = 1
+  state.conversationMessages.value = [{ id: 10, body: 'previous chat' }]
+  route.query.conversation = '2'
+  await new Promise((resolve) => setImmediate(resolve))
+  assert.equal(state.selectedConversationId.value, 2)
+  assert.equal(state.conversationMessages.value[0].body, 'notification target')
+  assert.ok(requests.includes('/me/conversations/2/messages'))
+})
+
+test('an inaccessible notification target does not fall back to an unrelated chat', async () => {
+  const route = vue.reactive({ query: { conversation: '1' } })
+  const requests = []
+  const { state } = await setupView('../src/views/MessagesView.vue', {
+    'vue-router': { useRoute: () => route, useRouter: () => ({ replace: async () => {} }) },
+    '../lib/api': {
+      apiGet: async (path) => {
+        requests.push(path)
+        return { data: path === '/me/conversations' ? [{ id: 1, unreadCount: 0 }] : [] }
+      },
+      apiRequest: async () => {}, formatDate: () => '', formatMoney: () => '',
+    },
+  })
+  state.selectedConversationId.value = 1
+  state.conversationMessages.value = [{ id: 10, body: 'previous chat' }]
+  route.query.conversation = '999'
+  await new Promise((resolve) => setImmediate(resolve))
+  assert.equal(state.selectedConversationId.value, null)
+  assert.equal(state.conversationMessages.value.length, 0)
+  assert.equal(requests.some((path) => path.endsWith('/messages')), false)
+})
+
+test('the bell uses the full unread total, including notifications outside its menu', async () => {
+  const { state } = await setupView('../src/App.vue', {
+    './lib/api': { apiGet: async () => ({ data: [{ id: 1, readAt: null }], unreadCount: 42 }), apiRequest: async () => {}, formatDate: () => '' },
+  })
+  await state.loadNotifications()
+  assert.equal(state.notifications.value.length, 1)
+  assert.equal(state.unreadNotificationCount.value, 42)
+})
+
+test('the app badge waits for authorized counts, follows reads, and clears on logout', async () => {
+  const badges = []
+  const { state, unreadMessageCount, currentUser } = await setupView('../src/App.vue', {
+    './lib/appBadge': { updateAppBadge: async (count) => { badges.push(count) } },
+    './lib/api': {
+      apiGet: async (path) => ({ data: path === '/me/conversations' ? [{ id: 1, unreadCount: 2 }] : [], unreadCount: 3 }),
+      apiRequest: async () => {}, formatDate: () => '',
+    },
+  })
+  await state.loadNotifications()
+  await vue.nextTick()
+  assert.equal(badges.length, 0)
+  await state.loadUnreadMessages()
+  await vue.nextTick()
+  assert.equal(badges.at(-1), 5)
+  unreadMessageCount.value = 0
+  await vue.nextTick()
+  assert.equal(badges.at(-1), 3)
+  currentUser.value = null
+  await vue.nextTick()
+  assert.equal(badges.at(-1), 0)
 })

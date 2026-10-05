@@ -19,6 +19,7 @@ final class WebPushNotificationSender
         private readonly string $publicKey,
         private readonly string $privateKey,
         private readonly string $subject,
+        private readonly UnreadInboxCounter $unreadInboxCounter,
     ) {
     }
 
@@ -48,6 +49,7 @@ final class WebPushNotificationSender
             return;
         }
 
+        $badgeCount = $this->unreadInboxCounter->total($notification->getRecipient());
         $expiredSubscriptions = [];
         foreach ($subscriptions as $subscription) {
             if (!$subscription instanceof UserPushSubscription) {
@@ -68,6 +70,7 @@ final class WebPushNotificationSender
                         'title' => $this->titleFor($notification),
                         'body' => $this->bodyFor($notification, $subscription->getLocale()),
                         'url' => $this->targetFor($notification),
+                        'badgeCount' => $badgeCount,
                     ], JSON_THROW_ON_ERROR),
                     ['TTL' => 86400],
                 );

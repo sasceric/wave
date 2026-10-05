@@ -1,6 +1,6 @@
 <script setup>
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
-import { RouterView, useRoute, useRouter } from 'vue-router'
+import { isNavigationFailure, NavigationFailureType, RouterView, useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { Bell, Building2, Download, House, LogOut, Menu, Megaphone, MessageCircle, UserRound, UsersRound, X } from '@lucide/vue'
 import { registerSW } from 'virtual:pwa-register'
@@ -15,6 +15,8 @@ import { mobileAccountSidebarOpen } from './composables/useMobileAccountSidebar'
 import { setLocale } from './i18n'
 import { apiGet, apiRequest, formatDate } from './lib/api'
 import { startInboxSync } from './lib/inboxSync'
+import { updateAppBadge } from './lib/appBadge'
+import { startNotificationNavigation } from './lib/notificationNavigation'
 import { updateSeo } from './lib/seo'
 import { trackPageView } from './lib/privacyMetrics'
 import { localizedPath } from './routePaths'
@@ -35,6 +37,9 @@ const signingOut = ref(false)
 const notificationsMenuOpen = ref(false)
 const notificationsMenu = ref(null)
 const notifications = ref([])
+const unreadNotificationTotal = ref(0)
+const notificationsLoaded = ref(false)
+const unreadMessagesLoaded = ref(false)
 const notificationsError = ref('')
 const markingAllRead = ref(false)
 const optimisticUnreadNotificationIds = ref([])
@@ -50,7 +55,7 @@ const installHelpVisible = ref(false)
 const installAvailable = ref(false)
 const installHint = computed(() => isIosDevice() ? t('app.installIosHint') : t('app.installHint'))
 const unreadNotificationCount = computed(() => (
-  notifications.value.filter((item) => !item.readAt).length
+  unreadNotificationTotal.value
   + optimisticUnreadNotificationIds.value.length
 ))
 const canShowInstallButton = computed(() => (
@@ -79,6 +84,7 @@ let realtimeConnecting = false
 let realtimeConnectionVersion = 0
 let realtimeLastEventId = ''
 let inboxSync = null
+let stopNotificationNavigation = null
 let notificationsRequestVersion = 0
 let unreadMessagesRequestVersion = 0
 const seenRealtimeNotificationIds = new Set()
@@ -91,6 +97,16 @@ let scrollDirection = 0
 let scrollDirectionDistance = 0
 let scrollFrame = null
 watch(locale, setLocale)
+watch(
+  () => [
+    currentUser.value?.id,
+    notificationsLoaded.value,
+    unreadMessagesLoaded.value,
+    unreadNotificationCount.value,
+    unreadMessageCount.value,
+  ],
+  refreshAppBadge,
+)
 watch(() => route.fullPath, () => {
   mobileMenuOpen.value = false
   mobileAccountSidebarOpen.value = false
@@ -115,10 +131,14 @@ watch(() => route.path, (path) => {
 watch(currentUser, (user, previousUser) => {
   mobileMenuOpen.value = false
   if (user?.id !== previousUser?.id) {
+    if (user && previousUser?.id) void updateAppBadge(0)
     closeRealtime()
     realtimeLastEventId = ''
     seenRealtimeNotificationIds.clear()
     notifications.value = []
+    unreadNotificationTotal.value = 0
+    notificationsLoaded.value = false
+    unreadMessagesLoaded.value = false
     optimisticUnreadNotificationIds.value = []
     unreadMessageCount.value = 0
     notificationsRequestVersion += 1
@@ -136,6 +156,7 @@ watch(currentUser, (user, previousUser) => {
     unreadMessagesRequestVersion += 1
     pushSubscribed.value = false
     pushStatus.value = ''
+    void updateAppBadge(0)
     closeRealtime()
     return
   }
@@ -176,6 +197,10 @@ watch(
   { immediate: true },
 )
 onMounted(() => {
+  stopNotificationNavigation = startNotificationNavigation(async (path) => {
+    const failure = await router.push(path)
+    return !failure || isNavigationFailure(failure, NavigationFailureType.duplicated)
+  })
   previousScrollY = window.scrollY
   inboxSync = startInboxSync(async () => {
     const userId = currentUser.value?.id
@@ -214,6 +239,7 @@ onMounted(() => {
   document.addEventListener('pointerdown', closeNotificationsOnOutsideClick)
 })
 onBeforeUnmount(() => {
+  stopNotificationNavigation?.()
   inboxSync?.stop()
   closeRealtime()
   window.removeEventListener('scroll', handleMobileScroll)
@@ -229,10 +255,17 @@ onBeforeUnmount(() => {
   document.removeEventListener('pointerdown', closeNotificationsOnOutsideClick)
 })
 
+function refreshAppBadge() {
+  if (currentUser.value && notificationsLoaded.value && unreadMessagesLoaded.value) {
+    void updateAppBadge(unreadNotificationCount.value + unreadMessageCount.value)
+  }
+}
+
 async function loadNotifications() {
   const userId = currentUser.value?.id
   if (!userId) return
   const requestVersion = ++notificationsRequestVersion
+  const pendingIds = new Set(optimisticUnreadNotificationIds.value)
   try {
     const response = await apiGet('/me/notifications')
     if (
@@ -242,9 +275,11 @@ async function loadNotifications() {
       return
     }
     notifications.value = response.data
+    unreadNotificationTotal.value = response.unreadCount ?? response.data.filter((item) => !item.readAt).length
+    notificationsLoaded.value = true
     const loadedIds = new Set(response.data.map((notification) => notification.id))
     optimisticUnreadNotificationIds.value = optimisticUnreadNotificationIds.value.filter(
-      (id) => !loadedIds.has(id),
+      (id) => !loadedIds.has(id) && !pendingIds.has(id),
     )
     notificationsError.value = ''
   } catch (cause) {
@@ -277,6 +312,7 @@ async function loadUnreadMessages() {
       (total, conversation) => total + conversation.unreadCount,
       0,
     )
+    unreadMessagesLoaded.value = true
   } catch (cause) {
     if (requestVersion !== unreadMessagesRequestVersion) return
     if (cause.status === 401) {
@@ -534,6 +570,7 @@ async function togglePushNotifications() {
     }
     pushSubscribed.value = true
     pushStatus.value = 'pushEnabled'
+    refreshAppBadge()
   } catch (cause) {
     pushStatus.value = 'pushError'
     notificationsError.value = cause.message
@@ -563,6 +600,7 @@ function onAppInstalled() {
   installPrompt = null
   installAvailable.value = false
   installHelpVisible.value = false
+  refreshAppBadge()
 }
 
 function checkForWaveUpdate() {
@@ -606,14 +644,18 @@ async function markAllNotificationsRead() {
   markingAllRead.value = true
   notificationsError.value = ''
   const pendingIds = new Set(optimisticUnreadNotificationIds.value)
+  const userId = currentUser.value?.id
   try {
     await apiRequest('/me/notifications/read-all', { method: 'POST', body: {} })
+    if (currentUser.value?.id !== userId) return
+    unreadNotificationTotal.value = 0
     notifications.value = notifications.value.map((notification) => (
       notification.readAt ? notification : { ...notification, readAt: new Date().toISOString() }
     ))
     optimisticUnreadNotificationIds.value = optimisticUnreadNotificationIds.value.filter(
       (id) => !pendingIds.has(id),
     )
+    void loadNotifications()
   } catch (cause) {
     notificationsError.value = cause.message
   } finally {
@@ -623,17 +665,23 @@ async function markAllNotificationsRead() {
 
 async function openNotification(notification) {
   notificationsError.value = ''
+  const userId = currentUser.value?.id
   try {
     const response = await apiRequest(`/me/notifications/${notification.id}/read`, {
       method: 'POST',
       body: {},
     })
+    if (currentUser.value?.id !== userId) return
     const index = notifications.value.findIndex((item) => item.id === notification.id)
+    if (index !== -1 && !notifications.value[index].readAt) {
+      unreadNotificationTotal.value = Math.max(0, unreadNotificationTotal.value - 1)
+    }
     if (index !== -1) notifications.value.splice(index, 1, response.data)
     optimisticUnreadNotificationIds.value = optimisticUnreadNotificationIds.value.filter(
       (id) => id !== notification.id,
     )
     notificationsMenuOpen.value = false
+    void loadNotifications()
     if (notification.conversationId) {
       await router.push({
         path: localizedPath('messages', locale.value),
@@ -753,7 +801,7 @@ async function signOut() {
             <button
               class="header-notifications__trigger"
               type="button"
-              :aria-label="t('app.notifications')"
+              :aria-label="unreadNotificationCount ? `${t('app.notifications')} (${unreadNotificationCount})` : t('app.notifications')"
               aria-haspopup="true"
               aria-controls="header-notifications-panel"
               :aria-expanded="notificationsMenuOpen"
