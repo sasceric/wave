@@ -110,6 +110,77 @@ Verify the live response headers after changing Nginx. In particular,
 `/index.html` and `/sw.js` must not return a long `max-age`. Hashed files under
 `public/build/assets/` can retain long-lived immutable caching.
 
+#### HestiaCP on Debian
+
+Hestia's default Nginx templates include `nginx.conf_*` and
+`nginx.ssl.conf_*` files from the domain's configuration directory. Add a
+separate exact-match location for each app-shell file in both HTTP and HTTPS
+server blocks. This avoids editing generated vhosts or Hestia's global
+templates, and overrides the template's generic `expires max` rule.
+
+For this deployment, the Hestia account is `steelcodeweb` and the document root
+is `/home/steelcodeweb/web/wave.ba/public_html/public`. Create a uniquely named
+snippet:
+
+```sh
+sudo install -d -o steelcodeweb -g steelcodeweb /home/steelcodeweb/conf/web/wave.ba
+sudo tee /home/steelcodeweb/conf/web/wave.ba/nginx.conf_pwa-cache >/dev/null <<'NGINX'
+location = /index.html {
+    root /home/steelcodeweb/web/wave.ba/public_html/public;
+    try_files $uri =404;
+    expires off;
+    add_header Cache-Control "no-cache, must-revalidate, max-age=0" always;
+    add_header Expires "0" always;
+}
+
+location = /sw.js {
+    root /home/steelcodeweb/web/wave.ba/public_html/public;
+    try_files $uri =404;
+    expires off;
+    add_header Cache-Control "no-cache, must-revalidate, max-age=0" always;
+    add_header Expires "0" always;
+}
+
+location = /registerSW.js {
+    root /home/steelcodeweb/web/wave.ba/public_html/public;
+    try_files $uri =404;
+    expires off;
+    add_header Cache-Control "no-cache, must-revalidate, max-age=0" always;
+    add_header Expires "0" always;
+}
+
+location = /manifest.webmanifest {
+    root /home/steelcodeweb/web/wave.ba/public_html/public;
+    try_files $uri =404;
+    expires off;
+    add_header Cache-Control "no-cache, must-revalidate, max-age=0" always;
+    add_header Expires "0" always;
+}
+NGINX
+sudo cp /home/steelcodeweb/conf/web/wave.ba/nginx.conf_pwa-cache \
+  /home/steelcodeweb/conf/web/wave.ba/nginx.ssl.conf_pwa-cache
+sudo chown steelcodeweb:steelcodeweb /home/steelcodeweb/conf/web/wave.ba/nginx.conf_pwa-cache \
+  /home/steelcodeweb/conf/web/wave.ba/nginx.ssl.conf_pwa-cache
+sudo chmod 644 /home/steelcodeweb/conf/web/wave.ba/nginx.conf_pwa-cache \
+  /home/steelcodeweb/conf/web/wave.ba/nginx.ssl.conf_pwa-cache
+sudo nginx -t && sudo systemctl reload nginx
+```
+
+Verify the public HTTPS responses; each listed file should return the
+`no-cache, must-revalidate, max-age=0` policy (not a long `max-age`):
+
+```sh
+for path in /index.html /sw.js /registerSW.js /manifest.webmanifest; do
+    printf '\n--- %s ---\n' "$path"
+    curl -sSI "https://wave.ba$path" |
+        grep -iE '^(HTTP/|Cache-Control:|Expires:|Last-Modified:)'
+done
+```
+
+Once those headers are correct, open the production site or installed PWA while
+online. The browser can then revalidate the worker and fetch the new app assets;
+clearing site storage should not be necessary.
+
 After configuring the web server, verify that
 `https://wave.ba/api/health` returns JSON such as
 `{"status":"ok","service":"wave-api"}`. If `/index.php/api/health` works but
