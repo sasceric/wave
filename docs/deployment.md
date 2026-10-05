@@ -52,8 +52,9 @@ when the SSH login is root. Keep the deployment checkout and locked
 dependencies trusted; using a dedicated non-root deployment user is safer.
 After installing dependencies, it runs `composer dump-env prod` so web requests
 use the compiled production environment instead of the development default in
-`.env`. After cache clearing, it assigns `var/` to the Hestia site account
-`steelcodeweb`, allowing PHP-FPM to write logs, cache, and media.
+`.env`. After cache clearing, it assigns
+`/home/steelcodeweb/web/wave.ba/public_html/var` to `steelcodeweb:steelcodeweb`
+and ensures the owner can write there, including logs, cache, and media.
 The deploy step preserves server-local frontend environment files such as
 `frontend/.env.production`. If `composer.lock` has local edits, it saves a patch
 under the ignored `var/deploy-backups/` directory and restores the tracked
