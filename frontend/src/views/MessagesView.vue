@@ -62,6 +62,12 @@ const isMobileView = ref(false)
 const visualViewportHeight = ref(0)
 const visualViewportTop = ref(0)
 const keyboardOpen = ref(false)
+const composerInput = ref(null)
+const composerFocused = ref(false)
+let viewportLayoutHeight = 0
+let viewportLayoutWidth = 0
+let viewportUpdateFrame = 0
+let viewportSettleTimers = []
 const conversationQuery = ref('')
 const conversationFilter = ref('all')
 const draft = ref('')
@@ -236,9 +242,10 @@ onMounted(() => {
   updateViewport()
   updateChatClock()
   document.addEventListener('visibilitychange', updateChatClock)
-  window.addEventListener('resize', updateViewport)
-  window.visualViewport?.addEventListener('resize', updateViewport)
-  window.visualViewport?.addEventListener('scroll', updateViewport)
+  window.addEventListener('resize', scheduleViewportUpdate)
+  window.visualViewport?.addEventListener('resize', scheduleViewportUpdate)
+  window.visualViewport?.addEventListener('scroll', scheduleViewportUpdate)
+  document.addEventListener('visibilitychange', scheduleViewportUpdate)
   void loadInbox()
   window.addEventListener('wave:realtime', handleRealtimeUpdate)
   window.addEventListener('wave:inbox-refresh', refreshInboxWhenVisible)
@@ -253,9 +260,11 @@ onBeforeUnmount(() => {
   document.documentElement.classList.remove('wave-chat-open')
   window.clearTimeout(chatClockTimer)
   document.removeEventListener('visibilitychange', updateChatClock)
-  window.removeEventListener('resize', updateViewport)
-  window.visualViewport?.removeEventListener('resize', updateViewport)
-  window.visualViewport?.removeEventListener('scroll', updateViewport)
+  window.removeEventListener('resize', scheduleViewportUpdate)
+  window.visualViewport?.removeEventListener('resize', scheduleViewportUpdate)
+  window.visualViewport?.removeEventListener('scroll', scheduleViewportUpdate)
+  document.removeEventListener('visibilitychange', scheduleViewportUpdate)
+  clearViewportUpdates()
   window.removeEventListener('wave:realtime', handleRealtimeUpdate)
   window.removeEventListener('wave:inbox-refresh', refreshInboxWhenVisible)
   document.removeEventListener('visibilitychange', acknowledgeVisibleMessages)
@@ -275,14 +284,77 @@ function updateChatClock() {
 function updateViewport() {
   isMobileView.value = window.matchMedia('(max-width: 760px)').matches
   const viewport = window.visualViewport
-  visualViewportHeight.value = Math.round(viewport?.height || window.innerHeight)
-  visualViewportTop.value = Math.round(viewport?.offsetTop || 0)
-  // iOS keeps the home indicator inset when the keyboard shrinks the visual viewport.
+  const height = Math.round(viewport?.height || window.innerHeight)
+  const width = Math.round(window.innerWidth || viewport?.width || 0)
   const layoutHeight = Math.max(window.innerHeight, document.documentElement.clientHeight || 0)
+  // Preserve the pre-keyboard height when an installed PWA resizes every viewport.
+  if (width !== viewportLayoutWidth || (!composerFocused.value && !keyboardOpen.value)) {
+    viewportLayoutWidth = width
+    viewportLayoutHeight = layoutHeight
+  } else {
+    viewportLayoutHeight = Math.max(viewportLayoutHeight, layoutHeight)
+  }
+  const keyboardLayoutHeight = composerFocused.value || keyboardOpen.value
+    ? Math.max(layoutHeight, viewportLayoutHeight) : layoutHeight
   keyboardOpen.value = isMobileView.value
     && Boolean(viewport)
     && Math.abs((viewport.scale || 1) - 1) < 0.01
-    && layoutHeight - visualViewportHeight.value > 120
+    && keyboardLayoutHeight - height > 120
+  visualViewportHeight.value = height
+  // WebKit can retain a stale pan offset after the keyboard has closed.
+  visualViewportTop.value = keyboardOpen.value ? Math.max(0, Math.round(viewport?.offsetTop || 0)) : 0
+}
+
+function clearViewportUpdates() {
+  if (viewportUpdateFrame) window.cancelAnimationFrame(viewportUpdateFrame)
+  viewportUpdateFrame = 0
+  viewportSettleTimers.forEach((timer) => window.clearTimeout(timer))
+  viewportSettleTimers = []
+}
+
+function scheduleViewportUpdate() {
+  clearViewportUpdates()
+  if (unmounted || document.visibilityState !== 'visible') return
+  updateViewport()
+  viewportUpdateFrame = window.requestAnimationFrame(() => {
+    viewportUpdateFrame = 0
+    if (!unmounted) updateViewport()
+  })
+  // Keyboard/emoji-panel geometry may settle after the resize event. This is a
+  // bounded layout check, with no interval and no message or notification fetch.
+  if (isMobileView.value) {
+    viewportSettleTimers = [100, 350, 750].map((delay) => window.setTimeout(() => {
+      if (!unmounted && document.visibilityState === 'visible') updateViewport()
+    }, delay))
+  }
+}
+
+function handleComposerFocus() {
+  // Keep the idle viewport baseline even if WebKit has already started resizing.
+  composerFocused.value = true
+  scheduleViewportUpdate()
+}
+
+function handleComposerBlur() {
+  composerFocused.value = false
+  scheduleViewportUpdate()
+}
+
+function preserveComposerFocus(event) {
+  if (isMobileView.value && document.activeElement === composerInput.value
+    && event.button === 0 && event.isPrimary !== false) {
+    // Cancel focus transfer, keeping the normal click/form submission intact.
+    event.preventDefault()
+  }
+}
+
+function focusComposerForSend(event) {
+  const input = composerInput.value
+  if (isMobileView.value && keyboardOpen.value && input && event?.submitter) {
+    // Button activation does not focus the button in every touch browser.
+    // Run inside the original submit gesture; iOS rejects focus after await.
+    input.focus({ preventScroll: true })
+  }
 }
 
 function handleRealtimeUpdate(event) {
@@ -703,10 +775,11 @@ function upsertConversation(conversation) {
   conversations.value.splice(existingIndex, 1, conversation)
 }
 
-async function sendMessage() {
+async function sendMessage(event) {
   if (!canSend.value) {
     return
   }
+  focusComposerForSend(event)
   sending.value = true
   error.value = ''
   const body = draft.value.trim()
@@ -1049,33 +1122,6 @@ function messageTimeDescription(value) {
               </template>
             </div>
           </div>
-          <button v-if="unseenNewMessages" type="button" class="campaign-messages__new-messages" @click="scrollToLatestMessage">{{ t('campaignChat.newMessages', { count: unseenNewMessages }) }}</button>
-          <form class="campaign-messages__composer" @submit.prevent="sendMessage">
-            <label class="campaign-messages__composer-field">
-              <span class="sr-only">{{ t('campaignChat.replyPlaceholder') }}</span>
-              <input
-                v-model="draft"
-                type="text"
-                maxlength="2000"
-                required
-                autocomplete="off"
-                :placeholder="t('campaignChat.replyPlaceholder')"
-                aria-describedby="campaign-message-enter-hint"
-              >
-              <span id="campaign-message-enter-hint" class="sr-only">
-                {{ t('campaignChat.messageHint') }}
-              </span>
-            </label>
-            <button
-              class="campaign-messages__send"
-              type="submit"
-              :aria-label="sending ? t('campaignChat.sending') : t('campaignChat.send')"
-              :title="sending ? t('campaignChat.sending') : t('campaignChat.send')"
-              :disabled="!canSend"
-            >
-              <Send :size="16" aria-hidden="true" />
-            </button>
-          </form>
         </template>
 
         <template v-else-if="pendingStart && pendingDetails && currentUser?.accountType === 'company'">
@@ -1113,33 +1159,6 @@ function messageTimeDescription(value) {
             </button>
           </header>
           <p class="campaign-messages__empty">{{ t('campaignChat.newConversationDescription') }}</p>
-          <button v-if="unseenNewMessages" type="button" class="campaign-messages__new-messages" @click="scrollToLatestMessage">{{ t('campaignChat.newMessages', { count: unseenNewMessages }) }}</button>
-          <form class="campaign-messages__composer" @submit.prevent="sendMessage">
-            <label class="campaign-messages__composer-field">
-              <span class="sr-only">{{ t('campaignChat.firstMessage') }}</span>
-              <input
-                v-model="draft"
-                type="text"
-                maxlength="2000"
-                required
-                autocomplete="off"
-                :placeholder="t('campaignChat.firstMessage')"
-                aria-describedby="campaign-message-enter-hint"
-              >
-              <span id="campaign-message-enter-hint" class="sr-only">
-                {{ t('campaignChat.messageHint') }}
-              </span>
-            </label>
-            <button
-              class="campaign-messages__send"
-              type="submit"
-              :aria-label="sending ? t('campaignChat.sending') : t('campaignChat.send')"
-              :title="sending ? t('campaignChat.sending') : t('campaignChat.send')"
-              :disabled="!canSend"
-            >
-              <Send :size="16" aria-hidden="true" />
-            </button>
-          </form>
         </template>
 
         <p
@@ -1150,6 +1169,41 @@ function messageTimeDescription(value) {
           <MessageCircle :size="30" stroke-width="1.4" aria-hidden="true" />
           <p>{{ t('campaignChat.selectConversation') }}</p>
         </div>
+
+        <button v-if="selectedThread && unseenNewMessages" type="button" class="campaign-messages__new-messages" @click="scrollToLatestMessage">{{ t('campaignChat.newMessages', { count: unseenNewMessages }) }}</button>
+        <form v-if="selectedThread || (pendingStart && pendingDetails && currentUser?.accountType === 'company')" class="campaign-messages__composer" @submit.prevent="sendMessage">
+          <label class="campaign-messages__composer-field">
+            <span class="sr-only">{{ t(selectedThread ? 'campaignChat.replyPlaceholder' : 'campaignChat.firstMessage') }}</span>
+            <input
+              ref="composerInput"
+              v-model="draft"
+              @focus="handleComposerFocus"
+              @blur="handleComposerBlur"
+              @input="scheduleViewportUpdate"
+              type="text"
+              maxlength="2000"
+              required
+              autocomplete="off"
+              enterkeyhint="send"
+              :placeholder="t(selectedThread ? 'campaignChat.replyPlaceholder' : 'campaignChat.firstMessage')"
+              aria-describedby="campaign-message-enter-hint"
+            >
+            <span id="campaign-message-enter-hint" class="sr-only">
+              {{ t('campaignChat.messageHint') }}
+            </span>
+          </label>
+          <button
+            class="campaign-messages__send"
+            type="submit"
+            @pointerdown="preserveComposerFocus"
+            @mousedown="preserveComposerFocus"
+            :aria-label="sending ? t('campaignChat.sending') : t('campaignChat.send')"
+            :title="sending ? t('campaignChat.sending') : t('campaignChat.send')"
+            :disabled="!canSend"
+          >
+            <Send :size="16" aria-hidden="true" />
+          </button>
+        </form>
       </section>
 
       <aside

@@ -4297,9 +4297,15 @@ h1 em, h2 em { color: #c67f67; font-weight: 400; }
     background: var(--paper);
   }
   html.wave-chat-open .campaign-messages__layout { height: 100%; border: 0; border-radius: 0; }
-  html.wave-chat-open .campaign-messages__thread { padding-bottom: 0; }
-  html.wave-chat-open .campaign-messages__thread-heading { padding-top: max(8px, env(safe-area-inset-top)); }
-  html.wave-chat-open .campaign-messages__composer { padding-bottom: max(9px, var(--chat-bottom-inset, env(safe-area-inset-bottom))); }
+  html.wave-chat-open .campaign-messages__thread { padding-bottom: 0; overflow: hidden; }
+  html.wave-chat-open .campaign-messages__thread-heading { flex-shrink: 0; padding-top: max(8px, env(safe-area-inset-top)); }
+  html.wave-chat-open .campaign-messages__composer {
+    position: relative;
+    bottom: auto;
+    flex-shrink: 0;
+    padding-bottom: max(9px, var(--chat-bottom-inset, env(safe-area-inset-bottom)));
+  }
+  html.wave-chat-open .campaign-messages__composer-field input { font-size: 16px; }
 }
 
 @media (max-width: 420px) {

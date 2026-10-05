@@ -114,3 +114,29 @@ unread messages” if the boundary is outside the loaded page. Lazy-loaded older
 pages move that divider back to the actual boundary without losing the scroll anchor.
 Unread divider boundaries reset when switching/leaving a thread, and a later unseen
 batch gets a fresh boundary. Migration `Version20261006170000` indexes unread lookups.
+
+### Mobile chat keyboard
+
+`MessagesView.vue` keeps one composer input mounted when the first message creates a
+conversation. A primary pointer press on Send prevents focus transfer while the
+input is focused. Mobile form submission also restores input focus synchronously
+inside the Send gesture when the keyboard is open; never move that focus after the
+network response, because the user may have moved elsewhere and iOS may reject it.
+
+The mobile chat uses the visual viewport's height and keyboard pan offset. It keeps
+an idle layout-height baseline for installed PWAs that resize every viewport metric,
+clears the bottom safe-area inset while the keyboard is open, and ignores stale pan
+offsets after it closes. Resize, scroll, input, focus and visibility events trigger
+immediate/frame measurements plus three bounded checks through 750 ms for delayed
+keyboard/emoji transitions. These checks never fetch messages or notifications and
+are cancelled on hide/unmount. The composer remains in the mobile flex layout with
+16px input text; the timeline supplies the scrollable area.
+
+Regression coverage is in `frontend/tests/chatKeyboard.test.js`. Desktop Chrome
+validation retained input focus after Send and kept both controls visible when the
+viewport changed from 428×926 to 428×430, then 428×390. This simulates available
+height, not the native iOS keyboard. After deploying, check the installed iPhone PWA:
+send several messages with the keyboard open, switch between text and emoji, dismiss
+and reopen the keyboard, and send the first message in a new conversation. Verify
+focus, visible controls, and restoration of the bottom inset. This frontend fix needs
+the normal production build/deployment; no environment or database changes.
