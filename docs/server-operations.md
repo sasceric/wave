@@ -186,7 +186,12 @@ stdout logs and do not run the old reminder/cache schedules alongside this entry
 
 ## Development
 
-`config/packages/wave_workers.yaml` enables the admin worker only in `dev`.
+`APP_ENV` selects the environment configuration automatically. Shared settings
+live in `config/packages/`; `config/packages/dev/wave_workers.yaml` enables the
+admin worker, `config/packages/prod/wave_workers.yaml` disables it, and tests
+use their own overrides in `config/packages/test/`. See
+[environment-specific configuration](environment-configuration.md) for the
+layout, local synchronous fallback and production setup.
 Open an admin page while signed in as `ROLE_ADMIN`: the browser calls CSRF-protected
 bounded consume requests, shares a Web Lock across tabs where supported, and the
 server also takes a PostgreSQL advisory lock across browsers. Hidden tabs and
@@ -195,7 +200,8 @@ wait two seconds between calls, errors back off, and only allowlisted transports
 are consumed; `failed` is excluded. No inbox polling was introduced.
 
 Closing the admin stops background progress unless CLI consumers also run.
-For dev CLI processing, override `wave.admin_worker.enabled: false` in dev YAML
+For dev CLI processing, override `wave.admin_worker.enabled: false` in
+`config/packages/dev/wave_workers.yaml`
 and run the four consumers plus `app:scheduled-tasks dispatch` as needed.
 Tests default to direct delivery but queue integration tests exercise actual
 Doctrine transports in a disposable PostgreSQL database.

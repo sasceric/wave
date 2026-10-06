@@ -1,0 +1,3 @@
+# Production processing belongs to supervised CLI consumers.
+parameters:
+    wave.admin_worker.enabled: false

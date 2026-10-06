@@ -1,0 +1,2 @@
+parameters:
+    wave.admin_worker.enabled: true

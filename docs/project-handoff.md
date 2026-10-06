@@ -36,6 +36,7 @@ Declared dependencies: PHP 8.4+, Symfony 8.1, Doctrine ORM 3, Vue 3, Vue Router,
 | Tests | `tests/Controller/` plus API, OAuth, service, command, and migration tests |
 | Deployment and server jobs | `.github/workflows/deploy-production.yml`, `docs/deployment.md`, `docs/server-operations.md`, `docs/mercure-server-setup.md` |
 | Admin operational tools | `AdminToolsController.php`, `Background/TaskRegistry.php`, `Background/AdminWorker.php`, `QueueInspector.php`, `AdminLogReader.php`, `frontend/src/views/AdminToolsView.vue` |
+| Environment configuration | `config/packages/dev/`, `prod/`, `test/`; `docs/environment-configuration.md` |
 | Background processing | `docs/background-processing-plan.md`: FroshTools comparison, queue/task catalog, indexing, logging, admin controls and rollout |
 
 Controller filenames in this table are under `src/Controller/Api/` unless a full path is shown.

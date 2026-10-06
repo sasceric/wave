@@ -67,6 +67,15 @@ npm --prefix frontend run dev -- --host 127.0.0.1
 
 Then open <http://127.0.0.1:5173>; Vite proxies `/api` to Symfony on port 8000. Use `127.0.0.1` consistently rather than switching to `localhost`: browser authorization cookies are host-scoped, while the default Mercure public URL is also `127.0.0.1`. If the app is opened at `localhost:5173` but Mercure at `127.0.0.1:3000`, the private EventSource request will not receive its subscription cookie and live notifications will fail. Restart Vite after changing hosts and sign in again at the `127.0.0.1` address, since cookies are not shared between the two hostnames.
 
+Environment settings are selected by `APP_ENV`: shared configuration is in
+`config/packages/`, with overrides in `config/packages/dev/`, `prod/` and `test/`.
+In development, keep `WAVE_QUEUE_ENABLED=true` and a visible admin tab open to
+process jobs without a separate worker process. For ordinary local work without
+an admin tab, `WAVE_QUEUE_ENABLED=false` uses the existing synchronous fallbacks.
+Production uses `APP_ENV=prod` and supervised CLI workers. See
+[environment-specific configuration](docs/environment-configuration.md) and
+[server operations](docs/server-operations.md) for details.
+
 Wave uses the self-hosted Mercure Hub for live campaign messages and in-app notification updates. Docker is not required for local development. In a third terminal, install the checksum-verified native Hub binary once and run it:
 
 ```sh
