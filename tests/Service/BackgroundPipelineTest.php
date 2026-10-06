@@ -7,12 +7,21 @@ use App\Background\FailedJobs;
 use App\Background\JobDispatcher;
 use App\Background\PayloadCipher;
 use App\Background\TaskRegistry;
+use App\Entity\User;
+use App\Entity\UserPushSubscription;
 use App\MessageHandler\JobHandler;
 use App\Service\QueueInspector;
+use App\Service\UnreadInboxCounter;
+use App\Service\WebPushNotificationSender;
 use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Tools\SchemaTool;
+use Minishlink\WebPush\VAPID;
+use PHPUnit\Framework\Attributes\DataProvider;
+use Psr\Log\NullLogger;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
+use Symfony\Component\HttpClient\MockHttpClient;
+use Symfony\Component\HttpClient\Response\MockResponse;
 use Symfony\Component\Messenger\Event\WorkerRunningEvent;
 use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Messenger\Worker;
@@ -102,7 +111,7 @@ final class BackgroundPipelineTest extends KernelTestCase
     {
         $container = self::getContainer();
         $locator = new \Symfony\Component\DependencyInjection\ServiceLocator(array_combine(['realtime', 'mail', 'push', 'background'], array_map(static fn (string $queue): \Closure => static fn () => $container->get('messenger.transport.' . $queue), ['realtime', 'mail', 'push', 'background'])));
-        $worker = new AdminWorker($this->db, $container->get(MessageBusInterface::class), $container->get(TaskRegistry::class), $container->get(EventDispatcherInterface::class), new \Psr\Log\NullLogger(), $locator, 'dev', true, true, 2, 3, 134217728, 2000);
+        $worker = new AdminWorker($this->db, $container->get(MessageBusInterface::class), $container->get(TaskRegistry::class), $container->get(EventDispatcherInterface::class), new NullLogger(), $locator, 'dev', true, true, 2, 3, 134217728, 2000);
         $start = microtime(true);
         self::assertSame(['handled' => 0, 'busy' => false], $worker->consume());
         self::assertLessThan(3, microtime(true) - $start);
@@ -191,6 +200,59 @@ final class BackgroundPipelineTest extends KernelTestCase
         self::assertCount(1, $sent);
         self::assertStringContainsString('Exact captured content', $sent[0]);
         self::assertSame('completed', $this->db->fetchOne('SELECT status FROM background_job'));
+    }
+
+    #[DataProvider('pushResponses')]
+    public function testQueuedPushUsesTheInstalledLibraryAndPreservesDeliveryOutcomes(int $httpStatus, string $jobStatus, bool $keepsSubscription): void
+    {
+        $em = self::getContainer()->get(EntityManagerInterface::class);
+        $user = new User('push-pipeline@example.test', 'creator');
+        $user->setPassword('unused-test-password-hash');
+        $deviceKeys = VAPID::createVapidKeys();
+        $subscription = new UserPushSubscription($user, 'https://push.example.test/test-subscription', $deviceKeys['publicKey'], rtrim(strtr(base64_encode(random_bytes(16)), '+/', '-_'), '='), 'en');
+        $em->persist($user);
+        $em->persist($subscription);
+        $em->flush();
+        $subscriptionId = $subscription->getId();
+        $requests = [];
+        $client = new MockHttpClient(static function (string $method, string $url, array $options) use (&$requests, $httpStatus): MockResponse {
+            $requests[] = [$method, $url, $options];
+
+            return new MockResponse('', ['http_code' => $httpStatus]);
+        });
+        $keys = VAPID::createVapidKeys();
+        self::getContainer()->set(WebPushNotificationSender::class, new WebPushNotificationSender(
+            $em, new NullLogger(), $keys['publicKey'], $keys['privateKey'], 'mailto:test@example.test',
+            self::getContainer()->get(UnreadInboxCounter::class), httpClient: $client,
+        ));
+        $id = $this->jobs->enqueue('SendWebPushMessage', ['subscriptionId' => $subscriptionId, 'userId' => $user->getId(), 'title' => 'Queued test', 'body' => 'Test message', 'url' => '/messages?conversation=1']);
+        $this->work('push');
+
+        self::assertCount(1, $requests);
+        self::assertSame('POST', $requests[0][0]);
+        self::assertSame('https://push.example.test/test-subscription', $requests[0][1]);
+        self::assertSame(10.0, $requests[0][2]['timeout']);
+        self::assertSame(10.0, $requests[0][2]['max_duration']);
+        self::assertSame(0, $requests[0][2]['max_redirects']);
+        self::assertStringContainsString('content-encoding: aes128gcm', strtolower(implode("\n", $requests[0][2]['headers'])));
+        self::assertSame($jobStatus, $this->db->fetchOne('SELECT status FROM background_job WHERE id = ?', [$id]));
+        self::assertSame($keepsSubscription ? 1 : 0, (int) $this->db->fetchOne('SELECT COUNT(*) FROM user_push_subscription WHERE id = ?', [$subscriptionId]));
+        if ($jobStatus === 'retrying') {
+            self::assertSame(1, (int) $this->db->fetchOne("SELECT COUNT(*) FROM messenger_messages WHERE queue_name = 'push' AND available_at > (CURRENT_TIMESTAMP AT TIME ZONE 'UTC')"));
+        } elseif ($jobStatus === 'failed') {
+            self::assertSame(1, (int) $this->db->fetchOne("SELECT COUNT(*) FROM messenger_messages WHERE queue_name = 'failed'"));
+        }
+    }
+
+    public static function pushResponses(): array
+    {
+        return [
+            'accepted' => [201, 'completed', true],
+            'expired subscription' => [410, 'completed', false],
+            'temporary provider failure' => [503, 'retrying', true],
+            'rate limited' => [429, 'retrying', true],
+            'permanent rejection' => [403, 'failed', true],
+        ];
     }
 
     private function work(string $queue): void

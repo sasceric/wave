@@ -144,9 +144,31 @@ An already-mounted Messages view reacts to changed conversation/inquiry queries.
 | Mercure returns 401 with app authorization | Matching issuer/JWT keys, public resource identity, subscriber cookie and approved/verified session |
 | CORS error or EventSource fails | Exact CORS origin, Nginx include, TLS and subscription-cookie scope |
 | Live chat works but push does not | VAPID pair, device subscription, website permission and OS notification settings |
+| Push jobs are delayed and logs show `WebPush::__construct()` argument #3 TypeError | Deploy the corrected Web Push 11 HTTP-client construction below, restart the push worker, then retry failed jobs |
 | Push arrives but tapping opens the wrong view | Notification URL/query, deployed service worker, current login and navigation with another chat already open |
 | Home-screen badge is missing | Installed app, platform Badging API support, notification permission, OS Badges setting and deployed worker/payload version |
 | Older app code persists | App-shell caching and acceptance of the PWA update |
 | Cache-write warnings | Ownership/write access of `var/cache/`, `var/log/` and deployment account |
 
-Hub logs: `journalctl -u mercure`. Application warnings rotate under `/home/steelcodeweb/web/wave.ba/public_html/var/log/prod-YYYY-MM-DD.log`. Relevant messages include `Unable to publish a Wave realtime update.`, `Web Push VAPID configuration is invalid.`, `Unable to send a Wave Web Push notification.` and `A Wave Web Push notification was rejected.` Record test time and which stage failed; keep secrets and private message text out of shared diagnostics.
+Hub logs: `journalctl -u mercure`. Queued push diagnostics: `journalctl -u wave-worker@push`; job outcomes are in `prod.background-YYYY-MM-DD.log`. Application warnings rotate under `/home/steelcodeweb/web/wave.ba/public_html/var/log/prod-YYYY-MM-DD.log`. `push.delivery.rejected` records the HTTP status and whether it is retryable without storing the provider response, endpoint or keys. Record test time and which stage failed; keep secrets and private message text out of shared diagnostics.
+
+### Recovering from the Web Push constructor error
+
+The initial queued push implementation passed `10` as the third constructor
+argument. Web Push 11 expects a PSR-18 client there, so jobs failed before any
+provider request. The corrected code supplies Symfony's `Psr18Client` with
+10-second inactivity and total-duration limits configured on its HTTP client.
+Both direct and queued delivery use the same factory.
+
+Deploy the corrected application code and run:
+
+```sh
+sudo systemctl restart wave-worker@push
+sudo journalctl -u wave-worker@push --since "5 minutes ago" -n 50 --no-pager
+```
+
+Use the matching Supervisor restart if applicable. Pending delayed jobs retry
+automatically; jobs already moved to `failed` need **Tools → Queues → Failed jobs
+→ Retry** after deployment. Leave `WAVE_QUEUE_ENABLED=true`. This correction
+requires no database migration, environment change, VAPID-key replacement or
+device re-subscription. Send a new test message and confirm actual device delivery.

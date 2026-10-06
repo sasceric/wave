@@ -12,6 +12,9 @@ use Minishlink\WebPush\Subscription;
 use Minishlink\WebPush\WebPush;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
+use Symfony\Component\HttpClient\HttpClient;
+use Symfony\Component\HttpClient\Psr18Client;
+use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 final class WebPushNotificationSender
 {
@@ -25,6 +28,7 @@ final class WebPushNotificationSender
         private readonly ?JobDispatcher $jobs = null,
         #[Autowire('%wave.queue.enabled%')] private readonly bool $queued = false,
         #[Autowire('%env(bool:WAVE_NOTIFICATIONS_ENABLED)%')] private readonly bool $notificationsEnabled = true,
+        private readonly ?HttpClientInterface $httpClient = null,
     ) {
     }
 
@@ -48,13 +52,7 @@ final class WebPushNotificationSender
             return;
         }
         try {
-            $webPush = new WebPush([
-                'VAPID' => [
-                    'subject' => $this->subject,
-                    'publicKey' => $this->publicKey,
-                    'privateKey' => $this->privateKey,
-                ],
-            ]);
+            $webPush = $this->createWebPush();
         } catch (\ErrorException $exception) {
             $this->logger->error('Web Push VAPID configuration is invalid.', ['exception' => $exception]);
 
@@ -134,7 +132,7 @@ final class WebPushNotificationSender
         if ($this->publicKey === '' || $this->privateKey === '') {
             throw new \Symfony\Component\Messenger\Exception\UnrecoverableMessageHandlingException('Web Push credentials are not configured.');
         }
-        $webPush = new WebPush(['VAPID' => ['subject' => $this->subject, 'publicKey' => $this->publicKey, 'privateKey' => $this->privateKey]], [], 10);
+        $webPush = $this->createWebPush();
         $report = $webPush->sendOneNotification(Subscription::create(['endpoint' => $subscription->getEndpoint(), 'keys' => ['p256dh' => $subscription->getPublicKey(), 'auth' => $subscription->getAuthToken()], 'contentEncoding' => 'aes128gcm']), json_encode(['title' => $payload['title'], 'body' => $payload['body'], 'url' => $payload['url'], 'badgeCount' => $this->unreadInboxCounter->total($subscription->getUser())], JSON_THROW_ON_ERROR), ['TTL' => 86400]);
         if ($report->isSubscriptionExpired()) {
             $this->entityManager->remove($subscription);
@@ -142,11 +140,28 @@ final class WebPushNotificationSender
             $this->logger->info('push.subscription.expired', ['subscription_id' => $payload['subscriptionId']]);
         } elseif (!$report->isSuccess()) {
             $status = $report->getResponse()?->getStatusCode() ?? 0;
-            if ($status === 429 || $status === 0 || $status >= 500) {
+            $retryable = $status === 429 || $status === 0 || $status >= 500;
+            $this->logger->warning('push.delivery.rejected', ['subscription_id' => $payload['subscriptionId'], 'http_status' => $status, 'retryable' => $retryable]);
+            if ($retryable) {
                 throw new \RuntimeException('Push provider temporarily rejected delivery.');
             }
             throw new \Symfony\Component\Messenger\Exception\UnrecoverableMessageHandlingException('Push provider rejected delivery (status ' . $status . ').');
         }
+    }
+
+    private function createWebPush(): WebPush
+    {
+        // Web Push 11 accepts a PSR-18 client; timeouts belong to that client.
+        $client = new Psr18Client(($this->httpClient ?? HttpClient::create())->withOptions([
+            'timeout' => 10.0,
+            'max_duration' => 10.0,
+            'max_redirects' => 0,
+        ]));
+
+        return new WebPush(
+            auth: ['VAPID' => ['subject' => $this->subject, 'publicKey' => $this->publicKey, 'privateKey' => $this->privateKey]],
+            client: $client,
+        );
     }
 
     private function titleFor(Notification $notification): string
