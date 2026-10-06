@@ -10,14 +10,15 @@ export function useInfiniteDirectory(endpoint, locale, filters = {}, batchSize =
   const error = ref('')
   const hasMore = ref(true)
   const filterEntries = Object.entries(filters)
-  let nextOffset = 0
+  let nextCursor = null
   let requestVersion = 0
   let disposed = false
 
   async function loadMore() {
     if (disposed || loading.value || !hasMore.value) return
     const version = requestVersion
-    const params = new URLSearchParams({ limit: String(batchSize), offset: String(nextOffset), view: 'card' })
+    const params = new URLSearchParams({ limit: String(batchSize), pagination: 'cursor', view: 'card' })
+    if (nextCursor) params.set('cursor', nextCursor)
     filterEntries.forEach(([key, value]) => {
       const filterValue = String(value.value || '').trim()
       if (filterValue) params.set(key, filterValue)
@@ -30,8 +31,6 @@ export function useInfiniteDirectory(endpoint, locale, filters = {}, batchSize =
       if (disposed || version !== requestVersion) return
       if (!Array.isArray(response.data)) throw new Error(t('api.invalidResponse'))
 
-      // Advance by the server batch, even if a changing directory repeats a card.
-      nextOffset += response.data.length
       const seen = new Set(items.value.map((item) => item.id))
       const additions = response.data.filter((item) => {
         if (seen.has(item.id)) return false
@@ -39,11 +38,9 @@ export function useInfiniteDirectory(endpoint, locale, filters = {}, batchSize =
         return true
       })
       items.value = [...items.value, ...additions]
-      const hasTotal = Number.isInteger(response.meta?.total) && response.meta.total >= 0
-      total.value = hasTotal ? response.meta.total : nextOffset
-      hasMore.value = response.data.length > 0 && (hasTotal
-        ? nextOffset < total.value
-        : response.data.length === batchSize)
+      if (Number.isInteger(response.meta?.total) && response.meta.total >= 0) total.value = response.meta.total
+      nextCursor = response.meta?.nextCursor || null
+      hasMore.value = response.data.length > 0 && Boolean(response.meta?.hasMore && nextCursor)
     } catch (cause) {
       if (!disposed && version === requestVersion) error.value = cause.message
     } finally {
@@ -53,7 +50,7 @@ export function useInfiniteDirectory(endpoint, locale, filters = {}, batchSize =
 
   function reset() {
     requestVersion += 1
-    nextOffset = 0
+    nextCursor = null
     items.value = []
     total.value = 0
     error.value = ''

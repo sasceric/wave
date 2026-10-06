@@ -75,11 +75,7 @@ final class AdminLogReader
             if (preg_match('/^[a-f0-9]{32}$/D', $cursor) !== 1) {
                 throw new \InvalidArgumentException('Invalid log cursor.');
             }
-            $state = $this->cache->get(self::CACHE_PREFIX . $cursor, static function (ItemInterface $item): mixed {
-                $item->expiresAfter(1);
-
-                return null;
-            });
+            $state = $this->cache->get(self::CACHE_PREFIX . $cursor, self::expiredCursor(...));
             if (!is_array($state) || $state['file'] !== $file) {
                 throw new \InvalidArgumentException('Expired log cursor.');
             }
@@ -135,6 +131,13 @@ final class AdminLogReader
                 fclose($handle);
             }
         }
+    }
+
+    private static function expiredCursor(ItemInterface $item): mixed
+    {
+        $item->expiresAfter(1);
+
+        return null;
     }
 
     private function safePath(string $name): ?string

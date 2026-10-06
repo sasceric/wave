@@ -75,7 +75,7 @@ function preferredLocale() {
 }
 
 const localizedRoutes = Object.entries(routeSegments).flatMap(([locale, routes]) => (
-  Object.entries(routes).map(([name, segment]) => ({
+  Object.entries(routes).map(([name]) => ({
     path: localizedPath(name, locale),
     name: localizedRouteName(name, locale),
     component: routeViews[name],

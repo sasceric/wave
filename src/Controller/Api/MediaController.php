@@ -105,7 +105,7 @@ final class MediaController
         $file = $request->files->get('file');
         if (!$file instanceof UploadedFile
             || !$file->isValid()
-            || $file->getSize() === null
+            || $file->getSize() === false
             || $file->getSize() > self::MAX_FILE_SIZE
             || !$storage->supports($file)
         ) {

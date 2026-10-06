@@ -8,6 +8,7 @@ use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity]
+#[ORM\Index(name: 'idx_creator_directory_name', columns: ['display_name', 'id'])]
 #[ORM\Table(name: 'creator')]
 #[ORM\UniqueConstraint(name: 'uniq_creator_slug', columns: ['slug'])]
 class Creator

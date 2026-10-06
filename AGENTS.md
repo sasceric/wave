@@ -14,7 +14,7 @@ Use `docs/project-handoff.md` for architecture, key code paths, local commands, 
 ## Validation
 
 - Run relevant backend tests with `php bin/phpunit` and validate frontend changes with `npm --prefix frontend run build`.
-- The existing repository coding policy requires PHPStan for PHP changes and ESLint for JavaScript/Vue changes. Neither is currently declared/configured in the project manifests. Report unavailable checks explicitly; do not claim they passed.
+- Run PHPStan with `composer analyse` for PHP changes and ESLint with `npm --prefix frontend run lint` for JavaScript/Vue changes. Both are configured and require development dependencies. Report unavailable checks explicitly; do not claim they passed.
 - For documentation-only changes, check the diff and whitespace; application tests are not necessary.
 
 ## Local and deployment context

@@ -398,6 +398,6 @@ final class OAuthController extends AbstractController
             }
         }
 
-        return $categories === [] ? null : $categories;
+        return $categories;
     }
 }

@@ -24,12 +24,13 @@ projection reconciliation, sitemap generation, reminders and cleanup use bounded
 jobs. Listings request small card resources and use projection/source fallback;
 chat sidebar unread counts are grouped rather than queried per conversation.
 
-The wider performance roadmap remains separate: public directories still use
-30-item offset pagination and admin catalogs need their own cursor/paginated APIs;
-the chat inbox now uses merged 30-item cursor batches, and PostgreSQL trigram/GIN tuning and representative load
-benchmarks have not been performed. The implementation does not establish a
-measured capacity for thousands of concurrent users. Production installation,
-backfill and provider/device smoke tests are also still deployment steps.
+Public directories now use signed 30-item cursor batches, and the four large admin
+catalog tables use server pagination/search/sort. The chat inbox uses merged
+30-item cursor batches. PHPStan and ESLint are configured and passing. A local
+synthetic PostgreSQL/API/chat/Messenger baseline is recorded in
+`docs/performance-baseline.md`; it does not establish thousands-of-users capacity.
+Trigram/GIN search tuning, production concurrency and provider/device smoke tests
+remain separate measurements/deployment checks.
 
 ## 1. What exists, and what the screenshots show
 
@@ -537,8 +538,10 @@ companies/campaigns in realistic proportions, and a large chat/reminder backlog)
 and explain query plans. Record SQL count, rows scanned, API p50/p95, worker duration,
 queue oldest age, CPU/RAM and bytes transferred before/after. Agree latency goals
 from the server baseline; passing unit tests does not prove thousand-user capacity.
-Run frontend build and relevant backend tests; PHPStan/ESLint remain unconfigured
-and must not be reported as passing until installed/configured.
+Run `composer analyse`, `npm --prefix frontend run lint`, the frontend build and
+relevant tests. The local baseline and reproducible script are documented in
+`docs/performance-baseline.md`; production concurrency/provider timings still need
+representative measurements.
 
 ## 11. Server/deployment work after implementation
 

@@ -384,6 +384,6 @@ final class AuthController extends AbstractController
             }
         }
 
-        return $categories === [] ? null : $categories;
+        return $categories;
     }
 }

@@ -3,6 +3,7 @@
 namespace App\Controller\Api;
 
 use App\Api\CampaignResource;
+use App\Api\DirectoryCursor;
 use App\Entity\Campaign;
 use App\Entity\DirectoryIndex;
 use App\Entity\MarketplaceCategory;
@@ -16,7 +17,7 @@ use Symfony\Component\Routing\Attribute\Route;
 final class CampaignController
 {
     #[Route('/api/campaigns', name: 'api_campaigns_index', methods: ['GET'])]
-    public function index(Request $request, EntityManagerInterface $entityManager): JsonResponse
+    public function index(Request $request, EntityManagerInterface $entityManager, DirectoryCursor $cursor): JsonResponse
     {
         $locale = LocaleContext::fromRequest($request);
         if ($locale === null) {
@@ -30,6 +31,13 @@ final class CampaignController
         }
         if ($offset < 0 || $offset > 100_000) {
             return new JsonResponse(['error' => ApiMessages::get('invalid_offset', $locale)], 400);
+        }
+
+        try {
+            $cursorMode = $cursor->enabled($request);
+            $position = $cursorMode ? $cursor->decode($request, 'campaign', ['featured' => 'bool', 'date' => 'date', 'id' => 'int']) : null;
+        } catch (\InvalidArgumentException) {
+            return new JsonResponse(['error' => ApiMessages::get('invalid_request', $locale)], 400);
         }
 
         $card = $request->query->getString('view') === 'card';
@@ -77,10 +85,11 @@ final class CampaignController
                 ->setParameter('featured', $featured);
         }
 
-        $total = (int) (clone $builder)
+        $total = $position !== null ? null : (int) (clone $builder)
             ->select('COUNT(DISTINCT campaign.id)')
             ->getQuery()
             ->getSingleScalarResult();
+        $cursor->seek($builder, ['featured' => ['campaign.featured', 'DESC'], 'date' => ['campaign.closesAt', 'ASC'], 'id' => ['campaign.id', 'ASC']], $position);
         $campaigns = $builder
             ->leftJoin('campaign.coverMedia', 'coverMedia')
             ->leftJoin('company.logoMedia', 'logoMedia')
@@ -88,10 +97,23 @@ final class CampaignController
             ->orderBy('campaign.featured', \SortDirection::Descending)
             ->addOrderBy('campaign.closesAt', \SortDirection::Ascending)
             ->addOrderBy('campaign.id', \SortDirection::Ascending)
-            ->setFirstResult($offset)
-            ->setMaxResults($limit)
+            ->setFirstResult($cursorMode ? 0 : $offset)
+            ->setMaxResults($limit + ($cursorMode ? 1 : 0))
             ->getQuery()
             ->getResult();
+        $hasMore = $cursorMode && count($campaigns) > $limit;
+        $campaigns = array_slice($campaigns, 0, $limit);
+        $last = $campaigns === [] ? null : $campaigns[array_key_last($campaigns)];
+        $meta = ['count' => count($campaigns), 'limit' => $limit];
+        if ($total !== null) {
+            $meta['total'] = $total;
+        }
+        if ($cursorMode) {
+            $meta['hasMore'] = $hasMore;
+            $meta['nextCursor'] = !$hasMore || $last === null ? null : $cursor->encode($request, 'campaign', ['featured' => $last->isFeatured(), 'date' => $last->getClosesAt()->format('Y-m-d H:i:s'), 'id' => $last->getId()]);
+        } else {
+            $meta['offset'] = $offset;
+        }
         $categoryLabels = self::categoryLabels($entityManager, $locale);
 
         return new JsonResponse([
@@ -104,7 +126,7 @@ final class CampaignController
                 ),
                 $campaigns,
             ),
-            'meta' => ['count' => count($campaigns), 'total' => $total, 'limit' => $limit, 'offset' => $offset],
+            'meta' => $meta,
         ]);
     }
 

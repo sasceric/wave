@@ -3,10 +3,10 @@
 namespace App\Controller\Api;
 
 use App\Account\AccountEmailSender;
-use App\Api\CampaignResource;
-use App\Api\CompanyResource;
-use App\Api\CreatorResource;
+use App\Api\AdminCatalog;
 use App\Api\ApiAccess;
+use App\Api\CampaignResource;
+use App\Api\CreatorResource;
 use App\Api\JsonPayload;
 use App\Api\MarketplaceCategoryLabels;
 use App\Entity\Application;
@@ -17,16 +17,14 @@ use App\Entity\HomepageSettings;
 use App\Entity\User;
 use App\Localization\ApiMessages;
 use App\Localization\LocaleContext;
-use DateTimeImmutable;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
-use SortDirection;
 use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
-use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
 
 final class HomepageController
 {
@@ -48,8 +46,8 @@ final class HomepageController
             $creatorQuery->andWhere('creator.featured = :featured')->setParameter('featured', true);
         }
         $creators = $creatorQuery
-            ->orderBy('creator.createdAt', SortDirection::Descending)
-            ->addOrderBy('creator.id', SortDirection::Descending)
+            ->orderBy('creator.createdAt', \SortDirection::Descending)
+            ->addOrderBy('creator.id', \SortDirection::Descending)
             ->setMaxResults(4)
             ->getQuery()
             ->getResult();
@@ -61,12 +59,12 @@ final class HomepageController
             ->andWhere('campaign.closesAt >= :today')
             ->andWhere('companyOwner.id IS NULL OR (companyOwner.approved = :approved AND companyOwner.hideMyAccount = :visible)')
             ->setParameter('status', 'open')
-            ->setParameter('today', new DateTimeImmutable('today'))
+            ->setParameter('today', new \DateTimeImmutable('today'))
             ->setParameter('approved', true)
             ->setParameter('visible', false)
-            ->orderBy('campaign.featured', SortDirection::Descending)
-            ->addOrderBy('campaign.publishedAt', SortDirection::Descending)
-            ->addOrderBy('campaign.id', SortDirection::Descending)
+            ->orderBy('campaign.featured', \SortDirection::Descending)
+            ->addOrderBy('campaign.publishedAt', \SortDirection::Descending)
+            ->addOrderBy('campaign.id', \SortDirection::Descending)
             ->setMaxResults(4)
             ->getQuery()
             ->getResult();
@@ -88,8 +86,8 @@ final class HomepageController
         ]);
     }
 
-    #[Route('/api/admin/dashboard', name: 'api_admin_dashboard', methods: ['GET'])]
-    public function dashboard(Request $request, EntityManagerInterface $entityManager, Security $security): JsonResponse
+    #[Route('/api/admin/catalog/{kind}', name: 'api_admin_catalog', methods: ['GET'])]
+    public function catalog(Request $request, string $kind, Security $security, AdminCatalog $catalog): JsonResponse
     {
         $locale = LocaleContext::fromRequest($request);
         if ($locale === null) {
@@ -99,82 +97,49 @@ final class HomepageController
         if ($admin instanceof JsonResponse) {
             return $admin;
         }
+        try {
+            return new JsonResponse($catalog->page($request, $kind, $locale));
+        } catch (\InvalidArgumentException) {
+            return new JsonResponse(['error' => ApiMessages::get('invalid_request', $locale)], 400);
+        }
+    }
 
-        $settings = $entityManager->find(HomepageSettings::class, 1);
-        $creators = $entityManager->getRepository(Creator::class)->createQueryBuilder('creator')
-            ->leftJoin('creator.owner', 'owner')
-            ->andWhere('owner.id IS NULL OR owner.approved = :approved')
-            ->setParameter('approved', true)
-            ->orderBy('creator.createdAt', SortDirection::Descending)
-            ->addOrderBy('creator.id', SortDirection::Descending)
-            ->getQuery()
-            ->getResult();
-        $companies = $entityManager->getRepository(Company::class)->createQueryBuilder('company')
-            ->leftJoin('company.owner', 'owner')
-            ->andWhere('owner.id IS NULL OR owner.approved = :approved')
-            ->setParameter('approved', true)
-            ->orderBy('company.featured', SortDirection::Descending)
-            ->addOrderBy('company.name', SortDirection::Ascending)
-            ->getQuery()
-            ->getResult();
-        $campaigns = $entityManager->getRepository(Campaign::class)->findBy([], ['publishedAt' => 'DESC']);
-        $registrations = $entityManager->getRepository(User::class)->createQueryBuilder('user')
-            ->where('user.role IN (:roles)')
-            ->andWhere('user.admin = :notAdmin')
-            ->andWhere('user.moderator = :notModerator')
-            ->andWhere('user.approved = :notApproved')
-            ->setParameter('roles', ['ROLE_CREATOR', 'ROLE_COMPANY'])
-            ->setParameter('notAdmin', false)
-            ->setParameter('notModerator', false)
-            ->setParameter('notApproved', false)
-            ->orderBy('user.id', SortDirection::Descending)
-            ->getQuery()
-            ->getResult();
-
-        return new JsonResponse([
-            'data' => [
-                'metrics' => [
-                    'users' => $entityManager->getRepository(User::class)->count([]),
-                    'creators' => $entityManager->getRepository(Creator::class)->count([]),
-                    'companies' => $entityManager->getRepository(Company::class)->count([]),
-                    'campaigns' => $entityManager->getRepository(Campaign::class)->count([]),
-                    'pendingApplications' => $entityManager->getRepository(Application::class)->count(['status' => 'pending']),
-                    'pendingRegistrations' => count($registrations),
-                ],
-                'creatorMode' => $settings?->getCreatorMode() ?? HomepageSettings::MODE_LATEST,
-                'creators' => array_map(static fn (Creator $creator): array => [
-                    'id' => $creator->getId(),
-                    'slug' => $creator->getSlug(),
-                    'displayName' => $creator->getDisplayName(),
-                    'category' => $creator->getCategory(),
-                    'location' => $creator->getLocation(),
-                    'avatarUrl' => $creator->getAvatarMedia()?->getUrl() ?? $creator->getAvatarUrl(),
-                    'featured' => $creator->isFeatured(),
-                ], $creators),
-                'companies' => array_map(
-                    static fn (Company $company): array => CompanyResource::fromEntity($company, $locale),
-                    $companies,
-                ),
-                'campaigns' => array_map(static fn (Campaign $campaign): array => [
-                    'id' => $campaign->getId(),
-                    'slug' => $campaign->getSlug(),
-                    'title' => $campaign->getTitle(),
-                    'status' => $campaign->getStatus(),
-                    'featured' => $campaign->isFeatured(),
-                    'company' => ['name' => $campaign->getCompany()->getName()],
-                ], $campaigns),
-                'registrations' => array_map(static fn (User $user): array => [
-                    'id' => $user->getId(),
-                    'email' => $user->getEmail(),
-                    'accountType' => $user->hasRole('ROLE_CREATOR') ? 'creator' : 'company',
-                    'name' => $user->getCreator()?->getDisplayName() ?? $user->getCompany()?->getName() ?? $user->getEmail(),
-                    'profileSlug' => $user->getCreator()?->getSlug() ?? $user->getCompany()?->getSlug(),
-                    'emailVerified' => $user->isEmailVerified(),
-                    'approved' => $user->isApproved(),
-                    'profileComplete' => $user->hasCompleteProfile(),
-                ], $registrations),
+    #[Route('/api/admin/dashboard', name: 'api_admin_dashboard', methods: ['GET'])]
+    public function dashboard(Request $request, EntityManagerInterface $entityManager, Security $security, AdminCatalog $catalog): JsonResponse
+    {
+        $locale = LocaleContext::fromRequest($request);
+        if ($locale === null) {
+            return new JsonResponse(['error' => ApiMessages::get('unsupported_language', 'bs')], 400);
+        }
+        $admin = ApiAccess::requireRole($security, 'ROLE_ADMIN', $locale);
+        if ($admin instanceof JsonResponse) {
+            return $admin;
+        }
+        $section = $request->query->getString('section', 'all');
+        if (!in_array($section, ['all', 'overview', 'homepage', 'creators', 'companies', 'campaigns', 'registrations', 'email-templates'], true)) {
+            return new JsonResponse(['error' => ApiMessages::get('invalid_request', $locale)], 400);
+        }
+        $data = [
+            'metrics' => [
+                'users' => $entityManager->getRepository(User::class)->count([]),
+                'creators' => $entityManager->getRepository(Creator::class)->count([]),
+                'companies' => $entityManager->getRepository(Company::class)->count([]),
+                'campaigns' => $entityManager->getRepository(Campaign::class)->count([]),
+                'pendingApplications' => $entityManager->getRepository(Application::class)->count(['status' => 'pending']),
+                'pendingRegistrations' => $entityManager->getRepository(User::class)->count(['role' => ['ROLE_CREATOR', 'ROLE_COMPANY'], 'admin' => false, 'moderator' => false, 'approved' => false]),
             ],
-        ]);
+            'creatorMode' => $entityManager->find(HomepageSettings::class, 1)?->getCreatorMode() ?? HomepageSettings::MODE_LATEST,
+        ];
+        foreach (['creators', 'companies', 'campaigns', 'registrations'] as $kind) {
+            $data[$kind] = $section === 'all' ? $catalog->page(new Request(), $kind, $locale)['data'] : [];
+        }
+        if ($section === 'homepage') {
+            foreach (['creators', 'companies', 'campaigns'] as $kind) {
+                $data[$kind] = $catalog->featured($kind, $locale);
+            }
+        }
+
+        return new JsonResponse(['data' => $data]);
     }
 
     #[Route('/api/admin/homepage', name: 'api_admin_homepage_update', methods: ['PUT'])]
@@ -227,24 +192,28 @@ final class HomepageController
         }
 
         $selectedCreators = array_fill_keys($creatorIds, true);
-        foreach ($entityManager->getRepository(Creator::class)->findAll() as $creator) {
+        foreach ($entityManager->getRepository(Creator::class)->findBy(['featured' => true]) as $creator) {
             if ($creator instanceof Creator) {
                 $creator->setFeatured(isset($selectedCreators[$creator->getId()]));
             }
         }
         if ($companyIds !== null) {
             $selectedCompanies = array_fill_keys($companyIds, true);
-            foreach ($entityManager->getRepository(Company::class)->findAll() as $company) {
+            foreach ($entityManager->getRepository(Company::class)->findBy(['featured' => true]) as $company) {
                 if ($company instanceof Company) {
                     $company->setFeatured(isset($selectedCompanies[$company->getId()]));
                 }
             }
         }
         $selectedCampaigns = array_fill_keys($campaignIds, true);
-        foreach ($entityManager->getRepository(Campaign::class)->findAll() as $campaign) {
+        foreach ($entityManager->getRepository(Campaign::class)->findBy(['featured' => true]) as $campaign) {
             if ($campaign instanceof Campaign) {
                 $campaign->setFeatured(isset($selectedCampaigns[$campaign->getId()]));
             }
+        }
+
+        foreach ([...$creators, ...$companies, ...$campaigns] as $selected) {
+            $selected->setFeatured(true);
         }
 
         $settings = $entityManager->find(HomepageSettings::class, 1) ?? new HomepageSettings();

@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import {
   ArrowUpRight,
   Check,
@@ -43,6 +43,22 @@ const featuredCreatorIds = ref([])
 const featuredCompanyIds = ref([])
 const featuredCampaignIds = ref([])
 
+const listRows = ref([])
+const listTotal = ref(0)
+const listLoading = ref(false)
+const listPage = ref(1)
+let listVersion = 0
+let dashboardVersion = 0
+let searchTimer
+let disposed = false
+const listOptions = ref({ page: 1, limit: 25, sort: '', direction: 'asc' })
+const candidates = reactive(Object.fromEntries(
+  ['creators', 'companies', 'campaigns'].map((kind) => [kind, {
+    rows: [], total: 0, page: 0, loading: false, error: false, q: '', version: 0, timer: null,
+  }]),
+))
+const isList = computed(() => ['creators', 'companies', 'campaigns', 'registrations'].includes(section.value))
+
 const section = computed(() => route.meta.adminSection ?? 'overview')
 const pageTitle = computed(() => t(
   section.value === 'email-templates'
@@ -50,25 +66,33 @@ const pageTitle = computed(() => t(
     : `adminDashboard.${section.value}PageTitle`,
 ))
 
-const creatorOptions = computed(() => (dashboard.value?.creators ?? []).map((creator) => ({
+const creatorOptions = computed(() => (candidates.creators.rows).map((creator) => ({
   id: creator.id,
   label: creator.displayName,
   description: [creator.category, creator.location].filter(Boolean).join(' · '),
 })))
 
-const campaignOptions = computed(() => (dashboard.value?.campaigns ?? []).map((campaign) => ({
+const campaignOptions = computed(() => (candidates.campaigns.rows).map((campaign) => ({
   id: campaign.id,
   label: campaign.title,
   description: campaign.company.name,
 })))
 
-const companyOptions = computed(() => (dashboard.value?.companies ?? []).map((company) => ({
+const companyOptions = computed(() => (candidates.companies.rows).map((company) => ({
   id: company.id,
   label: company.name,
   description: company.industry,
 })))
 
+const selectionOptions = computed(() => ({
+  creators: (dashboard.value?.creators ?? []).map((row) => ({ id: row.id, label: row.displayName })),
+  companies: (dashboard.value?.companies ?? []).map((row) => ({ id: row.id, label: row.name })),
+  campaigns: (dashboard.value?.campaigns ?? []).map((row) => ({ id: row.id, label: row.title })),
+}))
+
 const multiSelectLabels = computed(() => ({
+  loading: t('adminDashboard.loading'),
+  loadMore: t('directoryLoading.loadMore'),
   search: t('adminDashboard.searchOptions'),
   selectVisible: t('adminDashboard.selectVisible'),
   deselectVisible: t('adminDashboard.deselectVisible'),
@@ -154,22 +178,7 @@ const overviewStats = computed(() => metrics.value.filter(({ group }) => group =
 const pendingMetrics = computed(() => metrics.value.filter(({ group }) => group === 'attention'))
 const pendingTotal = computed(() => pendingMetrics.value.reduce((total, metric) => total + metric.value, 0))
 
-const currentRows = computed(() => {
-  if (!dashboard.value) return []
-  const rows = {
-    registrations: dashboard.value.registrations,
-    creators: dashboard.value.creators,
-    companies: dashboard.value.companies,
-    campaigns: dashboard.value.campaigns,
-  }[section.value] ?? []
-  const normalizedQuery = query.value.trim().toLocaleLowerCase()
-  return rows.filter((row) => {
-    const matchesQuery = !normalizedQuery || JSON.stringify(row).toLocaleLowerCase().includes(normalizedQuery)
-    const matchesStatus = statusFilter.value === 'all'
-      || (section.value === 'companies' && String(row.verified) === statusFilter.value)
-    return matchesQuery && matchesStatus
-  })
-})
+const currentRows = computed(() => listRows.value)
 
 const tableColumns = computed(() => {
   const columns = {
@@ -200,6 +209,7 @@ const tableColumns = computed(() => {
 })
 
 const tableLabels = computed(() => ({
+  loading: t('adminDashboard.loading'),
   actions: t('adminDashboard.actions'),
   deleteSelected: t('adminDashboard.deleteSelected'),
   empty: t('adminDashboard.noMatches'),
@@ -222,19 +232,24 @@ const deleteConfirmationMessage = computed(() => {
 })
 
 async function loadDashboard() {
+  const version = ++dashboardVersion
   loading.value = true
   error.value = ''
   notice.value = ''
 
   try {
-    const { data } = await apiGet('/admin/dashboard')
+    const { data } = await apiGet(`/admin/dashboard?section=${section.value}`)
+    if (disposed || version !== dashboardVersion) return
     dashboard.value = data
     creatorMode.value = data.creatorMode
     featuredCreatorIds.value = data.creators.filter(({ featured }) => featured).map(({ id }) => id)
     featuredCompanyIds.value = data.companies.filter(({ featured }) => featured).map(({ id }) => id)
     featuredCampaignIds.value = data.campaigns.filter(({ featured }) => featured).map(({ id }) => id)
     accessState.value = 'allowed'
+    if (isList.value) await loadList()
+    if (section.value === 'homepage') await Promise.all(Object.keys(candidates).map((kind) => loadCandidates(kind, true)))
   } catch (cause) {
+    if (disposed || version !== dashboardVersion) return
     if (cause.status === 401) accessState.value = 'anonymous'
     else if (cause.status === 403) accessState.value = 'forbidden'
     else {
@@ -242,8 +257,70 @@ async function loadDashboard() {
       accessState.value = 'error'
     }
   } finally {
-    loading.value = false
+    if (!disposed && version === dashboardVersion) loading.value = false
   }
+}
+
+async function loadList(options = listOptions.value) {
+  if (!isList.value || disposed) return
+  const version = ++listVersion
+  listOptions.value = { ...options }
+  listLoading.value = true
+  error.value = ''
+  const params = new URLSearchParams({ ...options, q: query.value.trim(), verified: statusFilter.value })
+  if (!options.sort) params.delete('sort')
+  try {
+    const response = await apiGet(`/admin/catalog/${section.value}?${params}`)
+    if (disposed || version !== listVersion) return
+    listRows.value = response.data
+    listTotal.value = response.meta.total
+    listPage.value = response.meta.page
+  } catch (cause) {
+    if (!disposed && version === listVersion) error.value = cause.message || t('adminDashboard.loadError')
+  } finally {
+    if (!disposed && version === listVersion) listLoading.value = false
+  }
+}
+
+async function loadCandidates(kind, reset = false) {
+  const state = candidates[kind]
+  if (disposed || (!reset && state.loading)) return
+  if (reset) {
+    state.page = 0
+    state.rows = []
+  }
+  const version = ++state.version
+  const viewVersion = dashboardVersion
+  const page = state.page + 1
+  state.loading = true
+  state.error = false
+  try {
+    const params = new URLSearchParams({ page, limit: 25, q: state.q.trim() })
+    const response = await apiGet(`/admin/catalog/${kind}?${params}`)
+    if (disposed || version !== state.version || viewVersion !== dashboardVersion) return
+    state.rows = reset ? response.data : [...state.rows, ...response.data]
+    state.total = response.meta.total
+    state.page = response.meta.page
+    // Keep selected labels when searches replace the candidate page.
+    const cache = new Map(dashboard.value[kind].map((row) => [row.id, row]))
+    state.rows.forEach((row) => cache.set(row.id, row))
+    dashboard.value[kind] = [...cache.values()]
+  } catch (cause) {
+    if (!disposed && version === state.version && viewVersion === dashboardVersion) {
+      state.error = true
+      error.value = cause.message || t('adminDashboard.loadError')
+    }
+  } finally {
+    if (!disposed && version === state.version) state.loading = false
+  }
+}
+
+function searchCandidates(kind, value) {
+  const state = candidates[kind]
+  state.q = value
+  state.version++
+  clearTimeout(state.timer)
+  state.timer = setTimeout(() => loadCandidates(kind, true), 250)
 }
 
 async function saveCuration() {
@@ -313,7 +390,7 @@ async function approveRegistration(registration) {
 }
 
 function requestBulkApproval(selectedIds) {
-  const selected = (dashboard.value?.registrations ?? []).filter(({ id }) => selectedIds.includes(id))
+  const selected = listRows.value.filter(({ id }) => selectedIds.includes(id))
   const eligible = selected.filter(({ approved, emailVerified, profileComplete }) => (
     !approved && emailVerified && profileComplete
   ))
@@ -361,7 +438,22 @@ async function confirmBulkApproval() {
 watch([locale, section], () => {
   query.value = ''
   statusFilter.value = 'all'
+  listVersion++
+  listRows.value = []
+  listTotal.value = 0
+  listPage.value = 1
+  listOptions.value = { page: 1, limit: 25, sort: '', direction: 'asc' }
   loadDashboard()
+})
+watch([query, statusFilter], () => {
+  listVersion++
+  clearTimeout(searchTimer)
+  searchTimer = setTimeout(() => loadList({ ...listOptions.value, page: 1 }), 250)
+})
+onBeforeUnmount(() => {
+  disposed = true
+  clearTimeout(searchTimer)
+  Object.values(candidates).forEach((state) => clearTimeout(state.timer))
 })
 onMounted(loadDashboard)
 </script>
@@ -483,6 +575,12 @@ onMounted(loadDashboard)
                   v-model="featuredCreatorIds"
                   :label="t('adminDashboard.selectFeaturedCreators')"
                   :options="creatorOptions"
+                  :selection-options="selectionOptions.creators"
+                  :remote="true"
+                  :loading="candidates.creators.loading"
+                  :has-more="candidates.creators.error || candidates.creators.rows.length < candidates.creators.total"
+                  @search="searchCandidates('creators', $event)"
+                  @load-more="loadCandidates('creators')"
                   :labels="multiSelectLabels"
                 />
               </article>
@@ -499,6 +597,12 @@ onMounted(loadDashboard)
                   v-model="featuredCampaignIds"
                   :label="t('adminDashboard.selectFeaturedCampaigns')"
                   :options="campaignOptions"
+                  :selection-options="selectionOptions.campaigns"
+                  :remote="true"
+                  :loading="candidates.campaigns.loading"
+                  :has-more="candidates.campaigns.error || candidates.campaigns.rows.length < candidates.campaigns.total"
+                  @search="searchCandidates('campaigns', $event)"
+                  @load-more="loadCandidates('campaigns')"
                   :labels="multiSelectLabels"
                 />
               </article>
@@ -515,6 +619,12 @@ onMounted(loadDashboard)
                   v-model="featuredCompanyIds"
                   :label="t('adminDashboard.selectFeaturedCompanies')"
                   :options="companyOptions"
+                  :selection-options="selectionOptions.companies"
+                  :remote="true"
+                  :loading="candidates.companies.loading"
+                  :has-more="candidates.companies.error || candidates.companies.rows.length < candidates.companies.total"
+                  @search="searchCandidates('companies', $event)"
+                  @load-more="loadCandidates('companies')"
                   :labels="multiSelectLabels"
                 />
               </article>
@@ -532,7 +642,12 @@ onMounted(loadDashboard)
 
         <section v-else class="admin-dashboard__list">
           <AdminDataTable
+            :key="section"
             :columns="tableColumns"
+            :total="listTotal"
+            :current-page="listPage"
+            :loading="listLoading"
+            @change="loadList"
             :rows="currentRows"
             :labels="tableLabels"
             @delete-selected="requestDelete"

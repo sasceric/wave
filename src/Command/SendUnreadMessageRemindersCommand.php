@@ -2,9 +2,6 @@
 
 namespace App\Command;
 
-use App\Account\AccountEmailSender;
-use App\Entity\User;
-use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
@@ -17,8 +14,6 @@ use Symfony\Component\Console\Output\OutputInterface;
 final class SendUnreadMessageRemindersCommand extends Command
 {
     public function __construct(
-        private readonly EntityManagerInterface $entityManager,
-        private readonly AccountEmailSender $emailSender,
         private readonly \App\Background\ReminderBatch $batch,
     ) {
         parent::__construct();
@@ -31,17 +26,5 @@ final class SendUnreadMessageRemindersCommand extends Command
         $output->writeln(sprintf('Sent %d unread message reminder(s).', $sent));
 
         return Command::SUCCESS;
-    }
-
-    private function participantName(User $user): string
-    {
-        if ($user->getCreator() !== null) {
-            return $user->getCreator()->getDisplayName();
-        }
-        if ($user->getCompany() !== null) {
-            return $user->getCompany()->getName();
-        }
-
-        return $user->getEmail();
     }
 }

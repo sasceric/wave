@@ -1902,6 +1902,7 @@ onMounted(loadDashboard)
       :categories="categories"
       :country-options="countryOptions"
       :phone-country="profilePhoneCountry"
+      @update:profile="profile = $event"
       :busy="busy"
       :error="error"
       @update:phone-country="profilePhoneCountry = $event"

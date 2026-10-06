@@ -3,6 +3,7 @@
 namespace App\Controller\Api;
 
 use App\Api\CreatorResource;
+use App\Api\DirectoryCursor;
 use App\Api\MarketplaceCategoryLabels;
 use App\Entity\Creator;
 use App\Entity\DirectoryIndex;
@@ -17,7 +18,7 @@ use Symfony\Component\Routing\Attribute\Route;
 final class CreatorController
 {
     #[Route('/api/creators', name: 'api_creators_index', methods: ['GET'])]
-    public function index(Request $request, EntityManagerInterface $entityManager): JsonResponse
+    public function index(Request $request, EntityManagerInterface $entityManager, DirectoryCursor $cursor): JsonResponse
     {
         $locale = LocaleContext::fromRequest($request);
         if ($locale === null) {
@@ -31,6 +32,13 @@ final class CreatorController
         }
         if ($offset < 0 || $offset > 100_000) {
             return new JsonResponse(['error' => ApiMessages::get('invalid_offset', $locale)], 400);
+        }
+
+        try {
+            $cursorMode = $cursor->enabled($request);
+            $position = $cursorMode ? $cursor->decode($request, 'creator', ['name' => 'string', 'id' => 'int']) : null;
+        } catch (\InvalidArgumentException) {
+            return new JsonResponse(['error' => ApiMessages::get('invalid_request', $locale)], 400);
         }
 
         $card = $request->query->getString('view') === 'card';
@@ -66,19 +74,33 @@ final class CreatorController
                 ->setParameter('platformSpaced', '%"platform": "' . $normalizedPlatform . '"%');
         }
 
-        $total = (int) (clone $builder)
+        $total = $position !== null ? null : (int) (clone $builder)
             ->select('COUNT(DISTINCT creator.id)')
             ->getQuery()
             ->getSingleScalarResult();
+        $cursor->seek($builder, ['name' => ['creator.displayName', 'ASC'], 'id' => ['creator.id', 'ASC']], $position);
         $creators = $builder
             ->leftJoin('creator.avatarMedia', 'avatarMedia')
             ->addSelect('avatarMedia', 'owner')
             ->orderBy('creator.displayName', \SortDirection::Ascending)
             ->addOrderBy('creator.id', \SortDirection::Ascending)
-            ->setFirstResult($offset)
-            ->setMaxResults($limit)
+            ->setFirstResult($cursorMode ? 0 : $offset)
+            ->setMaxResults($limit + ($cursorMode ? 1 : 0))
             ->getQuery()
             ->getResult();
+        $hasMore = $cursorMode && count($creators) > $limit;
+        $creators = array_slice($creators, 0, $limit);
+        $last = $creators === [] ? null : $creators[array_key_last($creators)];
+        $meta = ['count' => count($creators), 'limit' => $limit];
+        if ($total !== null) {
+            $meta['total'] = $total;
+        }
+        if ($cursorMode) {
+            $meta['hasMore'] = $hasMore;
+            $meta['nextCursor'] = !$hasMore || $last === null ? null : $cursor->encode($request, 'creator', ['name' => $last->getDisplayName(), 'id' => $last->getId()]);
+        } else {
+            $meta['offset'] = $offset;
+        }
         $categoryLabels = MarketplaceCategoryLabels::forLocale($entityManager, $locale);
 
         if (!$card && $creators !== []) {
@@ -105,7 +127,7 @@ final class CreatorController
                 ),
                 $creators,
             ),
-            'meta' => ['count' => count($creators), 'total' => $total, 'limit' => $limit, 'offset' => $offset],
+            'meta' => $meta,
         ]);
     }
 

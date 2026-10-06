@@ -37,6 +37,7 @@ const allowedColor = /^(?:#[\da-f]{3,8}|rgba?\(\s*\d{1,3}\s*,\s*\d{1,3}\s*,\s*\d
 
 function safeHref(value) {
   const href = value.trim()
+  // eslint-disable-next-line no-control-regex -- Strip URL control characters before checking the scheme.
   const normalizedHref = href.replace(/[\u0000-\u0020\u007f]+/g, '')
   const scheme = normalizedHref.match(/^([a-z][a-z\d+.-]*):/i)?.[1]?.toLowerCase()
 

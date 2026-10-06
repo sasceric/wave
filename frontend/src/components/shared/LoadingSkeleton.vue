@@ -7,6 +7,7 @@ defineProps({
   variant: { type: String, default: 'rows' },
   label: { type: String, default: '' },
   count: { type: Number, default: 5 },
+  columns: { type: Number, default: 4 },
   content: { type: String, default: 'profile' },
 })
 const { t } = useI18n()
@@ -19,6 +20,11 @@ const { t } = useI18n()
       <div v-for="index in count" :key="index" class="loading-skeleton__bubble" :class="{ 'is-outgoing': index % 2 === 0 }">
         <SkeletonBlock :width="index % 3 === 0 ? '65%' : '90%'" />
         <SkeletonBlock width="45%" />
+      </div>
+    </div>
+    <div v-else-if="variant === 'table'" class="loading-skeleton__table" :style="{ '--skeleton-columns': columns }" aria-hidden="true">
+      <div v-for="index in count" :key="index" class="loading-skeleton__table-row">
+        <SkeletonBlock v-for="column in columns" :key="column" width="80%" />
       </div>
     </div>
     <div v-else-if="variant === 'rows'" class="loading-skeleton__rows" aria-hidden="true">
@@ -147,6 +153,7 @@ const { t } = useI18n()
 
 <style scoped>
 .loading-skeleton { min-width: 0; }
+.loading-skeleton__table-row { display: grid; grid-template-columns: repeat(var(--skeleton-columns), minmax(0, 1fr)); gap: 24px; align-items: center; min-height: 48px; padding: 12px 0; border-bottom: 1px solid var(--line); }
 .loading-skeleton__copy, .loading-skeleton__panel { display: grid; min-width: 0; gap: 16px; }
 .loading-skeleton__row, .loading-skeleton__identity { display: flex; align-items: center; gap: 14px; }
 .loading-skeleton__copy { flex: 1; gap: 9px; }

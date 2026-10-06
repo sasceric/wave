@@ -3,6 +3,7 @@
 namespace App\Controller\Api;
 
 use App\Api\CompanyResource;
+use App\Api\DirectoryCursor;
 use App\Entity\Campaign;
 use App\Entity\Company;
 use App\Localization\ApiMessages;
@@ -16,7 +17,7 @@ use Symfony\Component\Routing\Attribute\Route;
 final class CompanyController
 {
     #[Route('/api/companies', name: 'api_companies_index', methods: ['GET'])]
-    public function index(Request $request, EntityManagerInterface $entityManager): JsonResponse
+    public function index(Request $request, EntityManagerInterface $entityManager, DirectoryCursor $cursor): JsonResponse
     {
         $locale = LocaleContext::fromRequest($request);
         if ($locale === null) {
@@ -32,12 +33,40 @@ final class CompanyController
             return new JsonResponse(['error' => ApiMessages::get('invalid_offset', $locale)], 400);
         }
 
+        try {
+            $cursorMode = $cursor->enabled($request);
+            $position = $cursorMode ? $cursor->decode($request, 'company', ['featured' => 'bool', 'count' => 'int', 'name' => 'string', 'id' => 'int']) : null;
+        } catch (\InvalidArgumentException) {
+            return new JsonResponse(['error' => ApiMessages::get('invalid_request', $locale)], 400);
+        }
         $today = (new \DateTimeImmutable('today'))->format('Y-m-d H:i:s');
-        $pageIds = $entityManager->getConnection()->fetchFirstColumn(
-            "SELECT c.id FROM company c LEFT JOIN wave_user u ON u.id = c.owner_id LEFT JOIN directory_index i ON i.kind = 'company' AND i.entity_id = c.id AND i.indexed_at >= ? WHERE u.id IS NULL OR (u.approved = TRUE AND u.hide_my_account = FALSE) ORDER BY c.featured DESC, COALESCE(i.available_campaign_count, (SELECT COUNT(*) FROM campaign a WHERE a.company_id = c.id AND a.status = 'open' AND a.closes_at >= ?)) DESC, c.name ASC, c.id ASC LIMIT ? OFFSET ?",
-            [$today, $today, $limit, $offset],
-            [\Doctrine\DBAL\ParameterType::STRING, \Doctrine\DBAL\ParameterType::STRING, \Doctrine\DBAL\ParameterType::INTEGER, \Doctrine\DBAL\ParameterType::INTEGER],
-        );
+        $sql = <<<'SQL'
+            SELECT * FROM (
+                SELECT c.id, c.featured, c.name,
+                    COALESCE(i.available_campaign_count, (
+                        SELECT COUNT(*) FROM campaign a
+                        WHERE a.company_id = c.id AND a.status = 'open' AND a.closes_at >= :today
+                    )) AS campaign_count
+                FROM company c
+                LEFT JOIN wave_user u ON u.id = c.owner_id
+                LEFT JOIN directory_index i ON i.kind = 'company' AND i.entity_id = c.id AND i.indexed_at >= :today
+                WHERE u.id IS NULL OR (u.approved = TRUE AND u.hide_my_account = FALSE)
+            ) ranked WHERE 1 = 1
+            SQL;
+        $params = ['today' => $today];
+        $parameterTypes = ['today' => \Doctrine\DBAL\ParameterType::STRING];
+        if ($position !== null) {
+            $sql .= ' AND (featured < :featured OR (featured = :featured AND (campaign_count < :count OR (campaign_count = :count AND (name > :name OR (name = :name AND id > :id))))))';
+            $params += $position;
+            $parameterTypes += ['featured' => \Doctrine\DBAL\ParameterType::BOOLEAN, 'count' => \Doctrine\DBAL\ParameterType::INTEGER, 'name' => \Doctrine\DBAL\ParameterType::STRING, 'id' => \Doctrine\DBAL\ParameterType::INTEGER];
+        }
+        $sql .= ' ORDER BY featured DESC, campaign_count DESC, name ASC, id ASC LIMIT :limit OFFSET :offset';
+        $params += ['limit' => $limit + ($cursorMode ? 1 : 0), 'offset' => $cursorMode ? 0 : $offset];
+        $parameterTypes += ['limit' => \Doctrine\DBAL\ParameterType::INTEGER, 'offset' => \Doctrine\DBAL\ParameterType::INTEGER];
+        $pageRows = $entityManager->getConnection()->fetchAllAssociative($sql, $params, $parameterTypes);
+        $hasMore = $cursorMode && count($pageRows) > $limit;
+        $pageRows = array_slice($pageRows, 0, $limit);
+        $pageIds = array_column($pageRows, 'id');
         $builder = $entityManager->getRepository(Company::class)->createQueryBuilder('company')
             ->leftJoin('company.owner', 'owner')
             ->andWhere('owner.id IS NULL OR (owner.approved = :approved AND owner.hideMyAccount = :visible)')
@@ -48,7 +77,7 @@ final class CompanyController
         } else {
             $builder->andWhere('company.id IN (:pageIds)')->setParameter('pageIds', $pageIds);
         }
-        $total = (int) $entityManager->getRepository(Company::class)->createQueryBuilder('company')
+        $total = $position !== null ? null : (int) $entityManager->getRepository(Company::class)->createQueryBuilder('company')
             ->select('COUNT(DISTINCT company.id)')
             ->leftJoin('company.owner', 'owner')
             ->andWhere('owner.id IS NULL OR (owner.approved = :approved AND owner.hideMyAccount = :visible)')
@@ -94,6 +123,20 @@ final class CompanyController
             }
         }
 
+        $meta = ['count' => count($companies), 'limit' => $limit];
+        if ($total !== null) {
+            $meta['total'] = $total;
+        }
+        if ($cursorMode) {
+            $last = $pageRows === [] ? null : $pageRows[array_key_last($pageRows)];
+            $meta['hasMore'] = $hasMore;
+            $meta['nextCursor'] = !$hasMore || $last === null ? null : $cursor->encode($request, 'company', [
+                'featured' => (bool) $last['featured'], 'count' => (int) $last['campaign_count'], 'name' => $last['name'], 'id' => (int) $last['id'],
+            ]);
+        } else {
+            $meta['offset'] = $offset;
+        }
+
         return new JsonResponse([
             'data' => array_map(
                 static fn (Company $company): array => CompanyResource::fromEntity(
@@ -104,7 +147,7 @@ final class CompanyController
                 ),
                 $companies,
             ),
-            'meta' => ['count' => count($companies), 'total' => $total, 'limit' => $limit, 'offset' => $offset],
+            'meta' => $meta,
         ]);
     }
 

@@ -1,6 +1,5 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import * as vue from 'vue'
 import { setupView } from './setupView.js'
 
 const card = (id, type = 'campaign') => ({

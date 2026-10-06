@@ -30,12 +30,12 @@ async function directory(apiGet, filters = {}) {
 const batch = (from, count) => Array.from({ length: count }, (_, index) => ({ id: from + index }))
 const settle = () => new Promise((resolve) => setImmediate(resolve))
 
-test('directories append 30 at a time and stop at the authoritative total without an extra fetch', async () => {
+test('directories append 30 at a time and stop at the cursor boundary without an extra fetch', async () => {
   const requests = []
   const { state, mounted, unmount } = await directory(async (path) => {
     requests.push(path)
-    const offset = Number(new URLSearchParams(path.split('?')[1]).get('offset'))
-    return { data: batch(offset + 1, Math.min(30, 61 - offset)), meta: { total: 61 } }
+    const offset = Number(new URLSearchParams(path.split('?')[1]).get('cursor'))
+    return { data: batch(offset + 1, Math.min(30, 61 - offset)), meta: { ...(offset === 0 ? { total: 61 } : {}), hasMore: offset < 60, nextCursor: offset < 60 ? String(offset + 30) : null } }
   })
   await mounted()
   assert.equal(state.items.value.length, 30)
@@ -43,19 +43,20 @@ test('directories append 30 at a time and stop at the authoritative total withou
   await state.loadMore()
   assert.equal(state.items.value.length, 60)
   await state.loadMore()
+  assert.equal(state.total.value, 61)
   assert.equal(state.items.value.length, 61)
   assert.equal(state.hasMore.value, false)
   await state.loadMore()
-  assert.deepEqual(requests, ['/creators?limit=30&offset=0&view=card', '/creators?limit=30&offset=30&view=card', '/creators?limit=30&offset=60&view=card'])
+  assert.deepEqual(requests, ['/creators?limit=30&pagination=cursor&view=card', '/creators?limit=30&pagination=cursor&view=card&cursor=30', '/creators?limit=30&pagination=cursor&view=card&cursor=60'])
   unmount()
 })
 
-test('duplicate intersection events cannot overlap requests, and failed batches retry the same offset', async () => {
+test('duplicate intersection events cannot overlap requests, and failed batches retry the same cursor', async () => {
   let complete
   const requests = []
   const { state, mounted, unmount } = await directory((path) => {
     requests.push(path)
-    if (requests.length === 1) return Promise.resolve({ data: batch(1, 30), meta: { total: 60 } })
+    if (requests.length === 1) return Promise.resolve({ data: batch(1, 30), meta: { total: 60, hasMore: true, nextCursor: '30' } })
     return new Promise((resolve, reject) => { complete = { resolve, reject } })
   })
   await mounted()
@@ -70,27 +71,27 @@ test('duplicate intersection events cannot overlap requests, and failed batches 
   const retry = state.loadMore()
   assert.equal(state.error.value, '')
   assert.equal(requests[2], requests[1])
-  complete.resolve({ data: batch(31, 30), meta: { total: 60 } })
+  complete.resolve({ data: batch(31, 30), meta: { hasMore: false, nextCursor: null } })
   await retry
   assert.equal(state.items.value.length, 60)
   assert.equal(state.hasMore.value, false)
   unmount()
 })
 
-test('filter changes discard stale batches and restart at zero; language changes use the new locale', async () => {
+test('filter changes discard stale batches and restart without a cursor; language changes use the new locale', async () => {
   const search = vue.ref('')
   const pending = []
   const { state, locale, mounted, unmount } = await directory((path, options) => new Promise((resolve) => pending.push({ path, options, resolve })), { q: search })
   const initial = mounted()
-  pending[0].resolve({ data: batch(1, 30), meta: { total: 60 } })
+  pending[0].resolve({ data: batch(1, 30), meta: { total: 60, hasMore: true, nextCursor: '30' } })
   await initial
   const oldBatch = state.loadMore()
   search.value = ' Food & travel '
   assert.equal(state.items.value.length, 0)
-  assert.equal(pending[2].path, '/creators?limit=30&offset=0&view=card&q=Food+%26+travel')
+  assert.equal(pending[2].path, '/creators?limit=30&pagination=cursor&view=card&q=Food+%26+travel')
   pending[2].resolve({ data: [{ id: 100 }], meta: { total: 1 } })
   await settle()
-  pending[1].resolve({ data: batch(31, 30), meta: { total: 60 } })
+  pending[1].resolve({ data: batch(31, 30), meta: { total: 60, hasMore: true, nextCursor: '30' } })
   await oldBatch
   assert.deepEqual(Array.from(state.items.value, (item) => item.id), [100])
   locale.value = 'en'
@@ -102,15 +103,15 @@ test('filter changes discard stale batches and restart at zero; language changes
   unmount()
 })
 
-test('repeated cards advance by the received batch, and an empty batch stops even with an outdated total', async () => {
-  const responses = [{ data: batch(1, 30), meta: { total: 100 } }, { data: batch(25, 30), meta: { total: 100 } }, { data: [], meta: { total: 100 } }]
+test('repeated cards advance by the server cursor, and an empty batch stops even with an outdated total', async () => {
+  const responses = [{ data: batch(1, 30), meta: { total: 100, hasMore: true, nextCursor: '30' } }, { data: batch(25, 30), meta: { hasMore: true, nextCursor: '60' } }, { data: [], meta: { hasMore: true, nextCursor: '90' } }]
   const paths = []
   const { state, mounted, unmount } = await directory(async (path) => { paths.push(path); return responses.shift() })
   await mounted()
   await state.loadMore()
   assert.equal(state.items.value.length, 54)
   await state.loadMore()
-  assert.equal(paths[2], '/creators?limit=30&offset=60&view=card')
+  assert.equal(paths[2], '/creators?limit=30&pagination=cursor&view=card&cursor=60')
   assert.equal(state.hasMore.value, false)
   await state.loadMore()
   assert.equal(paths.length, 3)
@@ -121,13 +122,13 @@ test('short batches without totals stop, and an unmounted directory ignores pend
   const first = await directory(async () => ({ data: batch(1, 5) }))
   await first.mounted()
   assert.equal(first.state.hasMore.value, false)
-  assert.equal(first.state.total.value, 5)
+  assert.equal(first.state.total.value, 0)
   first.unmount()
   let complete
   const second = await directory(() => new Promise((resolve) => { complete = resolve }))
   const initial = second.mounted()
   second.unmount()
-  complete({ data: batch(1, 30), meta: { total: 60 } })
+  complete({ data: batch(1, 30), meta: { total: 60, hasMore: true, nextCursor: '30' } })
   await initial
   assert.equal(second.state.items.value.length, 0)
 })

@@ -1,23 +1,28 @@
 <script setup>
 import { computed, ref, watch } from 'vue'
+import LoadingSkeleton from '../shared/LoadingSkeleton.vue'
 import { ChevronLeft, ChevronRight, SearchX } from '@lucide/vue'
 
 const props = defineProps({
   columns: { type: Array, required: true },
   rows: { type: Array, required: true },
   labels: { type: Object, required: true },
-  pageSize: { type: Number, default: 10 },
+  pageSize: { type: Number, default: 25 },
+  total: { type: Number, default: null },
+  currentPage: { type: Number, default: 1 },
+  loading: { type: Boolean, default: false },
 })
 
-const emit = defineEmits(['delete-selected'])
+const emit = defineEmits(['delete-selected', 'change'])
 const selectedIds = ref([])
-const page = ref(1)
+const page = ref(props.currentPage)
+const remote = computed(() => props.total !== null)
 const pageSize = ref(props.pageSize)
 const sortKey = ref(props.columns.find(({ defaultSort }) => defaultSort)?.key ?? props.columns.find(({ sortable }) => sortable)?.key ?? '')
 const sortDirection = ref('asc')
 
 const sortedRows = computed(() => {
-  if (!sortKey.value) return props.rows
+  if (remote.value || !sortKey.value) return props.rows
 
   return [...props.rows].sort((left, right) => {
     const a = String(valueFor(left, sortKey.value) ?? '').toLocaleLowerCase()
@@ -26,8 +31,8 @@ const sortedRows = computed(() => {
   })
 })
 
-const pageCount = computed(() => Math.max(1, Math.ceil(sortedRows.value.length / pageSize.value)))
-const visibleRows = computed(() => sortedRows.value.slice((page.value - 1) * pageSize.value, page.value * pageSize.value))
+const pageCount = computed(() => Math.max(1, Math.ceil((props.total ?? sortedRows.value.length) / pageSize.value)))
+const visibleRows = computed(() => remote.value ? props.rows : sortedRows.value.slice((page.value - 1) * pageSize.value, page.value * pageSize.value))
 const visibleIds = computed(() => visibleRows.value.map(({ id }) => id))
 const allVisibleSelected = computed(() => visibleIds.value.length > 0 && visibleIds.value.every((id) => selectedIds.value.includes(id)))
 const paginationItems = computed(() => {
@@ -52,12 +57,26 @@ const paginationItems = computed(() => {
 
 watch(() => props.rows.map(({ id }) => id), (ids) => {
   selectedIds.value = selectedIds.value.filter((id) => ids.includes(id))
-  page.value = 1
+  if (!remote.value) page.value = 1
 })
 
-watch([pageCount, pageSize], ([count]) => {
-  if (page.value > count) page.value = count
+watch(() => props.currentPage, (value) => { page.value = value })
+watch(pageCount, (count) => {
+  if (!remote.value && page.value > count) page.value = count
 })
+watch(pageSize, () => {
+  page.value = 1
+  requestPage()
+})
+
+function requestPage() {
+  if (remote.value) emit('change', { page: page.value, limit: pageSize.value, sort: sortKey.value, direction: sortDirection.value })
+}
+
+function changePage(value) {
+  page.value = value
+  requestPage()
+}
 
 function valueFor(row, key) {
   return key.split('.').reduce((value, part) => value?.[part], row)
@@ -84,11 +103,13 @@ function sortBy(column) {
     sortKey.value = column.key
     sortDirection.value = 'asc'
   }
+  page.value = 1
+  requestPage()
 }
 </script>
 
 <template>
-  <div class="admin-table">
+  <div class="admin-table" :aria-busy="loading">
     <div class="admin-table__header">
       <div class="admin-table__filters">
         <slot name="toolbar" />
@@ -127,7 +148,12 @@ function sortBy(column) {
           </tr>
         </thead>
         <tbody>
-          <tr v-for="row in visibleRows" :key="row.id">
+          <tr v-if="loading">
+            <td :colspan="columns.length + 2">
+              <LoadingSkeleton variant="table" :columns="columns.length + 2" :count="Math.max(rows.length, 5)" :label="labels.loading" />
+            </td>
+          </tr>
+          <tr v-for="row in (loading ? [] : visibleRows)" :key="row.id">
             <td class="admin-table__check">
               <input
                 type="checkbox"
@@ -143,7 +169,7 @@ function sortBy(column) {
             </td>
             <td class="admin-table__actions"><slot name="actions" :row="row" /></td>
           </tr>
-          <tr v-if="visibleRows.length === 0">
+          <tr v-if="!loading && visibleRows.length === 0">
             <td class="admin-table__empty" :colspan="columns.length + 2">
               <div class="admin-table__empty-state">
                 <span class="admin-table__empty-icon">
@@ -160,9 +186,9 @@ function sortBy(column) {
       <label class="admin-table__page-size">
         {{ labels.pageSize }}
         <select v-model.number="pageSize" :aria-label="labels.pageSize">
-          <option :value="10">10</option>
-          <option :value="25">25</option>
+                    <option :value="25">25</option>
           <option :value="50">50</option>
+          <option :value="100">100</option>
         </select>
       </label>
       <nav class="admin-table__pagination-controls" :aria-label="labels.pagination">
@@ -171,8 +197,8 @@ function sortBy(column) {
           type="button"
           :aria-label="labels.previous"
           :title="labels.previous"
-          :disabled="page <= 1"
-          @click="page--"
+          :disabled="loading || page <= 1"
+          @click="changePage(page - 1)"
         >
           <ChevronLeft :size="16" aria-hidden="true" />
         </button>
@@ -185,8 +211,8 @@ function sortBy(column) {
               type="button"
               :aria-label="labels.goToPage(item.page)"
               :aria-current="page === item.page ? 'page' : undefined"
-              :disabled="page === item.page"
-              @click="page = item.page"
+              :disabled="loading || page === item.page"
+              @click="changePage(item.page)"
             >
               {{ item.page }}
             </button>
@@ -197,8 +223,8 @@ function sortBy(column) {
           type="button"
           :aria-label="labels.next"
           :title="labels.next"
-          :disabled="page >= pageCount"
-          @click="page++"
+          :disabled="loading || page >= pageCount"
+          @click="changePage(page + 1)"
         >
           <ChevronRight :size="16" aria-hidden="true" />
         </button>

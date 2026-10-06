@@ -4,7 +4,7 @@ namespace App\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
 
-#[ORM\Entity]
+#[ORM\Entity(readOnly: true)]
 #[ORM\Table(name: 'wave_scheduled_task')]
 #[ORM\Index(name: 'idx_wave_task_due', columns: ['status', 'next_run_at'])]
 class ScheduledTask

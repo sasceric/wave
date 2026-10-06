@@ -1,16 +1,20 @@
 <script setup>
-import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { Check, ChevronDown, Search, X } from '@lucide/vue'
 import { getDropdownPlacement } from '../../utils/dropdownPlacement'
 
 const props = defineProps({
   label: { type: String, required: true },
   options: { type: Array, required: true },
+  remote: { type: Boolean, default: false },
+  loading: { type: Boolean, default: false },
+  hasMore: { type: Boolean, default: false },
+  selectionOptions: { type: Array, default: () => [] },
   modelValue: { type: Array, required: true },
   labels: { type: Object, required: true },
 })
 
-const emit = defineEmits(['update:modelValue'])
+const emit = defineEmits(['update:modelValue', 'search', 'load-more'])
 const search = ref('')
 const dropdown = ref(null)
 const trigger = ref(null)
@@ -19,7 +23,7 @@ const opensAbove = ref(false)
 
 const visibleOptions = computed(() => {
   const query = search.value.trim().toLocaleLowerCase()
-  if (!query) return props.options
+  if (props.remote || !query) return props.options
 
   return props.options.filter((option) => (
     `${option.label} ${option.description ?? ''}`.toLocaleLowerCase().includes(query)
@@ -28,13 +32,15 @@ const visibleOptions = computed(() => {
 
 const selectedOptions = computed(() => {
   const selected = new Set(props.modelValue)
-  return props.options.filter(({ id }) => selected.has(id))
+  return [...new Map([...props.selectionOptions, ...props.options].map((option) => [option.id, option])).values()].filter(({ id }) => selected.has(id))
 })
 
 const visibleIds = computed(() => visibleOptions.value.map(({ id }) => id))
 const allVisibleSelected = computed(() => (
   visibleIds.value.length > 0 && visibleIds.value.every((id) => props.modelValue.includes(id))
 ))
+
+watch(search, (value) => { if (props.remote) emit('search', value) })
 
 function updateMenuPlacement() {
   if (!dropdown.value?.open || !trigger.value || !menu.value) {
@@ -140,9 +146,12 @@ onBeforeUnmount(() => {
               <small v-if="option.description">{{ option.description }}</small>
             </span>
           </label>
-          <p v-if="visibleOptions.length === 0" class="admin-multi-select__empty">
+          <p v-if="!loading && visibleOptions.length === 0" class="admin-multi-select__empty">
             {{ labels.noResults }}
           </p>
+          <button v-if="hasMore || loading" class="button button--outline" type="button" :disabled="loading" @click="emit('load-more')">
+            {{ loading ? labels.loading : labels.loadMore }}
+          </button>
         </div>
       </div>
     </details>

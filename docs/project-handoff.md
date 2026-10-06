@@ -103,7 +103,15 @@ All 85 frontend tests passed on the bundled Node 24.19 runtime with
 crashes in this runner, use a Node 24 runtime satisfying the frontend engine
 requirement. This does not change the app's build or deployment requirements.
 
-Existing `.github/copilot-instructions.md` requires PHPStan for PHP changes and ESLint for JavaScript/Vue changes. At review time, neither was declared in the corresponding package manifest, and no project configuration was found outside dependency directories. This is a tooling gap to report or resolve when making code changes; do not claim those checks passed.
+Required static checks are now installed: `composer analyse` runs PHPStan level 5
+with Doctrine metadata/DQL analysis, and `npm --prefix frontend run lint` runs ESLint
+and Vue essential rules. `phpstan.neon` and `frontend/eslint.config.js` define the
+checks. The metadata loader uses a disconnected PostgreSQL configuration, so it
+needs no database credentials. PHPDoc is treated as a hint so runtime input
+validation is still checked. There is no suppressed historical-error baseline.
+The validation workflow also runs tests and the frontend production build.
+See `docs/performance-baseline.md` for pagination, measured local performance,
+the reproducible synthetic benchmark and deployment requirements.
 
 The production workflow deploys on pushes to `main`, as well as manual dispatch. Inspect it before pushing changes intended only for local review.
 
@@ -177,16 +185,18 @@ external provider fallback, deletion cleanup, deployment commands and tests.
 
 Creators, campaigns and companies use `useInfiniteDirectory.js` and the shared
 `DirectoryLoadMore.vue` sentinel. The first request loads 30 records; approaching
-200px from the list's end loads the next 30 through the existing API's `limit` and
-`offset` parameters. The loader retains existing cards during loading or errors,
-prevents overlapping requests, deduplicates by ID, and advances offsets by the
-received batch size. Filters and locale changes restart at zero and invalidate
-responses from previous requests. An empty batch or the filtered server total
-ends loading and shows the localized “No more results” message in all six locales.
-The Load more/retry button provides keyboard access and a fallback when intersection
-observation is unavailable. There is no periodic directory polling. The observer
-re-measures the end after each render and disconnects while loading, on errors,
-at completion, and on unmount.
+200px from the list's end loads the next 30 using `pagination=cursor` and an opaque
+`cursor`. `DirectoryCursor` signs each position and binds it to filters and locale.
+The first page returns the total; later pages use a one-record lookahead instead
+of another count. The loader preserves cards during loading/errors, prevents
+overlapping requests, deduplicates by ID and invalidates stale filter/locale
+responses. `hasMore=false` shows the localized end message in all six locales.
+Existing offset API callers are supported. The Load more/retry button provides
+keyboard access and an observer fallback. There is no periodic directory polling;
+the observer disconnects while loading, on errors, at completion and on unmount.
+Admin catalogs use `AdminCatalog` through `/api/admin/catalog/{kind}` with server
+search/sort and 25/50/100 row pages. Homepage selectors request bounded candidate
+pages, retaining selected records separately. Overview fetches metrics only.
 
 Public APIs enforce visibility before counting and paging: hidden or unapproved
 creator/company owners are excluded, and campaigns must be open, unexpired and

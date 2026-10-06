@@ -4,7 +4,7 @@ namespace App\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
 
-#[ORM\Entity]
+#[ORM\Entity(readOnly: true)]
 #[ORM\Table(name: 'messenger_messages')]
 #[ORM\Index(name: 'idx_messenger_receive', columns: ['queue_name', 'available_at', 'delivered_at', 'id'])]
 class MessengerMessage

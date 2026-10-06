@@ -6,6 +6,8 @@ use DateTimeImmutable;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity]
+#[ORM\Index(name: 'idx_campaign_directory_order', columns: ['status', 'featured', 'closes_at', 'id'])]
+#[ORM\Index(name: 'idx_campaign_company_available', columns: ['company_id', 'status', 'closes_at'])]
 #[ORM\Table(name: 'campaign')]
 #[ORM\UniqueConstraint(name: 'uniq_campaign_slug', columns: ['slug'])]
 class Campaign

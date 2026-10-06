@@ -1,0 +1,14 @@
+includes:
+    - vendor/phpstan/phpstan-doctrine/extension.neon
+    - vendor/phpstan/phpstan-doctrine/rules.neon
+    - vendor/phpstan/phpstan-symfony/extension.neon
+parameters:
+    level: 5
+    treatPhpDocTypesAsCertain: false
+    doctrine:
+        objectManagerLoader: tools/phpstan/object-manager.php
+    paths:
+        - src
+        - migrations
+        - tools
+    tmpDir: var/cache/phpstan

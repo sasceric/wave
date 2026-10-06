@@ -363,6 +363,19 @@ Run the API tests with:
 php bin/phpunit
 ```
 
+Run static analysis and frontend validation with development dependencies installed:
+
+```sh
+composer analyse
+npm --prefix frontend run lint
+npm --prefix frontend test
+npm --prefix frontend run build
+```
+
+Database tests must use a separate PostgreSQL test database, not local account data.
+See [pagination and performance baseline](docs/performance-baseline.md) for the
+reproducible local benchmark, keyset APIs and index migration deployment.
+
 The sample-data command is safe to rerun; it inserts missing demo records, refreshes their translations, and fills demo portfolio, package, category, and FAQ fields only when those fields are empty.
 
 ## Deployment

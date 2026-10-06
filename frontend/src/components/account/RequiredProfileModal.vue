@@ -1,5 +1,5 @@
 <script setup>
-import { onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import MultiSelect from '../shared/MultiSelect.vue'
 import PhoneNumberField from '../shared/PhoneNumberField.vue'
@@ -16,12 +16,18 @@ const props = defineProps({
   error: { type: String, default: '' },
 })
 
-const emit = defineEmits(['save', 'update:phoneCountry'])
+const emit = defineEmits(['save', 'update:phoneCountry', 'update:profile'])
 const { t } = useI18n()
 const dialog = ref(null)
+const profile = computed(() => new Proxy(props.profile, {
+  set(target, key, value) {
+    emit('update:profile', { ...target, [key]: value })
+    return true
+  },
+}))
 
 function updateCountry(countryCode) {
-  props.profile.countryCode = countryCode
+  profile.value.countryCode = countryCode
   emit('update:phoneCountry', countryCode)
 }
 

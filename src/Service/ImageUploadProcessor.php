@@ -38,6 +38,7 @@ final class ImageUploadProcessor
             IMAGETYPE_JPEG => @imagecreatefromjpeg($source),
             IMAGETYPE_PNG => @imagecreatefrompng($source),
             IMAGETYPE_WEBP => @imagecreatefromwebp($source),
+            default => throw new \InvalidArgumentException('Unsupported image type.'),
         };
         if (!$image instanceof \GdImage) {
             throw new \InvalidArgumentException('Image cannot be decoded.');

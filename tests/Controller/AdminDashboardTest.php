@@ -6,7 +6,6 @@ use App\Entity\Campaign;
 use App\Entity\Company;
 use App\Entity\Creator;
 use App\Entity\User;
-use DateTimeImmutable;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Tools\SchemaTool;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
@@ -29,6 +28,49 @@ final class AdminDashboardTest extends WebTestCase
         $schemaTool->createSchema($entityManager->getMetadataFactory()->getAllMetadata());
     }
 
+    public function testCatalogPagesSearchSortAndRequireAdmin(): void
+    {
+        $entityManager = static::getContainer()->get(EntityManagerInterface::class);
+        $admin = new User('paged-admin@example.test', 'ROLE_COMPANY');
+        $admin->setPassword('unused');
+        $admin->setAdmin(true);
+        $entityManager->persist($admin);
+        for ($index = 1; $index <= 61; ++$index) {
+            $name = sprintf('Creator %03d', $index);
+            $entityManager->persist(new Creator('admin-creator-' . $index, $name, 'Travel', 'Sarajevo', 'Bio', []));
+        }
+        $entityManager->flush();
+        $this->client->request('GET', '/api/admin/catalog/creators');
+        self::assertResponseStatusCodeSame(401);
+        $this->client->loginUser($admin, 'main');
+        $this->client->request('GET', '/api/admin/catalog/creators?page=2&limit=25&sort=displayName&direction=desc');
+        self::assertResponseIsSuccessful();
+        $result = $this->payload();
+        self::assertCount(25, $result['data']);
+        self::assertSame(61, $result['meta']['total']);
+        self::assertSame('Creator 036', $result['data'][0]['displayName']);
+        $this->client->request('GET', '/api/admin/catalog/creators?q=Creator+061');
+        self::assertResponseIsSuccessful();
+        self::assertSame(1, $this->payload()['meta']['total']);
+        $this->client->request('GET', '/api/admin/catalog/creators?page=99');
+        self::assertResponseIsSuccessful();
+        self::assertSame(3, $this->payload()['meta']['page']);
+        self::assertCount(11, $this->payload()['data']);
+        $this->client->request('GET', '/api/admin/catalog/creators?q=%25');
+        self::assertResponseIsSuccessful();
+        self::assertSame(0, $this->payload()['meta']['total']);
+        foreach (['limit=1000', 'sort=unknown', 'direction=invalid', 'page=-1'] as $invalid) {
+            $this->client->request('GET', '/api/admin/catalog/creators?' . $invalid);
+            self::assertResponseStatusCodeSame(400);
+        }
+        $this->client->request('GET', '/api/admin/dashboard?section=overview');
+        self::assertResponseIsSuccessful();
+        self::assertSame(61, $this->payload()['data']['metrics']['creators']);
+        self::assertSame([], $this->payload()['data']['creators']);
+        $this->client->request('GET', '/api/admin/dashboard');
+        self::assertCount(25, $this->payload()['data']['creators']);
+    }
+
     public function testAdminCanCurateHomepageAndNonAdminCannotAccessDashboard(): void
     {
         $entityManager = static::getContainer()->get(EntityManagerInterface::class);
@@ -44,7 +86,7 @@ final class AdminDashboardTest extends WebTestCase
             'Sarajevo',
             'A creator profile.',
             [],
-            createdAt: new DateTimeImmutable('2026-10-01'),
+            createdAt: new \DateTimeImmutable('2026-10-01'),
         );
         $latestCreator = new Creator(
             'latest-creator',
@@ -53,7 +95,7 @@ final class AdminDashboardTest extends WebTestCase
             'Zagreb',
             'Another creator profile.',
             [],
-            createdAt: new DateTimeImmutable('2026-10-02'),
+            createdAt: new \DateTimeImmutable('2026-10-02'),
         );
         $company = new Company('sample-company', 'Sample Company', 'Travel');
         $campaign = new Campaign(
@@ -68,8 +110,8 @@ final class AdminDashboardTest extends WebTestCase
             500,
             'Croatia',
             2,
-            new DateTimeImmutable('+10 days'),
-            new DateTimeImmutable('today'),
+            new \DateTimeImmutable('+10 days'),
+            new \DateTimeImmutable('today'),
             $company,
         );
 
@@ -166,8 +208,8 @@ final class AdminDashboardTest extends WebTestCase
             500,
             'Bosnia and Herzegovina',
             1,
-            new DateTimeImmutable('+10 days'),
-            new DateTimeImmutable('today'),
+            new \DateTimeImmutable('+10 days'),
+            new \DateTimeImmutable('today'),
             $company,
         );
 
@@ -208,7 +250,7 @@ final class AdminDashboardTest extends WebTestCase
 
         $this->client->request(
             'POST',
-            '/api/admin/registrations/'.$creatorUser->getId().'/approve?locale=en',
+            '/api/admin/registrations/' . $creatorUser->getId() . '/approve?locale=en',
             server: [
                 'HTTP_ACCEPT' => 'application/json',
                 'HTTP_X_CSRF_TOKEN' => $this->csrfToken(),
@@ -222,7 +264,7 @@ final class AdminDashboardTest extends WebTestCase
         self::assertTrue($entityManager->getRepository(User::class)->find($creatorUser->getId())->isApproved());
         $this->client->request(
             'POST',
-            '/api/admin/registrations/'.$creatorUser->getId().'/approve?locale=en',
+            '/api/admin/registrations/' . $creatorUser->getId() . '/approve?locale=en',
             server: [
                 'HTTP_ACCEPT' => 'application/json',
                 'HTTP_X_CSRF_TOKEN' => $this->csrfToken(),
@@ -313,8 +355,8 @@ final class AdminDashboardTest extends WebTestCase
             500,
             'Bosnia and Herzegovina',
             1,
-            new DateTimeImmutable('+10 days'),
-            new DateTimeImmutable('today'),
+            new \DateTimeImmutable('+10 days'),
+            new \DateTimeImmutable('today'),
             $company,
         );
 
@@ -352,7 +394,7 @@ final class AdminDashboardTest extends WebTestCase
 
         $this->client->request(
             'POST',
-            '/api/admin/registrations/'.$incompleteUser->getId().'/approve?locale=en',
+            '/api/admin/registrations/' . $incompleteUser->getId() . '/approve?locale=en',
             server: [
                 'HTTP_ACCEPT' => 'application/json',
                 'HTTP_X_CSRF_TOKEN' => $this->csrfToken(),

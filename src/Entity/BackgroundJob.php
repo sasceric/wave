@@ -4,7 +4,7 @@ namespace App\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
 
-#[ORM\Entity]
+#[ORM\Entity(readOnly: true)]
 #[ORM\Table(name: 'background_job')]
 #[ORM\Index(name: 'idx_background_job_status_created', columns: ['status', 'created_at'])]
 class BackgroundJob

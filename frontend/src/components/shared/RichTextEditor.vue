@@ -201,6 +201,7 @@ function openLinkPanel() {
 
 function applyLink() {
   const value = linkValue.value.trim()
+  // eslint-disable-next-line no-control-regex -- Strip URL control characters before checking the scheme.
   const normalized = value.replace(/[\u0000-\u0020\u007f]+/g, '')
   const scheme = normalized.match(/^([a-z][a-z\d+.-]*):/i)?.[1]?.toLowerCase()
 
