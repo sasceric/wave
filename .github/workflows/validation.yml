@@ -28,6 +28,9 @@ jobs:
       APP_ENV: test
       DATABASE_URL: postgresql://wave:test-only-password@127.0.0.1:5432/wave?serverVersion=17&charset=utf8
       MAILER_DSN: null://null
+      MAIL_FROM_ADDRESS: no-reply@wave.ba
+      MAIL_FROM_NAME: Wave
+      APP_BASE_URL: http://127.0.0.1:8000
     steps:
       - uses: actions/checkout@v4
       - uses: shivammathur/setup-php@v2
@@ -37,6 +40,14 @@ jobs:
           coverage: none
       - run: composer install --no-interaction --prefer-dist
       - run: composer analyse
+      # Each job has its own checkout. Symfony's page/SEO tests serve this build.
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.20.0'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm --prefix frontend ci
+      - run: npm --prefix frontend run build
       - run: php bin/phpunit
 
   frontend:

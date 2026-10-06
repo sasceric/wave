@@ -100,10 +100,11 @@ final class GenerateMediaThumbnailsCommandTest extends KernelTestCase
         $entityManager->persist($owner);
         $entityManager->persist($folder);
         $storage = self::getContainer()->get(MediaStorage::class);
+        (new Filesystem())->mkdir(dirname($storage->absolutePath('legacy-test.png')));
         $images = [];
         for ($index = 0; $index < $count; ++$index) {
             $path = 'legacy-test-'.bin2hex(random_bytes(8)).'.png';
-            imagepng(imagecreatetruecolor(1200, 800), $storage->absolutePath($path));
+            self::assertTrue(imagepng(imagecreatetruecolor(1200, 800), $storage->absolutePath($path)));
             $this->paths[] = $path;
             $media = new Media($folder, $owner, 'legacy.png', $path, 'image/png', filesize($storage->absolutePath($path)));
             $entityManager->persist($media);

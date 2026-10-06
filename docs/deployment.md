@@ -9,6 +9,17 @@ backups, supervised consumers and scheduled-task setup, see
 [server services, jobs and queues](server-operations.md). The deploy workflow
 does not provision those host services or schedules.
 
+## Validation workflow
+
+The separate **Validate** workflow uses independent backend and frontend jobs.
+The backend job builds the Vue app before PHPUnit because Symfony page and SEO
+tests read `public/index.html`. Build output is ignored by Git and is not shared
+between jobs. CI supplies a test email sender, a null mail transport and the local
+test origin; it does not use production SMTP credentials. If PHPUnit reports
+“Build the Vue app …” with HTTP 503, check the backend job's frontend build step.
+The thumbnail command tests create their fixture storage directory so a clean
+checkout does not depend on previously uploaded local media.
+
 ## GitHub Actions secrets
 
 Add these repository secrets under **Settings → Secrets and variables →
