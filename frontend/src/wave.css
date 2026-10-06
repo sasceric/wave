@@ -5267,3 +5267,42 @@ h1 em, h2 em { color: #c67f67; font-weight: 400; }
   border-radius: 20px;
   background: #edf3ed;
 }
+
+/* Reserve card geometry while data and images arrive, including installed PWAs. */
+.card-image { display: block; width: 100%; height: 100%; overflow: hidden; background: #dce3da; }
+.card-image > img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: inherit; opacity: 0; transition: opacity .2s ease; }
+.card-image--loaded > img { opacity: 1; }
+.card-image__fallback { display: grid; place-items: center; width: 100%; height: 100%; background: #65746a; }
+.card-image__fallback .wave-logo { width: 48%; max-width: 92px; height: auto; }
+.directory-skeleton { pointer-events: none; box-shadow: none; }
+.directory-skeleton--creator { background: #dce3da; }
+.directory-skeleton--creator .creator-card__details { display: grid; gap: 10px; }
+.skeleton-line { display: block; width: 85%; height: 12px; margin: 8px 0; border-radius: 5px; background: #dce3da; }
+.skeleton-line--wide { width: 94%; height: 17px; }
+.skeleton-line--short { width: 58%; }
+.skeleton-button { display: block; width: 100%; height: 44px; border-radius: 12px; background: #dce3da; }
+.skeleton-surface { background: #dce3da; }
+.directory-skeleton--creator .skeleton-line { background: rgba(255, 255, 255, .55); }
+.directory-skeleton--campaign .campaign-card__cover::before,
+.directory-skeleton--campaign .campaign-card__cover::after { display: none; }
+.directory-skeleton--campaign .campaign-card__panel { min-height: 175px; }
+.directory-skeleton--company .skeleton-button { width: 70%; height: 36px; margin-top: 6px; }
+.card-image--loading,
+.directory-skeleton { position: relative; isolation: isolate; }
+/* Card media remains positioned by the existing card layout. */
+.creator-card__image.card-image,
+.campaign-card__cover-image.card-image { position: absolute; }
+.card-image--loading::after,
+.directory-skeleton::after { position: absolute; z-index: 2; inset: 0; pointer-events: none; content: ''; background: linear-gradient(100deg, transparent 20%, rgba(255, 255, 255, .4) 50%, transparent 80%); transform: translateX(-100%); animation: wave-skeleton 1.5s ease-in-out infinite; }
+@keyframes wave-skeleton { to { transform: translateX(100%); } }
+@media (prefers-reduced-motion: reduce) {
+  .card-image--loading::after, .directory-skeleton::after { animation: none; display: none; }
+  .card-image > img { transition: none; }
+}
+.campaign-grid--directory .campaign-card__panel { min-height: 175px; }
+.campaign-grid--directory .campaign-card__footer > span { min-height: 26px; }
+.directory-skeleton--campaign .campaign-card__footer .skeleton-line { height: 26px; margin: 0; }
+@media (max-width: 1200px) {
+  /* The stacked company footer needs the same space before and after loading. */
+  .company-directory__grid .company-directory-card { min-height: 182px; }
+}

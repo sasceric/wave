@@ -81,6 +81,9 @@ final class CampaignController
             ->getQuery()
             ->getSingleScalarResult();
         $campaigns = $builder
+            ->leftJoin('campaign.coverMedia', 'coverMedia')
+            ->leftJoin('company.logoMedia', 'logoMedia')
+            ->addSelect('company', 'companyOwner', 'coverMedia', 'logoMedia')
             ->orderBy('campaign.featured', SortDirection::Descending)
             ->addOrderBy('campaign.closesAt', SortDirection::Ascending)
             ->addOrderBy('campaign.id', SortDirection::Ascending)

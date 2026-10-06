@@ -2,6 +2,7 @@
 import { useI18n } from 'vue-i18n'
 import CompanyCard from '../components/companies/CompanyCard.vue'
 import DirectoryLoadMore from '../components/shared/DirectoryLoadMore.vue'
+import DirectorySkeletonCard from '../components/shared/DirectorySkeletonCard.vue'
 import StatusMessage from '../components/shared/StatusMessage.vue'
 import { useInfiniteDirectory } from '../composables/useInfiniteDirectory'
 
@@ -22,8 +23,9 @@ const { items: companies, loading, error, hasMore, loadMore } = useInfiniteDirec
     <StatusMessage v-if="!loading && !error && !companies.length" variant="empty">
       {{ t('companyDirectory.empty') }}
     </StatusMessage>
-    <div v-if="companies.length" class="company-directory__grid">
+    <div v-if="companies.length || loading" class="company-directory__grid" :aria-busy="loading">
       <CompanyCard v-for="company in companies" :key="company.id" :company="company" />
+      <DirectorySkeletonCard v-for="index in loading ? (companies.length ? 2 : 6) : 0" :key="`loading-${index}`" kind="company" />
     </div>
     <DirectoryLoadMore
       :loading="loading"

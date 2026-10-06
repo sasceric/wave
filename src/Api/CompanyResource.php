@@ -20,6 +20,7 @@ final class CompanyResource
             'countryCode' => $company->getOwner()?->getCountryCode(),
             'logoUrl' => $company->getLogoMedia()?->getUrl() ?? $company->getLogoUrl(),
             'logoMediaId' => $company->getLogoMedia()?->getId(),
+            'logoImage' => MediaImageResource::fromEntity($company->getLogoMedia(), 96),
             'verified' => $company->isVerified(),
             'featured' => $company->isFeatured(),
         ];

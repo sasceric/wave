@@ -4,6 +4,7 @@ import { useI18n } from 'vue-i18n'
 import CampaignCard from '../components/campaigns/CampaignCard.vue'
 import DirectoryFilters from '../components/shared/DirectoryFilters.vue'
 import DirectoryLoadMore from '../components/shared/DirectoryLoadMore.vue'
+import DirectorySkeletonCard from '../components/shared/DirectorySkeletonCard.vue'
 import StatusMessage from '../components/shared/StatusMessage.vue'
 import { useInfiniteDirectory } from '../composables/useInfiniteDirectory'
 
@@ -39,12 +40,13 @@ const { items: campaigns, total, loading, error, hasMore, loadMore } = useInfini
     <StatusMessage v-if="!loading && !error && !campaigns.length" variant="empty">
       {{ t('campaignsPage.empty') }}
     </StatusMessage>
-    <div v-if="campaigns.length" class="campaign-grid campaign-grid--directory">
+    <div v-if="campaigns.length || loading" class="campaign-grid campaign-grid--directory" :aria-busy="loading">
       <CampaignCard
         v-for="campaign in campaigns"
         :key="campaign.id"
         :campaign="campaign"
       />
+      <DirectorySkeletonCard v-for="index in loading ? (campaigns.length ? 2 : 6) : 0" :key="`loading-${index}`" kind="campaign" />
     </div>
     <DirectoryLoadMore
       :loading="loading"

@@ -61,6 +61,8 @@ final class CompanyController
             ->getQuery()
             ->getSingleScalarResult();
         $companies = $builder
+            ->leftJoin('company.logoMedia', 'logoMedia')
+            ->addSelect('logoMedia', 'owner')
             ->setFirstResult($offset)
             ->setMaxResults($limit)
             ->getQuery()

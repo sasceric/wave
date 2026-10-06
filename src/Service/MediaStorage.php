@@ -16,6 +16,7 @@ final class MediaStorage
         private readonly string $storagePath,
         private readonly Filesystem $filesystem,
         private readonly ImageUploadProcessor $imageProcessor,
+        private readonly MediaThumbnails $thumbnails,
     ) {
     }
 
@@ -41,12 +42,20 @@ final class MediaStorage
         );
         $absoluteDirectory = $this->storagePath.'/'.dirname($relativePath);
         $this->filesystem->mkdir($absoluteDirectory);
-        $fileSize = $this->imageProcessor->writeWebp($file->getPathname(), $this->absolutePath($relativePath));
+        try {
+            $fileSize = $this->imageProcessor->writeWebp($file->getPathname(), $this->absolutePath($relativePath));
+            $dimensions = $this->thumbnails->warm($relativePath);
+        } catch (\Throwable $exception) {
+            $this->filesystem->remove($this->absolutePath($relativePath));
+            $this->thumbnails->remove($relativePath);
+            throw $exception;
+        }
 
         return [
             'path' => $relativePath,
             'mimeType' => 'image/webp',
             'fileSize' => $fileSize,
+            ...$dimensions,
         ];
     }
 
@@ -58,5 +67,6 @@ final class MediaStorage
     public function remove(Media $media): void
     {
         $this->filesystem->remove($this->absolutePath($media->getStoragePath()));
+        $this->thumbnails->remove($media->getStoragePath());
     }
 }

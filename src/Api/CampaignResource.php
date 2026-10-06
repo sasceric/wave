@@ -31,6 +31,7 @@ final class CampaignResource
             'featured' => $campaign->isFeatured(),
             'coverMediaId' => $campaign->getCoverMedia()?->getId(),
             'coverImageUrl' => $campaign->getCoverMedia()?->getUrl(),
+            'coverImage' => MediaImageResource::fromEntity($campaign->getCoverMedia()),
             'company' => CompanyResource::fromEntity($campaign->getCompany(), $locale),
         ];
     }

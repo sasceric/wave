@@ -36,6 +36,12 @@ class Media
     #[ORM\Column]
     private int $fileSize;
 
+    #[ORM\Column(nullable: true)]
+    private ?int $width = null;
+
+    #[ORM\Column(nullable: true)]
+    private ?int $height = null;
+
     #[ORM\Column]
     private DateTimeImmutable $createdAt;
 
@@ -94,6 +100,25 @@ class Media
     public function getCreatedAt(): DateTimeImmutable
     {
         return $this->createdAt;
+    }
+
+    public function getWidth(): ?int
+    {
+        return $this->width;
+    }
+
+    public function getHeight(): ?int
+    {
+        return $this->height;
+    }
+
+    public function setDimensions(int $width, int $height): void
+    {
+        if ($width < 1 || $height < 1) {
+            throw new \InvalidArgumentException('Image dimensions must be positive.');
+        }
+        $this->width = $width;
+        $this->height = $height;
     }
 
     public function getUrl(): string

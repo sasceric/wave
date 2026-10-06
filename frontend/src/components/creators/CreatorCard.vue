@@ -4,6 +4,7 @@ import { Camera, CirclePlay, Music2, UsersRound } from '@lucide/vue'
 import RouterLink from '../shared/LocalizedLink.vue'
 import { formatFollowers, formatMoney } from '../../lib/api'
 import WaveLogo from '../shared/WaveLogo.vue'
+import CardImage from '../shared/CardImage.vue'
 
 const props = defineProps({ creator: { type: Object, required: true } })
 
@@ -42,12 +43,12 @@ const startingPrice = computed(() => {
 <template>
   <RouterLink class="creator-card" :to="{ name: 'creator-profile', params: { slug: creator.slug } }">
     <div class="creator-card__media">
-      <img
-        v-if="creator.avatarUrl"
+      <CardImage
+        v-if="creator.avatarImage || creator.avatarUrl"
         class="creator-card__image"
+        :image="creator.avatarImage"
         :src="creator.avatarUrl"
         :alt="creator.displayName"
-        loading="lazy"
       />
       <div v-else class="creator-card__image creator-card__placeholder">
         <WaveLogo mark class="creator-card__placeholder-logo" />

@@ -67,6 +67,7 @@ final class CreatorResource
             'tagline' => $translation['tagline'] ?? ($creator->getTagline() !== '' ? $creator->getTagline() : ($translation['bio'] ?? $creator->getBio())),
             'avatarUrl' => $creator->getAvatarMedia()?->getUrl() ?? $creator->getAvatarUrl(),
             'avatarMediaId' => $creator->getAvatarMedia()?->getId(),
+            'avatarImage' => MediaImageResource::fromEntity($creator->getAvatarMedia()),
             'socialProfiles' => array_map(
                 static fn (array $profile): array => $profile + ['source' => ApiMessages::get('self_reported', $locale)],
                 $creator->getSocialProfiles(),

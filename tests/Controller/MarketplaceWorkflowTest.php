@@ -198,6 +198,88 @@ final class MarketplaceWorkflowTest extends WebTestCase
         self::assertResponseStatusCodeSame(401);
     }
 
+    public function testThumbnailsEnforceVisibilityBeforeServingCachedOrConditionalResponses(): void
+    {
+        $entityManager = static::getContainer()->get(EntityManagerInterface::class);
+        $owner = new User('thumbnail-owner@example.test', 'ROLE_CREATOR');
+        $owner->setPassword('unused-test-hash');
+        $owner->setApproved(true);
+        $owner->setCreator(new Creator('thumbnail-owner', 'Thumbnail Owner', 'Lifestyle', 'Sarajevo', '', []));
+        $entityManager->persist($owner);
+        $entityManager->flush();
+        $ownerId = $owner->getId();
+        $this->client->loginUser($owner, 'main');
+        $uploaded = $this->uploadImage('creator-avatar', $this->csrfToken(), 'thumbnail.png');
+        self::assertResponseStatusCodeSame(201);
+        $mediaId = $uploaded['data']['id'];
+        $this->uploadedMediaIds[] = $mediaId;
+        self::assertSame(1, $uploaded['data']['width']);
+        $url = $uploaded['data']['image']['src'];
+        $this->client->request('GET', $url);
+        self::assertResponseIsSuccessful();
+        self::assertSame('image/webp', $this->client->getResponse()->headers->get('Content-Type'));
+        self::assertTrue($this->client->getResponse()->headers->hasCacheControlDirective('no-store'));
+        $privateEtag = $this->client->getResponse()->getEtag();
+        $this->client->request('GET', $url, server: ['HTTP_IF_NONE_MATCH' => $privateEtag]);
+        self::assertResponseStatusCodeSame(200);
+        $this->client->restart();
+        $this->client->request('GET', $url, server: ['HTTP_IF_NONE_MATCH' => $privateEtag]);
+        self::assertResponseStatusCodeSame(404);
+
+        $entityManager = static::getContainer()->get(EntityManagerInterface::class);
+        $owner = $entityManager->find(User::class, $ownerId);
+        $media = $entityManager->find(Media::class, $mediaId);
+        $owner->getCreator()->setAvatarMedia($media);
+        $entityManager->flush();
+        $this->client->request('GET', $url);
+        self::assertResponseStatusCodeSame(200);
+        $response = $this->client->getResponse();
+        self::assertTrue($response->headers->hasCacheControlDirective('public'));
+        self::assertSame(300, $response->getMaxAge());
+        self::assertContains('Cookie', $response->getVary());
+        $etag = $response->getEtag();
+        self::assertNotNull($etag);
+        self::assertNotNull($response->getLastModified());
+        $this->client->request('GET', $url, server: ['HTTP_IF_NONE_MATCH' => $etag]);
+        self::assertResponseStatusCodeSame(304);
+        $this->client->request('GET', '/api/media/'.$mediaId.'/thumbnail/v1/10000');
+        self::assertResponseStatusCodeSame(404);
+        $this->client->request('GET', '/api/media/'.$mediaId.'/thumbnail/v0/320');
+        self::assertResponseStatusCodeSame(404);
+
+        $entityManager = static::getContainer()->get(EntityManagerInterface::class);
+        $owner = $entityManager->find(User::class, $ownerId);
+        $this->client->loginUser($owner, 'main');
+        $this->client->request('GET', $url);
+        self::assertTrue($this->client->getResponse()->headers->hasCacheControlDirective('private'));
+        self::assertSame(300, $this->client->getResponse()->getMaxAge());
+        $entityManager = static::getContainer()->get(EntityManagerInterface::class);
+        $owner = $entityManager->find(User::class, $ownerId);
+        $owner->setHideMyAccount(true);
+        $entityManager->flush();
+        $this->client->restart();
+        $this->client->request('GET', $url, server: ['HTTP_IF_NONE_MATCH' => $etag]);
+        self::assertResponseStatusCodeSame(404);
+
+        $entityManager = static::getContainer()->get(EntityManagerInterface::class);
+        $owner = $entityManager->find(User::class, $ownerId);
+        $this->client->loginUser($owner, 'main');
+        $this->jsonRequest('PUT', '/api/me/profile', [
+            'displayName' => 'Thumbnail Owner', 'category' => 'Lifestyle', 'categories' => ['Lifestyle'],
+            'location' => 'Sarajevo', 'bio' => '', 'tagline' => '', 'avatarMediaId' => null,
+            'avatarUrl' => null, 'tags' => [], 'socialProfiles' => [], 'portfolio' => [], 'packages' => [], 'faqs' => [],
+        ], $this->csrfToken());
+        self::assertResponseIsSuccessful();
+        $storage = static::getContainer()->get(\App\Service\MediaStorage::class);
+        $media = static::getContainer()->get(EntityManagerInterface::class)->find(Media::class, $mediaId);
+        $thumbnailPath = static::getContainer()->get(\App\Service\MediaThumbnails::class)->path($media, 320);
+        $sourcePath = $storage->absolutePath($media->getStoragePath());
+        $this->jsonRequest('DELETE', '/api/media/'.$mediaId, [], $this->csrfToken());
+        self::assertResponseIsSuccessful();
+        self::assertFileDoesNotExist($thumbnailPath);
+        self::assertFileDoesNotExist($sourcePath);
+    }
+
     public function testEveryUploadFolderStoresResizedWebpAndRejectsBrokenImages(): void
     {
         $entityManager = static::getContainer()->get(EntityManagerInterface::class);

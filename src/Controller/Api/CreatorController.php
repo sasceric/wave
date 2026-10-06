@@ -85,6 +85,8 @@ final class CreatorController
             ->getQuery()
             ->getSingleScalarResult();
         $creators = $builder
+            ->leftJoin('creator.avatarMedia', 'avatarMedia')
+            ->addSelect('avatarMedia', 'owner')
             ->orderBy('creator.displayName', SortDirection::Ascending)
             ->addOrderBy('creator.id', SortDirection::Ascending)
             ->setFirstResult($offset)
@@ -92,6 +94,19 @@ final class CreatorController
             ->getQuery()
             ->getResult();
         $categoryLabels = MarketplaceCategoryLabels::forLocale($entityManager, $locale);
+
+        if ($creators !== []) {
+            // Fetch the bounded page's portfolio associations in one query; joining
+            // a collection into the paginated query would truncate creator pages.
+            $entityManager->createQueryBuilder()
+                ->select('creator', 'portfolioMedia', 'media')
+                ->from(Creator::class, 'creator')
+                ->leftJoin('creator.portfolioMedia', 'portfolioMedia')
+                ->leftJoin('portfolioMedia.media', 'media')
+                ->where('creator IN (:creators)')
+                ->setParameter('creators', $creators)
+                ->getQuery()->getResult();
+        }
 
         return new JsonResponse([
             'data' => array_map(

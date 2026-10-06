@@ -36,6 +36,10 @@ services:
         arguments:
             $storagePath: '%kernel.project_dir%/var/media'
 
+    App\Service\MediaThumbnails:
+        arguments:
+            $storagePath: '%kernel.project_dir%/var/media'
+
     App\OAuth\OAuthProviderClient:
         arguments:
             $googleClientId: '%env(string:GOOGLE_OAUTH_CLIENT_ID)%'

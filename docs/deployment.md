@@ -84,6 +84,15 @@ are rejected. After deployment, upload a large JPEG/PNG and verify that its
 See [PHP's WebP constants](https://www.php.net/manual/en/image.constants.php)
 for the lossless encoding mode; resizing itself still reduces pixel resolution.
 
+## Listing images and skeletons
+
+For directory skeletons and cached image thumbnails, the normal workflow applies
+`Version20261006180000`. After deployment, run the bounded generation command as
+`steelcodeweb` to index existing image dimensions and pre-generate the media
+library. See [listing media rollout](media-thumbnails.md#server-rollout) for exact
+commands, resuming large libraries, cache behavior and verification. New uploads
+generate their variants automatically; no new environment configuration is needed.
+
 ## Chat history and seen receipts
 
 Migration `Version20261006160000` adds `(conversation_id, id)` and

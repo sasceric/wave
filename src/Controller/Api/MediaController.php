@@ -13,7 +13,9 @@ use App\Entity\MediaFolder;
 use App\Entity\User;
 use App\Localization\ApiMessages;
 use App\Localization\LocaleContext;
+use App\Media\ImageVariants;
 use App\Service\MediaStorage;
+use App\Service\MediaThumbnails;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
@@ -22,6 +24,7 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\ResponseHeaderBag;
+use Symfony\Component\HttpKernel\EventListener\AbstractSessionListener;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
 
@@ -125,6 +128,7 @@ final class MediaController
             $stored['mimeType'],
             $stored['fileSize'],
         );
+        $media->setDimensions($stored['width'], $stored['height']);
         $entityManager->persist($media);
         $entityManager->flush();
 
@@ -132,11 +136,15 @@ final class MediaController
     }
 
     #[Route('/api/media/{id}/file', name: 'api_media_file', requirements: ['id' => '\d+'], methods: ['GET'])]
+    #[Route('/api/media/{id}/thumbnail/{version}/{width}', name: 'api_media_thumbnail', requirements: ['id' => '\d+', 'version' => ImageVariants::VERSION, 'width' => '96|320|480'], methods: ['GET'])]
     public function file(
         int $id,
+        Request $request,
         EntityManagerInterface $entityManager,
         Security $security,
         MediaStorage $storage,
+        MediaThumbnails $thumbnails,
+        ?int $width = null,
     ): Response
     {
         $media = $entityManager->getRepository(Media::class)->find($id);
@@ -152,19 +160,37 @@ final class MediaController
         ) {
             return new JsonResponse(['error' => ApiMessages::get('invalid_media', 'bs')], 404);
         }
-        $path = $storage->absolutePath($media->getStoragePath());
+        try {
+            $path = $width === null
+                ? $storage->absolutePath($media->getStoragePath())
+                : $thumbnails->path($media, $width);
+        } catch (\InvalidArgumentException) {
+            return new JsonResponse(['error' => ApiMessages::get('invalid_media', 'bs')], 404);
+        }
         if (!is_file($path)) {
             return new JsonResponse(['error' => ApiMessages::get('invalid_media', 'bs')], 404);
         }
 
-        $response = new BinaryFileResponse($path);
-        $response->headers->set('Content-Type', $media->getMimeType());
+        $response = new BinaryFileResponse($path, autoEtag: true);
+        $response->headers->set('Content-Type', $width === null ? $media->getMimeType() : 'image/webp');
         $response->headers->set('X-Content-Type-Options', 'nosniff');
-        $response->headers->set('Cache-Control', $isPublic ? 'public, max-age=3600' : 'private, no-store');
+        $response->headers->set('Cache-Control', $isPublic
+            ? ($user instanceof User ? 'private' : 'public').', max-age=300, must-revalidate'
+            : 'private, no-store');
+        if ($isPublic) {
+            // Public pixels contain no session data. Signed-in users retain a
+            // private browser cache; Symfony must not reset its lifetime to zero.
+            $response->headers->set(AbstractSessionListener::NO_AUTO_CACHE_CONTROL_HEADER, 'true');
+        }
+        $response->setVary('Cookie');
         $response->setContentDisposition(
             ResponseHeaderBag::DISPOSITION_INLINE,
-            basename($media->getStoragePath()),
+            basename($path),
         );
+        // Always authorize first, including conditional requests for cached images.
+        if ($isPublic) {
+            $response->isNotModified($request);
+        }
 
         return $response;
     }

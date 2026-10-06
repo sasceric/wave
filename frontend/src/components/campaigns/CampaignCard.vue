@@ -9,6 +9,7 @@ import { currentUser } from '../../composables/useCurrentUser'
 import { useCampaignBookmarks } from '../../composables/useCampaignBookmarks'
 import { localizedRouteName } from '../../routePaths'
 import ConfirmationModal from '../shared/ConfirmationModal.vue'
+import CardImage from '../shared/CardImage.vue'
 
 const props = defineProps({ campaign: { type: Object, required: true } })
 const { t, locale } = useI18n()
@@ -100,19 +101,20 @@ async function confirmRemoveBookmark() {
 <template>
   <article class="campaign-card">
     <div class="campaign-card__cover" :class="`campaign-card__cover--${coverVariant}`">
-      <img
-        v-if="campaign.coverImageUrl"
+      <CardImage
+        v-if="campaign.coverImage || campaign.coverImageUrl"
         class="campaign-card__cover-image"
+        :image="campaign.coverImage"
         :src="campaign.coverImageUrl"
         alt=""
-        loading="lazy"
       />
       <div class="campaign-card__cover-brand">
-        <img
-          v-if="campaign.company.logoUrl"
+        <CardImage
+          v-if="campaign.company.logoImage || campaign.company.logoUrl"
+          :image="campaign.company.logoImage"
           :src="campaign.company.logoUrl"
           :alt="campaign.company.name"
-          loading="lazy"
+          sizes="38px"
         />
         <span v-else>{{ campaign.company.name.slice(0, 1) }}</span>
       </div>

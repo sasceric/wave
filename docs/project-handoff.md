@@ -27,7 +27,7 @@ Declared dependencies: PHP 8.4+, Symfony 8.1, Doctrine ORM 3, Vue 3, Vue Router,
 | Reusable UI | `frontend/src/components/shared/`, domain component directories |
 | Session and shared frontend state | `frontend/src/composables/useCurrentUser.js` and other composables |
 | API requests, CSRF, uploads, formatting | `frontend/src/lib/api.js` |
-| Image uploads and resizing | `MediaController.php`, `src/Service/MediaStorage.php`, `ImageUploadProcessor.php`; GD/EXIF requirements in `docs/deployment.md` |
+| Images, thumbnails and indexing | `MediaController.php`, `src/Service/MediaStorage.php`, `ImageUploadProcessor.php`, `MediaThumbnails.php`, `GenerateMediaThumbnailsCommand.php`; `docs/media-thumbnails.md` |
 | Visual styles | `frontend/src/wave.css`, existing component styles |
 | Localized navigation | `config/localized_routes.json`, `frontend/src/routePaths.js`, `frontend/src/router.js` |
 | Translations | `frontend/src/locales/`, `src/Localization/` |
@@ -145,6 +145,18 @@ focus, visible controls, and restoration of the bottom inset. This frontend fix 
 the normal production build/deployment; no environment or database changes.
 
 ### Lazy-loaded public directories
+
+Directory grids show six initial skeleton cards and two append skeletons while
+loading. `CardImage.vue` preserves media slots, lazy-loads responsive images,
+reveals cache hits immediately and settles errors on a logo fallback. Skeletons
+reuse card styles and respect reduced motion. Uploaded listing images use
+96/320/480px lossless WebP variants via the authorized media controller; resources
+include dimensions and `srcset` metadata without filesystem work. Thumbnail files
+persist under `var/media/thumbnails/v1/` with locks and atomic writes. New uploads
+warm variants automatically. Migration `Version20261006180000` records nullable
+media dimensions, and `app:media:generate-thumbnails` backfills existing images in
+resumable ID batches. See `docs/media-thumbnails.md` for caching/access behavior,
+external provider fallback, deletion cleanup, deployment commands and tests.
 
 Creators, campaigns and companies use `useInfiniteDirectory.js` and the shared
 `DirectoryLoadMore.vue` sentinel. The first request loads 30 records; approaching

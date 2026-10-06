@@ -5,6 +5,7 @@ import { useI18n } from 'vue-i18n'
 import CreatorCard from '../components/creators/CreatorCard.vue'
 import DirectoryFilters from '../components/shared/DirectoryFilters.vue'
 import DirectoryLoadMore from '../components/shared/DirectoryLoadMore.vue'
+import DirectorySkeletonCard from '../components/shared/DirectorySkeletonCard.vue'
 import StatusMessage from '../components/shared/StatusMessage.vue'
 import { useInfiniteDirectory } from '../composables/useInfiniteDirectory'
 import { SOCIAL_PLATFORMS } from '../lib/marketplace'
@@ -67,12 +68,13 @@ function normalizePlatform(value) {
     <StatusMessage v-if="!loading && !error && !creators.length" variant="empty">
       {{ t('creatorsPage.empty') }}
     </StatusMessage>
-    <div v-if="creators.length" class="creator-grid creator-grid--directory">
+    <div v-if="creators.length || loading" class="creator-grid creator-grid--directory" :aria-busy="loading">
       <CreatorCard
         v-for="creator in creators"
         :key="creator.id"
         :creator="creator"
       />
+      <DirectorySkeletonCard v-for="index in loading ? (creators.length ? 2 : 6) : 0" :key="`loading-${index}`" kind="creator" />
     </div>
     <DirectoryLoadMore
       :loading="loading"

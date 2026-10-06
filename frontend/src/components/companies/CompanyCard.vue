@@ -3,6 +3,7 @@ import { ArrowRight, Megaphone } from '@lucide/vue'
 import RouterLink from '../shared/LocalizedLink.vue'
 import { useI18n } from 'vue-i18n'
 import WaveLogo from '../shared/WaveLogo.vue'
+import CardImage from '../shared/CardImage.vue'
 
 defineProps({
   company: { type: Object, required: true },
@@ -15,7 +16,7 @@ const { t } = useI18n()
   <article class="company-directory-card">
     <div class="company-directory-card__identity">
       <div class="company-directory-card__logo">
-        <img v-if="company.logoUrl" :src="company.logoUrl" :alt="company.name" loading="lazy" />
+        <CardImage v-if="company.logoImage || company.logoUrl" :image="company.logoImage" :src="company.logoUrl" :alt="company.name" sizes="68px" />
         <WaveLogo v-else mark />
       </div>
       <span

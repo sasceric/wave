@@ -6,6 +6,7 @@ use App\Entity\MediaFolder;
 use App\Entity\User;
 use App\Service\ImageUploadProcessor;
 use App\Service\MediaStorage;
+use App\Service\MediaThumbnails;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Filesystem\Filesystem;
@@ -21,7 +22,11 @@ final class MediaStorageTest extends TestCase
         $this->directory = sys_get_temp_dir().'/wave-image-test-'.bin2hex(random_bytes(8));
         $filesystem = new Filesystem();
         $filesystem->mkdir($this->directory);
-        $this->storage = new MediaStorage($this->directory.'/media', $filesystem, new ImageUploadProcessor());
+        $processor = new ImageUploadProcessor();
+        $this->storage = new MediaStorage(
+            $this->directory.'/media', $filesystem, $processor,
+            new MediaThumbnails($this->directory.'/media', $filesystem, $processor),
+        );
     }
 
     protected function tearDown(): void

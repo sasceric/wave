@@ -14,6 +14,9 @@ final class MediaResource
             'url' => $media->getUrl(),
             'mimeType' => $media->getMimeType(),
             'fileSize' => $media->getFileSize(),
+            'width' => $media->getWidth(),
+            'height' => $media->getHeight(),
+            'image' => MediaImageResource::fromEntity($media),
             'folder' => [
                 'id' => $media->getFolder()->getId(),
                 'slug' => $media->getFolder()->getSlug(),
