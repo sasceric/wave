@@ -11,7 +11,10 @@ import { localizedRouteName } from '../../routePaths'
 import ConfirmationModal from '../shared/ConfirmationModal.vue'
 import CardImage from '../shared/CardImage.vue'
 
-const props = defineProps({ campaign: { type: Object, required: true } })
+const props = defineProps({
+  campaign: { type: Object, required: true },
+  imageSizes: { type: String, default: undefined },
+})
 const { t, locale } = useI18n()
 const route = useRoute()
 const router = useRouter()
@@ -105,6 +108,7 @@ async function confirmRemoveBookmark() {
         v-if="campaign.coverImage || campaign.coverImageUrl"
         class="campaign-card__cover-image"
         :image="campaign.coverImage"
+        :sizes="imageSizes"
         :src="campaign.coverImageUrl"
         alt=""
       />

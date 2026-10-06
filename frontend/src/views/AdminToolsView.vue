@@ -5,6 +5,7 @@ import { useI18n } from 'vue-i18n'
 import AccountSidebar from '../components/account/AccountSidebar.vue'
 import AdminReadOnlyTable from '../components/admin/AdminReadOnlyTable.vue'
 import LocalizedLink from '../components/shared/LocalizedLink.vue'
+import LoadingSkeleton from '../components/shared/LoadingSkeleton.vue'
 import StatusMessage from '../components/shared/StatusMessage.vue'
 import { currentUser } from '../composables/useCurrentUser'
 import { apiGet, apiRequest } from '../lib/api'
@@ -160,7 +161,10 @@ onBeforeUnmount(() => { requestId++ })
 
 <template>
   <section class="admin-dashboard">
-    <div v-if="access === 'loading'" class="admin-dashboard__state"><StatusMessage>{{ t('adminTools.loading') }}</StatusMessage></div>
+    <div v-if="access === 'loading'" class="admin-dashboard__layout">
+      <AccountSidebar v-if="currentUser" :user="currentUser" :admin-layout="true" />
+      <main class="admin-dashboard__main"><LoadingSkeleton variant="dashboard" :label="t('adminTools.loading')" /></main>
+    </div>
     <div v-else-if="access === 'anonymous'" class="admin-dashboard__state">
       <StatusMessage>{{ t('adminDashboard.signIn') }}</StatusMessage>
       <LocalizedLink class="button button--dark" :to="{ name: 'account', query: { mode: 'login' } }">{{ t('auth.signIn') }}</LocalizedLink>
@@ -187,7 +191,7 @@ onBeforeUnmount(() => { requestId++ })
           <p v-if="tab === 'logs'" class="admin-tools__hint">{{ t('adminTools.logsHint') }}</p>
           <StatusMessage v-if="meta.changed">{{ t('adminTools.logsChanged') }}</StatusMessage>
           <StatusMessage v-if="meta.limited">{{ t('adminTools.logsLimited') }}</StatusMessage>
-          <p v-if="loading" role="status">{{ t('adminTools.loading') }}</p>
+          <p v-if="loading" class="sr-only" role="status">{{ t('adminTools.loading') }}</p>
           <AdminReadOnlyTable :columns="columns" :rows="rows" :labels="labels" :page="page" :page-size="pageSize" :has-more="Boolean(meta.hasMore)" :busy="loading" :show-empty="!error" @page-size="pageSize = $event" @previous="navigate(-1)" @next="navigate(1)">
             <template #toolbar>
               <button v-if="tab === 'tasks'" type="button" class="button button--dark" :disabled="actionBusy || loading" @click="action('tasks/register')">{{ t('adminTools.register') }}</button>

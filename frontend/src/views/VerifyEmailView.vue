@@ -2,6 +2,7 @@
 import { onMounted, ref } from 'vue'
 import RouterLink from '../components/shared/LocalizedLink.vue'
 import { useI18n } from 'vue-i18n'
+import LoadingSkeleton from '../components/shared/LoadingSkeleton.vue'
 import StatusMessage from '../components/shared/StatusMessage.vue'
 import { apiRequest } from '../lib/api'
 
@@ -32,7 +33,7 @@ onMounted(async () => {
     <div class="account-intro">
       <p class="eyebrow">Wave</p>
       <h1>{{ status === 'complete' ? t('auth.emailVerified') : t('auth.verifyTitle') }}</h1>
-      <p v-if="status === 'pending'" role="status">{{ t('auth.verifyingEmail') }}</p>
+      <LoadingSkeleton v-if="status === 'pending'" :count="1" :label="t('auth.verifyingEmail')" />
       <p v-else-if="status === 'complete'" role="status">{{ t('auth.emailVerifiedPendingApproval') }}</p>
       <StatusMessage v-else-if="status === 'invalid'" variant="error">
         {{ error || t('auth.verificationInvalid') }}

@@ -1,6 +1,7 @@
 <script setup>
 import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
+import LoadingSkeleton from '../shared/LoadingSkeleton.vue'
 import StatusMessage from '../shared/StatusMessage.vue'
 import { apiGet, apiRequest } from '../../lib/api'
 import { localeNames } from '../../i18n'
@@ -182,7 +183,7 @@ onMounted(loadTemplates)
 
     <StatusMessage v-if="error" variant="error">{{ error }}</StatusMessage>
     <StatusMessage v-if="notice">{{ notice }}</StatusMessage>
-    <StatusMessage v-if="loading">{{ t('adminDashboard.loading') }}</StatusMessage>
+    <LoadingSkeleton v-if="loading" variant="account" :label="t('adminDashboard.loading')" />
 
     <div v-if="!loading && templates.length" class="email-template-manager__layout">
       <aside class="email-template-list" :aria-label="t('adminDashboard.chooseEmailTemplate')">

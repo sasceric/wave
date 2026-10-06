@@ -7,6 +7,7 @@ import DirectoryLoadMore from '../components/shared/DirectoryLoadMore.vue'
 import DirectorySkeletonCard from '../components/shared/DirectorySkeletonCard.vue'
 import StatusMessage from '../components/shared/StatusMessage.vue'
 import { useInfiniteDirectory } from '../composables/useInfiniteDirectory'
+import { DIRECTORY_IMAGE_SIZES } from '../lib/listingImage'
 
 const { t, locale } = useI18n()
 const search = ref('')
@@ -45,6 +46,7 @@ const { items: campaigns, total, loading, error, hasMore, loadMore } = useInfini
         v-for="campaign in campaigns"
         :key="campaign.id"
         :campaign="campaign"
+        :image-sizes="DIRECTORY_IMAGE_SIZES"
       />
       <DirectorySkeletonCard v-for="index in loading ? (campaigns.length ? 2 : 6) : 0" :key="`loading-${index}`" kind="campaign" />
     </div>

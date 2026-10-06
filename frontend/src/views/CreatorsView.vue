@@ -8,6 +8,7 @@ import DirectoryLoadMore from '../components/shared/DirectoryLoadMore.vue'
 import DirectorySkeletonCard from '../components/shared/DirectorySkeletonCard.vue'
 import StatusMessage from '../components/shared/StatusMessage.vue'
 import { useInfiniteDirectory } from '../composables/useInfiniteDirectory'
+import { DIRECTORY_IMAGE_SIZES } from '../lib/listingImage'
 import { SOCIAL_PLATFORMS } from '../lib/marketplace'
 
 const { t, locale } = useI18n()
@@ -73,6 +74,7 @@ function normalizePlatform(value) {
         v-for="creator in creators"
         :key="creator.id"
         :creator="creator"
+        :image-sizes="DIRECTORY_IMAGE_SIZES"
       />
       <DirectorySkeletonCard v-for="index in loading ? (creators.length ? 2 : 6) : 0" :key="`loading-${index}`" kind="creator" />
     </div>

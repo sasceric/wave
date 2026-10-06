@@ -4,8 +4,10 @@ import { useRoute } from 'vue-router'
 import RouterLink from '../components/shared/LocalizedLink.vue'
 import { useI18n } from 'vue-i18n'
 import CampaignCard from '../components/campaigns/CampaignCard.vue'
+import LoadingSkeleton from '../components/shared/LoadingSkeleton.vue'
 import StatusMessage from '../components/shared/StatusMessage.vue'
 import WaveLogo from '../components/shared/WaveLogo.vue'
+import { DIRECTORY_IMAGE_SIZES } from '../lib/listingImage'
 import { apiGet } from '../lib/api'
 import { getSeoOrigin, updateSeo } from '../lib/seo'
 import { localizedPath } from '../routePaths'
@@ -86,9 +88,7 @@ onMounted(loadCompany)
       {{ t('companyProfile.back') }} ↗
     </RouterLink>
   </section>
-  <section v-else-if="!company" class="page-width profile-error">
-    <StatusMessage>{{ t('companyProfile.loading') }}</StatusMessage>
-  </section>
+  <LoadingSkeleton v-else-if="!company" variant="company" :label="t('companyProfile.loading')" />
   <template v-else>
     <section class="company-cover">
       <div class="page-width company-cover__inner">
@@ -109,7 +109,7 @@ onMounted(loadCompany)
         <RouterLink class="text-link" to="/campaigns">{{ t('companyProfile.allBriefs') }} <span aria-hidden="true">↗</span></RouterLink>
       </div>
       <div v-if="campaigns.length" class="campaign-grid campaign-grid--directory">
-        <CampaignCard v-for="campaign in campaigns" :key="campaign.id" :campaign="campaign" />
+        <CampaignCard v-for="campaign in campaigns" :key="campaign.id" :campaign="campaign" :image-sizes="DIRECTORY_IMAGE_SIZES" />
       </div>
       <StatusMessage v-else variant="empty">
         {{ t('companyProfile.empty') }}

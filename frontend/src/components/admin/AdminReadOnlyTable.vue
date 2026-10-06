@@ -1,4 +1,5 @@
 <script setup>
+import SkeletonBlock from '../shared/SkeletonBlock.vue'
 import { ChevronLeft, ChevronRight } from '@lucide/vue'
 
 defineProps({
@@ -27,6 +28,9 @@ defineEmits(['page-size', 'previous', 'next'])
             <td v-for="column in columns" :key="column.key">
               <slot :name="`cell-${column.key}`" :row="row" :value="row[column.key]">{{ row[column.key] ?? '—' }}</slot>
             </td>
+          </tr>
+          <tr v-for="index in busy && !rows.length ? 5 : 0" :key="`loading-${index}`" aria-hidden="true">
+            <td v-for="column in columns" :key="column.key"><SkeletonBlock width="80%" /></td>
           </tr>
           <tr v-if="!rows.length && !busy && showEmpty"><td :colspan="columns.length" class="admin-table__empty">{{ labels.empty }}</td></tr>
         </tbody>

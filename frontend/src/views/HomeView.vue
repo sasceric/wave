@@ -4,6 +4,7 @@ import { useI18n } from 'vue-i18n'
 import { Building2, Camera, Mail, Megaphone, Search, UserRound, UsersRound } from '@lucide/vue'
 import CampaignCard from '../components/campaigns/CampaignCard.vue'
 import CreatorCard from '../components/creators/CreatorCard.vue'
+import DirectorySkeletonCard from '../components/shared/DirectorySkeletonCard.vue'
 import StatusMessage from '../components/shared/StatusMessage.vue'
 import FaqSection from '../components/shared/FaqSection.vue'
 import LocalizedLink from '../components/shared/LocalizedLink.vue'
@@ -13,7 +14,7 @@ const creators = ref([])
 const campaigns = ref([])
 const creatorsError = ref('')
 const campaignsError = ref('')
-const loading = ref(false)
+const loading = ref(true)
 const creatorMode = ref('latest')
 const { t, locale } = useI18n()
 const siteFaqItems = computed(() => Array.from({ length: 5 }, (_, index) => ({
@@ -154,10 +155,11 @@ onMounted(loadHome)
       <LocalizedLink class="text-link" to="/creators">{{ t('home.findPeople') }} <span aria-hidden="true">↗</span></LocalizedLink>
     </div>
     <StatusMessage v-if="creatorsError" variant="error">{{ creatorsError }}</StatusMessage>
-    <div v-else-if="creators.length" class="creator-grid">
+    <div v-else-if="creators.length || loading" class="creator-grid" :aria-busy="loading">
       <CreatorCard v-for="creator in creators" :key="creator.id" :creator="creator" />
+      <DirectorySkeletonCard v-for="index in loading && !creators.length ? 4 : 0" :key="`loading-${index}`" kind="creator" />
+      <span v-if="loading" class="sr-only" role="status">{{ t('home.loadingCreators') }}</span>
     </div>
-    <StatusMessage v-else-if="loading">{{ t('home.loadingCreators') }}</StatusMessage>
     <StatusMessage v-else variant="empty">{{ t('home.emptyCreators') }}</StatusMessage>
   </section>
 
@@ -168,10 +170,11 @@ onMounted(loadHome)
         <LocalizedLink class="text-link" to="/campaigns">{{ t('home.allCampaigns') }} <span aria-hidden="true">↗</span></LocalizedLink>
       </div>
       <StatusMessage v-if="campaignsError" variant="error">{{ campaignsError }}</StatusMessage>
-      <div v-else-if="campaigns.length" class="campaign-grid campaign-grid--home">
+      <div v-else-if="campaigns.length || loading" class="campaign-grid campaign-grid--home" :aria-busy="loading">
         <CampaignCard v-for="campaign in campaigns" :key="campaign.id" :campaign="campaign" />
+        <DirectorySkeletonCard v-for="index in loading && !campaigns.length ? 4 : 0" :key="`loading-${index}`" kind="campaign" />
+        <span v-if="loading" class="sr-only" role="status">{{ t('home.loadingCampaigns') }}</span>
       </div>
-      <StatusMessage v-else-if="loading">{{ t('home.loadingCampaigns') }}</StatusMessage>
       <StatusMessage v-else variant="empty">{{ t('home.emptyCampaigns') }}</StatusMessage>
     </div>
   </section>

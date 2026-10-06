@@ -7,6 +7,32 @@ reuse the real card geometry, image slots reserve their space, and reduced-motio
 preferences disable shimmer and fades. The shared `CardImage.vue` uses native lazy
 loading, asynchronous decoding, responsive `srcset`/`sizes`, a loading placeholder,
 and a settled logo fallback on image errors. Cached images reveal immediately.
+Creator and campaign directory cards use four columns above 760px and two on
+mobile, including skeletons. Their image `sizes` matches the grid width so the
+browser selects an appropriate 96/320/480px thumbnail for its pixel density.
+These variants remain useful; restoring the grid requires no thumbnail deletion
+or regeneration.
+
+## Loading across the app
+
+`SkeletonBlock.vue` supplies the shared shimmer primitive; `LoadingSkeleton.vue`
+uses it for account details, profile pages, campaign details, dashboard cards,
+list rows and message bubbles. `InboxSkeleton.vue` reserves the chat workspace,
+including the conversation list, thread header, timeline and composer. Home uses
+its existing card grids and mobile carousels for both real and skeleton cards.
+Admin Tools renders skeleton cells inside its real table while an empty page loads;
+email templates and moderation use the same shared loading layouts. The
+notification menu reserves list rows until its existing first request completes.
+
+Skeletons appear only while their existing data requests are pending. They do not
+add polling, extra API calls or artificial delays. Static pages display directly.
+Loaded content stays visible during home/inbox/dashboard refreshes. Account waits
+for its session and activity data before showing the dashboard, preventing a flash
+of sign-in or empty activity lists. Chat history removes placeholders before
+restoring the retained message's scroll position, including on request errors.
+Loading announcements use the existing localized labels or `app.loading` in all
+six locales. Placeholder shapes are hidden from screen readers, have no interactive
+controls, and shimmer is disabled for reduced-motion preferences.
 
 ## Image storage and indexing
 

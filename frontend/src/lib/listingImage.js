@@ -1,3 +1,6 @@
+// Match directory page widths, gaps and the four-column desktop / two-column mobile grid.
+export const DIRECTORY_IMAGE_SIZES = '(max-width: 420px) calc((100vw - 44px) / 2), (max-width: 600px) calc((100vw - 52px) / 2), (max-width: 760px) 274px, (max-width: 1224px) calc((100vw - 106px) / 4), 280px'
+
 export function listingImage(image, src) {
   if (image?.src) return image
   if (!src) return null

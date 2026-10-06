@@ -6,7 +6,10 @@ import { formatFollowers, formatMoney } from '../../lib/api'
 import WaveLogo from '../shared/WaveLogo.vue'
 import CardImage from '../shared/CardImage.vue'
 
-const props = defineProps({ creator: { type: Object, required: true } })
+const props = defineProps({
+  creator: { type: Object, required: true },
+  imageSizes: { type: String, default: undefined },
+})
 
 const primarySocial = computed(() => props.creator.socialProfiles?.[0] || null)
 const socialIcon = computed(() => {
@@ -47,6 +50,7 @@ const startingPrice = computed(() => {
         v-if="creator.avatarImage || creator.avatarUrl"
         class="creator-card__image"
         :image="creator.avatarImage"
+        :sizes="imageSizes"
         :src="creator.avatarUrl"
         :alt="creator.displayName"
       />

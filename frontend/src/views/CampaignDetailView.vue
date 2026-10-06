@@ -3,6 +3,7 @@ import { onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import RouterLink from '../components/shared/LocalizedLink.vue'
 import { useI18n } from 'vue-i18n'
+import LoadingSkeleton from '../components/shared/LoadingSkeleton.vue'
 import StatusMessage from '../components/shared/StatusMessage.vue'
 import WaveLogo from '../components/shared/WaveLogo.vue'
 import { apiGet, apiRequest, formatDate, formatMoney } from '../lib/api'
@@ -101,9 +102,7 @@ onMounted(loadCampaign)
       {{ t('campaignDetail.back') }} ↗
     </RouterLink>
   </section>
-  <section v-else-if="!campaign" class="page-width profile-error">
-    <StatusMessage>{{ t('campaignDetail.loading') }}</StatusMessage>
-  </section>
+  <LoadingSkeleton v-else-if="!campaign" variant="campaign" :label="t('campaignDetail.loading')" />
   <template v-else>
     <section class="brief-hero">
       <div class="page-width brief-hero__inner">

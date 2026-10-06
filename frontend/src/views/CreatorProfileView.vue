@@ -5,6 +5,7 @@ import RouterLink from '../components/shared/LocalizedLink.vue'
 import { useI18n } from 'vue-i18n'
 import { Camera, Check, ChevronLeft, ChevronRight, CirclePlay, MessageCircle, Music2, Plus, X } from '@lucide/vue'
 import FaqSection from '../components/shared/FaqSection.vue'
+import LoadingSkeleton from '../components/shared/LoadingSkeleton.vue'
 import StatusMessage from '../components/shared/StatusMessage.vue'
 import WaveLogo from '../components/shared/WaveLogo.vue'
 import { useMarketplaceCatalog } from '../composables/useMarketplaceCatalog'
@@ -514,9 +515,7 @@ onBeforeUnmount(() => packageDescriptionObserver?.disconnect())
       {{ t('creatorProfile.back') }} ↗
     </RouterLink>
   </section>
-  <section v-else-if="!creator" class="page-width profile-error">
-    <StatusMessage>{{ t('creatorProfile.loading') }}</StatusMessage>
-  </section>
+  <LoadingSkeleton v-else-if="!creator" variant="profile" :label="t('creatorProfile.loading')" />
   <template v-else>
     <dialog
       ref="portfolioGalleryDialog"

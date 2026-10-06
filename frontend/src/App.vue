@@ -9,6 +9,7 @@ import HeaderCreatorSearch from './components/shared/HeaderCreatorSearch.vue'
 import LocalizedLink from './components/shared/LocalizedLink.vue'
 import WaveWordmark from './components/shared/WaveWordmark.vue'
 import CookieConsentBanner from './components/shared/CookieConsentBanner.vue'
+import LoadingSkeleton from './components/shared/LoadingSkeleton.vue'
 import { currentUser, loadCurrentUser, setCurrentUser } from './composables/useCurrentUser'
 import { useAdminWorker } from './composables/useAdminWorker'
 import { unreadMessageCount } from './composables/useUnreadMessages'
@@ -850,7 +851,8 @@ async function signOut() {
                 >{{ t(pushSubscribed ? 'app.pushDisable' : 'app.pushEnable') }}</button>
                 <p v-if="pushStatus" role="status">{{ t(`app.${pushStatus}`) }}</p>
               </div>
-              <p v-if="!notificationsError && !notifications.length">{{ t('app.noNotifications') }}</p>
+              <LoadingSkeleton v-if="!notificationsError && !notificationsLoaded" :count="3" />
+              <p v-else-if="!notificationsError && !notifications.length">{{ t('app.noNotifications') }}</p>
               <div v-else-if="!notificationsError" class="header-notifications__list">
                 <button
                   v-for="notification in notifications"

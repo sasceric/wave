@@ -167,6 +167,7 @@
     }
   },
   "app": {
+    "loading": "Nalaganje…",
     "homeAria": "Začetna stran Wave",
     "home": "Domov",
     "mainNavigation": "Glavna navigacija",

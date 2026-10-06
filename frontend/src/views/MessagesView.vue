@@ -20,6 +20,8 @@ import {
   Wallet,
 } from '@lucide/vue'
 import LocalizedLink from '../components/shared/LocalizedLink.vue'
+import InboxSkeleton from '../components/messages/InboxSkeleton.vue'
+import LoadingSkeleton from '../components/shared/LoadingSkeleton.vue'
 import StatusMessage from '../components/shared/StatusMessage.vue'
 import { currentUser, loadCurrentUser } from '../composables/useCurrentUser'
 import { apiGet, apiRequest, formatDate, formatMoney } from '../lib/api'
@@ -72,6 +74,7 @@ const conversationQuery = ref('')
 const conversationFilter = ref('all')
 const draft = ref('')
 const loading = ref(true)
+const inboxLoaded = ref(false)
 const sending = ref(false)
 const error = ref('')
 const authRequired = ref(false)
@@ -223,6 +226,7 @@ watch(
     const inquiryId = Number(route.query.inquiry)
     if (conversationId === selectedConversationId.value || inquiryId === selectedInquiryId.value) return
     // Vue Router reuses this view when only the notification's chat query changes.
+    inboxLoaded.value = false
     void loadInbox()
   },
 )
@@ -423,6 +427,7 @@ async function loadInbox() {
       apiGet('/me/inquiries'),
     ])
     if (unmounted || requestVersion !== inboxRequestVersion || currentUser.value?.id !== userId) return
+    inboxLoaded.value = true
     conversations.value = conversationResponse.data
     inquiries.value = inquiryResponse.data.filter((inquiry) => inquiry.canChat)
 
@@ -645,14 +650,15 @@ async function loadOlderMessages() {
     rememberUnreadBoundary(response.data, response.meta?.firstUnreadId)
     mergeMessages(response.data)
     hasOlderMessages.value = Boolean(response.meta?.hasMoreOlder)
-    await nextTick()
-    if (!isCurrent()) return
-    const retained = anchorId && timeline?.querySelector(`[data-message-id="${anchorId}"]`)
-    if (retained) timeline.scrollTop += retained.getBoundingClientRect().top - anchorTop
   } catch (cause) {
     if (isCurrent()) historyError.value = cause.message
   } finally {
     if (requestVersion === historyRequestVersion) loadingOlderMessages.value = false
+    await nextTick()
+    if (isCurrent()) {
+      const retained = anchorId && timeline?.querySelector(`[data-message-id="${anchorId}"]`)
+      if (retained) timeline.scrollTop += retained.getBoundingClientRect().top - anchorTop
+    }
   }
 }
 
@@ -907,7 +913,7 @@ function messageTimeDescription(value) {
         {{ t('auth.signIn') }}
       </LocalizedLink>
     </div>
-    <StatusMessage v-else-if="loading" variant="loading">{{ t('campaignChat.loading') }}</StatusMessage>
+    <InboxSkeleton v-else-if="loading && !inboxLoaded" :open-chat="Boolean(route.query.conversation || route.query.inquiry || route.query.creator || route.query.company)" />
     <div
       v-else
       class="campaign-messages__layout"
@@ -1058,7 +1064,8 @@ function messageTimeDescription(value) {
             :aria-busy="loadingMessages || loadingOlderMessages"
             @scroll.passive="handleTimelineScroll"
           >
-            <p v-if="loadingMessages" class="campaign-messages__history-status" role="status">{{ t('campaignChat.loadingMessages') }}</p>
+            <LoadingSkeleton v-if="loadingMessages && !conversationMessages.length" variant="messages" :label="t('campaignChat.loadingMessages')" />
+            <LoadingSkeleton v-if="loadingOlderMessages" variant="messages" :count="2" :label="t('campaignChat.loadingOlder')" />
             <button v-if="hasOlderMessages" class="campaign-messages__history-button" type="button" :disabled="loadingOlderMessages || loadingMessages" @click="loadOlderMessages">
               {{ t(loadingOlderMessages ? 'campaignChat.loadingOlder' : hasEarlierUnreadMessages ? 'campaignChat.loadEarlierUnread' : 'campaignChat.loadOlder') }}
             </button>

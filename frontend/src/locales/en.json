@@ -166,6 +166,7 @@
     }
   },
   "app": {
+    "loading": "Loading…",
     "homeAria": "Wave home",
     "home": "Home",
     "mainNavigation": "Main navigation",

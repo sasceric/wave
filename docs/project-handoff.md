@@ -95,6 +95,13 @@ crashed natively in that runner; all 76 tests passed with Node 22.20 during the
 2026-10-06 Admin Tools validation. Prefer the documented Node 22 runtime when
 checking this suite.
 
+During the 2026-10-06 skeleton/grid validation, Node 22.20 also intermittently
+crashed with SIGSEGV in the experimental VM-module tests, including serial runs.
+All 85 frontend tests passed on the bundled Node 24.19 runtime with
+`--test-concurrency=1`; the production build passed on Node 22.20. If Node 22
+crashes in this runner, use a Node 24 runtime satisfying the frontend engine
+requirement. This does not change the app's build or deployment requirements.
+
 Existing `.github/copilot-instructions.md` requires PHPStan for PHP changes and ESLint for JavaScript/Vue changes. At review time, neither was declared in the corresponding package manifest, and no project configuration was found outside dependency directories. This is a tooling gap to report or resolve when making code changes; do not claim those checks passed.
 
 The production workflow deploys on pushes to `main`, as well as manual dispatch. Inspect it before pushing changes intended only for local review.
@@ -113,7 +120,7 @@ that belongs to the authorized thread; it does not create notifications for seen
 The Vue Messages view prepends older pages with a retained DOM anchor, merges by ID,
 and catches up with bounded `after` pages after a reconnect. New incoming messages do
 not force scroll while reading history. There is no online/away/offline presence service.
-Creators and campaigns directories use two columns on phones and desktop; homepage
+Creators and campaigns directories use four columns on desktop and two on phones; homepage
 carousels are separate from directory grids. Public directories load batches as described
 below; account campaign management retains its own pagination.
 
@@ -154,7 +161,9 @@ the normal production build/deployment; no environment or database changes.
 ### Lazy-loaded public directories
 
 Directory grids show six initial skeleton cards and two append skeletons while
-loading. `CardImage.vue` preserves media slots, lazy-loads responsive images,
+loading. Shared `SkeletonBlock`, `LoadingSkeleton` and `InboxSkeleton` components
+cover home, account, profiles, campaign details, chat and admin loading states;
+see `docs/media-thumbnails.md` for behavior and accessibility. `CardImage.vue` preserves media slots, lazy-loads responsive images,
 reveals cache hits immediately and settles errors on a logo fallback. Skeletons
 reuse card styles and respect reduced motion. Uploaded listing images use
 96/320/480px lossless WebP variants via the authorized media controller; resources

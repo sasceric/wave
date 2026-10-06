@@ -2,6 +2,7 @@
 import { onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import AccountSidebar from '../components/account/AccountSidebar.vue'
+import LoadingSkeleton from '../components/shared/LoadingSkeleton.vue'
 import StatusMessage from '../components/shared/StatusMessage.vue'
 import { currentUser } from '../composables/useCurrentUser'
 import { apiGet, apiRequest } from '../lib/api'
@@ -151,9 +152,7 @@ onMounted(loadModerationCatalog)
       <StatusMessage v-if="error" variant="error">{{ error }}</StatusMessage>
       <StatusMessage v-if="notice">{{ notice }}</StatusMessage>
 
-      <StatusMessage v-if="loading || accessState === 'loading'">
-        {{ t('moderation.loading') }}
-      </StatusMessage>
+      <LoadingSkeleton v-if="loading || accessState === 'loading'" variant="account" :label="t('moderation.loading')" />
       <div v-else-if="accessState === 'anonymous'" class="moderation-access">
         <p>{{ t('moderation.signIn') }}</p>
         <RouterLink class="button button--dark" to="/account">{{ t('auth.signIn') }} <span aria-hidden="true">↗</span></RouterLink>

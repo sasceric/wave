@@ -19,6 +19,7 @@ import AdminRowActions from '../components/admin/AdminRowActions.vue'
 import AccountSidebar from '../components/account/AccountSidebar.vue'
 import ConfirmationModal from '../components/shared/ConfirmationModal.vue'
 import LocalizedLink from '../components/shared/LocalizedLink.vue'
+import LoadingSkeleton from '../components/shared/LoadingSkeleton.vue'
 import StatusMessage from '../components/shared/StatusMessage.vue'
 import { currentUser } from '../composables/useCurrentUser'
 import { apiGet, apiRequest } from '../lib/api'
@@ -367,8 +368,9 @@ onMounted(loadDashboard)
 
 <template>
   <section class="admin-dashboard">
-    <div v-if="loading || accessState === 'loading'" class="admin-dashboard__state">
-      <StatusMessage>{{ t('adminDashboard.loading') }}</StatusMessage>
+    <div v-if="(loading && !dashboard) || accessState === 'loading'" class="admin-dashboard__layout">
+      <AccountSidebar v-if="currentUser" :user="currentUser" :admin-layout="true" />
+      <main class="admin-dashboard__main"><LoadingSkeleton variant="dashboard" :label="t('adminDashboard.loading')" /></main>
     </div>
     <div v-else-if="accessState === 'anonymous'" class="admin-dashboard__state">
       <StatusMessage>{{ t('adminDashboard.signIn') }}</StatusMessage>
@@ -380,7 +382,7 @@ onMounted(loadDashboard)
     <div v-else-if="accessState === 'error'" class="admin-dashboard__state">
       <StatusMessage variant="error">{{ error }}</StatusMessage>
     </div>
-    <div v-else class="admin-dashboard__layout">
+    <div v-else class="admin-dashboard__layout" :aria-busy="loading">
       <AccountSidebar
         :user="currentUser"
         :pending-registrations="dashboard.metrics.pendingRegistrations"

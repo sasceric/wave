@@ -15,6 +15,7 @@ import PhoneNumberField from '../components/shared/PhoneNumberField.vue'
 import ProfileImageField from '../components/shared/ProfileImageField.vue'
 import RichTextEditor from '../components/shared/RichTextEditor.vue'
 import SearchableSelect from '../components/shared/SearchableSelect.vue'
+import LoadingSkeleton from '../components/shared/LoadingSkeleton.vue'
 import StatusMessage from '../components/shared/StatusMessage.vue'
 import SwitchField from '../components/shared/SwitchField.vue'
 import WaveLogo from '../components/shared/WaveLogo.vue'
@@ -56,6 +57,8 @@ const LEGACY_ACCOUNT_TABS = {
   invitations: 'account-invitations',
 }
 const user = ref(null)
+const dashboardLoading = ref(true)
+const dashboardReady = ref(false)
 const accountTab = ref(isAccountTab(route.query.tab) ? route.query.tab : 'about')
 const accountSection = computed(() => route.meta.accountSection ?? 'profile')
 const busy = ref(false)
@@ -262,6 +265,8 @@ function incompleteProfileTab() {
 }
 
 async function loadDashboard() {
+  dashboardLoading.value = true
+  if (!user.value) dashboardReady.value = false
   let pendingBookmarkRedirect = null
   try {
     const response = await apiGet('/auth/me')
@@ -298,9 +303,6 @@ async function loadDashboard() {
         }
       }
       tags.value = (profile.value.tags || []).join(', ')
-      applications.value = []
-      offers.value = []
-      invitations.value = []
       if (canAccessMarketplace) {
         const [applicationResponse, offerResponse, invitationResponse] = await Promise.all([
           apiGet('/me/applications'),
@@ -311,6 +313,10 @@ async function loadDashboard() {
         applications.value = applicationResponse.data
         offers.value = offerResponse.data
         invitations.value = invitationResponse.data
+      } else {
+        applications.value = []
+        offers.value = []
+        invitations.value = []
       }
     } else {
       if (route.query.tab !== undefined) {
@@ -318,8 +324,6 @@ async function loadDashboard() {
         delete query.tab
         void router.replace({ query })
       }
-      campaigns.value = []
-      companyApplications.value = []
       if (canAccessMarketplace) {
         const campaignResponse = await apiGet('/me/campaigns')
         campaigns.value = campaignResponse.data
@@ -336,6 +340,9 @@ async function loadDashboard() {
           application.id,
           { amount: application.campaign.budgetMin, message: '' },
         ]))
+      } else {
+        campaigns.value = []
+        companyApplications.value = []
       }
     }
     if (canAccessMarketplace) {
@@ -354,6 +361,8 @@ async function loadDashboard() {
     }
     error.value = cause.message
   } finally {
+    dashboardLoading.value = false
+    dashboardReady.value = true
     if (pendingBookmarkRedirect) {
       await router.replace(pendingBookmarkRedirect)
     }
@@ -871,9 +880,13 @@ onMounted(loadDashboard)
 </script>
 
 <template>
-  <AccountAccessPanel v-if="!user" @authenticated="handleAuthenticated" />
+  <section v-if="dashboardLoading && !dashboardReady" class="account-page account-page--dashboard page-width">
+    <AccountSidebar v-if="currentUser" :user="currentUser" />
+    <LoadingSkeleton variant="account" :content="accountSection === 'campaigns' && campaignPage === 'create' ? 'profile' : accountSection" />
+  </section>
+  <AccountAccessPanel v-else-if="!user" @authenticated="handleAuthenticated" />
 
-  <section v-else class="account-page account-page--dashboard page-width">
+  <section v-else class="account-page account-page--dashboard page-width" :aria-busy="dashboardLoading">
     <div v-if="accountSection === 'profile'" class="account-welcome">
       <p class="account-welcome__title">{{ t('account.welcomeBack', { name: (user.accountType === 'creator' ? profile?.displayName : profile?.name) || t('account.title') }) }}</p>
       <p>{{ t('account.welcomeIntro') }}</p>
