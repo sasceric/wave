@@ -14,12 +14,12 @@ use App\Entity\Notification;
 use App\Entity\User;
 use App\Localization\ApiMessages;
 use App\Localization\LocaleContext;
-use App\Service\NotificationDelivery;
 use App\Service\ChatMessageHistory;
 use App\Service\ChatReadReceipt;
-use App\Service\UnreadInboxCounter;
+use App\Service\NotificationDelivery;
 use App\Service\RealtimeUpdatePublisher;
-use DateTimeInterface;
+use App\Service\UnreadInboxCounter;
+use App\Service\WebPushNotificationSender;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -212,9 +212,11 @@ final class CreatorInquiryController
             : ['company' => $user->getCompany()];
         $inquiries = $entityManager->getRepository(CreatorInquiry::class)->findBy($criteria, ['createdAt' => 'DESC']);
 
+        $unread = $counter->inquiries($user);
+
         return new JsonResponse([
             'data' => array_map(
-                static function (CreatorInquiry $inquiry) use ($entityManager, $user, $counter): array {
+                static function (CreatorInquiry $inquiry) use ($entityManager, $user, $unread): array {
                     $lastMessage = $inquiry->getStatus() === 'accepted'
                         ? $entityManager->getRepository(InquiryMessage::class)->findOneBy(
                             ['inquiry' => $inquiry],
@@ -222,7 +224,7 @@ final class CreatorInquiryController
                         )
                         : null;
 
-                    return [...self::inquiryResource($inquiry, $user, $lastMessage), 'unreadCount' => $counter->inquiryMessages($user, $inquiry->getId())];
+                    return [...self::inquiryResource($inquiry, $user, $lastMessage), 'unreadCount' => $unread[$inquiry->getId()] ?? 0];
                 },
                 $inquiries,
             ),
@@ -386,6 +388,7 @@ final class CreatorInquiryController
         Security $security,
         CsrfTokenManagerInterface $tokenManager,
         RealtimeUpdatePublisher $publisher,
+        WebPushNotificationSender $push,
     ): JsonResponse {
         $locale = LocaleContext::fromRequest($request);
         if ($locale === null) {
@@ -424,6 +427,7 @@ final class CreatorInquiryController
         $recipient = $creatorOwner?->getId() === $user->getId()
             ? $inquiry->getCompany()->getOwner() : $creatorOwner;
         if ($recipient instanceof User) {
+            $push->sendInquiry($recipient, $user, $id, $body, $message->getId());
             $publisher->publishEvent($recipient, [
                 'type' => 'chat_message', 'notificationType' => 'chat_message', 'inquiryId' => $inquiry->getId(), 'message' => $resource,
             ]);
@@ -442,8 +446,7 @@ final class CreatorInquiryController
         CreatorInquiry $inquiry,
         User $user,
         ?InquiryMessage $lastMessage = null,
-    ): array
-    {
+    ): array {
         $isCreator = $inquiry->getCreator()->getOwner()?->getId() === $user->getId();
 
         return [
@@ -470,11 +473,11 @@ final class CreatorInquiryController
             'currency' => $inquiry->getCurrency(),
             'message' => $inquiry->getMessage(),
             'status' => $inquiry->getStatus(),
-            'createdAt' => $inquiry->getCreatedAt()->format(DateTimeInterface::ATOM),
-            'respondedAt' => $inquiry->getRespondedAt()?->format(DateTimeInterface::ATOM),
+            'createdAt' => $inquiry->getCreatedAt()->format(\DateTimeInterface::ATOM),
+            'respondedAt' => $inquiry->getRespondedAt()?->format(\DateTimeInterface::ATOM),
             'lastMessage' => $lastMessage?->getBody() ?? $inquiry->getMessage(),
-            'lastMessageAt' => $lastMessage?->getCreatedAt()->format(DateTimeInterface::ATOM)
-                ?? $inquiry->getCreatedAt()->format(DateTimeInterface::ATOM),
+            'lastMessageAt' => $lastMessage?->getCreatedAt()->format(\DateTimeInterface::ATOM)
+                ?? $inquiry->getCreatedAt()->format(\DateTimeInterface::ATOM),
             'canChat' => $inquiry->getStatus() === 'accepted',
         ];
     }
@@ -487,10 +490,10 @@ final class CreatorInquiryController
         return [
             'id' => $message->getId(),
             'senderId' => $sender->getId(),
-            'readAt' => $message->getReadAt()?->format(DateTimeInterface::ATOM),
+            'readAt' => $message->getReadAt()?->format(\DateTimeInterface::ATOM),
             'senderRole' => $sender->getId() === $creatorOwnerId ? 'creator' : 'company',
             'body' => $message->getBody(),
-            'createdAt' => $message->getCreatedAt()->format(DateTimeInterface::ATOM),
+            'createdAt' => $message->getCreatedAt()->format(\DateTimeInterface::ATOM),
         ];
     }
 }

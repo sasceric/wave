@@ -44,6 +44,7 @@ export function routeNameFromCanonicalPath(path) {
     '/admin/kompanije': 'admin-companies',
     '/admin/kampanje': 'admin-campaigns',
     '/admin/email-templates': 'admin-email-templates',
+    '/admin/tools': 'admin-tools',
   }
 
   return staticRoutes[path]

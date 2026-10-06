@@ -2,11 +2,11 @@
 
 namespace App\Entity;
 
-use DateTimeImmutable;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity]
 #[ORM\Table(name: 'user_action_token')]
+#[ORM\Index(name: 'idx_action_token_expiry', columns: ['expires_at'])]
 #[ORM\UniqueConstraint(name: 'uniq_user_action_token_hash', columns: ['token_hash'])]
 #[ORM\Index(name: 'idx_user_action_token_user_purpose', columns: ['user_id', 'purpose'])]
 class UserActionToken
@@ -27,17 +27,17 @@ class UserActionToken
     private string $tokenHash;
 
     #[ORM\Column]
-    private DateTimeImmutable $expiresAt;
+    private \DateTimeImmutable $expiresAt;
 
     #[ORM\Column]
-    private DateTimeImmutable $createdAt;
+    private \DateTimeImmutable $createdAt;
 
-    public function __construct(User $user, string $purpose, string $tokenHash, DateTimeImmutable $expiresAt)
+    public function __construct(User $user, string $purpose, string $tokenHash, \DateTimeImmutable $expiresAt)
     {
         $this->user = $user;
         $this->purpose = $purpose;
         $this->tokenHash = $tokenHash;
         $this->expiresAt = $expiresAt;
-        $this->createdAt = new DateTimeImmutable();
+        $this->createdAt = new \DateTimeImmutable();
     }
 }

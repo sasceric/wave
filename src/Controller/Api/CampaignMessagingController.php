@@ -17,13 +17,11 @@ use App\Entity\Notification;
 use App\Entity\User;
 use App\Localization\ApiMessages;
 use App\Localization\LocaleContext;
-use App\Service\NotificationDelivery;
 use App\Service\ChatMessageHistory;
 use App\Service\ChatReadReceipt;
+use App\Service\NotificationDelivery;
 use App\Service\UnreadInboxCounter;
-use DateTimeImmutable;
 use Doctrine\ORM\EntityManagerInterface;
-use SortDirection;
 use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -56,17 +54,18 @@ final class CampaignMessagingController
                 ->join('conversation.campaign', 'campaign')
                 ->where('campaign.company = :company')
                 ->setParameter('company', $user->getCompany())
-                ->orderBy('conversation.updatedAt', SortDirection::Descending)
+                ->orderBy('conversation.updatedAt', \SortDirection::Descending)
                 ->getQuery()
                 ->getResult();
         } else {
             return new JsonResponse(['error' => ApiMessages::get('forbidden', $locale)], 403);
         }
 
+        $unread = $counter->conversations($user);
         $data = array_map(
             fn (CampaignConversation $conversation): array => CampaignConversationResource::fromEntity(
                 $conversation,
-                $this->unreadCount($entityManager, $conversation, $user),
+                $unread[$conversation->getId()] ?? 0,
                 $locale,
             ),
             $conversations,
@@ -293,13 +292,13 @@ final class CampaignMessagingController
         string $notificationType,
         string $locale,
         EntityManagerInterface $entityManager,
-        \App\Service\NotificationDelivery $notificationDelivery,
+        NotificationDelivery $notificationDelivery,
     ): JsonResponse {
         $conversation = $entityManager->getRepository(CampaignConversation::class)->findOneBy([
             'campaign' => $campaign,
             'creator' => $creator,
         ]);
-        $isNew = !($conversation instanceof CampaignConversation);
+        $isNew = !$conversation instanceof CampaignConversation;
         if ($isNew) {
             $conversation = new CampaignConversation($campaign, $creator, $sender);
             $entityManager->persist($conversation);

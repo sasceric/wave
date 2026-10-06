@@ -14,11 +14,26 @@ final class CreatorResource
         string $locale,
         ?string $categoryLabel = null,
         array $categoryLabels = [],
-    ): array
-    {
+        bool $card = false,
+    ): array {
         $translation = $creator->getTranslations()[$locale] ?? [];
         $owner = $creator->getOwner();
         $categories = $creator->getCategories();
+        if ($card) {
+            return [
+                'id' => $creator->getId(),
+                'slug' => $creator->getSlug(),
+                'featured' => $creator->isFeatured(),
+                'displayName' => $creator->getDisplayName(),
+                'category' => $translation['category'] ?? $creator->getCategory(),
+                'categoryLabel' => $categoryLabel ?? ($translation['category'] ?? $creator->getCategory()),
+                'categoryLabels' => array_map(static fn (string $category): string => $categoryLabels[$category] ?? $category, $categories),
+                'avatarUrl' => $creator->getAvatarMedia()?->getUrl() ?? $creator->getAvatarUrl(),
+                'avatarImage' => MediaImageResource::fromEntity($creator->getAvatarMedia()),
+                'socialProfiles' => array_map(static fn (array $profile): array => array_intersect_key($profile, array_flip(['platform', 'followers'])), array_slice($creator->getSocialProfiles(), 0, 1)),
+                'packages' => array_map(static fn (array $package): array => ['price' => $package['price'] ?? null, 'currency' => $package['currency'] ?? 'BAM'], $creator->getPackages()),
+            ];
+        }
         $portfolioMedia = [];
         foreach ($creator->getPortfolioMedia() as $portfolioItem) {
             $portfolioMedia[$portfolioItem->getMedia()->getId()] = $portfolioItem->getMedia()->getUrl();

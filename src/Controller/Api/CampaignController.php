@@ -4,12 +4,11 @@ namespace App\Controller\Api;
 
 use App\Api\CampaignResource;
 use App\Entity\Campaign;
+use App\Entity\DirectoryIndex;
 use App\Entity\MarketplaceCategory;
 use App\Localization\ApiMessages;
 use App\Localization\LocaleContext;
-use DateTimeImmutable;
 use Doctrine\ORM\EntityManagerInterface;
-use SortDirection;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Attribute\Route;
@@ -33,24 +32,26 @@ final class CampaignController
             return new JsonResponse(['error' => ApiMessages::get('invalid_offset', $locale)], 400);
         }
 
+        $card = $request->query->getString('view') === 'card';
         $query = trim($request->query->getString('q'));
         $category = trim($request->query->getString('category'));
         $company = trim($request->query->getString('company'));
         $builder = $entityManager->getRepository(Campaign::class)->createQueryBuilder('campaign')
             ->join('campaign.company', 'company')
+            ->leftJoin(DirectoryIndex::class, 'searchIndex', 'WITH', "searchIndex.kind = 'campaign' AND searchIndex.entityId = campaign.id")
             ->leftJoin('company.owner', 'companyOwner')
             ->andWhere('campaign.status = :status')
             ->andWhere('campaign.closesAt >= :today')
             ->andWhere('companyOwner.id IS NULL OR (companyOwner.approved = :approved AND companyOwner.hideMyAccount = :visible)')
             ->setParameter('status', 'open');
-        $builder->setParameter('today', new DateTimeImmutable('today'));
+        $builder->setParameter('today', new \DateTimeImmutable('today'));
         $builder->setParameter('approved', true);
         $builder->setParameter('visible', false);
 
         if ($query !== '') {
             $builder
-                ->andWhere('LOWER(campaign.title) LIKE :query OR LOWER(campaign.summary) LIKE :query OR LOWER(campaign.description) LIKE :query OR LOWER(campaign.category) LIKE :query OR LOWER(campaign.location) LIKE :query OR LOWER(company.name) LIKE :query OR LOWER(company.industry) LIKE :query')
-                ->setParameter('query', '%'.mb_strtolower($query).'%');
+                ->andWhere('searchIndex.searchText LIKE :query OR (searchIndex.id IS NULL AND (LOWER(campaign.title) LIKE :query OR LOWER(campaign.summary) LIKE :query OR LOWER(campaign.description) LIKE :query OR LOWER(campaign.category) LIKE :query OR LOWER(campaign.location) LIKE :query)) OR LOWER(company.name) LIKE :query OR LOWER(company.industry) LIKE :query')
+                ->setParameter('query', '%' . mb_strtolower($query) . '%');
         }
         if ($category !== '') {
             $builder
@@ -84,9 +85,9 @@ final class CampaignController
             ->leftJoin('campaign.coverMedia', 'coverMedia')
             ->leftJoin('company.logoMedia', 'logoMedia')
             ->addSelect('company', 'companyOwner', 'coverMedia', 'logoMedia')
-            ->orderBy('campaign.featured', SortDirection::Descending)
-            ->addOrderBy('campaign.closesAt', SortDirection::Ascending)
-            ->addOrderBy('campaign.id', SortDirection::Ascending)
+            ->orderBy('campaign.featured', \SortDirection::Descending)
+            ->addOrderBy('campaign.closesAt', \SortDirection::Ascending)
+            ->addOrderBy('campaign.id', \SortDirection::Ascending)
             ->setFirstResult($offset)
             ->setMaxResults($limit)
             ->getQuery()
@@ -99,6 +100,7 @@ final class CampaignController
                     $campaign,
                     $locale,
                     $categoryLabels[$campaign->getCategory()] ?? null,
+                    $card,
                 ),
                 $campaigns,
             ),
@@ -126,7 +128,7 @@ final class CampaignController
             ->setParameter('visible', false)
             ->getQuery()
             ->getOneOrNullResult();
-        if (!$campaign instanceof Campaign || $campaign->getClosesAt() < new DateTimeImmutable('today')) {
+        if (!$campaign instanceof Campaign || $campaign->getClosesAt() < new \DateTimeImmutable('today')) {
             return new JsonResponse(['error' => ApiMessages::get('campaign_not_found', $locale)], 404);
         }
 

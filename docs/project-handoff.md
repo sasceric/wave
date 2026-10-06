@@ -34,7 +34,9 @@ Declared dependencies: PHP 8.4+, Symfony 8.1, Doctrine ORM 3, Vue 3, Vue Router,
 | SEO and server-rendered metadata | `src/Controller/FrontendController.php`, `SeoController.php`, `src/Service/SeoMetadataProvider.php`, `SitemapGenerator.php`, `frontend/src/lib/seo.js` |
 | Service worker and app shell | `frontend/src/sw.js`, `frontend/vite.config.js`, `frontend/src/App.vue` |
 | Tests | `tests/Controller/` plus API, OAuth, service, command, and migration tests |
-| Deployment | `.github/workflows/deploy-production.yml`, `docs/deployment.md`, `docs/mercure-server-setup.md` |
+| Deployment and server jobs | `.github/workflows/deploy-production.yml`, `docs/deployment.md`, `docs/server-operations.md`, `docs/mercure-server-setup.md` |
+| Admin operational tools | `AdminToolsController.php`, `Background/TaskRegistry.php`, `Background/AdminWorker.php`, `QueueInspector.php`, `AdminLogReader.php`, `frontend/src/views/AdminToolsView.vue` |
+| Background processing | `docs/background-processing-plan.md`: FroshTools comparison, queue/task catalog, indexing, logging, admin controls and rollout |
 
 Controller filenames in this table are under `src/Controller/Api/` unless a full path is shown.
 
@@ -87,6 +89,11 @@ For realtime features, install the native hub once with `./bin/install-mercure.s
 ## Validation and continuation notes
 
 Backend tests: `php bin/phpunit`. Frontend regression tests: `npm --prefix frontend test`. Frontend production build: `npm --prefix frontend run build`. Inspect test database setup before running database-backed tests; use an isolated test database rather than the local account database.
+
+The frontend tests use experimental VM modules. Node 20.19 has intermittently
+crashed natively in that runner; all 76 tests passed with Node 22.20 during the
+2026-10-06 Admin Tools validation. Prefer the documented Node 22 runtime when
+checking this suite.
 
 Existing `.github/copilot-instructions.md` requires PHPStan for PHP changes and ESLint for JavaScript/Vue changes. At review time, neither was declared in the corresponding package manifest, and no project configuration was found outside dependency directories. This is a tooling gap to report or resolve when making code changes; do not claim those checks passed.
 
@@ -180,3 +187,26 @@ needed. Frontend regressions cover appending, stale responses, retries, deduplic
 and observer lifecycle. `ApiControllerTest` covers 61 visible entries per directory
 across 30/30/1/empty batches, including hidden/unapproved accounts and closed/expired
 campaigns, against a separate temporary PostgreSQL database.
+
+## Background jobs (2026-10-06)
+
+`src/Background` and `JobHandler` implement protected durable jobs and real
+Messenger processing. Four Doctrine queue names plus `failed` use the existing
+PostgreSQL connection; `ApiTransactionSubscriber` commits API domain writes and
+delivery intents together. `QueuedMailer` decorates Mailer with its bus explicitly
+disabled; the worker calls the actual transport. Keep APP_SECRET stable.
+
+`TaskRegistry` owns eight task definitions. Commands: `app:scheduled-tasks register`
+and `app:scheduled-tasks dispatch`. Development admin pages consume bounded
+requests via `useAdminWorker`; prod requires the checked-in systemd/Supervisor
+examples. See `docs/server-operations.md`; do not install old reminder/cache cron
+jobs alongside the new dispatcher.
+
+Index projections are invalidated on source mutations and queried with source
+fallbacks; source visibility/date checks remain authoritative. Media masters are
+normalized synchronously; derivative creation, repair and backfills are queued.
+Sitemap generation streams scalar batches to immutable split files and swaps the
+index after success. Logs retain bounded reverse cursor paging and modal details.
+
+The old ScheduledTaskMonitor observes direct legacy command invocations only;
+new Tools task state comes from TaskRegistry, not that command observer.

@@ -1,0 +1,16 @@
+parameters:
+    env(WAVE_QUEUE_ENABLED): 'true'
+    wave.queue.enabled: '%env(bool:WAVE_QUEUE_ENABLED)%'
+    wave.admin_worker.enabled: false
+    wave.admin_worker.time_limit: 2
+    wave.admin_worker.message_limit: 3
+    wave.admin_worker.memory_limit: 134217728
+    wave.admin_worker.idle_interval_ms: 2000
+
+when@dev:
+    parameters:
+        wave.admin_worker.enabled: true
+
+when@test:
+    parameters:
+        wave.queue.enabled: false

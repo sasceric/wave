@@ -3,10 +3,12 @@
 namespace App\Service;
 
 use App\Api\CampaignMessageResource;
+use App\Background\JobDispatcher;
 use App\Entity\CampaignMessage;
 use App\Entity\Notification;
 use App\Entity\User;
 use Psr\Log\LoggerInterface;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\Mercure\Exception\RuntimeException as MercureRuntimeException;
 use Symfony\Component\Mercure\HubInterface;
 use Symfony\Component\Mercure\Update;
@@ -17,6 +19,8 @@ final class RealtimeUpdatePublisher
         private readonly HubInterface $hub,
         private readonly LoggerInterface $logger,
         private readonly bool $enabled = true,
+        private readonly ?JobDispatcher $jobs = null,
+        #[Autowire('%wave.queue.enabled%')] private readonly bool $queued = false,
     ) {
     }
 
@@ -51,6 +55,11 @@ final class RealtimeUpdatePublisher
 
     private function publishPayload(User $recipient, array $payload, array $context = []): void
     {
+        if ($this->queued && $this->jobs !== null) {
+            $this->jobs->enqueue('PublishRealtimeMessage', ['userId' => $recipient->getId(), 'payload' => $payload, 'eventId' => bin2hex(random_bytes(16))]);
+
+            return;
+        }
         try {
             $eventId = $this->hub->publish(new Update(
                 $this->topicFor($recipient),
@@ -75,6 +84,6 @@ final class RealtimeUpdatePublisher
             throw new \LogicException('Persist a user before creating a realtime topic.');
         }
 
-        return 'https://wave.local/users/'.$userId;
+        return 'https://wave.local/users/' . $userId;
     }
 }

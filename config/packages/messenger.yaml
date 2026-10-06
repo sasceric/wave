@@ -1,0 +1,58 @@
+framework:
+    messenger:
+        failure_transport: failed
+        serializer:
+            default_serializer: App\Background\JobSerializer
+            symfony_serializer:
+                format: json
+        transports:
+            realtime:
+                dsn: 'doctrine://default?queue_name=realtime&auto_setup=false&redeliver_timeout=3600'
+                retry_strategy:
+                    max_retries: 5
+                    delay: 10000
+                    multiplier: 2
+                    max_delay: 900000
+                    jitter: 0.2
+            mail:
+                dsn: 'doctrine://default?queue_name=mail&auto_setup=false&redeliver_timeout=3600'
+                retry_strategy:
+                    max_retries: 5
+                    delay: 10000
+                    multiplier: 2
+                    max_delay: 900000
+                    jitter: 0.2
+            push:
+                dsn: 'doctrine://default?queue_name=push&auto_setup=false&redeliver_timeout=3600'
+                retry_strategy:
+                    max_retries: 5
+                    delay: 10000
+                    multiplier: 2
+                    max_delay: 900000
+                    jitter: 0.2
+            background:
+                dsn: 'doctrine://default?queue_name=background&auto_setup=false&redeliver_timeout=3600'
+                retry_strategy:
+                    max_retries: 5
+                    delay: 10000
+                    multiplier: 2
+                    max_delay: 900000
+                    jitter: 0.2
+            failed: 'doctrine://default?queue_name=failed&auto_setup=false'
+        routing:
+            'App\Message\SendEmailMessage': mail
+            'App\Message\SendWebPushMessage': push
+            'App\Message\PublishRealtimeMessage': realtime
+            'App\Message\UnreadMessageReminderTask': background
+            'App\Message\GenerateThumbnailsMessage': background
+            'App\Message\MediaIndexingMessage': background
+            'App\Message\CreatorIndexingMessage': background
+            'App\Message\CampaignIndexingMessage': background
+            'App\Message\CompanyIndexingMessage': background
+            'App\Message\SitemapGenerateTask': background
+            'App\Message\LogCleanupTask': background
+            'App\Message\CachePruneTask': background
+            'App\Message\ExpiredTokenCleanupTask': background
+            'App\Message\MediaMaintenanceTask': background
+            'App\Message\IndexReconcileTask': background
+            'App\Message\QueueMaintenanceTask': background

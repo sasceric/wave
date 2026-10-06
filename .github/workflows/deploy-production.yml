@@ -47,5 +47,7 @@ jobs:
             cd ..
             APP_ENV=prod php8.4 bin/console doctrine:migrations:migrate --no-interaction
             APP_ENV=prod php8.4 bin/console cache:clear
+            APP_ENV=prod php8.4 bin/console app:scheduled-tasks register --no-interaction
             chown -R steelcodeweb:steelcodeweb /home/steelcodeweb/web/wave.ba/public_html/var
             chmod -R u+rwX /home/steelcodeweb/web/wave.ba/public_html/var
+            APP_ENV=prod php8.4 bin/console messenger:stop-workers --no-interaction

@@ -21,6 +21,6 @@ final class NotificationDelivery
         }
 
         $this->realtimeUpdatePublisher->publish($notification, $message);
-        $this->webPushNotificationSender->send($notification);
+        $this->webPushNotificationSender->send($notification, $message);
     }
 }

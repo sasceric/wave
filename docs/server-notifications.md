@@ -2,6 +2,13 @@
 
 Use this checklist for the existing `wave.ba` server. The [Mercure installation guide](mercure-server-setup.md) contains the complete Caddyfile, systemd unit and Nginx proxy. Application releases follow [Production deployment](deployment.md).
 
+Notifications now use durable background delivery: separate `realtime`, `push`
+and `mail` consumers process accepted events. Before deploying this release,
+follow [server operations](server-operations.md) to install the consumers and
+scheduler; an available Mercure hub alone does not drain these queues. Existing
+issuer, JWT, VAPID and Caddy settings remain applicable. Live chat still receives
+Mercure events rather than polling for messages.
+
 ## Files and responsibilities
 
 | File | Purpose | Apply changes with |
@@ -18,6 +25,7 @@ Set these explicitly in the **production server's** `.env.local`, preserving its
 
 ```dotenv
 WAVE_NOTIFICATIONS_ENABLED=true
+WAVE_QUEUE_ENABLED=true
 MERCURE_URL=http://127.0.0.1:3000/.well-known/mercure
 MERCURE_PUBLIC_URL=https://mercure.wave.ba/.well-known/mercure
 MERCURE_ISSUER=https://wave.ba

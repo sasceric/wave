@@ -6,7 +6,7 @@ use App\Entity\Company;
 
 final class CompanyResource
 {
-    public static function fromEntity(Company $company, string $locale, ?int $availableCampaignCount = null): array
+    public static function fromEntity(Company $company, string $locale, ?int $availableCampaignCount = null, bool $card = false): array
     {
         $translation = $company->getTranslations()[$locale] ?? [];
 
@@ -27,6 +27,10 @@ final class CompanyResource
 
         if ($availableCampaignCount !== null) {
             $resource['availableCampaignCount'] = $availableCampaignCount;
+        }
+
+        if ($card) {
+            unset($resource['about'], $resource['city'], $resource['countryCode']);
         }
 
         return $resource;

@@ -260,8 +260,13 @@ Deploy the Symfony app, then clear its production cache and restart PHP-FPM or t
 The app also needs a scheduled command to send the one-hour unread-chat email reminder. After configuring Symfony's production mail transport, run it every five minutes as the deployment user; `flock` prevents overlapping executions:
 
 ```cron
-*/5 * * * * cd /home/steelcodeweb/web/wave.ba/public_html && /usr/bin/flock -n /var/lock/wave-unread-message-reminders.lock /usr/bin/php8.4 bin/console app:send-unread-message-reminders --env=prod --no-interaction >> var/log/unread-message-reminders.log 2>&1
+*/5 * * * * cd /home/steelcodeweb/web/wave.ba/public_html && APP_ENV=prod /usr/bin/flock -n var/unread-message-reminders.lock /usr/bin/php8.4 bin/console app:send-unread-message-reminders --env=prod --no-interaction >> var/log/unread-message-reminders.log 2>&1
 ```
+
+Use `sudo crontab -u steelcodeweb -e`, verify executable paths, and rotate the
+appended cron log. The lock belongs in writable `var/`; `/var/lock` may not be
+writable by this account. See [server operations](server-operations.md) for the
+full schedule, logging, backups and queue audit.
 
 ## 7. Verify end-to-end delivery
 

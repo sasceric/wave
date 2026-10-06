@@ -5,6 +5,7 @@ namespace App\Service;
 use App\Entity\Media;
 use App\Entity\MediaFolder;
 use App\Entity\User;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 
@@ -17,6 +18,7 @@ final class MediaStorage
         private readonly Filesystem $filesystem,
         private readonly ImageUploadProcessor $imageProcessor,
         private readonly MediaThumbnails $thumbnails,
+        #[Autowire('%wave.queue.enabled%')] private readonly bool $queued = false,
     ) {
     }
 
@@ -40,11 +42,11 @@ final class MediaStorage
             $now->format('m'),
             bin2hex(random_bytes(16)),
         );
-        $absoluteDirectory = $this->storagePath.'/'.dirname($relativePath);
+        $absoluteDirectory = $this->storagePath . '/' . dirname($relativePath);
         $this->filesystem->mkdir($absoluteDirectory);
         try {
             $fileSize = $this->imageProcessor->writeWebp($file->getPathname(), $this->absolutePath($relativePath));
-            $dimensions = $this->thumbnails->warm($relativePath);
+            $dimensions = $this->queued ? $this->imageProcessor->dimensions($this->absolutePath($relativePath)) : $this->thumbnails->warm($relativePath);
         } catch (\Throwable $exception) {
             $this->filesystem->remove($this->absolutePath($relativePath));
             $this->thumbnails->remove($relativePath);
@@ -61,7 +63,7 @@ final class MediaStorage
 
     public function absolutePath(string $relativePath): string
     {
-        return $this->storagePath.'/'.$relativePath;
+        return $this->storagePath . '/' . $relativePath;
     }
 
     public function remove(Media $media): void

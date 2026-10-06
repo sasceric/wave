@@ -10,6 +10,7 @@ import LocalizedLink from './components/shared/LocalizedLink.vue'
 import WaveWordmark from './components/shared/WaveWordmark.vue'
 import CookieConsentBanner from './components/shared/CookieConsentBanner.vue'
 import { currentUser, loadCurrentUser, setCurrentUser } from './composables/useCurrentUser'
+import { useAdminWorker } from './composables/useAdminWorker'
 import { unreadMessageCount } from './composables/useUnreadMessages'
 import { mobileAccountSidebarOpen } from './composables/useMobileAccountSidebar'
 import { setLocale } from './i18n'
@@ -23,6 +24,7 @@ import { localizedPath } from './routePaths'
 
 const route = useRoute()
 const router = useRouter()
+useAdminWorker(currentUser, route)
 const { locale, t } = useI18n()
 const currentYear = new Date().getFullYear()
 const mobileMenuOpen = ref(false)
@@ -172,6 +174,7 @@ watch(
     const pageKeys = {
       home: ['homeTitle', 'homeDescription'],
       messages: ['privateTitle', 'privateDescription'],
+      'admin-tools': ['privateTitle', 'privateDescription'],
       creators: ['creatorsTitle', 'creatorsDescription'],
       'creator-profile': ['creatorsTitle', 'creatorsDescription'],
       companies: ['companiesTitle', 'companiesDescription'],
@@ -183,7 +186,7 @@ watch(
       'cookie-policy': ['cookiesTitle', 'cookiesDescription'],
     }
     const [titleKey, descriptionKey] = pageKeys[routeName] || ['notFoundTitle', 'notFoundDescription']
-    const noindex = ['account', 'messages', 'verify-email', 'reset-password', 'moderation', 'admin'].includes(routeName)
+    const noindex = ['account', 'messages', 'verify-email', 'reset-password', 'moderation', 'admin', 'admin-tools'].includes(routeName)
       || !pageKeys[routeName]
 
     updateSeo({

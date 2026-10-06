@@ -12,7 +12,7 @@ and a settled logo fallback on image errors. Cached images reveal immediately.
 
 `ImageUploadProcessor` still creates a lossless WebP master at most 600px wide,
 without cropping or upscaling, preserving alpha and JPEG orientation. New uploads
-also generate lossless WebP thumbnails at fixed maximum widths of **96, 320 and
+queue generation of lossless WebP thumbnails at fixed maximum widths of **96, 320 and
 480px**. Each thumbnail keeps proportional height. Directory cards use thumbnail
 URLs; profile detail views retain the master URL.
 
@@ -22,9 +22,8 @@ immediately; the generation command backfills existing records. API image
 resources derive actual responsive widths from these columns, including images
 smaller than a configured variant. Resource serialization performs no image
 processing or filesystem inspection. Directory queries fetch image associations
-in batches rather than performing one media query per card. Creator portfolios
-are fetched separately for the bounded page to preserve pagination of their
-collection association.
+in batches rather than performing one media query per card. Full creator responses fetch portfolios separately for the bounded page;
+listing card responses omit portfolio associations and detail fields.
 
 `MediaThumbnails` stores derivatives outside the web root:
 
@@ -42,12 +41,14 @@ immutable source paths. Changing the thumbnail recipe requires a new
 and server caches together. Old derivative versions are removed when the owning
 media is deleted.
 
-Existing media is supported without replacing its source. Missing variants can
-be generated on their first authorized request, but pre-generating the library
-avoids image processing during directory browsing. The resumable command scans
-by the indexed media primary key, with bounded ORM batches, and clears the entity
-manager between batches. It processes new images automatically only during their
-normal upload; there is no recurring image polling or indexing job.
+Existing media is supported without replacing its source. With queues enabled,
+a missing variant queues a deduplicated repair and temporarily serves the master;
+image GET requests do not resize pixels. `MediaMaintenanceTask` scans bounded
+primary-key batches daily and enqueues `MediaIndexingMessage` continuations;
+individual derivatives use `GenerateThumbnailsMessage`. Start maintenance manually
+in Admin Tools for the initial library backfill. The direct resumable console
+command below remains available for diagnostics. The temporary synchronous fallback
+(`WAVE_QUEUE_ENABLED=false`) can still generate a missing variant on request.
 
 Seeded Unsplash URLs use that provider's existing resize parameters for the same
 three listing sizes. Arbitrary external image URLs retain their provider's file;
@@ -87,12 +88,14 @@ service-worker cache serving private images after account/session changes.
    [the deployment guide](deployment.md). Use at least 256M of PHP-FPM processing
    memory for typical 12-megapixel photos. Keep `var/media` writable by the web
    process and persistent across deployments; include it in media backups.
-2. Deploy normally. The existing workflow runs migration
-   `Version20261006180000`, builds the frontend/PWA, and assigns `var` ownership
-   to `steelcodeweb`. No new environment variable, queue, Redis service, Caddy
-   rule or web-server thumbnail route is needed.
-3. Generate thumbnails for existing uploads **as the web account**, so generated
-   directories and locks remain writable by future web requests:
+2. Follow [server operations](server-operations.md) to deploy migrations and
+   install the Messenger consumers and scheduled-task dispatcher. Keep
+   `WAVE_QUEUE_ENABLED=true` for asynchronous generation. The workflow builds the
+   SPA/PWA and assigns `var` ownership to `steelcodeweb`. Redis and additional
+   web-server thumbnail routes are not required.
+3. Start `MediaMaintenanceTask` manually in **Admin → Tools → Scheduled tasks**
+   to enqueue the initial backfill. Alternatively, generate directly with the
+   diagnostic command **as the web account**, preserving directory ownership:
 
    ```bash
    cd /home/steelcodeweb/web/wave.ba/public_html

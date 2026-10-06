@@ -419,24 +419,24 @@ final class AccountEmailSender
                 $title = is_string($package['title'] ?? null) ? $package['title'] : '';
                 $price = is_int($package['listedPrice'] ?? null) ? $package['listedPrice'] : null;
                 $packageCurrency = is_string($package['currency'] ?? null) ? $package['currency'] : $currency;
-                $packageLines[] = '- '.$title.($price === null
-                    ? ' — '.$copy['priceByAgreement']
-                    : ' — '.number_format($price, 0, ',', '.').' '.$packageCurrency);
+                $packageLines[] = '- ' . $title . ($price === null
+                    ? ' — ' . $copy['priceByAgreement']
+                    : ' — ' . number_format($price, 0, ',', '.') . ' ' . $packageCurrency);
             } elseif ($type === 'service') {
-                $packageLines[] = '- '.$copy['servicePackage'];
+                $packageLines[] = '- ' . $copy['servicePackage'];
             } elseif ($type === 'other') {
-                $packageLines[] = '- '.$copy['otherOption'];
+                $packageLines[] = '- ' . $copy['otherOption'];
             }
         }
         if ($packageLines === []) {
-            $packageLines[] = '- '.$copy['noPackages'];
+            $packageLines[] = '- ' . $copy['noPackages'];
         }
 
-        $details = $copy['selectedPackagesLabel'].":\n".implode("\n", $packageLines);
+        $details = $copy['selectedPackagesLabel'] . ":\n" . implode("\n", $packageLines);
         if ($proposedAmount !== null) {
-            $details .= "\n\n".$copy['proposedAmountLabel'].': '.number_format($proposedAmount, 0, ',', '.').' '.$currency;
+            $details .= "\n\n" . $copy['proposedAmountLabel'] . ': ' . number_format($proposedAmount, 0, ',', '.') . ' ' . $currency;
         }
-        $details .= "\n\n".$copy['companyMessageLabel'].":\n".$companyMessage;
+        $details .= "\n\n" . $copy['companyMessageLabel'] . ":\n" . $companyMessage;
 
         $this->sendMarketplaceEmail(
             $recipient,
@@ -467,7 +467,7 @@ final class AccountEmailSender
                 'secondValue' => $companyName,
                 'details' => $companyMessage,
             ],
-            '?inquiry='.$inquiryId,
+            '?inquiry=' . $inquiryId,
         );
     }
 
@@ -496,7 +496,7 @@ final class AccountEmailSender
                 'secondValue' => $senderName,
                 'details' => (string) $unreadCount,
             ],
-            '?conversation='.$conversationId,
+            '?conversation=' . $conversationId,
             $locale,
         );
     }
@@ -541,9 +541,9 @@ final class AccountEmailSender
             $variables += [
                 'firstValue' => 'Wave Studio',
                 'secondValue' => 'Amina Creator',
-                'details' => $variables['selectedPackagesLabel'].":\n- Recipe video — 500 BAM\n\n"
-                    .$variables['proposedAmountLabel'].":\n650 BAM\n\n"
-                    .$variables['companyMessageLabel'].":\nWe would love to collaborate.",
+                'details' => $variables['selectedPackagesLabel'] . ":\n- Recipe video — 500 BAM\n\n"
+                    . $variables['proposedAmountLabel'] . ":\n650 BAM\n\n"
+                    . $variables['companyMessageLabel'] . ":\nWe would love to collaborate.",
             ];
         } elseif ($template === 'creator_inquiry_accepted') {
             $variables += [
@@ -560,9 +560,9 @@ final class AccountEmailSender
     {
         $locale = $this->normalizedLocale($locale);
         $copy = $this->copyFor($type, $locale);
-        $url = rtrim($this->appBaseUrl, '/').$this->localizedRoutePath($routeName, $locale);
+        $url = rtrim($this->appBaseUrl, '/') . $this->localizedRoutePath($routeName, $locale);
         if ($token !== null) {
-            $url .= '#'.rawurlencode($token);
+            $url .= '#' . rawurlencode($token);
         }
         $variables = $copy;
         unset($variables['subject']);
@@ -590,7 +590,7 @@ final class AccountEmailSender
     ): void {
         $locale = $this->normalizedLocale($locale ?? $recipient->getPreferredLocale());
         $copy = $this->copyFor($template, $locale);
-        $url = rtrim($this->appBaseUrl, '/').$this->localizedRoutePath($routeName, $locale).$query;
+        $url = rtrim($this->appBaseUrl, '/') . $this->localizedRoutePath($routeName, $locale) . $query;
         $variables = array_merge($copy, $values, [
             'locale' => match ($locale) {
                 'sr' => 'sr-Latn',
@@ -628,10 +628,10 @@ final class AccountEmailSender
             ['detailsLabel', 'details'],
         ] as [$label, $value]) {
             if (isset($variables[$label], $variables[$value]) && $variables[$value] !== '') {
-                $text[] = $variables[$label].":\n".$variables[$value];
+                $text[] = $variables[$label] . ":\n" . $variables[$value];
             }
         }
-        $text[] = $variables['buttonLabel'].":\n".$url;
+        $text[] = $variables['buttonLabel'] . ":\n" . $url;
         foreach (['expiration', 'security'] as $optionalField) {
             if (isset($variables[$optionalField])) {
                 $text[] = $variables[$optionalField];
@@ -650,6 +650,12 @@ final class AccountEmailSender
                 $customization instanceof EmailTemplate ? $customization->getHtmlBody() : null,
             ));
 
+        if (in_array($type, ['verify', 'reset'], true)) {
+            $token = parse_url($url, PHP_URL_FRAGMENT);
+            if (is_string($token) && $token !== '') {
+                $message->getHeaders()->addTextHeader(\App\Background\QueuedMailer::SECURITY_TOKEN_HEADER, hash('sha256', rawurldecode($token)));
+            }
+        }
         $this->mailer->send($message);
     }
 
@@ -680,8 +686,8 @@ final class AccountEmailSender
         $segment = is_array($routes) && is_array($routes[$locale] ?? null) && is_string($routes[$locale][$routeName] ?? null)
             ? $routes[$locale][$routeName]
             : $routeName;
-        $prefix = $locale === 'bs' ? '' : '/'.$locale;
+        $prefix = $locale === 'bs' ? '' : '/' . $locale;
 
-        return $prefix.'/'.$segment;
+        return $prefix . '/' . $segment;
     }
 }

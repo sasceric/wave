@@ -4,6 +4,11 @@ The `Deploy production` GitHub Actions workflow deploys `main` to
 `/home/steelcodeweb/web/wave.ba/public_html/` after each push. It can also be
 started manually from **Actions → Deploy production → Run workflow**.
 
+For required running services, the reminder schedule, thumbnail backfill,
+backups, supervised consumers and scheduled-task setup, see
+[server services, jobs and queues](server-operations.md). The deploy workflow
+does not provision those host services or schedules.
+
 ## GitHub Actions secrets
 
 Add these repository secrets under **Settings → Secrets and variables →
@@ -83,6 +88,16 @@ are rejected. After deployment, upload a large JPEG/PNG and verify that its
 `/api/media/{id}/file` response is `image/webp`, at most 600px wide and uncropped.
 See [PHP's WebP constants](https://www.php.net/manual/en/image.constants.php)
 for the lossless encoding mode; resizing itself still reduces pixel resolution.
+
+## Admin operational tools
+
+The Tools/background-processing release adds durable PostgreSQL queues, protected
+job records, a task registry and directory projections. **Production needs
+supervised consumers and the scheduled-task dispatcher before queued deliveries
+can progress.** Follow [the first-deployment instructions](server-operations.md#first-deployment-step-by-step).
+The workflow migrates, registers missing tasks, builds the frontend and requests
+a graceful consumer restart; it does not install or enable systemd/Supervisor.
+
 
 ## Listing images and skeletons
 

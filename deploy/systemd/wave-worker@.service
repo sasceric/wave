@@ -1,0 +1,25 @@
+[Unit]
+Description=Wave Messenger consumer (%i)
+After=network-online.target postgresql.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=steelcodeweb
+Group=steelcodeweb
+WorkingDirectory=/home/steelcodeweb/web/wave.ba/public_html
+Environment=APP_ENV=prod
+Environment=APP_DEBUG=0
+ExecStart=/usr/bin/php8.4 bin/console messenger:consume %i --env=prod --no-debug --time-limit=3600 --memory-limit=192M --sleep=1 --no-interaction
+Restart=always
+RestartSec=3
+KillSignal=SIGTERM
+TimeoutStopSec=120
+NoNewPrivileges=true
+PrivateTmp=true
+UMask=0027
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

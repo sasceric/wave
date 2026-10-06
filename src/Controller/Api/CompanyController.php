@@ -8,7 +8,6 @@ use App\Entity\Company;
 use App\Localization\ApiMessages;
 use App\Localization\LocaleContext;
 use Doctrine\ORM\EntityManagerInterface;
-use SortDirection;
 use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -33,25 +32,22 @@ final class CompanyController
             return new JsonResponse(['error' => ApiMessages::get('invalid_offset', $locale)], 400);
         }
 
-        $campaignCountQuery = $entityManager->createQueryBuilder()
-            ->select('COUNT(availableCampaign.id)')
-            ->from(Campaign::class, 'availableCampaign')
-            ->where('availableCampaign.company = company')
-            ->andWhere('availableCampaign.status = :availableStatus')
-            ->andWhere('availableCampaign.closesAt >= :availableToday');
-
+        $today = (new \DateTimeImmutable('today'))->format('Y-m-d H:i:s');
+        $pageIds = $entityManager->getConnection()->fetchFirstColumn(
+            "SELECT c.id FROM company c LEFT JOIN wave_user u ON u.id = c.owner_id LEFT JOIN directory_index i ON i.kind = 'company' AND i.entity_id = c.id AND i.indexed_at >= ? WHERE u.id IS NULL OR (u.approved = TRUE AND u.hide_my_account = FALSE) ORDER BY c.featured DESC, COALESCE(i.available_campaign_count, (SELECT COUNT(*) FROM campaign a WHERE a.company_id = c.id AND a.status = 'open' AND a.closes_at >= ?)) DESC, c.name ASC, c.id ASC LIMIT ? OFFSET ?",
+            [$today, $today, $limit, $offset],
+            [\Doctrine\DBAL\ParameterType::STRING, \Doctrine\DBAL\ParameterType::STRING, \Doctrine\DBAL\ParameterType::INTEGER, \Doctrine\DBAL\ParameterType::INTEGER],
+        );
         $builder = $entityManager->getRepository(Company::class)->createQueryBuilder('company')
             ->leftJoin('company.owner', 'owner')
             ->andWhere('owner.id IS NULL OR (owner.approved = :approved AND owner.hideMyAccount = :visible)')
             ->setParameter('approved', true)
-            ->setParameter('visible', false)
-            ->addSelect('('.$campaignCountQuery->getDQL().') AS HIDDEN availableCampaignCount')
-            ->orderBy('company.featured', SortDirection::Descending)
-            ->addOrderBy('availableCampaignCount', SortDirection::Descending)
-            ->addOrderBy('company.name', SortDirection::Ascending)
-            ->addOrderBy('company.id', SortDirection::Ascending)
-            ->setParameter('availableStatus', 'open')
-            ->setParameter('availableToday', new \DateTimeImmutable('today'));
+            ->setParameter('visible', false);
+        if ($pageIds === []) {
+            $builder->andWhere('1 = 0');
+        } else {
+            $builder->andWhere('company.id IN (:pageIds)')->setParameter('pageIds', $pageIds);
+        }
         $total = (int) $entityManager->getRepository(Company::class)->createQueryBuilder('company')
             ->select('COUNT(DISTINCT company.id)')
             ->leftJoin('company.owner', 'owner')
@@ -63,11 +59,14 @@ final class CompanyController
         $companies = $builder
             ->leftJoin('company.logoMedia', 'logoMedia')
             ->addSelect('logoMedia', 'owner')
-            ->setFirstResult($offset)
             ->setMaxResults($limit)
             ->getQuery()
             ->getResult();
 
+        $ranks = array_flip($pageIds);
+        usort($companies, static fn (Company $left, Company $right): int => $ranks[$left->getId()] <=> $ranks[$right->getId()]);
+
+        $card = $request->query->getString('view') === 'card';
         $companyIds = [];
         foreach ($companies as $company) {
             if ($company instanceof Company && $company->getId() !== null) {
@@ -101,6 +100,7 @@ final class CompanyController
                     $company,
                     $locale,
                     $campaignCounts[$company->getId() ?? 0] ?? 0,
+                    $card,
                 ),
                 $companies,
             ),
@@ -114,8 +114,7 @@ final class CompanyController
         Request $request,
         EntityManagerInterface $entityManager,
         Security $security,
-    ): JsonResponse
-    {
+    ): JsonResponse {
         $locale = LocaleContext::fromRequest($request);
         if ($locale === null) {
             return new JsonResponse(['error' => ApiMessages::get('unsupported_language', 'bs')], 400);

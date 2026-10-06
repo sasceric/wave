@@ -10,6 +10,7 @@ import {
   MessageCircle,
   UserRound,
   Users,
+  Wrench,
 } from '@lucide/vue'
 import { useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
@@ -99,6 +100,7 @@ const navigationItems = computed(() => {
       { route: 'admin-companies', labelKey: 'adminDashboard.navCompanies', icon: Building2 },
       { route: 'admin-campaigns', labelKey: 'adminDashboard.navCampaigns', icon: Megaphone },
       { route: 'admin-email-templates', labelKey: 'adminDashboard.navEmailTemplates', icon: Mail },
+      { route: 'admin-tools', labelKey: 'adminTools.title', icon: Wrench },
     )
   }
 

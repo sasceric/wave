@@ -4,6 +4,7 @@ namespace App\Controller\Api;
 
 use App\Api\ApiAccess;
 use App\Api\MediaResource;
+use App\Background\JobDispatcher;
 use App\Entity\Campaign;
 use App\Entity\Company;
 use App\Entity\Creator;
@@ -18,6 +19,7 @@ use App\Service\MediaStorage;
 use App\Service\MediaThumbnails;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\SecurityBundle\Security;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -79,6 +81,8 @@ final class MediaController
         Security $security,
         CsrfTokenManagerInterface $tokenManager,
         MediaStorage $storage,
+        JobDispatcher $jobs,
+        #[Autowire('%wave.queue.enabled%')] bool $queued,
     ): JsonResponse {
         $locale = LocaleContext::fromRequest($request);
         if ($locale === null) {
@@ -132,6 +136,10 @@ final class MediaController
         $entityManager->persist($media);
         $entityManager->flush();
 
+        if ($queued) {
+            $jobs->enqueue('GenerateThumbnailsMessage', ['mediaId' => $media->getId()], 'thumbnail:' . ImageVariants::VERSION . ':' . $media->getId());
+        }
+
         return new JsonResponse(['data' => MediaResource::fromEntity($media)], 201);
     }
 
@@ -145,8 +153,7 @@ final class MediaController
         MediaStorage $storage,
         MediaThumbnails $thumbnails,
         ?int $width = null,
-    ): Response
-    {
+    ): Response {
         $media = $entityManager->getRepository(Media::class)->find($id);
         if (!$media instanceof Media) {
             return new JsonResponse(['error' => ApiMessages::get('invalid_media', 'bs')], 404);
@@ -175,7 +182,7 @@ final class MediaController
         $response->headers->set('Content-Type', $width === null ? $media->getMimeType() : 'image/webp');
         $response->headers->set('X-Content-Type-Options', 'nosniff');
         $response->headers->set('Cache-Control', $isPublic
-            ? ($user instanceof User ? 'private' : 'public').', max-age=300, must-revalidate'
+            ? ($user instanceof User ? 'private' : 'public') . ', max-age=300, must-revalidate'
             : 'private, no-store');
         if ($isPublic) {
             // Public pixels contain no session data. Signed-in users retain a

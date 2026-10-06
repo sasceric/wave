@@ -117,8 +117,12 @@ php bin/console app:send-unread-message-reminders
 On a server with a configured mail transport, schedule it every five minutes. Use `flock` to avoid overlapping runs:
 
 ```cron
-*/5 * * * * cd /var/www/wave && /usr/bin/flock -n /var/lock/wave-unread-message-reminders.lock /usr/bin/php bin/console app:send-unread-message-reminders --env=prod --no-interaction >> var/log/unread-message-reminders.log 2>&1
+*/5 * * * * cd /home/steelcodeweb/web/wave.ba/public_html && APP_ENV=prod /usr/bin/flock -n var/unread-message-reminders.lock /usr/bin/php8.4 bin/console app:send-unread-message-reminders --env=prod --no-interaction >> var/log/unread-message-reminders.log 2>&1
 ```
+
+Install this entry in the `steelcodeweb` crontab; verify executable paths and
+rotate its output log. See [server services, jobs and queues](docs/server-operations.md)
+for the current queue setup. With the new task dispatcher enabled, remove this legacy reminder cron entry.
 
 Rebuild the frontend after changes with `npm --prefix frontend run build`. Vite emits the app shell, hashed assets, web app manifest, and service worker into Symfony's `public/` directory. The build intentionally does not empty that directory, so it won't delete Symfony's `index.php`.
 
@@ -357,3 +361,15 @@ The sample-data command is safe to rerun; it inserts missing demo records, refre
 Production deployment is configured in [the GitHub Actions deployment guide](docs/deployment.md). The deployment checkout is `/home/steelcodeweb/web/wave.ba/public_html/`; configure the web server document root to its `public/` directory, serve existing files directly, and send other paths to `public/index.php`. This lets direct links such as `/creators/maya-chen` load the Vue app while `/api/*` stays in Symfony. Deployments run Doctrine migrations. Ensure the PHP process can write to `var/media/`, and configure `upload_max_filesize` to at least `10M` and `post_max_size` above `10M`. Set a unique production `APP_SECRET` and an appropriate `DATABASE_URL` via the environment; do not use the development values from `.env`.
 
 The PWA is responsive and installable, and precaches its public app shell and static assets only. API routes are excluded from navigation fallback, and no API/private responses are added to a runtime cache.
+
+### Background processing and admin Tools
+
+Wave now uses durable PostgreSQL Messenger queues for email, push, Mercure,
+thumbnails, indexing, sitemap and maintenance. Admin Tools provides task
+registration/manual scheduling, message-type and transport counts, individual
+failed-job retry/discard, and a paginated log viewer with details. The dev admin
+worker is enabled in YAML by default and processes while an admin page is open;
+production requires supervised CLI consumers and a scheduled-task dispatcher.
+Follow [server setup](docs/server-operations.md) before enabling this release on
+production. Keep APP_SECRET stable and the existing notification/Mercure/VAPID
+configuration. No Redis or RabbitMQ service is required.

@@ -1,0 +1,87 @@
+import assert from 'node:assert/strict'
+import { readFile } from 'node:fs/promises'
+import test from 'node:test'
+import { nextTick, ref } from 'vue'
+import { setupView } from './setupView.js'
+
+const view = '../src/views/AdminToolsView.vue'
+async function tools(apiGet) {
+  const currentUser = ref({ id: 1, isAdmin: true })
+  return setupView(view, {
+    '../lib/api': { apiGet, apiRequest: apiGet },
+    '../composables/useCurrentUser': { currentUser },
+  }, {}, { URLSearchParams })
+}
+async function settle() {
+  await nextTick()
+  await new Promise((resolve) => setImmediate(resolve))
+}
+
+test('log pagination uses snapshot cursors and page-size changes reset the snapshot', async () => {
+  const requests = []
+  const { state } = await tools(async (path) => {
+    requests.push(path)
+    if (path.includes('log-files')) return { data: { files: [{ name: 'prod.log' }] } }
+    if (path.includes('/logs?')) {
+      const cursor = new URLSearchParams(path.split('?')[1]).get('cursor')
+      return { data: [{ id: cursor || 'first' }], meta: { cursor: cursor || 'snapshot-first', nextCursor: cursor === 'snapshot-next' ? null : 'snapshot-next', hasMore: cursor !== 'snapshot-next' } }
+    }
+    return { data: [], meta: { total: 0, hasMore: false } }
+  })
+  await state.load()
+  state.tab.value = 'logs'
+  await settle()
+  assert.equal(state.rows.value.length, 0)
+  state.file.value = '__all__'
+  await settle()
+  assert.equal(state.rows.value[0].id, 'first')
+  state.navigate(1)
+  await settle()
+  assert.equal(state.page.value, 2)
+  assert.equal(state.rows.value[0].id, 'snapshot-next')
+  state.navigate(-1)
+  await settle()
+  assert.equal(state.page.value, 1)
+  assert.ok(requests.at(-1).includes('cursor=snapshot-first'))
+  state.pageSize.value = 50
+  await settle()
+  assert.ok(requests.at(-1).includes('pageSize=50'))
+  assert.ok(requests.at(-1).endsWith('cursor='))
+  state.file.value = 'prod.log'
+  await settle()
+  assert.ok(requests.at(-1).includes('file=prod.log'))
+  assert.equal(state.page.value, 1)
+})
+
+test('late responses cannot replace a newly selected tab and forbidden access clears rows', async () => {
+  let resolveFirst
+  let forbidden = false
+  const { state } = await tools(async (path) => {
+    if (forbidden) throw Object.assign(new Error('forbidden'), { status: 403 })
+    if (path.includes('/tasks?')) return new Promise((resolve) => { resolveFirst = resolve })
+    return { data: [{ id: 'queue-row' }], meta: { total: 1, hasMore: false } }
+  })
+  const first = state.load()
+  state.tab.value = 'queues'
+  await settle()
+  resolveFirst({ data: [{ id: 'outdated-task' }], meta: { total: 1 } })
+  await first
+  assert.equal(state.rows.value[0].id, 'queue-row')
+  forbidden = true
+  await state.load()
+  assert.equal(state.access.value, 'forbidden')
+  assert.equal(state.rows.value.length, 0)
+})
+
+test('all six locales include the tools route and complete interface copy', async () => {
+  const routes = JSON.parse(await readFile(new URL('../../config/localized_routes.json', import.meta.url)))
+  let expected
+  for (const locale of ['bs', 'hr', 'sr', 'sl', 'en', 'cnr']) {
+    const catalog = JSON.parse(await readFile(new URL(`../src/locales/${locale}.json`, import.meta.url)))
+    const keys = Object.keys(catalog.adminTools).sort()
+    expected ??= keys
+    assert.deepEqual(keys, expected)
+    assert.ok(routes[locale]['admin-tools'])
+    assert.equal(Object.keys(catalog.adminTools.statuses).length, 13)
+  }
+})

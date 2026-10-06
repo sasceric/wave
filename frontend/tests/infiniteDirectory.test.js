@@ -46,7 +46,7 @@ test('directories append 30 at a time and stop at the authoritative total withou
   assert.equal(state.items.value.length, 61)
   assert.equal(state.hasMore.value, false)
   await state.loadMore()
-  assert.deepEqual(requests, ['/creators?limit=30&offset=0', '/creators?limit=30&offset=30', '/creators?limit=30&offset=60'])
+  assert.deepEqual(requests, ['/creators?limit=30&offset=0&view=card', '/creators?limit=30&offset=30&view=card', '/creators?limit=30&offset=60&view=card'])
   unmount()
 })
 
@@ -87,7 +87,7 @@ test('filter changes discard stale batches and restart at zero; language changes
   const oldBatch = state.loadMore()
   search.value = ' Food & travel '
   assert.equal(state.items.value.length, 0)
-  assert.equal(pending[2].path, '/creators?limit=30&offset=0&q=Food+%26+travel')
+  assert.equal(pending[2].path, '/creators?limit=30&offset=0&view=card&q=Food+%26+travel')
   pending[2].resolve({ data: [{ id: 100 }], meta: { total: 1 } })
   await settle()
   pending[1].resolve({ data: batch(31, 30), meta: { total: 60 } })
@@ -110,7 +110,7 @@ test('repeated cards advance by the received batch, and an empty batch stops eve
   await state.loadMore()
   assert.equal(state.items.value.length, 54)
   await state.loadMore()
-  assert.equal(paths[2], '/creators?limit=30&offset=60')
+  assert.equal(paths[2], '/creators?limit=30&offset=60&view=card')
   assert.equal(state.hasMore.value, false)
   await state.loadMore()
   assert.equal(paths.length, 3)

@@ -17,7 +17,7 @@ export function useInfiniteDirectory(endpoint, locale, filters = {}, batchSize =
   async function loadMore() {
     if (disposed || loading.value || !hasMore.value) return
     const version = requestVersion
-    const params = new URLSearchParams({ limit: String(batchSize), offset: String(nextOffset) })
+    const params = new URLSearchParams({ limit: String(batchSize), offset: String(nextOffset), view: 'card' })
     filterEntries.forEach(([key, value]) => {
       const filterValue = String(value.value || '').trim()
       if (filterValue) params.set(key, filterValue)

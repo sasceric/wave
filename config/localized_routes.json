@@ -29,7 +29,8 @@
     "admin-creators": "admin/kreatori",
     "admin-companies": "admin/kompanije",
     "admin-campaigns": "admin/kampanje",
-    "admin-email-templates": "admin/email-predlosci"
+    "admin-email-templates": "admin/email-predlosci",
+    "admin-tools": "admin/alati"
   },
   "hr": {
     "home": "",
@@ -61,7 +62,8 @@
     "admin-creators": "admin/kreatori",
     "admin-companies": "admin/tvrtke",
     "admin-campaigns": "admin/kampanje",
-    "admin-email-templates": "admin/predlosci-e-poste"
+    "admin-email-templates": "admin/predlosci-e-poste",
+    "admin-tools": "admin/alati"
   },
   "sr": {
     "home": "",
@@ -93,7 +95,8 @@
     "admin-creators": "admin/kreatori",
     "admin-companies": "admin/kompanije",
     "admin-campaigns": "admin/kampanje",
-    "admin-email-templates": "admin/email-sabloni"
+    "admin-email-templates": "admin/email-sabloni",
+    "admin-tools": "admin/alati"
   },
   "cnr": {
     "home": "",
@@ -125,7 +128,8 @@
     "admin-creators": "admin/kreatori",
     "admin-companies": "admin/kompanije",
     "admin-campaigns": "admin/kampanje",
-    "admin-email-templates": "admin/email-predlozi"
+    "admin-email-templates": "admin/email-predlozi",
+    "admin-tools": "admin/alati"
   },
   "sl": {
     "home": "",
@@ -157,7 +161,8 @@
     "admin-creators": "admin/ustvarjalci",
     "admin-companies": "admin/podjetja",
     "admin-campaigns": "admin/kampanje",
-    "admin-email-templates": "admin/e-postne-predloge"
+    "admin-email-templates": "admin/e-postne-predloge",
+    "admin-tools": "admin/orodja"
   },
   "en": {
     "home": "",
@@ -189,6 +194,7 @@
     "admin-creators": "admin/creators",
     "admin-companies": "admin/companies",
     "admin-campaigns": "admin/campaigns",
-    "admin-email-templates": "admin/email-templates"
+    "admin-email-templates": "admin/email-templates",
+    "admin-tools": "admin/tools"
   }
 }

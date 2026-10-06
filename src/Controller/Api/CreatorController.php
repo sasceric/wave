@@ -5,10 +5,10 @@ namespace App\Controller\Api;
 use App\Api\CreatorResource;
 use App\Api\MarketplaceCategoryLabels;
 use App\Entity\Creator;
+use App\Entity\DirectoryIndex;
 use App\Localization\ApiMessages;
 use App\Localization\LocaleContext;
 use Doctrine\ORM\EntityManagerInterface;
-use SortDirection;
 use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -33,51 +33,37 @@ final class CreatorController
             return new JsonResponse(['error' => ApiMessages::get('invalid_offset', $locale)], 400);
         }
 
+        $card = $request->query->getString('view') === 'card';
         $query = trim($request->query->getString('q'));
         $platform = trim($request->query->getString('platform'));
         $category = trim($request->query->getString('category'));
         $builder = $entityManager->getRepository(Creator::class)->createQueryBuilder('creator')
             ->leftJoin('creator.owner', 'owner')
+            ->leftJoin(DirectoryIndex::class, 'searchIndex', 'WITH', "searchIndex.kind = 'creator' AND searchIndex.entityId = creator.id")
             ->andWhere('owner.id IS NULL OR (owner.approved = :approved AND owner.hideMyAccount = :visible)')
             ->setParameter('approved', true)
             ->setParameter('visible', false);
 
         if ($query !== '') {
-            $matchingTagIds = $entityManager->getConnection()->executeQuery(
-                'SELECT id FROM creator WHERE LOWER(CAST(tags AS TEXT)) LIKE ?',
-                ['%'.mb_strtolower($query).'%'],
-            )->fetchFirstColumn();
-
-            $searchCondition = 'LOWER(creator.displayName) LIKE :query OR LOWER(creator.bio) LIKE :query OR LOWER(creator.location) LIKE :query OR LOWER(creator.category) LIKE :query';
-            if ($matchingTagIds !== []) {
-                $searchCondition .= ' OR creator.id IN (:matchingTagIds)';
-                $builder->setParameter('matchingTagIds', $matchingTagIds);
-            }
             $builder
-                ->andWhere('('.$searchCondition.')')
-                ->setParameter('query', '%'.mb_strtolower($query).'%');
+                ->andWhere('searchIndex.searchText LIKE :query OR COALESCE(searchIndex.tagText, LOWER(JSON_TEXT(creator.tags))) LIKE :query OR (searchIndex.id IS NULL AND (LOWER(creator.displayName) LIKE :query OR LOWER(creator.bio) LIKE :query OR LOWER(creator.location) LIKE :query OR LOWER(creator.category) LIKE :query))')
+                ->setParameter('query', '%' . mb_strtolower($query) . '%');
         }
         if ($category !== '') {
             $categoryJson = json_encode(mb_strtolower($category), JSON_THROW_ON_ERROR);
             $categoryJson = strtr($categoryJson, ['!' => '!!', '%' => '!%', '_' => '!_']);
             $builder
-                ->andWhere("LOWER(creator.category) = :category OR LOWER(creator.categories) LIKE :categoryJson ESCAPE '!'")
+                ->andWhere("LOWER(creator.category) = :category OR LOWER(JSON_TEXT(creator.categories)) LIKE :categoryJson ESCAPE '!'")
                 ->setParameter('category', mb_strtolower($category))
-                ->setParameter('categoryJson', '%'.$categoryJson.'%');
+                ->setParameter('categoryJson', '%' . $categoryJson . '%');
         }
         if ($platform !== '') {
             $normalizedPlatform = mb_strtolower($platform);
-            $matchingPlatformIds = $entityManager->getConnection()->executeQuery(
-                'SELECT id FROM creator WHERE LOWER(CAST(social_profiles AS TEXT)) LIKE ? OR LOWER(CAST(social_profiles AS TEXT)) LIKE ?',
-                ['%"platform":"'.$normalizedPlatform.'"%', '%"platform": "'.$normalizedPlatform.'"%'],
-            )->fetchFirstColumn();
-            if ($matchingPlatformIds === []) {
-                $builder->andWhere('1 = 0');
-            } else {
-                $builder
-                    ->andWhere('creator.id IN (:matchingPlatformIds)')
-                    ->setParameter('matchingPlatformIds', $matchingPlatformIds);
-            }
+            $builder
+                ->andWhere("(searchIndex.id IS NOT NULL AND searchIndex.platformKeys LIKE :platformKey ESCAPE '!') OR (searchIndex.id IS NULL AND LOWER(JSON_TEXT(creator.socialProfiles)) LIKE :platformCompact) OR (searchIndex.id IS NULL AND LOWER(JSON_TEXT(creator.socialProfiles)) LIKE :platformSpaced)")
+                ->setParameter('platformKey', '%"' . strtr($normalizedPlatform, ['!' => '!!', '%' => '!%', '_' => '!_']) . '"%')
+                ->setParameter('platformCompact', '%"platform":"' . $normalizedPlatform . '"%')
+                ->setParameter('platformSpaced', '%"platform": "' . $normalizedPlatform . '"%');
         }
 
         $total = (int) (clone $builder)
@@ -87,15 +73,15 @@ final class CreatorController
         $creators = $builder
             ->leftJoin('creator.avatarMedia', 'avatarMedia')
             ->addSelect('avatarMedia', 'owner')
-            ->orderBy('creator.displayName', SortDirection::Ascending)
-            ->addOrderBy('creator.id', SortDirection::Ascending)
+            ->orderBy('creator.displayName', \SortDirection::Ascending)
+            ->addOrderBy('creator.id', \SortDirection::Ascending)
             ->setFirstResult($offset)
             ->setMaxResults($limit)
             ->getQuery()
             ->getResult();
         $categoryLabels = MarketplaceCategoryLabels::forLocale($entityManager, $locale);
 
-        if ($creators !== []) {
+        if (!$card && $creators !== []) {
             // Fetch the bounded page's portfolio associations in one query; joining
             // a collection into the paginated query would truncate creator pages.
             $entityManager->createQueryBuilder()
@@ -115,6 +101,7 @@ final class CreatorController
                     $locale,
                     $categoryLabels[$creator->getCategory()] ?? null,
                     $categoryLabels,
+                    $card,
                 ),
                 $creators,
             ),
@@ -128,8 +115,7 @@ final class CreatorController
         Request $request,
         EntityManagerInterface $entityManager,
         Security $security,
-    ): JsonResponse
-    {
+    ): JsonResponse {
         $locale = LocaleContext::fromRequest($request);
         if ($locale === null) {
             return new JsonResponse(['error' => ApiMessages::get('unsupported_language', 'bs')], 400);
