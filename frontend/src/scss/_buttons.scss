@@ -1,0 +1,79 @@
+@use './breakpoints';
+
+.button {
+  min-height: 48px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  padding: 0 19px;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  font-size: 12px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease;
+  cursor: pointer;
+
+  &:hover {
+    transform: translateY(-1px);
+  }
+
+  &--dark {
+    color: white;
+    background: var(--forest);
+  }
+
+  &--dark:hover {
+    background: #28534a;
+  }
+
+  &--dark span {
+    color: var(--gold);
+  }
+
+  &--text {
+    min-height: 44px;
+    padding: 0;
+    color: var(--forest);
+    background: transparent;
+  }
+
+  &--text span {
+    color: #c67f67;
+    font-size: 17px;
+  }
+
+  &--outline {
+    color: var(--forest);
+    background: transparent;
+    border-color: #bfc9c1;
+  }
+
+  &--outline:hover {
+    background: var(--sage);
+  }
+
+  &--full {
+    width: 100%;
+  }
+
+  &:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+    transform: none;
+  }
+}
+
+@include breakpoints.down(420px) {
+  .button {
+    min-height: 44px;
+    gap: 12px;
+    padding: 0 14px;
+    font-size: 10px;
+
+    &--text {
+      padding: 0;
+    }
+  }
+}

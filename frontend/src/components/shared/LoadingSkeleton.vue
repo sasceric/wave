@@ -153,4 +153,4 @@ const { t } = useI18n()
   </div>
 </template>
 
-<style scoped lang="scss" src="./LoadingSkeleton.scss"></style>
+<style scoped lang="scss" src="../../scss/components/shared/LoadingSkeleton.scss"></style>

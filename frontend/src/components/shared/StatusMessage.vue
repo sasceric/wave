@@ -39,4 +39,4 @@ const ariaRole = computed(() => {
   </p>
 </template>
 
-<style lang="scss" src="./StatusMessage.scss"></style>
+<style lang="scss" src="../../scss/components/shared/StatusMessage.scss"></style>

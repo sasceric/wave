@@ -21,4 +21,4 @@ const classes = computed(() => {
   </div>
 </template>
 
-<style lang="scss" src="./CardGrid.scss"></style>
+<style lang="scss" src="../../scss/components/shared/CardGrid.scss"></style>

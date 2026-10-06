@@ -51,4 +51,4 @@ onMounted(checkCachedImage)
   </span>
 </template>
 
-<style lang="scss" src="./CardImage.scss"></style>
+<style lang="scss" src="../../scss/components/shared/CardImage.scss"></style>

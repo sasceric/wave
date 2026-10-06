@@ -1,0 +1,49 @@
+@use '../../breakpoints';
+
+.page-hero {
+  padding-top: 84px;
+  padding-bottom: 49px;
+
+  .eyebrow {
+    margin-bottom: 12px;
+  }
+
+  h1 {
+    max-width: 760px;
+    margin: 0 0 13px;
+    font-size: clamp(50px, 6vw, 68px);
+    letter-spacing: -1px;
+    line-height: 1.08;
+  }
+
+  > p:last-child {
+    max-width: 580px;
+    margin: 0;
+    color: #75827a;
+    font-size: 14px;
+    line-height: 1.7;
+  }
+}
+
+.directory {
+  padding-bottom: 96px;
+}
+
+@include breakpoints.down(760px) {
+  .page-hero {
+    padding-top: 62px;
+    padding-bottom: 35px;
+
+    h1 {
+      font-size: clamp(44px, 10vw, 60px);
+    }
+
+    > p:last-child {
+      font-size: 12px;
+    }
+  }
+
+  .directory {
+    padding-bottom: 69px;
+  }
+}

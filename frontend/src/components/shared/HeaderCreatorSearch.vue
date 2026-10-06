@@ -91,4 +91,4 @@ onBeforeUnmount(() => mediaQuery?.removeEventListener('change', updateViewport))
   </form>
 </template>
 
-<style lang="scss" src="./HeaderCreatorSearch.scss"></style>
+<style lang="scss" src="../../scss/components/shared/HeaderCreatorSearch.scss"></style>

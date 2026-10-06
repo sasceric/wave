@@ -94,4 +94,4 @@ function changePageSize(event) {
   </div>
 </template>
 
-<style lang="scss" src="./DirectoryPagination.scss"></style>
+<style lang="scss" src="../../scss/components/shared/DirectoryPagination.scss"></style>

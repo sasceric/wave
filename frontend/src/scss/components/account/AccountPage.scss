@@ -1,0 +1,68 @@
+@use '../../breakpoints';
+
+.account-intro {
+  max-width: 610px;
+  margin-bottom: 28px;
+
+  h1 {
+    margin: 0 0 10px;
+    font-size: clamp(38px, 5vw, 56px);
+  }
+
+  > p:last-child {
+    color: #748178;
+    font-size: 12px;
+    line-height: 1.7;
+  }
+}
+
+.account-page {
+  .account-heading > div > p:last-child,
+  .account-intro > p:last-child,
+  .account-switch,
+  .profile-form__header p:last-child,
+  .form-field,
+  .form-field input,
+  .form-field select,
+  .form-field textarea,
+  .form-field small,
+  .media-upload-field > small,
+  .media-upload-field__error,
+  .media-upload-field input[type="file"],
+  .profile-editor__heading small,
+  .profile-editor__add,
+  .profile-editor__remove,
+  .profile-editor__empty,
+  .portfolio-editor__top > strong,
+  .multi-select__trigger,
+  .multi-select__option,
+  .multi-select__value,
+  .multi-select > small,
+  .dashboard-card > p,
+  .dashboard-card__subheading,
+  .offer-summary,
+  .status-pill,
+  .empty-state,
+  .notice,
+  .brief-application textarea,
+  .brief-application .notice,
+  .brief-application .field-label,
+  .button {
+    font-size: 14px;
+  }
+}
+
+.auth-form {
+  max-width: 500px;
+
+  > .button {
+    margin-top: 6px;
+  }
+}
+
+@include breakpoints.down(760px) {
+  .account-page {
+    padding-top: 44px;
+    padding-bottom: 65px;
+  }
+}

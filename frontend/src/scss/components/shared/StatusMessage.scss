@@ -1,0 +1,19 @@
+.notice,
+.empty-state {
+  margin: 22px 0;
+  padding: 23px;
+  border: 1px solid #e0e6df;
+  border-radius: 4px;
+  color: #708079;
+  background: #fdfcf8;
+  font-size: 12px;
+  line-height: 1.65;
+}
+
+.notice {
+  &--error {
+    border-color: #e9c2b8;
+    color: #a34433;
+    background: #fff8f5;
+  }
+}

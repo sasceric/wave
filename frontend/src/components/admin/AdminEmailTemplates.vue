@@ -289,4 +289,4 @@ onMounted(loadTemplates)
   </section>
 </template>
 
-<style lang="scss" src="./AdminEmailTemplates.scss"></style>
+<style lang="scss" src="../../scss/components/admin/AdminEmailTemplates.scss"></style>

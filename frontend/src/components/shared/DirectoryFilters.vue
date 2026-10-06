@@ -64,4 +64,4 @@ const { categories, error } = useMarketplaceCatalog(locale)
   <StatusMessage v-if="error" variant="error" class="directory-catalog-error">{{ error }}</StatusMessage>
 </template>
 
-<style lang="scss" src="./DirectoryFilters.scss"></style>
+<style lang="scss" src="../../scss/components/shared/DirectoryFilters.scss"></style>

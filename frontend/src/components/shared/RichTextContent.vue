@@ -10,4 +10,4 @@ const safeHtml = computed(() => sanitizeRichText(props.html))
   <div class="profile-bio" v-html="safeHtml"></div>
 </template>
 
-<style lang="scss" src="./RichTextContent.scss"></style>
+<style lang="scss" src="../../scss/components/shared/RichTextContent.scss"></style>

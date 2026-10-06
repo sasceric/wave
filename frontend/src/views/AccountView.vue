@@ -1913,4 +1913,4 @@ onMounted(loadDashboard)
   </AccountPage>
 </template>
 
-<style lang="scss" src="./AccountView.scss"></style>
+<style lang="scss" src="../scss/views/AccountView.scss"></style>

@@ -20,7 +20,7 @@ The default local database is SQLite, and PHP needs the `pdo_sqlite` extension w
 | `templates/emails/` | Editable HTML email templates with escaped placeholders; no Twig views |
 | `frontend/src/views/` | Route-level Vue pages |
 | `frontend/src/components/shared/` | Reusable design and status components |
-| Adjacent component/view `.scss` files, `frontend/src/styles/` | Feature styles and shared SCSS foundations; [style ownership and loading](docs/frontend-styles.md) |
+| `frontend/src/scss/` | Feature styles mirror the Vue component/view folders; shared SCSS foundations live at the SCSS root. See [style ownership and loading](docs/frontend-styles.md). |
 | `frontend/src/components/shared/MediaUploadField.vue` | Reusable owned-image upload control |
 | `frontend/src/components/companies/` | Company directory cards |
 | `frontend/src/components/account/` | Account access and dashboard panels |

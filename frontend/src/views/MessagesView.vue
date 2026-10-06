@@ -1485,4 +1485,4 @@ function messageTimeDescription(value) {
   </section>
 </template>
 
-<style lang="scss" src="./MessagesView.scss"></style>
+<style lang="scss" src="../scss/views/MessagesView.scss"></style>

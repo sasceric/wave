@@ -1,20 +1,22 @@
 # Frontend SCSS
 
-Vue components and views own their styles in adjacent files, for example
-`MessagesView.vue` / `MessagesView.scss` and `DirectoryFilters.vue` /
-`DirectoryFilters.scss`. Sass is a locked frontend development dependency; Vite
-compiles it during development and the production build.
+All SCSS lives under `frontend/src/scss/`. Component and view styles mirror the
+Vue folder structure: `views/MessagesView.vue` uses `scss/views/MessagesView.scss`,
+and `components/shared/DirectoryFilters.vue` uses
+`scss/components/shared/DirectoryFilters.scss`. Sass is a locked frontend
+development dependency; Vite compiles it during development and the production build.
 
 ## Where styles belong
 
-- `frontend/src/styles/global.scss` imports only app-wide foundations: tokens,
+- `frontend/src/scss/global.scss` imports only app-wide foundations: tokens,
   resets and typography, layout utilities, buttons, basic forms, accessibility
   helpers and the shared shimmer animation. It does not import page styles.
-- `frontend/src/styles/_breakpoints.scss` provides `down()` and `up()` mixins. It
+- `frontend/src/scss/_breakpoints.scss` provides `down()` and `up()` mixins. It
   emits no CSS on its own. Existing CSS custom properties remain runtime design
   tokens so colors and inherited themes continue working.
-- `App.scss` owns the header, footer, navigation, notification popover and PWA
-  update notice. Route styles live beside their view or reusable child.
+- `scss/App.scss` owns the header, footer, navigation, notification popover and PWA
+  update notice. Route styles live under `scss/views/`; reusable component styles
+  live under matching `scss/components/` subdirectories.
 - `CardGrid` owns creator, campaign and company grid layouts, including homepage
   carousels and account bookmarks. Directory creator/campaign grids keep four
   desktop columns and two columns at widths up to 760px.
@@ -26,10 +28,11 @@ compiles it during development and the production build.
 - Existing reusable controls, cards, loading states and dialogs own their own
   SCSS. The four previously scoped styles remain scoped after extraction.
 
-Attach styles to the component that renders the markup:
+Attach styles to the component that renders the markup. For a component under
+`frontend/src/components/shared/`:
 
 ```vue
-<style lang="scss" src="./ExampleComponent.scss"></style>
+<style lang="scss" src="../../scss/components/shared/ExampleComponent.scss"></style>
 ```
 
 Use `scoped` when selectors must be local to that component. The migrated BEM
@@ -38,13 +41,23 @@ rendered rich-text descendants rely on those selectors. Do not add `scoped` to
 them without checking those relationships. New components can use scoped styles
 and explicit `:deep()` for intentional child overrides.
 
-Responsive rules stay in the owning file:
+Group related elements, modifiers, states and descendants with Sass nesting.
+Keep selector order when nesting existing rules, since the cascade depends on it.
+Use shared breakpoint mixins for responsive rules in the owning file:
 
 ```scss
-@use '../../styles/breakpoints';
+@use '../../breakpoints';
 
 .example-component {
   color: var(--forest);
+
+  &__title {
+    margin: 0;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--forest);
+  }
 }
 
 @include breakpoints.down(760px) {
@@ -54,7 +67,8 @@ Responsive rules stay in the owning file:
 }
 ```
 
-Creator, campaign and company cards import their adjacent SCSS in their script.
+Creator, campaign and company cards import their matching SCSS modules from
+`scss/components/` in their script.
 `DirectorySkeletonCard` imports those same modules to reserve identical geometry.
 Bare imports give Vite one module identity per card skin rather than separate
 external-style requests with different block indices. `AdminMultiSelect` also
@@ -93,6 +107,15 @@ The migration produced 54 component/view SCSS files and eight foundation/mixin
 partials. A Sass + PostCSS comparison matched all 2,099 original selector rules,
 declarations, importance flags and media/keyframe contexts, with no missing or
 extra rules. The four scoped blocks were also preserved separately.
+
+The subsequent relocation into `scss/` verified that all 63 Sass source files
+compile to identical CSS before and after the move. No SCSS remains alongside
+Vue files; component and view stylesheet paths match their Vue paths.
+Related rules in 58 stylesheets now use Sass nesting for BEM elements/modifiers,
+states and descendants. A second Sass + PostCSS comparison verified that all 63
+compiled stylesheets retain the same selectors, declarations, at-rule contexts
+and cascade order. Runtime CSS custom properties remain in place for inherited
+themes; isolated base rules do not need artificial nesting or Sass variables.
 
 Local production-build measurements, excluding external font CSS:
 

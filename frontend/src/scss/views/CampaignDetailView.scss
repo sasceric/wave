@@ -1,0 +1,264 @@
+@use '../breakpoints';
+
+.brief-hero {
+  padding: 48px 0 54px;
+  background: #edf0e9;
+
+  &__inner {
+    max-width: 930px;
+  }
+}
+
+.back-link {
+  display: inline-block;
+  margin-bottom: 40px;
+  color: #687b70;
+  font-size: 10px;
+  font-weight: 600;
+  text-decoration: none;
+
+  &:hover {
+    color: var(--forest);
+  }
+}
+
+.brief-hero {
+  .eyebrow {
+    margin-bottom: 10px;
+  }
+
+  h1 {
+    margin: 0 0 9px;
+    font-size: 55px;
+  }
+
+  &__inner > p:not(.eyebrow) {
+    max-width: 620px;
+    margin-bottom: 22px;
+    color: #748178;
+    font-size: 13px;
+    line-height: 1.65;
+  }
+
+  &__brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--forest);
+    font-size: 11px;
+    font-weight: 700;
+  }
+
+  &__brand-link {
+    width: fit-content;
+    text-decoration: none;
+  }
+
+  &__brand-link:hover {
+    color: #557469;
+  }
+}
+
+.brand-avatar {
+  &--large {
+    width: 37px;
+    height: 37px;
+    flex: 0 0 auto;
+    overflow: hidden;
+    border-radius: 50%;
+    background: #638071;
+  }
+}
+
+.brief-hero {
+  &__brand small {
+    display: block;
+    margin-top: 3px;
+    color: #829087;
+    font-size: 9px;
+    font-weight: 400;
+  }
+}
+
+.brief-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: 65px;
+  padding-top: 60px;
+  padding-bottom: 95px;
+}
+
+.brief-copy {
+  > .eyebrow {
+    margin-bottom: 11px;
+  }
+
+  h2 {
+    max-width: 550px;
+    margin-bottom: 15px;
+    font-size: 34px;
+    line-height: 1.2;
+  }
+
+  > p:not(.eyebrow) {
+    color: #6d7b72;
+    font-size: 13px;
+    line-height: 1.9;
+  }
+
+  &__section {
+    margin-top: 34px;
+    padding-top: 19px;
+    border-top: 1px solid #e0e4dd;
+  }
+
+  &__section .eyebrow {
+    margin-bottom: 14px;
+  }
+
+  &__section ul {
+    margin: 0;
+    padding-left: 18px;
+    color: #64756a;
+    font-size: 12px;
+    line-height: 2;
+  }
+}
+
+.brief-aside {
+  align-self: start;
+  padding: 21px;
+  border: 1px solid #dfe4dc;
+  border-radius: 4px;
+  background: #fdfcf8;
+
+  &__top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+  }
+
+  &__top .eyebrow {
+    margin: 0;
+  }
+}
+
+.brief-status {
+  color: #68846d;
+  font-size: 9px;
+  font-weight: 700;
+
+  i {
+    width: 6px;
+    height: 6px;
+    display: inline-block;
+    margin: 0 4px 1px 0;
+    border-radius: 50%;
+    background: #86ab88;
+  }
+}
+
+.brief-fact {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 13px 0;
+  border-top: 1px solid #eaebe5;
+  color: #809087;
+  font-size: 10px;
+
+  strong {
+    color: var(--forest);
+    font-weight: 600;
+    text-align: right;
+  }
+}
+
+.brief-notice {
+  margin: 14px 0;
+  padding: 12px;
+  border-left: 2px solid #d69879;
+  color: #7c837b;
+  background: #f6f2e9;
+  font-size: 9px;
+  line-height: 1.6;
+}
+
+.brief-application {
+  textarea {
+    width: 100%;
+    min-height: 84px;
+    margin-bottom: 10px;
+    padding: 10px;
+    border: 1px solid #dfe4dc;
+    border-radius: 3px;
+    color: var(--ink);
+    font: inherit;
+    font-size: 11px;
+    line-height: 1.6;
+    resize: vertical;
+  }
+
+  .notice {
+    padding: 12px;
+    font-size: 10px;
+  }
+
+  .field-label {
+    display: block;
+    margin: 9px 0 7px;
+    color: #61736a;
+    font-size: 10px;
+    font-weight: 600;
+  }
+}
+
+.brief-notice {
+  > p {
+    margin: 0 0 12px;
+  }
+}
+
+@include breakpoints.down(1000px) {
+  .brief-layout {
+    gap: 38px;
+  }
+}
+
+@include breakpoints.down(760px) {
+  .brief-hero {
+    padding: 37px 0 40px;
+  }
+
+  .back-link {
+    margin-bottom: 30px;
+  }
+
+  .brief-hero {
+    h1 {
+      font-size: 43px;
+    }
+
+    &__inner > p:not(.eyebrow) {
+      font-size: 12px;
+    }
+  }
+
+  .brief-layout {
+    grid-template-columns: 1fr;
+    gap: 30px;
+    padding-top: 41px;
+    padding-bottom: 70px;
+  }
+
+  .brief-copy {
+    h2 {
+      font-size: 30px;
+    }
+  }
+
+  .brief-aside {
+    max-width: 460px;
+  }
+}

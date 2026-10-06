@@ -233,4 +233,4 @@ onBeforeUnmount(() => { requestId++ })
   </AdminPage>
 </template>
 
-<style scoped lang="scss" src="./AdminToolsView.scss"></style>
+<style scoped lang="scss" src="../scss/views/AdminToolsView.scss"></style>

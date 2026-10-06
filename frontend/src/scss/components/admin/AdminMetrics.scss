@@ -1,0 +1,125 @@
+@use '../../breakpoints';
+
+.admin-dashboard {
+  &__metrics {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  &__metric {
+    --metric-color: #316c55;
+    --metric-soft: #eaf3ee;
+    min-width: 0;
+    min-height: 132px;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 17px 15px;
+    border: 1px solid color-mix(in srgb, var(--metric-color) 14%, white);
+    border-radius: 11px;
+    color: inherit;
+    background: linear-gradient(145deg, #fffefa 10%, var(--metric-soft));
+    text-decoration: none;
+    box-shadow: 0 4px 14px rgba(23, 61, 54, .045);
+    transition: transform .16s ease, box-shadow .16s ease;
+  }
+
+  &__metric[href]:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 9px 20px rgba(23, 61, 54, .09);
+  }
+
+  &__metric--sage {
+    --metric-color: #316c55;
+    --metric-soft: #eaf3ee;
+  }
+
+  &__metric--blue {
+    --metric-color: #436e91;
+    --metric-soft: #eaf1f7;
+  }
+
+  &__metric--coral {
+    --metric-color: #a95745;
+    --metric-soft: #f8ede8;
+  }
+
+  &__metric--violet {
+    --metric-color: #685a8b;
+    --metric-soft: #f0edf7;
+  }
+
+  &__metric--amber {
+    --metric-color: #9a742b;
+    --metric-soft: #f8f1df;
+  }
+
+  &__metric-icon {
+    display: grid;
+    flex: 0 0 40px;
+    width: 40px;
+    height: 40px;
+    place-items: center;
+    border-radius: 10px;
+    color: var(--metric-color);
+    background: var(--metric-soft);
+  }
+
+  &__metric-copy {
+    display: grid;
+    min-width: 0;
+    gap: 4px;
+  }
+
+  &__metric-copy > span {
+    color: #66766d;
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1.35;
+  }
+
+  &__metric-copy strong {
+    color: var(--metric-color);
+    font-size: 32px;
+    font-weight: 650;
+    line-height: 1.1;
+  }
+
+  &__metric-copy small {
+    color: #7b887f;
+    font-size: 12px;
+    line-height: 1.4;
+  }
+
+  &__metric-arrow {
+    flex: 0 0 auto;
+    margin: 1px 0 0 auto;
+    color: var(--metric-color);
+    opacity: .65;
+  }
+}
+
+@include breakpoints.down(760px) {
+  .admin-dashboard {
+    &__metrics {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+}
+
+@include breakpoints.down(520px) {
+  .admin-dashboard {
+    &__metrics {
+      grid-template-columns: 1fr;
+    }
+  }
+}
+
+@include breakpoints.down(1000px) {
+  .admin-dashboard {
+    &__metrics {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+}

@@ -4,4 +4,4 @@
   </section>
 </template>
 
-<style lang="scss" src="./AccountPage.scss"></style>
+<style lang="scss" src="../../scss/components/account/AccountPage.scss"></style>

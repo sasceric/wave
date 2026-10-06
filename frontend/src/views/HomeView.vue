@@ -428,4 +428,4 @@ onMounted(loadHome)
 
 </template>
 
-<style lang="scss" src="./HomeView.scss"></style>
+<style lang="scss" src="../scss/views/HomeView.scss"></style>

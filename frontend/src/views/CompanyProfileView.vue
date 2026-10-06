@@ -119,4 +119,4 @@ onMounted(loadCompany)
   </template>
 </template>
 
-<style lang="scss" src="./CompanyProfileView.scss"></style>
+<style lang="scss" src="../scss/views/CompanyProfileView.scss"></style>

@@ -28,4 +28,4 @@ defineProps({
   </section>
 </template>
 
-<style lang="scss" src="./FaqSection.scss"></style>
+<style lang="scss" src="../../scss/components/shared/FaqSection.scss"></style>

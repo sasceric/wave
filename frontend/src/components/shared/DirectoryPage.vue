@@ -7,4 +7,4 @@
   </section>
 </template>
 
-<style lang="scss" src="./DirectoryPage.scss"></style>
+<style lang="scss" src="../../scss/components/shared/DirectoryPage.scss"></style>

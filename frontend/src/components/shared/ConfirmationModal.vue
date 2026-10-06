@@ -55,4 +55,4 @@ function dismiss() {
   </dialog>
 </template>
 
-<style lang="scss" src="./ConfirmationModal.scss"></style>
+<style lang="scss" src="../../scss/components/shared/ConfirmationModal.scss"></style>

@@ -171,5 +171,5 @@ onBeforeUnmount(() => {
   </div>
 </template>
 
-<style lang="scss" src="../shared/MultiSelect.scss"></style>
-<style lang="scss" src="./AdminMultiSelect.scss"></style>
+<style lang="scss" src="../../scss/components/shared/MultiSelect.scss"></style>
+<style lang="scss" src="../../scss/components/admin/AdminMultiSelect.scss"></style>

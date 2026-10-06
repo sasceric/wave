@@ -255,4 +255,4 @@ onMounted(loadModerationCatalog)
   </div>
 </template>
 
-<style lang="scss" src="./ModerationView.scss"></style>
+<style lang="scss" src="../scss/views/ModerationView.scss"></style>

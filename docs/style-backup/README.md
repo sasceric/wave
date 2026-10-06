@@ -8,6 +8,6 @@ the SCSS migration. It has 5,308 lines and this SHA-256 digest:
 ```
 
 Keep it as a reference; it is outside the frontend build and is not imported.
-Edit the adjacent component/view SCSS files instead. See
+Edit the matching component/view files under `frontend/src/scss/` instead. See
 [`../frontend-styles.md`](../frontend-styles.md) for ownership, validation and
 deployment details.

@@ -147,4 +147,4 @@ const navigationItems = computed(() => {
   </nav>
 </template>
 
-<style lang="scss" src="./AccountSidebar.scss"></style>
+<style lang="scss" src="../../scss/components/account/AccountSidebar.scss"></style>

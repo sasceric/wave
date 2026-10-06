@@ -1035,4 +1035,4 @@ onBeforeUnmount(() => packageDescriptionObserver?.disconnect())
   </template>
 </template>
 
-<style lang="scss" src="./CreatorProfileView.scss"></style>
+<style lang="scss" src="../scss/views/CreatorProfileView.scss"></style>

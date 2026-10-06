@@ -117,4 +117,4 @@ onBeforeUnmount(() => {
   </dialog>
 </template>
 
-<style lang="scss" src="./RequiredProfileModal.scss"></style>
+<style lang="scss" src="../../scss/components/account/RequiredProfileModal.scss"></style>

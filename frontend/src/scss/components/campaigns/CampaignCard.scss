@@ -1,0 +1,306 @@
+@use '../../breakpoints';
+
+.campaign-card {
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid #e0e4dc;
+  border-radius: 18px;
+  background: #fffefa;
+  box-shadow: 0 10px 28px rgba(40, 57, 47, .07);
+
+  &__cover {
+    position: relative;
+    height: 178px;
+    overflow: hidden;
+    background: linear-gradient(130deg, #d8b39a, #7f6e5e 58%, #40574d);
+  }
+
+  &__cover-image {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  &__cover::before,
+  &__cover::after {
+    position: absolute;
+    z-index: 1;
+    display: block;
+    content: "";
+    pointer-events: none;
+  }
+
+  &__cover::before {
+    width: 57%;
+    height: 150%;
+    top: -30%;
+    right: -8%;
+    border-radius: 50%;
+    background: rgba(255, 244, 218, .34);
+    transform: rotate(-22deg);
+  }
+
+  &__cover::after {
+    width: 42%;
+    height: 105%;
+    right: 15%;
+    bottom: -55%;
+    border-radius: 50%;
+    background: rgba(34, 68, 58, .28);
+  }
+
+  &__cover--beauty {
+    background: linear-gradient(130deg, #e8bfac, #c17e6d 56%, #70504d);
+  }
+
+  &__cover--fashion {
+    background: linear-gradient(130deg, #d4c3a8, #9a7962 56%, #514b46);
+  }
+
+  &__cover--food {
+    background: linear-gradient(130deg, #ddbc8d, #a7774d 56%, #5d5940);
+  }
+
+  &__cover--travel {
+    background: linear-gradient(130deg, #c3d1c2, #789485 56%, #475e52);
+  }
+
+  &__cover--wellness {
+    background: linear-gradient(130deg, #d9c5bd, #a77e78 56%, #665954);
+  }
+
+  &__cover--lifestyle {
+    background: linear-gradient(130deg, #d7c5a8, #9b8a6d 56%, #5d6250);
+  }
+
+  &__cover-brand {
+    position: absolute;
+    z-index: 1;
+    top: 14px;
+    left: 14px;
+    width: 38px;
+    height: 38px;
+    display: grid;
+    place-items: center;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, .72);
+    border-radius: 12px;
+    color: var(--forest);
+    background: #fffefa;
+    box-shadow: 0 3px 12px rgba(31, 46, 38, .14);
+    font-size: 17px;
+    font-weight: 700;
+  }
+
+  &__cover-brand img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  &__bookmark {
+    position: absolute;
+    z-index: 1;
+    top: 14px;
+    right: 14px;
+    width: 34px;
+    height: 34px;
+    display: grid;
+    place-items: center;
+    padding: 0;
+    border: 1px solid rgba(255, 255, 255, .72);
+    border-radius: 10px;
+    color: var(--ink);
+    background: rgba(255, 254, 250, .86);
+    cursor: pointer;
+    transition: color .16s ease, background .16s ease, transform .16s ease;
+  }
+
+  &__bookmark:hover {
+    transform: translateY(-1px);
+    color: var(--forest);
+    background: #fffefa;
+  }
+
+  &__bookmark:focus-visible {
+    outline: 2px solid var(--forest);
+    outline-offset: 3px;
+  }
+
+  &__bookmark.is-active {
+    color: #fffefa;
+    background: var(--forest);
+  }
+
+  &__bookmark:disabled {
+    cursor: wait;
+    opacity: .65;
+  }
+
+  &__bookmark-error {
+    margin: 0 10px 12px;
+    color: #a33e3e;
+    font-size: 11px;
+    line-height: 1.4;
+  }
+
+  &__featured {
+    position: absolute;
+    z-index: 1;
+    right: 14px;
+    bottom: 28px;
+    padding: 5px 8px;
+    border-radius: 99px;
+    color: #fffefa;
+    background: rgba(38, 67, 57, .82);
+    font-size: 9px;
+    font-weight: 700;
+  }
+
+  &__panel {
+    position: relative;
+    z-index: 1;
+    min-height: 175px;
+    margin: -16px 10px 0;
+    padding: 14px 14px 13px;
+    border: 1px solid #e8e8df;
+    border-radius: 16px;
+    background: #fffefa;
+    box-shadow: 0 6px 18px rgba(34, 50, 42, .08);
+  }
+
+  &__company {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    width: fit-content;
+    max-width: 100%;
+    margin-bottom: 6px;
+    color: #35463e;
+    font-size: 13px;
+    font-weight: 700;
+    text-decoration: none;
+  }
+
+  &__company:hover {
+    color: var(--forest);
+  }
+
+  &__verified {
+    width: 14px;
+    height: 14px;
+    display: inline-grid;
+    flex: 0 0 auto;
+    place-items: center;
+    border-radius: 50%;
+    color: #fff;
+    background: #5d967d;
+    font-size: 9px;
+  }
+
+  h3 {
+    margin: 0 0 3px;
+    overflow: hidden;
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 15px;
+    font-weight: 700;
+    line-height: 1.35;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__summary {
+    display: -webkit-box;
+    min-height: 18px;
+    margin: 0 0 10px;
+    overflow: hidden;
+    color: #78847d;
+    font-size: 11px;
+    line-height: 1.5;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 1;
+  }
+
+  &__channels {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 9px;
+    margin-bottom: 10px;
+    color: #65736b;
+    font-size: 10px;
+  }
+
+  &__channels span,
+  &__details span {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  &__details {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 9px 14px;
+    color: #6e7b74;
+    font-size: 11px;
+  }
+
+  &__details strong {
+    color: var(--forest);
+    font-size: 14px;
+    font-weight: 750;
+  }
+
+  &__details span {
+    min-width: 0;
+  }
+
+  &__details span svg {
+    flex: 0 0 auto;
+  }
+
+  &__footer {
+    display: grid;
+    gap: 10px;
+    padding: 12px 10px 10px;
+    color: #859088;
+    font-size: 10px;
+  }
+
+  &__cta {
+    min-height: 44px;
+    justify-content: center;
+    gap: 8px;
+    border-radius: 12px;
+    font-size: 13px;
+  }
+}
+
+@include breakpoints.down(420px) {
+  .campaign-card {
+    &__cover {
+      height: 155px;
+    }
+
+    &__panel {
+      min-height: 0;
+      margin-right: 8px;
+      margin-left: 8px;
+      padding: 12px;
+    }
+
+    &__footer {
+      padding: 10px 8px 8px;
+    }
+  }
+}
+
+.campaign-card {
+  &__cover-image.card-image {
+    position: absolute;
+  }
+}

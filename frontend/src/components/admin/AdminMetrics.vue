@@ -4,4 +4,4 @@
   </div>
 </template>
 
-<style lang="scss" src="./AdminMetrics.scss"></style>
+<style lang="scss" src="../../scss/components/admin/AdminMetrics.scss"></style>

@@ -92,4 +92,4 @@ onBeforeUnmount(() => {
   </div>
 </template>
 
-<style lang="scss" src="./AdminRowActions.scss"></style>
+<style lang="scss" src="../../scss/components/admin/AdminRowActions.scss"></style>

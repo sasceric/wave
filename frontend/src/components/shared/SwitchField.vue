@@ -50,4 +50,4 @@ function toggle() {
   </div>
 </template>
 
-<style lang="scss" src="./SwitchField.scss"></style>
+<style lang="scss" src="../../scss/components/shared/SwitchField.scss"></style>

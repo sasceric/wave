@@ -1,0 +1,96 @@
+.directory-skeleton {
+  pointer-events: none;
+  box-shadow: none;
+
+  &--creator {
+    background: #dce3da;
+  }
+
+  &--creator .creator-card__details {
+    display: grid;
+    gap: 10px;
+  }
+}
+
+.skeleton-line {
+  display: block;
+  width: 85%;
+  height: 12px;
+  margin: 8px 0;
+  border-radius: 5px;
+  background: #dce3da;
+
+  &--wide {
+    width: 94%;
+    height: 17px;
+  }
+
+  &--short {
+    width: 58%;
+  }
+}
+
+.skeleton-button {
+  display: block;
+  width: 100%;
+  height: 44px;
+  border-radius: 12px;
+  background: #dce3da;
+}
+
+.skeleton-surface {
+  background: #dce3da;
+}
+
+.directory-skeleton {
+  &--creator .skeleton-line {
+    background: rgba(255, 255, 255, .55);
+  }
+
+  &--campaign .campaign-card__cover::before,
+  &--campaign .campaign-card__cover::after {
+    display: none;
+  }
+
+  &--campaign .campaign-card__panel {
+    min-height: 175px;
+  }
+
+  &--company .skeleton-button {
+    width: 70%;
+    height: 36px;
+    margin-top: 6px;
+  }
+
+  & {
+    position: relative;
+    isolation: isolate;
+  }
+
+  &::after {
+    position: absolute;
+    z-index: 2;
+    inset: 0;
+    pointer-events: none;
+    content: '';
+    background: linear-gradient(100deg, transparent 20%, rgba(255, 255, 255, .4) 50%, transparent 80%);
+    transform: translateX(-100%);
+    animation: wave-skeleton 1.5s ease-in-out infinite;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .directory-skeleton {
+    &::after {
+      animation: none;
+      display: none;
+    }
+  }
+}
+
+.directory-skeleton {
+  &--campaign .campaign-card__footer .skeleton-line {
+    height: 26px;
+    margin: 0;
+  }
+}

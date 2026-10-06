@@ -176,4 +176,4 @@ defineExpose({ prepareSave, commit, rollback })
   </div>
 </template>
 
-<style lang="scss" src="./ProfileImageField.scss"></style>
+<style lang="scss" src="../../scss/components/shared/ProfileImageField.scss"></style>

@@ -1,5 +1,5 @@
 <script setup>
-import './CampaignCard.scss'
+import '../../scss/components/campaigns/CampaignCard.scss'
 import { computed, ref, watch } from 'vue'
 import { ArrowRight, Bookmark, Camera, CirclePlay, MapPin, Megaphone, Music2 } from '@lucide/vue'
 import { useRoute, useRouter } from 'vue-router'

@@ -583,4 +583,4 @@ function changeMode(nextMode) {
   </AccountPage>
 </template>
 
-<style lang="scss" src="./AccountAccessPanel.scss"></style>
+<style lang="scss" src="../../scss/components/account/AccountAccessPanel.scss"></style>

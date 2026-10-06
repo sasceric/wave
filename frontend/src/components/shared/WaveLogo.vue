@@ -31,4 +31,4 @@ defineProps({
   </svg>
 </template>
 
-<style lang="scss" src="./WaveLogo.scss"></style>
+<style lang="scss" src="../../scss/components/shared/WaveLogo.scss"></style>

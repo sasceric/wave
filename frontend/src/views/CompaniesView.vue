@@ -38,4 +38,4 @@ const { items: companies, loading, error, hasMore, loadMore } = useInfiniteDirec
   </section>
 </template>
 
-<style lang="scss" src="./CompaniesView.scss"></style>
+<style lang="scss" src="../scss/views/CompaniesView.scss"></style>

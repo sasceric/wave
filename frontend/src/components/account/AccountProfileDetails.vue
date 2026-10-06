@@ -96,4 +96,4 @@ const aboutHtml = computed(() => sanitizeRichText(
   </section>
 </template>
 
-<style lang="scss" src="./AccountProfileDetails.scss"></style>
+<style lang="scss" src="../../scss/components/account/AccountProfileDetails.scss"></style>

@@ -494,4 +494,4 @@ watch(() => props.label, setEditorAccessibility)
   </div>
 </template>
 
-<style lang="scss" src="./RichTextEditor.scss"></style>
+<style lang="scss" src="../../scss/components/shared/RichTextEditor.scss"></style>

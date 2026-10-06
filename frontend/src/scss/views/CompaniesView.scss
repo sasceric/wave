@@ -1,0 +1,35 @@
+@use '../breakpoints';
+
+.company-directory {
+  min-height: 560px;
+  padding: 70px 0 92px;
+
+  &__intro {
+    max-width: 650px;
+    margin-bottom: 37px;
+  }
+
+  &__intro .eyebrow {
+    margin-bottom: 12px;
+  }
+
+  &__intro h1 {
+    margin-bottom: 12px;
+    font-size: clamp(40px, 5vw, 59px);
+    line-height: 1.06;
+  }
+
+  &__intro > p:last-child {
+    max-width: 550px;
+    margin-bottom: 0;
+    color: #748178;
+    font-size: 13px;
+    line-height: 1.75;
+  }
+}
+
+@include breakpoints.down(520px) {
+  .company-directory {
+    padding: 48px 0 65px;
+  }
+}

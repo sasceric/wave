@@ -19,4 +19,4 @@ defineProps({
   </LocalizedLink>
 </template>
 
-<style lang="scss" src="./WaveWordmark.scss"></style>
+<style lang="scss" src="../../scss/components/shared/WaveWordmark.scss"></style>

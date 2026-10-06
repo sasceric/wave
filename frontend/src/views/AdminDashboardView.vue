@@ -782,4 +782,4 @@ onMounted(loadDashboard)
   </AdminPage>
 </template>
 
-<style lang="scss" src="./AdminDashboardView.scss"></style>
+<style lang="scss" src="../scss/views/AdminDashboardView.scss"></style>

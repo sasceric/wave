@@ -11,4 +11,4 @@ defineProps({ busy: { type: Boolean, default: false } })
   </div>
 </template>
 
-<style lang="scss" src="./AdminTableFrame.scss"></style>
+<style lang="scss" src="../../scss/components/admin/AdminTableFrame.scss"></style>

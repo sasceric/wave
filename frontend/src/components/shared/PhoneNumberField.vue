@@ -80,4 +80,4 @@ function updatePhone(event) {
   </div>
 </template>
 
-<style lang="scss" src="./PhoneNumberField.scss"></style>
+<style lang="scss" src="../../scss/components/shared/PhoneNumberField.scss"></style>

@@ -17,4 +17,4 @@ const flags = {
   <span class="language-flag" aria-hidden="true">{{ flags[locale] || flags.en }}</span>
 </template>
 
-<style lang="scss" src="./LanguageFlag.scss"></style>
+<style lang="scss" src="../../scss/components/shared/LanguageFlag.scss"></style>

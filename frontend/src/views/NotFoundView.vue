@@ -14,4 +14,4 @@ const { t } = useI18n()
   </section>
 </template>
 
-<style lang="scss" src="./NotFoundView.scss"></style>
+<style lang="scss" src="../scss/views/NotFoundView.scss"></style>

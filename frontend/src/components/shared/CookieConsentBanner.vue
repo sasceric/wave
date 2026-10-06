@@ -123,4 +123,4 @@ defineExpose({ open: openPreferences })
   </aside>
 </template>
 
-<style lang="scss" src="./CookieConsentBanner.scss"></style>
+<style lang="scss" src="../../scss/components/shared/CookieConsentBanner.scss"></style>

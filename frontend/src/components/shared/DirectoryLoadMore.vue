@@ -50,4 +50,4 @@ onBeforeUnmount(() => observer?.disconnect())
   </div>
 </template>
 
-<style lang="scss" src="./DirectoryLoadMore.scss"></style>
+<style lang="scss" src="../../scss/components/shared/DirectoryLoadMore.scss"></style>

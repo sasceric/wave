@@ -1,0 +1,39 @@
+.directory-load-more {
+  display: grid;
+  justify-items: center;
+  gap: 12px;
+  min-height: 80px;
+  padding: 20px 0;
+  color: var(--muted);
+  text-align: center;
+
+  p {
+    margin: 0;
+    font-size: 13px;
+  }
+
+  button {
+    min-height: 44px;
+    padding: 10px 22px;
+    border: 1px solid #d9dfd8;
+    border-radius: 4px;
+    background: #fffefa;
+    color: var(--forest);
+    font: inherit;
+    font-size: 13px;
+    cursor: pointer;
+  }
+
+  button:hover {
+    background: #edf2eb;
+  }
+
+  button:focus-visible {
+    outline: 2px solid var(--forest);
+    outline-offset: 3px;
+  }
+
+  &__error {
+    color: #993f36;
+  }
+}

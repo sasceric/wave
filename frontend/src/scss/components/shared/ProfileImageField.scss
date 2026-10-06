@@ -1,0 +1,106 @@
+.profile-image-field {
+  display: grid;
+  justify-items: start;
+  gap: 8px;
+
+  &__empty {
+    width: min(100%, 250px);
+    min-height: 150px;
+    display: grid;
+    align-content: center;
+    justify-items: center;
+    gap: 9px;
+    padding: 18px;
+    border: 1px dashed #bccbbf;
+    border-radius: 10px;
+    color: #5f7869;
+    background: #f6f8f3;
+    font: inherit;
+    cursor: pointer;
+    transition: border-color .16s ease, background .16s ease;
+  }
+
+  &__empty:hover:not(:disabled) {
+    border-color: #7e9c88;
+    background: #eff4ed;
+  }
+
+  &__empty > span {
+    color: var(--forest);
+    font-size: 12px;
+    font-weight: 650;
+  }
+
+  &__empty > small {
+    max-width: 200px;
+    color: #849188;
+    font-size: 9px;
+    font-weight: 400;
+    line-height: 1.5;
+    text-align: center;
+  }
+
+  &__image {
+    position: relative;
+    width: min(100%, 220px);
+  }
+
+  &__image > img {
+    display: block;
+    width: 100%;
+    aspect-ratio: 1;
+    border: 1px solid #dfe4dc;
+    border-radius: 10px;
+    background: #f1f2ee;
+    object-fit: cover;
+  }
+
+  &__remove {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    display: grid;
+    width: 32px;
+    height: 32px;
+    place-items: center;
+    border: 1px solid rgba(255, 255, 255, .75);
+    border-radius: 50%;
+    color: #fff;
+    background: rgba(34, 49, 41, .78);
+    cursor: pointer;
+  }
+
+  &__change {
+    min-height: 35px;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    margin-top: 8px;
+    padding: 7px 10px;
+    border: 1px solid #dfe5dc;
+    border-radius: 6px;
+    color: #53695e;
+    background: #fffefa;
+    font: inherit;
+    font-size: 10px;
+    cursor: pointer;
+  }
+
+  &__empty:disabled,
+  &__remove:disabled,
+  &__change:disabled {
+    opacity: .55;
+    cursor: not-allowed;
+  }
+
+  &__input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+}
