@@ -7,6 +7,8 @@ use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity]
 #[ORM\Table(name: 'campaign_conversation')]
+#[ORM\Index(name: 'idx_conversation_creator_activity', columns: ['creator_id', 'updated_at', 'id'])]
+#[ORM\Index(name: 'idx_conversation_campaign_activity', columns: ['campaign_id', 'updated_at', 'id'])]
 #[ORM\UniqueConstraint(name: 'uniq_campaign_conversation_campaign_creator', columns: ['campaign_id', 'creator_id'])]
 class CampaignConversation
 {

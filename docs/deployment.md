@@ -301,3 +301,12 @@ production data before applying migrations.
 
 After configuring the secrets and server, run the workflow manually once to
 verify the deployment environment before relying on pushes to `main`.
+
+## Chat list lazy loading
+
+The merged chat inbox loads 30 conversations/inquiries at a time. Migration
+`Version20261006210000` adds activity and latest-message indexes; the normal
+workflow applies it and rebuilds the SPA. Existing production environment values,
+workers and scheduling remain unchanged. Manual deployments must also run
+`APP_ENV=prod php8.4 bin/console doctrine:migrations:migrate --no-interaction`
+before clearing the production cache and restarting workers.

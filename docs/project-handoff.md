@@ -220,3 +220,34 @@ index after success. Logs retain bounded reverse cursor paging and modal details
 
 The old ScheduledTaskMonitor observes direct legacy command invocations only;
 new Tools task state comes from TaskRegistry, not that command observer.
+
+## Cursor-based inbox loading (2026-10-06)
+
+`InboxController` and `InboxHistory` expose `GET /api/me/inbox` for a merged
+campaign/direct-inquiry inbox. The default batch is 30 (maximum 100), ordered by
+latest activity descending, type ascending and ID descending. Opaque cursors retain
+timestamp precision and avoid offset shifts. Search (`q`, maximum 200 characters)
+and `filter=unread` apply on the server across the user's entire inbox; only accepted
+inquiries appear. PostgreSQL lateral queries retrieve inquiry previews in the same
+query, and list resources omit full campaign briefs and message history.
+
+`GET /api/me/inbox/{campaign|inquiry}/{id}` resolves one authorized thread for
+notification links and full chat details, even outside loaded/filtered batches.
+`GET /api/me/inbox/unread` returns the aggregate message count without serializing
+conversations. The existing conversation/inquiry endpoints remain compatible with
+account workflows. The new endpoints use participant approval/verification helpers
+and enforce ownership; GET requests do not acknowledge messages.
+
+`MessagesView.vue` appends batches through the shared `DirectoryLoadMore` sentinel,
+which accepts the inbox's scroll container as its observer root. Existing row
+skeletons reserve space. Search debounces for 250ms and invalidates stale requests
+immediately; retries retain their cursor and loaded rows. Selected chat details
+survive filter changes. Mercure applies known chats directly and retrieves only
+the authorized metadata of an unloaded chat. Event-driven catch-up refreshes the
+head while retaining older rows/cursors; no inbox polling was introduced. Local
+thread revisions prevent a slow batch from undoing live previews or read receipts.
+
+Migration `Version20261006210000` adds conversation activity and latest inquiry
+message indexes. Normal GitHub deployment applies it; no environment, scheduler or
+worker changes are needed. Validate against PostgreSQL. Further work remains on
+public-directory cursors, admin catalog pagination and representative load testing.

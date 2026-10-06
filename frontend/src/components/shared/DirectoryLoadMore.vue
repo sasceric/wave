@@ -7,6 +7,7 @@ const props = defineProps({
   hasMore: { type: Boolean, required: true },
   error: { type: String, default: '' },
   count: { type: Number, required: true },
+  root: { type: Object, default: null },
 })
 const emit = defineEmits(['load'])
 const { t } = useI18n()
@@ -22,15 +23,18 @@ function observeEnd() {
   }
 }
 
-onMounted(() => {
+function createObserver() {
+  observer?.disconnect()
   if (typeof IntersectionObserver !== 'undefined') {
     observer = new IntersectionObserver((entries) => {
       if (entries.some((entry) => entry.isIntersecting)
         && props.hasMore && !props.loading && !props.error) emit('load')
-    }, { rootMargin: '200px 0px' })
+    }, { root: props.root, rootMargin: '200px 0px' })
     observeEnd()
   }
-})
+}
+onMounted(createObserver)
+watch(() => props.root, createObserver, { flush: 'post' })
 watch(() => [props.loading, props.hasMore, props.error, props.count], observeEnd, { flush: 'post' })
 onBeforeUnmount(() => observer?.disconnect())
 </script>

@@ -89,5 +89,5 @@ test('a notification selecting another chat replaces the old interactive thread 
   await nextTick()
   assert.equal(state.inboxLoaded.value, false)
   assert.equal(state.loading.value, true)
-  assert.equal(requests, 2)
+  assert.equal(requests, 1)
 })

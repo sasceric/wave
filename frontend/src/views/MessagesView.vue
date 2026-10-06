@@ -20,6 +20,7 @@ import {
   Wallet,
 } from '@lucide/vue'
 import LocalizedLink from '../components/shared/LocalizedLink.vue'
+import DirectoryLoadMore from '../components/shared/DirectoryLoadMore.vue'
 import InboxSkeleton from '../components/messages/InboxSkeleton.vue'
 import LoadingSkeleton from '../components/shared/LoadingSkeleton.vue'
 import StatusMessage from '../components/shared/StatusMessage.vue'
@@ -33,6 +34,13 @@ const router = useRouter()
 const { t, locale } = useI18n()
 const conversations = ref([])
 const inquiries = ref([])
+const selectedDetails = ref(null)
+const loadingInboxPage = ref(false)
+const inboxPageError = ref('')
+const hasMoreInbox = ref(true)
+let inboxCursor = null
+let inboxFilterTimer = 0
+const threadRevisions = new Map()
 const conversationMessages = ref([])
 // Keep this visit's boundary after the server acknowledges reads.
 const firstUnreadMessageId = ref(null)
@@ -78,12 +86,14 @@ const inboxLoaded = ref(false)
 const sending = ref(false)
 const error = ref('')
 const authRequired = ref(false)
+const inboxList = ref(null)
 const messageList = ref(null)
 let messageScrollFrame = 0
 let inboxRefreshInProgress = false
 let inboxRefreshPending = false
 let messagesRequestVersion = 0
 let inboxRequestVersion = 0
+let inboxOpenVersion = 0
 let unmounted = false
 
 const pendingStart = computed(() => {
@@ -104,10 +114,12 @@ const pendingStart = computed(() => {
   return { campaign, creatorId, creatorSlug }
 })
 
-const selectedConversation = computed(() => conversations.value.find(
+const selectedConversation = computed(() => (selectedDetails.value?.threadType === 'campaign'
+  && selectedDetails.value.id === selectedConversationId.value ? selectedDetails.value : null) || conversations.value.find(
   (conversation) => conversation.id === selectedConversationId.value,
 ) || null)
-const selectedInquiry = computed(() => inquiries.value.find(
+const selectedInquiry = computed(() => (selectedDetails.value?.threadType === 'inquiry'
+  && selectedDetails.value.id === selectedInquiryId.value ? selectedDetails.value : null) || inquiries.value.find(
   (inquiry) => inquiry.id === selectedInquiryId.value,
 ) || null)
 const selectedThread = computed(() => selectedConversation.value || selectedInquiry.value)
@@ -119,7 +131,7 @@ const selectedThreadKey = computed(() => (
       : null
 ))
 const mobileThreadOpen = computed(() => Boolean(
-  selectedThread.value || (pendingStart.value && pendingDetails.value),
+  selectedConversationId.value !== null || selectedInquiryId.value !== null || (pendingStart.value && pendingDetails.value),
 ))
 const viewportStyle = computed(() => ({
   '--chat-viewport-height': `${visualViewportHeight.value}px`,
@@ -144,7 +156,8 @@ const threads = computed(() => [
       lastMessageAt: inquiry.lastMessageAt || inquiry.createdAt,
       unreadCount: inquiry.unreadCount || 0,
     })),
-].sort((first, second) => new Date(second.lastMessageAt) - new Date(first.lastMessageAt)))
+].sort((first, second) => new Date(second.lastMessageAt) - new Date(first.lastMessageAt)
+  || first.threadType.localeCompare(second.threadType) || second.id - first.id))
 
 const filteredConversations = computed(() => {
   const query = conversationQuery.value.trim().toLocaleLowerCase()
@@ -204,6 +217,7 @@ const currentDisplayName = computed(() => (
 ))
 const canSend = computed(() => (
   !sending.value
+  && !loadingMessages.value
   && draft.value.trim().length > 0
   && draft.value.trim().length <= 2000
   && (selectedThread.value || (
@@ -212,6 +226,23 @@ const canSend = computed(() => (
     && pendingDetails.value
   ))
 ))
+
+watch([conversationQuery, conversationFilter, locale], () => {
+  window.clearTimeout(inboxFilterTimer)
+  inboxRequestVersion += 1
+  conversations.value = []
+  inquiries.value = []
+  inboxCursor = null
+  hasMoreInbox.value = true
+  inboxPageError.value = ''
+  loadingInboxPage.value = true
+  const load = () => {
+    loadingInboxPage.value = false
+    void loadInboxPage()
+  }
+  if (conversationQuery.value.trim()) inboxFilterTimer = window.setTimeout(load, 250)
+  else load()
+}, { flush: 'sync' })
 
 watch([isMobileView, mobileThreadOpen], ([mobile, threadOpen]) => {
   document.documentElement.classList.toggle('wave-chat-open', mobile && threadOpen)
@@ -261,6 +292,7 @@ onBeforeUnmount(() => {
   messagesRequestVersion += 1
   historyRequestVersion += 1
   inboxRequestVersion += 1
+  window.clearTimeout(inboxFilterTimer)
   document.documentElement.classList.remove('wave-chat-open')
   window.clearTimeout(chatClockTimer)
   document.removeEventListener('visibilitychange', updateChatClock)
@@ -381,14 +413,15 @@ function handleRealtimeUpdate(event) {
     return
   }
   const collection = isInquiry ? inquiries.value : conversations.value
-  const thread = collection.find((item) => item.id === id)
+  const thread = collection.find((item) => item.id === id) || (isSelected ? selectedThread.value : null)
   if (!thread) {
-    void refreshInbox()
+    void loadLiveThread(isInquiry ? 'inquiry' : 'campaign', id)
     return
   }
   const isIncoming = message.senderId !== currentUser.value?.id
   const duplicate = isSelected && conversationMessages.value.some((existing) => existing.id === message.id)
   if (duplicate) return
+  markInboxThreadChanged(isInquiry ? 'inquiry' : 'campaign', id)
   Object.assign(thread, {
     lastMessage: message.body,
     lastMessageAt: message.createdAt,
@@ -396,6 +429,7 @@ function handleRealtimeUpdate(event) {
     unreadCount: (thread.unreadCount || 0) + (isIncoming ? 1 : 0),
   })
   if (isSelected) {
+    if (selectedDetails.value) Object.assign(selectedDetails.value, thread)
     if (isIncoming && !atLatestMessage.value) rememberUnreadBoundary([message])
     mergeMessages([message])
     if (atLatestMessage.value) {
@@ -414,81 +448,101 @@ function refreshInboxWhenVisible() {
   }
 }
 
-async function loadInbox() {
+async function loadInboxPage(refresh = false) {
+  if (unmounted || (!refresh && (loadingInboxPage.value || !hasMoreInbox.value))) return false
   const requestVersion = ++inboxRequestVersion
+  const userId = currentUser.value?.id
+  const revisions = new Map(threadRevisions)
+  const previousCursor = inboxCursor
+  const previousHasMore = hasMoreInbox.value
+  const hadItems = threads.value.length > 0
+  const params = new URLSearchParams({ limit: '30', filter: conversationFilter.value })
+  if (conversationQuery.value.trim()) params.set('q', conversationQuery.value.trim())
+  if (!refresh && inboxCursor) params.set('cursor', inboxCursor)
+  loadingInboxPage.value = true
+  inboxPageError.value = ''
+  try {
+    const response = await apiGet(`/me/inbox?${params}`, { locale: locale.value })
+    if (unmounted || requestVersion !== inboxRequestVersion || currentUser.value?.id !== userId) return false
+    if (!Array.isArray(response.data)) throw new Error(t('api.invalidResponse'))
+    for (const thread of response.data) {
+      const key = `${thread.threadType}-${thread.id}`
+      const collection = thread.threadType === 'inquiry' ? inquiries.value : conversations.value
+      // A slow batch must not undo a live preview, sent message or read receipt.
+      if ((threadRevisions.get(key) || 0) !== (revisions.get(key) || 0)
+        && collection.some((item) => item.id === thread.id)) continue
+      if (thread.threadType === 'inquiry') upsertInquiry(thread)
+      else upsertConversation(thread)
+    }
+    // Event-driven refreshes update the head without discarding older loaded rows
+    // or moving their pagination cursor. Filters start a fresh generation.
+    if (refresh && hadItems) {
+      inboxCursor = previousCursor
+      hasMoreInbox.value = previousHasMore
+    } else {
+      inboxCursor = response.meta?.nextCursor || null
+      hasMoreInbox.value = Boolean(response.meta?.hasMore && inboxCursor)
+    }
+    inboxLoaded.value = true
+    return true
+  } catch (cause) {
+    if (!unmounted && requestVersion === inboxRequestVersion && currentUser.value?.id === userId) {
+      inboxPageError.value = cause.message
+      if (cause.status === 401) handleLoadError(cause)
+    }
+    return false
+  } finally {
+    if (requestVersion === inboxRequestVersion) loadingInboxPage.value = false
+  }
+}
+
+async function loadInbox() {
+  const openVersion = ++inboxOpenVersion
+  messagesRequestVersion += 1
   loading.value = true
   error.value = ''
   authRequired.value = false
   try {
     if (!currentUser.value) await loadCurrentUser()
-    const userId = currentUser.value?.id
-    const [conversationResponse, inquiryResponse] = await Promise.all([
-      apiGet('/me/conversations'),
-      apiGet('/me/inquiries'),
-    ])
-    if (unmounted || requestVersion !== inboxRequestVersion || currentUser.value?.id !== userId) return
-    inboxLoaded.value = true
-    conversations.value = conversationResponse.data
-    inquiries.value = inquiryResponse.data.filter((inquiry) => inquiry.canChat)
-
-    const requestedId = Number(route.query.conversation)
-    const requestedConversation = conversations.value.find((item) => item.id === requestedId)
-    if (requestedConversation) {
-      await selectConversation({
-        ...requestedConversation,
-        threadType: 'campaign',
-        threadKey: `campaign-${requestedConversation.id}`,
-      }, false)
-      return
-    }
-
-    const requestedInquiryId = Number(route.query.inquiry)
-    const requestedInquiry = inquiries.value.find((item) => item.id === requestedInquiryId)
-    if (requestedInquiry) {
-      await selectConversation({
-        ...requestedInquiry,
-        threadType: 'inquiry',
-        threadKey: `inquiry-${requestedInquiry.id}`,
-      }, false)
-      return
-    }
-
+    if (!await loadInboxPage(true) || unmounted || openVersion !== inboxOpenVersion) return
+    const conversationId = Number(route.query.conversation)
+    const inquiryId = Number(route.query.inquiry)
     if (route.query.conversation !== undefined || route.query.inquiry !== undefined) {
-      // An inaccessible or removed target must not silently open an unrelated chat.
-      backToInbox(false)
+      const type = route.query.inquiry !== undefined ? 'inquiry' : 'campaign'
+      const id = type === 'inquiry' ? inquiryId : conversationId
+      if (!Number.isSafeInteger(id) || id < 1) {
+        backToInbox(false)
+        return
+      }
+      await openInboxThread(type, id, false)
       return
     }
-
     if (pendingStart.value) {
       const existing = conversations.value.find((item) => (
         item.campaign.slug === pendingStart.value.campaign
         && item.creator.id === pendingStart.value.creatorId
       ))
       if (existing) {
-        await selectConversation({
-          ...existing,
-          threadType: 'campaign',
-          threadKey: `campaign-${existing.id}`,
-        })
+        await selectConversation({ ...existing, threadType: 'campaign', threadKey: `campaign-${existing.id}` })
       } else if (currentUser.value?.accountType === 'company') {
         await loadPendingDetails()
       }
       return
     }
-
     if (threads.value.length && !isMobileView.value) {
       await selectConversation(threads.value[0])
     } else {
-      selectedConversationId.value = null
-      selectedInquiryId.value = null
-      conversationMessages.value = []
+      backToInbox(false)
     }
   } catch (cause) {
-    if (unmounted || requestVersion !== inboxRequestVersion) return
-    handleLoadError(cause)
+    if (!unmounted && openVersion === inboxOpenVersion) handleLoadError(cause)
   } finally {
-    if (requestVersion === inboxRequestVersion) loading.value = false
+    if (!unmounted && openVersion === inboxOpenVersion) loading.value = false
   }
+}
+
+async function openInboxThread(type, id, syncRoute = true) {
+  return selectConversation({ id, threadType: type, threadKey: `${type}-${id}` }, syncRoute)
 }
 
 async function loadPendingDetails() {
@@ -508,22 +562,38 @@ async function loadPendingDetails() {
 }
 
 async function selectConversation(thread, syncRoute = true) {
-  messagesRequestVersion += 1
+  const selectionVersion = ++messagesRequestVersion
+  const userId = currentUser.value?.id
   if (selectedThreadKey.value !== thread.threadKey) resetHistory()
   selectedConversationId.value = thread.threadType === 'campaign' ? thread.id : null
   selectedInquiryId.value = thread.threadType === 'inquiry' ? thread.id : null
+  selectedDetails.value = null
   pendingDetails.value = null
   detailsOpen.value = false
-  if (syncRoute) {
-    const query = thread.threadType === 'inquiry'
-      ? { inquiry: thread.id }
-      : { conversation: thread.id }
-    await router.replace({
-      name: localizedRouteName('messages', locale.value),
-      query,
-    })
+  loadingMessages.value = true
+  const isCurrent = () => !unmounted && messagesRequestVersion === selectionVersion && currentUser.value?.id === userId
+  try {
+    const response = await apiGet(`/me/inbox/${thread.threadType}/${thread.id}`, { locale: locale.value })
+    if (!isCurrent()) return
+    if (response.data?.id !== thread.id || response.data?.threadType !== thread.threadType) throw new Error(t('api.invalidResponse'))
+    selectedDetails.value = response.data
+    // Metadata for a deep link need not belong to the currently filtered page.
+    if (syncRoute) {
+      await router.replace({
+        name: localizedRouteName('messages', locale.value),
+        query: thread.threadType === 'inquiry' ? { inquiry: thread.id } : { conversation: thread.id },
+      })
+    }
+    if (!isCurrent()) return
+    await loadMessages(response.data, true, true)
+  } catch (cause) {
+    if (isCurrent()) {
+      backToInbox(false)
+      handleLoadError(cause)
+    }
+  } finally {
+    if (isCurrent()) loadingMessages.value = false
   }
-  await loadMessages(thread, true)
 }
 
 function backToInbox(syncRoute = true) {
@@ -531,6 +601,7 @@ function backToInbox(syncRoute = true) {
   detailsOpen.value = false
   selectedConversationId.value = null
   selectedInquiryId.value = null
+  selectedDetails.value = null
   pendingDetails.value = null
   resetHistory()
   if (!syncRoute) return
@@ -591,14 +662,14 @@ function mergeMessages(messages) {
       : message))
 }
 
-async function loadMessages(thread, forceScroll = false) {
+async function loadMessages(thread, forceScroll = false, startWithLatestPage = false) {
   const requestVersion = ++messagesRequestVersion
   const userId = currentUser.value?.id
   const isCurrentRequest = () => (
     !unmounted && requestVersion === messagesRequestVersion && currentUser.value?.id === userId
     && (thread.threadType === 'inquiry' ? selectedInquiryId.value : selectedConversationId.value) === thread.id
   )
-  const initial = conversationMessages.value.length === 0
+  const initial = startWithLatestPage || conversationMessages.value.length === 0
   loadingMessages.value = true
   try {
     let cursor = initial ? null : conversationMessages.value.at(-1)?.id
@@ -695,8 +766,15 @@ async function acknowledgeVisibleMessages() {
         ? { ...message, readAt: message.readAt || response.data.readAt } : message
     ))
     if (!atLatestMessage.value) rememberUnreadBoundary(conversationMessages.value.filter((message) => message.id > throughId))
-    if (response.conversation) upsertConversation(response.conversation)
-    else if (selectedInquiry.value) selectedInquiry.value.unreadCount = 0
+    const remainingUnread = conversationMessages.value.filter((message) => (
+      !isMessageMine(message) && message.id > throughId && !message.readAt
+    )).length
+    markInboxThreadChanged(thread.threadType, thread.id)
+    if (response.conversation) {
+      upsertConversation({ ...response.conversation, unreadCount: Math.max(response.conversation.unreadCount || 0, remainingUnread) })
+    } else if (selectedInquiry.value) {
+      upsertInquiry({ ...selectedInquiry.value, unreadCount: remainingUnread })
+    }
     window.dispatchEvent(new Event('wave:conversations-updated'))
   } catch (cause) {
     // Retry on the next scroll/visibility/message event, without a polling timer.
@@ -745,13 +823,8 @@ async function refreshInbox() {
   inboxRefreshInProgress = true
   const userId = currentUser.value?.id
   try {
-    const [conversationResponse, inquiryResponse] = await Promise.all([
-      apiGet('/me/conversations'),
-      apiGet('/me/inquiries'),
-    ])
+    if (!await loadInboxPage(true)) return
     if (unmounted || currentUser.value?.id !== userId) return
-    conversations.value = conversationResponse.data
-    inquiries.value = inquiryResponse.data.filter((inquiry) => inquiry.canChat)
     error.value = ''
     if (selectedThread.value) {
       await loadMessages({
@@ -772,13 +845,54 @@ async function refreshInbox() {
   }
 }
 
-function upsertConversation(conversation) {
-  const existingIndex = conversations.value.findIndex((item) => item.id === conversation.id)
-  if (existingIndex === -1) {
-    conversations.value.unshift(conversation)
-    return
+function markInboxThreadChanged(type, id) {
+  const key = `${type}-${id}`
+  threadRevisions.set(key, (threadRevisions.get(key) || 0) + 1)
+}
+
+function upsertThread(collection, thread, type) {
+  const existingIndex = collection.value.findIndex((item) => item.id === thread.id)
+  const existing = existingIndex === -1 ? null : collection.value[existingIndex]
+  const merged = {
+    ...existing,
+    ...thread,
+    threadType: type,
+    campaign: { ...existing?.campaign, ...thread.campaign },
   }
-  conversations.value.splice(existingIndex, 1, conversation)
+  if (existingIndex === -1) {
+    collection.value.push(merged)
+  } else {
+    collection.value.splice(existingIndex, 1, merged)
+  }
+  if (selectedDetails.value?.threadType === type && selectedDetails.value.id === thread.id) {
+    selectedDetails.value = {
+      ...selectedDetails.value,
+      ...merged,
+      campaign: { ...selectedDetails.value.campaign, ...merged.campaign },
+    }
+  }
+}
+
+function upsertConversation(conversation) {
+  upsertThread(conversations, conversation, 'campaign')
+}
+
+function upsertInquiry(inquiry) {
+  upsertThread(inquiries, inquiry, 'inquiry')
+}
+
+async function loadLiveThread(type, id) {
+  const version = inboxRequestVersion
+  const userId = currentUser.value?.id
+  try {
+    const response = await apiGet(`/me/inbox/${type}/${id}`, { locale: locale.value })
+    if (unmounted || version !== inboxRequestVersion || currentUser.value?.id !== userId) return
+    if (response.data?.id !== id || response.data?.threadType !== type) return
+    if (type === 'inquiry') upsertInquiry(response.data)
+    else upsertConversation(response.data)
+  } catch (cause) {
+    if (!unmounted && version === inboxRequestVersion && cause.status !== 404) inboxPageError.value = cause.message
+  }
 }
 
 async function sendMessage(event) {
@@ -820,10 +934,11 @@ async function sendMessage(event) {
       )
       if (!isCurrentSend()) return
       mergeMessages([response.data])
-      const inquiry = inquiries.value.find((item) => item.id === selectedInquiryId.value)
+      const inquiry = selectedInquiry.value
       if (inquiry) {
-        inquiry.lastMessage = body
-        inquiry.lastMessageAt = response.data.createdAt
+        markInboxThreadChanged('inquiry', inquiry.id)
+        upsertInquiry({ ...inquiry, lastMessage: body, lastMessageAt: response.data.createdAt,
+          lastMessageSenderId: currentUser.value?.id })
       }
       await scrollToLatestMessage()
     } else if (selectedConversationId.value !== null) {
@@ -835,6 +950,7 @@ async function sendMessage(event) {
       mergeMessages([response.data])
       const conversation = selectedConversation.value
       if (conversation) {
+        markInboxThreadChanged('campaign', conversation.id)
         upsertConversation({
           ...conversation,
           lastMessage: body,
@@ -945,7 +1061,7 @@ function messageTimeDescription(value) {
         <label class="campaign-messages__search">
           <span class="sr-only">{{ t('campaignChat.searchPlaceholder') }}</span>
           <Search :size="18" stroke-width="1.7" aria-hidden="true" />
-          <input v-model="conversationQuery" type="search" :placeholder="t('campaignChat.searchPlaceholder')">
+          <input v-model="conversationQuery" maxlength="200" type="search" :placeholder="t('campaignChat.searchPlaceholder')">
         </label>
 
         <div class="campaign-messages__filters" role="tablist" :aria-label="t('campaignChat.inbox')">
@@ -965,12 +1081,9 @@ function messageTimeDescription(value) {
           >{{ t('campaignChat.filterUnread') }}</button>
         </div>
 
-        <div v-if="!conversations.length && !pendingStart" class="campaign-messages__conversation-list">
-          <StatusMessage variant="empty">{{ t('campaignChat.noConversations') }}</StatusMessage>
-        </div>
-        <div v-else class="campaign-messages__conversation-list">
-          <p v-if="conversations.length && !filteredConversations.length" class="campaign-messages__no-results">
-            {{ t('campaignChat.noSearchResults') }}
+        <div ref="inboxList" class="campaign-messages__conversation-list" :aria-busy="loadingInboxPage">
+          <p v-if="!loadingInboxPage && !inboxPageError && !filteredConversations.length" class="campaign-messages__no-results">
+            {{ t(conversationQuery || conversationFilter === 'unread' ? 'campaignChat.noSearchResults' : 'campaignChat.noConversations') }}
           </p>
           <button
             v-for="conversation in filteredConversations"
@@ -1013,11 +1126,22 @@ function messageTimeDescription(value) {
               </span>
             </span>
           </button>
+          <LoadingSkeleton v-if="loadingInboxPage" variant="rows" :count="3" />
+          <DirectoryLoadMore
+            v-if="inboxLoaded || inboxPageError"
+            :loading="loadingInboxPage"
+            :has-more="hasMoreInbox"
+            :error="inboxPageError"
+            :count="threads.length"
+            :root="inboxList"
+            @load="loadInboxPage()"
+          />
         </div>
       </aside>
 
       <section class="campaign-messages__thread" aria-live="polite">
-        <template v-if="selectedThread">
+        <LoadingSkeleton v-if="loadingMessages && !selectedDetails" variant="messages" :label="t('campaignChat.loadingMessages')" />
+        <template v-else-if="selectedThread">
           <header class="campaign-messages__thread-heading">
             <button
               class="campaign-messages__back"

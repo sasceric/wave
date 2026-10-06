@@ -25,8 +25,8 @@ jobs. Listings request small card resources and use projection/source fallback;
 chat sidebar unread counts are grouped rather than queried per conversation.
 
 The wider performance roadmap remains separate: public directories still use
-30-item offset pagination, conversation lists and admin catalogs need their own
-cursor/paginated APIs, and PostgreSQL trigram/GIN tuning and representative load
+30-item offset pagination and admin catalogs need their own cursor/paginated APIs;
+the chat inbox now uses merged 30-item cursor batches, and PostgreSQL trigram/GIN tuning and representative load
 benchmarks have not been performed. The implementation does not establish a
 measured capacity for thousands of concurrent users. Production installation,
 backfill and provider/device smoke tests are also still deployment steps.

@@ -179,3 +179,28 @@ test('the shared sentinel measures the new end after append and stops observing 
   unmounted()
   assert.equal(observer.observed, false)
 })
+
+test('the shared sentinel observes the inbox scroll container and reconnects when it changes', async () => {
+  let mounted
+  let unmounted
+  const observers = []
+  class IntersectionObserver {
+    constructor(callback, options) { this.callback = callback; this.options = options; observers.push(this) }
+    observe() { this.observed = true }
+    disconnect() { this.observed = false }
+  }
+  const root = {}
+  const props = vue.reactive({ loading: false, hasMore: true, error: '', count: 30, root })
+  const { state } = await setupView('../src/components/shared/DirectoryLoadMore.vue', {
+    vue: { ...vue, onMounted: (callback) => { mounted = callback }, onBeforeUnmount: (callback) => { unmounted = callback } },
+  }, props, { IntersectionObserver })
+  state.sentinel.value = {}
+  mounted()
+  assert.equal(observers[0].options.root, props.root)
+  props.root = {}
+  await vue.nextTick()
+  assert.equal(observers[0].observed, false)
+  assert.equal(observers[1].options.root, props.root)
+  assert.equal(observers[1].observed, true)
+  unmounted()
+})

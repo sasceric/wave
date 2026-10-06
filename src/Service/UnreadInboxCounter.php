@@ -45,9 +45,9 @@ final class UnreadInboxCounter
     }
 
     /** @return array<int, int> */
-    public function conversations(User $user): array
+    public function conversations(User $user, ?int $conversationId = null): array
     {
-        $rows = $this->entityManager->createQueryBuilder()
+        $query = $this->entityManager->createQueryBuilder()
             ->select('IDENTITY(message.conversation) AS threadId, COUNT(message.id) AS unreadCount')
             ->from(CampaignMessage::class, 'message')
             ->join('message.conversation', 'conversation')
@@ -58,8 +58,11 @@ final class UnreadInboxCounter
             ->andWhere('message.sender <> :user')
             ->andWhere('message.readAt IS NULL')
             ->setParameter('user', $user)
-            ->groupBy('message.conversation')
-            ->getQuery()->getArrayResult();
+            ->groupBy('message.conversation');
+        if ($conversationId !== null) {
+            $query->andWhere('conversation.id = :conversationId')->setParameter('conversationId', $conversationId);
+        }
+        $rows = $query->getQuery()->getArrayResult();
 
         return array_column(array_map(static fn (array $row): array => ['id' => (int) $row['threadId'], 'count' => (int) $row['unreadCount']], $rows), 'count', 'id');
     }
@@ -84,7 +87,7 @@ final class UnreadInboxCounter
         return array_column(array_map(static fn (array $row): array => ['id' => (int) $row['threadId'], 'count' => (int) $row['unreadCount']], $rows), 'count', 'id');
     }
 
-    public function total(User $user): int
+    public function messages(User $user): int
     {
         $messages = (int) $this->entityManager->createQueryBuilder()
             ->select('COUNT(message.id)')
@@ -100,6 +103,11 @@ final class UnreadInboxCounter
             ->getQuery()->getSingleScalarResult();
 
         // Chat notification records describe these same messages; do not count them twice.
-        return $messages + $this->inquiryMessages($user) + $this->notifications($user);
+        return $messages + $this->inquiryMessages($user);
+    }
+
+    public function total(User $user): int
+    {
+        return $this->messages($user) + $this->notifications($user);
     }
 }

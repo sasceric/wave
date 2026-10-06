@@ -159,8 +159,8 @@ test('a notification chat query switches the already mounted Messages view', asy
     '../lib/api': {
       apiGet: async (path) => {
         requests.push(path)
-        if (path === '/me/conversations') return { data: [{ id: 1, unreadCount: 0 }, { id: 2, unreadCount: 1 }] }
-        if (path === '/me/inquiries') return { data: [] }
+        if (path.startsWith('/me/inbox?')) return { data: [{ id: 1, threadType: 'campaign', unreadCount: 0 }, { id: 2, threadType: 'campaign', unreadCount: 1 }], meta: { hasMore: false } }
+        if (path === '/me/inbox/campaign/2') return { data: { id: 2, threadType: 'campaign', unreadCount: 1 } }
         return { data: [{ id: 20, body: 'notification target' }], conversation: { id: 2, unreadCount: 0 } }
       },
       apiRequest: async () => {}, formatDate: () => '', formatMoney: () => '',
@@ -183,7 +183,8 @@ test('an inaccessible notification target does not fall back to an unrelated cha
     '../lib/api': {
       apiGet: async (path) => {
         requests.push(path)
-        return { data: path === '/me/conversations' ? [{ id: 1, unreadCount: 0 }] : [] }
+        if (path.startsWith('/me/inbox?')) return { data: [{ id: 1, threadType: 'campaign', unreadCount: 0 }], meta: { hasMore: false } }
+        throw Object.assign(new Error('Not accessible'), { status: 404 })
       },
       apiRequest: async () => {}, formatDate: () => '', formatMoney: () => '',
     },
@@ -211,7 +212,7 @@ test('the app badge waits for authorized counts, follows reads, and clears on lo
   const { state, unreadMessageCount, currentUser } = await setupView('../src/App.vue', {
     './lib/appBadge': { updateAppBadge: async (count) => { badges.push(count) } },
     './lib/api': {
-      apiGet: async (path) => ({ data: path === '/me/conversations' ? [{ id: 1, unreadCount: 2 }] : [], unreadCount: 3 }),
+      apiGet: async (path) => ({ data: [], unreadCount: path === '/me/inbox/unread' ? 2 : 3 }),
       apiRequest: async () => {}, formatDate: () => '',
     },
   })

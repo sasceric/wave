@@ -17,7 +17,7 @@ export async function setupView(path, extraModules = {}, props = {}, globals = {
     documentElement: { classList: { toggle: () => {} } },
   }
   const context = vm.createContext({
-    window: windowTarget, document: documentTarget, navigator: {}, console, Event, URL,
+    window: windowTarget, document: documentTarget, navigator: {}, console, Event, URL, URLSearchParams,
     CustomEvent: class extends Event {
       constructor(type, options) { super(type); this.detail = options?.detail }
     },

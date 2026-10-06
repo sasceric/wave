@@ -7,6 +7,7 @@ use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity]
 #[ORM\Table(name: 'inquiry_message')]
+#[ORM\Index(name: 'idx_inquiry_message_latest', columns: ['inquiry_id', 'created_at', 'id'])]
 #[ORM\Index(name: 'idx_inquiry_message_unread', columns: ['inquiry_id', 'sender_id', 'id'], options: ['where' => '(read_at IS NULL)'])]
 #[ORM\Index(name: 'idx_inquiry_message_history', columns: ['inquiry_id', 'id'])]
 #[ORM\Index(name: 'idx_inquiry_message_inquiry_created', columns: ['inquiry_id', 'created_at'])]

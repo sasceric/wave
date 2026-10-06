@@ -4,6 +4,7 @@ namespace App\Controller\Api;
 
 use App\Account\AccountEmailSender;
 use App\Api\ApiAccess;
+use App\Api\CreatorInquiryResource;
 use App\Api\Currency;
 use App\Api\JsonPayload;
 use App\Entity\Company;
@@ -188,7 +189,7 @@ final class CreatorInquiryController
             );
         }
 
-        return new JsonResponse(['data' => self::inquiryResource($inquiry, $user)], 201);
+        return new JsonResponse(['data' => CreatorInquiryResource::fromEntity($inquiry, $user)], 201);
     }
 
     #[Route('/api/me/inquiries', name: 'api_my_inquiries', methods: ['GET'])]
@@ -224,7 +225,7 @@ final class CreatorInquiryController
                         )
                         : null;
 
-                    return [...self::inquiryResource($inquiry, $user, $lastMessage), 'unreadCount' => $unread[$inquiry->getId()] ?? 0];
+                    return [...CreatorInquiryResource::fromEntity($inquiry, $user, $lastMessage), 'unreadCount' => $unread[$inquiry->getId()] ?? 0];
                 },
                 $inquiries,
             ),
@@ -298,7 +299,7 @@ final class CreatorInquiryController
             );
         }
 
-        return new JsonResponse(['data' => self::inquiryResource($inquiry, $user)]);
+        return new JsonResponse(['data' => CreatorInquiryResource::fromEntity($inquiry, $user)]);
     }
 
     #[Route('/api/me/inquiries/{id}/messages', name: 'api_creator_inquiry_messages', methods: ['GET'])]
@@ -440,46 +441,6 @@ final class CreatorInquiryController
     {
         return $inquiry->getCreator()->getOwner()?->getId() === $user->getId()
             || $inquiry->getCompany()->getOwner()?->getId() === $user->getId();
-    }
-
-    private static function inquiryResource(
-        CreatorInquiry $inquiry,
-        User $user,
-        ?InquiryMessage $lastMessage = null,
-    ): array {
-        $isCreator = $inquiry->getCreator()->getOwner()?->getId() === $user->getId();
-
-        return [
-            'id' => $inquiry->getId(),
-            'role' => $isCreator ? 'creator' : 'company',
-            'creator' => [
-                'slug' => $inquiry->getCreator()->getSlug(),
-                'displayName' => $inquiry->getCreator()->getDisplayName(),
-                'avatarUrl' => $inquiry->getCreator()->getAvatarMedia()?->getUrl()
-                    ?? $inquiry->getCreator()->getAvatarUrl(),
-            ],
-            'company' => [
-                'slug' => $inquiry->getCompany()->getSlug(),
-                'name' => $inquiry->getCompany()->getName(),
-                'logoUrl' => $inquiry->getCompany()->getLogoMedia()?->getUrl()
-                    ?? $inquiry->getCompany()->getLogoUrl(),
-            ],
-            'packageId' => $inquiry->getPackageId(),
-            'packageTitle' => $inquiry->getPackageTitle(),
-            'selectedPackages' => $inquiry->getSelectedPackages(),
-            'listedPrice' => $inquiry->getListedPrice(),
-            'listedPriceCurrency' => $inquiry->getListedPriceCurrency(),
-            'proposedAmount' => $inquiry->getProposedAmount(),
-            'currency' => $inquiry->getCurrency(),
-            'message' => $inquiry->getMessage(),
-            'status' => $inquiry->getStatus(),
-            'createdAt' => $inquiry->getCreatedAt()->format(\DateTimeInterface::ATOM),
-            'respondedAt' => $inquiry->getRespondedAt()?->format(\DateTimeInterface::ATOM),
-            'lastMessage' => $lastMessage?->getBody() ?? $inquiry->getMessage(),
-            'lastMessageAt' => $lastMessage?->getCreatedAt()->format(\DateTimeInterface::ATOM)
-                ?? $inquiry->getCreatedAt()->format(\DateTimeInterface::ATOM),
-            'canChat' => $inquiry->getStatus() === 'accepted',
-        ];
     }
 
     private static function messageResource(InquiryMessage $message, CreatorInquiry $inquiry): array

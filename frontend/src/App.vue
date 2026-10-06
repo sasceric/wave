@@ -305,17 +305,14 @@ async function loadUnreadMessages() {
   const requestVersion = ++unreadMessagesRequestVersion
 
   try {
-    const response = await apiGet('/me/conversations')
+    const response = await apiGet('/me/inbox/unread')
     if (
       currentUser.value?.id !== userId
       || requestVersion !== unreadMessagesRequestVersion
     ) {
       return
     }
-    unreadMessageCount.value = response.data.reduce(
-      (total, conversation) => total + conversation.unreadCount,
-      0,
-    ) + (response.unreadInquiryCount || 0)
+    unreadMessageCount.value = response.unreadCount || 0
     unreadMessagesLoaded.value = true
   } catch (cause) {
     if (requestVersion !== unreadMessagesRequestVersion) return
