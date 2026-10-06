@@ -170,3 +170,6 @@ onBeforeUnmount(() => {
     <p v-else class="admin-multi-select__hint">{{ labels.noSelection }}</p>
   </div>
 </template>
+
+<style lang="scss" src="../shared/MultiSelect.scss"></style>
+<style lang="scss" src="./AdminMultiSelect.scss"></style>

@@ -1,4 +1,6 @@
 <script setup>
+import DirectoryPage from '../components/shared/DirectoryPage.vue'
+import CardGrid from '../components/shared/CardGrid.vue'
 import { ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
@@ -45,16 +47,16 @@ function normalizePlatform(value) {
 </script>
 
 <template>
-  <section class="page-hero page-width">
-    <p class="eyebrow">{{ t('creatorsPage.eyebrow') }}</p>
-    <h1>
-      {{ t('creatorsPage.headlineLead') }}
-      <em>{{ t('creatorsPage.headlineEmphasis') }}</em>
-    </h1>
-    <p>{{ t('creatorsPage.description') }}</p>
-  </section>
+  <DirectoryPage>
+    <template #intro>
+      <p class="eyebrow">{{ t('creatorsPage.eyebrow') }}</p>
+      <h1>
+        {{ t('creatorsPage.headlineLead') }}
+        <em>{{ t('creatorsPage.headlineEmphasis') }}</em>
+      </h1>
+      <p>{{ t('creatorsPage.description') }}</p>
+    </template>
 
-  <section class="directory page-width">
     <DirectoryFilters
       v-model:search="search"
       v-model:category="category"
@@ -69,7 +71,7 @@ function normalizePlatform(value) {
     <StatusMessage v-if="!loading && !error && !creators.length" variant="empty">
       {{ t('creatorsPage.empty') }}
     </StatusMessage>
-    <div v-if="creators.length || loading" class="creator-grid creator-grid--directory" :aria-busy="loading">
+    <CardGrid v-if="creators.length || loading" kind="creator" layout="directory" :aria-busy="loading">
       <CreatorCard
         v-for="creator in creators"
         :key="creator.id"
@@ -77,7 +79,7 @@ function normalizePlatform(value) {
         :image-sizes="DIRECTORY_IMAGE_SIZES"
       />
       <DirectorySkeletonCard v-for="index in loading ? (creators.length ? 2 : 6) : 0" :key="`loading-${index}`" kind="creator" />
-    </div>
+    </CardGrid>
     <DirectoryLoadMore
       :loading="loading"
       :error="error"
@@ -85,5 +87,5 @@ function normalizePlatform(value) {
       :count="creators.length"
       @load="loadMore"
     />
-  </section>
+  </DirectoryPage>
 </template>

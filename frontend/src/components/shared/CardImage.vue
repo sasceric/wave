@@ -50,3 +50,5 @@ onMounted(checkCachedImage)
     </span>
   </span>
 </template>
+
+<style lang="scss" src="./CardImage.scss"></style>

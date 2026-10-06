@@ -116,3 +116,5 @@ onBeforeUnmount(() => {
     </section>
   </dialog>
 </template>
+
+<style lang="scss" src="./RequiredProfileModal.scss"></style>

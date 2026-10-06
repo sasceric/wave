@@ -38,3 +38,5 @@ const ariaRole = computed(() => {
     <slot />
   </p>
 </template>
+
+<style lang="scss" src="./StatusMessage.scss"></style>

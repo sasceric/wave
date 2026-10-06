@@ -91,3 +91,5 @@ onBeforeUnmount(() => {
     </Teleport>
   </div>
 </template>
+
+<style lang="scss" src="./AdminRowActions.scss"></style>

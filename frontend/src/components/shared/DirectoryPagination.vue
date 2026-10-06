@@ -93,3 +93,5 @@ function changePageSize(event) {
     </nav>
   </div>
 </template>
+
+<style lang="scss" src="./DirectoryPagination.scss"></style>

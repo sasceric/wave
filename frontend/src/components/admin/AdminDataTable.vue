@@ -1,4 +1,5 @@
 <script setup>
+import AdminTableFrame from './AdminTableFrame.vue'
 import { computed, ref, watch } from 'vue'
 import LoadingSkeleton from '../shared/LoadingSkeleton.vue'
 import { ChevronLeft, ChevronRight, SearchX } from '@lucide/vue'
@@ -109,8 +110,8 @@ function sortBy(column) {
 </script>
 
 <template>
-  <div class="admin-table" :aria-busy="loading">
-    <div class="admin-table__header">
+  <AdminTableFrame :busy="loading">
+    <template #toolbar>
       <div class="admin-table__filters">
         <slot name="toolbar" />
       </div>
@@ -126,7 +127,7 @@ function sortBy(column) {
           {{ labels.deleteSelected }}
         </button>
       </div>
-    </div>
+    </template>
     <div class="admin-table__scroll">
       <table class="admin-table__table">
         <thead>
@@ -230,5 +231,5 @@ function sortBy(column) {
         </button>
       </nav>
     </footer>
-  </div>
+  </AdminTableFrame>
 </template>

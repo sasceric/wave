@@ -177,3 +177,5 @@ onMounted(loadCampaign)
     </section>
   </template>
 </template>
+
+<style lang="scss" src="./CampaignDetailView.scss"></style>

@@ -1,4 +1,5 @@
 <script setup>
+import './CompanyCard.scss'
 import { ArrowRight, Megaphone } from '@lucide/vue'
 import RouterLink from '../shared/LocalizedLink.vue'
 import { useI18n } from 'vue-i18n'

@@ -254,3 +254,5 @@ onMounted(loadModerationCatalog)
     </section>
   </div>
 </template>
+
+<style lang="scss" src="./ModerationView.scss"></style>

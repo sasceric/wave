@@ -54,3 +54,5 @@ function dismiss() {
     </section>
   </dialog>
 </template>
+
+<style lang="scss" src="./ConfirmationModal.scss"></style>

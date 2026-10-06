@@ -1,0 +1,100 @@
+@use '../../styles/breakpoints';
+
+.directory__filters {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 24px;
+  padding: 13px;
+  border: 1px solid #e3e6df;
+  border-radius: 4px;
+  background: #fdfcf8;
+}
+
+.directory-catalog-error {
+  margin: -18px 0 20px;
+  font-size: 10px;
+}
+
+.search-field,
+.select-field {
+  min-height: 42px;
+  display: flex;
+  align-items: center;
+  border: 1px solid #e6e8e2;
+  border-radius: 3px;
+  background: white;
+}
+
+.search-field {
+  flex: 1;
+  gap: 9px;
+  padding: 0 12px;
+  color: #b4836e;
+}
+
+.search-field > svg {
+  flex: 0 0 auto;
+}
+
+.search-field input {
+  width: 100%;
+  border: 0;
+  outline: 0;
+  color: var(--ink);
+  background: transparent;
+  font-size: 11px;
+}
+
+.search-field input::placeholder {
+  color: #9ba49e;
+}
+
+.select-field select {
+  min-width: 175px;
+  height: 40px;
+  padding: 0 38px 0 12px;
+  appearance: none;
+  -webkit-appearance: none;
+  border: 0;
+  outline: 0;
+  color: #52685e;
+  background-color: transparent;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16'%3E%3Cpath d='m4 6 4 4 4-4' fill='none' stroke='%2361736a' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 16px;
+  font-size: 10px;
+  cursor: pointer;
+}
+
+.directory__count {
+  min-width: 94px;
+  color: #85928a;
+  font-size: 10px;
+  text-align: right;
+}
+
+@include breakpoints.down(760px) {
+  .directory__filters {
+    flex-wrap: wrap;
+    padding: 9px;
+  }
+
+  .search-field {
+    flex-basis: 100%;
+  }
+
+  .select-field {
+    flex: 1;
+  }
+
+  .select-field select {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .directory__count {
+    min-width: 82px;
+  }
+}

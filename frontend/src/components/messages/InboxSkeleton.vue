@@ -43,10 +43,4 @@ const { t } = useI18n()
   </div>
 </template>
 
-<style scoped>
-.inbox-skeleton__filters, .inbox-skeleton__composer { display: flex; gap: 12px; padding: 20px 0; }
-.inbox-skeleton__composer { padding: 10px 0 0; }
-.inbox-skeleton__composer > :first-child { flex: 1; width: auto !important; }
-.campaign-messages__details { padding: 24px; }
-.campaign-messages__details > span { margin-bottom: 20px; }
-</style>
+<style scoped lang="scss" src="./InboxSkeleton.scss"></style>

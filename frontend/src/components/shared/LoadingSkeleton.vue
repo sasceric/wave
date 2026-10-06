@@ -1,4 +1,6 @@
 <script setup>
+import AdminMetrics from '../admin/AdminMetrics.vue'
+import CardGrid from './CardGrid.vue'
 import { useI18n } from 'vue-i18n'
 import DirectorySkeletonCard from './DirectorySkeletonCard.vue'
 import SkeletonBlock from './SkeletonBlock.vue'
@@ -57,9 +59,9 @@ const { t } = useI18n()
             <SkeletonBlock shape="control" />
           </div>
         </div>
-        <div v-else-if="content === 'bookmarks'" class="campaign-grid account-bookmarks-grid">
+        <CardGrid v-else-if="content === 'bookmarks'" kind="campaign" layout="bookmarks">
           <DirectorySkeletonCard v-for="index in 4" :key="index" kind="campaign" />
-        </div>
+        </CardGrid>
         <div v-else class="loading-skeleton__rows">
           <div v-for="index in count" :key="index" class="loading-skeleton__row">
             <SkeletonBlock shape="avatar" />
@@ -74,12 +76,12 @@ const { t } = useI18n()
     </div>
     <div v-else-if="variant === 'dashboard'" aria-hidden="true">
       <SkeletonBlock shape="title" width="40%" />
-      <div class="admin-dashboard__metrics loading-skeleton__metrics">
+      <AdminMetrics class="admin-dashboard__metrics loading-skeleton__metrics">
         <div v-for="index in 4" :key="index" class="admin-dashboard__metric loading-skeleton__panel">
           <SkeletonBlock width="80%" />
           <SkeletonBlock shape="title" width="45%" />
         </div>
-      </div>
+      </AdminMetrics>
       <div class="form-card loading-skeleton__panel">
         <SkeletonBlock v-for="index in 8" :key="index" shape="control" />
       </div>
@@ -95,9 +97,9 @@ const { t } = useI18n()
       </div>
       <div class="page-width company-briefs loading-skeleton__panel">
         <SkeletonBlock shape="title" width="40%" />
-        <div class="campaign-grid campaign-grid--directory">
+        <CardGrid kind="campaign" layout="directory">
           <DirectorySkeletonCard v-for="index in 4" :key="index" kind="campaign" />
-        </div>
+        </CardGrid>
       </div>
     </div>
     <div v-else-if="variant === 'campaign'" aria-hidden="true">
@@ -151,26 +153,4 @@ const { t } = useI18n()
   </div>
 </template>
 
-<style scoped>
-.loading-skeleton { min-width: 0; }
-.loading-skeleton__table-row { display: grid; grid-template-columns: repeat(var(--skeleton-columns), minmax(0, 1fr)); gap: 24px; align-items: center; min-height: 48px; padding: 12px 0; border-bottom: 1px solid var(--line); }
-.loading-skeleton__copy, .loading-skeleton__panel { display: grid; min-width: 0; gap: 16px; }
-.loading-skeleton__row, .loading-skeleton__identity { display: flex; align-items: center; gap: 14px; }
-.loading-skeleton__copy { flex: 1; gap: 9px; }
-.loading-skeleton__identity { min-height: 95px; margin-bottom: 24px; }
-.loading-skeleton__rows { display: grid; gap: 8px; }
-.loading-skeleton__row { min-height: 90px; padding: 16px 12px; border-bottom: 1px solid var(--line); }
-.loading-skeleton__portfolio { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
-.loading-skeleton__fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 28px; padding: 20px 0; }
-.loading-skeleton__tabs { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin-top: 12px; }
-.loading-skeleton__metrics { margin: 24px 0; }
-.loading-skeleton__messages { display: flex; flex-direction: column; justify-content: flex-end; gap: 24px; min-height: 320px; padding: 8px 0; }
-.loading-skeleton__bubble { display: grid; gap: 13px; width: min(70%, 320px); min-height: 76px; padding: 20px; border-radius: 18px 18px 18px 4px; background: #edece3; }
-.loading-skeleton__bubble.is-outgoing { align-self: flex-end; border-radius: 18px 18px 4px 18px; background: #dce6df; }
-.loading-skeleton__company { display: grid; justify-items: center; gap: 18px; }
-@media (max-width: 760px) {
-  .loading-skeleton__fields { grid-template-columns: 1fr; }
-  .loading-skeleton__tabs { gap: 6px; }
-  .loading-skeleton__bubble { width: 75%; }
-}
-</style>
+<style scoped lang="scss" src="./LoadingSkeleton.scss"></style>

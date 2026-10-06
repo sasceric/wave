@@ -1,4 +1,5 @@
 <script setup>
+import RichTextContent from '../components/shared/RichTextContent.vue'
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import RouterLink from '../components/shared/LocalizedLink.vue'
@@ -11,7 +12,6 @@ import WaveLogo from '../components/shared/WaveLogo.vue'
 import { useMarketplaceCatalog } from '../composables/useMarketplaceCatalog'
 import { apiGet, apiRequest, formatDate, formatFollowers, formatMoney } from '../lib/api'
 import { CURRENCIES, SOCIAL_PLATFORMS } from '../lib/marketplace'
-import { sanitizeRichText } from '../lib/richText'
 import { getSeoOrigin, updateSeo } from '../lib/seo'
 import { localizedPath } from '../routePaths'
 
@@ -732,7 +732,7 @@ onBeforeUnmount(() => packageDescriptionObserver?.disconnect())
             </div>
           </div>
         </div>
-        <div class="profile-bio" v-html="sanitizeRichText(creator.bio)"></div>
+        <RichTextContent :html="creator.bio" />
         <div class="profile-tags"><span v-for="tag in creator.tags" :key="tag">{{ tag }}</span></div>
         <StatusMessage v-if="catalogError" variant="error">{{ catalogError }}</StatusMessage>
 
@@ -1034,3 +1034,5 @@ onBeforeUnmount(() => packageDescriptionObserver?.disconnect())
     </section>
   </template>
 </template>
+
+<style lang="scss" src="./CreatorProfileView.scss"></style>

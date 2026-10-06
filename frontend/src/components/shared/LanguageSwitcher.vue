@@ -84,3 +84,5 @@ onBeforeUnmount(() => document.removeEventListener('pointerdown', closeOnOutside
     </div>
   </div>
 </template>
+
+<style lang="scss" src="./LanguageSwitcher.scss"></style>

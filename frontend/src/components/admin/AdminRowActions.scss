@@ -1,0 +1,68 @@
+.admin-row-actions {
+  display: inline-flex;
+  position: relative;
+}
+
+.admin-row-actions__trigger {
+  display: grid;
+  width: 31px;
+  height: 31px;
+  place-items: center;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  color: #65766d;
+  background: transparent;
+  cursor: pointer;
+}
+
+.admin-row-actions__trigger:hover,
+.admin-row-actions__trigger[aria-expanded="true"] {
+  border-color: #dfe4dc;
+  color: var(--forest);
+  background: #fffefa;
+}
+
+.admin-row-actions__menu {
+  position: fixed;
+  z-index: 80;
+  display: grid;
+  min-width: 184px;
+  gap: 2px;
+  padding: 5px;
+  border: 1px solid #e1e6e0;
+  border-radius: 8px;
+  background: #fffefa;
+  box-shadow: 0 12px 28px rgba(23, 61, 54, .18);
+}
+
+.admin-row-actions__item {
+  display: flex;
+  min-height: 40px;
+  align-items: center;
+  gap: 9px;
+  border: 0;
+  border-radius: 5px;
+  padding: 0 9px;
+  color: #53695e;
+  background: transparent;
+  font: inherit;
+  font-size: 14px;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.admin-row-actions__item:hover,
+.admin-row-actions__item:focus-visible {
+  outline: none;
+  background: #f1f4ef;
+}
+
+.admin-row-actions__item--danger {
+  color: #a33f36;
+}
+
+.admin-row-actions__item--danger:hover,
+.admin-row-actions__item--danger:focus-visible {
+  background: #fbefed;
+}

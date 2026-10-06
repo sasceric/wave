@@ -1,4 +1,5 @@
 <script setup>
+import AccountPage from '../components/account/AccountPage.vue'
 import { onMounted, ref } from 'vue'
 import RouterLink from '../components/shared/LocalizedLink.vue'
 import { useI18n } from 'vue-i18n'
@@ -47,7 +48,7 @@ async function resetPassword() {
 </script>
 
 <template>
-  <section class="account-page page-width">
+  <AccountPage class="account-page page-width">
     <div class="account-intro">
       <p class="eyebrow">Wave</p>
       <h1>{{ complete ? t('auth.resetComplete') : t('auth.resetTitle') }}</h1>
@@ -71,5 +72,5 @@ async function resetPassword() {
       <RouterLink v-else class="button button--dark" to="/account">{{ t('auth.backToSignIn') }} <span aria-hidden="true">↗</span></RouterLink>
       <RouterLink v-if="invalid" class="button button--outline" to="/account">{{ t('auth.backToSignIn') }} <span aria-hidden="true">↗</span></RouterLink>
     </div>
-  </section>
+  </AccountPage>
 </template>

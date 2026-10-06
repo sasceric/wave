@@ -244,3 +244,5 @@ onBeforeUnmount(() => {
     </div>
   </div>
 </template>
+
+<style lang="scss" src="./SearchableSelect.scss"></style>

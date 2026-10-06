@@ -1,4 +1,5 @@
 <script setup>
+import AccountPage from './AccountPage.vue'
 import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
@@ -226,7 +227,7 @@ function changeMode(nextMode) {
 </script>
 
 <template>
-  <section
+  <AccountPage
     class="account-page page-width"
     :class="{
       'account-page--auth-splash': mode === 'login',
@@ -579,5 +580,7 @@ function changeMode(nextMode) {
       </button>
       </form>
     </div>
-  </section>
+  </AccountPage>
 </template>
+
+<style lang="scss" src="./AccountAccessPanel.scss"></style>

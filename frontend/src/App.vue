@@ -1163,3 +1163,5 @@ async function signOut() {
     </nav>
   </div>
 </template>
+
+<style lang="scss" src="./App.scss"></style>

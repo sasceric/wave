@@ -27,3 +27,5 @@ defineProps({
     </div>
   </section>
 </template>
+
+<style lang="scss" src="./FaqSection.scss"></style>

@@ -13,3 +13,5 @@ const { t } = useI18n()
     <LocalizedLink class="button button--dark" to="/">{{ t('notFound.backHome') }} <span aria-hidden="true">↗</span></LocalizedLink>
   </section>
 </template>
+
+<style lang="scss" src="./NotFoundView.scss"></style>

@@ -61,3 +61,5 @@ async function upload(event) {
     <p v-if="error" class="media-upload-field__error" role="alert">{{ error }}</p>
   </div>
 </template>
+
+<style lang="scss" src="./MediaUploadField.scss"></style>

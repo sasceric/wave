@@ -30,3 +30,5 @@ defineProps({
     <circle cx="684" cy="238" r="18" fill="#d98368" />
   </svg>
 </template>
+
+<style lang="scss" src="./WaveLogo.scss"></style>

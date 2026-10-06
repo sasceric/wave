@@ -49,3 +49,5 @@ onBeforeUnmount(() => observer?.disconnect())
     <p v-else role="status">{{ t('directoryLoading.end') }}</p>
   </div>
 </template>
+
+<style lang="scss" src="./DirectoryLoadMore.scss"></style>

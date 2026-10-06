@@ -49,3 +49,5 @@ function toggle() {
     </button>
   </div>
 </template>
+
+<style lang="scss" src="./SwitchField.scss"></style>

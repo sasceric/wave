@@ -71,3 +71,5 @@ function openCookieSettings() {
     </div>
   </article>
 </template>
+
+<style lang="scss" src="./LegalView.scss"></style>

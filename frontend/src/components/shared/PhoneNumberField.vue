@@ -79,3 +79,5 @@ function updatePhone(event) {
     </label>
   </div>
 </template>
+
+<style lang="scss" src="./PhoneNumberField.scss"></style>

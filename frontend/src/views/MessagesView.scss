@@ -1,0 +1,1240 @@
+@use '../styles/breakpoints';
+
+.campaign-messages {
+  width: 100%;
+  min-height: calc(100vh - 100px);
+  padding: 4px clamp(18px, 3.1vw, 52px) 12px;
+}
+
+.campaign-messages__layout {
+  display: grid;
+  grid-template-columns: minmax(325px, .95fr) minmax(500px, 1.9fr) minmax(325px, .9fr);
+  height: calc(100vh - 100px);
+  min-height: 630px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #fbf8f2;
+  box-shadow: 0 14px 38px rgba(37, 45, 39, .055);
+}
+
+.campaign-messages__inbox,
+.campaign-messages__thread,
+.campaign-messages__details {
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.campaign-messages__inbox {
+  display: flex;
+  flex-direction: column;
+  padding: 24px 14px 12px;
+  border-right: 1px solid var(--line);
+  background: #fcfaf5;
+}
+
+.campaign-messages__inbox-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 0 3px 20px;
+}
+
+.campaign-messages__inbox-heading h1 {
+  margin: 0;
+  color: var(--ink);
+  font-family: var(--serif);
+  font-size: 32px;
+  font-weight: 400;
+  letter-spacing: -.035em;
+}
+
+.campaign-messages__inbox-actions {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.campaign-messages__new-message {
+  min-height: 42px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 0 13px;
+  border-radius: 9px;
+  color: #fffefa;
+  background: var(--forest);
+  font-size: 10px;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.campaign-messages__new-message:hover {
+  background: #28534a;
+}
+
+.campaign-messages__refresh {
+  width: 32px;
+  height: 32px;
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  color: #64736b;
+  background: transparent;
+  cursor: pointer;
+}
+
+.campaign-messages__refresh:hover {
+  color: var(--forest);
+  background: #eee9df;
+}
+
+.campaign-messages__search {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 45px;
+  margin-bottom: 13px;
+  padding: 0 13px;
+  border: 1px solid #e5dfd5;
+  border-radius: 10px;
+  color: #394a44;
+  background: #fffefa;
+}
+
+.campaign-messages__search input {
+  width: 100%;
+  min-width: 0;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  outline: 0;
+  color: var(--ink);
+  background: transparent;
+  font: inherit;
+  font-size: 12px;
+}
+
+.campaign-messages__search input::placeholder,
+.campaign-messages__composer-field input::placeholder {
+  color: #818982;
+  font-size: 11px;
+}
+
+.campaign-messages__search:focus-within {
+  border-color: #96a99b;
+  box-shadow: 0 0 0 3px rgba(23, 61, 54, .07);
+}
+
+.campaign-messages__filters {
+  display: flex;
+  align-items: center;
+  gap: 25px;
+  margin: 0 4px 9px;
+  border-bottom: 1px solid #e8e2d9;
+}
+
+.campaign-messages__filters button {
+  min-height: 37px;
+  padding: 0 1px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  color: #77817b;
+  background: transparent;
+  font: inherit;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.campaign-messages__filters button.is-active {
+  border-bottom-color: var(--forest);
+  color: var(--forest);
+  font-weight: 700;
+}
+
+.campaign-messages__conversation-list {
+  min-height: 0;
+  flex: 1;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.campaign-messages__conversation-list > .status-message {
+  margin: 8px 0;
+}
+
+.campaign-messages__conversation {
+  display: grid;
+  width: 100%;
+  grid-template-columns: 53px minmax(0, 1fr);
+  align-items: center;
+  gap: 11px;
+  margin: 2px 0;
+  padding: 11px 9px;
+  border: 0;
+  border-radius: 10px;
+  color: var(--ink);
+  background: transparent;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.campaign-messages__conversation:hover {
+  background: #f4efe7;
+}
+
+.campaign-messages__conversation.is-active {
+  background: #f0e9df;
+}
+
+.campaign-messages__avatar {
+  width: 53px;
+  height: 53px;
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  border: 2px solid #fffefa;
+  border-radius: 50%;
+  color: var(--forest);
+  background: #e5e9e1;
+  box-shadow: 0 0 0 1px rgba(31, 42, 40, .08);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.campaign-messages__avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.campaign-messages__conversation-body {
+  min-width: 0;
+  display: grid;
+  gap: 4px;
+}
+
+.campaign-messages__conversation-top,
+.campaign-messages__conversation-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 7px;
+}
+
+.campaign-messages__conversation-top strong {
+  overflow: hidden;
+  color: #202b28;
+  font-size: 13px;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.campaign-messages__conversation-top time {
+  flex: 0 0 auto;
+  color: #7c8680;
+  font-size: 10px;
+}
+
+.campaign-messages__unread {
+  min-width: 23px;
+  height: 23px;
+  display: inline-grid;
+  flex: 0 0 auto;
+  place-items: center;
+  padding: 0 5px;
+  border-radius: 50%;
+  color: #fffefa;
+  background: var(--coral);
+  font-size: 10px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.campaign-messages__preview {
+  display: -webkit-box;
+  overflow: hidden;
+  color: #839087;
+  font-size: 9px;
+  line-height: 1.45;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+
+.campaign-messages__conversation-meta .campaign-messages__campaign {
+  color: #78837c;
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.campaign-messages__preview {
+  color: #78817c;
+  font-size: 11px;
+}
+
+.campaign-messages__no-results {
+  margin: 17px 8px;
+  color: #78817c;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.campaign-messages__thread {
+  display: flex;
+  flex-direction: column;
+  padding: 0 23px 12px;
+  border-right: 1px solid var(--line);
+  background: #fffdf9;
+}
+
+.campaign-messages__thread-heading {
+  position: sticky;
+  top: 0;
+  z-index: 4;
+  min-height: 92px;
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  padding: 13px 1px;
+  border-bottom: 1px solid #e8e2d9;
+  background: #fffdf9;
+}
+
+.campaign-messages__back,
+.campaign-messages__details-toggle {
+  width: 40px;
+  height: 40px;
+  flex: 0 0 auto;
+  display: none;
+  place-items: center;
+  padding: 0;
+  border: 1px solid #e7e1d7;
+  border-radius: 50%;
+  color: var(--forest);
+  background: #fffefa;
+  cursor: pointer;
+}
+
+.campaign-messages__back:hover,
+.campaign-messages__details-toggle:hover {
+  background: #f3eee5;
+}
+
+.campaign-messages__avatar--large {
+  width: 55px;
+  height: 55px;
+}
+
+.campaign-messages__thread-person {
+  min-width: 0;
+  flex: 1;
+}
+
+.campaign-messages__thread-person h2 {
+  overflow: hidden;
+  margin: 0 0 5px;
+  color: var(--ink);
+  font-family: var(--serif);
+  font-size: 23px;
+  font-weight: 400;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.campaign-messages__thread-person a,
+.campaign-messages__thread-person p {
+  display: block;
+  overflow: hidden;
+  margin: 0;
+  color: #78867d;
+  font-size: 10px;
+  text-overflow: ellipsis;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.campaign-messages__thread-person a:hover {
+  color: var(--forest);
+  text-decoration: underline;
+}
+
+.campaign-messages__thread-kind {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 10px;
+  border-radius: 20px;
+  color: #547064;
+  background: #edf2e9;
+  font-size: 9px;
+  white-space: nowrap;
+}
+
+.campaign-messages__thread-kind::before {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #438267;
+  content: '';
+}
+
+.campaign-messages__timeline {
+  display: flex;
+  min-height: 260px;
+  flex: 1;
+  flex-direction: column;
+  gap: 17px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 21px 2px;
+  scroll-padding-bottom: 18px;
+}
+
+.campaign-messages__day {
+  display: flex;
+  flex-direction: column;
+  gap: 17px;
+}
+
+.campaign-messages__day-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 7px 0;
+  color: var(--muted);
+  font-size: 11px;
+  text-align: center;
+}
+
+.campaign-messages__day-divider::before,
+.campaign-messages__day-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--line);
+}
+
+.campaign-messages__day-divider span {
+  max-width: 75%;
+  padding: 5px 12px;
+  border-radius: 20px;
+  background: var(--paper);
+}
+
+.campaign-messages__message-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+.campaign-messages__message-row--grouped {
+  margin-top: -11px;
+}
+
+.campaign-messages__avatar--grouped {
+  visibility: hidden;
+}
+
+.campaign-messages__message-row--mine {
+  justify-content: flex-end;
+}
+
+.campaign-messages__avatar--message {
+  width: 37px;
+  height: 37px;
+  font-size: 9px;
+}
+
+.campaign-messages__message {
+  width: fit-content;
+  max-width: min(78%, 540px);
+  padding: 12px 16px 8px;
+  border: 1px solid #eee7dc;
+  border-radius: 17px 17px 17px 5px;
+  color: #303b36;
+  background: #f4eee5;
+}
+
+.campaign-messages__message--mine {
+  border-color: var(--forest);
+  border-radius: 17px 17px 5px 17px;
+  color: #fffefa;
+  background: var(--forest);
+}
+
+.campaign-messages__message p {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.55;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.campaign-messages__message time {
+  display: block;
+  margin-top: 6px;
+  color: #858b85;
+  font-size: 9px;
+  text-align: right;
+}
+
+.campaign-messages__message--mine time {
+  color: #d1dbd3;
+}
+
+.campaign-messages__composer {
+  position: sticky;
+  bottom: 0;
+  z-index: 4;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 50px;
+  align-items: center;
+  gap: 9px;
+  padding: 12px 0 1px;
+  border-top: 1px solid #e8e2d9;
+  background: #fffdf9;
+}
+
+.campaign-messages__composer-field {
+  min-width: 0;
+  display: block;
+}
+
+.campaign-messages__composer-field input {
+  width: 100%;
+  height: 49px;
+  padding: 0 16px;
+  border: 1px solid #e2ddd4;
+  border-radius: 10px;
+  color: var(--ink);
+  background: #fffefa;
+  font: inherit;
+  font-size: 13px;
+}
+
+.campaign-messages__composer-field input:focus,
+.campaign-messages__search input:focus {
+  outline: 2px solid rgba(66, 105, 83, .22);
+  border-color: #8ea493;
+}
+
+.campaign-messages__send {
+  width: 50px;
+  height: 49px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 10px;
+  color: #fffefa;
+  background: var(--forest);
+  cursor: pointer;
+}
+
+.campaign-messages__send:hover:not(:disabled) {
+  background: #28534a;
+}
+
+.campaign-messages__send:disabled {
+  opacity: .45;
+  cursor: not-allowed;
+}
+
+.campaign-messages__empty {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin: 0;
+  padding: 24px;
+  color: #78867d;
+  font-size: 12px;
+  text-align: center;
+}
+
+.campaign-messages__empty p {
+  margin: 0;
+}
+
+.campaign-messages__details {
+  overflow-y: auto;
+  background: #faf7f1;
+}
+
+.campaign-messages__details-mobile-heading {
+  display: none;
+}
+
+.campaign-messages__details-scroll {
+  display: grid;
+  align-content: start;
+  gap: 13px;
+  padding: 13px;
+}
+
+.campaign-messages__company-profile {
+  overflow: hidden;
+}
+
+.campaign-messages__cover {
+  position: relative;
+  height: 164px;
+  display: flex;
+  align-items: flex-end;
+  padding: 12px;
+  overflow: hidden;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #e1d3bb, #a8ad91 55%, #587263);
+}
+
+.campaign-messages__cover img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.campaign-messages__company-heading {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  margin: -18px 8px 0;
+  position: relative;
+}
+
+.campaign-messages__avatar--company {
+  width: 62px;
+  height: 62px;
+  background: #fffefa;
+  box-shadow: 0 2px 10px rgba(31, 42, 40, .11);
+}
+
+.campaign-messages__company-heading h2 {
+  margin: 0 0 4px;
+  color: var(--ink);
+  font-family: var(--serif);
+  font-size: 18px;
+  line-height: 1.2;
+}
+
+.campaign-messages__company-heading p {
+  margin: 0;
+  color: #77827b;
+  font-size: 10px;
+}
+
+.campaign-messages__verified {
+  width: 21px;
+  height: 21px;
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  margin-left: auto;
+  border-radius: 50%;
+  color: #fffefa;
+  background: #36795d;
+}
+
+.campaign-messages__campaign-card {
+  overflow: hidden;
+  border: 1px solid #e9e3d9;
+  border-radius: 11px;
+  background: #fffefa;
+  box-shadow: 0 5px 16px rgba(31, 42, 40, .035);
+}
+
+.campaign-messages__campaign-card-body {
+  padding: 17px 16px 15px;
+}
+
+.campaign-messages__campaign-card-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 9px;
+  margin-bottom: 7px;
+}
+
+.campaign-messages__campaign-card-body .eyebrow {
+  margin: 0 0 5px;
+  color: #849088;
+  font-size: 8px;
+  letter-spacing: .11em;
+}
+
+.campaign-messages__campaign-card h2 {
+  margin: 0;
+  color: var(--ink);
+  font-family: var(--serif);
+  font-size: 20px;
+  font-weight: 400;
+  line-height: 1.2;
+}
+
+.campaign-messages__status-pill {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 8px;
+  border-radius: 20px;
+  color: #666f69;
+  background: #f0eee9;
+  font-size: 8px;
+  white-space: nowrap;
+}
+
+.campaign-messages__status-pill span {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #9b9f98;
+}
+
+.campaign-messages__status-pill.is-open {
+  color: #416c53;
+  background: #eaf2e8;
+}
+
+.campaign-messages__status-pill.is-open span {
+  background: #31805a;
+}
+
+.campaign-messages__summary {
+  margin: 0 0 13px;
+  color: #707a73;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.campaign-messages__facts {
+  display: grid;
+  gap: 0;
+  margin: 0;
+  padding: 4px 0 7px;
+  border-top: 1px solid #eee9e1;
+}
+
+.campaign-messages__facts div {
+  min-width: 0;
+}
+
+.campaign-messages__facts div {
+  display: grid;
+  grid-template-columns: minmax(105px, .95fr) minmax(0, 1.4fr);
+  align-items: center;
+  gap: 6px;
+  padding: 8px 0;
+}
+
+.campaign-messages__facts dt {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  color: #79827d;
+  font-size: 10px;
+}
+
+.campaign-messages__facts dt svg {
+  flex: 0 0 auto;
+  color: #314940;
+}
+
+.campaign-messages__facts dd {
+  margin: 0;
+  color: #202b28;
+  font-size: 10px;
+  font-weight: 600;
+  text-align: right;
+  overflow-wrap: anywhere;
+}
+
+.campaign-messages__channels {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 10px;
+  color: #64726b;
+  font-size: 10px;
+}
+
+.campaign-messages__channels svg {
+  flex: 0 0 auto;
+  color: #314940;
+}
+
+.campaign-messages__brief {
+  margin: 10px 0;
+  border-top: 1px solid #eee9e1;
+  color: #64726b;
+  font-size: 10px;
+}
+
+.campaign-messages__brief summary {
+  padding: 10px 0 4px;
+  color: var(--forest);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.campaign-messages__brief p {
+  margin: 5px 0 9px;
+  line-height: 1.55;
+  white-space: pre-line;
+}
+
+.campaign-messages__campaign-link {
+  min-height: 43px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 12px;
+  padding: 0 12px;
+  border: 1px solid var(--forest);
+  border-radius: 8px;
+  color: #fffefa;
+  background: var(--forest);
+  font-size: 10px;
+  font-weight: 600;
+  text-align: center;
+  text-decoration: none;
+}
+
+.campaign-messages__campaign-link:hover {
+  background: #28534a;
+}
+
+.campaign-messages__details--empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 10px;
+  padding: 20px;
+  color: #87938b;
+  text-align: center;
+  background: #faf7f1;
+}
+
+.campaign-messages__details--empty p {
+  max-width: 190px;
+  margin: 0;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.campaign-messages__signed-out {
+  display: grid;
+  justify-items: start;
+  gap: 12px;
+  padding: 22px;
+  border: 1px solid #e3e8df;
+  border-radius: 8px;
+  background: #fffefa;
+}
+
+.campaign-messages__signed-out p {
+  margin: 0;
+  color: #718078;
+  font-size: 12px;
+}
+
+@include breakpoints.down(1180px) {
+  .campaign-messages {
+    padding-right: 20px;
+    padding-left: 20px;
+  }
+
+  .campaign-messages__layout {
+    height: auto;
+    min-height: 0;
+    grid-template-columns: minmax(260px, .8fr) minmax(0, 1.7fr);
+  }
+
+  .campaign-messages__inbox,
+  .campaign-messages__thread {
+    min-height: 650px;
+  }
+
+  .campaign-messages__details {
+    grid-column: 1 / -1;
+  }
+
+  .campaign-messages__details-scroll {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@include breakpoints.down(760px) {
+  .campaign-messages {
+    min-height: 0;
+    height: calc(100dvh - 134px);
+    padding: 0 10px 8px;
+  }
+
+  .campaign-messages__layout {
+    position: relative;
+    display: block;
+    height: 100%;
+    min-height: 0;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+  }
+
+  .campaign-messages__inbox {
+    height: 100%;
+    min-height: 0;
+    padding: 18px 12px 8px;
+    border-right: 0;
+  }
+
+  .campaign-messages__inbox-heading {
+    padding-bottom: 15px;
+  }
+
+  .campaign-messages__inbox-heading h1 {
+    font-size: 29px;
+  }
+
+  .campaign-messages__new-message {
+    min-height: 39px;
+    gap: 5px;
+    padding: 0 9px;
+    font-size: 9px;
+  }
+
+  .campaign-messages__refresh {
+    width: 29px;
+    height: 29px;
+  }
+
+  .campaign-messages__conversation {
+    grid-template-columns: 48px minmax(0, 1fr);
+    gap: 9px;
+    padding: 10px 7px;
+  }
+
+  .campaign-messages__avatar {
+    width: 48px;
+    height: 48px;
+  }
+
+  .campaign-messages__thread {
+    display: none;
+    height: 100%;
+    min-height: 0;
+    padding: 0 12px max(8px, env(safe-area-inset-bottom));
+    border-right: 0;
+  }
+
+  .campaign-messages__layout.has-active-chat .campaign-messages__inbox {
+    display: none;
+  }
+
+  .campaign-messages__layout.has-active-chat .campaign-messages__thread {
+    display: flex;
+  }
+
+  .campaign-messages__thread-heading {
+    min-height: 65px;
+    gap: 8px;
+    margin: 0 -12px;
+    padding: 8px 10px;
+  }
+
+  .campaign-messages__back,
+  .campaign-messages__details-toggle {
+    width: 37px;
+    height: 37px;
+    display: grid;
+  }
+
+  .campaign-messages__avatar--large {
+    width: 42px;
+    height: 42px;
+  }
+
+  .campaign-messages__thread-person h2 {
+    margin-bottom: 3px;
+    font-size: 18px;
+  }
+
+  .campaign-messages__thread-person a,
+  .campaign-messages__thread-person p {
+    font-size: 9px;
+  }
+
+  .campaign-messages__thread-kind {
+    display: none;
+  }
+
+  .campaign-messages__timeline {
+    min-height: 0;
+    padding: 15px 0;
+  }
+
+  .campaign-messages__avatar--message {
+    width: 31px;
+    height: 31px;
+  }
+
+  .campaign-messages__message {
+    max-width: 84%;
+    padding: 10px 12px 7px;
+  }
+
+  .campaign-messages__message p {
+    font-size: 12px;
+  }
+
+  .campaign-messages__composer {
+    grid-template-columns: minmax(0, 1fr) 47px;
+    gap: 7px;
+    margin: 0 -12px;
+    padding: 9px 11px calc(8px + env(safe-area-inset-bottom));
+  }
+
+  .campaign-messages__composer-field input {
+    height: 45px;
+    padding: 0 12px;
+    font-size: 12px;
+  }
+
+  .campaign-messages__send {
+    width: 47px;
+    height: 45px;
+  }
+
+  .campaign-messages__details {
+    display: none;
+  }
+
+  .campaign-messages__details.is-open {
+    position: absolute;
+    z-index: 8;
+    inset: 0;
+    display: block;
+    border: 0;
+    background: #faf7f1;
+  }
+
+  .campaign-messages__details-mobile-heading {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    height: 57px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 15px;
+    border-bottom: 1px solid var(--line);
+    background: #faf7f1;
+  }
+
+  .campaign-messages__details-mobile-heading h2 {
+    margin: 0;
+    color: var(--ink);
+    font-family: var(--serif);
+    font-size: 21px;
+    font-weight: 400;
+  }
+
+  .campaign-messages__details-mobile-heading button {
+    width: 37px;
+    height: 37px;
+    display: grid;
+    place-items: center;
+    border: 1px solid #e5dfd5;
+    border-radius: 50%;
+    color: var(--forest);
+    background: #fffefa;
+  }
+
+  .campaign-messages__details-scroll {
+    gap: 11px;
+    padding: 11px 12px 22px;
+  }
+
+  .campaign-messages__cover {
+    height: 150px;
+  }
+
+  .campaign-messages__company-heading h2 {
+    font-size: 16px;
+  }
+
+  .campaign-messages__campaign-card-body {
+    padding: 14px;
+  }
+
+  .campaign-messages__details--empty {
+    display: none;
+  }
+
+  .campaign-messages__layout.has-active-chat .campaign-messages__details--empty {
+    display: none;
+  }
+
+  .campaign-messages__layout:not(.has-active-chat) .campaign-messages__thread {
+    display: none;
+  }
+}
+
+@include breakpoints.down(760px) {
+  html.wave-chat-open,
+  html.wave-chat-open body {
+    overflow: hidden;
+  }
+
+  html.wave-chat-open .site-header,
+  html.wave-chat-open .site-footer,
+  html.wave-chat-open .mobile-bottom-nav {
+    display: none !important;
+  }
+
+  html.wave-chat-open .site-shell {
+    padding-bottom: 0;
+  }
+
+  html.wave-chat-open .campaign-messages--workspace {
+    position: fixed;
+    z-index: 50;
+    top: var(--chat-viewport-top, 0);
+    right: 0;
+    left: 0;
+    height: var(--chat-viewport-height, 100dvh);
+    min-height: 0;
+    padding: 0;
+    background: var(--paper);
+  }
+
+  html.wave-chat-open .campaign-messages__layout {
+    height: 100%;
+    border: 0;
+    border-radius: 0;
+  }
+
+  html.wave-chat-open .campaign-messages__thread {
+    padding-bottom: 0;
+    overflow: hidden;
+  }
+
+  html.wave-chat-open .campaign-messages__thread-heading {
+    flex-shrink: 0;
+    padding-top: max(8px, env(safe-area-inset-top));
+  }
+
+  html.wave-chat-open .campaign-messages__composer {
+    position: relative;
+    bottom: auto;
+    flex-shrink: 0;
+    padding-bottom: max(9px, var(--chat-bottom-inset, env(safe-area-inset-bottom)));
+  }
+
+  html.wave-chat-open .campaign-messages__composer-field input {
+    font-size: 16px;
+  }
+}
+
+@include breakpoints.down(420px) {
+  .campaign-messages__inbox-heading {
+    gap: 5px;
+  }
+
+  .campaign-messages__new-message span {
+    max-width: 96px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
+.campaign-messages__timeline {
+  overflow-anchor: none;
+}
+
+.campaign-messages__history-button,
+.campaign-messages__new-messages {
+  align-self: center;
+  padding: 8px 14px;
+  border: 1px solid #d9dfd8;
+  border-radius: 20px;
+  color: var(--forest);
+  background: #fffefa;
+  font: inherit;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.campaign-messages__history-button:disabled {
+  opacity: .65;
+  cursor: wait;
+}
+
+.campaign-messages__history-status {
+  margin: 0;
+  text-align: center;
+  font-size: 12px;
+}
+
+.campaign-messages__new-messages {
+  margin: 0 0 8px;
+}
+
+.campaign-messages__message-meta {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 5px;
+  margin-top: 6px;
+}
+
+.campaign-messages__message-meta time {
+  margin-top: 0;
+}
+
+.campaign-messages__receipt {
+  display: inline-flex;
+  color: #afc6bf;
+}
+
+.campaign-messages__receipt--seen {
+  color: #9ee1f3;
+}
+
+.campaign-messages__unread-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 8px 0 3px;
+  color: var(--forest);
+  font-size: 11px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.campaign-messages__unread-divider::before,
+.campaign-messages__unread-divider::after {
+  height: 1px;
+  flex: 1;
+  background: #a1b7ad;
+  content: '';
+}
+
+.campaign-messages__unread-divider span {
+  padding: 5px 12px;
+  border: 1px solid #d4e0d9;
+  border-radius: 20px;
+  background: #edf3ed;
+}

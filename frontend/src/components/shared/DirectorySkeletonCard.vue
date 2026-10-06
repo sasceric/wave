@@ -1,4 +1,7 @@
 <script setup>
+import '../creators/CreatorCard.scss'
+import '../campaigns/CampaignCard.scss'
+import '../companies/CompanyCard.scss'
 defineProps({ kind: { type: String, required: true } })
 </script>
 
@@ -35,3 +38,5 @@ defineProps({ kind: { type: String, required: true } })
     </div>
   </div>
 </template>
+
+<style lang="scss" src="./DirectorySkeletonCard.scss"></style>

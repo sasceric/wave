@@ -1,4 +1,5 @@
 <script setup>
+import './CreatorCard.scss'
 import { computed } from 'vue'
 import { Camera, CirclePlay, Music2, UsersRound } from '@lucide/vue'
 import RouterLink from '../shared/LocalizedLink.vue'

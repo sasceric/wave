@@ -1,4 +1,5 @@
 <script setup>
+import CardGrid from '../components/shared/CardGrid.vue'
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import RouterLink from '../components/shared/LocalizedLink.vue'
@@ -108,12 +109,14 @@ onMounted(loadCompany)
         <div><p class="eyebrow">{{ t('companyProfile.openCalls') }}</p><h2>{{ t('companyProfile.campaignsFrom', { company: company.name }) }}</h2></div>
         <RouterLink class="text-link" to="/campaigns">{{ t('companyProfile.allBriefs') }} <span aria-hidden="true">↗</span></RouterLink>
       </div>
-      <div v-if="campaigns.length" class="campaign-grid campaign-grid--directory">
+      <CardGrid v-if="campaigns.length" kind="campaign" layout="directory">
         <CampaignCard v-for="campaign in campaigns" :key="campaign.id" :campaign="campaign" :image-sizes="DIRECTORY_IMAGE_SIZES" />
-      </div>
+      </CardGrid>
       <StatusMessage v-else variant="empty">
         {{ t('companyProfile.empty') }}
       </StatusMessage>
     </section>
   </template>
 </template>
+
+<style lang="scss" src="./CompanyProfileView.scss"></style>

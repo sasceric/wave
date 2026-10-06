@@ -1,0 +1,210 @@
+@use '../../styles/breakpoints';
+
+.creator-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.campaign-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.account-bookmarks-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.campaign-grid--home {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.campaign-grid--directory {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.company-directory__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 17px;
+}
+
+@include breakpoints.down(520px) {
+  .company-directory__grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@include breakpoints.down(1000px) {
+  .creator-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .company-directory__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .campaign-grid--directory {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@include breakpoints.down(760px) {
+  .company-directory__grid {
+    grid-template-columns: 1fr;
+  }
+
+  .creator-grid {
+    grid-template-columns: none;
+    grid-auto-flow: column;
+    grid-auto-columns: 84%;
+    gap: 12px;
+    overflow-x: auto;
+    direction: ltr;
+    touch-action: pan-x pan-y;
+    scroll-snap-type: x proximity;
+    scroll-behavior: smooth;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .creator-grid::-webkit-scrollbar {
+    display: none;
+  }
+
+  .creator-grid > .creator-card {
+    scroll-snap-align: start;
+  }
+
+  .campaign-grid,
+  .campaign-grid--directory {
+    grid-template-columns: 1fr;
+  }
+
+  .campaign-grid--home {
+    grid-template-columns: none;
+    grid-auto-flow: column;
+    grid-auto-columns: 84%;
+    gap: 13px;
+    overflow-x: auto;
+    direction: ltr;
+    touch-action: pan-x pan-y;
+    scroll-snap-type: x proximity;
+    scroll-behavior: smooth;
+    padding-bottom: 8px;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .campaign-grid--home::-webkit-scrollbar {
+    display: none;
+  }
+
+  .campaign-grid--home > .campaign-card {
+    scroll-snap-align: start;
+  }
+}
+
+@include breakpoints.down(420px) {
+  .creator-grid {
+    grid-auto-columns: 88%;
+    gap: 10px;
+  }
+}
+
+@include breakpoints.down(420px) {
+  .campaign-grid--home {
+    grid-auto-columns: 88%;
+    gap: 10px;
+  }
+}
+
+.creator-grid--directory,
+.campaign-grid--directory {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-auto-flow: row;
+  grid-auto-columns: auto;
+  overflow: visible;
+  scroll-snap-type: none;
+}
+
+.creator-grid--directory > .creator-card {
+  min-width: 0;
+  scroll-snap-align: none;
+}
+
+.campaign-grid--directory > .campaign-card {
+  min-width: 0;
+}
+
+@include breakpoints.down(760px) {
+  .creator-grid--directory,
+  .campaign-grid--directory {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  .creator-grid--directory .creator-card__heading {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 3px;
+  }
+
+  .creator-grid--directory .creator-card__details {
+    right: 9px;
+    left: 9px;
+  }
+
+  .creator-grid--directory .creator-card__heading h3 {
+    font-size: 13px;
+  }
+
+  .creator-grid--directory .creator-card__price {
+    font-size: 11px;
+  }
+
+  .campaign-grid--directory .campaign-card__panel {
+    padding: 10px 8px;
+    margin-right: 5px;
+    margin-left: 5px;
+  }
+
+  .campaign-grid--directory .campaign-card h3 {
+    font-size: 15px;
+    overflow-wrap: anywhere;
+  }
+
+  .campaign-grid--directory .campaign-card__company {
+    font-size: 11px;
+    overflow-wrap: anywhere;
+  }
+
+  .campaign-grid--directory .campaign-card__details {
+    gap: 7px;
+  }
+
+  .campaign-grid--directory .campaign-card__details strong {
+    font-size: 12px;
+  }
+
+  .campaign-grid--directory .campaign-card__cta {
+    padding: 8px 5px;
+    font-size: 11px;
+  }
+}
+
+.campaign-grid--directory .campaign-card__panel {
+  min-height: 175px;
+}
+
+.campaign-grid--directory .campaign-card__footer > span {
+  min-height: 26px;
+}
+
+@include breakpoints.down(1200px) {
+  .company-directory__grid .company-directory-card {
+    min-height: 182px;
+  }
+}

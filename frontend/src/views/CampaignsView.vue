@@ -1,4 +1,6 @@
 <script setup>
+import DirectoryPage from '../components/shared/DirectoryPage.vue'
+import CardGrid from '../components/shared/CardGrid.vue'
 import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import CampaignCard from '../components/campaigns/CampaignCard.vue'
@@ -20,16 +22,16 @@ const { items: campaigns, total, loading, error, hasMore, loadMore } = useInfini
 </script>
 
 <template>
-  <section class="page-hero page-width">
-    <p class="eyebrow">{{ t('campaignsPage.eyebrow') }}</p>
-    <h1>
-      {{ t('campaignsPage.headlineLead') }}
-      <em>{{ t('campaignsPage.headlineEmphasis') }}</em>
-    </h1>
-    <p>{{ t('campaignsPage.description') }}</p>
-  </section>
+  <DirectoryPage>
+    <template #intro>
+      <p class="eyebrow">{{ t('campaignsPage.eyebrow') }}</p>
+      <h1>
+        {{ t('campaignsPage.headlineLead') }}
+        <em>{{ t('campaignsPage.headlineEmphasis') }}</em>
+      </h1>
+      <p>{{ t('campaignsPage.description') }}</p>
+    </template>
 
-  <section class="directory page-width">
     <DirectoryFilters
       v-model:search="search"
       v-model:category="category"
@@ -41,7 +43,7 @@ const { items: campaigns, total, loading, error, hasMore, loadMore } = useInfini
     <StatusMessage v-if="!loading && !error && !campaigns.length" variant="empty">
       {{ t('campaignsPage.empty') }}
     </StatusMessage>
-    <div v-if="campaigns.length || loading" class="campaign-grid campaign-grid--directory" :aria-busy="loading">
+    <CardGrid v-if="campaigns.length || loading" kind="campaign" layout="directory" :aria-busy="loading">
       <CampaignCard
         v-for="campaign in campaigns"
         :key="campaign.id"
@@ -49,7 +51,7 @@ const { items: campaigns, total, loading, error, hasMore, loadMore } = useInfini
         :image-sizes="DIRECTORY_IMAGE_SIZES"
       />
       <DirectorySkeletonCard v-for="index in loading ? (campaigns.length ? 2 : 6) : 0" :key="`loading-${index}`" kind="campaign" />
-    </div>
+    </CardGrid>
     <DirectoryLoadMore
       :loading="loading"
       :error="error"
@@ -57,5 +59,5 @@ const { items: campaigns, total, loading, error, hasMore, loadMore } = useInfini
       :count="campaigns.length"
       @load="loadMore"
     />
-  </section>
+  </DirectoryPage>
 </template>

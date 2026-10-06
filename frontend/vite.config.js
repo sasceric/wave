@@ -47,6 +47,7 @@ export default defineConfig({
     }),
   ],
   build: {
+    cssCodeSplit: true,
     outDir: '../public',
     assetsDir: 'build/assets',
     emptyOutDir: false,

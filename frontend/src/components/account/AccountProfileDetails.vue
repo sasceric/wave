@@ -1,4 +1,5 @@
 <script setup>
+import RichTextContent from '../shared/RichTextContent.vue'
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { formatMoney } from '../../lib/api'
@@ -53,7 +54,7 @@ const aboutHtml = computed(() => sanitizeRichText(
       </dl>
       <div class="profile-details__about">
         <h3>{{ isCreator ? t('account.bio') : t('account.companyAbout') }}</h3>
-        <div v-if="aboutHtml" class="profile-bio" v-html="aboutHtml"></div>
+        <RichTextContent v-if="aboutHtml" :html="aboutHtml" />
         <p v-else class="profile-details__empty">{{ t('account.notProvided') }}</p>
       </div>
     </template>
@@ -94,3 +95,5 @@ const aboutHtml = computed(() => sanitizeRichText(
     </template>
   </section>
 </template>
+
+<style lang="scss" src="./AccountProfileDetails.scss"></style>

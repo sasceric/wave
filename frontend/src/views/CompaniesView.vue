@@ -1,4 +1,5 @@
 <script setup>
+import CardGrid from '../components/shared/CardGrid.vue'
 import { useI18n } from 'vue-i18n'
 import CompanyCard from '../components/companies/CompanyCard.vue'
 import DirectoryLoadMore from '../components/shared/DirectoryLoadMore.vue'
@@ -23,10 +24,10 @@ const { items: companies, loading, error, hasMore, loadMore } = useInfiniteDirec
     <StatusMessage v-if="!loading && !error && !companies.length" variant="empty">
       {{ t('companyDirectory.empty') }}
     </StatusMessage>
-    <div v-if="companies.length || loading" class="company-directory__grid" :aria-busy="loading">
+    <CardGrid v-if="companies.length || loading" kind="company" layout="directory" :aria-busy="loading">
       <CompanyCard v-for="company in companies" :key="company.id" :company="company" />
       <DirectorySkeletonCard v-for="index in loading ? (companies.length ? 2 : 6) : 0" :key="`loading-${index}`" kind="company" />
-    </div>
+    </CardGrid>
     <DirectoryLoadMore
       :loading="loading"
       :error="error"
@@ -36,3 +37,5 @@ const { items: companies, loading, error, hasMore, loadMore } = useInfiniteDirec
     />
   </section>
 </template>
+
+<style lang="scss" src="./CompaniesView.scss"></style>

@@ -1,4 +1,6 @@
 <script setup>
+import AdminMetrics from '../components/admin/AdminMetrics.vue'
+import AdminPage from '../components/admin/AdminPage.vue'
 import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import {
   ArrowUpRight,
@@ -459,7 +461,7 @@ onMounted(loadDashboard)
 </script>
 
 <template>
-  <section class="admin-dashboard">
+  <AdminPage class="admin-dashboard">
     <div v-if="(loading && !dashboard) || accessState === 'loading'" class="admin-dashboard__layout">
       <AccountSidebar v-if="currentUser" :user="currentUser" :admin-layout="true" />
       <main class="admin-dashboard__main"><LoadingSkeleton variant="dashboard" :label="t('adminDashboard.loading')" /></main>
@@ -497,7 +499,7 @@ onMounted(loadDashboard)
               </div>
               <span>{{ t('adminDashboard.overviewEyebrow') }}</span>
             </header>
-            <div class="admin-dashboard__metrics">
+            <AdminMetrics class="admin-dashboard__metrics">
               <component
                 :is="metric.routeName ? LocalizedLink : 'article'"
                 v-for="metric in overviewStats"
@@ -516,7 +518,7 @@ onMounted(loadDashboard)
                 </span>
                 <ArrowUpRight v-if="metric.routeName" class="admin-dashboard__metric-arrow" :size="16" aria-hidden="true" />
               </component>
-            </div>
+            </AdminMetrics>
           </section>
 
           <section class="admin-overview__section">
@@ -777,5 +779,7 @@ onMounted(loadDashboard)
       @update:open="closeBulkApprovalModal"
       @confirm="confirmBulkApproval"
     />
-  </section>
+  </AdminPage>
 </template>
+
+<style lang="scss" src="./AdminDashboardView.scss"></style>

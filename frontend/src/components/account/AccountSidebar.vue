@@ -146,3 +146,5 @@ const navigationItems = computed(() => {
     </LocalizedLink>
   </nav>
 </template>
+
+<style lang="scss" src="./AccountSidebar.scss"></style>

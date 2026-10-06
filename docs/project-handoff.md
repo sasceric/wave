@@ -28,7 +28,7 @@ Declared dependencies: PHP 8.4+, Symfony 8.1, Doctrine ORM 3, Vue 3, Vue Router,
 | Session and shared frontend state | `frontend/src/composables/useCurrentUser.js` and other composables |
 | API requests, CSRF, uploads, formatting | `frontend/src/lib/api.js` |
 | Images, thumbnails and indexing | `MediaController.php`, `src/Service/MediaStorage.php`, `ImageUploadProcessor.php`, `MediaThumbnails.php`, `GenerateMediaThumbnailsCommand.php`; `docs/media-thumbnails.md` |
-| Visual styles | `frontend/src/wave.css`, existing component styles |
+| Visual styles | Adjacent component/view `.scss` files, `frontend/src/styles/global.scss`; `docs/frontend-styles.md` |
 | Localized navigation | `config/localized_routes.json`, `frontend/src/routePaths.js`, `frontend/src/router.js` |
 | Translations | `frontend/src/locales/`, `src/Localization/` |
 | SEO and server-rendered metadata | `src/Controller/FrontendController.php`, `SeoController.php`, `src/Service/SeoMetadataProvider.php`, `SitemapGenerator.php`, `frontend/src/lib/seo.js` |

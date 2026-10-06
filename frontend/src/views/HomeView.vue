@@ -1,4 +1,5 @@
 <script setup>
+import CardGrid from '../components/shared/CardGrid.vue'
 import { computed, nextTick, onMounted, reactive, ref, useId, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { Building2, Camera, Mail, Megaphone, Search, UserRound, UsersRound } from '@lucide/vue'
@@ -155,11 +156,11 @@ onMounted(loadHome)
       <LocalizedLink class="text-link" to="/creators">{{ t('home.findPeople') }} <span aria-hidden="true">↗</span></LocalizedLink>
     </div>
     <StatusMessage v-if="creatorsError" variant="error">{{ creatorsError }}</StatusMessage>
-    <div v-else-if="creators.length || loading" class="creator-grid" :aria-busy="loading">
+    <CardGrid v-else-if="creators.length || loading" kind="creator" layout="home" :aria-busy="loading">
       <CreatorCard v-for="creator in creators" :key="creator.id" :creator="creator" />
       <DirectorySkeletonCard v-for="index in loading && !creators.length ? 4 : 0" :key="`loading-${index}`" kind="creator" />
       <span v-if="loading" class="sr-only" role="status">{{ t('home.loadingCreators') }}</span>
-    </div>
+    </CardGrid>
     <StatusMessage v-else variant="empty">{{ t('home.emptyCreators') }}</StatusMessage>
   </section>
 
@@ -170,11 +171,11 @@ onMounted(loadHome)
         <LocalizedLink class="text-link" to="/campaigns">{{ t('home.allCampaigns') }} <span aria-hidden="true">↗</span></LocalizedLink>
       </div>
       <StatusMessage v-if="campaignsError" variant="error">{{ campaignsError }}</StatusMessage>
-      <div v-else-if="campaigns.length || loading" class="campaign-grid campaign-grid--home" :aria-busy="loading">
+      <CardGrid v-else-if="campaigns.length || loading" kind="campaign" layout="home" :aria-busy="loading">
         <CampaignCard v-for="campaign in campaigns" :key="campaign.id" :campaign="campaign" />
         <DirectorySkeletonCard v-for="index in loading && !campaigns.length ? 4 : 0" :key="`loading-${index}`" kind="campaign" />
         <span v-if="loading" class="sr-only" role="status">{{ t('home.loadingCampaigns') }}</span>
-      </div>
+      </CardGrid>
       <StatusMessage v-else variant="empty">{{ t('home.emptyCampaigns') }}</StatusMessage>
     </div>
   </section>
@@ -426,3 +427,5 @@ onMounted(loadHome)
   </section>
 
 </template>
+
+<style lang="scss" src="./HomeView.scss"></style>

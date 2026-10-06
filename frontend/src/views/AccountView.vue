@@ -1,4 +1,6 @@
 <script setup>
+import AccountPage from '../components/account/AccountPage.vue'
+import CardGrid from '../components/shared/CardGrid.vue'
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { parsePhoneNumberFromString } from 'libphonenumber-js/min'
@@ -880,13 +882,13 @@ onMounted(loadDashboard)
 </script>
 
 <template>
-  <section v-if="dashboardLoading && !dashboardReady" class="account-page account-page--dashboard page-width">
+  <AccountPage v-if="dashboardLoading && !dashboardReady" class="account-page account-page--dashboard page-width">
     <AccountSidebar v-if="currentUser" :user="currentUser" />
     <LoadingSkeleton variant="account" :content="accountSection === 'campaigns' && campaignPage === 'create' ? 'profile' : accountSection" />
-  </section>
+  </AccountPage>
   <AccountAccessPanel v-else-if="!user" @authenticated="handleAuthenticated" />
 
-  <section v-else class="account-page account-page--dashboard page-width" :aria-busy="dashboardLoading">
+  <AccountPage v-else class="account-page account-page--dashboard page-width" :aria-busy="dashboardLoading">
     <div v-if="accountSection === 'profile'" class="account-welcome">
       <p class="account-welcome__title">{{ t('account.welcomeBack', { name: (user.accountType === 'creator' ? profile?.displayName : profile?.name) || t('account.title') }) }}</p>
       <p>{{ t('account.welcomeIntro') }}</p>
@@ -1513,9 +1515,9 @@ onMounted(loadDashboard)
         class="form-card account-activity-panel"
       >
         <h2>{{ t('account.bookmarks') }}</h2>
-        <div v-if="bookmarks.length" class="campaign-grid account-bookmarks-grid">
+        <CardGrid v-if="bookmarks.length" kind="campaign" layout="bookmarks">
           <CampaignCard v-for="campaign in bookmarks" :key="campaign.id" :campaign="campaign" />
-        </div>
+        </CardGrid>
         <StatusMessage v-else variant="empty">{{ t('account.noBookmarks') }}</StatusMessage>
       </section>
 
@@ -1908,5 +1910,7 @@ onMounted(loadDashboard)
       @update:phone-country="profilePhoneCountry = $event"
       @save="saveProfile"
     />
-  </section>
+  </AccountPage>
 </template>
+
+<style lang="scss" src="./AccountView.scss"></style>

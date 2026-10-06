@@ -1,0 +1,23 @@
+@use '../../styles/breakpoints';
+
+.wordmark {
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
+}
+
+.wordmark__image {
+  width: 116px;
+  height: auto;
+  display: block;
+}
+
+.wordmark--light .wordmark__image {
+  filter: brightness(0) invert(1);
+}
+
+@include breakpoints.down(760px) {
+  .wordmark__image {
+    width: 90px;
+  }
+}

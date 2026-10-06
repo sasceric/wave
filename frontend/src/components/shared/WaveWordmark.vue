@@ -18,3 +18,5 @@ defineProps({
     <WaveLogo class="wordmark__image" />
   </LocalizedLink>
 </template>
+
+<style lang="scss" src="./WaveWordmark.scss"></style>

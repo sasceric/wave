@@ -1,4 +1,5 @@
 <script setup>
+import AdminTableFrame from './AdminTableFrame.vue'
 import SkeletonBlock from '../shared/SkeletonBlock.vue'
 import { ChevronLeft, ChevronRight } from '@lucide/vue'
 
@@ -17,8 +18,8 @@ defineEmits(['page-size', 'previous', 'next'])
 </script>
 
 <template>
-  <div class="admin-table" :aria-busy="busy">
-    <div class="admin-table__header"><slot name="toolbar" /></div>
+  <AdminTableFrame :busy="busy">
+    <template #toolbar><slot name="toolbar" /></template>
     <div class="admin-table__scroll">
       <table class="admin-table__table">
         <caption class="sr-only">{{ labels.caption }}</caption>
@@ -49,5 +50,5 @@ defineEmits(['page-size', 'previous', 'next'])
         <button class="admin-table__page-button" type="button" :disabled="busy || !hasMore" :aria-label="labels.next" @click="$emit('next')"><ChevronRight :size="16" aria-hidden="true" /></button>
       </nav>
     </footer>
-  </div>
+  </AdminTableFrame>
 </template>

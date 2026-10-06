@@ -288,3 +288,5 @@ onMounted(loadTemplates)
     </dialog>
   </section>
 </template>
+
+<style lang="scss" src="./AdminEmailTemplates.scss"></style>
