@@ -366,6 +366,10 @@ php bin/phpunit
 
 Run static analysis and frontend validation with development dependencies installed:
 
+Use Node 24.19 for frontend validation, matching GitHub Actions. The tests run
+serially because the experimental VM-module runner has intermittently crashed
+with `SIGSEGV` on Node 22.20. Production builds still use Node 22.
+
 ```sh
 composer analyse
 npm --prefix frontend run lint

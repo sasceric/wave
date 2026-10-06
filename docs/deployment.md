@@ -12,6 +12,11 @@ does not provision those host services or schedules.
 ## Validation workflow
 
 The separate **Validate** workflow uses independent backend and frontend jobs.
+Frontend validation uses Node 24.19 and runs `npm --prefix frontend test`, which
+serializes the experimental VM-module tests. Node 22.20 has intermittently
+crashed with `SIGSEGV` in that runner, including the `adminTools.test.js` suite
+on GitHub Actions. Such a process crash is distinct from an assertion failure.
+The backend job's frontend build and the production server remain on Node 22.
 The backend job builds the Vue app before PHPUnit because Symfony page and SEO
 tests read `public/index.html`. Build output is ignored by Git and is not shared
 between jobs. CI supplies a test email sender, a null mail transport and the local

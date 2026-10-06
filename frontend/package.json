@@ -8,7 +8,7 @@
   },
   "scripts": {
     "dev": "vite",
-    "test": "node --experimental-vm-modules --test tests/*.test.js",
+    "test": "node --experimental-vm-modules --test --test-concurrency=1 tests/*.test.js",
     "build": "vite build",
     "preview": "vite preview",
     "lint": "eslint src tests *.js --max-warnings=0"

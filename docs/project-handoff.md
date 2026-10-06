@@ -91,17 +91,13 @@ For realtime features, install the native hub once with `./bin/install-mercure.s
 
 Backend tests: `php bin/phpunit`. Frontend regression tests: `npm --prefix frontend test`. Frontend production build: `npm --prefix frontend run build`. Inspect test database setup before running database-backed tests; use an isolated test database rather than the local account database.
 
-The frontend tests use experimental VM modules. Node 20.19 has intermittently
-crashed natively in that runner; all 76 tests passed with Node 22.20 during the
-2026-10-06 Admin Tools validation. Prefer the documented Node 22 runtime when
-checking this suite.
-
-During the 2026-10-06 skeleton/grid validation, Node 22.20 also intermittently
-crashed with SIGSEGV in the experimental VM-module tests, including serial runs.
-All 85 frontend tests passed on the bundled Node 24.19 runtime with
-`--test-concurrency=1`; the production build passed on Node 22.20. If Node 22
-crashes in this runner, use a Node 24 runtime satisfying the frontend engine
-requirement. This does not change the app's build or deployment requirements.
+The frontend tests use experimental VM modules. Node 20.19 and Node 22.20 have
+intermittently crashed with `SIGSEGV` in that runner, including serial runs and
+the GitHub Actions `adminTools.test.js` suite. Frontend CI therefore uses Node
+24.19, and `npm --prefix frontend test` runs with `--test-concurrency=1` for
+consistent local/CI execution. Use Node 24.19 for frontend validation. The
+backend job's frontend build and production deployment remain on Node 22; no
+production server runtime change is required for the test-runner fix.
 
 Required static checks are now installed: `composer analyse` runs PHPStan level 5
 with Doctrine metadata/DQL analysis, and `npm --prefix frontend run lint` runs ESLint
