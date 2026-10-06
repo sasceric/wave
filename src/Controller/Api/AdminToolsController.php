@@ -92,7 +92,7 @@ final class AdminToolsController
         }
     }
 
-    #[Route('/failed', methods: ['GET'])]
+    #[Route('/failed', name: 'api_admin_tools_failed_list', methods: ['GET'])]
     public function failed(Request $request, Security $security, QueueInspector $inspector): JsonResponse
     {
         $locale = $this->authorize($request, $security);
@@ -109,7 +109,7 @@ final class AdminToolsController
         return $this->response(['data' => array_slice($rows, 0, $size), 'meta' => ['page' => $page, 'pageSize' => $size, 'hasMore' => count($rows) > $size]]);
     }
 
-    #[Route('/failed/{id}/{action}', requirements: ['id' => '\\d+'], methods: ['POST'])]
+    #[Route('/failed/{id}/{action}', name: 'api_admin_tools_failed_action', requirements: ['id' => '\\d+'], methods: ['POST'])]
     public function failedAction(int $id, string $action, Request $request, Security $security, CsrfTokenManagerInterface $csrf, FailedJobs $jobs): JsonResponse
     {
         $locale = $this->authorize($request, $security);

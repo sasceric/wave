@@ -188,7 +188,7 @@ onBeforeUnmount(() => { requestId++ })
           <StatusMessage v-if="meta.changed">{{ t('adminTools.logsChanged') }}</StatusMessage>
           <StatusMessage v-if="meta.limited">{{ t('adminTools.logsLimited') }}</StatusMessage>
           <p v-if="loading" role="status">{{ t('adminTools.loading') }}</p>
-          <AdminReadOnlyTable :columns="columns" :rows="rows" :labels="labels" :page="page" :page-size="pageSize" :has-more="Boolean(meta.hasMore)" :busy="loading" @page-size="pageSize = $event" @previous="navigate(-1)" @next="navigate(1)">
+          <AdminReadOnlyTable :columns="columns" :rows="rows" :labels="labels" :page="page" :page-size="pageSize" :has-more="Boolean(meta.hasMore)" :busy="loading" :show-empty="!error" @page-size="pageSize = $event" @previous="navigate(-1)" @next="navigate(1)">
             <template #toolbar>
               <button v-if="tab === 'tasks'" type="button" class="button button--dark" :disabled="actionBusy || loading" @click="action('tasks/register')">{{ t('adminTools.register') }}</button>
               <button v-if="tab === 'queues'" type="button" class="button button--outline" @click="showFailed = !showFailed">{{ t(showFailed ? 'adminTools.queues' : 'adminTools.failedJobs') }}</button>

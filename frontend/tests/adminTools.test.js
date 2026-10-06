@@ -85,3 +85,32 @@ test('all six locales include the tools route and complete interface copy', asyn
     assert.equal(Object.keys(catalog.adminTools.statuses).length, 13)
   }
 })
+
+test('failed jobs load through their own endpoint and retry refreshes the failed list', async () => {
+  const requests = []
+  let failed = true
+  const { state } = await tools(async (path, options) => {
+    requests.push(path)
+    if (path === '/admin/tools/failed/17/retry') {
+      assert.equal(options.method, 'POST')
+      failed = false
+      return { data: { accepted: true } }
+    }
+    if (path.startsWith('/admin/tools/failed?')) {
+      return { data: failed ? [{ id: 17, type: 'SendWebPushMessage', attempts: 6, error_code: 'TypeError' }] : [], meta: { page: 1, pageSize: 25, hasMore: false } }
+    }
+    return { data: [], meta: { hasMore: false } }
+  })
+  await state.load()
+  state.tab.value = 'queues'
+  state.showFailed.value = true
+  await settle()
+  assert.ok(requests.includes('/admin/tools/failed?page=1&pageSize=25'))
+  assert.equal(state.rows.value[0].id, 17)
+  assert.equal(state.rows.value[0].attempts, 6)
+  await state.action('failed/17/retry')
+  await settle()
+  assert.equal(state.rows.value.length, 0)
+  assert.equal(state.error.value, '')
+  assert.equal(state.actionBusy.value, false)
+})

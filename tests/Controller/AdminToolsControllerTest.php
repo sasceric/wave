@@ -2,6 +2,7 @@
 
 namespace App\Tests\Controller;
 
+use App\Background\JobDispatcher;
 use App\Entity\User;
 use App\Service\AdminLogReader;
 use Doctrine\ORM\EntityManagerInterface;
@@ -37,7 +38,7 @@ final class AdminToolsControllerTest extends WebTestCase
 
     public function testEveryEndpointRequiresAdminIncludingForModerators(): void
     {
-        foreach (['tasks', 'queues', 'log-files', 'logs'] as $endpoint) {
+        foreach (['tasks', 'queues', 'failed', 'worker/config', 'log-files', 'logs'] as $endpoint) {
             $this->client->request('GET', '/api/admin/tools/' . $endpoint . '?locale=en');
             self::assertResponseStatusCodeSame(401);
         }
@@ -45,7 +46,7 @@ final class AdminToolsControllerTest extends WebTestCase
         $moderator->setModerator(true);
         static::getContainer()->get(EntityManagerInterface::class)->flush();
         $this->client->loginUser($moderator, 'main');
-        foreach (['tasks', 'queues', 'log-files', 'logs'] as $endpoint) {
+        foreach (['tasks', 'queues', 'failed', 'worker/config', 'log-files', 'logs'] as $endpoint) {
             $this->client->request('GET', '/api/admin/tools/' . $endpoint . '?locale=en');
             self::assertResponseStatusCodeSame(403);
         }
@@ -99,6 +100,46 @@ final class AdminToolsControllerTest extends WebTestCase
         self::assertResponseStatusCodeSame(409);
         $this->client->request('POST', '/api/admin/tools/worker/consume?locale=en', server: ['HTTP_X_CSRF_TOKEN' => $token]);
         self::assertResponseStatusCodeSame(403);
+    }
+
+    public function testFailedJobsArePaginatedAndCanBeRetriedOrDiscardedThroughTheApi(): void
+    {
+        $this->client->loginUser($this->user(true), 'main');
+        $db = static::getContainer()->get(EntityManagerInterface::class)->getConnection();
+        $jobs = static::getContainer()->get(JobDispatcher::class);
+        for ($index = 0; $index < 30; ++$index) {
+            $job = $jobs->enqueue('SendWebPushMessage', ['body' => 'Private message text']);
+            $db->update('background_job', ['status' => 'failed', 'attempts' => 6, 'error_code' => 'TypeError', 'finished_at' => gmdate('Y-m-d H:i:s')], ['id' => $job]);
+        }
+        $db->executeStatement("UPDATE messenger_messages SET queue_name = 'failed'");
+        $this->client->request('GET', '/api/admin/tools/failed?locale=en&pageSize=25');
+        self::assertResponseIsSuccessful();
+        self::assertStringContainsString('no-store', $this->client->getResponse()->headers->get('Cache-Control'));
+        $first = $this->payload();
+        self::assertCount(25, $first['data']);
+        self::assertTrue($first['meta']['hasMore']);
+        self::assertSame('SendWebPushMessage', $first['data'][0]['type']);
+        self::assertSame('TypeError', $first['data'][0]['error_code']);
+        self::assertStringNotContainsString('Private message text', $this->client->getResponse()->getContent());
+        $this->client->request('GET', '/api/admin/tools/failed?locale=en&page=2&pageSize=25');
+        self::assertResponseIsSuccessful();
+        self::assertCount(5, $this->payload()['data']);
+        self::assertFalse($this->payload()['meta']['hasMore']);
+        $row = $first['data'][0];
+        $this->client->request('POST', '/api/admin/tools/failed/' . $row['id'] . '/retry?locale=en');
+        self::assertResponseStatusCodeSame(403);
+        $this->client->request('GET', '/api/auth/csrf?locale=en');
+        $token = $this->payload()['csrfToken'];
+        $this->client->request('POST', '/api/admin/tools/failed/' . $row['id'] . '/retry?locale=en', server: ['HTTP_X_CSRF_TOKEN' => $token]);
+        self::assertResponseStatusCodeSame(202);
+        self::assertSame('queued', $db->fetchOne('SELECT status FROM background_job WHERE id = ?', [$row['job_id']]));
+        self::assertSame(29, (int) $db->fetchOne("SELECT COUNT(*) FROM messenger_messages WHERE queue_name = 'failed'"));
+        self::assertSame(1, (int) $db->fetchOne("SELECT COUNT(*) FROM messenger_messages WHERE queue_name = 'push'"));
+        $discard = $first['data'][1];
+        $this->client->request('POST', '/api/admin/tools/failed/' . $discard['id'] . '/discard?locale=en', server: ['HTTP_X_CSRF_TOKEN' => $token]);
+        self::assertResponseStatusCodeSame(202);
+        self::assertSame('discarded', $db->fetchOne('SELECT status FROM background_job WHERE id = ?', [$discard['job_id']]));
+        self::assertSame('', $db->fetchOne('SELECT payload FROM background_job WHERE id = ?', [$discard['job_id']]));
     }
 
     private function user(bool $admin): User

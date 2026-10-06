@@ -10,6 +10,7 @@ defineProps({
   pageSizes: { type: Array, default: () => [25, 50, 100] },
   hasMore: { type: Boolean, default: false },
   busy: { type: Boolean, default: false },
+  showEmpty: { type: Boolean, default: true },
 })
 defineEmits(['page-size', 'previous', 'next'])
 </script>
@@ -27,7 +28,7 @@ defineEmits(['page-size', 'previous', 'next'])
               <slot :name="`cell-${column.key}`" :row="row" :value="row[column.key]">{{ row[column.key] ?? '—' }}</slot>
             </td>
           </tr>
-          <tr v-if="!rows.length"><td :colspan="columns.length" class="admin-table__empty">{{ labels.empty }}</td></tr>
+          <tr v-if="!rows.length && !busy && showEmpty"><td :colspan="columns.length" class="admin-table__empty">{{ labels.empty }}</td></tr>
         </tbody>
       </table>
     </div>

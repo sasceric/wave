@@ -145,6 +145,7 @@ An already-mounted Messages view reacts to changed conversation/inquiry queries.
 | CORS error or EventSource fails | Exact CORS origin, Nginx include, TLS and subscription-cookie scope |
 | Live chat works but push does not | VAPID pair, device subscription, website permission and OS notification settings |
 | Push jobs are delayed and logs show `WebPush::__construct()` argument #3 TypeError | Deploy the corrected Web Push 11 HTTP-client construction below, restart the push worker, then retry failed jobs |
+| Failed transport count is nonzero but the Failed jobs view shows a load error | Deploy the distinct failed-list/action route names and rebuild Symfony's production routing cache; jobs remain in PostgreSQL |
 | Push arrives but tapping opens the wrong view | Notification URL/query, deployed service worker, current login and navigation with another chat already open |
 | Home-screen badge is missing | Installed app, platform Badging API support, notification permission, OS Badges setting and deployed worker/payload version |
 | Older app code persists | App-shell caching and acceptance of the PWA update |
