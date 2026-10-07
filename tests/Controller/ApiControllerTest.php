@@ -236,9 +236,9 @@ final class ApiControllerTest extends WebTestCase
         foreach ([$company, $hiddenOwner, $hiddenCompany] as $entity) {
             $em->persist($entity);
         }
-        $make = static fn (string $slug, string $category, array $channels, int $min = 100, int $max = 500, string $location = 'Zenica', string $currency = 'BAM', string $close = '+7 days', string $published = 'today', bool $featured = false, string $status = 'open', ?Company $brand = null): Campaign => new Campaign(
+        $make = static fn (string $slug, string $category, array $channels, int $min = 100, int $max = 500, string $location = 'Zenica', string $currency = 'BAM', string $close = '+7 days', string $published = 'today', bool $featured = false, string $status = 'open', ?Company $brand = null, string $countryCode = 'BA'): Campaign => new Campaign(
             $slug, $slug, 'Summary', 'Brief', $category, $channels, ['One post'], $min, $max, $location, 2,
-            new \DateTimeImmutable($close), new \DateTimeImmutable($published), $brand ?? $company, $featured, $status, currency: $currency,
+            new \DateTimeImmutable($close), new \DateTimeImmutable($published), $brand ?? $company, $featured, $status, currency: $currency, countryCode: $countryCode, categories: [$category, 'Nature'],
         );
         foreach ([
             $make('campaign-filter-a', 'Travel', ['Instagram'], featured: true),
@@ -251,12 +251,13 @@ final class ApiControllerTest extends WebTestCase
             $make('campaign-filter-other-budget', 'Food', ['TikTok'], min: 600, max: 900),
             $make('campaign-filter-ended', 'Food', ['TikTok'], close: '-1 day'),
             $make('campaign-filter-closed', 'Food', ['TikTok'], status: 'closed'),
+            $make('campaign-filter-other-country', 'Food', ['Instagram'], countryCode: 'HR'),
             $make('campaign-filter-hidden', 'Food', ['TikTok'], brand: $hiddenCompany),
         ] as $campaign) {
             $em->persist($campaign);
         }
         $em->flush();
-        $filters = ['categories' => '["Travel","Food"]', 'channels' => '["Instagram","TikTok"]', 'location' => 'ZENICA', 'currency' => 'BAM', 'budgetMin' => '200', 'budgetMax' => '500', 'pagination' => 'cursor', 'view' => 'card', 'limit' => 1];
+        $filters = ['categories' => '["Travel","Food"]', 'channels' => '["Instagram","TikTok"]', 'city' => 'ZENICA', 'countries' => '["BA"]', 'currency' => 'BAM', 'budgetMin' => '200', 'budgetMax' => '500', 'pagination' => 'cursor', 'view' => 'card', 'limit' => 1];
         $firstCursor = null;
         foreach (['recommended' => ['a', 'b', 'c'], 'newest' => ['c', 'b', 'a'], 'closing' => ['b', 'c', 'a']] as $sort => $expected) {
             $path = '/api/campaigns?' . http_build_query($filters + ['sort' => $sort]);
@@ -278,10 +279,20 @@ final class ApiControllerTest extends WebTestCase
             } while ($next !== null);
             self::assertSame(array_map(static fn ($suffix) => 'campaign-filter-' . $suffix, $expected), $loaded);
         }
-        foreach (['channels' => '["TikTok"]', 'location' => 'Sarajevo', 'currency' => 'EUR', 'budgetMin' => '300', 'budgetMax' => '400', 'sort' => 'newest'] as $key => $value) {
+        foreach (['countries' => '["HR"]', 'channels' => '["TikTok"]', 'city' => 'Sarajevo', 'currency' => 'EUR', 'budgetMin' => '300', 'budgetMax' => '400', 'sort' => 'newest'] as $key => $value) {
             $this->client->request('GET', '/api/campaigns?' . http_build_query(array_replace($filters + ['sort' => 'recommended'], [$key => $value, 'cursor' => $firstCursor])));
             self::assertResponseStatusCodeSame(400);
         }
+        $this->client->request('GET', '/api/campaigns?' . http_build_query(['categories' => '["Nature"]', 'countries' => '["HR"]', 'city' => 'Zenica']));
+        self::assertResponseIsSuccessful();
+        $secondary = json_decode($this->client->getResponse()->getContent(), true, flags: JSON_THROW_ON_ERROR);
+        self::assertSame(['campaign-filter-other-country'], array_column($secondary['data'], 'slug'));
+        self::assertArrayNotHasKey('location', $secondary['data'][0]);
+        $this->client->request('GET', '/api/campaigns/filters');
+        self::assertResponseIsSuccessful();
+        $facets = json_decode($this->client->getResponse()->getContent(), true, flags: JSON_THROW_ON_ERROR)['data']['countries'];
+        self::assertSame(['BA', 'HR'], array_column($facets, 'value'));
+        self::assertSame([8, 1], array_column($facets, 'count'));
         // JSON value matching must not mistake a substring for a channel name.
         $this->client->request('GET', '/api/campaigns?' . http_build_query(['channels' => '["Insta"]']));
         self::assertResponseIsSuccessful();
@@ -290,7 +301,7 @@ final class ApiControllerTest extends WebTestCase
 
     public function testCampaignDirectoryRejectsInvalidEntityFilters(): void
     {
-        foreach ([['categories' => '{}'], ['channels' => '[1]'], ['sort' => 'bad'], ['currency' => 'USD'], ['budgetMin' => '-1'], ['budgetMax' => '1.5'], ['budgetMax' => '10000001'], ['budgetMin' => '10'], ['budgetMin' => '500', 'budgetMax' => '200', 'currency' => 'BAM']] as $filters) {
+        foreach ([['countries' => '["ZZ"]'], ['countries' => '["Bosnia"]'], ['categories' => '{}'], ['channels' => '[1]'], ['sort' => 'bad'], ['currency' => 'USD'], ['budgetMin' => '-1'], ['budgetMax' => '1.5'], ['budgetMax' => '10000001'], ['budgetMin' => '10'], ['budgetMin' => '500', 'budgetMax' => '200', 'currency' => 'BAM']] as $filters) {
             $this->client->request('GET', '/api/campaigns?' . http_build_query($filters));
             self::assertResponseStatusCodeSame(400);
         }
@@ -769,6 +780,7 @@ final class ApiControllerTest extends WebTestCase
             $this->client->request('GET', '/api/creators/maya-chen?locale=' . $locale);
             self::assertResponseIsSuccessful();
             $payload = json_decode($this->client->getResponse()->getContent(), true, flags: JSON_THROW_ON_ERROR);
+            self::assertSame('', $payload['data']['tagline']);
             self::assertSame(
                 [
                     'bs' => 'Bosanski opis.',

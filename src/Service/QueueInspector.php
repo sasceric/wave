@@ -46,4 +46,9 @@ final class QueueInspector
     {
         return $this->connection->fetchAllAssociative("SELECT m.id, j.id AS job_id, j.type, j.attempts, j.error_code, j.finished_at FROM messenger_messages m JOIN background_job j ON j.id = m.body::jsonb->>'jobId' WHERE m.queue_name = 'failed' ORDER BY m.id DESC LIMIT ? OFFSET ?", [$size + 1, ($page - 1) * $size], [\Doctrine\DBAL\ParameterType::INTEGER, \Doctrine\DBAL\ParameterType::INTEGER]);
     }
+
+    public function failedCount(): int
+    {
+        return (int) $this->connection->fetchOne("SELECT COUNT(*) FROM messenger_messages m JOIN background_job j ON j.id = m.body::jsonb->>'jobId' WHERE m.queue_name = 'failed'");
+    }
 }

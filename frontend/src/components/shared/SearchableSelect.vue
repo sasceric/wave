@@ -1,7 +1,7 @@
 <script setup>
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { Search } from '@lucide/vue'
+import { ChevronDown, Search } from '@lucide/vue'
 import { getDropdownPlacement } from '../../utils/dropdownPlacement'
 
 let nextId = 0
@@ -14,6 +14,7 @@ const props = defineProps({
   searchPlaceholder: { type: String, required: true },
   noResultsLabel: { type: String, required: true },
   disabled: { type: Boolean, default: false },
+  required: { type: Boolean, default: false },
 })
 
 const emit = defineEmits(['update:modelValue'])
@@ -177,12 +178,13 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div class="form-field searchable-select">
+  <div class="form-field searchable-select" data-validation-field :data-required="required" :data-validation-value="modelValue" :data-disabled="disabled">
     <label class="searchable-select__label" :for="id">{{ label }}</label>
     <div ref="root" class="searchable-select__control" :class="{ 'is-above': opensAbove }">
       <button
         :id="id"
         class="searchable-select__trigger"
+        data-validation-control
         :class="{ 'is-placeholder': !selectedOption }"
         type="button"
         :aria-label="`${label}: ${selectedOption?.label || placeholder}`"
@@ -194,7 +196,7 @@ onBeforeUnmount(() => {
         @keydown="handleTriggerKeydown"
       >
         <span>{{ selectedOption?.label || placeholder }}</span>
-        <span class="searchable-select__chevron" aria-hidden="true">⌄</span>
+        <ChevronDown class="searchable-select__chevron" :size="16" aria-hidden="true" />
       </button>
       <div v-if="isOpen" ref="menu" class="searchable-select__menu">
         <label class="searchable-select__search">

@@ -1,6 +1,7 @@
 <script setup>
 import '../../scss/components/creators/CreatorCard.scss'
 import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { Camera, CirclePlay, Music2, UsersRound } from '@lucide/vue'
 import RouterLink from '../shared/LocalizedLink.vue'
 import { formatFollowers, formatMoney } from '../../lib/api'
@@ -11,6 +12,7 @@ const props = defineProps({
   creator: { type: Object, required: true },
   imageSizes: { type: String, default: undefined },
 })
+const { t } = useI18n()
 
 const primarySocial = computed(() => props.creator.socialProfiles?.[0] || null)
 const socialIcon = computed(() => {
@@ -55,6 +57,7 @@ const startingPrice = computed(() => {
         :alt="creator.displayName"
       />
       <div class="creator-card__shade"></div>
+      <span v-if="creator.featured" class="creator-card__featured">{{ t('campaignCard.featured') }}</span>
       <span
         v-if="primarySocial"
         class="creator-card__metric"

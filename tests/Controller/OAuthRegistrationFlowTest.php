@@ -60,6 +60,7 @@ final class OAuthRegistrationFlowTest extends WebTestCase
                 'accountType' => 'creator',
                 'firstName' => 'Avery',
                 'lastName' => 'Creator',
+                'birthday' => '2000-02-29',
                 'phone' => '+387 61 123 456',
                 'country' => 'BA',
                 'city' => 'Sarajevo',
@@ -76,6 +77,7 @@ final class OAuthRegistrationFlowTest extends WebTestCase
         self::assertFalse($user->isApproved());
         self::assertTrue($user->hasCompleteProfile());
         self::assertSame('en', $user->getPreferredLocale());
+        self::assertSame('2000-02-29', $user->getCreator()->getBirthday()->format('Y-m-d'));
         self::assertInstanceOf(OAuthIdentity::class, $entityManager->getRepository(OAuthIdentity::class)
             ->findOneBy(['provider' => 'google', 'subject' => 'provider-user-1']));
         self::assertEmailCount(1);

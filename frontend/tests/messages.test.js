@@ -5,6 +5,28 @@ import { test } from 'node:test'
 import * as vue from 'vue'
 import { setupView } from './setupView.js'
 
+test('closed campaigns block sending drafts, while open campaigns and direct inquiries can send', async () => {
+  const requests = []
+  const { state } = await setupView('../src/views/MessagesView.vue', {
+    '../lib/api': { apiGet: async () => {}, apiRequest: async (path) => { requests.push(path) }, formatDate: () => '', formatMoney: () => '' },
+  })
+  state.selectedConversationId.value = 1
+  state.conversations.value = [{ id: 1, campaign: { status: 'closed' } }]
+  state.draft.value = 'A message that cannot be sent'
+  assert.equal(state.campaignChatClosed.value, true)
+  assert.equal(state.canSend.value, false)
+  await state.sendMessage()
+  assert.equal(requests.length, 0)
+  assert.equal(state.draft.value, 'A message that cannot be sent')
+  state.conversations.value[0].campaign.status = 'open'
+  assert.equal(state.canSend.value, true)
+  state.selectedConversationId.value = null
+  state.selectedInquiryId.value = 2
+  state.inquiries.value = [{ id: 2, status: 'accepted' }]
+  assert.equal(state.campaignChatClosed.value, false)
+  assert.equal(state.canSend.value, true)
+})
+
 test('a slow response for the previous conversation cannot replace the newly opened chat', async () => {
   const pending = new Map()
   const { state } = await setupView('../src/views/MessagesView.vue', {
@@ -108,14 +130,13 @@ test('closing a pending Mercure authorization prevents a stale connection from o
   assert.equal(connections, 0)
 })
 
-test('the account sidebar messages badge uses the same reactive count as the header', async () => {
-  const { state, unreadMessageCount } = await setupView('../src/components/account/AccountSidebar.vue', {}, {
+test('the sidebar omits media kit and messages while retaining account workflow routes', async () => {
+  const { state } = await setupView('../src/components/account/AccountSidebar.vue', {}, {
     user: { accountType: 'creator', approved: true }, pendingRegistrations: 0, adminLayout: false,
   })
-  unreadMessageCount.value = 3
-  assert.equal(state.navigationItems.value.find((item) => item.route === 'messages').badge, 3)
-  unreadMessageCount.value = 0
-  assert.equal(state.navigationItems.value.find((item) => item.route === 'messages').badge, 0)
+  assert.ok(!state.navigationItems.value.some((item) => ['account', 'messages'].includes(item.route)))
+  assert.ok(state.navigationItems.value.some((item) => item.route === 'account-applications'))
+  assert.deepEqual(Array.from(state.exploreItems.value, (item) => item.route), ['creators'])
 })
 
 test('the service worker displays a push and tells open windows to reload authorized inbox data', async () => {

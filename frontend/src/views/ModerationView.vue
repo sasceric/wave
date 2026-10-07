@@ -170,7 +170,7 @@ onMounted(loadModerationCatalog)
               </div>
               <button v-if="editingCategoryId" class="text-link" type="button" @click="resetCategoryForm">{{ t('account.cancelEdit') }}</button>
             </div>
-            <form class="catalog-form" @submit.prevent="saveCategory">
+            <form v-form-validation class="catalog-form" @submit.prevent="saveCategory">
               <label class="form-field">
                 <span>{{ t('moderation.categoryValue') }}</span>
                 <input v-model.trim="categoryForm.value" required minlength="2" maxlength="80" :disabled="Boolean(editingCategoryId)" />
@@ -213,7 +213,7 @@ onMounted(loadModerationCatalog)
               </div>
               <button v-if="editingFaqId" class="text-link" type="button" @click="resetFaqForm">{{ t('account.cancelEdit') }}</button>
             </div>
-            <form class="catalog-form" @submit.prevent="saveFaq">
+            <form v-form-validation class="catalog-form" @submit.prevent="saveFaq">
               <template v-for="language in catalogLocales" :key="language">
                 <label class="form-field">
                   <span>{{ t('moderation.questionFor') }} {{ language.toUpperCase() }}</span>

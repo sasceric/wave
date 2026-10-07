@@ -69,6 +69,20 @@
     left: 15px;
   }
 
+  &__featured {
+    position: absolute;
+    z-index: 2;
+    top: 13px;
+    right: 13px;
+    padding: 5px 9px;
+    border-radius: 20px;
+    color: #fffefa;
+    background: #40665b;
+    font-size: 10px;
+    font-weight: 700;
+    line-height: 1;
+  }
+
   &__heading {
     min-width: 0;
     display: flex;
@@ -135,6 +149,8 @@
 @include breakpoints.down(420px) {
   .creator-card {
     border-radius: 8px;
+
+    &__featured { top: 8px; right: 8px; padding: 5px 7px; font-size: 9px; }
 
     &__metric {
       top: 8px;

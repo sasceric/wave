@@ -24,7 +24,7 @@ final class UserResource
             'isAdmin' => $user->hasRole('ROLE_ADMIN'),
             'hide_my_account' => $user->isHideMyAccount() ? 1 : 0,
             'profile' => $profile instanceof \App\Entity\Creator
-                ? CreatorResource::fromEntity($profile, $locale, categoryLabels: $categoryLabels)
+                ? CreatorResource::fromEntity($profile, $locale, categoryLabels: $categoryLabels) + ['birthday' => $profile->getBirthday()?->format('Y-m-d')]
                 : ($profile instanceof \App\Entity\Company ? CompanyResource::fromEntity($profile, $locale, categoryLabels: $categoryLabels) : null),
         ];
     }

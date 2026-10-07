@@ -32,7 +32,18 @@ function toggleMenu() {
   const left = Math.max(8, Math.min(rect.right - menuWidth, window.innerWidth - menuWidth - 8))
   menuStyle.value = { top: `${top}px`, left: `${left}px` }
   open.value = true
-  nextTick(() => menu.value?.querySelector('[role="menuitem"]')?.focus())
+  nextTick(() => {
+    const height = menu.value?.getBoundingClientRect().height || estimatedMenuHeight
+    menuStyle.value = {
+      left: `${left}px`,
+      top: `${rect.bottom + height + 8 <= window.innerHeight ? rect.bottom + 4 : Math.max(8, rect.top - height - 4)}px`,
+    }
+    menuItems()[0]?.focus()
+  })
+}
+
+function menuItems() {
+  return Array.from(menu.value?.querySelectorAll('[role="menuitem"]:not(:disabled)') || [])
 }
 
 function handleDocumentClick(event) {
@@ -41,10 +52,28 @@ function handleDocumentClick(event) {
 }
 
 function handleKeydown(event) {
-  if (event.key === 'Escape' && open.value) closeMenu(true)
+  if (!open.value) return
+  if (event.key === 'Escape') {
+    event.preventDefault()
+    closeMenu(true)
+    return
+  }
+  if (!menu.value?.contains(event.target)) return
+  const items = menuItems()
+  const index = items.indexOf(document.activeElement)
+  let next
+  if (event.key === 'ArrowDown') next = (index + 1) % items.length
+  else if (event.key === 'ArrowUp') next = (index - 1 + items.length) % items.length
+  else if (event.key === 'Home') next = 0
+  else if (event.key === 'End') next = items.length - 1
+  else if (event.key === 'Tab') { closeMenu(); return }
+  else return
+  event.preventDefault()
+  items[next]?.focus()
 }
 
-function handleViewportChange() {
+function handleViewportChange(event) {
+  if (menu.value?.contains(event?.target)) return
   if (open.value) closeMenu()
 }
 
@@ -73,6 +102,7 @@ onBeforeUnmount(() => {
       aria-haspopup="menu"
       :aria-expanded="open"
       @click="toggleMenu"
+      @keydown.down.prevent="!open && toggleMenu()"
     >
       <MoreHorizontal :size="18" aria-hidden="true" />
     </button>
@@ -84,7 +114,7 @@ onBeforeUnmount(() => {
         role="menu"
         :aria-label="label"
         :style="menuStyle"
-        @click="closeMenu"
+        @click="closeMenu(true)"
       >
         <slot />
       </div>

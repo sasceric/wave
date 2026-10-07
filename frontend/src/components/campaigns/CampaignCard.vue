@@ -11,7 +11,7 @@ import { useCampaignBookmarks } from '../../composables/useCampaignBookmarks'
 import { localizedRouteName } from '../../routePaths'
 import ConfirmationModal from '../shared/ConfirmationModal.vue'
 import CardImage from '../shared/CardImage.vue'
-import { CAMPAIGN_PLACEHOLDER } from '../../lib/marketplace'
+import { campaignPlace, CAMPAIGN_PLACEHOLDER } from '../../lib/marketplace'
 
 const props = defineProps({
   campaign: { type: Object, required: true },
@@ -150,7 +150,7 @@ async function confirmRemoveBookmark() {
 
       <div class="campaign-card__details">
         <strong>{{ formatMoney(campaign.budgetMin, campaign.currency) }}–{{ formatMoney(campaign.budgetMax, campaign.currency) }}</strong>
-        <span><MapPin :size="14" aria-hidden="true" />{{ campaign.location }}</span>
+        <span><MapPin :size="14" aria-hidden="true" />{{ campaignPlace(campaign, locale) }}</span>
       </div>
     </div>
 

@@ -34,7 +34,6 @@ const labels = computed(() => ({
   pagination: t('adminDashboard.pagination'),
   previous: t('adminDashboard.previous'),
   next: t('adminDashboard.next'),
-  page: t('adminTools.page', { page: page.value }),
 }))
 
 function formatDate(value) {
@@ -75,9 +74,10 @@ function refresh() {
   load()
 }
 
-function navigate(direction) {
-  if (loading.value || (direction < 0 && page.value <= 1) || (direction > 0 && !meta.value.hasMore)) return
-  page.value += direction
+function navigatePage(target) {
+  const count = meta.value.total == null ? page.value + Number(Boolean(meta.value.hasMore)) : Math.max(1, Math.ceil(meta.value.total / pageSize.value))
+  if (loading.value || target < 1 || target > count || target === page.value) return
+  page.value = target
   load()
 }
 
@@ -138,11 +138,11 @@ onBeforeUnmount(() => { requestId++ })
           :page="page"
           :page-size="pageSize"
           :has-more="Boolean(meta.hasMore)"
+          :total="meta.total ?? null"
           :busy="loading"
           :show-empty="!error"
           @page-size="pageSize = $event"
-          @previous="navigate(-1)"
-          @next="navigate(1)"
+          @page="navigatePage"
         >
           <template #cell-locale="{ value }">{{ value.toUpperCase() }}</template>
           <template #cell-subscribedAt="{ value }">{{ formatDate(value) }}</template>

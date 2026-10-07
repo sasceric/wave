@@ -1,0 +1,44 @@
+.range-slider {
+  min-width: 0;
+  margin-top: 10px;
+
+  &__values { display: flex; justify-content: space-between; gap: 12px; color: var(--muted); font-size: 12px; }
+  &__values label:last-child { text-align: right; }
+  output { display: block; margin-top: 5px; color: var(--forest); font-size: 13px; font-weight: 400; }
+  &__track { position: relative; height: 6px; margin: 23px 10px 20px; border-radius: 6px; background: #dfe6dc; }
+  &__selection { position: absolute; height: 100%; border-radius: inherit; background: var(--forest); }
+
+  &__input {
+    position: absolute;
+    z-index: 2;
+    top: -19px;
+    left: -10px;
+    width: calc(100% + 20px);
+    height: 44px;
+    margin: 0;
+    padding: 0;
+    appearance: none;
+    background: transparent;
+    pointer-events: none;
+
+    &--lower { z-index: 1; }
+    &.is-at-end, &:focus-visible { z-index: 3; }
+    &:focus-visible { outline: none; }
+
+    &::-webkit-slider-runnable-track { height: 6px; background: transparent; }
+    &::-moz-range-track { height: 6px; background: transparent; }
+    &::-webkit-slider-thumb {
+      width: 20px; height: 20px; margin-top: -7px; appearance: none; border: 2px solid var(--forest); border-radius: 50%; background: #fffefa; box-shadow: 0 2px 5px #183c3426; pointer-events: auto; cursor: grab; touch-action: none;
+    }
+    &::-moz-range-thumb {
+      width: 16px; height: 16px; border: 2px solid var(--forest); border-radius: 50%; background: #fffefa; box-shadow: 0 2px 5px #183c3426; pointer-events: auto; cursor: grab; touch-action: none;
+    }
+    &:focus-visible::-webkit-slider-thumb { outline: 2px solid #789281; outline-offset: 3px; }
+    &:focus-visible::-moz-range-thumb { outline: 2px solid #789281; outline-offset: 3px; }
+    &:active::-webkit-slider-thumb { cursor: grabbing; }
+    &:active::-moz-range-thumb { cursor: grabbing; }
+    &:disabled::-webkit-slider-thumb { cursor: not-allowed; }
+    &:disabled::-moz-range-thumb { cursor: not-allowed; }
+  }
+  &.is-disabled { opacity: .5; }
+}

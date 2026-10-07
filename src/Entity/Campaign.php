@@ -48,7 +48,13 @@ class Campaign
     private string $currency = 'BAM';
 
     #[ORM\Column(length: 120)]
-    private string $location;
+    private string $city;
+
+    #[ORM\Column(length: 2, nullable: true)]
+    private ?string $countryCode = null;
+
+    #[ORM\Column(type: 'json', options: ['default' => '[]'])]
+    private array $categories = [];
 
     #[ORM\Column]
     private int $creatorCount;
@@ -86,7 +92,7 @@ class Campaign
         array $deliverables,
         int $budgetMin,
         int $budgetMax,
-        string $location,
+        string $city,
         int $creatorCount,
         DateTimeImmutable $closesAt,
         DateTimeImmutable $publishedAt,
@@ -96,8 +102,12 @@ class Campaign
         array $translations = [],
         ?Media $coverMedia = null,
         string $currency = 'BAM',
+        ?string $countryCode = null,
+        array $categories = [],
     ) {
         $this->slug = $slug;
+        $this->countryCode = $countryCode;
+        $this->categories = $categories !== [] ? array_values(array_unique($categories)) : [$category];
         $this->title = $title;
         $this->summary = $summary;
         $this->description = $description;
@@ -107,7 +117,7 @@ class Campaign
         $this->budgetMin = $budgetMin;
         $this->budgetMax = $budgetMax;
         $this->currency = $currency;
-        $this->location = $location;
+        $this->city = $city;
         $this->creatorCount = $creatorCount;
         $this->closesAt = $closesAt;
         $this->publishedAt = $publishedAt;
@@ -173,9 +183,19 @@ class Campaign
         return $this->currency;
     }
 
-    public function getLocation(): string
+    public function getCity(): string
     {
-        return $this->location;
+        return $this->city;
+    }
+
+    public function getCountryCode(): ?string
+    {
+        return $this->countryCode;
+    }
+
+    public function getCategories(): array
+    {
+        return $this->categories !== [] ? $this->categories : [$this->category];
     }
 
     public function getCreatorCount(): int
@@ -247,12 +267,16 @@ class Campaign
         array $deliverables,
         int $budgetMin,
         int $budgetMax,
-        string $location,
+        string $city,
         int $creatorCount,
         DateTimeImmutable $closesAt,
         string $status,
         ?string $currency = null,
+        ?string $countryCode = null,
+        array $categories = [],
     ): void {
+        $this->countryCode = $countryCode;
+        $this->categories = $categories !== [] ? array_values(array_unique($categories)) : [$category];
         $this->title = $title;
         $this->summary = $summary;
         $this->description = $description;
@@ -261,7 +285,7 @@ class Campaign
         $this->deliverables = $deliverables;
         $this->budgetMin = $budgetMin;
         $this->budgetMax = $budgetMax;
-        $this->location = $location;
+        $this->city = $city;
         $this->creatorCount = $creatorCount;
         $this->closesAt = $closesAt;
         $this->status = $status;

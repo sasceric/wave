@@ -556,7 +556,7 @@ onMounted(loadDashboard)
         </section>
 
         <section v-else-if="section === 'homepage'" class="admin-dashboard__panel">
-          <form class="admin-dashboard__form" @submit.prevent="saveCuration">
+          <form v-form-validation class="admin-dashboard__form" @submit.prevent="saveCuration">
             <div class="admin-settings-grid">
               <article class="admin-settings-card">
                 <header class="admin-settings-card__heading">

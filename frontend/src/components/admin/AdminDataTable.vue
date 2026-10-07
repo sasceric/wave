@@ -1,8 +1,9 @@
 <script setup>
 import AdminTableFrame from './AdminTableFrame.vue'
+import AdminPagination from './AdminPagination.vue'
 import { computed, ref, watch } from 'vue'
 import LoadingSkeleton from '../shared/LoadingSkeleton.vue'
-import { ChevronLeft, ChevronRight, SearchX } from '@lucide/vue'
+import { SearchX } from '@lucide/vue'
 
 const props = defineProps({
   columns: { type: Array, required: true },
@@ -36,25 +37,6 @@ const pageCount = computed(() => Math.max(1, Math.ceil((props.total ?? sortedRow
 const visibleRows = computed(() => remote.value ? props.rows : sortedRows.value.slice((page.value - 1) * pageSize.value, page.value * pageSize.value))
 const visibleIds = computed(() => visibleRows.value.map(({ id }) => id))
 const allVisibleSelected = computed(() => visibleIds.value.length > 0 && visibleIds.value.every((id) => selectedIds.value.includes(id)))
-const paginationItems = computed(() => {
-  const total = pageCount.value
-  const numbers = total <= 7
-    ? Array.from({ length: total }, (_, index) => index + 1)
-    : [...new Set([1, page.value - 1, page.value, page.value + 1, total])]
-      .filter((number) => number >= 1 && number <= total)
-      .sort((left, right) => left - right)
-  const items = []
-
-  numbers.forEach((number, index) => {
-    const previous = numbers[index - 1]
-    if (previous && number - previous > 1) {
-      items.push({ key: `ellipsis-${previous}-${number}`, page: null })
-    }
-    items.push({ key: `page-${number}`, page: number })
-  })
-
-  return items
-})
 
 watch(() => props.rows.map(({ id }) => id), (ids) => {
   selectedIds.value = selectedIds.value.filter((id) => ids.includes(id))
@@ -187,49 +169,12 @@ function sortBy(column) {
       <label class="admin-table__page-size">
         {{ labels.pageSize }}
         <select v-model.number="pageSize" :aria-label="labels.pageSize">
-                    <option :value="25">25</option>
+          <option :value="25">25</option>
           <option :value="50">50</option>
           <option :value="100">100</option>
         </select>
       </label>
-      <nav class="admin-table__pagination-controls" :aria-label="labels.pagination">
-        <button
-          class="admin-table__page-button"
-          type="button"
-          :aria-label="labels.previous"
-          :title="labels.previous"
-          :disabled="loading || page <= 1"
-          @click="changePage(page - 1)"
-        >
-          <ChevronLeft :size="16" aria-hidden="true" />
-        </button>
-        <div class="admin-table__page-numbers">
-          <template v-for="item in paginationItems" :key="item.key">
-            <span v-if="item.page === null" class="admin-table__ellipsis" aria-hidden="true">…</span>
-            <button
-              v-else
-              class="admin-table__page-number"
-              type="button"
-              :aria-label="labels.goToPage(item.page)"
-              :aria-current="page === item.page ? 'page' : undefined"
-              :disabled="loading || page === item.page"
-              @click="changePage(item.page)"
-            >
-              {{ item.page }}
-            </button>
-          </template>
-        </div>
-        <button
-          class="admin-table__page-button"
-          type="button"
-          :aria-label="labels.next"
-          :title="labels.next"
-          :disabled="loading || page >= pageCount"
-          @click="changePage(page + 1)"
-        >
-          <ChevronRight :size="16" aria-hidden="true" />
-        </button>
-      </nav>
+      <AdminPagination :page="page" :count="pageCount" :busy="loading" :labels="labels" @change="changePage" />
     </footer>
   </AdminTableFrame>
 </template>

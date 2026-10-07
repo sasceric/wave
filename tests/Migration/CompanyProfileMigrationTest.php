@@ -41,10 +41,14 @@ final class CompanyProfileMigrationTest extends KernelTestCase
         $db->executeStatement("ALTER TABLE creator ADD COLUMN location VARCHAR(120) NOT NULL DEFAULT ''");
         $db->executeStatement("UPDATE creator SET location = CASE WHEN owner_id IS NULL THEN city ELSE 'Old duplicate' END");
         $db->executeStatement('ALTER TABLE creator DROP COLUMN city');
+        $db->executeStatement('ALTER TABLE creator DROP COLUMN birthday');
         require_once dirname(__DIR__, 2).'/migrations/Version20261007013000.php';
         require_once dirname(__DIR__, 2).'/migrations/Version20261007014000.php';
+        require_once dirname(__DIR__, 2).'/migrations/Version20261007040000.php';
         $this->execute($db, new \DoctrineMigrations\Version20261007013000($db, new NullLogger()));
         $this->execute($db, new \DoctrineMigrations\Version20261007014000($db, new NullLogger()));
+        $this->execute($db, new \DoctrineMigrations\Version20261007040000($db, new NullLogger()));
+        self::assertNull($db->fetchOne('SELECT birthday FROM creator WHERE id = ?', [$creator->getId()]));
         self::assertSame('Zenica', $db->fetchOne('SELECT city FROM wave_user WHERE id = ?', [$owner->getId()]));
         self::assertSame('Mostar', $db->fetchOne('SELECT city FROM creator WHERE id = ?', [$standalone->getId()]));
         self::assertNull($db->fetchOne('SELECT city FROM creator WHERE id = ?', [$creator->getId()]));

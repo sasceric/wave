@@ -1,8 +1,8 @@
 <script setup>
 import { computed, onBeforeUnmount, ref, useId } from 'vue'
-import { Camera, ImagePlus, Upload, X } from '@lucide/vue'
 import { apiRequest, apiUpload } from '../../lib/api'
 import ConfirmationModal from './ConfirmationModal.vue'
+import ImageUploadControl from './ImageUploadControl.vue'
 
 const props = defineProps({
   compact: { type: Boolean, default: false },
@@ -123,41 +123,20 @@ defineExpose({ prepareSave, commit, rollback })
 </script>
 
 <template>
-  <div class="profile-image-field" :class="{ 'profile-image-field--avatar': compact }" :aria-busy="disabled">
-    <button
-      v-if="!preview"
-      class="profile-image-field__empty"
-      type="button"
+  <div class="profile-image-upload">
+    <ImageUploadControl
+      :compact="compact"
+      :preview-url="preview"
+      :alt="alt"
+      :add-label="addLabel"
+      :change-label="changeLabel"
+      :remove-label="removeLabel"
+      :helper-text="helperText"
       :disabled="disabled || hasPreparedChange"
-      @click="openFilePicker"
-    >
-      <ImagePlus :size="25" aria-hidden="true" />
-      <span>{{ addLabel }}</span>
-      <small>{{ helperText }}</small>
-    </button>
-    <div v-else class="profile-image-field__image">
-      <img :src="preview" :alt="alt" />
-      <button
-        class="profile-image-field__remove"
-        type="button"
-        :aria-label="removeLabel"
-        :title="removeLabel"
-        :disabled="disabled || hasPreparedChange"
-        @click="removalConfirmationOpen = true"
-      >
-        <X :size="17" aria-hidden="true" />
-      </button>
-      <button
-        class="profile-image-field__change"
-        type="button"
-        :disabled="disabled || hasPreparedChange"
-        @click="openFilePicker"
-      >
-        <Camera v-if="compact" :size="20" aria-hidden="true" />
-        <Upload v-else :size="14" aria-hidden="true" />
-        <span :class="{ 'sr-only': compact }">{{ changeLabel }}</span>
-      </button>
-    </div>
+      can-remove
+      @choose="openFilePicker"
+      @remove="removalConfirmationOpen = true"
+    />
     <input
       :id="inputId"
       ref="fileInput"

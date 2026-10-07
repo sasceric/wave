@@ -54,13 +54,13 @@ onBeforeUnmount(() => {
       <p class="eyebrow">{{ t('auth.registrationEyebrow') }}</p>
       <h2 id="required-profile-title">{{ t('auth.registrationHeroTitle') }}</h2>
       <p id="required-profile-description">{{ t('account.profileIncomplete') }}</p>
-      <form class="required-profile-modal__form" @submit.prevent="emit('save')">
+      <form v-form-validation class="required-profile-modal__form" @submit.prevent="emit('save')">
         <template v-if="user.accountType === 'creator'">
           <label class="form-field">
             <span>{{ t('auth.name') }}</span>
             <input v-model.trim="profile.displayName" required minlength="2" maxlength="120" autocomplete="name" autofocus />
           </label>
-          <MultiSelect
+          <MultiSelect required
             v-model="profile.categories"
             :options="categories"
             :label="t('auth.category')"
@@ -77,7 +77,7 @@ onBeforeUnmount(() => {
             <span>{{ t('account.companyName') }}</span>
             <input v-model.trim="profile.name" required minlength="2" maxlength="120" autocomplete="organization" autofocus />
           </label>
-          <MultiSelect
+          <MultiSelect required
               v-model="profile.industries"
               :options="industryOptions"
               :label="t('auth.industry')"
@@ -88,7 +88,7 @@ onBeforeUnmount(() => {
               :max-selections="20"
             />
         </template>
-        <SearchableSelect
+        <SearchableSelect required
           :model-value="profile.countryCode || ''"
           :options="countryOptions"
           :label="t('auth.country')"

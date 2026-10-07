@@ -11,7 +11,6 @@
   &__view-options { display: flex; gap: 8px; }
   &__view-options button { display: flex; align-items: center; gap: 7px; min-height: 35px; padding: 0 14px; border: 1px solid #e2e6df; border-radius: 12px; color: #5d756b; background: #fffefa; font: inherit; font-size: 12px; cursor: pointer; }
   &__view-options button[aria-pressed='true'] { color: #fffefa; background: var(--forest); border-color: var(--forest); }
-  &__panel-city { margin-top: 10px; }
   &__hint { margin: -5px 0 0; color: var(--muted); font-size: 11px; line-height: 1.5; }
   .creator-card { aspect-ratio: 3 / 4; box-shadow: none; }
   .creator-card__heading { align-items: start; flex-direction: column; gap: 3px; }

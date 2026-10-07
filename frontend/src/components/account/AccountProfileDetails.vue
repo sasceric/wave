@@ -1,10 +1,10 @@
 <script setup>
-import { BadgeCheck, Building2, ExternalLink, FileText, Globe, Handshake, Images, MessageCircleQuestion, Pencil, Phone, Tags, UserRound, UsersRound } from '@lucide/vue'
+import { BadgeCheck, Building2, CalendarDays, ExternalLink, FileText, Globe, Handshake, Images, MessageCircleQuestion, Pencil, Phone, Tags, UserRound, UsersRound } from '@lucide/vue'
 import AccountProfileCard from './AccountProfileCard.vue'
 import RichTextContent from '../shared/RichTextContent.vue'
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { formatMoney } from '../../lib/api'
+import { formatDate, formatMoney } from '../../lib/api'
 import { sanitizeRichText } from '../../lib/richText'
 
 const props = defineProps({
@@ -30,7 +30,9 @@ const basics = computed(() => [
   [Globe, t('auth.country'), countryName.value],
   [Building2, t('auth.city'), props.profile.city],
   [Phone, t('auth.phone'), props.profile.phone],
+  ...(isCreator.value ? [[CalendarDays, t('account.birthday'), props.profile.birthday ? formatDate(props.profile.birthday) : '']] : []),
 ])
+const tagline = computed(() => props.profile.tagline || '')
 const aboutHtml = computed(() => sanitizeRichText(
   isCreator.value ? props.profile.bio : props.profile.about,
 ))
@@ -57,8 +59,8 @@ const aboutHtml = computed(() => sanitizeRichText(
         </AccountProfileCard>
         <AccountProfileCard class="profile-details__additional" :title="t('account.additionalInformation')" :icon="FileText" editable @edit="emit('edit', 'about')">
           <dl class="profile-details__grid">
-            <div v-if="isCreator" class="profile-details__row"><FileText :size="20" aria-hidden="true" /><dt>{{ t('account.tagline') }}</dt><dd>{{ profile.tagline || t('account.notProvided') }}</dd></div>
-            <div class="profile-details__row"><Pencil :size="20" aria-hidden="true" /><dt>{{ isCreator ? t('account.bio') : t('account.companyAbout') }}</dt><dd><RichTextContent v-if="aboutHtml" :html="aboutHtml" /><span v-else>{{ t('account.notProvided') }}</span></dd></div>
+            <div v-if="isCreator && tagline" class="profile-details__row"><FileText :size="20" aria-hidden="true" /><dt>{{ t('account.tagline') }}</dt><dd>{{ tagline || t('account.notProvided') }}</dd></div>
+            <div class="profile-details__row profile-details__row--content"><Pencil :size="20" aria-hidden="true" /><dt>{{ isCreator ? t('account.bio') : t('account.companyAbout') }}</dt><dd><RichTextContent v-if="aboutHtml" :html="aboutHtml" /><span v-else>{{ t('account.notProvided') }}</span></dd></div>
             <div v-if="isCreator" class="profile-details__row"><Tags :size="20" aria-hidden="true" /><dt>{{ t('account.tags') }}</dt><dd>{{ (profile.tags || []).join(', ') || t('account.notProvided') }}</dd></div>
             <div v-if="!isCreator && profile.socialLinks?.length" class="profile-details__row"><ExternalLink :size="20" aria-hidden="true" /><dt>{{ t('account.companySocialLinks') }}</dt><dd class="profile-details__links"><a v-for="link in profile.socialLinks" :key="link.platform" :href="link.url" target="_blank" rel="noopener noreferrer">{{ link.platform }} <ExternalLink :size="13" aria-hidden="true" /></a></dd></div>
           </dl>

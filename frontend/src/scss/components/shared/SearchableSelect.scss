@@ -3,8 +3,8 @@
 
   &__label {
     color: #61736a;
-    font-size: inherit;
-    font-weight: 600;
+    font-size: 12px;
+    font-weight: 400;
   }
 
   &__control {
@@ -24,6 +24,8 @@
     color: var(--ink);
     background: #fffefa;
     font: inherit;
+    font-size: 13px;
+    font-weight: 400;
     text-align: left;
     cursor: pointer;
     transition: border-color .16s ease, box-shadow .16s ease;

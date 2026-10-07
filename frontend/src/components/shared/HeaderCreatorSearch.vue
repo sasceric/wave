@@ -56,7 +56,7 @@ onBeforeUnmount(() => mediaQuery?.removeEventListener('change', updateViewport))
 </script>
 
 <template>
-  <form
+  <form v-form-validation
     class="header-creator-search"
     :class="{ 'is-expanded': expanded }"
     role="search"

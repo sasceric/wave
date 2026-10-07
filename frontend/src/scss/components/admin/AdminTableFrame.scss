@@ -269,11 +269,16 @@
   .admin-table {
     &__pagination {
       align-items: center;
+      flex-wrap: wrap;
     }
 
-    &__page-numbers .admin-table__page-number:not([aria-current="page"]),
-    &__ellipsis {
-      display: none;
+    &__pagination-controls {
+      max-width: 100%;
+      overflow-x: auto;
     }
+
+    &__pagination-controls button { flex-shrink: 0; }
+
+
   }
 }

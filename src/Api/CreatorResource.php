@@ -80,7 +80,7 @@ final class CreatorResource
             ),
             'city' => $creator->getCity(),
             'bio' => $translation['bio'] ?? $creator->getBio(),
-            'tagline' => $translation['tagline'] ?? ($creator->getTagline() !== '' ? $creator->getTagline() : ($translation['bio'] ?? $creator->getBio())),
+            'tagline' => $translation['tagline'] ?? $creator->getTagline(),
             'avatarUrl' => $creator->getAvatarMedia()?->getUrl() ?? $creator->getAvatarUrl(),
             'avatarMediaId' => $creator->getAvatarMedia()?->getId(),
             'avatarImage' => MediaImageResource::fromEntity($creator->getAvatarMedia()),

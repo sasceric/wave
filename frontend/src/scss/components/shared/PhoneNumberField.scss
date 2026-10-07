@@ -3,7 +3,7 @@
   display: grid;
   grid-column: 1 / -1;
   grid-template-columns: minmax(118px, .8fr) minmax(0, 1.4fr);
-  align-items: end;
+  align-items: start;
   gap: 10px;
   margin-bottom: 12px;
 
@@ -15,7 +15,7 @@
 
   .searchable-select__trigger {
     gap: 5px;
-    padding-right: 9px;
-    padding-left: 9px;
+    padding-right: 13px;
+    padding-left: 13px;
   }
 }

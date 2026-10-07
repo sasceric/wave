@@ -3,6 +3,7 @@
 namespace App\Controller\Api;
 
 use App\Account\AccountEmailSender;
+use App\Account\CreatorBirthday;
 use App\Api\ApiAccess;
 use App\Api\JsonPayload;
 use App\Api\ProfileSlug;
@@ -277,6 +278,10 @@ final class OAuthController extends AbstractController
         }
 
         if ($type === 'creator') {
+            $birthday = CreatorBirthday::parse($data['birthday'] ?? null);
+            if ($birthday === false) {
+                return new JsonResponse(['error' => ApiMessages::get('invalid_birthday', $locale), 'fields' => ['birthday']], 400);
+            }
             $firstName = is_string($data['firstName'] ?? null) ? trim($data['firstName']) : '';
             $lastName = is_string($data['lastName'] ?? null) ? trim($data['lastName']) : '';
             if ($firstName === '' || $lastName === '' || mb_strlen($firstName) > 60 || mb_strlen($lastName) > 60) {
@@ -328,6 +333,7 @@ final class OAuthController extends AbstractController
                 [],
                 categories: $categories,
             ));
+            $user->getCreator()?->setBirthday($birthday);
         } else {
             $industries = $data['industries'] ?? [$data['industry'] ?? ''];
             if (!is_array($industries) || !array_is_list($industries) || count($industries) < 1 || count($industries) > 20

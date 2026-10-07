@@ -22,9 +22,9 @@
   h2 { margin: 0; color: #172e28; font-family: var(--serif); font-size: 17px; font-weight: 600; line-height: 1.25; overflow-wrap: anywhere; }
   &__heading p { margin: 3px 0 0; color: #75867d; font-size: 12px; line-height: 1.35; }
   &__description { min-height: 38px; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; margin: 7px 0 12px; color: #72837a; font-size: 12px; line-height: 1.6; }
-  &__footer { display: flex; align-items: center; gap: 13px; margin-top: auto; min-width: 0; }
+  &__footer { display: flex; flex-wrap: wrap; align-items: center; gap: 13px; margin-top: auto; min-width: 0; }
   &__meta { min-width: 0; display: flex; align-items: center; gap: 5px; color: #73877d; font-size: 11px; line-height: 1.4; }
-  &__meta:first-child { overflow-wrap: anywhere; }
+  &__meta:first-child { white-space: nowrap; }
   &__meta svg { flex-shrink: 0; color: #355e50; }
   &__link { flex-shrink: 0; display: flex; align-items: center; justify-content: center; gap: 9px; min-height: 34px; margin-left: auto; padding: 6px 10px; border: 1px solid #b7c9bf; border-radius: 9px; color: #1d4c3f; text-decoration: none; font-size: 10px; font-weight: 600; }
   &__link:hover { background: #eef2e9; }

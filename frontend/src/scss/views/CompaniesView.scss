@@ -24,7 +24,7 @@
   &__view-options { display: flex; gap: 8px; }
   &__view-options button { display: flex; align-items: center; gap: 7px; min-height: 35px; padding: 0 14px; border: 1px solid #e2e6df; border-radius: 12px; color: #5d756b; background: #fffefa; font: inherit; font-size: 12px; cursor: pointer; }
   &__view-options button[aria-pressed='true'] { color: #fffefa; background: var(--forest); border-color: var(--forest); }
-  &__grid { gap: 18px; }
+  &__grid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 18px; }
   &__grid--list { grid-template-columns: 1fr; }
   &__grid--list .company-directory-card { display: grid; grid-template-columns: 240px minmax(0, 1fr); }
   &__grid--list .company-directory-card__visual { height: 100%; min-height: 185px; }
@@ -60,4 +60,3 @@
     &__grid--list .company-directory-card__heading { min-height: 53px; padding-top: 10px; }
   }
 }
-.company-directory__panel-city { margin-top: 10px; }

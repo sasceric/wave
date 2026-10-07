@@ -106,7 +106,7 @@ final class AdminToolsController
         }
         $rows = $inspector->failed($page, $size);
 
-        return $this->response(['data' => array_slice($rows, 0, $size), 'meta' => ['page' => $page, 'pageSize' => $size, 'hasMore' => count($rows) > $size]]);
+        return $this->response(['data' => array_slice($rows, 0, $size), 'meta' => ['page' => $page, 'pageSize' => $size, 'total' => $inspector->failedCount(), 'hasMore' => count($rows) > $size]]);
     }
 
     #[Route('/failed/{id}/{action}', name: 'api_admin_tools_failed_action', requirements: ['id' => '\\d+'], methods: ['POST'])]

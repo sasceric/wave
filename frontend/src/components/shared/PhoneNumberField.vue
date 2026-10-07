@@ -1,7 +1,8 @@
 <script setup>
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { getCountries, getCountryCallingCode } from 'libphonenumber-js/min'
+import { getCountries, getCountryCallingCode, parsePhoneNumberFromString } from 'libphonenumber-js/min'
+import { nationalPhoneNumber } from '../../lib/phoneNumbers'
 import SearchableSelect from './SearchableSelect.vue'
 
 const props = defineProps({
@@ -47,14 +48,28 @@ function flagEmoji(countryCode) {
     .join('')
 }
 
+const displayedPhone = computed(() => nationalPhoneNumber(props.modelValue, props.countryCode))
+
+function updateCountry(countryCode) {
+  const phone = displayedPhone.value
+  emit('update:countryCode', countryCode)
+  emit('update:modelValue', phone)
+}
+
 function updatePhone(event) {
-  emit('update:modelValue', event.target.value)
+  const value = event.target.value
+  const country = value.trim().startsWith('+') ? parsePhoneNumberFromString(value)?.country : null
+  if (country && country !== props.countryCode) emit('update:countryCode', country)
+  const phone = nationalPhoneNumber(value, country || props.countryCode)
+  event.target.value = phone
+  emit('update:modelValue', phone)
 }
 </script>
 
 <template>
   <div class="phone-number-field">
     <SearchableSelect
+      :required="!optional"
       class="phone-number-field__country"
       :model-value="props.countryCode"
       :options="countryOptions"
@@ -62,12 +77,14 @@ function updatePhone(event) {
       :placeholder="countryPlaceholder"
       :search-placeholder="countrySearchPlaceholder"
       :no-results-label="noCountriesFoundLabel"
-      @update:model-value="emit('update:countryCode', $event)"
+      @update:model-value="updateCountry"
     />
     <label class="form-field phone-number-field__number">
       <span>{{ label }}</span>
       <input
-        :value="props.modelValue"
+        data-validation-rule="phone"
+        :data-phone-country="countryCode"
+        :value="displayedPhone"
         type="tel"
         inputmode="tel"
         :required="!optional"

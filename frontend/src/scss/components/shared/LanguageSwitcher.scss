@@ -73,6 +73,25 @@
     color: #728d7d;
     font-size: 11px;
   }
+
+  &--expanded {
+    width: 100%;
+
+    .language-switcher__trigger {
+      width: 100%;
+      min-height: 44px;
+      gap: 10px;
+      padding: 10px 13px;
+      border: 1px solid #dfe4dc;
+      border-radius: 10px;
+      background: #fcfbf7;
+      font-size: 13px;
+      font-weight: 400;
+    }
+
+    .language-switcher__name { flex: 1; text-align: left; }
+    .language-switcher__menu { width: 100%; }
+  }
 }
 
 @include breakpoints.down(760px) {

@@ -1,0 +1,32 @@
+.date-picker {
+  // Theme the library in the same way as Wave's other form controls.
+  .dp--main {
+    --dp-font-family: "DM Sans", sans-serif;
+    --dp-font-size: 13px;
+    --dp-border-radius: 10px;
+    --dp-cell-border-radius: 7px;
+    --dp-background-color: #fffefa;
+    --dp-text-color: var(--ink);
+    --dp-primary-color: var(--forest);
+    --dp-primary-text-color: #fffefa;
+    --dp-hover-color: var(--sage);
+    --dp-hover-text-color: var(--forest);
+    --dp-border-color: #dfe4dc;
+    --dp-border-color-hover: #9aada0;
+    --dp-border-color-focus: #789281;
+    --dp-menu-border-color: #dfe4dc;
+    --dp-icon-color: #74847a;
+    --dp-secondary-color: var(--muted);
+    --dp-danger-color: #b64836;
+  }
+
+  .dp--input {
+    min-height: 44px;
+    padding: 10px 38px;
+    background: #fcfbf7;
+    font-size: 13px;
+    font-weight: 400;
+  }
+
+  .dp--menu { box-shadow: 0 14px 32px #1f2a2829; }
+}

@@ -6,6 +6,8 @@ final class ApiMessages
 {
     private const MESSAGES = [
         'bs' => [
+            'campaign_chat_closed' => 'Kampanja je zatvorena. Više nije moguće slati poruke u ovom razgovoru.',
+            'invalid_birthday' => 'Odaberi ispravan datum rođenja između 1900. godine i danas.',
             'campaign_not_found' => 'Kampanja nije pronađena.',
             'company_not_found' => 'Kompanija nije pronađena.',
             'creator_not_found' => 'Kreator nije pronađen.',
@@ -61,6 +63,8 @@ final class ApiMessages
             'newsletter_email_failed' => 'Potvrdni e-mail nije poslan. Pokušaj ponovo kasnije.',
         ],
         'hr' => [
+            'campaign_chat_closed' => 'Kampanja je zatvorena. Više nije moguće slati poruke u ovom razgovoru.',
+            'invalid_birthday' => 'Odaberi ispravan datum rođenja između 1900. godine i danas.',
             'campaign_not_found' => 'Kampanja nije pronađena.',
             'company_not_found' => 'Tvrtka nije pronađena.',
             'creator_not_found' => 'Kreator nije pronađen.',
@@ -116,6 +120,8 @@ final class ApiMessages
             'newsletter_email_failed' => 'Potvrdna e-pošta nije poslana. Pokušaj ponovno kasnije.',
         ],
         'sr' => [
+            'campaign_chat_closed' => 'Kampanja je zatvorena. Više nije moguće slati poruke u ovom razgovoru.',
+            'invalid_birthday' => 'Odaberi ispravan datum rođenja između 1900. godine i danas.',
             'campaign_not_found' => 'Kampanja nije pronađena.',
             'company_not_found' => 'Kompanija nije pronađena.',
             'creator_not_found' => 'Kreator nije pronađen.',
@@ -171,6 +177,8 @@ final class ApiMessages
             'newsletter_email_failed' => 'Potvrdni e-mail nije poslat. Pokušaj ponovo kasnije.',
         ],
         'cnr' => [
+            'campaign_chat_closed' => 'Kampanja je zatvorena. Više nije moguće slati poruke u ovom razgovoru.',
+            'invalid_birthday' => 'Odaberi ispravan datum rođenja između 1900. godine i danas.',
             'campaign_not_found' => 'Kampanja nije pronađena.',
             'company_not_found' => 'Kompanija nije pronađena.',
             'creator_not_found' => 'Kreator nije pronađen.',
@@ -226,6 +234,8 @@ final class ApiMessages
             'newsletter_email_failed' => 'Potvrdni e-mail nije poslat. Pokušaj ponovo kasnije.',
         ],
         'sl' => [
+            'campaign_chat_closed' => 'Kampanja je zaprta. V tem pogovoru ni več mogoče pošiljati sporočil.',
+            'invalid_birthday' => 'Izberi veljaven datum rojstva med letom 1900 in danes.',
             'campaign_not_found' => 'Kampanja ni bila najdena.',
             'company_not_found' => 'Podjetje ni bilo najdeno.',
             'creator_not_found' => 'Ustvarjalec ni bil najden.',
@@ -281,6 +291,8 @@ final class ApiMessages
             'newsletter_email_failed' => 'Potrditvenega e-poštnega sporočila ni bilo mogoče poslati. Poskusi znova pozneje.',
         ],
         'en' => [
+            'campaign_chat_closed' => 'This campaign is closed. You can no longer send messages in this conversation.',
+            'invalid_birthday' => 'Choose a valid birthday between 1900 and today.',
             'campaign_not_found' => 'Campaign not found.',
             'company_not_found' => 'Company not found.',
             'creator_not_found' => 'Creator not found.',

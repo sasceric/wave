@@ -10,6 +10,7 @@ const props = defineProps({
   placeholder: { type: String, default: '' },
   showLabel: { type: Boolean, default: true },
   disabled: { type: Boolean, default: false },
+  required: { type: Boolean, default: false },
 })
 const emit = defineEmits(['update:modelValue'])
 const id = `single-select-${useId()}`
@@ -101,11 +102,12 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div ref="root" class="form-field single-select" :class="{ 'is-above': opensAbove }" @focusout="closeOnFocusOut" @keydown.esc="handleEscape">
+  <div ref="root" class="form-field single-select" :class="{ 'is-above': opensAbove }" data-validation-field :data-required="required" :data-disabled="disabled" :data-validation-value="modelValue" @focusout="closeOnFocusOut" @keydown.esc="handleEscape">
     <span :id="`${id}-label`" class="single-select__label" :class="{ 'single-select__label--hidden': !showLabel }">{{ label }}</span>
     <button
       ref="trigger"
       class="single-select__trigger"
+      data-validation-control
       :class="{ 'is-open': isOpen }"
       type="button"
       :aria-labelledby="selectedOption?.label === label ? `${id}-label` : `${id}-label ${id}-value`"

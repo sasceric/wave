@@ -215,8 +215,10 @@ const currentDisplayName = computed(() => (
   || currentUser.value?.email
   || ''
 ))
-const canSend = computed(() => (
+const campaignChatClosed = computed(() => selectedCampaign.value?.status === 'closed')
+const canSend = computed(() => Boolean(
   !sending.value
+  && !campaignChatClosed.value
   && !loadingMessages.value
   && draft.value.trim().length > 0
   && draft.value.trim().length <= 2000
@@ -1302,12 +1304,14 @@ function messageTimeDescription(value) {
         </div>
 
         <button v-if="selectedThread && unseenNewMessages" type="button" class="campaign-messages__new-messages" @click="scrollToLatestMessage">{{ t('campaignChat.newMessages', { count: unseenNewMessages }) }}</button>
-        <form v-if="selectedThread || (pendingStart && pendingDetails && currentUser?.accountType === 'company')" class="campaign-messages__composer" @submit.prevent="sendMessage">
+        <form v-form-validation v-if="selectedThread || (pendingStart && pendingDetails && currentUser?.accountType === 'company')" class="campaign-messages__composer" @submit.prevent="sendMessage">
+          <p v-if="campaignChatClosed" id="campaign-chat-closed-notice" class="campaign-messages__closed-notice" role="status">{{ t('campaignChat.closedNotice') }}</p>
           <label class="campaign-messages__composer-field">
             <span class="sr-only">{{ t(selectedThread ? 'campaignChat.replyPlaceholder' : 'campaignChat.firstMessage') }}</span>
             <input
               ref="composerInput"
               v-model="draft"
+              :disabled="campaignChatClosed"
               @focus="handleComposerFocus"
               @blur="handleComposerBlur"
               @input="scheduleViewportUpdate"
@@ -1317,7 +1321,7 @@ function messageTimeDescription(value) {
               autocomplete="off"
               enterkeyhint="send"
               :placeholder="t(selectedThread ? 'campaignChat.replyPlaceholder' : 'campaignChat.firstMessage')"
-              aria-describedby="campaign-message-enter-hint"
+              :aria-describedby="campaignChatClosed ? 'campaign-chat-closed-notice' : 'campaign-message-enter-hint'"
             >
             <span id="campaign-message-enter-hint" class="sr-only">
               {{ t('campaignChat.messageHint') }}

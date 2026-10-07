@@ -114,7 +114,6 @@ function clearFilters() {
         </fieldset>
         <fieldset>
           <MultiSelect v-model="selectedCountries" :options="countryOptions" :label="t('companyDirectory.countryLabel')" :placeholder="t('companyDirectory.countryLabel')" :search-placeholder="t('companyDirectory.countryPlaceholder')" :no-results-label="t('auth.noCountriesFound')" :remove-label="t('account.remove')" />
-          <DirectorySearch class="creator-directory__panel-city" v-model="city" :icon="false" :placeholder="t('companyDirectory.locationPlaceholder')" :label="t('companyDirectory.cityLabel')" />
         </fieldset>
         <fieldset>
           <MultiSelect v-model="selectedPlatforms" :options="platformOptions" :label="t('creatorDirectory.platformLabel')" :placeholder="t('platforms.all')" :search-placeholder="t('creatorDirectory.searchPlatforms')" :no-results-label="t('creatorDirectory.noPlatforms')" :remove-label="t('account.remove')" />

@@ -1,9 +1,10 @@
 <script setup>
 import AdminTableFrame from './AdminTableFrame.vue'
 import SkeletonBlock from '../shared/SkeletonBlock.vue'
-import { ChevronLeft, ChevronRight } from '@lucide/vue'
+import { computed } from 'vue'
+import AdminPagination from './AdminPagination.vue'
 
-defineProps({
+const props = defineProps({
   columns: { type: Array, required: true },
   rows: { type: Array, required: true },
   labels: { type: Object, required: true },
@@ -11,10 +12,15 @@ defineProps({
   pageSize: { type: Number, default: 25 },
   pageSizes: { type: Array, default: () => [25, 50, 100] },
   hasMore: { type: Boolean, default: false },
+  total: { type: Number, default: null },
+  availablePages: { type: Number, default: 1 },
   busy: { type: Boolean, default: false },
   showEmpty: { type: Boolean, default: true },
 })
-defineEmits(['page-size', 'previous', 'next'])
+defineEmits(['page-size', 'page'])
+const pageCount = computed(() => props.total === null
+  ? Math.max(props.availablePages, props.page + Number(props.hasMore))
+  : Math.max(1, Math.ceil(props.total / props.pageSize)))
 </script>
 
 <template>
@@ -26,7 +32,7 @@ defineEmits(['page-size', 'previous', 'next'])
         <thead><tr><th v-for="column in columns" :key="column.key" scope="col">{{ column.label }}</th></tr></thead>
         <tbody>
           <tr v-for="row in rows" :key="row.id">
-            <td v-for="column in columns" :key="column.key">
+            <td v-for="column in columns" :key="column.key" :class="{ 'admin-table__actions': column.key === 'actions' }">
               <slot :name="`cell-${column.key}`" :row="row" :value="row[column.key]">{{ row[column.key] ?? '—' }}</slot>
             </td>
           </tr>
@@ -44,11 +50,7 @@ defineEmits(['page-size', 'previous', 'next'])
           <option v-for="size in pageSizes" :key="size" :value="size">{{ size }}</option>
         </select>
       </label>
-      <nav class="admin-table__pagination-controls" :aria-label="labels.pagination">
-        <button class="admin-table__page-button" type="button" :disabled="busy || page <= 1" :aria-label="labels.previous" @click="$emit('previous')"><ChevronLeft :size="16" aria-hidden="true" /></button>
-        <span aria-live="polite">{{ labels.page }}</span>
-        <button class="admin-table__page-button" type="button" :disabled="busy || !hasMore" :aria-label="labels.next" @click="$emit('next')"><ChevronRight :size="16" aria-hidden="true" /></button>
-      </nav>
+      <AdminPagination :page="page" :count="pageCount" :busy="busy" :labels="labels" @change="$emit('page', $event)" />
     </footer>
   </AdminTableFrame>
 </template>

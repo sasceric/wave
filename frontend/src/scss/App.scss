@@ -18,12 +18,13 @@
   backdrop-filter: blur(16px);
 
   &__inner {
-    max-width: 1320px;
+    width: min(1400px, 100% - 64px);
+    max-width: 1400px;
     min-height: 82px;
     display: flex;
     align-items: center;
     gap: 40px;
-    padding: 0 48px;
+    padding: 0;
     margin: 0 auto;
     border-bottom: 1px solid rgba(32, 61, 56, .1);
   }
@@ -38,7 +39,7 @@
     position: relative;
     color: #61736d;
     font-size: 12px;
-    font-weight: 600;
+    font-weight: 400;
     text-decoration: none;
     transition: color .2s ease;
   }
@@ -481,8 +482,6 @@
     &__inner {
       position: relative;
       gap: 10px;
-      padding-right: 24px;
-      padding-left: 24px;
     }
   }
 }
@@ -506,6 +505,7 @@
   .site-header {
     &__inner {
       position: relative;
+      width: 100%;
       min-height: 62px;
       padding: 0 13px;
       gap: 5px;
@@ -723,8 +723,8 @@
 }
 
 .site-shell--account .site-header__inner {
-  width: calc(100% - 64px);
-  max-width: none;
+  width: min(1400px, 100% - 64px);
+  max-width: 1400px;
 }
 
 @include breakpoints.down(760px) {

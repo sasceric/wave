@@ -23,6 +23,13 @@
   font-size: 10px;
   font-weight: 600;
 
+  > span,
+  > label {
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 400;
+  }
+
   input,
   select,
   textarea {
@@ -67,6 +74,8 @@
   input::placeholder,
   textarea::placeholder {
     color: #9ba49e;
+    font-weight: 400;
+    opacity: 1;
   }
 
   small {

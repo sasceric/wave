@@ -14,6 +14,7 @@ const props = defineProps({
   helperText: { type: String, default: '' },
   maxSelections: { type: Number, default: 0 },
   disabled: { type: Boolean, default: false },
+  required: { type: Boolean, default: false },
 })
 
 const emit = defineEmits(['update:modelValue'])
@@ -159,7 +160,7 @@ defineExpose({ openMenu })
 </script>
 
 <template>
-  <div class="form-field multi-select">
+  <div class="form-field multi-select" data-validation-field :data-required="required" :data-validation-value="modelValue.length ? 'selected' : ''" :data-disabled="disabled">
     <span :id="`${id}-label`" class="multi-select__label">{{ label }}</span>
     <small v-if="helperText">{{ helperText }}</small>
     <div
@@ -182,6 +183,7 @@ defineExpose({ openMenu })
         :id="`${id}-trigger`"
         ref="trigger"
         class="multi-select__trigger"
+        data-validation-control
         type="button"
         :aria-labelledby="`${id}-label`"
         :aria-expanded="isOpen"

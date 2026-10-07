@@ -41,8 +41,9 @@
 }
 
 .creator-profile {
+  --profile-hero-height: 290px;
   position: relative; isolation: isolate;
-  &__backdrop { position: absolute; z-index: -1; inset: 0 0 auto; height: 290px; overflow: hidden; pointer-events: none; }
+  &__backdrop { position: absolute; z-index: -1; inset: 0 0 auto; height: var(--profile-hero-height); overflow: hidden; pointer-events: none; }
   &__backdrop::before { position: absolute; inset: 0; background: url('/images/tropical-palm.webp') center 65% / cover; opacity: .16; filter: grayscale(1); content: ''; }
   &__backdrop span { position: absolute; border-radius: 50%; }
   &__backdrop span:nth-child(1) { width: 65px; height: 65px; top: 125px; left: max(12px, calc(50% - 670px)); background: #e88b64; }
@@ -50,6 +51,7 @@
   &__backdrop span:nth-child(3) { width: 430px; height: 430px; top: 75px; right: max(0px, calc((100vw - 1160px) / 2 - 95px)); background: #527066; }
 }
 .profile-layout {
+  grid-template-rows: minmax(calc(var(--profile-hero-height) - 32px), auto) auto;
   display: grid; grid-template-columns: minmax(0, 1fr) 285px; grid-template-areas: 'summary fit' 'packages details'; column-gap: 61px; row-gap: 28px; align-items: start; padding-top: 32px; padding-bottom: 93px;
 }
 .profile-main {
@@ -621,7 +623,7 @@
 
 @include breakpoints.down(760px) {
   .creator-profile {
-    &__backdrop { height: 225px; }
+    --profile-hero-height: 225px;
     &__backdrop span:nth-child(1) { width: 34px; height: 34px; left: -16px; top: 150px; }
     &__backdrop span:nth-child(2) { display: none; }
     &__backdrop span:nth-child(3) { right: -310px; top: 10px; opacity: .12; }
@@ -635,6 +637,7 @@
 
   .profile-layout {
     grid-template-columns: 1fr;
+    grid-template-rows: minmax(calc(var(--profile-hero-height) - 32px), auto) auto auto auto;
     grid-template-areas: 'summary' 'packages' 'fit' 'details';
     gap: 24px;
     padding-top: 32px;

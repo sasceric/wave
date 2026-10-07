@@ -1,8 +1,9 @@
 <script setup>
+import SingleSelect from '../components/shared/SingleSelect.vue'
 import CardGrid from '../components/shared/CardGrid.vue'
 import { computed, nextTick, onMounted, reactive, ref, useId, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { Building2, Camera, Mail, Megaphone, Search, UserRound, UsersRound } from '@lucide/vue'
+import { ArrowRight, ArrowUpRight, Building2, Camera, CircleCheck, ClipboardCheck, CreditCard, FileCheck2, FileText, HelpCircle, Mail, Map, Search, ShieldCheck, UserRound, UsersRound } from '@lucide/vue'
 import CampaignCard from '../components/campaigns/CampaignCard.vue'
 import CreatorCard from '../components/creators/CreatorCard.vue'
 import DirectorySkeletonCard from '../components/shared/DirectorySkeletonCard.vue'
@@ -18,6 +19,7 @@ const campaignsError = ref('')
 const loading = ref(true)
 const creatorMode = ref('latest')
 const { t, locale } = useI18n()
+const siteFaqIcons = [HelpCircle, UsersRound, FileText, CreditCard, ShieldCheck]
 const siteFaqItems = computed(() => Array.from({ length: 5 }, (_, index) => ({
   id: `site-${index + 1}`,
   question: t(`siteFaq.question${index + 1}`),
@@ -181,25 +183,47 @@ onMounted(loadHome)
   </section>
 
   <section class="audience-promo">
-    <LocalizedLink class="audience-promo__card" to="/campaigns">
-      <img src="/images/sunlit-profile.webp" alt="" loading="lazy" decoding="async" />
+    <article class="audience-promo__card">
+      <div class="audience-promo__visual" aria-hidden="true">
+        <img src="/images/sunlit-profile.webp" alt="" loading="lazy" decoding="async" />
+      </div>
       <div class="audience-promo__copy">
         <p class="audience-promo__eyebrow">{{ t('home.creatorsPromoEyebrow') }}</p>
-        <h2 class="audience-promo__title">{{ t('home.creatorsPromoTitle') }}</h2>
+        <h2 class="audience-promo__title">{{ t('home.creatorsPromoTitle').replace(/\.$/, '') }}<span>.</span></h2>
         <p class="audience-promo__description">{{ t('home.creatorsPromoDescription') }}</p>
-        <span class="audience-promo__arrow" aria-hidden="true">→</span>
+        <ul class="audience-promo__benefits">
+          <li><Map :size="17" aria-hidden="true" />{{ t('home.creatorsBenefitCampaigns') }}</li>
+          <li><ClipboardCheck :size="17" aria-hidden="true" />{{ t('home.creatorsBenefitTerms') }}</li>
+          <li><CircleCheck :size="17" aria-hidden="true" />{{ t('home.creatorsBenefitPlace') }}</li>
+        </ul>
+        <LocalizedLink class="audience-promo__button" to="/campaigns">{{ t('home.creatorsPromoAction') }}<ArrowRight :size="21" aria-hidden="true" /></LocalizedLink>
       </div>
-    </LocalizedLink>
+      <svg class="audience-promo__sketch" viewBox="0 0 70 70" aria-hidden="true"><path d="M48 4 15 48 43 21M15 16 12 51 50 35M28 60 61 39" /></svg>
+      <div v-if="campaigns.length" class="audience-promo__campaign"><CampaignCard :campaign="campaigns[0]" /></div>
+    </article>
 
-    <LocalizedLink class="audience-promo__card audience-promo__card--brands" to="/creators">
-      <img src="/images/minimalist-wave.webp" alt="" loading="lazy" decoding="async" />
+    <article class="audience-promo__card audience-promo__card--brands">
+      <div class="audience-promo__visual" aria-hidden="true">
+        <img src="/images/minimalist-wave.webp" alt="" loading="lazy" decoding="async" />
+      </div>
       <div class="audience-promo__copy">
         <p class="audience-promo__eyebrow">{{ t('home.brandsPromoEyebrow') }}</p>
-        <h2 class="audience-promo__title">{{ t('home.brandsPromoTitle') }}</h2>
+        <h2 class="audience-promo__title">{{ t('home.brandsPromoTitle').replace(/\.$/, '') }}<span>.</span></h2>
         <p class="audience-promo__description">{{ t('home.brandsPromoDescription') }}</p>
-        <span class="audience-promo__arrow audience-promo__arrow--brands" aria-hidden="true">→</span>
+        <ul class="audience-promo__benefits">
+          <li><Search :size="17" aria-hidden="true" />{{ t('home.brandsBenefitDiscover') }}</li>
+          <li><FileCheck2 :size="17" aria-hidden="true" />{{ t('home.brandsBenefitCommunication') }}</li>
+          <li><Camera :size="17" aria-hidden="true" />{{ t('home.brandsBenefitResults') }}</li>
+        </ul>
+        <LocalizedLink class="audience-promo__button" to="/account/campaigns/new">{{ t('home.postCampaign') }}<ArrowRight :size="21" aria-hidden="true" /></LocalizedLink>
       </div>
-    </LocalizedLink>
+      <div class="audience-promo__results">
+        <span>{{ t('home.resultsEyebrow') }}<ArrowUpRight :size="20" aria-hidden="true" /></span>
+        <div class="audience-promo__chart" aria-hidden="true"><i v-for="bar in 6" :key="bar" :style="{ height: `${bar * 8 + 5}px` }"></i></div>
+        <p>{{ t('home.resultsDescription') }}</p>
+      </div>
+      <p class="audience-promo__note">{{ t('home.brandsPromoNote') }}</p>
+    </article>
   </section>
 
   <section id="how-it-works" class="how-it-works-section" aria-labelledby="steps-title">
@@ -210,28 +234,22 @@ onMounted(loadHome)
         <p>{{ t('home.stepsIntro') }}</p>
       </div>
       <div class="steps">
-        <svg class="steps__wave" viewBox="0 0 1000 110" preserveAspectRatio="none" aria-hidden="true">
-          <path d="M0 55C70 55 100 25 167 25S270 85 334 85 435 42 500 42 600 8 667 8 770 75 834 75 930 48 1000 48" />
+        <svg class="steps__wave" viewBox="0 0 1000 130" preserveAspectRatio="none" aria-hidden="true">
+          <path d="M0 75C70 75 115 0 205 30S340 125 440 78 575 20 660 55 795 135 880 90 950 90 1000 130" />
         </svg>
-        <article class="step">
-          <span class="step__icon" aria-hidden="true"><Search :size="19" stroke-width="1.7" /></span>
-          <div class="step__content">
-            <h3>{{ t('home.step1Title') }}</h3>
-            <p>{{ t('home.step1Description') }}</p>
+        <article v-for="(icon, index) in [Search, FileCheck2, Camera]" :key="index" class="step">
+          <div class="step__visual">
+            <span class="step__icon" aria-hidden="true"><component :is="icon" :size="30" stroke-width="1.7" /></span>
+            <span class="step__number" aria-hidden="true">0{{ index + 1 }}</span>
+            <img :src="`/images/home-step-${['match', 'brief', 'create'][index]}.webp`" alt="" loading="lazy" decoding="async" />
+            <div v-if="index === 1" class="step__brief" aria-hidden="true">
+              <strong>{{ t('home.briefTitle') }}</strong>
+              <span v-for="key in ['Brief', 'Budget', 'Deadline', 'Deliverables']" :key="key"><CircleCheck :size="11" />{{ t(`home.brief${key}`) }}</span>
+            </div>
           </div>
-        </article>
-        <article class="step">
-          <span class="step__icon" aria-hidden="true"><Megaphone :size="19" stroke-width="1.7" /></span>
           <div class="step__content">
-            <h3>{{ t('home.step2Title') }}</h3>
-            <p>{{ t('home.step2Description') }}</p>
-          </div>
-        </article>
-        <article class="step">
-          <span class="step__icon" aria-hidden="true"><Camera :size="19" stroke-width="1.7" /></span>
-          <div class="step__content">
-            <h3>{{ t('home.step3Title') }}</h3>
-            <p>{{ t('home.step3Description') }}</p>
+            <h3>{{ t(`home.step${index + 1}Title`) }}</h3>
+            <p>{{ t(`home.step${index + 1}Description`) }}</p>
           </div>
         </article>
       </div>
@@ -266,7 +284,7 @@ onMounted(loadHome)
         <span class="contact-visual__underline"></span>
       </div>
       <span class="contact-block__watermark" aria-hidden="true">Wave</span>
-      <form
+      <form v-form-validation
         class="contact-form"
         aria-labelledby="contact-form-title"
         :aria-busy="contactSending"
@@ -337,15 +355,7 @@ onMounted(loadHome)
             :disabled="contactSending"
           />
         </label>
-        <label class="form-field contact-form__field--interest">
-          <span>{{ t('home.contactInterest') }}</span>
-          <select v-model="contactForm.interest" required :disabled="contactSending">
-            <option value="collaboration">{{ t('home.contactInterestCollaboration') }}</option>
-            <option value="campaign">{{ t('home.contactInterestCampaign') }}</option>
-            <option value="partnership">{{ t('home.contactInterestPartnership') }}</option>
-            <option value="other">{{ t('home.contactInterestOther') }}</option>
-          </select>
-        </label>
+        <SingleSelect class="contact-form__field--interest" v-model="contactForm.interest" :label="t('home.contactInterest')" :options="['collaboration', 'campaign', 'partnership', 'other'].map(value => ({ value, label: t(`home.contactInterest${value.charAt(0).toUpperCase() + value.slice(1)}`) }))" required :disabled="contactSending" />
         <label class="form-field contact-form__field--message">
           <span>{{ t('home.contactMessage') }}</span>
           <textarea
@@ -357,6 +367,7 @@ onMounted(loadHome)
             :placeholder="t('home.contactMessagePlaceholder')"
             :disabled="contactSending"
           ></textarea>
+          <small>{{ t('home.contactMessageMinimum', { count: 20 }) }}</small>
           <span class="contact-form__message-meta">{{ contactForm.message.length }} / 4000</span>
         </label>
         <div class="contact-form__submit">
@@ -408,21 +419,39 @@ onMounted(loadHome)
       </dialog>
     </div>
   </section>
-  <FaqSection
-    class="home-faq"
-    :eyebrow="t('siteFaq.eyebrow')"
-    :title="t('siteFaq.title')"
-    :description="t('siteFaq.description')"
-    :items="siteFaqItems"
-  />
+  <section class="home-faq" aria-labelledby="faq-title">
+    <div class="home-faq__inner page-width">
+      <div class="home-faq__visual home-faq__visual--creator" aria-hidden="true">
+        <img src="/images/home-faq-creator.webp" alt="" loading="lazy" decoding="async" />
+        <p class="home-faq__note">{{ t('home.faqCreatorNote') }}</p>
+      </div>
+      <FaqSection
+        :eyebrow="t('siteFaq.eyebrow')"
+        :title="t('siteFaq.title')"
+        :description="t('siteFaq.description')"
+        :items="siteFaqItems"
+      >
+        <template #title>{{ t('home.faqTitleLead') }}<br /><em>{{ t('home.faqTitleEmphasis') }}</em></template>
+        <template #icon="{ index }"><span class="home-faq__icon" aria-hidden="true"><component :is="siteFaqIcons[index]" :size="20" stroke-width="1.7" /></span></template>
+      </FaqSection>
+      <div class="home-faq__visual home-faq__visual--desk" aria-hidden="true">
+        <p class="home-faq__note">{{ t('home.faqDeskNote') }}</p>
+        <img src="/images/home-step-match.webp" alt="" loading="lazy" decoding="async" />
+      </div>
+    </div>
+  </section>
   <section class="brand-separator" aria-labelledby="brand-separator-title">
-    <div class="brand-separator__content">
-      <h2 id="brand-separator-title" class="brand-separator__headline">
-        <span>{{ t('home.brandSeparatorCreators') }}</span>
-        <span>{{ t('home.brandSeparatorBrands') }}</span>
-        <em>{{ t('home.brandSeparatorBigWaves') }}</em>
-      </h2>
-      <p class="brand-separator__wordmark">{{ t('home.brandSeparatorWordmark') }}</p>
+    <div class="brand-separator__content page-width">
+      <div class="brand-separator__copy">
+        <p class="eyebrow">{{ t('home.brandSeparatorEyebrow') }}</p>
+        <h2 id="brand-separator-title" class="brand-separator__headline">
+          <span>{{ t('home.brandSeparatorCreators') }}</span>
+          <span>{{ t('home.brandSeparatorBrands') }}</span>
+          <em>{{ t('home.brandSeparatorBigWaves') }}</em>
+        </h2>
+        <p class="brand-separator__description">{{ t('home.brandSeparatorDescription') }}</p>
+        <LocalizedLink class="audience-promo__button" to="/campaigns">{{ t('home.exploreCampaigns') }}<ArrowRight :size="21" aria-hidden="true" /></LocalizedLink>
+      </div>
     </div>
   </section>
 

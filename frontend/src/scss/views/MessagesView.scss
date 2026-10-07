@@ -503,6 +503,22 @@
     background: #fffdf9;
   }
 
+  &__closed-notice {
+    grid-column: 1 / -1;
+    margin: 0 0 3px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    color: var(--forest);
+    background: #edf1eb;
+    font-size: 13px;
+  }
+
+  &__composer-field input:disabled {
+    color: #87928a;
+    background: #f1f2ed;
+    cursor: not-allowed;
+  }
+
   &__composer-field {
     min-width: 0;
     display: block;

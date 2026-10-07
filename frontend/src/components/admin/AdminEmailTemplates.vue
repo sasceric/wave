@@ -207,7 +207,7 @@ onMounted(loadTemplates)
         </button>
       </aside>
 
-      <form v-if="selectedTemplate" class="email-template-editor" @submit.prevent="saveTemplate">
+      <form v-form-validation v-if="selectedTemplate" class="email-template-editor" @submit.prevent="saveTemplate">
         <header class="email-template-editor__heading">
           <div>
             <p class="eyebrow">{{ t('adminDashboard.emailTemplatesEyebrow') }}</p>

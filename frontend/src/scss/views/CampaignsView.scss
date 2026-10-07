@@ -13,12 +13,9 @@
   &__view-options button[aria-pressed='true'] { color: #fffefa; background: var(--forest); border-color: var(--forest); }
   &__field { display: block; min-width: 0; color: #61736a; font-size: 12px; }
   &__field > span { display: block; margin-bottom: 7px; font-weight: 600; }
-  &__field > input { width: 100%; min-width: 0; height: 42px; padding: 0 10px; border: 1px solid #dfe4dc; border-radius: 8px; color: var(--forest); background: #fffefa; font: inherit; }
-  &__field > input:disabled { opacity: .55; }
-  &__field > input:focus-visible { outline: 2px solid #789281; outline-offset: 2px; }
-  &__budget { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-top: 8px; }
   legend { color: #61736a; font-size: 12px; font-weight: 600; }
   &__hint { margin: 9px 0 0; color: var(--muted); font-size: 11px; line-height: 1.5; }
+  &__hint--currency { padding: 10px 12px; border: 1px solid #cedacd; border-radius: 8px; color: var(--forest); background: #edf2e9; font-size: 12px; }
   &__grid--list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 @include breakpoints.down(1150px) { .campaign-directory__content { grid-template-columns: 220px minmax(0, 1fr); gap: 18px; } }

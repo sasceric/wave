@@ -8,6 +8,9 @@ const props = defineProps({
   pageSize: { type: Number, required: true },
   total: { type: Number, required: true },
   pageSizes: { type: Array, default: () => [30, 60, 90] },
+  showSinglePage: { type: Boolean, default: false },
+  showPageSize: { type: Boolean, default: true },
+  statusLabel: { type: String, default: '' },
 })
 
 const emit = defineEmits(['update:page', 'update:pageSize'])
@@ -47,16 +50,16 @@ function changePageSize(event) {
 
 <template>
   <div v-if="total > 0" class="directory-pagination">
-    <label class="directory-pagination__page-size">
+    <label v-if="showPageSize" class="directory-pagination__page-size">
       <span>{{ t('directoryPagination.itemsPerPage') }}</span>
       <select :value="pageSize" :aria-label="t('directoryPagination.itemsPerPage')" @change="changePageSize">
         <option v-for="size in pageSizes" :key="size" :value="size">{{ size }}</option>
       </select>
     </label>
     <p class="directory-pagination__status">
-      {{ t('directoryPagination.pageStatus', { current: page, total: pageCount, count: total }) }}
+      {{ statusLabel || t('directoryPagination.pageStatus', { current: page, total: pageCount, count: total }) }}
     </p>
-    <nav v-if="pageCount > 1" class="directory-pagination__controls" :aria-label="t('directoryPagination.ariaLabel')">
+    <nav v-if="pageCount > 1 || showSinglePage" class="directory-pagination__controls" :aria-label="t('directoryPagination.ariaLabel')">
       <button
         type="button"
         :aria-label="t('directoryPagination.previous')"

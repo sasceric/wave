@@ -1,4 +1,5 @@
 <script setup>
+import { campaignPlace } from '../lib/marketplace'
 import { onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { ArrowRight, BadgeCheck, CalendarDays, DollarSign, MapPin, Tag, UsersRound } from '@lucide/vue'
@@ -117,7 +118,7 @@ onMounted(loadCampaign)
         <div class="brief-hero__grid">
           <div class="brief-hero__copy">
             <p class="eyebrow">
-              {{ campaign.categoryLabel || campaign.category }}
+              {{ (campaign.categoryLabels || [campaign.categoryLabel || campaign.category]).join(', ') }}
               <span aria-hidden="true">·</span>
               {{ t('campaignDetail.openCampaign') }}
             </p>
@@ -193,7 +194,7 @@ onMounted(loadCampaign)
               >
                 {{ t('account.apply') }} <ArrowRight :size="17" aria-hidden="true" />
               </button>
-              <template v-else>
+              <form v-else v-form-validation @submit.prevent="applyToCampaign">
                 <label class="field-label" for="application-message">{{ t('account.applicationMessage') }}</label>
                 <textarea
                   id="application-message"
@@ -210,14 +211,12 @@ onMounted(loadCampaign)
                   </button>
                   <button
                     class="button button--dark"
-                    type="button"
-                    :disabled="applicationMessage.trim().length < 20"
-                    @click="applyToCampaign"
+                    type="submit"
                   >
                     {{ t('account.sendApplication') }} <ArrowRight :size="17" aria-hidden="true" />
                   </button>
                 </div>
-              </template>
+              </form>
             </div>
             <div v-else-if="applicationSent" class="brief-notice" role="status">
               {{ t('account.applicationSent') }}
@@ -244,7 +243,7 @@ onMounted(loadCampaign)
       <article class="brief-copy">
         <p class="eyebrow">{{ t('campaignDetail.idea') }}</p>
         <h2>{{ t('campaignDetail.ideaHeadline') }}</h2>
-        <p class="brief-copy__description">{{ campaign.description }}</p>
+        <RichTextContent :html="campaign.description" />
         <div class="brief-copy__section">
           <p class="eyebrow">{{ t('campaignDetail.deliverables') }}</p>
           <ul v-if="campaign.deliverables?.length" class="brief-deliverables">
@@ -269,12 +268,12 @@ onMounted(loadCampaign)
           <div class="brief-fact">
             <Tag :size="18" aria-hidden="true" />
             <span>{{ t('campaignDetail.category') }}</span>
-            <strong>{{ campaign.categoryLabel || campaign.category }}</strong>
+            <strong>{{ (campaign.categoryLabels || [campaign.categoryLabel || campaign.category]).join(', ') }}</strong>
           </div>
           <div class="brief-fact">
             <MapPin :size="18" aria-hidden="true" />
             <span>{{ t('campaignDetail.location') }}</span>
-            <strong>{{ campaign.location }}</strong>
+            <strong>{{ campaignPlace(campaign, locale) }}</strong>
           </div>
           <div class="brief-fact">
             <DollarSign :size="18" aria-hidden="true" />

@@ -388,10 +388,15 @@
     cursor: pointer;
   }
 
-  &__remove:hover {
+  &__remove:hover:not(:disabled) {
     border-color: #e8c4ba;
     color: #814d40;
     background: #fff0eb;
+  }
+
+  &__remove:disabled {
+    opacity: .5;
+    cursor: not-allowed;
   }
 
   &__empty {
@@ -446,16 +451,13 @@
   }
 
   .social-editor {
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr) minmax(150px, .8fr) auto;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr) minmax(150px, .8fr);
   }
 
   .social-editor .form-field {
     margin-bottom: 2px;
   }
 
-  .social-editor > .profile-editor__remove {
-    margin-bottom: 17px;
-  }
 }
 
 .verification-banner {
@@ -505,11 +507,25 @@
 
 .social-editor {
   display: grid;
-  grid-template-columns: 1fr 1.2fr .8fr auto;
-  align-items: end;
+  grid-template-columns: 1fr 1.2fr .8fr;
+  align-items: start;
   gap: 9px;
-  padding: 12px 0 3px;
-  border-top: 1px solid #e9ebe5;
+  margin-top: 18px;
+  padding: 18px;
+  border: 1px solid #e2e6df;
+  border-radius: 10px;
+  background: #fffefa;
+
+  &__top {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 6px;
+
+    strong { font-size: 13px; font-weight: 500; }
+  }
 
   .form-field {
     margin-bottom: 8px;
@@ -1229,11 +1245,6 @@
       gap: 6px 10px;
     }
 
-    .social-editor > .profile-editor__remove {
-      grid-column: 1 / -1;
-      justify-self: end;
-      margin: 0 0 4px;
-    }
   }
 
   .portfolio-editor,
@@ -1403,4 +1414,30 @@
 .company-cover-field {
   .profile-image-field__image { width: min(100%, 400px); }
   .profile-image-field__image > img { aspect-ratio: auto; max-height: 240px; object-fit: contain; }
+}
+
+.campaign-deliverables {
+  display: grid;
+  gap: 16px;
+
+  &__item {
+    margin-bottom: 0;
+  }
+
+  &__heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+
+    > label {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 400;
+    }
+
+    > button { flex: 0 0 auto; }
+  }
+
+  > button { justify-self: start; }
 }

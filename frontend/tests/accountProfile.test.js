@@ -3,17 +3,22 @@ import { test } from 'node:test'
 import { ref } from 'vue'
 import { setupView } from './setupView.js'
 
-async function setupAccount({ saveError = null } = {}) {
+async function setupAccount({ saveError = null, accountType = 'company' } = {}) {
   const requests = []
   const scrolls = []
   let blurred = false
   const account = {
-    id: 1, accountType: 'company', approved: false, isAdmin: false,
+    id: 1, accountType, approved: false, isAdmin: false,
     profileComplete: true, emailVerified: true,
     phone: '+38761123456', city: 'Sarajevo', countryCode: 'BA',
     profile: {
       name: 'Test company', industry: 'Software', about: 'Saved description',
       socialProfiles: [{ platform: 'TikTok', followers: 100 }],
+      ...(accountType === 'creator' ? {
+        displayName: 'Test creator', category: 'Travel', categories: ['Travel'],
+        bio: 'Saved bio', tagline: '', tags: ['Nature', 'Food, drinks'],
+        socialProfiles: [], portfolio: [], packages: [], faqs: [],
+      } : {}),
     },
   }
   const view = await setupView('../src/views/AccountView.vue', {
@@ -39,19 +44,19 @@ async function setupAccount({ saveError = null } = {}) {
 
 test('Cancel restores nested profile details, tags and phone country without saving', async () => {
   const { state, requests } = await setupAccount()
-  state.tags.value = 'original'
+  state.tags.value = ['original']
   state.profilePhoneCountry.value = 'BA'
   assert.equal(state.editingProfile.value, false)
   state.startProfileEdit()
   state.profile.value.name = 'Unsaved company'
   state.profile.value.socialProfiles[0].followers = 999
-  state.tags.value = 'unsaved'
+  state.tags.value = ['unsaved']
   state.profilePhoneCountry.value = 'HR'
   state.cancelProfileEdit()
   assert.equal(state.editingProfile.value, false)
   assert.equal(state.profile.value.name, 'Test company')
   assert.equal(state.profile.value.socialProfiles[0].followers, 100)
-  assert.equal(state.tags.value, 'original')
+  assert.deepEqual(Array.from(state.tags.value), ['original'])
   assert.equal(state.profilePhoneCountry.value, 'BA')
   assert.equal(requests.length, 0)
 })
@@ -81,6 +86,18 @@ test('Save uses the existing profile API and returns to saved details', async ()
   assert.equal(state.editingProfile.value, false)
 })
 
+test('creator tags load and save as separate values, preserving commas inside a tag', async () => {
+  const { state, requests } = await setupAccount({ accountType: 'creator' })
+  assert.deepEqual(Array.from(state.tags.value), ['Nature', 'Food, drinks'])
+  state.startProfileEdit()
+  state.tags.value = ['Nature', 'Food, drinks', 'Travel']
+  await state.saveProfile()
+  assert.equal(requests.length, 1)
+  assert.deepEqual(Array.from(requests[0].body.tags), ['Nature', 'Food, drinks', 'Travel'])
+  assert.deepEqual(Array.from(state.tags.value), ['Nature', 'Food, drinks', 'Travel'])
+  assert.equal(state.editingProfile.value, false)
+})
+
 test('a failed Save leaves the form and draft available for correction', async () => {
   const { state } = await setupAccount({ saveError: 'Please try again' })
   state.startProfileEdit()
@@ -91,6 +108,20 @@ test('a failed Save leaves the form and draft available for correction', async (
   assert.equal(state.error.value, 'Please try again')
   state.cancelProfileEdit()
   assert.equal(state.profile.value.name, 'Test company')
+})
+
+test('offers resolve chats by their application, preserving unrelated conversations and missing chats', async () => {
+  const { state } = await setupAccount({ accountType: 'creator' })
+  state.applications.value = [
+    { id: 12, conversationId: 78 },
+    { id: 13, conversationId: 79 },
+  ]
+  state.offers.value = [
+    { id: 1, applicationId: 13 },
+    { id: 2, applicationId: 12 },
+    { id: 3, applicationId: 99 },
+  ]
+  assert.deepEqual(Array.from(state.offersWithConversations.value, (offer) => offer.conversationId), [79, 78, null])
 })
 
 test('login clears form focus and resets the page without a smooth scroll', async () => {
@@ -129,9 +160,16 @@ test('failed company Save rolls back both staged uploads', async () => {
   assert.equal(state.editingProfile.value, true)
 })
 
-test('campaign Save retains its separate target location', async () => {
+test('campaign Save sends separate city, country, areas and deliverables', async () => {
   const { state, requests } = await setupAccount()
-  state.campaignForm.value.location = 'Croatia'
+  state.campaignForm.value.city = 'Zagreb'
+  state.campaignForm.value.countryCode = 'HR'
+  state.campaignForm.value.categories = ['Food', 'Travel']
+  state.campaignForm.value.deliverables = ['1 video', '3 photos']
   await state.saveCampaign()
-  assert.equal(requests[0].body.location, 'Croatia')
+  assert.equal(requests[0].body.city, 'Zagreb')
+  assert.equal(requests[0].body.countryCode, 'HR')
+  assert.deepEqual(Array.from(requests[0].body.categories), ['Food', 'Travel'])
+  assert.deepEqual(Array.from(requests[0].body.deliverables), ['1 video', '3 photos'])
+  assert.ok(!('location' in requests[0].body))
 })

@@ -17,6 +17,8 @@ import {
 import LanguageSwitcher from '../shared/LanguageSwitcher.vue'
 import StatusMessage from '../shared/StatusMessage.vue'
 import MultiSelect from '../shared/MultiSelect.vue'
+import DatePicker from '../shared/DatePicker.vue'
+import { dateOnly } from '../../lib/datePicker'
 import SearchableSelect from '../shared/SearchableSelect.vue'
 import WaveWordmark from '../shared/WaveWordmark.vue'
 import PhoneNumberField from '../shared/PhoneNumberField.vue'
@@ -43,6 +45,7 @@ const form = reactive({
   password: '',
   accountType: 'creator',
   firstName: '',
+  birthday: '',
   lastName: '',
   companyName: '',
   phone: '',
@@ -195,6 +198,7 @@ async function submit() {
             name: `${form.firstName.trim()} ${form.lastName.trim()}`,
             category: form.categories[0],
             categories: form.categories,
+            birthday: form.birthday || null,
           }
         : { name: form.companyName.trim(), industries: form.industries }),
     })
@@ -328,7 +332,7 @@ function changeMode(nextMode) {
       }"
     >
       <StatusMessage v-if="catalogError" variant="error">{{ catalogError }}</StatusMessage>
-      <form
+      <form v-form-validation
         class="form-card auth-form"
         :class="{
           'auth-form--registration': mode === 'register',
@@ -411,7 +415,8 @@ function changeMode(nextMode) {
               autocomplete="family-name"
             />
           </label>
-          <MultiSelect
+          <DatePicker v-model="form.birthday" :label="t('account.birthday')" :helper-text="t('account.birthdayPrivate')" min="1900-01-01" :max="dateOnly()" />
+          <MultiSelect required
             class="form-field--wide"
             v-model="form.categories"
             :options="categories"
@@ -436,7 +441,7 @@ function changeMode(nextMode) {
               :placeholder="t('auth.companyNamePlaceholder')"
             />
           </label>
-          <MultiSelect
+          <MultiSelect required
               v-model="form.industries"
               :options="industries || []"
               :label="t('auth.industry')"
@@ -447,7 +452,7 @@ function changeMode(nextMode) {
               :max-selections="20"
             />
         </template>
-        <SearchableSelect
+        <SearchableSelect required
           :model-value="form.country"
           :options="countryOptions"
           :label="t('auth.country')"

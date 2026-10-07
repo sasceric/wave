@@ -3,6 +3,7 @@
 namespace App\Tests\Controller;
 
 use App\Entity\Campaign;
+use App\Entity\Application as CampaignApplication;
 use App\Entity\CampaignConversation;
 use App\Entity\CampaignMessage;
 use App\Entity\Company;
@@ -103,6 +104,7 @@ final class MarketplaceWorkflowTest extends WebTestCase
             'password' => 'a-long-passphrase-for-wave',
             'firstName' => 'Avery',
             'lastName' => 'Creator',
+            'birthday' => '2000-02-29',
             'phone' => '+387 61 123 456',
             'category' => 'Travel',
             'categories' => ['Travel', 'Lifestyle'],
@@ -119,6 +121,7 @@ final class MarketplaceWorkflowTest extends WebTestCase
         self::assertArrayNotHasKey('password', $registered);
         self::assertSame('', $registered['profile']['bio']);
         self::assertSame(['Travel', 'Lifestyle'], $registered['profile']['categories']);
+        self::assertSame('2000-02-29', $registered['profile']['birthday']);
         $registeredUser = static::getContainer()->get(EntityManagerInterface::class)
             ->getRepository(User::class)->findOneBy(['email' => 'creator@example.test']);
         self::assertInstanceOf(User::class, $registeredUser);
@@ -152,6 +155,7 @@ final class MarketplaceWorkflowTest extends WebTestCase
 
         $this->jsonRequest('PUT', '/api/me/profile', [
             'displayName' => 'Avery Creator',
+            'birthday' => '1999-05-08',
             'category' => 'Food',
             'categories' => ['Food', 'Lifestyle'],
             'bio' => 'I make thoughtful guides for slower, more curious travel.',
@@ -167,11 +171,13 @@ final class MarketplaceWorkflowTest extends WebTestCase
         self::assertSame('Prijavio/la kreator/ica', $this->payload()['data']['socialProfiles'][0]['source']);
         self::assertSame((new DateTimeImmutable('today'))->format('Y-m-d'), $this->payload()['data']['socialProfiles'][0]['lastUpdated']);
         self::assertSame(['Food', 'Lifestyle'], $this->payload()['data']['categories']);
+        self::assertSame('1999-05-08', $this->payload()['data']['birthday']);
         self::assertSame('Can you create a custom travel itinerary?', $this->payload()['data']['faqs'][0]['question']);
 
         $this->client->request('GET', '/api/creators/'.$registered['profile']['slug'].'?locale=en');
         self::assertResponseIsSuccessful();
         self::assertSame('Avery Creator', $this->payload()['data']['displayName']);
+        self::assertArrayNotHasKey('birthday', $this->payload()['data']);
         self::assertSame(['Food', 'Lifestyle'], $this->payload()['data']['categories']);
         self::assertSame('Can you create a custom travel itinerary?', $this->payload()['data']['faqs'][0]['question']);
 
@@ -730,14 +736,16 @@ final class MarketplaceWorkflowTest extends WebTestCase
         $campaignFields = [
             'title' => 'A New Table',
             'summary' => 'A thoughtful campaign for a good meal.',
-            'description' => 'Create a warm story about a meal shared with friends.',
+            'description' => '<p>Create a <strong>warm story</strong> about a meal shared with friends.</p><script>alert(1)</script>',
             'category' => 'Food',
             'channels' => ['Instagram'],
             'deliverables' => ['1 short video'],
             'budgetMin' => 250,
             'budgetMax' => 600,
             'currency' => 'EUR',
-            'location' => 'Croatia',
+            'city' => 'Zagreb',
+            'countryCode' => 'HR',
+            'categories' => ['Food', 'Travel'],
             'creatorCount' => 2,
             'closesAt' => (new DateTimeImmutable('+35 days'))->format('Y-m-d'),
         ];
@@ -748,11 +756,21 @@ final class MarketplaceWorkflowTest extends WebTestCase
         self::assertResponseStatusCodeSame(400);
         self::assertSame(['budgetMax', 'closesAt'], $this->payload()['fields']);
 
+        $this->jsonRequest('POST', '/api/company/campaigns', [...$campaignFields, 'description' => '<p><br></p>', 'categories' => [], 'countryCode' => 'ZZ'], $csrf);
+        self::assertResponseStatusCodeSame(400);
+        self::assertSame(['description', 'categories', 'countryCode'], $this->payload()['fields']);
+
         $this->jsonRequest('POST', '/api/company/campaigns', $campaignFields, $csrf);
         self::assertResponseStatusCodeSame(201);
         $managedCampaign = $this->payload()['data'];
         self::assertSame('open', $managedCampaign['status']);
         self::assertSame('EUR', $managedCampaign['currency']);
+        self::assertSame('Zagreb', $managedCampaign['city']);
+        self::assertSame('HR', $managedCampaign['countryCode']);
+        self::assertSame(['Food', 'Travel'], $managedCampaign['categories']);
+        self::assertStringContainsString('<strong>warm story</strong>', $managedCampaign['description']);
+        self::assertStringNotContainsString('<script', $managedCampaign['description']);
+        self::assertArrayNotHasKey('location', $managedCampaign);
         self::assertArrayNotHasKey('moderationStatus', $managedCampaign);
         $this->client->request('GET', '/api/campaigns/'.$managedCampaign['slug'].'?locale=bs');
         self::assertResponseIsSuccessful();
@@ -1009,6 +1027,49 @@ final class MarketplaceWorkflowTest extends WebTestCase
         $this->client->request('GET', '/api/me/bookmarks?locale=bs');
         self::assertResponseIsSuccessful();
         self::assertSame([], $this->payload()['data']);
+    }
+
+    public function testClosedCampaignChatsRejectNewMessagesButRetainReadableHistory(): void
+    {
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $companyUser = new User('closed-chat-company@example.test', 'ROLE_COMPANY');
+        $companyUser->setPassword('unused-test-hash');
+        $company = new Company('closed-chat-company', 'Chat Company', 'Food');
+        $companyUser->setCompany($company);
+        $creatorUser = new User('closed-chat-creator@example.test', 'ROLE_CREATOR');
+        $creatorUser->setPassword('unused-test-hash');
+        $creator = new Creator('closed-chat-creator', 'Chat Creator', 'Food', 'Sarajevo', 'A creator profile.', [], []);
+        $creatorUser->setCreator($creator);
+        $campaign = new Campaign(
+            'closed-chat', 'Closed campaign', 'Summary', 'Campaign brief', 'Food', ['Instagram'], ['1 post'],
+            300, 700, 'Sarajevo', 2, new DateTimeImmutable('+20 days'), new DateTimeImmutable('today'), $company,
+        );
+        $campaign->setStatus('closed');
+        $application = new CampaignApplication($campaign, $creator, 'An application for this campaign.');
+        $application->setStatus('shortlisted');
+        $conversation = new CampaignConversation($campaign, $creator, $companyUser);
+        $message = new CampaignMessage($conversation, $companyUser, 'Existing message remains readable');
+        foreach ([$companyUser, $creatorUser, $campaign, $application, $conversation, $message] as $entity) {
+            $em->persist($entity);
+        }
+        $em->flush();
+        $conversationId = $conversation->getId();
+        $creatorId = $creator->getId();
+
+        foreach ([$creatorUser, $companyUser] as $participant) {
+            $this->client->loginUser($participant, 'main');
+            $this->jsonRequest('POST', '/api/me/conversations/'.$conversationId.'/messages', ['body' => 'Must not be sent'], $this->csrfToken());
+            self::assertResponseStatusCodeSame(409);
+            self::assertStringContainsString('zatvorena', $this->payload()['error']);
+            $this->client->request('GET', '/api/me/conversations/'.$conversationId.'/messages?locale=bs');
+            self::assertResponseIsSuccessful();
+            self::assertCount(1, $this->payload()['data']);
+            self::assertSame('Existing message remains readable', $this->payload()['data'][0]['body']);
+        }
+        $this->jsonRequest('POST', '/api/company/campaigns/closed-chat/conversations', [
+            'creatorId' => $creatorId, 'message' => 'Must not start or append a conversation',
+        ], $this->csrfToken());
+        self::assertResponseStatusCodeSame(409);
     }
 
     public function testCampaignConversationsAreScopedAndGenerateNotifications(): void

@@ -1,7 +1,6 @@
 <script setup>
 import { computed, onBeforeUnmount, onMounted, watch } from 'vue'
 import {
-  Bell,
   ExternalLink,
   LogOut,
   Building2,
@@ -25,7 +24,6 @@ import WaveLogo from '../shared/WaveLogo.vue'
 import LocalizedLink from '../shared/LocalizedLink.vue'
 import LanguageSwitcher from '../shared/LanguageSwitcher.vue'
 import { mobileAccountSidebarOpen } from '../../composables/useMobileAccountSidebar'
-import { unreadMessageCount } from '../../composables/useUnreadMessages'
 
 const props = defineProps({
   user: {
@@ -68,13 +66,7 @@ const adminMarketingItems = computed(() => navigationItems.value.filter((item) =
 )))
 const exploreItems = computed(() => [
   { route: 'creators', label: t('app.creatorsNav'), icon: Users },
-  { route: 'companies', label: t('app.companies'), icon: Building2 },
-  { route: 'campaigns', label: t('app.campaigns'), icon: Megaphone },
 ])
-function openNotifications() {
-  closeMobileSidebar()
-  window.dispatchEvent(new Event('wave:open-notifications'))
-}
 async function signOut() {
   if (signingOut.value) return
   signingOut.value = true
@@ -115,13 +107,7 @@ onBeforeUnmount(() => {
 const navigationItems = computed(() => {
   const canUseMarketplace = props.user?.approved || props.user?.isAdmin
   const creator = props.user?.accountType === 'creator'
-  const items = [
-    {
-      route: 'account',
-      labelKey: creator ? 'account.creatorProfile' : 'account.companyProfile',
-      icon: creator ? UserRound : Building2,
-    },
-  ]
+  const items = []
 
   if (canUseMarketplace && creator) {
     items.push(
@@ -136,10 +122,6 @@ const navigationItems = computed(() => {
       { route: 'account-campaigns', labelKey: 'account.campaigns', icon: Megaphone },
       { route: 'account-inquiries', labelKey: 'account.directRequests', icon: MessageCircle },
     )
-  }
-
-  if (canUseMarketplace) {
-    items.push({ route: 'messages', labelKey: 'app.messages', icon: MessageCircle, badge: unreadMessageCount.value })
   }
 
   if (props.user?.isModerator) {
@@ -196,8 +178,7 @@ const navigationItems = computed(() => {
     </div>
     <div class="account-sidebar__group account-sidebar__group--public">
       <div class="account-sidebar__language">
-        <span>{{ t('app.language') }}</span>
-        <LanguageSwitcher />
+        <LanguageSwitcher expanded />
       </div>
       <LocalizedLink v-for="item in exploreItems" :key="item.route" class="account-sidebar__link" :class="{ 'is-active': route.meta.routeName === item.route }" :to="{ name: item.route }" @click="closeMobileSidebar"><component :is="item.icon" :size="20" aria-hidden="true" /><span class="account-sidebar__text">{{ item.label }}</span></LocalizedLink>
     </div>
@@ -218,8 +199,6 @@ const navigationItems = computed(() => {
       <span class="account-sidebar__text">{{ item.label }}</span>
       <strong v-if="item.badge" class="account-sidebar__badge">{{ item.badge > 99 ? '99+' : item.badge }}</strong>
     </LocalizedLink>
-    <button v-if="user" class="account-sidebar__link" type="button" @click="openNotifications"><Bell :size="20" aria-hidden="true" /><span class="account-sidebar__text">{{ t('app.notifications') }}</span></button>
-    <LocalizedLink v-if="user?.accountType === 'creator'" class="account-sidebar__link" :to="{ name: 'account', query: { tab: 'faqs' } }" @click="closeMobileSidebar"><ClipboardCheck :size="20" aria-hidden="true" /><span class="account-sidebar__text">{{ t('account.creatorFaqs') }}</span></LocalizedLink>
     </div>
     <div v-if="adminItems.length" class="account-sidebar__group">
       <p class="account-sidebar__label">{{ t('adminDashboard.navOverview') }}</p>

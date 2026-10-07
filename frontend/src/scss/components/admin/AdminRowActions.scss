@@ -26,6 +26,8 @@
     z-index: 80;
     display: grid;
     min-width: 184px;
+    max-height: calc(100vh - 16px);
+    overflow-y: auto;
     gap: 2px;
     padding: 5px;
     border: 1px solid #e1e6e0;
@@ -60,6 +62,8 @@
   &__item--danger {
     color: #a33f36;
   }
+
+  &__item:disabled { opacity: .5; cursor: default; }
 
   &__item--danger:hover,
   &__item--danger:focus-visible {

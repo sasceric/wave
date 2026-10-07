@@ -21,7 +21,7 @@ function submitForm() {
 <template>
   <div class="site-footer__newsletter-signup">
     <p class="site-footer__newsletter-copy">{{ t('app.footerNewsletterText') }}</p>
-    <form class="site-footer__newsletter-form" :aria-busy="loading" @submit.prevent="submitForm">
+    <form v-form-validation class="site-footer__newsletter-form" :aria-busy="loading" @submit.prevent="submitForm">
       <label class="sr-only" :for="inputId">
         {{ t('app.footerNewsletterPlaceholder') }}
       </label>

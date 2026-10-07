@@ -6,17 +6,23 @@ import { useRoute, useRouter } from 'vue-router'
 import { parsePhoneNumberFromString } from 'libphonenumber-js/min'
 import RouterLink from '../components/shared/LocalizedLink.vue'
 import { I18nT, useI18n } from 'vue-i18n'
-import { ArrowLeft, Eye, ExternalLink, FileText, MessageCircle, Plus, Trash2, UserRound, X } from '@lucide/vue'
+import { ArrowLeft, Eye, ExternalLink, FileText, Plus, Trash2, UserRound, X } from '@lucide/vue'
 import AccountAccessPanel from '../components/account/AccountAccessPanel.vue'
 import AccountSidebar from '../components/account/AccountSidebar.vue'
 import AccountProfileSummary from '../components/account/AccountProfileSummary.vue'
 import AccountProfileCard from '../components/account/AccountProfileCard.vue'
 import AccountProfileDetails from '../components/account/AccountProfileDetails.vue'
+import CreatorCampaignActivity from '../components/account/CreatorCampaignActivity.vue'
 import RequiredProfileModal from '../components/account/RequiredProfileModal.vue'
 import MultiSelect from '../components/shared/MultiSelect.vue'
+import DatePicker from '../components/shared/DatePicker.vue'
+import { dateOnly } from '../lib/datePicker'
+import TagInput from '../components/shared/TagInput.vue'
 import MediaUploadField from '../components/shared/MediaUploadField.vue'
+import SingleSelect from '../components/shared/SingleSelect.vue'
 import PhoneNumberField from '../components/shared/PhoneNumberField.vue'
 import ProfileImageField from '../components/shared/ProfileImageField.vue'
+import RichTextContent from '../components/shared/RichTextContent.vue'
 import RichTextEditor from '../components/shared/RichTextEditor.vue'
 import SearchableSelect from '../components/shared/SearchableSelect.vue'
 import LoadingSkeleton from '../components/shared/LoadingSkeleton.vue'
@@ -27,7 +33,7 @@ import { apiGet, apiRequest, formatDate, formatMoney } from '../lib/api'
 import { useMarketplaceCatalog } from '../composables/useMarketplaceCatalog'
 import { currentUser, setCurrentUser } from '../composables/useCurrentUser'
 import { useCampaignBookmarks } from '../composables/useCampaignBookmarks'
-import { COMPANY_SOCIAL_PLATFORMS, CURRENCIES, SOCIAL_PLATFORMS } from '../lib/marketplace'
+import { campaignPlace, COMPANY_SOCIAL_PLATFORMS, CURRENCIES, SOCIAL_PLATFORMS } from '../lib/marketplace'
 import { formatInternationalPhoneNumber } from '../lib/phoneNumbers'
 import { localizedRouteName } from '../routePaths'
 import countries from '../data/countries.json'
@@ -78,10 +84,14 @@ let profileBeforeEdit = null
 const profileImageField = ref(null)
 const companyCoverField = ref(null)
 const profilePhoneCountry = ref('BA')
-const tags = ref('')
+const tags = ref([])
 const campaigns = ref([])
 const applications = ref([])
 const offers = ref([])
+const offersWithConversations = computed(() => offers.value.map((offer) => ({
+  ...offer,
+  conversationId: applications.value.find((application) => application.id === offer.applicationId)?.conversationId ?? null,
+})))
 const invitations = ref([])
 const companyApplications = ref([])
 const inquiries = ref([])
@@ -148,13 +158,14 @@ function emptyCampaign() {
     description: '',
     coverMediaId: null,
     coverImageUrl: '',
-    category: 'Lifestyle',
+    categories: ['Lifestyle'],
     channelsText: 'Instagram, TikTok',
-    deliverablesText: '1 short-form video',
+    deliverables: [''],
     budgetMin: 300,
     budgetMax: 800,
     currency: 'BAM',
-    location: '',
+    city: '',
+    countryCode: '',
     creatorCount: 3,
     closesAt: deadline.toISOString().slice(0, 10),
     status: 'open',
@@ -186,7 +197,7 @@ function startProfileEdit(tab) {
   if (editingProfile.value) return
   profileBeforeEdit = {
     profile: JSON.parse(JSON.stringify(profile.value)),
-    tags: tags.value,
+    tags: [...tags.value],
     phoneCountry: profilePhoneCountry.value,
   }
   error.value = ''
@@ -286,6 +297,7 @@ async function loadDashboard() {
         ...profile.value,
         ...(response.data.accountType === 'company' ? { industries: profile.value.industries || [profile.value.industry].filter(Boolean) } : {}),
         ...(response.data.accountType === 'company' ? { socialLinks: profile.value.socialLinks || [] } : {}),
+        ...(response.data.accountType === 'creator' ? { birthday: profile.value.birthday || '' } : {}),
         phone: response.data.phone || '',
         city: response.data.city || '',
         countryCode: response.data.countryCode || '',
@@ -312,7 +324,7 @@ async function loadDashboard() {
           void router.replace({ query })
         }
       }
-      tags.value = (profile.value.tags || []).join(', ')
+      tags.value = [...(profile.value.tags || [])]
       if (canAccessMarketplace) {
         const [applicationResponse, offerResponse, invitationResponse] = await Promise.all([
           apiGet('/me/applications'),
@@ -499,6 +511,7 @@ async function saveProfile() {
         displayName: profile.value.displayName,
         category: profile.value.categories[0] || profile.value.category,
         categories: profile.value.categories,
+        birthday: profile.value.birthday || null,
         phone: normalizedPhone,
         city: profile.value.city.trim(),
         countryCode: profile.value.countryCode,
@@ -506,7 +519,7 @@ async function saveProfile() {
         tagline: profile.value.tagline,
         avatarMediaId: profile.value.avatarMediaId || null,
         avatarUrl: profile.value.avatarMediaId ? null : profile.value.avatarUrl || null,
-        tags: tags.value.split(',').map((tag) => tag.trim()).filter(Boolean),
+        tags: [...tags.value],
         socialProfiles: profile.value.socialProfiles.map(({ platform, handle, followers }) => ({
           platform,
           handle,
@@ -670,13 +683,14 @@ function setCampaignForm(campaign = null) {
     description: campaign.description,
     coverMediaId: campaign.coverMediaId || null,
     coverImageUrl: campaign.coverImageUrl || '',
-    category: campaign.category,
+    categories: campaign.categories || [campaign.category],
     channelsText: campaign.channels.join(', '),
-    deliverablesText: campaign.deliverables.join(', '),
+    deliverables: [...campaign.deliverables],
     budgetMin: campaign.budgetMin,
     budgetMax: campaign.budgetMax,
     currency: campaign.currency || 'BAM',
-    location: campaign.location,
+    city: campaign.city || '',
+    countryCode: campaign.countryCode || '',
     creatorCount: campaign.creatorCount,
     closesAt: campaign.closesAt.slice(0, 10),
     status: campaign.status,
@@ -696,13 +710,14 @@ async function saveCampaign() {
     summary: campaignForm.value.summary,
     description: campaignForm.value.description,
     coverMediaId: campaignForm.value.coverMediaId,
-    category: campaignForm.value.category,
+    categories: campaignForm.value.categories,
     channels: campaignForm.value.channelsText.split(',').map((item) => item.trim()).filter(Boolean),
-    deliverables: campaignForm.value.deliverablesText.split(',').map((item) => item.trim()).filter(Boolean),
+    deliverables: campaignForm.value.deliverables.map((item) => item.trim()),
     budgetMin: Number(campaignForm.value.budgetMin),
     budgetMax: Number(campaignForm.value.budgetMax),
     currency: campaignForm.value.currency,
-    location: campaignForm.value.location,
+    city: campaignForm.value.city,
+    countryCode: campaignForm.value.countryCode,
     creatorCount: Number(campaignForm.value.creatorCount),
     closesAt: campaignForm.value.closesAt,
     status: campaignForm.value.status,
@@ -759,7 +774,13 @@ async function sendOffer(application) {
 }
 
 async function respondToOffer(offer, decision) {
-  await runAction(`/me/offers/${offer.id}/respond`, { decision })
+  if (busy.value) return
+  busy.value = true
+  try {
+    await runAction(`/me/offers/${offer.id}/respond`, { decision })
+  } finally {
+    busy.value = false
+  }
 }
 
 async function respondToInvitation(invitation, decision) {
@@ -784,6 +805,8 @@ async function respondToInvitation(invitation, decision) {
 }
 
 async function respondToInquiry(inquiry, decision) {
+  if (busy.value) return
+  busy.value = true
   error.value = ''
   notice.value = ''
   try {
@@ -801,6 +824,8 @@ async function respondToInquiry(inquiry, decision) {
     }
   } catch (cause) {
     error.value = cause.message
+  } finally {
+    busy.value = false
   }
 }
 
@@ -918,7 +943,7 @@ onMounted(loadDashboard)
       <AccountSidebar :user="user" :profile="profile" />
       <main class="account-content">
       <div class="account-grid">
-      <form
+      <form v-form-validation
         v-if="accountSection === 'profile'"
         class="profile-form profile-form--wide"
         @submit.prevent="saveProfile"
@@ -1013,9 +1038,9 @@ onMounted(loadDashboard)
             <div class="form-grid profile-edit-basics">
               <label class="form-field form-field--wide">
                 <span>{{ t('auth.name') }}</span>
-                <input v-model.trim="profile.displayName" required maxlength="120" autocomplete="name" />
+                <input v-model.trim="profile.displayName" required minlength="2" maxlength="120" autocomplete="name" />
               </label>
-              <MultiSelect
+              <MultiSelect required
                 v-model="profile.categories"
                 :options="categories"
                 :label="t('auth.category')"
@@ -1027,12 +1052,12 @@ onMounted(loadDashboard)
                 :max-selections="5"
               />
 
-              <SearchableSelect
+              <SearchableSelect required
                 :model-value="profile.countryCode || ''"
                 :options="countryOptions"
                 :label="t('auth.country')"
                 :placeholder="t('auth.selectCountry')"
-                :search-placeholder="t('auth.searchCountry')"
+                :search-placeholder="t('companyDirectory.countryPlaceholder')"
                 :no-results-label="t('auth.noCountriesFound')"
                 @update:model-value="updateProfileCountry"
               />
@@ -1040,6 +1065,15 @@ onMounted(loadDashboard)
                 <span>{{ t('auth.city') }}</span>
                 <input v-model.trim="profile.city" required maxlength="70" autocomplete="address-level2" />
               </label>
+              <DatePicker
+                v-model="profile.birthday"
+                :label="t('account.birthday')"
+                :placeholder="t('datePicker.placeholder')"
+                :helper-text="t('account.birthdayPrivate')"
+                min="1900-01-01"
+                :max="dateOnly()"
+                :disabled="busy"
+              />
               <PhoneNumberField
                 v-model="profile.phone"
                 v-model:country-code="profilePhoneCountry"
@@ -1067,10 +1101,18 @@ onMounted(loadDashboard)
                   :maxlength="1500"
                 />
               </div>
-              <label class="form-field form-field--wide">
-                <span>{{ t('account.tags') }}</span>
-                <input v-model="tags" maxlength="500" />
-              </label>
+              <TagInput
+                v-model="tags"
+                class="form-field--wide"
+                :label="t('account.tags')"
+                :placeholder="t('account.tagsPlaceholder')"
+                :remove-label="t('account.remove')"
+                :limit-label="t('account.tagsLimit', { count: 10 })"
+                :too-long-label="t('account.tagsTooLong', { count: 40 })"
+                :max-tags="10"
+                :max-length="40"
+                :disabled="busy"
+              />
             </div>
             </AccountProfileCard>
           </section>
@@ -1098,13 +1140,20 @@ onMounted(loadDashboard)
               </button>
             </div>
             <div v-if="!profile.socialProfiles.length" class="profile-editor__empty">{{ t('account.noSocialProfiles') }}</div>
-            <div v-for="(social, index) in profile.socialProfiles" :key="index" class="social-editor">
-              <label class="form-field">
-                <span>{{ t('account.platform') }}</span>
-                <select v-model="social.platform" required>
-                  <option v-for="platform in SOCIAL_PLATFORMS" :key="platform" :value="platform">{{ platform }}</option>
-                </select>
-              </label>
+            <article v-for="(social, index) in profile.socialProfiles" :key="index" class="social-editor">
+              <div class="social-editor__top">
+                <strong>{{ social.platform }}</strong>
+                <button
+                  class="profile-editor__remove"
+                  type="button"
+                  :aria-label="`${t('account.remove')}: ${social.platform}`"
+                  @click="profile.socialProfiles.splice(index, 1)"
+                >
+                  <Trash2 :size="15" aria-hidden="true" />
+                  <span>{{ t('account.remove') }}</span>
+                </button>
+              </div>
+              <SingleSelect v-model="social.platform" :label="t('account.platform')" :options="SOCIAL_PLATFORMS.map(value => ({ value, label: value }))" required />
               <label class="form-field">
                 <span>{{ t('account.handle') }}</span>
                 <input v-model.trim="social.handle" required maxlength="120" />
@@ -1113,16 +1162,7 @@ onMounted(loadDashboard)
                 <span>{{ t('account.followers') }}</span>
                 <input v-model.number="social.followers" type="number" min="0" max="200000000" required />
               </label>
-              <button
-                class="profile-editor__remove"
-                type="button"
-                :aria-label="`${t('account.remove')}: ${social.platform}`"
-                @click="profile.socialProfiles.splice(index, 1)"
-              >
-                <Trash2 :size="15" aria-hidden="true" />
-                <span>{{ t('account.remove') }}</span>
-              </button>
-            </div>
+            </article>
           </section>
 
           <section
@@ -1162,20 +1202,8 @@ onMounted(loadDashboard)
                 </button>
               </div>
               <div class="form-grid">
-                <label class="form-field">
-                  <span>{{ t('account.mediaType') }}</span>
-                  <select v-model="item.type" @change="changePortfolioType(item)">
-                    <option value="image">{{ t('account.image') }}</option>
-                    <option value="video">{{ t('account.video') }}</option>
-                  </select>
-                </label>
-                <label class="form-field">
-                  <span>{{ t('account.mediaPlatform') }}</span>
-                  <select v-model="item.platform">
-                    <option value="All">{{ t('account.allPlatforms') }}</option>
-                    <option v-for="platform in SOCIAL_PLATFORMS" :key="platform" :value="platform">{{ platform }}</option>
-                  </select>
-                </label>
+                <SingleSelect v-model="item.type" :label="t('account.mediaType')" :options="[{ value: 'image', label: t('account.image') }, { value: 'video', label: t('account.video') }]" @update:model-value="changePortfolioType(item)" />
+                <SingleSelect v-model="item.platform" :label="t('account.mediaPlatform')" :options="[{ value: 'All', label: t('account.allPlatforms') }, ...SOCIAL_PLATFORMS.map(value => ({ value, label: value }))]" />
               </div>
               <label class="form-field">
                 <span>{{ t('account.mediaTitle') }}</span>
@@ -1231,12 +1259,7 @@ onMounted(loadDashboard)
                   <span>{{ t('account.remove') }}</span>
                 </button>
               </div>
-              <label class="form-field">
-                <span>{{ t('account.platform') }}</span>
-                <select v-model="packageItem.platform">
-                  <option v-for="platform in SOCIAL_PLATFORMS" :key="platform" :value="platform">{{ platform }}</option>
-                </select>
-              </label>
+              <SingleSelect v-model="packageItem.platform" :label="t('account.platform')" :options="SOCIAL_PLATFORMS.map(value => ({ value, label: value }))" />
               <label class="form-field">
                 <span>{{ t('account.packageTitle') }}</span>
                 <input v-model.trim="packageItem.title" required minlength="3" maxlength="120" />
@@ -1249,14 +1272,7 @@ onMounted(loadDashboard)
                 <span>{{ t('account.packagePrice') }}</span>
                 <input v-model="packageItem.price" type="number" min="1" max="10000000" />
               </label>
-              <label class="form-field">
-                <span>{{ t('account.currency') }}</span>
-                <select v-model="packageItem.currency">
-                  <option v-for="currency in CURRENCIES" :key="currency" :value="currency">
-                    {{ currency }}
-                  </option>
-                </select>
-              </label>
+              <SingleSelect v-model="packageItem.currency" :label="t('account.currency')" :options="CURRENCIES.map(value => ({ value, label: value }))" />
             </article>
           </section>
 
@@ -1356,7 +1372,7 @@ onMounted(loadDashboard)
                 :placeholder="t('auth.companyNamePlaceholder')"
               />
             </label>
-            <MultiSelect
+            <MultiSelect required
               v-model="profile.industries"
               :options="companyIndustryOptions"
               :label="t('auth.industry')"
@@ -1366,13 +1382,13 @@ onMounted(loadDashboard)
               :remove-label="t('account.remove')"
               :max-selections="20"
             />
-            <SearchableSelect
+            <SearchableSelect required
               class="form-field--wide"
               :model-value="profile.countryCode || ''"
               :options="countryOptions"
               :label="t('auth.country')"
               :placeholder="t('auth.selectCountry')"
-              :search-placeholder="t('auth.searchCountry')"
+              :search-placeholder="t('companyDirectory.countryPlaceholder')"
               :no-results-label="t('auth.noCountriesFound')"
               @update:model-value="updateProfileCountry"
             />
@@ -1424,12 +1440,7 @@ onMounted(loadDashboard)
             </div>
             <div v-if="!(profile.socialLinks || []).length" class="profile-editor__empty">{{ t('account.noSocialLinks') }}</div>
             <div v-for="(link, index) in profile.socialLinks" :key="index" class="social-editor company-social-editor__row">
-              <label class="form-field">
-                <span>{{ t('account.platform') }}</span>
-                <select v-model="link.platform" required>
-                  <option v-for="platform in COMPANY_SOCIAL_PLATFORMS" :key="platform" :value="platform">{{ platform }}</option>
-                </select>
-              </label>
+              <SingleSelect v-model="link.platform" :label="t('account.platform')" :options="COMPANY_SOCIAL_PLATFORMS.map(value => ({ value, label: value }))" required />
               <label class="form-field form-field--wide">
                 <span>{{ t('account.socialLinkUrl') }}</span>
                 <input v-model.trim="link.url" type="url" required maxlength="500" placeholder="https://" />
@@ -1453,51 +1464,12 @@ onMounted(loadDashboard)
         </div>
       </form>
 
-      <section
+      <CreatorCampaignActivity
         v-if="accountSection === 'applications' && user.accountType === 'creator'"
-        id="account-panel-applications"
-        class="form-card account-activity-panel"
-      >
-        <h2>{{ t('account.myApplications') }}</h2>
-        <StatusMessage v-if="!applications.length" variant="empty">
-          {{ t('account.noApplications') }}
-        </StatusMessage>
-        <div v-else class="application-list">
-          <article v-for="application in applications" :key="application.id" class="application-row">
-            <div class="application-row__main">
-              <div class="application-row__heading">
-                <RouterLink
-                  class="application-row__title"
-                  :to="{ name: 'campaign-detail', params: { slug: application.campaign.slug } }"
-                >
-                  {{ application.campaign.title }}
-                </RouterLink>
-                <span class="status-pill">{{ statusLabel(application.status) }}</span>
-              </div>
-              <div class="application-row__meta">
-                <span>{{ application.campaign.company.name }}</span>
-                <time :datetime="application.createdAt">{{ formatDate(application.createdAt) }}</time>
-              </div>
-              <p class="application-row__message">{{ application.message }}</p>
-              <div v-if="application.offer" class="application-row__offer">
-                <strong>{{ formatMoney(application.offer.amount, application.campaign.currency) }}</strong>
-                <span>{{ application.offer.message }}</span>
-              </div>
-            </div>
-            <RouterLink
-              v-if="application.conversationId"
-              class="button button--outline application-row__chat"
-              :to="{
-                name: localizedRouteName('messages', locale),
-                query: { conversation: application.conversationId },
-              }"
-            >
-              <MessageCircle :size="15" aria-hidden="true" />
-              {{ t('account.openChat') }}
-            </RouterLink>
-          </article>
-        </div>
-      </section>
+        kind="applications"
+        :items="applications"
+        :can-respond="user.emailVerified && user.approved"
+      />
       <section
         v-if="accountSection === 'invitations' && user.accountType === 'creator'"
         id="account-panel-invitations"
@@ -1526,28 +1498,13 @@ onMounted(loadDashboard)
           </div>
         </article>
       </section>
-      <section
+      <CreatorCampaignActivity
         v-if="accountSection === 'offers' && user.accountType === 'creator'"
-        id="account-panel-offers"
-        class="form-card account-activity-panel"
-      >
-        <h2>{{ t('account.myOffers') }}</h2>
-        <StatusMessage v-if="!offers.length" variant="empty">
-          {{ t('account.noOffers') }}
-        </StatusMessage>
-        <article v-for="offer in offers" :key="offer.id" class="dashboard-card">
-          <div class="dashboard-card__heading">
-            <RouterLink :to="{ name: 'campaign-detail', params: { slug: offer.campaign.slug } }">{{ offer.campaign.title }}</RouterLink>
-            <span class="status-pill">{{ statusLabel(offer.status) }}</span>
-          </div>
-          <strong>{{ formatMoney(offer.amount, offer.campaign.currency) }}</strong>
-          <p>{{ offer.message }}</p>
-          <div v-if="offer.status === 'pending'" class="button-row">
-            <button class="button button--dark" type="button" :disabled="!user.emailVerified || !user.approved" @click="respondToOffer(offer, 'accept')">{{ t('account.accept') }}</button>
-            <button class="button button--outline" type="button" :disabled="!user.emailVerified || !user.approved" @click="respondToOffer(offer, 'reject')">{{ t('account.reject') }}</button>
-          </div>
-        </article>
-      </section>
+        :items="offersWithConversations"
+        :can-respond="user.emailVerified && user.approved"
+        :responding="busy || dashboardLoading"
+        @respond="respondToOffer"
+      />
 
       <section
         v-if="accountSection === 'bookmarks' && user.accountType === 'creator'"
@@ -1644,10 +1601,10 @@ onMounted(loadDashboard)
               {{ t('account.cancelEdit') }}
             </RouterLink>
           </header>
-          <form class="form-stack" @submit.prevent="saveCampaign">
+          <form v-form-validation class="form-stack" @submit.prevent="saveCampaign">
             <label class="form-field"><span>{{ t('account.campaignTitle') }}</span><input v-model.trim="campaignForm.title" required minlength="5" maxlength="160" /></label>
             <label class="form-field"><span>{{ t('account.summary') }}</span><input v-model.trim="campaignForm.summary" required minlength="10" maxlength="220" /></label>
-            <label class="form-field"><span>{{ t('account.description') }}</span><textarea v-model.trim="campaignForm.description" required minlength="20" maxlength="8000"></textarea></label>
+            <div class="form-field"><span>{{ t('account.description') }}</span><RichTextEditor v-model="campaignForm.description" :label="t('account.description')" :placeholder="t('account.campaignDescriptionPlaceholder')" required :minlength="20" :maxlength="8000" /></div>
             <div class="form-field form-field--wide">
               <span>{{ t('account.campaignCover') }}</span>
               <MediaUploadField
@@ -1659,39 +1616,40 @@ onMounted(loadDashboard)
               />
             </div>
             <div class="form-grid">
-              <label class="form-field">
-                <span>{{ t('auth.category') }}</span>
-                <select v-model="campaignForm.category">
-                  <option v-for="category in categories" :key="category.value" :value="category.value">
-                    {{ category.label }}
-                  </option>
-                </select>
-              </label>
-              <label class="form-field"><span>{{ t('campaignDetail.location') }}</span><input v-model.trim="campaignForm.location" required maxlength="120" /></label>
+              <MultiSelect v-model="campaignForm.categories" :label="t('auth.category')" :options="categories" :placeholder="t('categories.all')" :search-placeholder="t('creatorDirectory.searchCategories')" :remove-label="t('account.remove')" required />
+              <SearchableSelect v-model="campaignForm.countryCode" :label="t('auth.country')" :options="countryOptions" :search-placeholder="t('companyDirectory.countryPlaceholder')" required />
+              <label class="form-field"><span>{{ t('auth.city') }}</span><input v-model.trim="campaignForm.city" required minlength="2" maxlength="120" /></label>
             </div>
             <label class="form-field"><span>{{ t('account.channels') }}</span><input v-model="campaignForm.channelsText" required /></label>
-            <label class="form-field"><span>{{ t('account.deliverables') }}</span><input v-model="campaignForm.deliverablesText" required /></label>
+            <AccountProfileCard :title="t('account.deliverables')" :icon="FileText">
+              <div class="campaign-deliverables">
+                <div v-for="(item, index) in campaignForm.deliverables" :key="index" class="form-field campaign-deliverables__item">
+                  <div class="campaign-deliverables__heading">
+                    <label :for="`campaign-deliverable-${index}`">{{ t('account.deliverableItem', { number: index + 1 }) }}</label>
+                    <button
+                      class="profile-editor__remove"
+                      type="button"
+                      :disabled="campaignForm.deliverables.length === 1"
+                      :aria-label="`${t('account.remove')}: ${t('account.deliverableItem', { number: index + 1 })}`"
+                      @click="campaignForm.deliverables.splice(index, 1)"
+                    >
+                      <Trash2 :size="15" aria-hidden="true" />
+                      <span>{{ t('account.remove') }}</span>
+                    </button>
+                  </div>
+                  <input :id="`campaign-deliverable-${index}`" v-model.trim="campaignForm.deliverables[index]" required maxlength="180" :placeholder="t('account.deliverablePlaceholder')" />
+                </div>
+                <button class="profile-editor__add" type="button" :disabled="campaignForm.deliverables.length >= 10" @click="campaignForm.deliverables.push('')"><Plus :size="16" aria-hidden="true" />{{ t('account.addDeliverable') }}</button>
+              </div>
+            </AccountProfileCard>
             <div class="form-grid">
               <label class="form-field"><span>{{ t('account.budgetMin') }}</span><input v-model.number="campaignForm.budgetMin" type="number" min="1" max="10000000" required /></label>
               <label class="form-field"><span>{{ t('account.budgetMax') }}</span><input v-model.number="campaignForm.budgetMax" type="number" min="1" max="10000000" required /></label>
-              <label class="form-field">
-                <span>{{ t('account.currency') }}</span>
-                <select v-model="campaignForm.currency">
-                  <option v-for="currency in CURRENCIES" :key="currency" :value="currency">
-                    {{ currency }}
-                  </option>
-                </select>
-              </label>
+              <SingleSelect v-model="campaignForm.currency" :label="t('account.currency')" :options="CURRENCIES.map(value => ({ value, label: value }))" />
               <label class="form-field"><span>{{ t('account.creatorCount') }}</span><input v-model.number="campaignForm.creatorCount" type="number" min="1" max="100" required /></label>
-              <label class="form-field"><span>{{ t('account.closesAt') }}</span><input v-model="campaignForm.closesAt" type="date" required /></label>
+              <DatePicker v-model="campaignForm.closesAt" :label="t('account.closesAt')" required />
             </div>
-            <label v-if="editingCampaignId" class="form-field">
-              <span>{{ t('account.status') }}</span>
-              <select v-model="campaignForm.status">
-                <option value="open">{{ t('account.open') }}</option>
-                <option value="closed">{{ t('account.closed') }}</option>
-              </select>
-            </label>
+            <SingleSelect v-if="editingCampaignId" v-model="campaignForm.status" :label="t('account.status')" :options="[{ value: 'open', label: t('account.open') }, { value: 'closed', label: t('account.closed') }]" />
             <div class="button-row">
               <button class="button button--dark" type="submit" :disabled="busy || !user.emailVerified || !user.approved">
                 {{ editingCampaignId ? t('account.updateCampaign') : t('account.publish') }}
@@ -1722,10 +1680,10 @@ onMounted(loadDashboard)
               :alt="selectedCampaign.title"
             />
             <p class="company-campaign-detail__summary">{{ selectedCampaign.summary }}</p>
-            <p class="company-campaign-detail__description">{{ selectedCampaign.description }}</p>
+            <RichTextContent :html="selectedCampaign.description" />
             <dl class="company-campaign-detail__facts">
               <div><dt>{{ t('auth.category') }}</dt><dd>{{ selectedCampaign.category }}</dd></div>
-              <div><dt>{{ t('campaignDetail.location') }}</dt><dd>{{ selectedCampaign.location }}</dd></div>
+              <div><dt>{{ t('campaignDetail.location') }}</dt><dd>{{ campaignPlace(selectedCampaign, locale) }}</dd></div>
               <div><dt>{{ t('account.budgetMin') }} – {{ t('account.budgetMax') }}</dt><dd>{{ formatMoney(selectedCampaign.budgetMin, selectedCampaign.currency) }} – {{ formatMoney(selectedCampaign.budgetMax, selectedCampaign.currency) }}</dd></div>
               <div><dt>{{ t('account.creatorCount') }}</dt><dd>{{ selectedCampaign.creatorCount }}</dd></div>
               <div><dt>{{ t('account.closesAt') }}</dt><dd>{{ formatDate(selectedCampaign.closesAt) }}</dd></div>
@@ -1857,7 +1815,7 @@ onMounted(loadDashboard)
               {{ t('account.viewPublicProfile') }} ↗
             </RouterLink>
           </div>
-          <div v-if="selectedApplication.status === 'shortlisted'" class="form-stack company-applicant-card__offer">
+          <form v-if="selectedApplication.status === 'shortlisted'" v-form-validation class="form-stack company-applicant-card__offer" @submit.prevent="sendOffer(selectedApplication)">
             <label class="form-field">
               <span>{{ t('account.offerAmount') }} ({{ selectedApplication.campaign.currency }})</span>
               <input
@@ -1874,65 +1832,26 @@ onMounted(loadDashboard)
             </label>
             <button
               class="button button--dark"
-              type="button"
-              :disabled="!user.emailVerified || !user.approved || !offerForms[selectedApplication.id]?.message.trim()"
-              @click="sendOffer(selectedApplication)"
+              type="submit"
+              :disabled="!user.emailVerified || !user.approved"
             >
               {{ t('account.sendOffer') }}
             </button>
-          </div>
+          </form>
           <div v-else-if="selectedApplication.offer" class="offer-summary">
             <strong>{{ formatMoney(selectedApplication.offer.amount, selectedApplication.campaign.currency) }}</strong>
             <p>{{ selectedApplication.offer.message }}</p>
           </div>
         </div>
       </dialog>
-      <section
+      <CreatorCampaignActivity
         v-if="accountSection === 'inquiries'"
-        id="account-panel-inquiries"
-        class="form-card account-inquiries"
-      >
-        <h2>{{ t('account.directRequests') }}</h2>
-        <StatusMessage v-if="!inquiries.length" variant="empty">
-          {{ t('account.noDirectRequests') }}
-        </StatusMessage>
-        <article v-for="inquiry in inquiries" :key="inquiry.id" class="dashboard-card inquiry-card">
-          <div class="dashboard-card__heading">
-            <strong>{{ user.accountType === 'creator' ? inquiry.company.name : inquiry.creator.displayName }}</strong>
-            <span class="status-pill">{{ t(`account.inquiry${inquiry.status[0].toUpperCase()}${inquiry.status.slice(1)}`) }}</span>
-          </div>
-          <p v-if="inquiry.selectedPackages?.length" class="dashboard-card__subheading">
-            <span v-for="(selection, index) in inquiry.selectedPackages" :key="index">
-              {{ index ? ' · ' : '' }}{{ selection.type === 'service'
-                ? t('creatorProfile.servicePackage')
-                : selection.type === 'other'
-                  ? t('creatorProfile.somethingElse')
-                  : selection.title }}
-            </span>
-          </p>
-          <p v-else-if="inquiry.packageTitle" class="dashboard-card__subheading">{{ inquiry.packageTitle }}</p>
-          <p v-if="!inquiry.canChat">{{ inquiry.message }}</p>
-          <p v-if="inquiry.proposedAmount || inquiry.listedPrice" class="inquiry-card__price">
-            {{ t('account.proposedPrice') }}:
-            {{ formatMoney(inquiry.proposedAmount ?? inquiry.listedPrice, inquiry.proposedAmount ? inquiry.currency : inquiry.listedPriceCurrency) }}
-          </p>
-          <div v-if="user.accountType === 'creator' && inquiry.status === 'pending'" class="button-row">
-            <button class="button button--dark" type="button" :disabled="!user.emailVerified || !user.approved" @click="respondToInquiry(inquiry, 'accept')">{{ t('account.accept') }}</button>
-            <button class="button button--outline" type="button" :disabled="!user.emailVerified || !user.approved" @click="respondToInquiry(inquiry, 'reject')">{{ t('account.reject') }}</button>
-          </div>
-          <RouterLink
-            v-if="inquiry.canChat"
-            class="button button--outline inquiry-chat-link"
-            :to="{
-              name: localizedRouteName('messages', locale),
-              query: { inquiry: inquiry.id },
-            }"
-          >
-            <MessageCircle :size="15" aria-hidden="true" />
-            {{ t('account.openChat') }}
-          </RouterLink>
-        </article>
-      </section>
+        kind="inquiries"
+        :items="inquiries"
+        :can-respond="user.emailVerified && user.approved"
+        :responding="busy || dashboardLoading"
+        @respond="respondToInquiry"
+      />
       </div>
       </main>
     </div>

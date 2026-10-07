@@ -1162,7 +1162,7 @@ async function signOut() {
           </details>
         </div>
 
-        <div class="site-footer__column site-footer__newsletter">
+        <div v-if="!isMobileFooter" class="site-footer__column site-footer__newsletter">
           <details
             class="site-footer__accordion"
             :open="!isMobileFooter || mobileFooterSectionsOpen.newsletter"

@@ -1,10 +1,13 @@
 <script setup>
 import { onBeforeUnmount, onMounted, ref } from 'vue'
+import { ChevronDown } from '@lucide/vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import LanguageFlag from './LanguageFlag.vue'
 import { localeNames } from '../../i18n'
 import { defaultLocale, localizedRouteName, localizedRouteNames } from '../../routePaths'
+
+defineProps({ expanded: { type: Boolean, default: false } })
 
 const { locale, t } = useI18n()
 const route = useRoute()
@@ -54,6 +57,7 @@ onBeforeUnmount(() => document.removeEventListener('pointerdown', closeOnOutside
   <div
     ref="menu"
     class="language-switcher"
+    :class="{ 'language-switcher--expanded': expanded }"
     @keydown.esc.stop.prevent="isOpen = false"
   >
     <button
@@ -65,6 +69,8 @@ onBeforeUnmount(() => document.removeEventListener('pointerdown', closeOnOutside
       @click="isOpen = !isOpen"
     >
       <LanguageFlag :locale="locale" />
+      <span v-if="expanded" class="language-switcher__name">{{ localeNames[locale] }}</span>
+      <ChevronDown v-if="expanded" :size="16" aria-hidden="true" />
     </button>
     <div v-if="isOpen" class="language-switcher__menu" role="menu" :aria-label="t('app.language')">
       <button

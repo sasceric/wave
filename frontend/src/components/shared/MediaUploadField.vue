@@ -2,6 +2,7 @@
 import { computed, ref, useId } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { apiUpload } from '../../lib/api'
+import ImageUploadControl from './ImageUploadControl.vue'
 
 const props = defineProps({
   folder: { type: String, required: true },
@@ -12,10 +13,13 @@ const props = defineProps({
 const emit = defineEmits(['update:modelValue', 'uploaded'])
 
 const inputId = useId()
+const fileInput = ref(null)
 const { t } = useI18n()
 const busy = ref(false)
 const error = ref('')
-const required = computed(() => !props.optional && !props.modelValue && !props.previewUrl)
+const uploadedUrl = ref('')
+const uploadedId = ref(null)
+const preview = computed(() => props.previewUrl || (props.modelValue === uploadedId.value ? uploadedUrl.value : ''))
 
 async function upload(event) {
   const input = event.target
@@ -26,6 +30,8 @@ async function upload(event) {
   error.value = ''
   try {
     const response = await apiUpload(`/media?folder=${encodeURIComponent(props.folder)}`, file)
+    uploadedUrl.value = response.data.url
+    uploadedId.value = response.data.id
     emit('update:modelValue', response.data.id)
     emit('uploaded', response.data)
   } catch (cause) {
@@ -38,26 +44,30 @@ async function upload(event) {
 </script>
 
 <template>
-  <div class="media-upload-field" :class="{ 'has-preview': previewUrl }">
-    <img
-      v-if="previewUrl"
-      class="media-upload-field__preview"
-      :src="previewUrl"
-      alt=""
-      loading="lazy"
+  <div
+    class="media-upload-field"
+    data-validation-field
+    :data-required="!optional"
+    :data-validation-value="modelValue || preview ? 'uploaded' : ''"
+    :data-disabled="busy"
+  >
+    <ImageUploadControl
+      :preview-url="preview"
+      :add-label="busy ? t('account.mediaUploading') : t('account.mediaUpload')"
+      :change-label="t('account.changeProfileImage')"
+      :helper-text="t('account.mediaUploadHint')"
+      :disabled="busy"
+      @choose="fileInput?.click()"
     />
-    <label class="form-field" :for="inputId">
-      <span>{{ busy ? t('account.mediaUploading') : t('account.mediaUpload') }}</span>
-      <input
-        :id="inputId"
-        type="file"
-        accept="image/jpeg,image/png,image/webp"
-        :required="required"
-        :disabled="busy"
-        @change="upload"
-      />
-    </label>
-    <small>{{ t('account.mediaUploadHint') }}</small>
+    <input
+      :id="inputId"
+      ref="fileInput"
+      class="profile-image-field__input"
+      type="file"
+      accept="image/jpeg,image/png,image/webp"
+      :disabled="busy"
+      @change="upload"
+    />
     <p v-if="error" class="media-upload-field__error" role="alert">{{ error }}</p>
   </div>
 </template>

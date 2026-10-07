@@ -33,7 +33,7 @@ final class DirectoryIndexer
                 $profiles = $kind === 'creator' ? json_decode($row['social_profiles'], true, flags: JSON_THROW_ON_ERROR) : [];
                 $platforms = array_values(array_unique(array_map(static fn ($profile): string => mb_strtolower((string) ($profile['platform'] ?? '')), $profiles)));
                 $count = $kind === 'company' ? (int) $this->connection->fetchOne("SELECT COUNT(*) FROM campaign WHERE company_id = ? AND status = 'open' AND closes_at >= ?", [$id, (new \DateTimeImmutable('today'))->format('Y-m-d H:i:s')]) : null;
-                $fields = $kind === 'creator' ? ['display_name', 'bio', 'city', 'category'] : ($kind === 'company' ? ['name', 'industry', 'about'] : ['title', 'summary', 'description', 'category', 'location']);
+                $fields = $kind === 'creator' ? ['display_name', 'bio', 'city', 'category'] : ($kind === 'company' ? ['name', 'industry', 'about'] : ['title', 'summary', 'description', 'category', 'categories', 'city', 'country_code']);
                 if ($kind === 'company') {
                     $row['industry'] .= ' ' . implode(' ', $this->connection->fetchFirstColumn('SELECT value FROM company_industry WHERE company_id = ?', [$id]));
                 }

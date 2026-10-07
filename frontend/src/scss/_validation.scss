@@ -1,0 +1,36 @@
+.validation-required { color: #b64836; }
+
+.validation-error,
+.form-field .validation-error {
+  display: block;
+  margin-top: 4px;
+  color: #b64836;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.5;
+}
+
+.has-field-error {
+  .is-field-invalid,
+  .multi-select__control,
+  .searchable-select__trigger,
+  .single-select__trigger,
+  .date-picker .dp--input,
+  .profile-image-field__empty,
+  .rich-text-editor .ql-container {
+    border-color: #b64836 !important;
+    box-shadow: 0 0 0 2px #b6483614;
+  }
+}
+
+:where(input, textarea)::placeholder {
+  color: #9ba49e;
+  font-weight: 400;
+  opacity: 1;
+}
+
+.rich-text-editor .ql-editor.ql-blank::before {
+  color: #9ba49e;
+  font-style: normal;
+  font-weight: 400;
+}

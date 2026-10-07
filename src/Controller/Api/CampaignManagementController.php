@@ -25,6 +25,10 @@ use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
 
 final class CampaignManagementController
 {
+    public function __construct(private readonly \App\Service\RichTextSanitizer $richText)
+    {
+    }
+
     #[Route('/api/me/campaigns', name: 'api_my_campaigns', methods: ['GET'])]
     public function index(Request $request, EntityManagerInterface $entityManager, Security $security): JsonResponse
     {
@@ -124,7 +128,7 @@ final class CampaignManagementController
             $fields['deliverables'],
             $fields['budgetMin'],
             $fields['budgetMax'],
-            $fields['location'],
+            $fields['city'],
             $fields['creatorCount'],
             $fields['closesAt'],
             new DateTimeImmutable('today'),
@@ -132,6 +136,8 @@ final class CampaignManagementController
             status: 'open',
             coverMedia: $coverMedia,
             currency: $fields['currency'],
+            countryCode: $fields['countryCode'],
+            categories: $fields['categories'],
         );
         $entityManager->persist($campaign);
         $entityManager->flush();
@@ -190,11 +196,13 @@ final class CampaignManagementController
             $fields['deliverables'],
             $fields['budgetMin'],
             $fields['budgetMax'],
-            $fields['location'],
+            $fields['city'],
             $fields['creatorCount'],
             $fields['closesAt'],
             $fields['status'],
             $fields['currency'],
+            $fields['countryCode'],
+            $fields['categories'],
         );
         $campaign->setCoverMedia($coverMedia);
         $entityManager->flush();
@@ -207,9 +215,18 @@ final class CampaignManagementController
         $invalidFields = [];
         $title = $this->text($data, 'title', 5, 160);
         $summary = $this->text($data, 'summary', 10, 220);
-        $description = $this->text($data, 'description', 20, 8000);
-        $category = $this->text($data, 'category', 2, 80);
-        $location = $this->text($data, 'location', 2, 120);
+        $description = is_string($data['description'] ?? null) && strlen($data['description']) <= 100_000
+            ? $this->richText->sanitize($data['description']) : null;
+        if ($description !== null && (mb_strlen($this->richText->plainText($description)) < 20 || mb_strlen($this->richText->plainText($description)) > 8000)) {
+            $description = null;
+        }
+        $categories = $this->stringList($data['categories'] ?? null, 10, 80);
+        $category = $categories[0] ?? null;
+        $city = $this->text($data, 'city', 2, 120);
+        $countryCode = is_string($data['countryCode'] ?? null) ? strtoupper(trim($data['countryCode'])) : null;
+        if ($countryCode !== null && !\App\Account\CountryCode::isSupported($countryCode)) {
+            $countryCode = null;
+        }
         $channels = $this->stringList($data['channels'] ?? null, 6, 40);
         $deliverables = $this->stringList($data['deliverables'] ?? null, 10, 180);
         $budgetMin = $data['budgetMin'] ?? null;
@@ -228,10 +245,13 @@ final class CampaignManagementController
             $invalidFields[] = 'description';
         }
         if ($category === null) {
-            $invalidFields[] = 'category';
+            $invalidFields[] = 'categories';
         }
-        if ($location === null) {
-            $invalidFields[] = 'location';
+        if ($city === null) {
+            $invalidFields[] = 'city';
+        }
+        if ($countryCode === null) {
+            $invalidFields[] = 'countryCode';
         }
         if ($channels === null || $channels === []) {
             $invalidFields[] = 'channels';
@@ -276,7 +296,7 @@ final class CampaignManagementController
             return null;
         }
 
-        return compact('title', 'summary', 'description', 'category', 'location', 'channels', 'deliverables', 'budgetMin', 'budgetMax', 'currency', 'creatorCount', 'closesAt', 'status');
+        return compact('title', 'summary', 'description', 'category', 'categories', 'city', 'countryCode', 'channels', 'deliverables', 'budgetMin', 'budgetMax', 'currency', 'creatorCount', 'closesAt', 'status');
     }
 
     private function text(array $data, string $key, int $minimum, int $maximum): ?string

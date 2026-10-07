@@ -30,6 +30,9 @@ class Creator
     #[ORM\Column(length: 120, nullable: true)]
     private ?string $city = null;
 
+    #[ORM\Column(type: 'date_immutable', nullable: true)]
+    private ?DateTimeImmutable $birthday = null;
+
     #[ORM\Column(type: 'text')]
     private string $bio;
 
@@ -158,6 +161,16 @@ class Creator
     public function getBio(): string
     {
         return $this->bio;
+    }
+
+    public function getBirthday(): ?DateTimeImmutable
+    {
+        return $this->birthday;
+    }
+
+    public function setBirthday(?DateTimeImmutable $birthday): void
+    {
+        $this->birthday = $birthday;
     }
 
     public function setBio(string $bio): void

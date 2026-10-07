@@ -35,11 +35,11 @@ test('log pagination uses snapshot cursors and page-size changes reset the snaps
   state.file.value = '__all__'
   await settle()
   assert.equal(state.rows.value[0].id, 'first')
-  state.navigate(1)
+  state.navigatePage(2)
   await settle()
   assert.equal(state.page.value, 2)
   assert.equal(state.rows.value[0].id, 'snapshot-next')
-  state.navigate(-1)
+  state.navigatePage(1)
   await settle()
   assert.equal(state.page.value, 1)
   assert.ok(requests.at(-1).includes('cursor=snapshot-first'))

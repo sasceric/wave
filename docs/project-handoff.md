@@ -262,7 +262,7 @@ public-directory cursors, admin catalog pagination and representative load testi
 
 ### Companies directory design (2026-10-07)
 
-`CompaniesView.vue` uses the shared `DirectoryHero`, `DirectoryToolbar`, `DirectorySearch`, and `DirectoryFilterPanel` components, with matching SCSS under `scss/components/shared/`. Its view SCSS provides the photographic art and three-column company card layout. Mobile uses single-column cards, horizontally scrollable filter controls, a visible sort control and a modal filter sheet with focus handling and background scroll locking. Grid/list selection applies to desktop. The directory uses the same `.page-width` container as home. The search toolbar sticks below the header on desktop and mobile, moving to the top when the mobile header hides on downward scroll. A bordered card and shadow highlight the sticky state. Industry and country multiselects live only in the sidebar/mobile sheet. Status and sorting use the shared `SingleSelect.vue` component with matching SCSS, keyboard navigation, no search field, and one selected value.
+`CompaniesView.vue` uses the shared `DirectoryHero`, `DirectoryToolbar`, `DirectorySearch`, and `DirectoryFilterPanel` components, with matching SCSS under `scss/components/shared/`. Its view SCSS provides the photographic art and four-column company card layout. Mobile uses single-column cards, horizontally scrollable filter controls, a visible sort control and a modal filter sheet with focus handling and background scroll locking. Grid/list selection applies to desktop. The directory uses the same `.page-width` container as home. The search toolbar sticks below the header on desktop and mobile, moving to the top when the mobile header hides on downward scroll. A bordered card and shadow highlight the sticky state. Industry and country multiselects live only in the sidebar/mobile sheet. Status and sorting use the shared `SingleSelect.vue` component with matching SCSS, keyboard navigation, no search field, and one selected value.
 
 `GET /api/companies/filters` returns industry and country counts from visible, approved companies, using actual company industry values rather than creator categories. Industry labels respect company translations. The directory accepts JSON arrays in `industries` and `countries` (two-letter country codes), and binds both filters into its cursor scope. Country selections match any selected country; the legacy single `country` parameter remains supported. Filters use the existing industry, owner city/country, verified and featured fields; there are no new company-size or collaboration-type fields.
 
@@ -349,9 +349,9 @@ uses existing local campaign/product/content-production images. Campaign cards
 retain their shared component, four desktop columns and two mobile columns, image
 fallbacks, lazy loading, skeletons and 30-item cursor batches.
 
-Campaign filters use existing `category`, `channels`, `location`, `currency`,
+Campaign filters use existing `categories` (with the primary `category` fallback), `channels`, `city`, `countryCode`, `currency`,
 `budgetMin` and `budgetMax` fields. Areas come from the shared admin catalog.
-Location searches the campaign target location, not company/creator geography.
+City and country filter the campaign’s own geography. Country choices come from visible, open campaigns through `/api/campaigns/filters`. The `countries` parameter accepts a JSON array of ISO country codes.
 Budget ranges overlap the offered range and require a selected currency. Sorting
 supports recommended (featured, then closing date), newest, and closing soon,
 with stable ID tie-breaks. Signed cursors bind every filter and sort. The API
@@ -359,3 +359,53 @@ hydrates only the selected batch, retains the legacy single-category/company/
 featured query parameters and excludes expired/closed campaigns and hidden or
 unapproved companies. This page change adds no migration or server configuration;
 it uses the normal backend/frontend deployment.
+
+### Shared form controls and campaign geography (2026-10-07)
+
+`v-form-validation` supplies required stars, red inline submit errors, and localized
+fallback placeholders across SPA forms. Custom inputs expose validation metadata;
+server validation and access checks remain authoritative. Keep placeholders and
+labels at regular weight. `TagInput` commits chips with Enter; `DatePicker` wraps
+Vue Datepicker with date-fns locales; `ImageUploadControl` shares upload placeholders.
+`RichTextEditor` uses the basic Quill Snow toolbar. Campaign descriptions are
+sanitized on the server and rendered through `RichTextContent`. Empty creator
+headlines stay empty rather than falling back to HTML biographies.
+
+Migration `Version20261007040000` adds the optional, private creator birthday;
+`Version20261007050000` replaces campaign location with city/country_code and adds
+JSON categories. Recognizable legacy country names are converted; other text is
+preserved in city without inventing a target country. The primary category is the
+fallback for existing campaigns. Company campaign creation/editing uses area
+multiselect, country picker, city, rich description, and individual deliverables
+with add/remove controls. Deploy both migrations before serving the new API.
+
+Campaign budget filters use the shared dual-handle `RangeSlider`: 0–30,000, initially
+0–10,000, disabled until currency is selected. Creator and company city search lives
+only in the sticky toolbar. Companies use four desktop columns. Shared creator cards
+show the existing featured flag on home and directory listings.
+
+All admin table footers use `AdminPagination`; task/failed-job actions reuse
+`AdminRowActions`. Logs retain cursor paging and can revisit already loaded page
+cursors. The account sidebar hides directory/language controls on desktop; mobile
+shows a full-width language picker and Creators. Profile, Messages, Notifications,
+and the duplicate creator FAQs entry are omitted from sidebar navigation.
+
+### Account activity tables and closed campaign chats (2026-10-07)
+
+`CreatorCampaignActivity.vue` shares the table, status filters, search and numbered
+pagination for offers, applications and direct inquiries. It pages the already
+loaded account records at ten items per page; the existing API endpoints and
+ownership checks are unchanged. Chat actions target the exact application
+conversation ID or accepted inquiry ID. Company inquiries show their creator
+counterpart. Pending offers and creator inquiries retain accept/reject actions.
+
+Campaign details open in a centered native dialog with cover, brand, sanitized
+brief and campaign facts. It has no detail tabs or application submission action.
+Inquiry dialogs use their own message and selected packages rather than campaign
+fields. Mobile tables become stacked rows, with pagination and controls retained.
+
+Closed campaigns disable the messages composer and display a localized notice.
+The campaign messaging API also rejects POST messages and company conversation
+starts with HTTP 409 while retaining readable chat history. Only explicit campaign
+`status=closed` blocks chat; passing the application deadline does not end an
+existing collaboration. No database migration or additional configuration is needed.

@@ -102,6 +102,9 @@ final class CampaignMessagingController
         if (!$campaign instanceof Campaign) {
             return new JsonResponse(['error' => ApiMessages::get('campaign_not_found', $locale)], 404);
         }
+        if ($campaign->getStatus() === 'closed') {
+            return new JsonResponse(['error' => ApiMessages::get('campaign_chat_closed', $locale)], 409);
+        }
         $data = JsonPayload::fromRequest($request);
         $creatorId = is_array($data) ? ($data['creatorId'] ?? null) : null;
         $body = is_array($data) && is_string($data['message'] ?? null) ? trim($data['message']) : '';
@@ -238,6 +241,9 @@ final class CampaignMessagingController
         }
         $data = JsonPayload::fromRequest($request);
         $body = is_array($data) && is_string($data['body'] ?? null) ? trim($data['body']) : '';
+        if ($conversation->getCampaign()->getStatus() === 'closed') {
+            return new JsonResponse(['error' => ApiMessages::get('campaign_chat_closed', $locale)], 409);
+        }
         if ($data === null || mb_strlen($body) < 1 || mb_strlen($body) > 2000) {
             return new JsonResponse(['error' => ApiMessages::get('invalid_request', $locale)], 400);
         }

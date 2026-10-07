@@ -5,6 +5,7 @@ import { RefreshCw } from '@lucide/vue'
 import { useI18n } from 'vue-i18n'
 import AccountSidebar from '../components/account/AccountSidebar.vue'
 import AdminReadOnlyTable from '../components/admin/AdminReadOnlyTable.vue'
+import AdminRowActions from '../components/admin/AdminRowActions.vue'
 import LocalizedLink from '../components/shared/LocalizedLink.vue'
 import LoadingSkeleton from '../components/shared/LoadingSkeleton.vue'
 import StatusMessage from '../components/shared/StatusMessage.vue'
@@ -45,7 +46,6 @@ const labels = computed(() => ({
   pagination: t('adminDashboard.pagination'),
   previous: t('adminDashboard.previous'),
   next: t('adminDashboard.next'),
-  page: t('adminTools.page', { page: page.value }),
 }))
 
 function date(value) {
@@ -133,9 +133,15 @@ function refresh() {
   load()
 }
 
-function navigate(direction) {
-  if (loading.value || (direction < 0 && page.value <= 1) || (direction > 0 && !meta.value.hasMore)) return
-  page.value += direction
+function navigatePage(target) {
+  if (loading.value || target < 1 || target === page.value) return
+  if (tab.value === 'logs') {
+    if (target > cursors.value.length || (target > 1 && !cursors.value[target - 1])) return
+  } else {
+    const count = meta.value.total == null ? page.value + Number(Boolean(meta.value.hasMore)) : Math.max(1, Math.ceil(meta.value.total / pageSize.value))
+    if (target > count) return
+  }
+  page.value = target
   load()
 }
 
@@ -193,7 +199,7 @@ onBeforeUnmount(() => { requestId++ })
           <StatusMessage v-if="meta.changed">{{ t('adminTools.logsChanged') }}</StatusMessage>
           <StatusMessage v-if="meta.limited">{{ t('adminTools.logsLimited') }}</StatusMessage>
           <p v-if="loading" class="sr-only" role="status">{{ t('adminTools.loading') }}</p>
-          <AdminReadOnlyTable :columns="columns" :rows="rows" :labels="labels" :page="page" :page-size="pageSize" :has-more="Boolean(meta.hasMore)" :busy="loading" :show-empty="!error" @page-size="pageSize = $event" @previous="navigate(-1)" @next="navigate(1)">
+          <AdminReadOnlyTable :columns="columns" :rows="rows" :labels="labels" :page="page" :page-size="pageSize" :total="meta.total ?? null" :available-pages="tab === 'logs' ? Math.max(1, cursors.filter(Boolean).length) : 1" :has-more="Boolean(meta.hasMore)" :busy="loading" :show-empty="!error" @page-size="pageSize = $event" @page="navigatePage">
             <template #toolbar>
               <button v-if="tab === 'tasks'" type="button" class="button button--dark" :disabled="actionBusy || loading" @click="action('tasks/register')">{{ t('adminTools.register') }}</button>
               <button v-if="tab === 'queues'" type="button" class="button button--outline" @click="showFailed = !showFailed">{{ t(showFailed ? 'adminTools.queues' : 'adminTools.failedJobs') }}</button>
@@ -203,14 +209,15 @@ onBeforeUnmount(() => { requestId++ })
             </template>
             <template #cell-name="{ value }"><code>{{ value }}</code></template>
             <template #cell-actions="{ row }">
-              <details v-if="tab === 'tasks'" class="admin-tools__actions">
-                <summary>{{ t('adminTools.actions') }}</summary>
-                <button v-for="name in ['run', 'scheduled', 'immediate', 'inactive']" :key="name" type="button" :disabled="actionBusy || row.status === 'unregistered' || (name === 'run' && Boolean(row.activeJobId))" @click="action(`tasks/${encodeURIComponent(row.name)}/${name}`)">{{ t(`adminTools.action.${name}`) }}</button>
-              </details>
-              <div v-else class="admin-tools__actions">
-                <button type="button" :disabled="actionBusy" @click="action(`failed/${row.id}/retry`)">{{ t('adminTools.retry') }}</button>
-                <button type="button" :disabled="actionBusy" @click="action(`failed/${row.id}/discard`)">{{ t('adminTools.discard') }}</button>
-              </div>
+              <AdminRowActions :label="t('adminDashboard.rowActions', { name: row.name ?? row.type })">
+                <template v-if="tab === 'tasks'">
+                  <button v-for="name in ['run', 'scheduled', 'immediate', 'inactive']" :key="name" class="admin-row-actions__item" role="menuitem" type="button" :disabled="actionBusy || row.status === 'unregistered' || (name === 'run' && Boolean(row.activeJobId))" @click="action(`tasks/${encodeURIComponent(row.name)}/${name}`)">{{ t(`adminTools.action.${name}`) }}</button>
+                </template>
+                <template v-else>
+                  <button class="admin-row-actions__item" role="menuitem" type="button" :disabled="actionBusy" @click="action(`failed/${row.id}/retry`)">{{ t('adminTools.retry') }}</button>
+                  <button class="admin-row-actions__item admin-row-actions__item--danger" role="menuitem" type="button" :disabled="actionBusy" @click="action(`failed/${row.id}/discard`)">{{ t('adminTools.discard') }}</button>
+                </template>
+              </AdminRowActions>
             </template>
             <template #cell-kind="{ value }">{{ t(`adminTools.${value}Kind`) }}</template>
             <template #cell-lastStartedAt="{ value }">{{ date(value) }}</template>

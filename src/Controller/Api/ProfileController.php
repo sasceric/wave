@@ -2,6 +2,7 @@
 
 namespace App\Controller\Api;
 
+use App\Account\CreatorBirthday;
 use App\Api\ApiAccess;
 use App\Api\Currency;
 use App\Api\CreatorResource;
@@ -85,6 +86,10 @@ final class ProfileController
                 return new JsonResponse(['error' => ApiMessages::get('profile_unavailable', $locale)], 409);
             }
             $name = $this->text($data, 'displayName', 2, 120);
+            $birthday = array_key_exists('birthday', $data) ? CreatorBirthday::parse($data['birthday']) : $creator->getBirthday();
+            if ($birthday === false) {
+                return new JsonResponse(['error' => ApiMessages::get('invalid_birthday', $locale), 'fields' => ['birthday']], 400);
+            }
             $category = $this->text($data, 'category', 2, 80);
             $categories = array_key_exists('categories', $data)
                 ? $this->stringList($data['categories'], 5, 80)
@@ -122,6 +127,7 @@ final class ProfileController
             }
             $creator->updateProfile($name, $category, $city ?? '', $bio, $socialProfiles, $tags, $avatarUrl, $tagline, $portfolio['items'], $packages, $categories, $faqs);
             $creator->setAvatarMedia($avatarMedia);
+            $creator->setBirthday($birthday);
             $user->setPhone($phone);
             $user->setCity($city);
             $user->setCountryCode($countryCode);
@@ -137,7 +143,7 @@ final class ProfileController
             }
             $entityManager->flush();
 
-            return new JsonResponse(['data' => CreatorResource::fromEntity($creator, $locale)]);
+            return new JsonResponse(['data' => CreatorResource::fromEntity($creator, $locale) + ['birthday' => $creator->getBirthday()?->format('Y-m-d')]]);
         }
 
         $company = $user->getCompany();

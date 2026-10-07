@@ -1,4 +1,5 @@
 <script setup>
+import SingleSelect from '../components/shared/SingleSelect.vue'
 import RichTextContent from '../components/shared/RichTextContent.vue'
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
@@ -488,7 +489,7 @@ onBeforeUnmount(() => packageDescriptionObserver?.disconnect())
         <StatusMessage v-else-if="!viewer.emailVerified" variant="error">
           {{ t('creatorProfile.verifyEmail') }}
         </StatusMessage>
-        <form v-else class="profile-request-dialog__form" @submit.prevent="submitRequest">
+        <form v-form-validation v-else class="profile-request-dialog__form" @submit.prevent="submitRequest">
           <fieldset class="profile-request-dialog__packages">
             <legend>{{ t('creatorProfile.choosePackages') }}</legend>
             <p>{{ t('creatorProfile.choosePackagesHint') }}</p>
@@ -557,14 +558,7 @@ onBeforeUnmount(() => packageDescriptionObserver?.disconnect())
               <span>{{ t('creatorProfile.proposedAmount') }}</span>
               <input v-model="requestForm.proposedAmount" type="number" min="1" max="10000000" />
             </label>
-            <label class="form-field">
-              <span>{{ t('account.currency') }}</span>
-              <select v-model="requestForm.currency">
-                <option v-for="currency in CURRENCIES" :key="currency" :value="currency">
-                  {{ currency }}
-                </option>
-              </select>
-            </label>
+            <SingleSelect v-model="requestForm.currency" :label="t('account.currency')" :options="CURRENCIES.map(value => ({ value, label: value }))" />
           </div>
           <label class="form-field">
             <span>{{ t('creatorProfile.requestMessage') }}</span>
@@ -589,7 +583,7 @@ onBeforeUnmount(() => packageDescriptionObserver?.disconnect())
               <div>
                 <p class="eyebrow">{{ categoryLabel }}<template v-if="creator.city"> · {{ creator.city }}</template></p>
                 <h1>{{ creator.displayName }}</h1>
-                <p class="profile-tagline">{{ creator.tagline }}</p>
+                <p v-if="creator.tagline" class="profile-tagline">{{ creator.tagline }}</p>
                 <div
                   v-if="creator.socialProfiles.length || creator.city"
                   class="profile-stat-pills"
@@ -629,7 +623,7 @@ onBeforeUnmount(() => packageDescriptionObserver?.disconnect())
             {{ t('creatorProfile.requestCollaboration') }} <span aria-hidden="true">↗</span>
           </button>
           <p v-if="canOpenRequest" class="profile-aside__note">{{ t('creatorProfile.chatNote') }}</p>
-          <form
+          <form v-form-validation
             v-if="viewer?.accountType === 'company' && viewer.emailVerified && viewer.approved && creator.canReceiveCampaignInvitations"
             class="campaign-invite-form"
             @submit.prevent="sendCampaignInvitation"
@@ -639,20 +633,7 @@ onBeforeUnmount(() => packageDescriptionObserver?.disconnect())
             <StatusMessage v-if="inviteError" variant="error">{{ inviteError }}</StatusMessage>
             <StatusMessage v-if="notice">{{ notice }}</StatusMessage>
             <template v-if="inviteCampaigns.length">
-              <label class="form-field">
-                <span>{{ t('campaignChat.chooseCampaign') }}</span>
-                <select v-model="inviteForm.campaignSlug" required>
-                  <option value="" disabled>{{ t('campaignChat.chooseCampaign') }}</option>
-                  <option
-                    v-for="campaign in inviteCampaigns"
-                    :key="campaign.id"
-                    :value="campaign.slug"
-                    :disabled="Boolean(campaignInviteStatus(campaign))"
-                  >
-                    {{ campaign.title }}{{ campaignInviteStatus(campaign) ? ` — ${campaignInviteStatus(campaign)}` : '' }}
-                  </option>
-                </select>
-              </label>
+              <SingleSelect v-model="inviteForm.campaignSlug" :label="t('campaignChat.chooseCampaign')" :options="inviteCampaigns.map(campaign => ({ value: campaign.slug, label: campaign.title + (campaignInviteStatus(campaign) ? ` — ${campaignInviteStatus(campaign)}` : ''), disabled: Boolean(campaignInviteStatus(campaign)) }))" required />
               <label class="form-field">
                 <span>{{ t('campaignChat.invitationMessage') }}</span>
                 <textarea v-model.trim="inviteForm.message" required minlength="1" maxlength="2000"></textarea>

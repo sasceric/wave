@@ -1,10 +1,10 @@
 @use '../../breakpoints';
 
 .admin-dashboard {
-  width: 100vw;
+  width: 100%;
   max-width: none;
   min-height: 560px;
-  margin-left: calc(50% - 50vw);
+  margin: 0;
   padding: 0;
 
   &__state {

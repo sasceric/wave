@@ -36,6 +36,10 @@ final class CampaignController
         try {
             $categories = $this->selectedValues($request, 'categories', 80);
             $channels = $this->selectedValues($request, 'channels', 40);
+            $countries = array_map(strtoupper(...), $this->selectedValues($request, 'countries', 2));
+            foreach ($countries as $country) {
+                if (!\App\Account\CountryCode::isSupported($country)) throw new \InvalidArgumentException();
+            }
             $sort = $request->query->getString('sort', 'recommended');
             $currency = $request->query->getString('currency');
             $budgetMin = $this->budgetBound($request, 'budgetMin');
@@ -59,7 +63,7 @@ final class CampaignController
         $conditions = ['c.status = :status', 'c.closes_at >= :today', '(owner.id IS NULL OR (owner.approved = TRUE AND owner.hide_my_account = FALSE))'];
         $query = trim($request->query->getString('q'));
         if ($query !== '') {
-            $conditions[] = "(i.search_text LIKE :query OR (i.id IS NULL AND (LOWER(c.title) LIKE :query OR LOWER(c.summary) LIKE :query OR LOWER(c.description) LIKE :query OR LOWER(c.category) LIKE :query OR LOWER(c.location) LIKE :query)) OR LOWER(company.name) LIKE :query OR LOWER(company.industry) LIKE :query)";
+            $conditions[] = "(i.search_text LIKE :query OR (i.id IS NULL AND (LOWER(c.title) LIKE :query OR LOWER(c.summary) LIKE :query OR LOWER(c.description) LIKE :query OR LOWER(c.category) LIKE :query OR LOWER(c.city) LIKE :query OR LOWER(c.country_code) LIKE :query OR LOWER(CAST(c.categories AS TEXT)) LIKE :query)) OR LOWER(company.name) LIKE :query OR LOWER(company.industry) LIKE :query)";
             $params['query'] = '%' . mb_strtolower($query) . '%';
         }
         $category = trim($request->query->getString('category'));
@@ -67,9 +71,13 @@ final class CampaignController
             $categories[] = $category;
         }
         if ($categories !== []) {
-            $conditions[] = 'LOWER(c.category) IN (:categories)';
-            $params['categories'] = array_map(mb_strtolower(...), array_unique($categories));
-            $types['categories'] = \Doctrine\DBAL\ArrayParameterType::STRING;
+            $parts = [];
+            foreach (array_values(array_unique($categories)) as $index => $value) {
+                $parts[] = "(LOWER(c.category) = :category$index OR LOWER(CAST(c.categories AS TEXT)) LIKE :categoryJson$index ESCAPE '!')";
+                $params['category' . $index] = mb_strtolower($value);
+                $params['categoryJson' . $index] = '%' . strtr(json_encode(mb_strtolower($value), JSON_THROW_ON_ERROR), ['!' => '!!', '%' => '!%', '_' => '!_']) . '%';
+            }
+            $conditions[] = '(' . implode(' OR ', $parts) . ')';
         }
         if ($channels !== []) {
             $parts = [];
@@ -80,10 +88,15 @@ final class CampaignController
             }
             $conditions[] = '(' . implode(' OR ', $parts) . ')';
         }
-        $location = trim($request->query->getString('location'));
-        if ($location !== '') {
-            $conditions[] = "LOWER(c.location) LIKE :location ESCAPE '!'";
-            $params['location'] = '%' . strtr(mb_strtolower($location), ['!' => '!!', '%' => '!%', '_' => '!_']) . '%';
+        $city = trim($request->query->getString('city'));
+        if ($city !== '') {
+            $conditions[] = "LOWER(c.city) LIKE :city ESCAPE '!'";
+            $params['city'] = '%' . strtr(mb_strtolower($city), ['!' => '!!', '%' => '!%', '_' => '!_']) . '%';
+        }
+        if ($countries !== []) {
+            $conditions[] = 'UPPER(c.country_code) IN (:countries)';
+            $params['countries'] = $countries;
+            $types['countries'] = \Doctrine\DBAL\ArrayParameterType::STRING;
         }
         if ($currency !== '') {
             $conditions[] = 'c.currency = :currency';
@@ -179,6 +192,21 @@ final class CampaignController
             ),
             'meta' => $meta,
         ]);
+    }
+
+    #[Route('/api/campaigns/filters', name: 'api_campaigns_filters', methods: ['GET'])]
+    public function filters(Request $request, EntityManagerInterface $entityManager): JsonResponse
+    {
+        if (LocaleContext::fromRequest($request) === null) {
+            return new JsonResponse(['error' => ApiMessages::get('unsupported_language', 'bs')], 400);
+        }
+        $rows = $entityManager->getConnection()->fetchAllAssociative("SELECT c.country_code AS value, COUNT(*) AS count FROM campaign c
+            JOIN company ON company.id = c.company_id LEFT JOIN wave_user owner ON owner.id = company.owner_id
+            WHERE c.status = 'open' AND c.closes_at >= :today AND c.country_code IS NOT NULL
+            AND (owner.id IS NULL OR (owner.approved = TRUE AND owner.hide_my_account = FALSE))
+            GROUP BY c.country_code ORDER BY c.country_code", ['today' => (new \DateTimeImmutable('today'))->format('Y-m-d H:i:s')]);
+
+        return new JsonResponse(['data' => ['countries' => array_map(static fn (array $row): array => ['value' => $row['value'], 'count' => (int) $row['count']], $rows)]]);
     }
 
     #[Route('/api/campaigns/{slug}', name: 'api_campaigns_show', methods: ['GET'])]

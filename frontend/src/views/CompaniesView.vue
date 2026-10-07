@@ -132,7 +132,6 @@ function clearFilters() {
             :no-results-label="t('auth.noCountriesFound')"
             :remove-label="t('account.remove')"
           />
-          <DirectorySearch class="company-directory__panel-city" v-model="city" :icon="false" :placeholder="t('companyDirectory.locationPlaceholder')" :label="t('companyDirectory.cityLabel')" />
         </fieldset>
         <fieldset>
           <SingleSelect v-model="status" :options="statusOptions" :label="t('companyDirectory.statusLabel')" />
