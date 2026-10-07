@@ -4,6 +4,7 @@ namespace App\Controller\Api;
 
 use App\Api\ApiAccess;
 use App\Api\CampaignResource;
+use App\Api\MarketplaceCategoryLabels;
 use App\Api\Currency;
 use App\Api\JsonPayload;
 use App\Entity\Application;
@@ -62,10 +63,11 @@ final class CampaignManagementController
                 $appliedCreatorIdsByCampaign[$campaignId][] = $creatorId;
             }
         }
+        $categoryLabels = MarketplaceCategoryLabels::forLocale($entityManager, $locale);
         $campaignResources = [];
         foreach ($campaigns as $campaign) {
             $campaignId = $campaign->getId();
-            $resource = CampaignResource::fromEntity($campaign, $locale);
+            $resource = CampaignResource::fromEntity($campaign, $locale, categoryLabels: $categoryLabels);
             $resource['invitedCreatorIds'] = null !== $campaignId ? ($invitedCreatorIdsByCampaign[$campaignId] ?? []) : [];
             $resource['appliedCreatorIds'] = null !== $campaignId ? ($appliedCreatorIdsByCampaign[$campaignId] ?? []) : [];
             $campaignResources[] = $resource;
@@ -134,7 +136,7 @@ final class CampaignManagementController
         $entityManager->persist($campaign);
         $entityManager->flush();
 
-        return new JsonResponse(['data' => CampaignResource::fromEntity($campaign, $locale)], 201);
+        return new JsonResponse(['data' => CampaignResource::fromEntity($campaign, $locale, categoryLabels: MarketplaceCategoryLabels::forLocale($entityManager, $locale))], 201);
     }
 
     #[Route('/api/company/campaigns/{id}', name: 'api_company_campaign_update', methods: ['PUT'])]
@@ -197,7 +199,7 @@ final class CampaignManagementController
         $campaign->setCoverMedia($coverMedia);
         $entityManager->flush();
 
-        return new JsonResponse(['data' => CampaignResource::fromEntity($campaign, $locale)]);
+        return new JsonResponse(['data' => CampaignResource::fromEntity($campaign, $locale, categoryLabels: MarketplaceCategoryLabels::forLocale($entityManager, $locale))]);
     }
 
     private function campaignFields(array $data, bool $allowStatus, array &$invalidFields): ?array

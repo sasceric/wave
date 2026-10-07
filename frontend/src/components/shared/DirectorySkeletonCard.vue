@@ -29,12 +29,20 @@ defineProps({ kind: { type: String, required: true } })
     </div>
   </div>
   <div v-else class="company-directory-card directory-skeleton directory-skeleton--company" aria-hidden="true">
-    <div class="company-directory-card__logo skeleton-surface"></div>
-    <div class="company-directory-card__content">
-      <span class="skeleton-line skeleton-line--wide"></span>
-      <span class="skeleton-line"></span>
-      <span class="skeleton-line skeleton-line--short"></span>
-      <span class="skeleton-button"></span>
+    <div class="company-directory-card__visual skeleton-surface"></div>
+    <div class="company-directory-card__body">
+      <div class="company-directory-card__identity">
+        <span class="company-directory-card__logo skeleton-surface"></span>
+        <div class="company-directory-card__heading">
+          <span class="skeleton-line skeleton-line--wide"></span>
+          <span class="skeleton-line skeleton-line--short"></span>
+        </div>
+      </div>
+      <div class="company-directory-card__description"><span class="skeleton-line"></span><span class="skeleton-line skeleton-line--short"></span></div>
+      <div class="company-directory-card__footer">
+        <span class="skeleton-line skeleton-line--short"></span>
+        <span class="skeleton-button"></span>
+      </div>
     </div>
   </div>
 </template>

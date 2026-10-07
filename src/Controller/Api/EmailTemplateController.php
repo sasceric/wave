@@ -10,6 +10,7 @@ use App\Api\JsonPayload;
 use App\Entity\EmailTemplate;
 use App\Localization\ApiMessages;
 use App\Localization\LocaleContext;
+use App\Newsletter\NewsletterSubscriberEmailSender;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -25,6 +26,7 @@ final class EmailTemplateController
         'registered',
         'approval',
         'contact',
+        'subscribed',
         'application_received',
         'creator_inquiry_received',
         'creator_inquiry_accepted',
@@ -37,6 +39,7 @@ final class EmailTemplateController
         Security $security,
         EntityManagerInterface $entityManager,
         AccountEmailSender $accountEmailSender,
+        NewsletterSubscriberEmailSender $subscriberEmailSender,
         EmailTemplateRenderer $renderer,
     ): JsonResponse {
         $locale = LocaleContext::fromRequest($request);
@@ -59,14 +62,16 @@ final class EmailTemplateController
                 'locale' => $locale,
                 'subject' => $customization instanceof EmailTemplate
                     ? $customization->getSubject()
-                    : $this->defaultSubject($key, $locale, $accountEmailSender),
+                    : $this->defaultSubject($key, $locale, $accountEmailSender, $subscriberEmailSender),
                 'htmlBody' => $customization instanceof EmailTemplate
                     ? $customization->getHtmlBody()
                     : $renderer->getDefaultHtml($key),
                 'variables' => $renderer->variables($key),
                 'preview' => $key === 'contact'
                     ? ContactEmailCopy::previewVariables($locale)
-                    : $accountEmailSender->previewVariables($key, $locale),
+                    : ($key === 'subscribed'
+                        ? $subscriberEmailSender->previewVariables($locale)
+                        : $accountEmailSender->previewVariables($key, $locale)),
             ];
         }
 
@@ -126,10 +131,18 @@ final class EmailTemplateController
         return new JsonResponse(['message' => 'Email template saved.']);
     }
 
-    private function defaultSubject(string $key, string $locale, AccountEmailSender $accountEmailSender): string
+    private function defaultSubject(
+        string $key,
+        string $locale,
+        AccountEmailSender $accountEmailSender,
+        NewsletterSubscriberEmailSender $subscriberEmailSender,
+    ): string
     {
         if ($key === 'contact') {
             return ContactEmailCopy::forLocale($locale)['subject'];
+        }
+        if ($key === 'subscribed') {
+            return $subscriberEmailSender->defaultSubject($locale);
         }
 
         return $accountEmailSender->defaultSubject($key, $locale);

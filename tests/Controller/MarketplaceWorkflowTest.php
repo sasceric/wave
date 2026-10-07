@@ -108,7 +108,6 @@ final class MarketplaceWorkflowTest extends WebTestCase
             'categories' => ['Travel', 'Lifestyle'],
             'city' => 'Sarajevo',
             'country' => 'BA',
-            'location' => 'Sarajevo, Bosnia and Herzegovina',
         ], $csrf);
 
         self::assertResponseStatusCodeSame(201);
@@ -155,7 +154,6 @@ final class MarketplaceWorkflowTest extends WebTestCase
             'displayName' => 'Avery Creator',
             'category' => 'Food',
             'categories' => ['Food', 'Lifestyle'],
-            'location' => 'Sarajevo, Bosnia and Herzegovina',
             'bio' => 'I make thoughtful guides for slower, more curious travel.',
             'avatarUrl' => null,
             'tags' => ['Slow travel', 'Photography'],
@@ -291,7 +289,7 @@ final class MarketplaceWorkflowTest extends WebTestCase
         }
         $entityManager->flush();
 
-        foreach ([[$creator, 'creator-avatar'], [$creator, 'creator-portfolio'], [$company, 'company-logo'], [$company, 'campaign-cover']] as [$owner, $folder]) {
+        foreach ([[$creator, 'creator-avatar'], [$creator, 'creator-portfolio'], [$company, 'company-logo'], [$company, 'company-cover'], [$company, 'campaign-cover']] as [$owner, $folder]) {
             $this->client->loginUser($owner, 'main');
             $csrf = $this->csrfToken();
             $path = tempnam(sys_get_temp_dir(), 'wave-upload-');
@@ -326,7 +324,7 @@ final class MarketplaceWorkflowTest extends WebTestCase
             }
         }
         $entityManager = static::getContainer()->get(EntityManagerInterface::class);
-        self::assertSame(4, $entityManager->getRepository(Media::class)->count([]));
+        self::assertSame(5, $entityManager->getRepository(Media::class)->count([]));
     }
 
     public function testUploadedMediaIsOwnedAndCreatorProfileStoresMediaReferences(): void
@@ -496,6 +494,51 @@ final class MarketplaceWorkflowTest extends WebTestCase
         self::assertResponseIsSuccessful();
         $this->jsonRequest('DELETE', '/api/media/'.$logo['data']['id'], [], $this->csrfToken());
         self::assertResponseIsSuccessful();
+    }
+
+    public function testCompanyCoverIsOwnedPublicOnlyWhenVisibleAndCannotBeDeletedWhileUsed(): void
+    {
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $owner = new User('cover-owner@example.test', 'ROLE_COMPANY');
+        $other = new User('cover-other@example.test', 'ROLE_COMPANY');
+        foreach ([$owner, $other] as $user) {
+            $user->setPassword('unused');
+            $user->setCompany(new Company(str_replace('@example.test', '', $user->getEmail()), 'Cover company', 'Food'));
+            $em->persist($user);
+        }
+        $em->flush();
+        $this->client->loginUser($owner, 'main');
+        $csrf = $this->csrfToken();
+        $cover = $this->uploadImage('company-cover', $csrf, 'cover.png');
+        self::assertResponseStatusCodeSame(201);
+        $id = $cover['data']['id'];
+        $this->uploadedMediaIds[] = $id;
+        $body = ['name' => 'Cover company', 'industries' => ['Food', 'Technology'], 'coverMediaId' => $id];
+        $this->jsonRequest('PUT', '/api/me/profile', $body, $csrf);
+        self::assertResponseIsSuccessful();
+        self::assertSame(['Food', 'Technology'], $this->payload()['data']['profile']['industries']);
+        self::assertSame($id, $this->payload()['data']['profile']['coverMediaId']);
+        $this->jsonRequest('DELETE', '/api/media/'.$id, [], $csrf);
+        self::assertResponseStatusCodeSame(409);
+        $this->client->loginUser($other, 'main');
+        $this->client->request('GET', $cover['data']['url']);
+        self::assertResponseIsSuccessful();
+        $this->jsonRequest('PUT', '/api/me/profile', $body, $this->csrfToken());
+        self::assertResponseStatusCodeSame(400);
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $em->getRepository(User::class)->find($owner->getId())->setHideMyAccount(true);
+        $em->flush();
+        $this->client->request('GET', $cover['data']['url']);
+        self::assertResponseStatusCodeSame(404);
+        $this->client->loginUser($owner, 'main');
+        $this->jsonRequest('PUT', '/api/me/profile', ['name' => 'Cover company', 'industries' => ['Technology', 'Travel'], 'coverMediaId' => null], $this->csrfToken());
+        self::assertResponseIsSuccessful();
+        self::assertNull($this->payload()['data']['profile']['coverMediaId']);
+        self::assertSame(['Technology', 'Travel'], $this->payload()['data']['profile']['industries']);
+        $this->jsonRequest('DELETE', '/api/media/'.$id, [], $this->csrfToken());
+        self::assertResponseIsSuccessful();
+        $this->jsonRequest('PUT', '/api/me/profile', ['name' => 'Cover company', 'industries' => []], $this->csrfToken());
+        self::assertResponseStatusCodeSame(400);
     }
 
     public function testAccountsCanHideTheirPublicProfilesAndCompanyCampaigns(): void

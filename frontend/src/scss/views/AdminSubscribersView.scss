@@ -1,0 +1,50 @@
+@use '../breakpoints';
+
+.admin-subscribers {
+  &__heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+
+  &__heading h1 {
+    margin: 0 0 8px;
+    color: var(--forest);
+    font-family: var(--serif);
+    font-size: 28px;
+    font-weight: 500;
+  }
+
+  &__heading p:not(.eyebrow) {
+    margin: 0;
+    color: var(--muted);
+    font-size: 14px;
+    line-height: 1.6;
+  }
+
+  &__heading .eyebrow {
+    margin: 0 0 8px;
+  }
+
+  &__heading .button {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+}
+
+@include breakpoints.down(760px) {
+  .admin-subscribers {
+    &__heading {
+      align-items: flex-start;
+    }
+
+    &__heading h1 {
+      font-size: 24px;
+    }
+  }
+}

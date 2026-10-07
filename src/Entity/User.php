@@ -186,8 +186,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
             return $creator instanceof Creator
                 && mb_strlen(trim($creator->getDisplayName())) >= 2
-                && array_filter($creator->getCategories(), static fn (string $category): bool => trim($category) !== '') !== []
-                && mb_strlen(trim($creator->getLocation())) >= 2;
+                && array_filter($creator->getCategories(), static fn (string $category): bool => trim($category) !== '') !== [];
         }
 
         if ($this->hasRole('ROLE_COMPANY')) {

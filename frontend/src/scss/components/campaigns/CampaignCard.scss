@@ -12,7 +12,7 @@
     position: relative;
     height: 178px;
     overflow: hidden;
-    background: linear-gradient(130deg, #d8b39a, #7f6e5e 58%, #40574d);
+    background: var(--sage);
   }
 
   &__cover-image {
@@ -21,58 +21,6 @@
     width: 100%;
     height: 100%;
     object-fit: cover;
-  }
-
-  &__cover::before,
-  &__cover::after {
-    position: absolute;
-    z-index: 1;
-    display: block;
-    content: "";
-    pointer-events: none;
-  }
-
-  &__cover::before {
-    width: 57%;
-    height: 150%;
-    top: -30%;
-    right: -8%;
-    border-radius: 50%;
-    background: rgba(255, 244, 218, .34);
-    transform: rotate(-22deg);
-  }
-
-  &__cover::after {
-    width: 42%;
-    height: 105%;
-    right: 15%;
-    bottom: -55%;
-    border-radius: 50%;
-    background: rgba(34, 68, 58, .28);
-  }
-
-  &__cover--beauty {
-    background: linear-gradient(130deg, #e8bfac, #c17e6d 56%, #70504d);
-  }
-
-  &__cover--fashion {
-    background: linear-gradient(130deg, #d4c3a8, #9a7962 56%, #514b46);
-  }
-
-  &__cover--food {
-    background: linear-gradient(130deg, #ddbc8d, #a7774d 56%, #5d5940);
-  }
-
-  &__cover--travel {
-    background: linear-gradient(130deg, #c3d1c2, #789485 56%, #475e52);
-  }
-
-  &__cover--wellness {
-    background: linear-gradient(130deg, #d9c5bd, #a77e78 56%, #665954);
-  }
-
-  &__cover--lifestyle {
-    background: linear-gradient(130deg, #d7c5a8, #9b8a6d 56%, #5d6250);
   }
 
   &__cover-brand {

@@ -5,10 +5,12 @@ import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { parsePhoneNumberFromString } from 'libphonenumber-js/min'
 import RouterLink from '../components/shared/LocalizedLink.vue'
-import { useI18n } from 'vue-i18n'
-import { Eye, MessageCircle, Plus, Trash2, X } from '@lucide/vue'
+import { I18nT, useI18n } from 'vue-i18n'
+import { ArrowLeft, Eye, ExternalLink, FileText, MessageCircle, Plus, Trash2, UserRound, X } from '@lucide/vue'
 import AccountAccessPanel from '../components/account/AccountAccessPanel.vue'
 import AccountSidebar from '../components/account/AccountSidebar.vue'
+import AccountProfileSummary from '../components/account/AccountProfileSummary.vue'
+import AccountProfileCard from '../components/account/AccountProfileCard.vue'
 import AccountProfileDetails from '../components/account/AccountProfileDetails.vue'
 import RequiredProfileModal from '../components/account/RequiredProfileModal.vue'
 import MultiSelect from '../components/shared/MultiSelect.vue'
@@ -19,15 +21,13 @@ import RichTextEditor from '../components/shared/RichTextEditor.vue'
 import SearchableSelect from '../components/shared/SearchableSelect.vue'
 import LoadingSkeleton from '../components/shared/LoadingSkeleton.vue'
 import StatusMessage from '../components/shared/StatusMessage.vue'
-import SwitchField from '../components/shared/SwitchField.vue'
-import WaveLogo from '../components/shared/WaveLogo.vue'
 import CampaignCard from '../components/campaigns/CampaignCard.vue'
 import DirectoryPagination from '../components/shared/DirectoryPagination.vue'
 import { apiGet, apiRequest, formatDate, formatMoney } from '../lib/api'
 import { useMarketplaceCatalog } from '../composables/useMarketplaceCatalog'
 import { currentUser, setCurrentUser } from '../composables/useCurrentUser'
 import { useCampaignBookmarks } from '../composables/useCampaignBookmarks'
-import { CURRENCIES, SOCIAL_PLATFORMS } from '../lib/marketplace'
+import { COMPANY_SOCIAL_PLATFORMS, CURRENCIES, SOCIAL_PLATFORMS } from '../lib/marketplace'
 import { formatInternationalPhoneNumber } from '../lib/phoneNumbers'
 import { localizedRouteName } from '../routePaths'
 import countries from '../data/countries.json'
@@ -35,7 +35,11 @@ import countries from '../data/countries.json'
 const { t, locale } = useI18n()
 const route = useRoute()
 const router = useRouter()
-const { categories, error: catalogError } = useMarketplaceCatalog(locale)
+const { categories, industries: catalogIndustries, error: catalogError } = useMarketplaceCatalog(locale, { includeIndustries: true })
+const companyIndustryOptions = computed(() => {
+  const options = catalogIndustries?.value || []
+  return [...options, ...(profile.value?.industries || []).filter((value) => !options.some((option) => option.value === value)).map((value) => ({ value, label: profile.value.industryLabels?.[profile.value.industries.indexOf(value)] || value }))]
+})
 const { bookmarks, loadCampaignBookmarks } = useCampaignBookmarks()
 const countryDisplayLocale = computed(() => {
   if (locale.value === 'cnr') return 'bs'
@@ -72,6 +76,7 @@ const profile = ref(null)
 const editingProfile = ref(false)
 let profileBeforeEdit = null
 const profileImageField = ref(null)
+const companyCoverField = ref(null)
 const profilePhoneCountry = ref('BA')
 const tags = ref('')
 const campaigns = ref([])
@@ -176,7 +181,9 @@ function updateProfileCountry(countryCode) {
   profilePhoneCountry.value = countryCode || 'BA'
 }
 
-function startProfileEdit() {
+function startProfileEdit(tab) {
+  if (isAccountTab(tab)) selectAccountTab(tab)
+  if (editingProfile.value) return
   profileBeforeEdit = {
     profile: JSON.parse(JSON.stringify(profile.value)),
     tags: tags.value,
@@ -211,7 +218,6 @@ function incompleteProfileTab() {
   if (user.value.accountType === 'creator'
     && (!profile.value.displayName.trim()
       || profile.value.categories.length === 0
-      || !profile.value.location.trim()
       || !profile.value.city.trim()
       || !profile.value.countryCode
       || !profile.value.phone.trim())
@@ -220,7 +226,7 @@ function incompleteProfileTab() {
   }
   if (user.value.accountType === 'company'
     && (!profile.value.name.trim()
-      || !profile.value.industry.trim()
+      || !(profile.value.industries || []).length
       || !profile.value.city.trim()
       || !profile.value.countryCode
       || !profile.value.phone.trim())
@@ -278,6 +284,8 @@ async function loadDashboard() {
     if (response.data.profile) {
       profile.value = {
         ...profile.value,
+        ...(response.data.accountType === 'company' ? { industries: profile.value.industries || [profile.value.industry].filter(Boolean) } : {}),
+        ...(response.data.accountType === 'company' ? { socialLinks: profile.value.socialLinks || [] } : {}),
         phone: response.data.phone || '',
         city: response.data.city || '',
         countryCode: response.data.countryCode || '',
@@ -484,14 +492,13 @@ async function saveProfile() {
     return
   }
 
-  let imageChange = null
+  const imageChanges = []
   let profileSaved = false
   const body = isCreator
     ? {
         displayName: profile.value.displayName,
         category: profile.value.categories[0] || profile.value.category,
         categories: profile.value.categories,
-        location: profile.value.location,
         phone: normalizedPhone,
         city: profile.value.city.trim(),
         countryCode: profile.value.countryCode,
@@ -526,57 +533,49 @@ async function saveProfile() {
       }
     : {
         name: profile.value.name,
-        industry: profile.value.industry,
+        industries: profile.value.industries,
+        coverMediaId: profile.value.coverMediaId || null,
         about: profile.value.about || '',
         city: profile.value.city?.trim() || null,
         countryCode: profile.value.countryCode || null,
         phone: normalizedPhone,
+        socialLinks: (profile.value.socialLinks || []).map(({ platform, url }) => ({ platform, url })),
       }
   try {
-    imageChange = await profileImageField.value?.prepareSave()
-    if (imageChange) {
-      if (isCreator) {
-        body.avatarMediaId = imageChange.mediaId
-        body.avatarUrl = imageChange.url
-      } else {
-        body.logoMediaId = imageChange.mediaId
-        body.logoUrl = imageChange.url
-      }
-    } else if (isCreator) {
-      body.avatarMediaId = profile.value.avatarMediaId || null
-      body.avatarUrl = profile.value.avatarMediaId ? null : profile.value.avatarUrl || null
-    } else {
-      body.logoMediaId = profile.value.logoMediaId || null
-      body.logoUrl = profile.value.logoMediaId ? null : profile.value.logoUrl || null
+    const fields = [
+      { field: profileImageField.value, id: isCreator ? 'avatarMediaId' : 'logoMediaId', url: isCreator ? 'avatarUrl' : 'logoUrl' },
+      ...(!isCreator ? [{ field: companyCoverField.value, id: 'coverMediaId', url: 'coverUrl' }] : []),
+    ]
+    for (const entry of fields) {
+      const change = await entry.field?.prepareSave()
+      if (change) imageChanges.push({ ...entry, change })
+      body[entry.id] = change ? change.mediaId : profile.value[entry.id] || null
+      if (entry.id !== 'coverMediaId') body[entry.url] = change ? change.url : profile.value[entry.id] ? null : profile.value[entry.url] || null
     }
-
     await apiRequest('/me/profile', { method: 'PUT', body })
     profileSaved = true
-    if (imageChange) {
-      if (isCreator) {
-        profile.value.avatarMediaId = imageChange.mediaId
-        profile.value.avatarUrl = imageChange.url
-      } else {
-        profile.value.logoMediaId = imageChange.mediaId
-        profile.value.logoUrl = imageChange.url
-      }
-    }
-    if (imageChange?.previousMediaId) {
-      try {
-        await apiRequest(`/media/${imageChange.previousMediaId}`, { method: 'DELETE' })
-      } catch (cause) {
-        error.value = `${t('account.profileImageCleanupFailed')} ${cause.message}`
-        notice.value = t('account.profileSaved')
+    for (const { id, url, change } of imageChanges) {
+      profile.value[id] = change.mediaId
+      profile.value[url] = change.url
+      if (change.previousMediaId) {
+        try {
+          await apiRequest(`/media/${change.previousMediaId}`, { method: 'DELETE' })
+        } catch (cause) {
+          error.value = `${t('account.profileImageCleanupFailed')} ${cause.message}`
+        }
       }
     }
     notice.value = t('account.profileSaved')
     await loadDashboard()
   } catch (cause) {
-    if (!profileSaved && imageChange?.uploadedMediaId) {
-      try {
-        await profileImageField.value?.rollback(imageChange)
-      } catch (cleanupCause) {
-        error.value = `${cause.message} ${t('account.profileImageCleanupFailed')} ${cleanupCause.message}`
+    if (!profileSaved) {
+      for (const { field, change } of imageChanges) {
+        if (!change.uploadedMediaId) continue
+        try {
+          await field?.rollback(change)
+        } catch (cleanupCause) {
+          error.value = `${cause.message} ${t('account.profileImageCleanupFailed')} ${cleanupCause.message}`
+        }
       }
     }
     if (!error.value) {
@@ -584,7 +583,7 @@ async function saveProfile() {
     }
   } finally {
     if (profileSaved) {
-      profileImageField.value?.commit()
+      for (const { field } of imageChanges) field?.commit()
       editingProfile.value = false
       profileBeforeEdit = null
     }
@@ -595,6 +594,13 @@ async function saveProfile() {
 function addSocialProfile() {
   if (profile.value.socialProfiles.length < 5) {
     profile.value.socialProfiles.push({ platform: 'TikTok', handle: '', followers: 0 })
+  }
+}
+
+function addCompanySocialLink() {
+  profile.value.socialLinks ||= []
+  if (profile.value.socialLinks.length < COMPANY_SOCIAL_PLATFORMS.length) {
+    profile.value.socialLinks.push({ platform: COMPANY_SOCIAL_PLATFORMS.find((platform) => !profile.value.socialLinks.some((link) => link.platform === platform)) || 'Website', url: '' })
   }
 }
 
@@ -888,52 +894,16 @@ onMounted(loadDashboard)
   </AccountPage>
   <AccountAccessPanel v-else-if="!user" @authenticated="handleAuthenticated" />
 
-  <AccountPage v-else class="account-page account-page--dashboard page-width" :aria-busy="dashboardLoading">
-    <div v-if="accountSection === 'profile'" class="account-welcome">
-      <p class="account-welcome__title">{{ t('account.welcomeBack', { name: (user.accountType === 'creator' ? profile?.displayName : profile?.name) || t('account.title') }) }}</p>
-      <p>{{ t('account.welcomeIntro') }}</p>
-    </div>
-    <div class="account-heading">
-      <div class="account-heading__identity">
-        <div
-          class="account-heading__avatar"
-          :class="user.accountType === 'creator' ? 'account-heading__avatar--creator' : 'account-heading__avatar--company'"
-        >
-          <img
-            v-if="user.accountType === 'creator' && profile?.avatarUrl"
-            :src="profile.avatarUrl"
-            :alt="profile.displayName"
-          />
-          <img
-            v-else-if="user.accountType !== 'creator' && profile?.logoUrl"
-            :src="profile.logoUrl"
-            :alt="profile.name"
-          />
-          <WaveLogo v-else mark />
-        </div>
-        <div class="account-heading__copy">
-          <p class="eyebrow">{{ user.accountType === 'creator' ? t('account.creatorProfile') : t('account.companyProfile') }}</p>
-          <h1>{{ (user.accountType === 'creator' ? profile?.displayName : profile?.name) || t('account.title') }}</h1>
-          <p class="account-heading__email">{{ user.email }}</p>
-          <RouterLink
-            v-if="profile?.slug"
-            class="text-link account-heading__profile-link"
-            :to="user.accountType === 'creator' ? { name: 'creator-profile', params: { slug: profile.slug } } : { name: 'company-profile', params: { slug: profile.slug } }"
-          >
-            {{ t('account.viewPublicProfile') }} ↗
-          </RouterLink>
-        </div>
+  <AccountPage v-else class="account-page account-page--dashboard page-width" :class="{ 'account-page--editing': editingProfile && accountSection === 'profile' }" :aria-busy="dashboardLoading">
+    <header v-if="accountSection === 'profile'" class="account-welcome" :class="{ 'account-welcome--editing': editingProfile }">
+      <div>
+        <button v-if="editingProfile" class="account-welcome__back" type="button" :disabled="busy" @click="cancelProfileEdit"><ArrowLeft :size="18" aria-hidden="true" />{{ t('account.back') }}</button>
+        <h1 class="account-welcome__title"><template v-if="editingProfile">{{ t('account.editProfile') }}</template><I18nT v-else keypath="account.welcomeBack" scope="global"><template #name><span>{{ (user.accountType === 'creator' ? profile?.displayName : profile?.name) || t('account.title') }}</span></template></I18nT></h1>
+        <p>{{ editingProfile ? t('account.profileEditorIntro') : t('account.welcomeIntro') }}</p>
       </div>
-      <div class="account-heading__actions">
-        <SwitchField
-          :model-value="user.hide_my_account"
-          :label="t('account.hideAccount')"
-          :description="t('account.hideAccountHint')"
-          :disabled="visibilitySaving"
-          @update:model-value="updateAccountVisibility"
-        />
-      </div>
-    </div>
+      <RouterLink v-if="profile?.slug" class="account-welcome__public" :to="{ name: user.accountType === 'creator' ? 'creator-profile' : 'company-profile', params: { slug: profile.slug } }"><Eye :size="21" aria-hidden="true" />{{ t('account.viewPublicProfile') }}<ExternalLink :size="15" aria-hidden="true" /></RouterLink>
+    </header>
+    <AccountProfileSummary v-if="profile && !editingProfile" :user="user" :profile="profile" :country-options="countryOptions" :visibility-saving="visibilitySaving" @edit="startProfileEdit('about')" @select-tab="selectAccountTab" @visibility="updateAccountVisibility" />
     <StatusMessage v-if="error" variant="error">{{ error }}</StatusMessage>
     <StatusMessage v-else-if="notice">{{ notice }}</StatusMessage>
     <div v-if="!user.emailVerified" class="verification-banner">
@@ -945,51 +915,14 @@ onMounted(loadDashboard)
     </div>
 
     <div class="account-layout">
-      <AccountSidebar :user="user" />
+      <AccountSidebar :user="user" :profile="profile" />
       <main class="account-content">
       <div class="account-grid">
       <form
         v-if="accountSection === 'profile'"
-        class="form-card profile-form profile-form--wide"
+        class="profile-form profile-form--wide"
         @submit.prevent="saveProfile"
       >
-        <header class="profile-form__header">
-          <div>
-            <p class="eyebrow">{{ user.accountType === 'creator' ? t('account.creatorProfile') : t('account.companyProfile') }}</p>
-            <h2>{{ user.accountType === 'creator' ? t('account.creatorProfile') : t('account.companyProfile') }}</h2>
-            <p>{{ editingProfile ? t('account.profileEditorIntro') : t('account.profileDetailsIntro') }}</p>
-          </div>
-          <div class="profile-form__actions">
-            <template v-if="editingProfile">
-              <button class="button button--outline" type="button" :disabled="busy" @click="cancelProfileEdit">{{ t('account.richTextCancel') }}</button>
-              <button class="button button--dark profile-form__save" type="submit" :disabled="busy">
-                {{ t('account.saveProfile') }}
-                <span aria-hidden="true">↗</span>
-              </button>
-            </template>
-            <button v-else class="button button--dark profile-form__save" type="button" @click="startProfileEdit">{{ t('account.editProfile') }}</button>
-          </div>
-        </header>
-
-        <div v-if="editingProfile" class="profile-image-editor">
-          <ProfileImageField
-            ref="profileImageField"
-            :folder="user.accountType === 'creator' ? 'creator-avatar' : 'company-logo'"
-            :model-value="user.accountType === 'creator' ? profile.avatarMediaId : profile.logoMediaId"
-            :preview-url="user.accountType === 'creator' ? profile.avatarUrl : profile.logoUrl"
-            :alt="user.accountType === 'creator' ? profile.displayName : profile.name"
-            :add-label="t('account.addProfileImage')"
-            :change-label="t('account.changeProfileImage')"
-            :remove-label="t('account.removeProfileImage')"
-            :helper-text="t('account.profileImageSaveHint')"
-            :remove-title="t('account.profileImageRemoveTitle')"
-            :remove-message="t('account.profileImageRemoveMessage')"
-            :confirm-label="t('account.remove')"
-            :cancel-label="t('account.richTextCancel')"
-            :disabled="busy || !user.approved"
-          />
-        </div>
-
         <nav
           v-if="user.accountType === 'creator'"
           class="profile-tabs"
@@ -1046,8 +979,10 @@ onMounted(loadDashboard)
           :tab="accountTab"
           :country-options="countryOptions"
           :categories="categories"
+          @edit="startProfileEdit"
         />
-        <template v-else-if="user.accountType === 'creator'">
+        <div v-if="editingProfile" class="profile-edit-layout">
+        <template v-if="user.accountType === 'creator'">
           <section
             v-if="accountTab === 'about'"
             id="account-panel-about"
@@ -1055,7 +990,27 @@ onMounted(loadDashboard)
             role="tabpanel"
             aria-labelledby="account-tab-about"
           >
-            <div class="form-grid">
+            <AccountProfileCard :title="t('account.basicInformation')" :icon="UserRound">
+            <div class="profile-edit-avatar">
+              <ProfileImageField
+                ref="profileImageField"
+                compact
+                :folder="user.accountType === 'creator' ? 'creator-avatar' : 'company-logo'"
+                :model-value="user.accountType === 'creator' ? profile.avatarMediaId : profile.logoMediaId"
+                :preview-url="user.accountType === 'creator' ? profile.avatarUrl : profile.logoUrl"
+                :alt="user.accountType === 'creator' ? profile.displayName : profile.name"
+                :add-label="t('account.addProfileImage')"
+                :change-label="t('account.changeProfileImage')"
+                :remove-label="t('account.removeProfileImage')"
+                :helper-text="t('account.profileImageSaveHint')"
+                :remove-title="t('account.profileImageRemoveTitle')"
+                :remove-message="t('account.profileImageRemoveMessage')"
+                :confirm-label="t('account.remove')"
+                :cancel-label="t('account.richTextCancel')"
+                :disabled="busy || !user.approved"
+              />
+            </div>
+            <div class="form-grid profile-edit-basics">
               <label class="form-field form-field--wide">
                 <span>{{ t('auth.name') }}</span>
                 <input v-model.trim="profile.displayName" required maxlength="120" autocomplete="name" />
@@ -1071,10 +1026,7 @@ onMounted(loadDashboard)
                 :helper-text="t('account.categoriesHint')"
                 :max-selections="5"
               />
-              <label class="form-field">
-                <span>{{ t('auth.location') }}</span>
-                <input v-model.trim="profile.location" required maxlength="120" autocomplete="address-level2" />
-              </label>
+
               <SearchableSelect
                 :model-value="profile.countryCode || ''"
                 :options="countryOptions"
@@ -1098,6 +1050,10 @@ onMounted(loadDashboard)
                 :country-search-placeholder="t('auth.searchPhoneCountry')"
                 :no-countries-found-label="t('auth.noPhoneCountriesFound')"
               />
+            </div>
+            </AccountProfileCard>
+            <AccountProfileCard :title="t('account.additionalInformation')" :icon="FileText">
+            <div class="form-grid">
               <label class="form-field form-field--wide">
                 <span>{{ t('account.tagline') }}</span>
                 <input v-model.trim="profile.tagline" maxlength="180" />
@@ -1116,6 +1072,7 @@ onMounted(loadDashboard)
                 <input v-model="tags" maxlength="500" />
               </label>
             </div>
+            </AccountProfileCard>
           </section>
 
           <section
@@ -1351,6 +1308,43 @@ onMounted(loadDashboard)
           </section>
         </template>
         <section v-else class="profile-tab-panel">
+          <div class="company-profile-images">
+            <ProfileImageField
+              ref="profileImageField"
+              folder="company-logo"
+              :model-value="profile.logoMediaId"
+              :preview-url="profile.logoUrl || ''"
+              :alt="profile.name"
+              :add-label="t('account.addProfileImage')"
+              :change-label="t('account.changeProfileImage')"
+              :remove-label="t('account.removeProfileImage')"
+              :helper-text="t('account.profileImageSaveHint')"
+              :remove-title="t('account.profileImageRemoveTitle')"
+              :remove-message="t('account.profileImageRemoveMessage')"
+              :confirm-label="t('account.remove')"
+              :cancel-label="t('account.richTextCancel')"
+              :disabled="busy || !user.approved"
+            />
+            <div><h3>{{ t('account.companyCover') }}</h3>
+            <ProfileImageField
+              class="company-cover-field"
+              ref="companyCoverField"
+              folder="company-cover"
+              :model-value="profile.coverMediaId"
+              :preview-url="profile.coverUrl || ''"
+              :alt="profile.name"
+              :add-label="t('account.addCompanyCover')"
+              :change-label="t('account.changeCompanyCover')"
+              :remove-label="t('account.removeCompanyCover')"
+              :helper-text="t('account.profileImageSaveHint')"
+              :remove-title="t('account.removeCompanyCoverTitle')"
+              :remove-message="t('account.removeCompanyCoverMessage')"
+              :confirm-label="t('account.remove')"
+              :cancel-label="t('account.richTextCancel')"
+              :disabled="busy || !user.approved"
+            />
+            </div>
+          </div>
           <div class="form-grid">
             <label class="form-field">
               <span>{{ t('account.companyName') }}</span>
@@ -1362,15 +1356,16 @@ onMounted(loadDashboard)
                 :placeholder="t('auth.companyNamePlaceholder')"
               />
             </label>
-            <label class="form-field">
-              <span>{{ t('auth.industry') }}</span>
-              <input
-                v-model.trim="profile.industry"
-                required
-                maxlength="100"
-                :placeholder="t('auth.industryPlaceholder')"
-              />
-            </label>
+            <MultiSelect
+              v-model="profile.industries"
+              :options="companyIndustryOptions"
+              :label="t('auth.industry')"
+              :placeholder="t('companyDirectory.selectIndustries')"
+              :search-placeholder="t('companyDirectory.searchIndustries')"
+              :no-results-label="t('companyDirectory.noIndustries')"
+              :remove-label="t('account.remove')"
+              :max-selections="20"
+            />
             <SearchableSelect
               class="form-field--wide"
               :model-value="profile.countryCode || ''"
@@ -1411,7 +1406,51 @@ onMounted(loadDashboard)
               :maxlength="1500"
             />
           </div>
+          <section class="company-social-editor">
+            <div class="profile-editor__heading">
+              <div>
+                <h3>{{ t('account.companySocialLinks') }}</h3>
+                <small>{{ t('account.companySocialLinksHint') }}</small>
+              </div>
+              <button
+                class="profile-editor__add"
+                type="button"
+                :disabled="(profile.socialLinks || []).length >= COMPANY_SOCIAL_PLATFORMS.length"
+                @click="addCompanySocialLink"
+              >
+                <Plus :size="16" aria-hidden="true" />
+                {{ t('account.addSocialLink') }}
+              </button>
+            </div>
+            <div v-if="!(profile.socialLinks || []).length" class="profile-editor__empty">{{ t('account.noSocialLinks') }}</div>
+            <div v-for="(link, index) in profile.socialLinks" :key="index" class="social-editor company-social-editor__row">
+              <label class="form-field">
+                <span>{{ t('account.platform') }}</span>
+                <select v-model="link.platform" required>
+                  <option v-for="platform in COMPANY_SOCIAL_PLATFORMS" :key="platform" :value="platform">{{ platform }}</option>
+                </select>
+              </label>
+              <label class="form-field form-field--wide">
+                <span>{{ t('account.socialLinkUrl') }}</span>
+                <input v-model.trim="link.url" type="url" required maxlength="500" placeholder="https://" />
+              </label>
+              <button
+                class="profile-editor__remove"
+                type="button"
+                :aria-label="`${t('account.remove')}: ${link.platform}`"
+                @click="profile.socialLinks.splice(index, 1)"
+              >
+                <Trash2 :size="15" aria-hidden="true" />
+                <span>{{ t('account.remove') }}</span>
+              </button>
+            </div>
+          </section>
         </section>
+          <footer class="profile-form__footer">
+            <button class="button button--outline" type="button" :disabled="busy" @click="cancelProfileEdit">{{ t('account.richTextCancel') }}</button>
+            <button class="button button--dark" type="submit" :disabled="busy">{{ t('account.saveProfile') }}</button>
+          </footer>
+        </div>
       </form>
 
       <section
@@ -1728,7 +1767,7 @@ onMounted(loadDashboard)
                     <strong>{{ application.creator.displayName }}</strong>
                     <small>
                       {{ application.creator.categoryLabel || application.creator.category }}
-                      <template v-if="application.creator.location"> · {{ application.creator.location }}</template>
+                      <template v-if="application.creator.city"> · {{ application.creator.city }}</template>
                     </small>
                   </span>
                 </button>
@@ -1775,7 +1814,7 @@ onMounted(loadDashboard)
             />
             <div>
               <strong>{{ selectedApplication.creator.categoryLabel || selectedApplication.creator.category }}</strong>
-              <span v-if="selectedApplication.creator.location">{{ selectedApplication.creator.location }}</span>
+              <span v-if="selectedApplication.creator.city">{{ selectedApplication.creator.city }}</span>
             </div>
           </div>
           <p v-if="selectedApplication.creator.bio" class="company-applicant-dialog__bio">
@@ -1902,6 +1941,7 @@ onMounted(loadDashboard)
       :user="user"
       :profile="profile"
       :categories="categories"
+      :industry-options="companyIndustryOptions"
       :country-options="countryOptions"
       :phone-country="profilePhoneCountry"
       @update:profile="profile = $event"

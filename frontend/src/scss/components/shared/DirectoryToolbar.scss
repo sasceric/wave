@@ -1,0 +1,26 @@
+@use '../../breakpoints';
+.directory-toolbar-anchor { height: 1px; margin-bottom: -1px; }
+.directory-toolbar {
+  position: sticky; top: 90px; z-index: 19; display: flex; align-items: center; gap: 14px; padding: 13px 15px; margin-bottom: 18px; border: 1px solid #e0e4dc; border-radius: 24px; background: rgba(255, 254, 251, .9);
+  > .directory-search { flex: 0 1 370px; }
+  &__controls { display: flex; align-items: center; gap: 14px; flex: 1; min-width: 0; }
+  &__controls > .directory-search { flex: 1 1 140px; }
+  &__controls > .single-select { flex: 0 1 210px; min-width: 0; margin-bottom: 0; }
+  .single-select__trigger { min-height: 42px; border-radius: 10px; }
+  &__controls > .single-select:last-child .single-select__menu { left: auto; right: 0; }
+  &__filter-trigger { display: none; }
+  &.is-sticky { border-color: #dfe4dc; background: #fffefa; box-shadow: 0 8px 24px rgba(31, 42, 40, .12); }
+}
+@include breakpoints.down(1150px) { .directory-toolbar, .directory-toolbar__controls { gap: 10px; } }
+@include breakpoints.down(760px) {
+  .directory-toolbar {
+    top: 62px; transition: top .22s ease; display: grid; grid-template-columns: minmax(0, 1fr) 48px; gap: 14px 12px; margin-top: -4px; margin-bottom: 21px; padding: 10px; margin-inline: -10px; border-color: transparent; border-radius: 16px; background: var(--paper);
+    > .directory-search { min-height: 46px; border-radius: 15px; }
+    &__filter-trigger { position: relative; display: grid; place-items: center; width: 48px; height: 46px; padding: 0; border: 0; border-radius: 15px; color: #fffefa; background: var(--forest); cursor: pointer; }
+    &__filter-trigger strong { position: absolute; top: -4px; right: -4px; min-width: 18px; padding: 2px 4px; border-radius: 12px; background: #e17d5d; font-size: 10px; }
+    &__controls { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(var(--control-columns), minmax(0, 1fr)); gap: 9px; }
+    &__controls > .directory-search, .single-select__trigger { min-height: 36px; border-radius: 12px; }
+    .single-select__menu { left: auto; right: 0; }
+  }
+  .site-shell--mobile-chrome-hidden .directory-toolbar { top: 0; }
+}

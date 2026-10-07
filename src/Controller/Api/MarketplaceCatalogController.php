@@ -3,7 +3,7 @@
 namespace App\Controller\Api;
 
 use App\Entity\CreatorFaq;
-use App\Entity\MarketplaceCategory;
+use App\Marketplace\MarketplaceAreaCatalog;
 use App\Localization\ApiMessages;
 use App\Localization\LocaleContext;
 use Doctrine\ORM\EntityManagerInterface;
@@ -21,17 +21,14 @@ final class MarketplaceCatalogController
             return new JsonResponse(['error' => ApiMessages::get('unsupported_language', 'bs')], 400);
         }
 
-        $categories = $entityManager->getRepository(MarketplaceCategory::class)->findBy(
-            ['active' => true],
-            ['position' => 'ASC', 'id' => 'ASC'],
-        );
+        return new JsonResponse(['data' => MarketplaceAreaCatalog::options($entityManager, $locale)]);
+    }
 
-        return new JsonResponse([
-            'data' => array_map(static fn (MarketplaceCategory $category): array => [
-                'value' => $category->getValue(),
-                'label' => $category->label($locale),
-            ], $categories),
-        ]);
+    #[Route('/api/marketplace/company-industries', name: 'api_company_industries', methods: ['GET'])]
+    public function companyIndustries(Request $request, EntityManagerInterface $entityManager): JsonResponse
+    {
+        // Keep the legacy URL for existing clients; both use the same admin catalog.
+        return $this->categories($request, $entityManager);
     }
 
     #[Route('/api/marketplace/creator-faqs', name: 'api_marketplace_creator_faqs', methods: ['GET'])]

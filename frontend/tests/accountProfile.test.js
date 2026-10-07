@@ -56,6 +56,18 @@ test('Cancel restores nested profile details, tags and phone country without sav
   assert.equal(requests.length, 0)
 })
 
+test('editing a section selects its tab and repeated edit actions retain the original Cancel snapshot', async () => {
+  const { state, requests } = await setupAccount()
+  state.startProfileEdit('portfolio')
+  assert.equal(state.accountTab.value, 'portfolio')
+  state.profile.value.name = 'Unsaved company'
+  state.startProfileEdit('about')
+  assert.equal(state.accountTab.value, 'about')
+  state.cancelProfileEdit()
+  assert.equal(state.profile.value.name, 'Test company')
+  assert.equal(requests.length, 0)
+})
+
 test('Save uses the existing profile API and returns to saved details', async () => {
   const { state, requests } = await setupAccount()
   state.startProfileEdit()
@@ -89,4 +101,37 @@ test('login clears form focus and resets the page without a smooth scroll', asyn
   assert.equal(scrolls[0].top, 0)
   assert.equal(scrolls[0].behavior, 'instant')
   assert.equal(state.editingProfile.value, false)
+})
+
+test('company Save sends multiple industries and its cover and logo changes together', async () => {
+  const { state, requests } = await setupAccount()
+  let committed = 0
+  state.startProfileEdit()
+  state.profile.value.industries = ['Software', 'Technology']
+  state.profileImageField.value = { prepareSave: async () => ({ mediaId: 11, url: '/logo', uploadedMediaId: 11 }), commit: () => { committed++ } }
+  state.companyCoverField.value = { prepareSave: async () => ({ mediaId: 12, url: '/cover', uploadedMediaId: 12 }), commit: () => { committed++ } }
+  await state.saveProfile()
+  assert.deepEqual(requests[0].body.industries, ['Software', 'Technology'])
+  assert.equal(requests[0].body.logoMediaId, 11)
+  assert.equal(requests[0].body.coverMediaId, 12)
+  assert.equal(committed, 2)
+})
+
+test('failed company Save rolls back both staged uploads', async () => {
+  const { state } = await setupAccount({ saveError: 'Failed save' })
+  const rolledBack = []
+  state.startProfileEdit()
+  for (const [field, id] of [[state.profileImageField, 11], [state.companyCoverField, 12]]) {
+    field.value = { prepareSave: async () => ({ mediaId: id, url: '/image', uploadedMediaId: id }), rollback: async (change) => { rolledBack.push(change.uploadedMediaId) } }
+  }
+  await state.saveProfile()
+  assert.deepEqual(rolledBack, [11, 12])
+  assert.equal(state.editingProfile.value, true)
+})
+
+test('campaign Save retains its separate target location', async () => {
+  const { state, requests } = await setupAccount()
+  state.campaignForm.value.location = 'Croatia'
+  await state.saveCampaign()
+  assert.equal(requests[0].body.location, 'Croatia')
 })

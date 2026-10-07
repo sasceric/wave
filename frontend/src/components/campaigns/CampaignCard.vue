@@ -11,6 +11,7 @@ import { useCampaignBookmarks } from '../../composables/useCampaignBookmarks'
 import { localizedRouteName } from '../../routePaths'
 import ConfirmationModal from '../shared/ConfirmationModal.vue'
 import CardImage from '../shared/CardImage.vue'
+import { CAMPAIGN_PLACEHOLDER } from '../../lib/marketplace'
 
 const props = defineProps({
   campaign: { type: Object, required: true },
@@ -24,21 +25,6 @@ const bookmarkBusy = ref(false)
 const bookmarkError = ref('')
 const removeBookmarkConfirmationOpen = ref(false)
 const bookmarked = computed(() => isCampaignBookmarked(props.campaign.slug))
-const coverVariant = computed(() => {
-  const category = String(props.campaign.category || '')
-    .normalize('NFD')
-    .replace(/\p{Diacritic}/gu, '')
-    .toLowerCase()
-
-  if (/beauty|ljepot|lepot/.test(category)) return 'beauty'
-  if (/fashion|moda/.test(category)) return 'fashion'
-  if (/food|hran|kulinar/.test(category)) return 'food'
-  if (/travel|putovanj|potovan/.test(category)) return 'travel'
-  if (/wellness|zdrav|dobrobit/.test(category)) return 'wellness'
-
-  return 'lifestyle'
-})
-
 const platformIcons = {
   Instagram: Camera,
   TikTok: Music2,
@@ -104,13 +90,12 @@ async function confirmRemoveBookmark() {
 
 <template>
   <article class="campaign-card">
-    <div class="campaign-card__cover" :class="`campaign-card__cover--${coverVariant}`">
+    <div class="campaign-card__cover">
       <CardImage
-        v-if="campaign.coverImage || campaign.coverImageUrl"
         class="campaign-card__cover-image"
         :image="campaign.coverImage"
         :sizes="imageSizes"
-        :src="campaign.coverImageUrl"
+        :src="campaign.coverImageUrl || CAMPAIGN_PLACEHOLDER"
         alt=""
       />
       <div class="campaign-card__cover-brand">

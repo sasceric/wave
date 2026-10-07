@@ -3,9 +3,9 @@
 namespace App\Controller\Api;
 
 use App\Api\CampaignResource;
+use App\Api\Currency;
 use App\Api\DirectoryCursor;
 use App\Entity\Campaign;
-use App\Entity\DirectoryIndex;
 use App\Entity\MarketplaceCategory;
 use App\Localization\ApiMessages;
 use App\Localization\LocaleContext;
@@ -34,75 +34,121 @@ final class CampaignController
         }
 
         try {
+            $categories = $this->selectedValues($request, 'categories', 80);
+            $channels = $this->selectedValues($request, 'channels', 40);
+            $sort = $request->query->getString('sort', 'recommended');
+            $currency = $request->query->getString('currency');
+            $budgetMin = $this->budgetBound($request, 'budgetMin');
+            $budgetMax = $this->budgetBound($request, 'budgetMax');
+            if (!in_array($sort, ['recommended', 'newest', 'closing'], true)
+                || ($currency !== '' && !Currency::isSupported($currency))
+                || (($budgetMin !== null || $budgetMax !== null) && $currency === '')
+                || ($budgetMin !== null && $budgetMax !== null && $budgetMin > $budgetMax)) {
+                throw new \InvalidArgumentException();
+            }
             $cursorMode = $cursor->enabled($request);
-            $position = $cursorMode ? $cursor->decode($request, 'campaign', ['featured' => 'bool', 'date' => 'date', 'id' => 'int']) : null;
+            $positionTypes = $sort === 'recommended' ? ['featured' => 'bool', 'date' => 'date', 'id' => 'int'] : ['date' => 'date', 'id' => 'int'];
+            $position = $cursorMode ? $cursor->decode($request, 'campaign', $positionTypes) : null;
         } catch (\InvalidArgumentException) {
             return new JsonResponse(['error' => ApiMessages::get('invalid_request', $locale)], 400);
         }
 
         $card = $request->query->getString('view') === 'card';
+        $params = ['status' => 'open', 'today' => (new \DateTimeImmutable('today'))->format('Y-m-d H:i:s')];
+        $types = [];
+        $conditions = ['c.status = :status', 'c.closes_at >= :today', '(owner.id IS NULL OR (owner.approved = TRUE AND owner.hide_my_account = FALSE))'];
         $query = trim($request->query->getString('q'));
-        $category = trim($request->query->getString('category'));
-        $company = trim($request->query->getString('company'));
-        $builder = $entityManager->getRepository(Campaign::class)->createQueryBuilder('campaign')
-            ->join('campaign.company', 'company')
-            ->leftJoin(DirectoryIndex::class, 'searchIndex', 'WITH', "searchIndex.kind = 'campaign' AND searchIndex.entityId = campaign.id")
-            ->leftJoin('company.owner', 'companyOwner')
-            ->andWhere('campaign.status = :status')
-            ->andWhere('campaign.closesAt >= :today')
-            ->andWhere('companyOwner.id IS NULL OR (companyOwner.approved = :approved AND companyOwner.hideMyAccount = :visible)')
-            ->setParameter('status', 'open');
-        $builder->setParameter('today', new \DateTimeImmutable('today'));
-        $builder->setParameter('approved', true);
-        $builder->setParameter('visible', false);
-
         if ($query !== '') {
-            $builder
-                ->andWhere('searchIndex.searchText LIKE :query OR (searchIndex.id IS NULL AND (LOWER(campaign.title) LIKE :query OR LOWER(campaign.summary) LIKE :query OR LOWER(campaign.description) LIKE :query OR LOWER(campaign.category) LIKE :query OR LOWER(campaign.location) LIKE :query)) OR LOWER(company.name) LIKE :query OR LOWER(company.industry) LIKE :query')
-                ->setParameter('query', '%' . mb_strtolower($query) . '%');
+            $conditions[] = "(i.search_text LIKE :query OR (i.id IS NULL AND (LOWER(c.title) LIKE :query OR LOWER(c.summary) LIKE :query OR LOWER(c.description) LIKE :query OR LOWER(c.category) LIKE :query OR LOWER(c.location) LIKE :query)) OR LOWER(company.name) LIKE :query OR LOWER(company.industry) LIKE :query)";
+            $params['query'] = '%' . mb_strtolower($query) . '%';
         }
+        $category = trim($request->query->getString('category'));
         if ($category !== '') {
-            $builder
-                ->andWhere('LOWER(campaign.category) = :category')
-                ->setParameter('category', mb_strtolower($category));
+            $categories[] = $category;
         }
+        if ($categories !== []) {
+            $conditions[] = 'LOWER(c.category) IN (:categories)';
+            $params['categories'] = array_map(mb_strtolower(...), array_unique($categories));
+            $types['categories'] = \Doctrine\DBAL\ArrayParameterType::STRING;
+        }
+        if ($channels !== []) {
+            $parts = [];
+            foreach ($channels as $index => $channel) {
+                // Match complete JSON values, including before a queued index rebuild.
+                $parts[] = "LOWER(CAST(c.channels AS TEXT)) LIKE :channel$index ESCAPE '!'";
+                $params['channel' . $index] = '%' . strtr(json_encode(mb_strtolower($channel), JSON_THROW_ON_ERROR), ['!' => '!!', '%' => '!%', '_' => '!_']) . '%';
+            }
+            $conditions[] = '(' . implode(' OR ', $parts) . ')';
+        }
+        $location = trim($request->query->getString('location'));
+        if ($location !== '') {
+            $conditions[] = "LOWER(c.location) LIKE :location ESCAPE '!'";
+            $params['location'] = '%' . strtr(mb_strtolower($location), ['!' => '!!', '%' => '!%', '_' => '!_']) . '%';
+        }
+        if ($currency !== '') {
+            $conditions[] = 'c.currency = :currency';
+            $params['currency'] = $currency;
+        }
+        // Include campaigns whose offered budget overlaps the requested range.
+        foreach (['budgetMin' => [$budgetMin, 'c.budget_max >='], 'budgetMax' => [$budgetMax, 'c.budget_min <=']] as $key => [$value, $comparison]) {
+            if ($value !== null) {
+                $conditions[] = $comparison . ' :' . $key;
+                $params[$key] = $value;
+                $types[$key] = \Doctrine\DBAL\ParameterType::INTEGER;
+            }
+        }
+        $company = trim($request->query->getString('company'));
         if ($company !== '') {
-            $builder
-                ->andWhere('company.slug = :company')
-                ->setParameter('company', $company);
+            $conditions[] = 'company.slug = :company';
+            $params['company'] = $company;
         }
         if ($request->query->has('featured')) {
             $featuredValue = $request->query->all()['featured'];
-            if (!is_string($featuredValue)) {
-                return new JsonResponse(['error' => ApiMessages::get('invalid_featured', $locale)], 400);
-            }
-            $featured = filter_var($featuredValue, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
+            $featured = is_string($featuredValue) ? filter_var($featuredValue, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE) : null;
             if ($featured === null) {
                 return new JsonResponse(['error' => ApiMessages::get('invalid_featured', $locale)], 400);
             }
-            $builder
-                ->andWhere('campaign.featured = :featured')
-                ->setParameter('featured', $featured);
+            $conditions[] = 'c.featured = :featuredFilter';
+            $params['featuredFilter'] = $featured;
+            $types['featuredFilter'] = \Doctrine\DBAL\ParameterType::BOOLEAN;
         }
-
-        $total = $position !== null ? null : (int) (clone $builder)
-            ->select('COUNT(DISTINCT campaign.id)')
-            ->getQuery()
-            ->getSingleScalarResult();
-        $cursor->seek($builder, ['featured' => ['campaign.featured', 'DESC'], 'date' => ['campaign.closesAt', 'ASC'], 'id' => ['campaign.id', 'ASC']], $position);
-        $campaigns = $builder
-            ->leftJoin('campaign.coverMedia', 'coverMedia')
-            ->leftJoin('company.logoMedia', 'logoMedia')
+        $base = " FROM campaign c JOIN company ON company.id = c.company_id
+            LEFT JOIN wave_user owner ON owner.id = company.owner_id
+            LEFT JOIN directory_index i ON i.kind = 'campaign' AND i.entity_id = c.id
+            WHERE " . implode(' AND ', $conditions);
+        $connection = $entityManager->getConnection();
+        $total = $position !== null ? null : (int) $connection->fetchOne('SELECT COUNT(*)' . $base, $params, $types);
+        $sql = 'SELECT c.id, c.featured, c.closes_at, c.published_at' . $base;
+        if ($position !== null) {
+            $sql .= match ($sort) {
+                'newest' => ' AND (c.published_at < :date OR (c.published_at = :date AND c.id < :id))',
+                'closing' => ' AND (c.closes_at > :date OR (c.closes_at = :date AND c.id > :id))',
+                default => ' AND (c.featured < :featured OR (c.featured = :featured AND (c.closes_at > :date OR (c.closes_at = :date AND c.id > :id))))',
+            };
+            $params += $position;
+            if ($sort === 'recommended') {
+                $types['featured'] = \Doctrine\DBAL\ParameterType::BOOLEAN;
+            }
+        }
+        $sql .= ' ORDER BY ' . match ($sort) {
+            'newest' => 'c.published_at DESC, c.id DESC',
+            'closing' => 'c.closes_at ASC, c.id ASC',
+            default => 'c.featured DESC, c.closes_at ASC, c.id ASC',
+        } . ' LIMIT :limit OFFSET :offset';
+        $params += ['limit' => $limit + ($cursorMode ? 1 : 0), 'offset' => $cursorMode ? 0 : $offset];
+        $types += ['limit' => \Doctrine\DBAL\ParameterType::INTEGER, 'offset' => \Doctrine\DBAL\ParameterType::INTEGER];
+        $rows = $connection->fetchAllAssociative($sql, $params, $types);
+        $hasMore = $cursorMode && count($rows) > $limit;
+        $rows = array_slice($rows, 0, $limit);
+        $ids = array_column($rows, 'id');
+        // Hydrate only this batch, together with the media and company used by cards.
+        $campaigns = $ids === [] ? [] : $entityManager->getRepository(Campaign::class)->createQueryBuilder('campaign')
+            ->join('campaign.company', 'company')->leftJoin('company.owner', 'companyOwner')
+            ->leftJoin('campaign.coverMedia', 'coverMedia')->leftJoin('company.logoMedia', 'logoMedia')
             ->addSelect('company', 'companyOwner', 'coverMedia', 'logoMedia')
-            ->orderBy('campaign.featured', \SortDirection::Descending)
-            ->addOrderBy('campaign.closesAt', \SortDirection::Ascending)
-            ->addOrderBy('campaign.id', \SortDirection::Ascending)
-            ->setFirstResult($cursorMode ? 0 : $offset)
-            ->setMaxResults($limit + ($cursorMode ? 1 : 0))
-            ->getQuery()
-            ->getResult();
-        $hasMore = $cursorMode && count($campaigns) > $limit;
-        $campaigns = array_slice($campaigns, 0, $limit);
+            ->where('campaign.id IN (:ids)')->setParameter('ids', $ids)->getQuery()->getResult();
+        $ranks = array_flip($ids);
+        usort($campaigns, static fn (Campaign $a, Campaign $b): int => $ranks[$a->getId()] <=> $ranks[$b->getId()]);
         $last = $campaigns === [] ? null : $campaigns[array_key_last($campaigns)];
         $meta = ['count' => count($campaigns), 'limit' => $limit];
         if ($total !== null) {
@@ -110,7 +156,11 @@ final class CampaignController
         }
         if ($cursorMode) {
             $meta['hasMore'] = $hasMore;
-            $meta['nextCursor'] = !$hasMore || $last === null ? null : $cursor->encode($request, 'campaign', ['featured' => $last->isFeatured(), 'date' => $last->getClosesAt()->format('Y-m-d H:i:s'), 'id' => $last->getId()]);
+            $meta['nextCursor'] = !$hasMore || $last === null ? null : $cursor->encode($request, 'campaign', match ($sort) {
+                'newest' => ['date' => $last->getPublishedAt()->format('Y-m-d H:i:s'), 'id' => $last->getId()],
+                'closing' => ['date' => $last->getClosesAt()->format('Y-m-d H:i:s'), 'id' => $last->getId()],
+                default => ['featured' => $last->isFeatured(), 'date' => $last->getClosesAt()->format('Y-m-d H:i:s'), 'id' => $last->getId()],
+            });
         } else {
             $meta['offset'] = $offset;
         }
@@ -123,6 +173,7 @@ final class CampaignController
                     $locale,
                     $categoryLabels[$campaign->getCategory()] ?? null,
                     $card,
+                    $categoryLabels,
                 ),
                 $campaigns,
             ),
@@ -157,8 +208,32 @@ final class CampaignController
         $categoryLabels = self::categoryLabels($entityManager, $locale);
 
         return new JsonResponse([
-            'data' => CampaignResource::fromEntity($campaign, $locale, $categoryLabels[$campaign->getCategory()] ?? null),
+            'data' => CampaignResource::fromEntity($campaign, $locale, $categoryLabels[$campaign->getCategory()] ?? null, categoryLabels: $categoryLabels),
         ]);
+    }
+
+    private function selectedValues(Request $request, string $key, int $maxLength): array
+    {
+        $values = json_decode($request->query->getString($key, '[]'));
+        if (!is_array($values) || !array_is_list($values) || count($values) > 100
+            || array_filter($values, static fn ($value): bool => !is_string($value) || $value === '' || mb_strlen($value) > $maxLength) !== []) {
+            throw new \InvalidArgumentException();
+        }
+
+        return array_values(array_unique($values));
+    }
+
+    private function budgetBound(Request $request, string $key): ?int
+    {
+        $value = $request->query->getString($key);
+        if ($value === '') {
+            return null;
+        }
+        if (!preg_match('/^[0-9]{1,8}$/D', $value) || (int) $value > 10_000_000) {
+            throw new \InvalidArgumentException();
+        }
+
+        return (int) $value;
     }
 
     private static function categoryLabels(EntityManagerInterface $entityManager, string $locale): array

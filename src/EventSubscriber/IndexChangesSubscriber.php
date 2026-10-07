@@ -5,6 +5,7 @@ namespace App\EventSubscriber;
 use App\Background\JobDispatcher;
 use App\Entity\Campaign;
 use App\Entity\Company;
+use App\Entity\CompanyIndustry;
 use App\Entity\Creator;
 use App\Entity\User;
 use Doctrine\Bundle\DoctrineBundle\Attribute\AsDoctrineListener;
@@ -32,11 +33,21 @@ final class IndexChangesSubscriber
         // Drop stale projections in the domain transaction; readers fall back to source data until indexing completes.
         $db = $event->getObjectManager()->getConnection();
         $keys = [];
-        foreach ([...$work->getScheduledEntityUpdates(), ...$work->getScheduledEntityDeletions()] as $entity) {
+        foreach ([...$work->getScheduledEntityInsertions(), ...$work->getScheduledEntityUpdates(), ...$work->getScheduledEntityDeletions()] as $entity) {
+            if ($entity instanceof CompanyIndustry) {
+                $entity = $entity->getCompany();
+            }
             if ($entity instanceof Creator || $entity instanceof Company || $entity instanceof Campaign) {
                 $kind = $entity instanceof Creator ? 'creator' : ($entity instanceof Company ? 'company' : 'campaign');
                 if ($entity->getId() !== null) {
                     $keys[] = $kind . ':' . $entity->getId();
+                }
+            }
+            if ($entity instanceof User) {
+                foreach ([$entity->getCreator(), $entity->getCompany()] as $profile) {
+                    if ($profile !== null && $profile->getId() !== null) {
+                        $keys[] = ($profile instanceof Creator ? 'creator:' : 'company:') . $profile->getId();
+                    }
                 }
             }
             if ($entity instanceof Campaign && $entity->getCompany()->getId() !== null) {
@@ -47,19 +58,16 @@ final class IndexChangesSubscriber
         sort($keys);
         foreach ($keys as $key) {
             $db->executeQuery('SELECT pg_advisory_xact_lock(hashtext(?))', ['wave.index.' . $key]);
+            $db->delete('directory_index', ['id' => $key]);
         }
         foreach ([...$work->getScheduledEntityInsertions(), ...$work->getScheduledEntityUpdates(), ...$work->getScheduledEntityDeletions()] as $entity) {
+            if ($entity instanceof CompanyIndustry) {
+                $entity = $entity->getCompany();
+            }
             if ($entity instanceof Creator || $entity instanceof Company || $entity instanceof Campaign) {
-                if ($entity->getId() !== null) {
-                    $kind = $entity instanceof Creator ? 'creator' : ($entity instanceof Company ? 'company' : 'campaign');
-                    $db->delete('directory_index', ['id' => $kind . ':' . $entity->getId()]);
-                }
                 $this->changed[spl_object_id($entity)] = $entity;
             }
             if ($entity instanceof Campaign) {
-                if ($entity->getCompany()->getId() !== null) {
-                    $db->delete('directory_index', ['id' => 'company:' . $entity->getCompany()->getId()]);
-                }
                 $this->changed[spl_object_id($entity->getCompany())] = $entity->getCompany();
             }
             if ($entity instanceof User) {

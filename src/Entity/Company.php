@@ -2,6 +2,8 @@
 
 namespace App\Entity;
 
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity]
@@ -33,6 +35,14 @@ class Company
     #[ORM\JoinColumn(nullable: true, onDelete: 'SET NULL')]
     private ?Media $logoMedia = null;
 
+    #[ORM\ManyToOne(targetEntity: Media::class)]
+    #[ORM\JoinColumn(nullable: true, onDelete: 'SET NULL')]
+    private ?Media $coverMedia = null;
+
+    /** @var Collection<int, CompanyIndustry> */
+    #[ORM\OneToMany(mappedBy: 'company', targetEntity: CompanyIndustry::class, cascade: ['persist'], orphanRemoval: true)]
+    private Collection $industrySelections;
+
     #[ORM\Column]
     private bool $verified;
 
@@ -41,6 +51,10 @@ class Company
 
     #[ORM\Column(type: 'json', options: ['default' => '{}'])]
     private array $translations;
+
+    /** @var list<array{platform: string, url: string}> */
+    #[ORM\Column(name: 'social_links', type: 'json', options: ['default' => '[]'])]
+    private array $socialLinks = [];
 
     #[ORM\OneToOne(inversedBy: 'company', targetEntity: User::class)]
     #[ORM\JoinColumn(nullable: true, unique: true, onDelete: 'SET NULL')]
@@ -55,6 +69,7 @@ class Company
         array $translations = [],
         ?string $about = null,
     ) {
+        $this->industrySelections = new ArrayCollection();
         $this->slug = $slug;
         $this->name = $name;
         $this->industry = $industry;
@@ -82,6 +97,43 @@ class Company
     public function getIndustry(): string
     {
         return $this->industry;
+    }
+
+    public function getIndustries(): array
+    {
+        $values = $this->industrySelections->map(static fn (CompanyIndustry $industry): string => $industry->getValue())->toArray();
+        return array_values(array_unique(array_filter([$this->industry, ...$values])));
+    }
+
+    public function setIndustries(array $values): void
+    {
+        $values = array_values(array_unique($values));
+        if ($values === []) {
+            throw new \InvalidArgumentException('At least one industry is required.');
+        }
+        foreach ($this->industrySelections->toArray() as $selection) {
+            if (!in_array($selection->getValue(), $values, true)) {
+                $this->industrySelections->removeElement($selection);
+            }
+        }
+        $existing = $this->industrySelections->map(static fn (CompanyIndustry $industry): string => $industry->getValue())->toArray();
+        foreach ($values as $value) {
+            if (!in_array($value, $existing, true)) {
+                $this->industrySelections->add(new CompanyIndustry($this, $value));
+            }
+        }
+        $this->industry = $values[0];
+        $this->translations = [];
+    }
+
+    public function getCoverMedia(): ?Media
+    {
+        return $this->coverMedia;
+    }
+
+    public function setCoverMedia(?Media $media): void
+    {
+        $this->coverMedia = $media;
     }
 
     public function getAbout(): ?string
@@ -127,6 +179,18 @@ class Company
     public function setTranslations(array $translations): void
     {
         $this->translations = $translations;
+    }
+
+    /** @return list<array{platform: string, url: string}> */
+    public function getSocialLinks(): array
+    {
+        return $this->socialLinks;
+    }
+
+    /** @param list<array{platform: string, url: string}> $socialLinks */
+    public function setSocialLinks(array $socialLinks): void
+    {
+        $this->socialLinks = $socialLinks;
     }
 
     public function getOwner(): ?User

@@ -9,6 +9,7 @@ import StatusMessage from '../shared/StatusMessage.vue'
 const props = defineProps({
   user: { type: Object, required: true },
   profile: { type: Object, required: true },
+  industryOptions: { type: Array, default: () => [] },
   categories: { type: Array, default: () => [] },
   countryOptions: { type: Array, default: () => [] },
   phoneCountry: { type: String, required: true },
@@ -69,20 +70,23 @@ onBeforeUnmount(() => {
             :remove-label="t('account.remove')"
             :max-selections="5"
           />
-          <label class="form-field">
-            <span>{{ t('auth.location') }}</span>
-            <input v-model.trim="profile.location" required minlength="2" maxlength="120" autocomplete="address-level2" />
-          </label>
+
         </template>
         <template v-else>
           <label class="form-field">
             <span>{{ t('account.companyName') }}</span>
             <input v-model.trim="profile.name" required minlength="2" maxlength="120" autocomplete="organization" autofocus />
           </label>
-          <label class="form-field">
-            <span>{{ t('auth.industry') }}</span>
-            <input v-model.trim="profile.industry" required minlength="2" maxlength="100" />
-          </label>
+          <MultiSelect
+              v-model="profile.industries"
+              :options="industryOptions"
+              :label="t('auth.industry')"
+              :placeholder="t('companyDirectory.selectIndustries')"
+              :search-placeholder="t('companyDirectory.searchIndustries')"
+              :no-results-label="t('companyDirectory.noIndustries')"
+              :remove-label="t('account.remove')"
+              :max-selections="20"
+            />
         </template>
         <SearchableSelect
           :model-value="profile.countryCode || ''"

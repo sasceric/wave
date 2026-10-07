@@ -27,8 +27,8 @@ class Creator
     #[ORM\Column(length: 80)]
     private string $category;
 
-    #[ORM\Column(length: 120)]
-    private string $location;
+    #[ORM\Column(length: 120, nullable: true)]
+    private ?string $city = null;
 
     #[ORM\Column(type: 'text')]
     private string $bio;
@@ -84,7 +84,7 @@ class Creator
         string $slug,
         string $displayName,
         string $category,
-        string $location,
+        string $city,
         string $bio,
         array $socialProfiles,
         array $tags = [],
@@ -100,7 +100,7 @@ class Creator
         $this->slug = $slug;
         $this->displayName = $displayName;
         $this->category = $category;
-        $this->location = $location;
+        $this->city = $this->owner === null ? $city : null;
         $this->bio = $bio;
         $this->socialProfiles = $socialProfiles;
         $this->tags = $tags;
@@ -150,9 +150,9 @@ class Creator
         return $this->createdAt;
     }
 
-    public function getLocation(): string
+    public function getCity(): string
     {
-        return $this->location;
+        return $this->owner?->getCity() ?? $this->city ?? '';
     }
 
     public function getBio(): string
@@ -284,13 +284,19 @@ class Creator
 
     public function setOwner(?User $owner): void
     {
+        if ($owner !== null && !$owner->getCity() && $this->city) {
+            $owner->setCity(mb_substr($this->city, 0, 70));
+        }
         $this->owner = $owner;
+        if ($owner !== null) {
+            $this->city = null;
+        }
     }
 
     public function updateProfile(
         string $displayName,
         string $category,
-        string $location,
+        string $city,
         string $bio,
         array $socialProfiles,
         array $tags,
@@ -304,7 +310,7 @@ class Creator
         $this->displayName = $displayName;
         $this->category = $categories[0] ?? $category;
         $this->categories = $categories;
-        $this->location = $location;
+        $this->city = $this->owner === null ? $city : null;
         $this->bio = $bio;
         $this->socialProfiles = $socialProfiles;
         $this->tags = $tags;

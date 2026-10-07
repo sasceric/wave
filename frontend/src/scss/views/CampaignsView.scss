@@ -1,0 +1,37 @@
+@use '../breakpoints';
+.campaign-directory {
+  position: relative; padding-bottom: 96px; color: var(--forest);
+  &__hero { min-height: 265px; }
+  &__hero .directory-hero__copy { max-width: 63%; }
+  &__hero h1 { max-width: 630px; }
+  &__content { display: grid; grid-template-columns: 245px minmax(0, 1fr); gap: 22px; align-items: start; }
+  &__results { min-width: 0; }
+  &__results-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 35px; margin-bottom: 14px; }
+  &__results-head p { margin: 0; font-size: 13px; }
+  &__view-options { display: flex; gap: 8px; }
+  &__view-options button { display: flex; align-items: center; gap: 7px; min-height: 35px; padding: 0 14px; border: 1px solid #e2e6df; border-radius: 12px; color: #5d756b; background: #fffefa; font: inherit; font-size: 12px; cursor: pointer; }
+  &__view-options button[aria-pressed='true'] { color: #fffefa; background: var(--forest); border-color: var(--forest); }
+  &__field { display: block; min-width: 0; color: #61736a; font-size: 12px; }
+  &__field > span { display: block; margin-bottom: 7px; font-weight: 600; }
+  &__field > input { width: 100%; min-width: 0; height: 42px; padding: 0 10px; border: 1px solid #dfe4dc; border-radius: 8px; color: var(--forest); background: #fffefa; font: inherit; }
+  &__field > input:disabled { opacity: .55; }
+  &__field > input:focus-visible { outline: 2px solid #789281; outline-offset: 2px; }
+  &__budget { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-top: 8px; }
+  legend { color: #61736a; font-size: 12px; font-weight: 600; }
+  &__hint { margin: 9px 0 0; color: var(--muted); font-size: 11px; line-height: 1.5; }
+  &__grid--list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@include breakpoints.down(1150px) { .campaign-directory__content { grid-template-columns: 220px minmax(0, 1fr); gap: 18px; } }
+@include breakpoints.down(760px) {
+  .campaign-directory {
+    padding-bottom: 88px;
+    &__hero { min-height: 215px; padding-top: 30px; padding-bottom: 28px; }
+    &__hero .directory-hero__copy { max-width: 100%; }
+    &__hero h1 { max-width: 100%; font-size: clamp(34px, 8.8vw, 46px); }
+    &__hero .eyebrow { font-size: 11px; letter-spacing: .06em; }
+    &__hero .directory-hero__copy > p:last-child { max-width: 100%; font-size: 16px; }
+    &__content { display: block; }
+    &__view-options { display: none; }
+    &__field > input { font-size: 16px; }
+  }
+}

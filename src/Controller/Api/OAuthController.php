@@ -7,6 +7,7 @@ use App\Api\ApiAccess;
 use App\Api\JsonPayload;
 use App\Api\ProfileSlug;
 use App\Api\UserResource;
+use App\Api\MarketplaceCategoryLabels;
 use App\Entity\Company;
 use App\Entity\Creator;
 use App\Entity\OAuthIdentity;
@@ -314,26 +315,34 @@ final class OAuthController extends AbstractController
 
         if ($type === 'creator') {
             $categories = $this->categoryList($data['categories'] ?? []);
-            $location = is_string($data['location'] ?? null) ? trim($data['location']) : '';
-            if ($categories === null || $location === '' || mb_strlen($location) > 120) {
+            if ($categories === null) {
                 return new JsonResponse(['error' => ApiMessages::get('invalid_registration', $locale)], 400);
             }
             $user->setCreator(new Creator(
                 ProfileSlug::fromName($name),
                 $name,
                 $categories[0],
-                $location,
+                $city,
                 '',
                 [],
                 [],
                 categories: $categories,
             ));
         } else {
-            $industry = is_string($data['industry'] ?? null) ? trim($data['industry']) : '';
+            $industries = $data['industries'] ?? [$data['industry'] ?? ''];
+            if (!is_array($industries) || !array_is_list($industries) || count($industries) < 1 || count($industries) > 20
+                || array_filter($industries, static fn ($value): bool => !is_string($value) || mb_strlen(trim($value)) < 2 || mb_strlen($value) > 100) !== []
+            ) {
+                return new JsonResponse(['error' => ApiMessages::get('invalid_profile', $locale)], 400);
+            }
+            $industries = array_values(array_unique(array_map('trim', $industries)));
+            $industry = $industries[0];
             if ($industry === '' || mb_strlen($industry) > 100) {
                 return new JsonResponse(['error' => ApiMessages::get('invalid_registration', $locale)], 400);
             }
-            $user->setCompany(new Company(ProfileSlug::fromName($name), $name, $industry));
+            $company = new Company(ProfileSlug::fromName($name), $name, $industry);
+            $company->setIndustries($industries);
+            $user->setCompany($company);
         }
 
         $entityManager->persist($user);
@@ -348,7 +357,7 @@ final class OAuthController extends AbstractController
         $security->login($user, SessionAuthenticator::class, 'main');
 
         return new JsonResponse([
-            'data' => UserResource::fromEntity($user, $locale),
+            'data' => UserResource::fromEntity($user, $locale, MarketplaceCategoryLabels::forLocale($entityManager, $locale)),
             'csrfToken' => $tokenManager->refreshToken('wave')->getValue(),
         ], 201);
     }

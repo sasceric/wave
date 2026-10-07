@@ -37,6 +37,7 @@ final class MediaController
     private const FOLDERS = [
         'creator-avatar' => ['name' => 'Creator avatars', 'role' => 'ROLE_CREATOR'],
         'creator-portfolio' => ['name' => 'Creator portfolio', 'role' => 'ROLE_CREATOR'],
+        'company-cover' => ['name' => 'Company covers', 'role' => 'ROLE_COMPANY'],
         'company-logo' => ['name' => 'Company logos', 'role' => 'ROLE_COMPANY'],
         'campaign-cover' => ['name' => 'Campaign covers', 'role' => 'ROLE_COMPANY'],
     ];
@@ -230,6 +231,7 @@ final class MediaController
         $isReferenced = $entityManager->getRepository(CreatorPortfolioMedia::class)->count(['media' => $media]) > 0
             || $entityManager->getRepository(Creator::class)->count(['avatarMedia' => $media]) > 0
             || $entityManager->getRepository(Company::class)->count(['logoMedia' => $media]) > 0
+            || $entityManager->getRepository(Company::class)->count(['coverMedia' => $media]) > 0
             || $entityManager->getRepository(Campaign::class)->count(['coverMedia' => $media]) > 0;
         if ($isReferenced) {
             return new JsonResponse(['error' => ApiMessages::get('media_in_use', $locale)], 409);
@@ -286,7 +288,7 @@ final class MediaController
         $companyLogoCount = $entityManager->getRepository(Company::class)->createQueryBuilder('company')
             ->select('COUNT(company.id)')
             ->leftJoin('company.owner', 'owner')
-            ->andWhere('company.logoMedia = :media')
+            ->andWhere('(company.logoMedia = :media OR company.coverMedia = :media)')
             ->andWhere('(owner.id IS NULL OR (owner.approved = :approved AND owner.hideMyAccount = :visible))')
             ->setParameter('media', $media)
             ->setParameter('approved', true)

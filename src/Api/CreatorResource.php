@@ -19,6 +19,7 @@ final class CreatorResource
         $translation = $creator->getTranslations()[$locale] ?? [];
         $owner = $creator->getOwner();
         $categories = $creator->getCategories();
+        $categoryLabel ??= $categoryLabels[$creator->getCategory()] ?? null;
         if ($card) {
             return [
                 'id' => $creator->getId(),
@@ -77,7 +78,7 @@ final class CreatorResource
                 static fn (string $category): string => $categoryLabels[$category] ?? $category,
                 $categories,
             ),
-            'location' => $creator->getLocation(),
+            'city' => $creator->getCity(),
             'bio' => $translation['bio'] ?? $creator->getBio(),
             'tagline' => $translation['tagline'] ?? ($creator->getTagline() !== '' ? $creator->getTagline() : ($translation['bio'] ?? $creator->getBio())),
             'avatarUrl' => $creator->getAvatarMedia()?->getUrl() ?? $creator->getAvatarUrl(),

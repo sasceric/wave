@@ -100,7 +100,7 @@ final class DirectoryCursor
     private function scope(Request $request, string $kind): string
     {
         $filters = [];
-        foreach (['locale', 'q', 'platform', 'category', 'company', 'featured'] as $key) {
+        foreach (['locale', 'q', 'platform', 'category', 'categories', 'platforms', 'audience', 'company', 'featured', 'industry', 'industries', 'city', 'country', 'countries', 'verified', 'sort', 'channels', 'location', 'currency', 'budgetMin', 'budgetMax'] as $key) {
             $filters[$key] = trim($request->query->getString($key, $key === 'locale' ? 'bs' : ''));
         }
 

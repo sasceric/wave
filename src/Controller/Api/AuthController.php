@@ -8,6 +8,7 @@ use App\Api\ApiAccess;
 use App\Api\JsonPayload;
 use App\Api\ProfileSlug;
 use App\Api\UserResource;
+use App\Api\MarketplaceCategoryLabels;
 use App\Entity\Company;
 use App\Entity\Creator;
 use App\Entity\User;
@@ -41,7 +42,7 @@ final class AuthController extends AbstractController
     }
 
     #[Route('/api/auth/me', name: 'api_auth_me', methods: ['GET'])]
-    public function me(Request $request, Security $security): JsonResponse
+    public function me(Request $request, Security $security, EntityManagerInterface $entityManager): JsonResponse
     {
         $locale = LocaleContext::fromRequest($request);
         if ($locale === null) {
@@ -52,7 +53,7 @@ final class AuthController extends AbstractController
             return new JsonResponse(['error' => ApiMessages::get('authentication_required', $locale)], 401);
         }
 
-        return new JsonResponse(['data' => UserResource::fromEntity($user, $locale)]);
+        return new JsonResponse(['data' => UserResource::fromEntity($user, $locale, MarketplaceCategoryLabels::forLocale($entityManager, $locale))]);
     }
 
     #[Route('/api/auth/register', name: 'api_auth_register', methods: ['POST'])]
@@ -118,8 +119,7 @@ final class AuthController extends AbstractController
         if ($type === 'creator') {
             $category = is_string($data['category'] ?? null) ? trim($data['category']) : '';
             $categories = $this->categoryList($data['categories'] ?? [$category]);
-            $location = is_string($data['location'] ?? null) ? trim($data['location']) : '';
-            if ($categories === null || $location === '' || mb_strlen($location) > 120) {
+            if ($categories === null) {
                 return new JsonResponse(['error' => ApiMessages::get('invalid_registration', $locale)], 400);
             }
             $category = $categories[0];
@@ -127,18 +127,27 @@ final class AuthController extends AbstractController
                 ProfileSlug::fromName($name),
                 $name,
                 $category,
-                $location,
+                $city,
                 '',
                 [],
                 [],
                 categories: $categories,
             ));
         } else {
-            $industry = is_string($data['industry'] ?? null) ? trim($data['industry']) : '';
+            $industries = $data['industries'] ?? [$data['industry'] ?? ''];
+            if (!is_array($industries) || !array_is_list($industries) || count($industries) < 1 || count($industries) > 20
+                || array_filter($industries, static fn ($value): bool => !is_string($value) || mb_strlen(trim($value)) < 2 || mb_strlen($value) > 100) !== []
+            ) {
+                return new JsonResponse(['error' => ApiMessages::get('invalid_profile', $locale)], 400);
+            }
+            $industries = array_values(array_unique(array_map('trim', $industries)));
+            $industry = $industries[0];
             if ($industry === '' || mb_strlen($industry) > 100) {
                 return new JsonResponse(['error' => ApiMessages::get('invalid_registration', $locale)], 400);
             }
-            $user->setCompany(new Company(ProfileSlug::fromName($name), $name, $industry));
+            $company = new Company(ProfileSlug::fromName($name), $name, $industry);
+            $company->setIndustries($industries);
+            $user->setCompany($company);
         }
 
         $entityManager->persist($user);
@@ -148,7 +157,7 @@ final class AuthController extends AbstractController
         $security->login($user, SessionAuthenticator::class, 'main');
 
         return new JsonResponse([
-            'data' => UserResource::fromEntity($user, $locale),
+            'data' => UserResource::fromEntity($user, $locale, MarketplaceCategoryLabels::forLocale($entityManager, $locale)),
             'csrfToken' => $tokenManager->refreshToken('wave')->getValue(),
         ], 201);
     }
@@ -319,7 +328,7 @@ final class AuthController extends AbstractController
         $security->login($user, SessionAuthenticator::class, 'main');
 
         return new JsonResponse([
-            'data' => UserResource::fromEntity($user, $locale),
+            'data' => UserResource::fromEntity($user, $locale, MarketplaceCategoryLabels::forLocale($entityManager, $locale)),
             'csrfToken' => $tokenManager->refreshToken('wave')->getValue(),
         ]);
     }

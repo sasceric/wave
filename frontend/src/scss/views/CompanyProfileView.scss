@@ -1,99 +1,248 @@
 @use '../breakpoints';
 
-.company-cover {
-  padding: 56px 0 61px;
-  background: #edf0e9;
+.company-profile__hero {
+  position: relative;
+  min-height: 340px;
+  overflow: hidden;
+  color: #f8f8f1;
+  background: var(--forest);
 
-  &__inner {
-    max-width: 850px;
+  &::after {
+    position: absolute;
+    inset: 0;
+    content: '';
+    background: linear-gradient(90deg, rgba(11, 48, 42, .92) 0%, rgba(11, 48, 42, .74) 45%, rgba(11, 48, 42, .18) 100%);
   }
 }
 
-.company-logo {
-  width: 60px;
-  height: 60px;
+.company-profile__hero-image {
+  position: absolute;
+  inset: 0;
+  background-position: center;
+  background-size: cover;
+  opacity: .95;
+}
+
+.company-profile__hero-inner {
+  position: relative;
+  z-index: 1;
+  min-height: 340px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 40px;
+  padding-top: 58px;
+  padding-bottom: 52px;
+}
+
+.company-profile__hero-content {
+  min-width: 0;
+}
+
+.company-profile__identity {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+}
+
+.company-profile__logo {
+  width: 132px;
+  height: 132px;
+  flex: 0 0 auto;
   display: grid;
   place-items: center;
   overflow: hidden;
-  margin-bottom: 25px;
-  border: 1px solid #d5dfd4;
-  border-radius: 50%;
-  background: #638071;
+  border: 7px solid rgba(255, 255, 255, .9);
+  border-radius: 25px;
+  background: #0d4038;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, .16);
 
-  .wave-logo {
-    width: 100%;
-    height: 100%;
-  }
-
-  img {
+  img, .wave-logo {
     width: 100%;
     height: 100%;
     object-fit: cover;
   }
 }
 
-.company-cover {
-  .eyebrow {
-    margin-bottom: 7px;
-  }
+.company-profile__hero .eyebrow {
+  margin-bottom: 8px;
+  color: rgba(255, 255, 255, .72);
+}
 
-  h1 {
-    display: flex;
+.company-profile__hero h1 {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0;
+  color: #fff;
+  font-size: clamp(42px, 5vw, 70px);
+  line-height: .98;
+}
+
+.company-profile__tagline {
+  margin: 14px 0 0;
+  color: rgba(255, 255, 255, .78);
+  font-size: 17px;
+}
+
+.company-profile__stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 27px;
+
+  span {
+    display: inline-flex;
     align-items: center;
-    gap: 10px;
-    margin: 0 0 9px;
-    font-size: 48px;
-  }
-
-  &__location {
-    margin: 0 0 8px;
-    color: #738178;
+    gap: 8px;
+    padding: 10px 15px;
+    border: 1px solid rgba(255, 255, 255, .28);
+    border-radius: 999px;
+    color: #fff;
+    background: rgba(255, 255, 255, .13);
     font-size: 12px;
-  }
-
-  &__about {
-    max-width: 700px;
-    margin-top: 15px;
-    color: #607168;
-    font-size: 13px;
-    line-height: 1.75;
-  }
-
-  &__about > :first-child {
-    margin-top: 0;
-  }
-
-  &__about > :last-child {
-    margin-bottom: 0;
-  }
-
-  > .company-cover__inner > p:last-child {
-    margin: 0;
-    color: #7c8980;
-    font-size: 11px;
   }
 }
 
-.company-briefs {
-  padding-top: 63px;
-  padding-bottom: 85px;
+.company-profile__hero-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
 
-  .section-heading h2 {
-    font-size: 34px;
+.company-profile__body {
+  padding-top: 48px;
+  padding-bottom: 90px;
+}
+
+.company-profile__overview-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(270px, .75fr) minmax(210px, .52fr);
+  gap: 14px;
+  align-items: stretch;
+}
+
+.company-profile__card {
+  min-width: 0;
+  padding: 28px 30px;
+  border: 1px solid #e1e6df;
+  border-radius: 17px;
+  background: rgba(255, 255, 255, .68);
+  box-shadow: 0 9px 24px rgba(22, 35, 31, .035);
+}
+
+.company-profile__card h2 {
+  margin: 0 0 16px;
+  color: var(--forest);
+  font-size: 28px;
+}
+
+.company-profile__about-card {
+  .eyebrow {
+    margin-bottom: 11px;
   }
+}
+
+.company-profile__rich-text,
+.company-profile__muted {
+  color: #718078;
+  font-size: 15px;
+  line-height: 1.7;
+}
+
+.company-profile__rich-text > :first-child { margin-top: 0; }
+.company-profile__rich-text > :last-child { margin-bottom: 0; }
+
+.company-profile__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 22px;
+
+  span {
+    padding: 8px 13px;
+    border: 1px solid #dce5dd;
+    border-radius: 999px;
+    color: #587268;
+    background: #f3f6f0;
+    font-size: 12px;
+  }
+}
+
+.company-profile__details-card {
+  background: #f2f5ef;
+}
+
+.company-profile__detail {
+  display: grid;
+  grid-template-columns: 24px 80px minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  padding: 14px 0;
+  border-bottom: 1px solid #dfe6de;
+
+  &:last-child { border-bottom: 0; }
+
+  > svg { color: #698078; }
+  span { color: #74837b; font-size: 12px; }
+  strong { color: var(--forest); font-size: 13px; overflow-wrap: anywhere; }
+}
+
+.company-profile__social-card {
+  h2 { font-size: 22px; }
+
+  a {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 13px 0;
+    border-bottom: 1px solid #e5e9e3;
+    color: #60736a;
+    font-size: 13px;
+    text-decoration: none;
+
+    &:last-child { border-bottom: 0; }
+    svg:last-child { margin-left: auto; }
+    &:hover { color: var(--forest); }
+  }
+}
+
+.company-profile__campaigns {
+  padding-top: 68px;
+
+  .section-heading h2 { font-size: 34px; }
+}
+
+@include breakpoints.down(1000px) {
+  .company-profile__overview-grid { grid-template-columns: minmax(0, 1.2fr) minmax(260px, .8fr); }
+  .company-profile__social-card { grid-column: 1 / -1; }
 }
 
 @include breakpoints.down(760px) {
-  .company-cover {
-    padding: 42px 0;
-
-    h1 {
-      font-size: 39px;
-    }
+  .company-profile__hero { min-height: 490px; }
+  .company-profile__hero-inner {
+    min-height: 490px;
+    display: block;
+    padding-top: 46px;
+    padding-bottom: 36px;
   }
-
-  .company-briefs {
-    padding-top: 48px;
-    padding-bottom: 65px;
-  }
+  .company-profile__hero-image { background-position: 62% center; }
+  .company-profile__hero::after { background: linear-gradient(180deg, rgba(11, 48, 42, .42), rgba(11, 48, 42, .92) 78%); }
+  .company-profile__identity { align-items: flex-end; gap: 16px; }
+  .company-profile__logo { width: 86px; height: 86px; border-width: 5px; border-radius: 17px; }
+  .company-profile__hero h1 { font-size: 39px; }
+  .company-profile__tagline { font-size: 14px; }
+  .company-profile__stats { margin-top: 28px; }
+  .company-profile__stats span { padding: 8px 11px; font-size: 11px; }
+  .company-profile__hero-action { margin-top: 24px; }
+  .company-profile__body { padding-top: 28px; padding-bottom: 70px; }
+  .company-profile__overview-grid { grid-template-columns: 1fr; gap: 12px; }
+  .company-profile__social-card { grid-column: auto; }
+  .company-profile__card { padding: 24px 21px; }
+  .company-profile__card h2 { font-size: 25px; }
+  .company-profile__campaigns { padding-top: 48px; }
+  .company-profile__campaigns .section-heading { align-items: flex-start; gap: 13px; flex-direction: column; }
+  .company-profile__campaigns .section-heading h2 { font-size: 29px; }
 }

@@ -7,9 +7,9 @@
   padding-bottom: 92px;
 
   &--dashboard.page-width {
-    width: min(1200px, calc(100vw - 293px));
+    width: min(1200px, calc(100vw - 308px));
     max-width: 1200px;
-    margin-left: calc(245px + max(24px, (100vw - 1445px) / 2));
+    margin-left: calc(260px + max(24px, (100vw - 1460px) / 2));
     margin-right: 24px;
   }
 }

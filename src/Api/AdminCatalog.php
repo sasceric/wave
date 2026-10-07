@@ -33,7 +33,7 @@ final class AdminCatalog
             throw new \InvalidArgumentException('Invalid admin page.');
         }
         $columns = match ($kind) {
-            'creators' => ['displayName' => 'item.displayName', 'category' => 'item.category', 'location' => 'item.location'],
+            'creators' => ['displayName' => 'item.displayName', 'category' => 'item.category', 'city' => 'COALESCE(owner.city, item.city)'],
             'companies' => ['name' => 'item.name', 'industry' => 'item.industry', 'verified' => 'item.verified'],
             'campaigns' => ['title' => 'item.title', 'company.name' => 'company.name', 'status' => 'item.status'],
             'registrations' => ['approved' => 'item.approved', 'name' => 'COALESCE(creator.displayName, company.name, item.email)', 'email' => 'item.email', 'accountType' => 'item.role', 'emailVerified' => 'item.emailVerified'],
@@ -65,15 +65,19 @@ final class AdminCatalog
         $items = $builder->orderBy($columns[$sort], $direction)->addOrderBy('item.id', $direction)
             ->setFirstResult(($page - 1) * $limit)->setMaxResults($limit)->getQuery()->getResult();
 
+        $categoryLabels = $kind === 'companies' ? MarketplaceCategoryLabels::forLocale($this->entityManager, $locale) : [];
+
         return [
-            'data' => array_map(fn (object $item): array => $this->resource($item, $locale), $items),
+            'data' => array_map(fn (object $item): array => $this->resource($item, $locale, $categoryLabels), $items),
             'meta' => ['page' => $page, 'limit' => $limit, 'total' => $total, 'count' => count($items)],
         ];
     }
 
     public function featured(string $kind, string $locale): array
     {
-        return array_map(fn (object $item): array => $this->resource($item, $locale),
+        $categoryLabels = $kind === 'companies' ? MarketplaceCategoryLabels::forLocale($this->entityManager, $locale) : [];
+
+        return array_map(fn (object $item): array => $this->resource($item, $locale, $categoryLabels),
             $this->query($kind)->andWhere('item.featured = :featured')->setParameter('featured', true)->orderBy('item.id', 'ASC')->getQuery()->getResult());
     }
 
@@ -98,7 +102,7 @@ final class AdminCatalog
         return $builder;
     }
 
-    private function resource(object $item, string $locale): array
+    private function resource(object $item, string $locale, array $categoryLabels = []): array
     {
         if ($item instanceof Creator) {
             return [
@@ -106,13 +110,13 @@ final class AdminCatalog
                 'slug' => $item->getSlug(),
                 'displayName' => $item->getDisplayName(),
                 'category' => $item->getCategory(),
-                'location' => $item->getLocation(),
+                'city' => $item->getCity(),
                 'avatarUrl' => $item->getAvatarMedia()?->getUrl() ?? $item->getAvatarUrl(),
                 'featured' => $item->isFeatured(),
             ];
         }
         if ($item instanceof Company) {
-            $resource = CompanyResource::fromEntity($item, $locale, card: true);
+            $resource = CompanyResource::fromEntity($item, $locale, card: true, categoryLabels: $categoryLabels);
             unset($resource['logoImage']);
 
             return $resource;

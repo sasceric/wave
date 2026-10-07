@@ -326,3 +326,42 @@ workflow applies it and rebuilds the SPA. Existing production environment values
 workers and scheduling remain unchanged. Manual deployments must also run
 `APP_ENV=prod php8.4 bin/console doctrine:migrations:migrate --no-interaction`
 before clearing the production cache and restarting workers.
+
+## Company industries, covers and creator city (2026-10-07)
+
+The standard deployment workflow already builds the frontend, applies Doctrine
+migrations, clears production cache and stops workers so systemd restarts them
+with the new code. No additional environment variables or services are needed.
+Database migrations are required; clearing cache alone is insufficient.
+
+- `Version20261007013000` adds company cover media and `company_industry`,
+  an indexed relation supporting multiple industries. Existing primary industry
+  values are copied into the relation and retained for compatibility.
+- `Version20261007014000` removes `creator.location`. Account city is the
+  canonical city for owned creator profiles. Existing account cities are preserved;
+  an empty account city is filled from the old location. Standalone catalog
+  creators retain their old value as a nullable city fallback. Creator search
+  projections are invalidated and use source data until normal indexing runs.
+- Company covers use the existing media storage, ownership/approval checks,
+  lossless WebP upload processing and thumbnail generation queue. The default
+  card cover is a bundled static asset. No thumbnail backfill is needed for it.
+- “Država” on the companies directory filters `wave_user.country_code`;
+  “Grad” filters account city. There is no company location column to remove.
+
+For a manual deployment, follow the normal deployment steps above, including
+`APP_ENV=prod php8.4 bin/console doctrine:migrations:migrate --no-interaction`,
+`APP_ENV=prod php8.4 bin/console cache:clear`, and
+`APP_ENV=prod php8.4 bin/console messenger:stop-workers --no-interaction`.
+Use the normal database backup procedure before applying schema changes.
+
+
+### Shared marketplace areas (2026-10-07)
+
+The shared creators/companies/campaigns catalog is populated by migration
+`Version20261007020000`. The normal deployment's Doctrine migration step adds the
+missing starter areas while preserving existing admin edits and profile selections.
+For manual deployment, run `php bin/console doctrine:migrations:migrate --no-interaction`
+with `APP_ENV=prod` before warming the cache. Cache clearing alone does not populate
+the list. Include `migrations/data/marketplace-areas-20261007.json` in the checkout.
+Manage subsequent additions and translations through the existing admin catalog
+page. This change needs no additional worker or environment setting.

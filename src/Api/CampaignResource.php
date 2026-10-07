@@ -6,9 +6,10 @@ use App\Entity\Campaign;
 
 final class CampaignResource
 {
-    public static function fromEntity(Campaign $campaign, string $locale, ?string $categoryLabel = null, bool $card = false): array
+    public static function fromEntity(Campaign $campaign, string $locale, ?string $categoryLabel = null, bool $card = false, array $categoryLabels = []): array
     {
         $translation = $campaign->getTranslations()[$locale] ?? [];
+        $categoryLabel ??= $categoryLabels[$campaign->getCategory()] ?? null;
 
         $resource = [
             'id' => $campaign->getId(),
@@ -32,7 +33,7 @@ final class CampaignResource
             'coverMediaId' => $campaign->getCoverMedia()?->getId(),
             'coverImageUrl' => $campaign->getCoverMedia()?->getUrl(),
             'coverImage' => MediaImageResource::fromEntity($campaign->getCoverMedia()),
-            'company' => CompanyResource::fromEntity($campaign->getCompany(), $locale, card: $card),
+            'company' => CompanyResource::fromEntity($campaign->getCompany(), $locale, card: $card, categoryLabels: $categoryLabels),
         ];
         if ($card) {
             unset($resource['description'], $resource['deliverables']);

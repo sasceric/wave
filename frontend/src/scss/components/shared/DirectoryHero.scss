@@ -1,0 +1,21 @@
+@use '../../breakpoints';
+.directory-hero {
+  position: relative; display: flex; align-items: center; min-height: 225px; overflow: hidden; padding: 36px 16px;
+  &__copy {
+    position: relative; z-index: 1; max-width: 72%;
+    .eyebrow { margin: 0 0 18px; color: #71837d; font-size: 12px; letter-spacing: .16em; }
+    h1 { margin: 0 0 16px; color: #102421; font-family: var(--serif); font-size: clamp(38px, 4vw, 62px); font-weight: 500; letter-spacing: -.035em; line-height: 1.07; }
+    h1 em { color: var(--coral); font-weight: 500; }
+    > p:last-child { max-width: 740px; margin: 0; color: #6c7e78; font-size: 18px; line-height: 1.5; }
+  }
+}
+@include breakpoints.down(1150px) { .directory-hero__copy { max-width: 69%; > p:last-child { font-size: 15px; } } }
+@include breakpoints.down(760px) {
+  .directory-hero { min-height: 220px; margin-inline: -18px; padding: 25px 18px 27px; align-items: start; }
+  .directory-hero__copy {
+    max-width: 100%;
+    .eyebrow { font-size: 10px; margin-bottom: 17px; }
+    h1 { max-width: 74%; font-size: clamp(32px, 7.8vw, 44px); letter-spacing: -.035em; line-height: 1.08; margin-bottom: 15px; }
+    > p:last-child { max-width: 83%; font-size: 15px; line-height: 1.55; }
+  }
+}

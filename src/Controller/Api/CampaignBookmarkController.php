@@ -60,6 +60,7 @@ final class CampaignBookmarkController
                     $bookmark->getCampaign(),
                     $locale,
                     $categoryLabels[$bookmark->getCampaign()->getCategory()] ?? null,
+                    categoryLabels: $categoryLabels,
                 ),
                 $bookmarks,
             ),
@@ -106,6 +107,7 @@ final class CampaignBookmarkController
                 $campaign,
                 $locale,
                 $categoryLabels[$campaign->getCategory()] ?? null,
+                categoryLabels: $categoryLabels,
             ),
         ], $created ? 201 : 200);
     }

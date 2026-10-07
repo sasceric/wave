@@ -1,10 +1,11 @@
 <script setup>
 import { computed, onBeforeUnmount, ref, useId } from 'vue'
-import { ImagePlus, Upload, X } from '@lucide/vue'
+import { Camera, ImagePlus, Upload, X } from '@lucide/vue'
 import { apiRequest, apiUpload } from '../../lib/api'
 import ConfirmationModal from './ConfirmationModal.vue'
 
 const props = defineProps({
+  compact: { type: Boolean, default: false },
   folder: { type: String, required: true },
   modelValue: { type: Number, default: null },
   previewUrl: { type: String, default: '' },
@@ -122,7 +123,7 @@ defineExpose({ prepareSave, commit, rollback })
 </script>
 
 <template>
-  <div class="profile-image-field" :aria-busy="disabled">
+  <div class="profile-image-field" :class="{ 'profile-image-field--avatar': compact }" :aria-busy="disabled">
     <button
       v-if="!preview"
       class="profile-image-field__empty"
@@ -152,8 +153,9 @@ defineExpose({ prepareSave, commit, rollback })
         :disabled="disabled || hasPreparedChange"
         @click="openFilePicker"
       >
-        <Upload :size="14" aria-hidden="true" />
-        {{ changeLabel }}
+        <Camera v-if="compact" :size="20" aria-hidden="true" />
+        <Upload v-else :size="14" aria-hidden="true" />
+        <span :class="{ 'sr-only': compact }">{{ changeLabel }}</span>
       </button>
     </div>
     <input

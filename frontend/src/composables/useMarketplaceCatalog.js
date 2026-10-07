@@ -1,7 +1,8 @@
 import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { apiGet } from '../lib/api'
 
-export function useMarketplaceCatalog(locale, { includeFaqs = false } = {}) {
+export function useMarketplaceCatalog(locale, { includeFaqs = false, includeIndustries = false } = {}) {
+  const industries = ref([])
   const categories = ref([])
   const faqs = ref([])
   const loading = ref(false)
@@ -18,8 +19,11 @@ export function useMarketplaceCatalog(locale, { includeFaqs = false } = {}) {
       if (includeFaqs) {
         requests.push(apiGet('/marketplace/creator-faqs'))
       }
-      const [categoryResponse, faqResponse] = await Promise.all(requests)
+      const responses = await Promise.all(requests)
+      const [categoryResponse] = responses
+      const faqResponse = includeFaqs ? responses[1] : null
       if (currentRequestVersion === requestVersion) {
+        industries.value = includeIndustries ? categoryResponse.data : []
         categories.value = categoryResponse.data
         faqs.value = faqResponse?.data || []
       }
@@ -40,5 +44,5 @@ export function useMarketplaceCatalog(locale, { includeFaqs = false } = {}) {
     requestVersion += 1
   })
 
-  return { categories, faqs, loading, error, refresh: load }
+  return { industries, categories, faqs, loading, error, refresh: load }
 }

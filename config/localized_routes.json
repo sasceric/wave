@@ -30,6 +30,7 @@
     "admin-companies": "admin/kompanije",
     "admin-campaigns": "admin/kampanje",
     "admin-email-templates": "admin/email-predlosci",
+    "admin-subscribers": "admin/pretplatnici",
     "admin-tools": "admin/alati"
   },
   "hr": {
@@ -63,6 +64,7 @@
     "admin-companies": "admin/tvrtke",
     "admin-campaigns": "admin/kampanje",
     "admin-email-templates": "admin/predlosci-e-poste",
+    "admin-subscribers": "admin/pretplatnici",
     "admin-tools": "admin/alati"
   },
   "sr": {
@@ -96,6 +98,7 @@
     "admin-companies": "admin/kompanije",
     "admin-campaigns": "admin/kampanje",
     "admin-email-templates": "admin/email-sabloni",
+    "admin-subscribers": "admin/pretplatnici",
     "admin-tools": "admin/alati"
   },
   "cnr": {
@@ -129,6 +132,7 @@
     "admin-companies": "admin/kompanije",
     "admin-campaigns": "admin/kampanje",
     "admin-email-templates": "admin/email-predlozi",
+    "admin-subscribers": "admin/pretplatnici",
     "admin-tools": "admin/alati"
   },
   "sl": {
@@ -162,6 +166,7 @@
     "admin-companies": "admin/podjetja",
     "admin-campaigns": "admin/kampanje",
     "admin-email-templates": "admin/e-postne-predloge",
+    "admin-subscribers": "admin/narocniki",
     "admin-tools": "admin/orodja"
   },
   "en": {
@@ -195,6 +200,7 @@
     "admin-companies": "admin/companies",
     "admin-campaigns": "admin/campaigns",
     "admin-email-templates": "admin/email-templates",
+    "admin-subscribers": "admin/subscribers",
     "admin-tools": "admin/tools"
   }
 }

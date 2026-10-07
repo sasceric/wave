@@ -104,3 +104,31 @@
     border: 0;
   }
 }
+
+.profile-image-field--avatar {
+  .profile-image-field__image {
+    position: relative;
+  }
+
+  .profile-image-field__change {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    width: 42px;
+    height: 42px;
+    min-height: 42px;
+    display: grid;
+    place-items: center;
+    padding: 0;
+    border-radius: 50%;
+    background: #fffefa;
+    box-shadow: 0 3px 8px #173d3614;
+  }
+
+  .profile-image-field__remove {
+    width: 25px;
+    height: 25px;
+    right: 0;
+    top: 0;
+  }
+}

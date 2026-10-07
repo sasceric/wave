@@ -38,6 +38,10 @@ const templateLabels = computed(() => ({
     title: t('adminDashboard.contactEmailTemplate'),
     description: t('adminDashboard.contactEmailTemplateHint'),
   },
+  subscribed: {
+    title: t('adminDashboard.subscribedEmailTemplate'),
+    description: t('adminDashboard.subscribedEmailTemplateHint'),
+  },
   application_received: {
     title: t('adminDashboard.applicationReceivedEmailTemplate'),
     description: t('adminDashboard.applicationReceivedEmailTemplateHint'),

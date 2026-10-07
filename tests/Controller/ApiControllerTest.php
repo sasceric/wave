@@ -5,6 +5,7 @@ namespace App\Tests\Controller;
 use App\Entity\Campaign;
 use App\Entity\Company;
 use App\Entity\Creator;
+use App\Entity\MarketplaceCategory;
 use App\Entity\User;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Tools\SchemaTool;
@@ -23,6 +24,48 @@ final class ApiControllerTest extends WebTestCase
         $metadata = $entityManager->getMetadataFactory()->getAllMetadata();
         $schemaTool->dropSchema($metadata);
         $schemaTool->createSchema($metadata);
+    }
+
+    public function testAdminAreasAreSharedByCompaniesCreatorsAndCampaigns(): void
+    {
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $category = new MarketplaceCategory('Photography', ['bs' => 'Fotografija', 'en' => 'Photography'], 0);
+        $inactive = new MarketplaceCategory('Inactive', ['en' => 'Inactive'], 1);
+        $inactive->update($inactive->getLabels(), 1, false);
+        $company = new Company('shared-brand', 'Shared Brand', 'Photography');
+        $creator = new Creator('shared-creator', 'Shared Creator', 'Photography', 'Zenica', 'Profile', []);
+        $campaign = new Campaign('shared-campaign', 'Shared Campaign', 'Summary', 'Brief', 'Photography', ['Instagram'], ['Post'], 10, 20, 'Zenica', 1, new \DateTimeImmutable('+7 days'), new \DateTimeImmutable('today'), $company);
+        foreach ([$category, $inactive, $company, $creator, $campaign] as $entity) {
+            $em->persist($entity);
+        }
+        $em->flush();
+
+        $this->client->request('GET', '/api/marketplace/categories?locale=bs');
+        self::assertResponseIsSuccessful();
+        $options = json_decode($this->client->getResponse()->getContent(), true, flags: JSON_THROW_ON_ERROR)['data'];
+        self::assertSame([['value' => 'Photography', 'label' => 'Fotografija']], $options);
+        $this->client->request('GET', '/api/marketplace/company-industries?locale=bs');
+        self::assertResponseIsSuccessful();
+        self::assertSame($options, json_decode($this->client->getResponse()->getContent(), true, flags: JSON_THROW_ON_ERROR)['data']);
+
+        // An admin edit must reach all directories on subsequent requests.
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $category = $em->getRepository(MarketplaceCategory::class)->findOneBy(['value' => 'Photography']);
+        $category->update(['bs' => 'Fotografija i vizuelne priče', 'en' => 'Photography and visual stories'], 0, true);
+        $em->flush();
+        foreach (['companies/shared-brand' => 'industry', 'creators/shared-creator' => 'categoryLabel', 'campaigns/shared-campaign' => 'categoryLabel'] as $path => $labelKey) {
+            $this->client->request('GET', '/api/' . $path . '?locale=bs');
+            self::assertResponseIsSuccessful();
+            $data = json_decode($this->client->getResponse()->getContent(), true, flags: JSON_THROW_ON_ERROR)['data'];
+            self::assertSame('Fotografija i vizuelne priče', $data[$labelKey]);
+            if (isset($data['company'])) {
+                self::assertSame(['Fotografija i vizuelne priče'], $data['company']['industryLabels']);
+            }
+        }
+        $this->client->request('GET', '/api/companies/filters?locale=bs');
+        self::assertResponseIsSuccessful();
+        $options = json_decode($this->client->getResponse()->getContent(), true, flags: JSON_THROW_ON_ERROR)['data']['industries'];
+        self::assertSame([['value' => 'Photography', 'label' => 'Fotografija i vizuelne priče', 'count' => 1]], $options);
     }
 
     public function testCreatorDirectorySupportsSearchAndLabelsMetrics(): void
@@ -48,6 +91,70 @@ final class ApiControllerTest extends WebTestCase
         self::assertSame('maya-chen', $payload['data'][0]['slug']);
         self::assertSame('Prijavio/la kreator/ica', $payload['data'][0]['socialProfiles'][0]['source']);
         self::assertSame('2026-09-18', $payload['data'][0]['socialProfiles'][0]['lastUpdated']);
+    }
+
+    public function testCreatorFiltersAndSortingUseVisibleExistingFieldsAcrossCursorPages(): void
+    {
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        foreach ([0, 9999, 10000, 49999, 50000, 50000, 200000, 1000] as $index => $followers) {
+            $creator = new Creator('filter-creator-' . $index, 'Creator ' . $index, $index === 0 ? 'Travel' : 'Food', 'Legacy city', 'Profile', [
+                ['platform' => $index === 5 ? 'TikTok' : 'Instagram', 'followers' => $followers],
+            ], categories: $index === 2 ? ['Food', 'Travel'] : [], createdAt: new \DateTimeImmutable('2026-10-' . sprintf('%02d', min($index + 1, 5)) . ' 12:00:00'));
+            $owner = new User('creator-filter-' . $index . '@example.test', 'ROLE_CREATOR');
+            $owner->setPassword('unused');
+            $owner->setApproved($index !== 7);
+            $owner->setHideMyAccount($index === 6);
+            $owner->setCity($index === 0 ? 'Zenica' : 'Sarajevo');
+            $owner->setCountryCode($index % 2 === 0 ? 'BA' : 'HR');
+            $owner->setCreator($creator);
+            $em->persist($owner);
+            $em->persist($creator);
+        }
+        $em->flush();
+        $this->client->request('GET', '/api/creators/filters');
+        self::assertResponseIsSuccessful();
+        $facets = json_decode($this->client->getResponse()->getContent(), true, flags: JSON_THROW_ON_ERROR)['data'];
+        self::assertSame(['BA', 'HR'], array_column($facets['countries'], 'value'));
+        self::assertSame([3, 3], array_column($facets['countries'], 'count'));
+        $filters = http_build_query(['pagination' => 'cursor', 'limit' => 2, 'sort' => 'followers', 'categories' => '["Travel","Food"]', 'countries' => '["ba","HR"]']);
+        $this->client->request('GET', '/api/creators?' . $filters);
+        self::assertResponseIsSuccessful();
+        $first = json_decode($this->client->getResponse()->getContent(), true, flags: JSON_THROW_ON_ERROR);
+        self::assertSame(6, $first['meta']['total']);
+        self::assertSame(['Creator 5', 'Creator 4'], array_column($first['data'], 'displayName'));
+        $this->client->request('GET', '/api/creators?' . $filters . '&cursor=' . urlencode($first['meta']['nextCursor']));
+        self::assertResponseIsSuccessful();
+        $second = json_decode($this->client->getResponse()->getContent(), true, flags: JSON_THROW_ON_ERROR);
+        self::assertSame(['Creator 3', 'Creator 2'], array_column($second['data'], 'displayName'));
+        self::assertArrayNotHasKey('total', $second['meta']);
+        $this->client->request('GET', '/api/creators?' . $filters . '&cursor=' . urlencode($first['meta']['nextCursor']) . '&audience=large');
+        self::assertResponseStatusCodeSame(400);
+        foreach (['small' => ['Creator 1'], 'medium' => ['Creator 2', 'Creator 3'], 'large' => ['Creator 4', 'Creator 5']] as $range => $expected) {
+            $this->client->request('GET', '/api/creators?audience=' . $range);
+            self::assertResponseIsSuccessful();
+            self::assertSame($expected, array_column(json_decode($this->client->getResponse()->getContent(), true)['data'], 'displayName'));
+        }
+        $this->client->request('GET', '/api/creators?' . http_build_query(['categories' => '["Travel"]', 'countries' => '["BA"]', 'city' => 'Zenica']));
+        self::assertResponseIsSuccessful();
+        self::assertSame(['Creator 0'], array_column(json_decode($this->client->getResponse()->getContent(), true)['data'], 'displayName'));
+        $this->client->request('GET', '/api/creators?platforms=' . urlencode('["TikTok"]'));
+        self::assertResponseIsSuccessful();
+        self::assertSame(['Creator 5'], array_column(json_decode($this->client->getResponse()->getContent(), true)['data'], 'displayName'));
+        $this->client->request('GET', '/api/creators?categories=' . urlencode('["Travel"]'));
+        self::assertResponseIsSuccessful();
+        self::assertSame(['Creator 0', 'Creator 2'], array_column(json_decode($this->client->getResponse()->getContent(), true)['data'], 'displayName'));
+        $newest = 'pagination=cursor&sort=newest&limit=1';
+        $this->client->request('GET', '/api/creators?' . $newest);
+        self::assertResponseIsSuccessful();
+        $first = json_decode($this->client->getResponse()->getContent(), true);
+        self::assertSame('Creator 5', $first['data'][0]['displayName']);
+        $this->client->request('GET', '/api/creators?' . $newest . '&cursor=' . urlencode($first['meta']['nextCursor']));
+        self::assertResponseIsSuccessful();
+        self::assertSame('Creator 4', json_decode($this->client->getResponse()->getContent(), true)['data'][0]['displayName']);
+        foreach (['categories' => '[123]', 'countries' => '["Bosnia"]', 'platforms' => '{"value":"TikTok"}', 'sort' => 'invalid', 'audience' => 'invalid'] as $key => $value) {
+            $this->client->request('GET', '/api/creators?' . http_build_query([$key => $value]));
+            self::assertResponseStatusCodeSame(400);
+        }
     }
 
     public function testCampaignBriefIncludesCompanyAndCanBeFiltered(): void
@@ -114,6 +221,187 @@ final class ApiControllerTest extends WebTestCase
 
         $this->client->request('GET', '/api/campaigns/field-notes-expired');
         self::assertResponseStatusCodeSame(404);
+    }
+
+    public function testCampaignEntityFiltersAndSortingPreserveLazyLoadingScope(): void
+    {
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $company = new Company('campaign-filter-brand', 'Campaign Filter Brand', 'Food');
+        $hiddenOwner = new User('hidden-campaign-filter@example.com', 'ROLE_COMPANY');
+        $hiddenOwner->setPassword('unused-test-password');
+        $hiddenOwner->setApproved(true);
+        $hiddenOwner->setHideMyAccount(true);
+        $hiddenCompany = new Company('hidden-campaign-brand', 'Hidden Campaign Brand', 'Food');
+        $hiddenCompany->setOwner($hiddenOwner);
+        foreach ([$company, $hiddenOwner, $hiddenCompany] as $entity) {
+            $em->persist($entity);
+        }
+        $make = static fn (string $slug, string $category, array $channels, int $min = 100, int $max = 500, string $location = 'Zenica', string $currency = 'BAM', string $close = '+7 days', string $published = 'today', bool $featured = false, string $status = 'open', ?Company $brand = null): Campaign => new Campaign(
+            $slug, $slug, 'Summary', 'Brief', $category, $channels, ['One post'], $min, $max, $location, 2,
+            new \DateTimeImmutable($close), new \DateTimeImmutable($published), $brand ?? $company, $featured, $status, currency: $currency,
+        );
+        foreach ([
+            $make('campaign-filter-a', 'Travel', ['Instagram'], featured: true),
+            $make('campaign-filter-b', 'Food', ['TikTok'], close: '+3 days'),
+            $make('campaign-filter-c', 'Travel', ['Instagram'], close: '+3 days'),
+            $make('campaign-filter-other-channel', 'Food', ['YouTube']),
+            $make('campaign-filter-other-area', 'Technology', ['Instagram']),
+            $make('campaign-filter-other-location', 'Food', ['TikTok'], location: 'Sarajevo'),
+            $make('campaign-filter-other-currency', 'Food', ['TikTok'], currency: 'EUR'),
+            $make('campaign-filter-other-budget', 'Food', ['TikTok'], min: 600, max: 900),
+            $make('campaign-filter-ended', 'Food', ['TikTok'], close: '-1 day'),
+            $make('campaign-filter-closed', 'Food', ['TikTok'], status: 'closed'),
+            $make('campaign-filter-hidden', 'Food', ['TikTok'], brand: $hiddenCompany),
+        ] as $campaign) {
+            $em->persist($campaign);
+        }
+        $em->flush();
+        $filters = ['categories' => '["Travel","Food"]', 'channels' => '["Instagram","TikTok"]', 'location' => 'ZENICA', 'currency' => 'BAM', 'budgetMin' => '200', 'budgetMax' => '500', 'pagination' => 'cursor', 'view' => 'card', 'limit' => 1];
+        $firstCursor = null;
+        foreach (['recommended' => ['a', 'b', 'c'], 'newest' => ['c', 'b', 'a'], 'closing' => ['b', 'c', 'a']] as $sort => $expected) {
+            $path = '/api/campaigns?' . http_build_query($filters + ['sort' => $sort]);
+            $next = null;
+            $loaded = [];
+            do {
+                $this->client->request('GET', $path . ($next === null ? '' : '&cursor=' . urlencode($next)));
+                self::assertResponseIsSuccessful();
+                $payload = json_decode($this->client->getResponse()->getContent(), true, flags: JSON_THROW_ON_ERROR);
+                if ($next === null) {
+                    self::assertSame(3, $payload['meta']['total']);
+                    if ($sort === 'recommended') {
+                        $firstCursor = $payload['meta']['nextCursor'];
+                    }
+                }
+                $loaded = array_merge($loaded, array_column($payload['data'], 'slug'));
+                $next = $payload['meta']['nextCursor'];
+                self::assertLessThanOrEqual(3, count($loaded));
+            } while ($next !== null);
+            self::assertSame(array_map(static fn ($suffix) => 'campaign-filter-' . $suffix, $expected), $loaded);
+        }
+        foreach (['channels' => '["TikTok"]', 'location' => 'Sarajevo', 'currency' => 'EUR', 'budgetMin' => '300', 'budgetMax' => '400', 'sort' => 'newest'] as $key => $value) {
+            $this->client->request('GET', '/api/campaigns?' . http_build_query(array_replace($filters + ['sort' => 'recommended'], [$key => $value, 'cursor' => $firstCursor])));
+            self::assertResponseStatusCodeSame(400);
+        }
+        // JSON value matching must not mistake a substring for a channel name.
+        $this->client->request('GET', '/api/campaigns?' . http_build_query(['channels' => '["Insta"]']));
+        self::assertResponseIsSuccessful();
+        self::assertSame(0, json_decode($this->client->getResponse()->getContent(), true, flags: JSON_THROW_ON_ERROR)['meta']['total']);
+    }
+
+    public function testCampaignDirectoryRejectsInvalidEntityFilters(): void
+    {
+        foreach ([['categories' => '{}'], ['channels' => '[1]'], ['sort' => 'bad'], ['currency' => 'USD'], ['budgetMin' => '-1'], ['budgetMax' => '1.5'], ['budgetMax' => '10000001'], ['budgetMin' => '10'], ['budgetMin' => '500', 'budgetMax' => '200', 'currency' => 'BAM']] as $filters) {
+            $this->client->request('GET', '/api/campaigns?' . http_build_query($filters));
+            self::assertResponseStatusCodeSame(400);
+        }
+    }
+
+    public function testCompanyFiltersUseVisibleCompanyFieldsAndPreserveCursorScope(): void
+    {
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        foreach (['Food' => 'Hrana', 'Travel' => 'Putovanja i turizam', 'Technology' => 'Tehnologija', 'Beauty' => 'Ljepota'] as $value => $label) {
+            $em->persist(new MarketplaceCategory($value, ['bs' => $label, 'en' => $value], 0));
+        }
+        $travel = new Company('company-travel', 'Travel Brand', 'Travel', translations: ['bs' => ['industry' => 'Putovanja']], about: '<p>Thoughtful &amp; local</p>');
+        $travel->setIndustries(['Travel', 'Technology']);
+        $food = new Company('company-food', 'Food Brand', 'Food');
+        $hidden = new Company('company-hidden', 'Hidden Brand', 'Private industry');
+        $pending = new Company('company-pending', 'Pending Brand', 'Pending industry');
+        foreach ([$travel, $food, $hidden, $pending] as $index => $company) {
+            $owner = new User('company-filter-' . $index . '@example.test', 'ROLE_COMPANY');
+            $owner->setPassword('unused');
+            $owner->setApproved($company !== $pending);
+            $owner->setHideMyAccount($company === $hidden);
+            $owner->setCity($company === $travel ? 'Zenica' : 'Sarajevo');
+            $owner->setCountryCode($company === $travel ? 'BA' : 'HR');
+            $owner->setCompany($company);
+            $em->persist($owner);
+            $em->persist($company);
+        }
+        $em->flush();
+        $this->client->request('GET', '/api/companies/filters?locale=bs');
+        self::assertResponseIsSuccessful();
+        $facets = json_decode($this->client->getResponse()->getContent(), true, flags: JSON_THROW_ON_ERROR)['data'];
+        $options = array_column($facets['industries'], null, 'value');
+        self::assertCount(4, $options);
+        self::assertSame(1, $options['Food']['count']);
+        self::assertSame(1, $options['Travel']['count']);
+        self::assertSame(1, $options['Technology']['count']);
+        self::assertSame(0, $options['Beauty']['count']);
+        self::assertArrayNotHasKey('Private industry', $options);
+        self::assertArrayNotHasKey('Pending industry', $options);
+        self::assertSame('Putovanja i turizam', $options['Travel']['label']);
+        $this->client->request('GET', '/api/companies?industries=' . urlencode('["Technology"]'));
+        self::assertResponseIsSuccessful();
+        self::assertSame(['Travel Brand'], array_column(json_decode($this->client->getResponse()->getContent(), true)['data'], 'name'));
+        self::assertSame(['BA', 'HR'], array_column($facets['countries'], 'value'));
+        self::assertSame([1, 1], array_column($facets['countries'], 'count'));
+
+        $filters = http_build_query(['countries' => json_encode(['ba', 'HR', 'BA']), 'industries' => json_encode(['Food', 'Travel']), 'pagination' => 'cursor', 'view' => 'card', 'limit' => 1, 'sort' => 'name']);
+        $this->client->request('GET', '/api/companies?' . $filters);
+        self::assertResponseIsSuccessful();
+        $first = json_decode($this->client->getResponse()->getContent(), true, flags: JSON_THROW_ON_ERROR);
+        self::assertSame(2, $first['meta']['total']);
+        self::assertSame('Food Brand', $first['data'][0]['name']);
+        $this->client->request('GET', '/api/companies?' . $filters . '&cursor=' . urlencode($first['meta']['nextCursor']));
+        self::assertResponseIsSuccessful();
+        $second = json_decode($this->client->getResponse()->getContent(), true, flags: JSON_THROW_ON_ERROR);
+        self::assertSame('Travel Brand', $second['data'][0]['name']);
+        self::assertSame('Thoughtful & local', $second['data'][0]['summary']);
+        self::assertArrayNotHasKey('about', $second['data'][0]);
+        self::assertFalse($second['meta']['hasMore']);
+        $this->client->request('GET', '/api/companies?' . $filters . '&cursor=' . urlencode($first['meta']['nextCursor']) . '&city=Zenica');
+        self::assertResponseStatusCodeSame(400);
+        $this->client->request('GET', '/api/companies?industries=' . urlencode('[123]'));
+        self::assertResponseStatusCodeSame(400);
+        $this->client->request('GET', '/api/companies?industries=' . urlencode('{"industry":"Travel"}'));
+        self::assertResponseStatusCodeSame(400);
+        $this->client->request('GET', '/api/companies?' . $filters . '&cursor=' . urlencode($first['meta']['nextCursor']) . '&countries=' . urlencode('["BA"]'));
+        self::assertResponseStatusCodeSame(400);
+        foreach (['[123]', '{"country":"BA"}', '["Bosnia"]', '["BA\n"]'] as $invalidCountries) {
+            $this->client->request('GET', '/api/companies?countries=' . urlencode($invalidCountries));
+            self::assertResponseStatusCodeSame(400);
+        }
+        $this->client->request('GET', '/api/companies?countries=' . urlencode('["BA"]'));
+        self::assertResponseIsSuccessful();
+        self::assertSame(['Travel Brand'], array_column(json_decode($this->client->getResponse()->getContent(), true)['data'], 'name'));
+        $this->client->request('GET', '/api/companies?country=BA&city=Zenica');
+        self::assertResponseIsSuccessful();
+        $result = json_decode($this->client->getResponse()->getContent(), true, flags: JSON_THROW_ON_ERROR);
+        self::assertSame(['Travel Brand'], array_column($result['data'], 'name'));
+    }
+
+    public function testCompanyCardUsesItsOwnCoverThumbnail(): void
+    {
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $company = new Company('cover-brand', 'Cover Brand', 'Travel');
+        $owner = new User('cover-brand@example.test', 'ROLE_COMPANY');
+        $owner->setPassword('unused');
+        $owner->setApproved(true);
+        $owner->setCompany($company);
+        $folder = new \App\Entity\MediaFolder('company-cover', 'Company covers');
+        $media = new \App\Entity\Media($folder, $owner, 'cover.webp', 'cover.webp', 'image/webp', 100);
+        $media->setDimensions(600, 400);
+        foreach ([$company, $owner, $folder, $media] as $entity) {
+            $em->persist($entity);
+        }
+        $active = new Campaign('active-cover', 'Active', 'Summary', 'Brief', 'Travel', ['Instagram'], ['Post'], 10, 20, 'Zenica', 1, new \DateTimeImmutable('+7 days'), new \DateTimeImmutable('today'), $company);
+        $company->setCoverMedia($media);
+        $em->persist($active);
+        $em->flush();
+        $this->client->request('GET', '/api/companies?view=card');
+        self::assertResponseIsSuccessful();
+        $cards = json_decode($this->client->getResponse()->getContent(), true, flags: JSON_THROW_ON_ERROR)['data'];
+        self::assertSame('/api/media/' . $media->getId() . '/thumbnail/v1/480', $cards[0]['coverImage']['src']);
+        self::assertSame(480, $cards[0]['coverImage']['width']);
+        self::assertSame(320, $cards[0]['coverImage']['height']);
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $em->getRepository(Company::class)->findOneBy(['slug' => 'cover-brand'])->setCoverMedia(null);
+        $em->flush();
+        $this->client->request('GET', '/api/companies?view=card');
+        self::assertResponseIsSuccessful();
+        $cards = json_decode($this->client->getResponse()->getContent(), true, flags: JSON_THROW_ON_ERROR)['data'];
+        self::assertNull($cards[0]['coverImage']);
     }
 
     public function testCompanyDirectoryCountsAvailableCampaignsAndOrdersFeaturedCompaniesFirst(): void

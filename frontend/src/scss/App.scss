@@ -8,10 +8,6 @@
   > main {
     flex: 1;
   }
-
-  &--account .site-footer {
-    display: none;
-  }
 }
 
 .site-header {
@@ -149,6 +145,26 @@
     color: #9c3935;
     font-size: 11px;
     line-height: 1.45;
+  }
+}
+
+.header-account-link {
+  width: 38px;
+  height: 38px;
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  border: 1px solid transparent;
+  border-radius: 50%;
+  color: #52685e;
+  text-decoration: none;
+  transition: border-color .16s ease, color .16s ease, background .16s ease;
+
+  &:hover,
+  &.is-active {
+    border-color: #dfe6dd;
+    color: var(--forest);
+    background: #fffefa;
   }
 }
 
@@ -448,182 +464,6 @@
   display: none;
 }
 
-.site-footer {
-  position: relative;
-  overflow: hidden;
-  padding: 54px max(32px, calc((100% - 1160px) / 2)) 22px;
-  color: #eef0e8;
-  background: radial-gradient(ellipse at 14% 0%, rgba(240, 192, 120, .12), transparent 34%),
-    linear-gradient(125deg, #173d36 0%, #102f2a 100%);
-
-  &__inner {
-    max-width: 1160px;
-    display: grid;
-    grid-template-columns: minmax(220px, 1.5fr) repeat(2, minmax(115px, .7fr)) minmax(190px, 1fr);
-    gap: clamp(26px, 5vw, 72px);
-    padding-bottom: 42px;
-    margin: 0 auto;
-  }
-
-  &__brand {
-    max-width: 300px;
-  }
-
-  &__wordmark {
-    display: inline-flex;
-    margin-bottom: 17px;
-  }
-
-  &__wordmark .wordmark__image {
-    width: 103px;
-  }
-
-  &__brand > p {
-    max-width: 250px;
-    margin: 0 0 20px;
-    color: #d3ded6;
-    font-family: var(--serif);
-    font-size: 19px;
-    line-height: 1.4;
-  }
-
-  &__social {
-    display: flex;
-    gap: 8px;
-  }
-
-  &__social-icon {
-    width: 33px;
-    height: 33px;
-    display: grid;
-    place-items: center;
-    border: 1px solid rgba(231, 239, 231, .25);
-    border-radius: 50%;
-    color: #f0c078;
-    font-size: 17px;
-    font-weight: 700;
-    line-height: 1;
-  }
-
-  &__social-icon svg {
-    width: 16px;
-    height: 16px;
-    fill: none;
-    stroke: currentColor;
-    stroke-width: 1.7;
-  }
-
-  &__social-icon .site-footer__social-dot {
-    fill: currentColor;
-    stroke: none;
-  }
-
-  &__social-icon--tiktok {
-    font-size: 21px;
-  }
-
-  &__social-icon--facebook {
-    font-family: Arial, sans-serif;
-    font-size: 20px;
-  }
-
-  &__social-icon--x {
-    font-size: 13px;
-  }
-
-  &__social-note {
-    display: block;
-    margin-top: 9px;
-    color: #99aca1;
-    font-size: 14px;
-  }
-
-  &__column {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 12px;
-  }
-
-  &__column h2 {
-    margin: 4px 0 5px;
-    color: #f0c078;
-    font-size: 14px;
-    font-weight: 700;
-    letter-spacing: .13em;
-    text-transform: uppercase;
-  }
-
-  &__column > a,
-  &__column > button {
-    padding: 0;
-    border: 0;
-    color: #d3ded6;
-    background: transparent;
-    font-size: 14px;
-    line-height: 1.5;
-    text-align: left;
-    text-decoration: none;
-    cursor: pointer;
-    transition: color .18s ease;
-  }
-
-  &__column > a:hover,
-  &__column > button:hover {
-    color: #f0c078;
-  }
-
-  &__contact > p {
-    max-width: 250px;
-    margin: 0;
-    color: #bdc9c0;
-    font-size: 14px;
-    line-height: 1.65;
-  }
-
-  &__email {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    margin-top: 4px;
-    color: #f0c078;
-    font-size: 14px;
-    font-weight: 600;
-    text-decoration: none;
-  }
-
-  &__operator {
-    margin-top: 2px;
-    color: #99aca1;
-    font-size: 14px;
-  }
-
-  &__bottom {
-    max-width: 1160px;
-    display: flex;
-    justify-content: space-between;
-    gap: 15px;
-    padding-top: 16px;
-    margin: 0 auto;
-    border-top: 1px solid rgba(231, 239, 231, .19);
-    color: #99aca1;
-    font-size: 14px;
-  }
-
-  &--admin {
-    position: relative;
-    z-index: 21;
-  }
-}
-
-@include breakpoints.down(760px) {
-  .site-footer {
-    &--admin {
-      z-index: 6;
-    }
-  }
-}
-
 @include breakpoints.down(1000px) {
   .site-header {
     &__inner {
@@ -699,12 +539,6 @@
 
   .header-messages {
     &__trigger {
-      display: none;
-    }
-  }
-
-  .site-header {
-    &__actions .header-user-menu {
       display: none;
     }
   }
@@ -797,7 +631,7 @@
   .mobile-bottom-nav {
     position: fixed;
     z-index: 10;
-    bottom: calc(8px + env(safe-area-inset-bottom));
+    bottom: calc(4px + env(safe-area-inset-bottom));
     left: 50%;
     width: min(440px, calc(100% - 24px));
     display: grid;
@@ -879,33 +713,6 @@
     transition: transform .22s ease, opacity .22s ease;
   }
 
-  .site-footer {
-    padding: 36px 20px 21px;
-  }
-
-  .site-shell {
-    &--footer-visible .site-footer {
-      padding-bottom: calc(97px + env(safe-area-inset-bottom));
-    }
-  }
-
-  .site-footer {
-    &__inner {
-      grid-template-columns: minmax(0, 1.35fr) repeat(2, minmax(105px, .8fr));
-      gap: 28px;
-      padding-bottom: 30px;
-    }
-
-    &__brand {
-      grid-column: 1 / -1;
-      max-width: 340px;
-    }
-
-    &__bottom {
-      flex-direction: column;
-      gap: 8px;
-    }
-  }
 }
 
 @media (max-width: 760px) and (prefers-reduced-motion: reduce) {
@@ -915,16 +722,23 @@
   }
 }
 
-@include breakpoints.down(420px) {
-  .site-footer {
-    &__inner {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 28px 20px;
-    }
+.site-shell--account .site-header__inner {
+  width: calc(100% - 64px);
+  max-width: none;
+}
 
-    &__brand,
-    &__contact {
-      grid-column: 1 / -1;
+@include breakpoints.down(760px) {
+  .site-shell--account .site-header__inner {
+    width: calc(100% - 28px);
+  }
+}
+
+@include breakpoints.down(760px) {
+  .site-shell--account {
+    .site-header__actions .header-user-menu { display: none; }
+
+    .header-install {
+      display: none;
     }
   }
 }

@@ -1,0 +1,83 @@
+.single-select {
+  position: relative;
+  min-width: 0;
+
+  &__label--hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  &__trigger {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    width: 100%;
+    min-height: 44px;
+    padding: 8px 11px;
+    border: 1px solid #dfe4dc;
+    border-radius: 8px;
+    color: var(--forest);
+    background: #fffefa;
+    font: inherit;
+    font-size: 12px;
+    font-weight: 400;
+    text-align: left;
+    cursor: pointer;
+
+    > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    > svg { flex: 0 0 auto; color: #74847a; }
+    &:disabled { opacity: .6; cursor: not-allowed; }
+    &:focus-visible, &.is-open { border-color: #9aada0; outline: 0; box-shadow: 0 0 0 3px rgba(93, 132, 104, .1); }
+  }
+
+  &__menu {
+    position: absolute;
+    z-index: 30;
+    top: calc(100% + 5px);
+    left: 0;
+    min-width: 100%;
+    width: max-content;
+    max-width: min(320px, calc(100vw - 40px));
+    max-height: var(--dropdown-available-height, 340px);
+    padding: 8px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    border: 1px solid #dfe4dc;
+    border-radius: 10px;
+    background: #fffefa;
+    box-shadow: 0 14px 32px rgba(31, 42, 40, .16);
+    transform: translateX(var(--dropdown-inline-offset, 0px));
+  }
+
+  &.is-above > &__menu { top: auto; bottom: calc(100% + 5px); }
+
+  &__option {
+    width: 100%;
+    min-height: 38px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 8px 10px;
+    border: 0;
+    border-radius: 6px;
+    color: #52685e;
+    background: transparent;
+    font: inherit;
+    font-size: 12px;
+    font-weight: 400;
+    text-align: left;
+    cursor: pointer;
+
+    > svg { flex: 0 0 auto; }
+    &:hover, &.is-selected { color: var(--forest); background: #eef2eb; }
+    &:focus-visible { outline: 2px solid #789281; outline-offset: -2px; }
+    &:disabled { color: #9ba49e; cursor: not-allowed; }
+  }
+}

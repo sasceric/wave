@@ -110,8 +110,14 @@
             "Če izberete prijavo z Googlom ali Applom, izbrani ponudnik obdeluje podatke za prijavo v skladu s svojimi pravili zasebnosti. Google Analytics lahko obdeluje podatke o uporabi le, če ga dovolite."
           ],
           "links": [
-            { "label": "Googlova politika zasebnosti", "url": "https://policies.google.com/privacy" },
-            { "label": "Applova politika zasebnosti", "url": "https://www.apple.com/legal/privacy/" }
+            {
+              "label": "Googlova politika zasebnosti",
+              "url": "https://policies.google.com/privacy"
+            },
+            {
+              "label": "Applova politika zasebnosti",
+              "url": "https://www.apple.com/legal/privacy/"
+            }
           ]
         }
       ]
@@ -151,7 +157,10 @@
             "Privolitev lahko prekličete v Nastavitvah piškotkov. Wave nato preneha pošiljati analitične dogodke in odstrani piškotke Google Analytics, nastavljene na tem spletnem mestu."
           ],
           "links": [
-            { "label": "Googlova politika zasebnosti", "url": "https://policies.google.com/privacy" }
+            {
+              "label": "Googlova politika zasebnosti",
+              "url": "https://policies.google.com/privacy"
+            }
           ]
         },
         {
@@ -160,7 +169,10 @@
             "Wave naloži pisave vmesnika iz storitve Google Fonts. Ko se prikaže videoposnetek iz profila, se lahko brskalnik poveže z youtube-nocookie.com, ki ga upravlja Google. Ti ponudniki lahko obdelujejo tehnične podatke ali uporabljajo lastno shrambo brskalnika; Wave te shrambe ne upravlja."
           ],
           "links": [
-            { "label": "Googlova politika zasebnosti", "url": "https://policies.google.com/privacy" }
+            {
+              "label": "Googlova politika zasebnosti",
+              "url": "https://policies.google.com/privacy"
+            }
           ]
         }
       ]
@@ -179,16 +191,32 @@
     "earlyAccessSubject": "Zgodnji dostop do Wave",
     "account": "Moj račun",
     "footerTagline": "Dobro sodelovanje se začne s pravim ujemanjem.",
+    "footerDescription": "Povezujemo ustvarjalce in blagovne znamke za pristne zgodbe, ki navdihujejo.",
     "sayHello": "Pozdravi nas",
     "copyright": "© {year} Wave. Za vse, ki ustvarjajo.",
-    "footerMvp": "Profili, kampanje in prijave · sodelovanja po dogovoru",
     "footerExplore": "Raziščite",
     "footerLegal": "Pravne informacije",
     "footerContact": "Kontakt",
     "footerContactText": "Imate vprašanje o Waveu ali potrebujete pomoč? Pišite nam.",
     "footerOperator": "Upravlja UD SteelCode",
+    "footerNewsletterTitle": "Ostanite na tekočem",
+    "footerNewsletterText": "Prijavite se na občasne novice o novih kampanjah, ustvarjalcih in nasvetih.",
+    "footerNewsletterPlaceholder": "Vaš e-poštni naslov",
+    "footerNewsletterSubmit": "Prijava po e-pošti",
+    "footerNewsletterNote": "Poslali ti bomo e-pošto za potrditev prijave.",
+    "footerNewsletterSuccessTitle": "Prijava je uspela",
+    "footerNewsletterSuccessMessage": "Hvala! Kmalu boš prejel/a e-pošto s potrditvijo prijave na novice Wave.",
+    "footerNewsletterError": "Prijave ni bilo mogoče dokončati. Poskusi znova pozneje.",
+    "footerNewsletterClose": "Zapri",
+    "footerQuickLinks": "Hitre povezave",
+    "footerProfiles": "Profili",
+    "footerApplications": "Prijave",
+    "footerCollaboration": "Sodelovanja po dogovoru",
+    "backToTop": "Nazaj na vrh",
     "socialLinks": "Wave na družbenih omrežjih",
-    "socialComingSoon": "Profili na omrežjih kmalu",
+    "socialFollow": "Spremljajte nas na družbenih omrežjih.",
+    "instagram": "Wave na Instagramu",
+    "facebook": "Wave na Facebooku",
     "language": "Jezik",
     "openMenu": "Odpri navigacijo",
     "closeMenu": "Zapri navigacijo",
@@ -314,7 +342,50 @@
     "empty": "Podjetja se bodo prikazala tukaj, ko se pridružijo Waveu.",
     "viewProfile": "Ogled podjetja",
     "featured": "Izpostavljeno",
-    "openCampaigns": "Odprte kampanje"
+    "openCampaigns": "Odprte kampanje",
+    "filters": "Filtri podjetij",
+    "filterTitle": "Filtri",
+    "filterButton": "Filtri",
+    "clearFilters": "Počisti vse",
+    "applyFilters": "Prikaži rezultate ({count})",
+    "search": "Išči podjetja…",
+    "searchLabel": "Išči podjetja",
+    "industryLabel": "Področja",
+    "allIndustries": "Vsa področja",
+    "locationLabel": "Država",
+    "locationPlaceholder": "Išči mesto…",
+    "countryLabel": "Država",
+    "countryPlaceholder": "Poišči državo…",
+    "statusLabel": "Stanje",
+    "verifiedOnly": "Preverjena podjetja",
+    "featuredOnly": "Izpostavljena podjetja",
+    "sortLabel": "Razvrsti podjetja",
+    "sortRecommended": "Priporočeno",
+    "sortCampaigns": "Največ odprtih kampanj",
+    "sortName": "Ime A–Ž",
+    "resultCount": "Prikazanih {count} podjetij",
+    "noIndustryOptions": "Področja niso na voljo",
+    "heroBadge": "Znamke z različnih področij",
+    "verified": "Preverjeno podjetje",
+    "cityLabel": "Mesto",
+    "grid": "Mreža",
+    "list": "Seznam",
+    "layoutLabel": "Prikaz podjetij",
+    "showMore": "Prikaži več",
+    "showLess": "Prikaži manj",
+    "retryFilters": "Poskusi znova",
+    "countryNames": {
+      "BA": "Bosna in Hercegovina",
+      "HR": "Hrvaška",
+      "RS": "Srbija",
+      "SI": "Slovenija",
+      "ME": "Črna gora",
+      "MK": "Severna Makedonija"
+    },
+    "verifiedAndFeatured": "Preverjena in izpostavljena",
+    "searchIndustries": "Išči področja",
+    "noIndustries": "Ni področij, ki bi ustrezala iskanju.",
+    "selectIndustries": "Izberi področja"
   },
   "home": {
     "kicker": "Creators × brands",
@@ -509,7 +580,9 @@
     "goodFit": "Prava izbira za",
     "brandsCategory": "znamke, ki jim je pomembno področje: {category}.",
     "goodFitDescription": "Razišči odprte briefe in poišči pravi razlog za pogovor.",
-    "browseBriefs": "Oglej si odprte briefe"
+    "browseBriefs": "Oglej si odprte briefe",
+    "openPortfolioItem": "Odpri delo {index}: {title}",
+    "galleryHint": "Povleci ali uporabi puščične tipke za pregled del."
   },
   "campaignsPage": {
     "eyebrow": "Dober začetek sodelovanja",
@@ -539,6 +612,11 @@
     "back": "Nazaj na kampanje",
     "loading": "Nalagam podjetje …",
     "profileLabel": "Profil znamke Wave",
+    "profileIntro": "Znamka, odprta za dobra sodelovanja.",
+    "aboutEyebrow": "O podjetju",
+    "aboutTitle": "O podjetju {company}",
+    "areas": "Področja",
+    "followUs": "Spremljajte nas",
     "openCalls": "Odprti pozivi",
     "campaignsFrom": "Kampanje znamke {company}.",
     "allBriefs": "Oglej si vse briefe",
@@ -625,7 +703,7 @@
     "searchPhoneCountry": "Išči državo ali klicno številko",
     "noPhoneCountriesFound": "Ni zadetkov za državo ali klicno številko",
     "phoneInvalid": "Vnesite veljavno telefonsko številko za izbrano klicno številko.",
-    "category": "Glavno področje",
+    "category": "Področja",
     "location": "Lokacija",
     "country": "Država",
     "selectCountry": "Izberi državo",
@@ -634,7 +712,7 @@
     "countryRequired": "Za nadaljevanje izberi državo.",
     "city": "Mesto",
     "cityPlaceholder": "Vnesi ime svojega mesta",
-    "industry": "Dejavnost",
+    "industry": "Področja",
     "industryPlaceholder": "Npr. turizem, moda, hrana in pijača ali kozmetika",
     "signIn": "Prijava",
     "register": "Ustvari račun",
@@ -659,6 +737,17 @@
     "companyInvite": "Predstavi svoje podjetje in objavi kampanje za prave ustvarjalce."
   },
   "account": {
+    "basicInformation": "Osnovni podatki",
+    "additionalInformation": "Dodatni podatki",
+    "profileImage": "Profilna slika",
+    "imageRecommendations": "Priporočila",
+    "imageRecommendationQuality": "Jasna in kakovostna fotografija",
+    "imageRecommendationDimensions": "Priporočena velikost vsaj 400 × 400",
+    "imageRecommendationFormats": "Format: JPG, PNG ali WebP",
+    "sidebarExplore": "Razišči",
+    "sidebarSettings": "Nastavitve",
+    "edit": "Uredi",
+    "back": "Nazaj",
     "editProfile": "Uredi profil",
     "welcomeBack": "Dobrodošli, {name}!",
     "welcomeIntro": "Tukaj lahko pregledate in uredite podatke svojega profila.",
@@ -668,6 +757,11 @@
     "profileEditorIntro": "Uredi informacije, ki jih blagovne znamke vidijo na tvojem javnem profilu.",
     "profileIncomplete": "Pred shranjevanjem izpolni obvezna polja v označenem delu profila.",
     "socialMetricsHint": "Dodaj kanale in posodobljene podatke o svojem občinstvu.",
+    "companySocialLinks": "Družbena omrežja",
+    "companySocialLinksHint": "Dodajte javne kanale in spletno stran, kjer vas lahko stranke najdejo.",
+    "addSocialLink": "Dodaj povezavo",
+    "noSocialLinks": "Povezave še niso dodane.",
+    "socialLinkUrl": "URL povezave",
     "noSocialProfiles": "Še nisi dodal/dodala nobenega kanala.",
     "noPortfolioItems": "Dodaj fotografije ali javno dostopen video v svoj portfelj.",
     "noPackages": "Dodaj pakete sodelovanja, ki si jih lahko ogledajo blagovne znamke.",
@@ -871,12 +965,18 @@
     "inquiryRejected": "Zavrnjeno",
     "proposedPrice": "Znesek",
     "writeMessage": "Napiši sporočilo",
-    "sendMessage": "Pošlji sporočilo"
+    "sendMessage": "Pošlji sporočilo",
+    "companyCover": "Naslovna fotografija podjetja",
+    "addCompanyCover": "Dodaj naslovno fotografijo",
+    "changeCompanyCover": "Spremeni naslovno fotografijo",
+    "removeCompanyCover": "Odstrani naslovno fotografijo",
+    "removeCompanyCoverTitle": "Odstranim naslovno fotografijo?",
+    "removeCompanyCoverMessage": "Fotografija bo odstranjena po shranjevanju sprememb."
   },
   "moderation": {
     "eyebrow": "Wave katalog",
-    "title": "Kategorije in pogosta vprašanja",
-    "description": "Upravljaj kategorije in pogosta vprašanja, prikazana na Waveu.",
+    "title": "Področja in FAQ",
+    "description": "Upravljaj skupna področja za ustvarjalce, podjetja in kampanje ter pogosta vprašanja.",
     "loading": "Nalaganje kataloga…",
     "empty": "Trenutno ni kampanj za pregled.",
     "noAccess": "Ta prostor je na voljo samo moderatorjem Wave.",
@@ -893,17 +993,17 @@
     "rejected": "Kampanja je zavrnjena.",
     "error": "Kataloga ni mogoče naložiti. Poskusi znova.",
     "decisionError": "Odločitve ni mogoče shraniti. Osveži seznam in poskusi znova.",
-    "catalogTab": "Kategorije in pogosta vprašanja",
-    "addCategory": "Dodaj kategorijo",
-    "editCategory": "Uredi kategorijo",
-    "categoryValue": "Interno ime kategorije",
+    "catalogTab": "Področja in FAQ",
+    "addCategory": "Dodaj področje",
+    "editCategory": "Uredi področje",
+    "categoryValue": "Interno ime področja",
     "labelFor": "Ime v jeziku",
     "position": "Vrstni red",
     "active": "Aktivno",
     "inactive": "Neaktivno",
     "edit": "Uredi",
     "saveCatalog": "Shrani spremembe",
-    "categorySaved": "Kategorija je shranjena.",
+    "categorySaved": "Področje je shranjeno.",
     "addFaq": "Dodaj pogosto vprašanje",
     "editFaq": "Uredi pogosto vprašanje",
     "questionFor": "Vprašanje v jeziku",
@@ -958,6 +1058,8 @@
     "saved": "Nastavitve domače strani so shranjene.",
     "navigationLabel": "Skrbniški razdelki",
     "navOverview": "Pregled",
+    "navMarketing": "Marketing",
+    "navSubscribers": "Naročniki",
     "navRegistrations": "Odobritve",
     "navHomepage": "Domača stran",
     "navCreators": "Ustvarjalci",
@@ -976,9 +1078,16 @@
     "companiesPageDescription": "Preglej vsa podjetja in njihovo stanje preverjanja.",
     "campaignsPageTitle": "Kampanje",
     "emailTemplatesPageTitle": "E-poštne predloge",
+    "subscribersPageTitle": "Naročniki na novice",
+    "subscribersPageDescription": "Preglej e-poštne naslove, prijavljene na novice Wave.",
+    "subscribersCaption": "Naročniki na novice Wave",
+    "subscribersEmpty": "Naročnikov še ni.",
+    "subscribersLoadError": "Naročnikov ni bilo mogoče naložiti.",
+    "subscriberLanguage": "Jezik",
+    "subscriberSubscribedAt": "Prijavljen",
     "emailTemplatesEyebrow": "E-POŠTNA KOMUNIKACIJA",
     "emailTemplatesTitle": "Uredi odhodna sporočila",
-    "emailTemplatesDescription": "Upravljaj predloge za račun, prijavo na kampanjo, sodelovanje z ustvarjalcem, neprebrana sporočila in kontakt.",
+    "emailTemplatesDescription": "Upravljaj predloge za račun, prijavo na kampanjo, sodelovanje z ustvarjalcem, neprebrana sporočila, kontakt in prijavo na novice.",
     "chooseEmailTemplate": "Izberi predlogo",
     "verifyEmailTemplate": "Potrditev e-pošte",
     "verifyEmailTemplateHint": "Pošlje se po registraciji za potrditev naslova in pojasni pregled računa.",
@@ -990,6 +1099,8 @@
     "approvalEmailTemplateHint": "Pošlje se, ko skrbnik odobri račun.",
     "contactEmailTemplate": "Obvestilo kontaktnega obrazca",
     "contactEmailTemplateHint": "Pošlje se v Waveov nabiralnik po oddaji kontaktnega obrazca.",
+    "subscribedEmailTemplate": "Potrditev prijave na novice",
+    "subscribedEmailTemplateHint": "Pošlje se na vneseni naslov po prijavi na novice Wave.",
     "applicationReceivedEmailTemplate": "Prejeta prijava na kampanjo",
     "applicationReceivedEmailTemplateHint": "Podjetju pošlje ime ustvarjalca in sporočilo prijave.",
     "creatorInquiryEmailTemplate": "Povpraševanje za paket ustvarjalca",
@@ -1022,7 +1133,7 @@
     "accountType": "Vrsta računa",
     "approvalStatus": "Odobritev",
     "emailVerification": "Potrditev e-pošte",
-    "industry": "Panoga",
+    "industry": "Področja",
     "category": "Kategorija",
     "actions": "Dejanja",
     "rowActions": "Dejanja za {name}",
@@ -1082,7 +1193,7 @@
     "selectedOptions": "Izbranih: {count}",
     "removeOption": "Odstrani {name}",
     "searchCreators": "Išči po imenu, kategoriji ali lokaciji",
-    "searchCompanies": "Išči po podjetju ali panogi",
+    "searchCompanies": "Išči po podjetju ali področju",
     "searchCampaigns": "Išči po kampanji, podjetju ali stanju",
     "noMatches": "Ni zadetkov za to iskanje.",
     "companyFeaturedSaved": "Izbor izpostavljenih podjetij je shranjen."
@@ -1176,5 +1287,41 @@
       "admin": "Razvojni skrbniški delavec je omogočen.",
       "cli": "Potrebni so delavci CLI."
     }
+  },
+  "creatorDirectory": {
+    "heroBadge": "Pristni ustvarjalci z različnih področij",
+    "categoryLabel": "Področja",
+    "searchCategories": "Poišči področja…",
+    "platformLabel": "Platforme",
+    "searchPlatforms": "Poišči platforme…",
+    "noPlatforms": "Ni najdenih platform.",
+    "audienceLabel": "Velikost občinstva",
+    "allAudiences": "Vse velikosti občinstva",
+    "audienceSmall": "Majhna (1–10k)",
+    "audienceMedium": "Srednja (10–50k)",
+    "audienceLarge": "Velika (50k+)",
+    "audienceHint": "Število sledilcev na največjem kanalu.",
+    "sortLabel": "Razvrsti ustvarjalce",
+    "sortNewest": "Najnovejši",
+    "sortFollowers": "Največ sledilcev",
+    "layoutLabel": "Prikaz ustvarjalcev",
+    "noCategories": "Ni najdenih področij."
+  },
+  "campaignDirectory": {
+    "heroBadge": "Kampanje, ki povezujejo znamke in ustvarjalce",
+    "channelLabel": "Kanali",
+    "allChannels": "Vsi kanali",
+    "locationLabel": "Lokacija kampanje",
+    "locationPlaceholder": "Poišči lokacijo kampanje…",
+    "currencyLabel": "Valuta",
+    "allCurrencies": "Vse valute",
+    "budgetLabel": "Proračun",
+    "budgetFrom": "Od",
+    "budgetTo": "Do",
+    "chooseCurrency": "Izberi valuto za filtriranje proračuna.",
+    "budgetHint": "Prikazane so kampanje, katerih proračun se prekriva z izbranim razponom.",
+    "sortLabel": "Razvrsti kampanje",
+    "sortClosing": "Kmalu se zaključijo",
+    "layoutLabel": "Prikaz kampanj"
   }
 }

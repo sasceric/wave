@@ -81,7 +81,7 @@ final class HomepageController
                     ),
                     $creators,
                 ),
-                'campaigns' => array_map(static fn (Campaign $campaign): array => CampaignResource::fromEntity($campaign, $locale), $campaigns),
+                'campaigns' => array_map(static fn (Campaign $campaign): array => CampaignResource::fromEntity($campaign, $locale, categoryLabels: $categoryLabels), $campaigns),
             ],
         ]);
     }

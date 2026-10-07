@@ -1,6 +1,9 @@
 <script setup>
 import { computed, onBeforeUnmount, onMounted, watch } from 'vue'
 import {
+  Bell,
+  ExternalLink,
+  LogOut,
   Building2,
   ClipboardCheck,
   House,
@@ -12,9 +15,15 @@ import {
   Users,
   Wrench,
 } from '@lucide/vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
+import { ref } from 'vue'
+import { apiRequest } from '../../lib/api'
+import { setCurrentUser } from '../../composables/useCurrentUser'
+import { localizedPath } from '../../routePaths'
+import WaveLogo from '../shared/WaveLogo.vue'
 import LocalizedLink from '../shared/LocalizedLink.vue'
+import LanguageSwitcher from '../shared/LanguageSwitcher.vue'
 import { mobileAccountSidebarOpen } from '../../composables/useMobileAccountSidebar'
 import { unreadMessageCount } from '../../composables/useUnreadMessages'
 
@@ -23,6 +32,7 @@ const props = defineProps({
     type: Object,
     default: null,
   },
+  profile: { type: Object, default: null },
   pendingRegistrations: {
     type: Number,
     default: 0,
@@ -31,10 +41,55 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
+  mobileOnly: {
+    type: Boolean,
+    default: false,
+  },
 })
 
 const route = useRoute()
-const { t } = useI18n()
+const { t, locale } = useI18n()
+const router = useRouter()
+const signingOut = ref(false)
+const signOutError = ref('')
+const identity = computed(() => props.profile || props.user?.profile || {})
+const name = computed(() => identity.value.displayName || identity.value.name || props.user?.name || props.user?.email || t('app.account'))
+const image = computed(() => identity.value.avatarUrl || identity.value.logoUrl)
+const publicRoute = computed(() => identity.value.slug ? {
+  name: props.user?.accountType === 'creator' ? 'creator-profile' : 'company-profile',
+  params: { slug: identity.value.slug },
+} : null)
+const primaryItems = computed(() => navigationItems.value.filter((item) => !item.route.startsWith('admin')))
+const adminItems = computed(() => navigationItems.value.filter((item) => (
+  item.route.startsWith('admin') && item.group !== 'marketing'
+)))
+const adminMarketingItems = computed(() => navigationItems.value.filter((item) => (
+  item.group === 'marketing'
+)))
+const exploreItems = computed(() => [
+  { route: 'creators', label: t('app.creatorsNav'), icon: Users },
+  { route: 'companies', label: t('app.companies'), icon: Building2 },
+  { route: 'campaigns', label: t('app.campaigns'), icon: Megaphone },
+])
+function openNotifications() {
+  closeMobileSidebar()
+  window.dispatchEvent(new Event('wave:open-notifications'))
+}
+async function signOut() {
+  if (signingOut.value) return
+  signingOut.value = true
+  signOutError.value = ''
+  try {
+    await apiRequest('/auth/logout', { method: 'POST', body: {} })
+    setCurrentUser(null)
+    closeMobileSidebar()
+    await router.replace({ path: localizedPath('account', locale.value), query: { mode: 'login' } })
+  } catch (cause) {
+    signOutError.value = cause.message
+  } finally {
+    signingOut.value = false
+  }
+}
 
 function closeMobileSidebar() {
   mobileAccountSidebarOpen.value = false
@@ -101,6 +156,12 @@ const navigationItems = computed(() => {
       { route: 'admin-campaigns', labelKey: 'adminDashboard.navCampaigns', icon: Megaphone },
       { route: 'admin-email-templates', labelKey: 'adminDashboard.navEmailTemplates', icon: Mail },
       { route: 'admin-tools', labelKey: 'adminTools.title', icon: Wrench },
+      {
+        route: 'admin-subscribers',
+        labelKey: 'adminDashboard.navSubscribers',
+        icon: Mail,
+        group: 'marketing',
+      },
     )
   }
 
@@ -124,13 +185,26 @@ const navigationItems = computed(() => {
     class="account-sidebar"
     :class="{
       'account-sidebar--admin': adminLayout,
+      'account-sidebar--mobile-only': mobileOnly,
       'account-sidebar--mobile-open': mobileAccountSidebarOpen,
     }"
     :aria-label="t('account.navigation')"
   >
+    <div v-if="user" class="account-sidebar__identity">
+      <div class="account-sidebar__avatar"><img v-if="image" :src="image" :alt="name" /><WaveLogo v-else mark /></div>
+      <div><strong>{{ name }}</strong><LocalizedLink v-if="publicRoute" :to="publicRoute" @click="closeMobileSidebar">{{ t('account.viewPublicProfile') }}<ExternalLink :size="12" aria-hidden="true" /></LocalizedLink></div>
+    </div>
+    <div class="account-sidebar__group account-sidebar__group--public">
+      <div class="account-sidebar__language">
+        <span>{{ t('app.language') }}</span>
+        <LanguageSwitcher />
+      </div>
+      <LocalizedLink v-for="item in exploreItems" :key="item.route" class="account-sidebar__link" :class="{ 'is-active': route.meta.routeName === item.route }" :to="{ name: item.route }" @click="closeMobileSidebar"><component :is="item.icon" :size="20" aria-hidden="true" /><span class="account-sidebar__text">{{ item.label }}</span></LocalizedLink>
+    </div>
+    <div v-if="user" class="account-sidebar__group">
     <p class="account-sidebar__label">{{ t('account.navigation') }}</p>
     <LocalizedLink
-      v-for="item in navigationItems"
+      v-for="item in primaryItems"
       :key="item.route"
       class="account-sidebar__link"
       :class="{ 'is-active': route.meta.routeName === item.route }"
@@ -144,6 +218,23 @@ const navigationItems = computed(() => {
       <span class="account-sidebar__text">{{ item.label }}</span>
       <strong v-if="item.badge" class="account-sidebar__badge">{{ item.badge > 99 ? '99+' : item.badge }}</strong>
     </LocalizedLink>
+    <button v-if="user" class="account-sidebar__link" type="button" @click="openNotifications"><Bell :size="20" aria-hidden="true" /><span class="account-sidebar__text">{{ t('app.notifications') }}</span></button>
+    <LocalizedLink v-if="user?.accountType === 'creator'" class="account-sidebar__link" :to="{ name: 'account', query: { tab: 'faqs' } }" @click="closeMobileSidebar"><ClipboardCheck :size="20" aria-hidden="true" /><span class="account-sidebar__text">{{ t('account.creatorFaqs') }}</span></LocalizedLink>
+    </div>
+    <div v-if="adminItems.length" class="account-sidebar__group">
+      <p class="account-sidebar__label">{{ t('adminDashboard.navOverview') }}</p>
+      <LocalizedLink v-for="item in adminItems" :key="item.route" class="account-sidebar__link" :class="{ 'is-active': route.meta.routeName === item.route }" :to="{ name: item.route }" :aria-current="route.meta.routeName === item.route ? 'page' : undefined" @click="closeMobileSidebar"><component :is="item.icon" :size="20" aria-hidden="true" /><span class="account-sidebar__text">{{ item.label }}</span><strong v-if="item.badge" class="account-sidebar__badge">{{ item.badge > 99 ? '99+' : item.badge }}</strong></LocalizedLink>
+    </div>
+    <div v-if="adminMarketingItems.length" class="account-sidebar__group">
+      <p class="account-sidebar__label">{{ t('adminDashboard.navMarketing') }}</p>
+      <LocalizedLink v-for="item in adminMarketingItems" :key="item.route" class="account-sidebar__link" :class="{ 'is-active': route.meta.routeName === item.route }" :to="{ name: item.route }" :aria-current="route.meta.routeName === item.route ? 'page' : undefined" @click="closeMobileSidebar"><component :is="item.icon" :size="20" aria-hidden="true" /><span class="account-sidebar__text">{{ item.label }}</span><strong v-if="item.badge" class="account-sidebar__badge">{{ item.badge > 99 ? '99+' : item.badge }}</strong></LocalizedLink>
+    </div>
+    <div v-if="user" class="account-sidebar__group">
+      <p class="account-sidebar__label">{{ t('account.sidebarSettings') }}</p>
+      <LocalizedLink class="account-sidebar__link" :to="{ name: 'account' }" @click="closeMobileSidebar"><UserRound :size="20" aria-hidden="true" /><span class="account-sidebar__text">{{ t('app.account') }}</span></LocalizedLink>
+      <button class="account-sidebar__link account-sidebar__link--signout" type="button" :disabled="signingOut" @click="signOut"><LogOut :size="20" aria-hidden="true" /><span class="account-sidebar__text">{{ t('account.signOut') }}</span></button>
+      <p v-if="signOutError" class="account-sidebar__error" role="alert">{{ signOutError }}</p>
+    </div>
   </nav>
 </template>
 

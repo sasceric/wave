@@ -1,0 +1,80 @@
+@use '../../breakpoints';
+
+.account-profile-card {
+  min-width: 0;
+  padding: 20px 24px;
+  border: 1px solid #e2e6df;
+  border-radius: 17px;
+  background: rgba(255, 255, 255, .65);
+
+  &__heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    margin-bottom: 18px;
+
+    h3 {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin: 0;
+      color: var(--forest);
+      font-family: inherit;
+      font-size: 17px;
+      font-weight: 600;
+      line-height: 1.4;
+    }
+
+    svg {
+      flex: 0 0 auto;
+    }
+  }
+
+  &__edit {
+    min-height: 40px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+    flex: 0 0 auto;
+    padding: 8px 12px;
+    border: 1px solid #dfe5dc;
+    border-radius: 10px;
+    color: var(--forest);
+    background: #f3f5ef;
+    font: inherit;
+    font-size: 12px;
+    cursor: pointer;
+
+    &:hover {
+      background: var(--sage);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--forest);
+      outline-offset: 3px;
+    }
+  }
+}
+
+@include breakpoints.down(760px) {
+  .account-profile-card {
+    padding: 20px;
+
+    &__heading h3 {
+      font-size: 16px;
+      gap: 12px;
+    }
+
+    &__edit {
+      min-width: 44px;
+      min-height: 44px;
+      padding: 10px;
+    }
+
+    &__edit span {
+      display: none;
+    }
+  }
+}

@@ -7,6 +7,7 @@ use App\Api\Currency;
 use App\Api\CreatorResource;
 use App\Api\JsonPayload;
 use App\Api\UserResource;
+use App\Api\MarketplaceCategoryLabels;
 use App\Entity\Company;
 use App\Entity\Creator;
 use App\Entity\CreatorPortfolioMedia;
@@ -51,7 +52,7 @@ final class ProfileController
         $user->setHideMyAccount($hideMyAccount === 1);
         $entityManager->flush();
 
-        return new JsonResponse(['data' => UserResource::fromEntity($user, $locale)]);
+        return new JsonResponse(['data' => UserResource::fromEntity($user, $locale, MarketplaceCategoryLabels::forLocale($entityManager, $locale))]);
     }
 
     #[Route('/api/me/profile', name: 'api_profile_update', methods: ['PUT'])]
@@ -91,7 +92,6 @@ final class ProfileController
             if ($categories !== null && $categories !== []) {
                 $category = $categories[0];
             }
-            $location = $this->text($data, 'location', 2, 120);
             $bio = $this->richText($data, 'bio', $richTextSanitizer);
             $bioText = $bio === null ? null : $richTextSanitizer->plainText($bio);
             $phone = array_key_exists('phone', $data)
@@ -117,10 +117,10 @@ final class ProfileController
             $portfolio = $this->portfolio($data['portfolio'] ?? [], $creator, $user, $entityManager);
             $packages = $this->packages($data['packages'] ?? []);
             $faqs = $this->faqs($data['faqs'] ?? []);
-            if ($name === null || $category === null || $categories === null || $categories === [] || $location === null || $bio === null || $phone === false || $city === false || $countryCode === false || $tagline === null || $avatarUrl === false || $avatarMedia === false || $tags === null || $socialProfiles === null || $portfolio === null || $packages === null || $faqs === null) {
+            if ($name === null || $category === null || $categories === null || $categories === [] || $bio === null || $phone === false || $city === false || $countryCode === false || $tagline === null || $avatarUrl === false || $avatarMedia === false || $tags === null || $socialProfiles === null || $portfolio === null || $packages === null || $faqs === null) {
                 return new JsonResponse(['error' => ApiMessages::get('invalid_profile', $locale)], 400);
             }
-            $creator->updateProfile($name, $category, $location, $bio, $socialProfiles, $tags, $avatarUrl, $tagline, $portfolio['items'], $packages, $categories, $faqs);
+            $creator->updateProfile($name, $category, $city ?? '', $bio, $socialProfiles, $tags, $avatarUrl, $tagline, $portfolio['items'], $packages, $categories, $faqs);
             $creator->setAvatarMedia($avatarMedia);
             $user->setPhone($phone);
             $user->setCity($city);
@@ -145,7 +145,13 @@ final class ProfileController
             return new JsonResponse(['error' => ApiMessages::get('profile_unavailable', $locale)], 409);
         }
         $name = $this->text($data, 'name', 2, 120);
-        $industry = $this->text($data, 'industry', 2, 100);
+        $industries = array_key_exists('industries', $data)
+            ? (is_array($data['industries']) && array_is_list($data['industries']) ? $this->stringList($data['industries'], 20, 100) : null)
+            : (isset($data['industry']) ? [$this->text($data, 'industry', 2, 100)] : $company->getIndustries());
+        $industry = $industries[0] ?? null;
+        $coverMedia = array_key_exists('coverMediaId', $data)
+            ? $this->ownedMedia($data['coverMediaId'], $user, 'company-cover', $entityManager)
+            : $company->getCoverMedia();
         $about = array_key_exists('about', $data)
             ? $this->optionalRichText($data, 'about', $richTextSanitizer)
             : $company->getAbout();
@@ -164,25 +170,36 @@ final class ProfileController
         $logoUrl = $logoMedia instanceof Media
             ? null
             : $this->imageUrl($data, 'logoUrl');
+        $socialLinks = array_key_exists('socialLinks', $data)
+            ? $this->socialLinks($data['socialLinks'])
+            : $company->getSocialLinks();
         if ($name === null
             || $industry === null
+            || $industries === null
+            || $industries === []
+            || array_filter($industries, static fn ($value): bool => !is_string($value) || mb_strlen($value) < 2) !== []
+            || $coverMedia === false
             || $about === false
             || $phone === false
             || $city === false
             || $countryCode === false
             || $logoUrl === false
             || $logoMedia === false
+            || $socialLinks === null
         ) {
             return new JsonResponse(['error' => ApiMessages::get('invalid_profile', $locale)], 400);
         }
         $company->updateProfile($name, $industry, $logoUrl, $about);
+        $company->setIndustries($industries);
+        $company->setCoverMedia($coverMedia);
         $company->setLogoMedia($logoMedia);
+        $company->setSocialLinks($socialLinks);
         $user->setPhone($phone);
         $user->setCity($city);
         $user->setCountryCode($countryCode);
         $entityManager->flush();
 
-        return new JsonResponse(['data' => UserResource::fromEntity($user, $locale)]);
+        return new JsonResponse(['data' => UserResource::fromEntity($user, $locale, MarketplaceCategoryLabels::forLocale($entityManager, $locale))]);
     }
 
     private function text(array $data, string $key, int $minLength, int $maxLength): ?string
@@ -306,6 +323,41 @@ final class ProfileController
         }
 
         return $profiles;
+    }
+
+    /** @return list<array{platform: string, url: string}>|null */
+    private function socialLinks(mixed $value): ?array
+    {
+        if (!is_array($value) || !array_is_list($value) || count($value) > 6) {
+            return null;
+        }
+
+        $allowed = ['Instagram', 'TikTok', 'YouTube', 'Facebook', 'LinkedIn', 'Website'];
+        $links = [];
+        foreach ($value as $link) {
+            if (!is_array($link)
+                || !is_string($link['platform'] ?? null)
+                || !is_string($link['url'] ?? null)
+            ) {
+                return null;
+            }
+            $platform = trim($link['platform']);
+            $url = trim($link['url']);
+            if (!in_array($platform, $allowed, true)
+                || $url === ''
+                || mb_strlen($url) > 500
+                || filter_var($url, FILTER_VALIDATE_URL) === false
+                || parse_url($url, PHP_URL_SCHEME) !== 'https'
+            ) {
+                return null;
+            }
+            if (array_filter($links, static fn (array $existing): bool => $existing['platform'] === $platform) !== []) {
+                return null;
+            }
+            $links[] = ['platform' => $platform, 'url' => $url];
+        }
+
+        return $links;
     }
 
     private function portfolio(

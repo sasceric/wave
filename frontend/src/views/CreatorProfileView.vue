@@ -4,14 +4,14 @@ import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import RouterLink from '../components/shared/LocalizedLink.vue'
 import { useI18n } from 'vue-i18n'
-import { Camera, Check, ChevronLeft, ChevronRight, CirclePlay, MessageCircle, Music2, Plus, X } from '@lucide/vue'
+import { Camera, Check, CirclePlay, MapPin, MessageCircle, Music2, Plus, X } from '@lucide/vue'
 import FaqSection from '../components/shared/FaqSection.vue'
+import PortfolioGallery from '../components/shared/PortfolioGallery.vue'
 import LoadingSkeleton from '../components/shared/LoadingSkeleton.vue'
 import StatusMessage from '../components/shared/StatusMessage.vue'
-import WaveLogo from '../components/shared/WaveLogo.vue'
 import { useMarketplaceCatalog } from '../composables/useMarketplaceCatalog'
 import { apiGet, apiRequest, formatDate, formatFollowers, formatMoney } from '../lib/api'
-import { CURRENCIES, SOCIAL_PLATFORMS } from '../lib/marketplace'
+import { CREATOR_PLACEHOLDER, CURRENCIES, SOCIAL_PLATFORMS } from '../lib/marketplace'
 import { getSeoOrigin, updateSeo } from '../lib/seo'
 import { localizedPath } from '../routePaths'
 
@@ -21,12 +21,7 @@ const viewer = ref(null)
 const error = ref('')
 const notice = ref('')
 const selectedPlatform = ref('All')
-const currentPortfolioIndex = ref(0)
-const lightboxIndex = ref(0)
-const mobileGallery = ref(null)
 const requestDialog = ref(null)
-const portfolioLightbox = ref(null)
-const portfolioGalleryDialog = ref(null)
 const requestForm = ref({
   packageIds: [],
   other: false,
@@ -103,8 +98,6 @@ const visiblePortfolio = computed(() => {
   return creator.value.portfolio.filter((item) => item.platform === 'All' || item.platform === selectedPlatform.value)
 })
 
-const featuredPortfolio = computed(() => visiblePortfolio.value.slice(0, 3))
-const lightboxItem = computed(() => visiblePortfolio.value[lightboxIndex.value] || null)
 
 const visiblePackages = computed(() => {
   if (!creator.value) {
@@ -158,10 +151,6 @@ async function loadCreator() {
   inviteCampaigns.value = []
   inviteError.value = ''
   selectedPlatform.value = 'All'
-  currentPortfolioIndex.value = 0
-  lightboxIndex.value = 0
-  closeLightbox()
-  closePortfolioGallery()
   error.value = ''
   notice.value = ''
   requestError.value = ''
@@ -302,70 +291,6 @@ function handleRequestDialogCancel(event) {
 
 function selectPlatform(platform) {
   selectedPlatform.value = platform
-  currentPortfolioIndex.value = 0
-  lightboxIndex.value = 0
-  nextTick(() => mobileGallery.value?.scrollTo({ left: 0, behavior: 'smooth' }))
-}
-
-function updateCurrentPortfolioIndex() {
-  const gallery = mobileGallery.value
-  if (!gallery) {
-    return
-  }
-
-  const slides = Array.from(gallery.children)
-  const galleryLeft = gallery.getBoundingClientRect().left + gallery.clientLeft
-  currentPortfolioIndex.value = slides.reduce((nearestIndex, slide, index) => (
-    Math.abs(slide.getBoundingClientRect().left - galleryLeft)
-      < Math.abs(slides[nearestIndex].getBoundingClientRect().left - galleryLeft)
-      ? index
-      : nearestIndex
-  ), 0)
-}
-
-function scrollToPortfolioItem(index) {
-  const gallery = mobileGallery.value
-  const slide = gallery?.children[index]
-  if (!slide) {
-    return
-  }
-
-  currentPortfolioIndex.value = index
-  const galleryLeft = gallery.getBoundingClientRect().left + gallery.clientLeft
-  const slideLeft = slide.getBoundingClientRect().left
-  gallery.scrollTo({
-    left: gallery.scrollLeft + slideLeft - galleryLeft,
-    behavior: 'smooth',
-  })
-}
-
-function openLightbox(index = 0) {
-  closePortfolioGallery()
-  lightboxIndex.value = index
-  nextTick(() => portfolioLightbox.value?.showModal())
-}
-
-function closeLightbox() {
-  if (portfolioLightbox.value?.open) {
-    portfolioLightbox.value.close()
-  }
-}
-
-function openPortfolioGallery() {
-  portfolioGalleryDialog.value?.showModal()
-}
-
-function closePortfolioGallery() {
-  if (portfolioGalleryDialog.value?.open) {
-    portfolioGalleryDialog.value.close()
-  }
-}
-
-function moveLightbox(direction) {
-  const count = visiblePortfolio.value.length
-  if (count > 0) {
-    lightboxIndex.value = (lightboxIndex.value + direction + count) % count
-  }
 }
 
 function togglePackageDescription(packageId) {
@@ -488,7 +413,7 @@ watch(
         name: value.displayName,
         url: new URL(localizedPath('creator-profile', locale.value, { slug: value.slug }), getSeoOrigin()).href,
         description: value.bio,
-        address: { '@type': 'PostalAddress', addressLocality: value.location },
+        address: { '@type': 'PostalAddress', addressLocality: value.city },
         knowsAbout: value.categories,
         ...(sameAs.length ? { sameAs } : {}),
         ...(image ? { image } : {}),
@@ -517,55 +442,6 @@ onBeforeUnmount(() => packageDescriptionObserver?.disconnect())
   </section>
   <LoadingSkeleton v-else-if="!creator" variant="profile" :label="t('creatorProfile.loading')" />
   <template v-else>
-    <dialog
-      ref="portfolioGalleryDialog"
-      class="portfolio-gallery-dialog"
-      :aria-label="t('creatorProfile.portfolio')"
-      @click.self="closePortfolioGallery"
-    >
-      <div class="portfolio-gallery-dialog__content">
-        <header class="portfolio-gallery-dialog__header">
-          <div>
-            <p class="eyebrow">{{ t('creatorProfile.workEyebrow') }}</p>
-            <h2>{{ t('creatorProfile.portfolio') }}</h2>
-            <span>{{ t('creatorProfile.portfolioCount', { count: visiblePortfolio.length }) }}</span>
-          </div>
-          <button
-            class="portfolio-gallery-dialog__close"
-            type="button"
-            :aria-label="t('creatorProfile.closeGallery')"
-            @click="closePortfolioGallery"
-          >
-            <X :size="21" aria-hidden="true" />
-          </button>
-        </header>
-        <div class="portfolio-gallery-dialog__grid">
-          <article v-for="(item, index) in visiblePortfolio" :key="item.id" class="profile-gallery__item">
-            <div class="profile-gallery__media">
-              <button
-                v-if="item.type === 'image'"
-                class="profile-gallery__image-button"
-                type="button"
-                :aria-label="item.title || creator.displayName"
-                @click="openLightbox(index)"
-              >
-                <img :src="item.url" :alt="item.title || creator.displayName" loading="lazy" />
-              </button>
-              <iframe
-                v-else
-                :src="item.embedUrl"
-                :title="item.title || creator.displayName"
-                loading="lazy"
-                allow="accelerometer; encrypted-media; gyroscope; picture-in-picture; web-share"
-                allowfullscreen
-                referrerpolicy="strict-origin-when-cross-origin"
-              ></iframe>
-            </div>
-            <p v-if="item.title">{{ item.title }}</p>
-          </article>
-        </div>
-      </div>
-    </dialog>
     <dialog
       ref="requestDialog"
       class="profile-request-dialog"
@@ -701,41 +577,97 @@ onBeforeUnmount(() => packageDescriptionObserver?.disconnect())
         </form>
       </div>
     </dialog>
-    <section class="profile-layout page-width">
-      <div class="profile-main">
-        <div class="profile-heading">
-          <div class="profile-heading__identity">
-            <div class="profile-heading__avatar">
-              <img v-if="creator.avatarUrl" :src="creator.avatarUrl" :alt="creator.displayName" />
-              <WaveLogo v-else mark />
-            </div>
-            <div>
-              <p class="eyebrow">{{ categoryLabel }} · {{ creator.location }}</p>
-              <h1>{{ creator.displayName }}</h1>
-              <p class="profile-tagline">{{ creator.tagline }}</p>
-              <div
-                v-if="creator.socialProfiles.length"
-                class="profile-stat-pills"
-                role="group"
-                :aria-label="t('creatorProfile.mediaKit')"
-              >
-                <span
-                  v-for="profile in creator.socialProfiles"
-                  :key="profile.platform"
-                  :title="t('creatorProfile.updated', { date: formatDate(profile.lastUpdated) })"
-                  :aria-label="`${formatFollowers(profile.followers)} ${profile.platform}. ${t('creatorProfile.updated', { date: formatDate(profile.lastUpdated) })}. ${t('creatorProfile.selfReported')}`"
+    <section class="creator-profile">
+      <div class="creator-profile__backdrop" aria-hidden="true"><span></span><span></span><span></span></div>
+      <section class="profile-layout page-width">
+        <div class="profile-main">
+          <div class="profile-heading">
+            <div class="profile-heading__identity">
+              <div class="profile-heading__avatar">
+                <img :src="creator.avatarUrl || CREATOR_PLACEHOLDER" :alt="creator.displayName" />
+              </div>
+              <div>
+                <p class="eyebrow">{{ categoryLabel }}<template v-if="creator.city"> · {{ creator.city }}</template></p>
+                <h1>{{ creator.displayName }}</h1>
+                <p class="profile-tagline">{{ creator.tagline }}</p>
+                <div
+                  v-if="creator.socialProfiles.length || creator.city"
+                  class="profile-stat-pills"
+                  role="group"
+                  :aria-label="t('creatorProfile.mediaKit')"
                 >
-                  <strong>{{ formatFollowers(profile.followers) }}</strong>
-                  {{ profile.platform }}
-                </span>
+                  <span
+                    v-for="profile in creator.socialProfiles"
+                    :key="profile.platform"
+                    :title="t('creatorProfile.updated', { date: formatDate(profile.lastUpdated) })"
+                    :aria-label="`${formatFollowers(profile.followers)} ${profile.platform}. ${t('creatorProfile.updated', { date: formatDate(profile.lastUpdated) })}. ${t('creatorProfile.selfReported')}`"
+                  >
+                    <component :is="packagePlatformIcons[profile.platform] || Camera" :size="19" aria-hidden="true" />
+                    <strong>{{ formatFollowers(profile.followers) }}</strong>
+                  </span>
+                  <span v-if="creator.city"><MapPin :size="18" aria-hidden="true" />{{ creator.city }}</span>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-        <RichTextContent :html="creator.bio" />
-        <div class="profile-tags"><span v-for="tag in creator.tags" :key="tag">{{ tag }}</span></div>
-        <StatusMessage v-if="catalogError" variant="error">{{ catalogError }}</StatusMessage>
+          <RichTextContent :html="creator.bio" />
+          <div class="profile-tags"><span v-for="tag in creator.tags" :key="tag">{{ tag }}</span></div>
+          <StatusMessage v-if="catalogError" variant="error">{{ catalogError }}</StatusMessage>
 
+          <PortfolioGallery v-if="visiblePortfolio.length" class="profile-portfolio" :items="visiblePortfolio" :name="creator.displayName" />
+        </div>
+        <aside class="profile-aside">
+          <p class="eyebrow">{{ t('creatorProfile.goodFit') }}</p>
+          <h3>{{ t('creatorProfile.brandsCategory', { category: categoryLabel.toLowerCase() }) }}</h3>
+          <p>{{ t('creatorProfile.goodFitDescription') }}</p>
+          <button
+            v-if="canOpenRequest"
+            class="button button--dark button--full"
+            type="button"
+            @click="openRequestForm()"
+          >
+            {{ t('creatorProfile.requestCollaboration') }} <span aria-hidden="true">↗</span>
+          </button>
+          <p v-if="canOpenRequest" class="profile-aside__note">{{ t('creatorProfile.chatNote') }}</p>
+          <form
+            v-if="viewer?.accountType === 'company' && viewer.emailVerified && viewer.approved && creator.canReceiveCampaignInvitations"
+            class="campaign-invite-form"
+            @submit.prevent="sendCampaignInvitation"
+          >
+            <h4>{{ t('campaignChat.inviteTitle') }}</h4>
+            <p>{{ t('campaignChat.inviteDescription') }}</p>
+            <StatusMessage v-if="inviteError" variant="error">{{ inviteError }}</StatusMessage>
+            <StatusMessage v-if="notice">{{ notice }}</StatusMessage>
+            <template v-if="inviteCampaigns.length">
+              <label class="form-field">
+                <span>{{ t('campaignChat.chooseCampaign') }}</span>
+                <select v-model="inviteForm.campaignSlug" required>
+                  <option value="" disabled>{{ t('campaignChat.chooseCampaign') }}</option>
+                  <option
+                    v-for="campaign in inviteCampaigns"
+                    :key="campaign.id"
+                    :value="campaign.slug"
+                    :disabled="Boolean(campaignInviteStatus(campaign))"
+                  >
+                    {{ campaign.title }}{{ campaignInviteStatus(campaign) ? ` — ${campaignInviteStatus(campaign)}` : '' }}
+                  </option>
+                </select>
+              </label>
+              <label class="form-field">
+                <span>{{ t('campaignChat.invitationMessage') }}</span>
+                <textarea v-model.trim="inviteForm.message" required minlength="1" maxlength="2000"></textarea>
+              </label>
+              <button
+                class="button button--outline button--full"
+                type="submit"
+                :disabled="inviteBusy || !canSubmitCampaignInvitation"
+              >
+                {{ inviteBusy ? t('campaignChat.sending') : t('campaignChat.inviteButton') }}
+              </button>
+            </template>
+            <StatusMessage v-else variant="empty">{{ t('campaignChat.noInviteCampaigns') }}</StatusMessage>
+          </form>
+        </aside>
         <section class="profile-content-section profile-packages">
           <div class="profile-section-heading">
             <div><p class="eyebrow">{{ t('creatorProfile.collaborateEyebrow') }}</p><h2>{{ t('creatorProfile.packages') }}</h2></div>
@@ -811,224 +743,25 @@ onBeforeUnmount(() => packageDescriptionObserver?.disconnect())
           </div>
         </section>
 
-        <section v-if="visiblePortfolio.length" class="profile-content-section profile-portfolio">
-          <div
-            class="profile-gallery profile-gallery--desktop"
-            :class="{
-              'profile-gallery--three': featuredPortfolio.length === 3,
-              'profile-gallery--two': featuredPortfolio.length === 2,
-              'profile-gallery--single': featuredPortfolio.length === 1,
-            }"
-            :aria-label="t('creatorProfile.portfolio')"
+        <div class="profile-sidebar-details">
+          <FaqSection
+            v-if="profileFaqs.length"
+            class="profile-content-section profile-faqs"
+            :eyebrow="t('creatorProfile.faqEyebrow')"
+            :title="t('creatorProfile.faqTitle')"
+            :items="profileFaqs"
+          />
+          <section
+            v-if="creator.categoryLabels.length"
+            class="profile-content-section profile-related-categories"
           >
-            <article
-              v-for="(item, index) in featuredPortfolio"
-              :key="item.id"
-              class="profile-gallery__item"
-            >
-              <div class="profile-gallery__media">
-                <button
-                  v-if="item.type === 'image'"
-                  class="profile-gallery__image-button"
-                  type="button"
-                  :aria-label="item.title || creator.displayName"
-                  @click="openLightbox(index)"
-                >
-                  <img :src="item.url" :alt="item.title || creator.displayName" loading="lazy" />
-                </button>
-                <iframe
-                  v-else
-                  :src="item.embedUrl"
-                  :title="item.title || creator.displayName"
-                  loading="lazy"
-                  allow="accelerometer; encrypted-media; gyroscope; picture-in-picture; web-share"
-                  allowfullscreen
-                  referrerpolicy="strict-origin-when-cross-origin"
-                ></iframe>
-              </div>
-              <p v-if="item.title">{{ item.title }}</p>
-            </article>
-          </div>
-
-          <div
-            ref="mobileGallery"
-            class="profile-gallery profile-gallery--mobile"
-            :aria-label="t('creatorProfile.portfolio')"
-            @scroll.passive="updateCurrentPortfolioIndex"
-          >
-            <article v-for="(item, index) in visiblePortfolio" :key="item.id" class="profile-gallery__item">
-              <div class="profile-gallery__media">
-                <button
-                  v-if="item.type === 'image'"
-                  class="profile-gallery__image-button"
-                  type="button"
-                  :aria-label="item.title || creator.displayName"
-                  @click="openLightbox(index)"
-                >
-                  <img :src="item.url" :alt="item.title || creator.displayName" loading="lazy" />
-                </button>
-                <iframe
-                  v-else
-                  :src="item.embedUrl"
-                  :title="item.title || creator.displayName"
-                  loading="lazy"
-                  allow="accelerometer; encrypted-media; gyroscope; picture-in-picture; web-share"
-                  allowfullscreen
-                  referrerpolicy="strict-origin-when-cross-origin"
-                ></iframe>
-              </div>
-              <p v-if="item.title">{{ item.title }}</p>
-            </article>
-          </div>
-          <div v-if="visiblePortfolio.length > 1" class="profile-gallery__controls">
-            <div class="profile-gallery__dots" role="group" :aria-label="t('creatorProfile.portfolio')">
-              <button
-                v-for="(item, index) in visiblePortfolio"
-                :key="item.id"
-                type="button"
-                :class="{ 'is-active': currentPortfolioIndex === index }"
-                :aria-label="t('creatorProfile.goToItem', { index: index + 1 })"
-                :aria-current="currentPortfolioIndex === index ? 'true' : undefined"
-                @click="scrollToPortfolioItem(index)"
-              ></button>
+            <div class="profile-section-heading">
+              <h2>{{ t('creatorProfile.relatedCategories') }}</h2>
             </div>
-            <span class="profile-gallery__counter" aria-live="polite">
-              {{ currentPortfolioIndex + 1 }} / {{ visiblePortfolio.length }}
-            </span>
-          </div>
-          <div v-if="visiblePortfolio.length > 3" class="profile-gallery__footer">
-            <button class="profile-gallery__show-all" type="button" @click="openPortfolioGallery">
-              {{ t('creatorProfile.showAllPortfolio', { count: visiblePortfolio.length }) }}
-            </button>
-          </div>
-        </section>
-
-        <dialog
-          ref="portfolioLightbox"
-          class="portfolio-lightbox"
-          :aria-label="t('creatorProfile.portfolio')"
-          @click.self="closeLightbox"
-          @keydown.left.prevent="moveLightbox(-1)"
-          @keydown.right.prevent="moveLightbox(1)"
-        >
-          <div v-if="lightboxItem" class="portfolio-lightbox__content">
-            <button
-              class="portfolio-lightbox__close"
-              type="button"
-              :aria-label="t('creatorProfile.closeGallery')"
-              autofocus
-              @click="closeLightbox"
-            >
-              <X :size="21" aria-hidden="true" />
-            </button>
-            <button
-              class="portfolio-lightbox__arrow portfolio-lightbox__arrow--previous"
-              type="button"
-              :aria-label="t('creatorProfile.previousItem')"
-              :disabled="visiblePortfolio.length < 2"
-              @click="moveLightbox(-1)"
-            >
-              <ChevronLeft :size="25" aria-hidden="true" />
-            </button>
-            <div class="portfolio-lightbox__media">
-              <img
-                v-if="lightboxItem.type === 'image'"
-                :src="lightboxItem.url"
-                :alt="lightboxItem.title || creator.displayName"
-              />
-              <iframe
-                v-else
-                :src="lightboxItem.embedUrl"
-                :title="lightboxItem.title || creator.displayName"
-                allow="accelerometer; encrypted-media; gyroscope; picture-in-picture; web-share"
-                allowfullscreen
-                referrerpolicy="strict-origin-when-cross-origin"
-              ></iframe>
+            <div class="profile-related-categories__items">
+              <span v-for="category in creator.categoryLabels" :key="category">{{ category }}</span>
             </div>
-            <button
-              class="portfolio-lightbox__arrow portfolio-lightbox__arrow--next"
-              type="button"
-              :aria-label="t('creatorProfile.nextItem')"
-              :disabled="visiblePortfolio.length < 2"
-              @click="moveLightbox(1)"
-            >
-              <ChevronRight :size="25" aria-hidden="true" />
-            </button>
-            <div class="portfolio-lightbox__caption">
-              <span>{{ lightboxItem.title || creator.displayName }}</span>
-              <span>{{ lightboxIndex + 1 }} / {{ visiblePortfolio.length }}</span>
-            </div>
-          </div>
-        </dialog>
-      </div>
-      <aside class="profile-aside">
-        <p class="eyebrow">{{ t('creatorProfile.goodFit') }}</p>
-        <h3>{{ t('creatorProfile.brandsCategory', { category: categoryLabel.toLowerCase() }) }}</h3>
-        <p>{{ t('creatorProfile.goodFitDescription') }}</p>
-        <button
-          v-if="canOpenRequest"
-          class="button button--dark button--full"
-          type="button"
-          @click="openRequestForm()"
-        >
-          {{ t('creatorProfile.requestCollaboration') }} <span aria-hidden="true">↗</span>
-        </button>
-        <p v-if="canOpenRequest" class="profile-aside__note">{{ t('creatorProfile.chatNote') }}</p>
-        <form
-          v-if="viewer?.accountType === 'company' && viewer.emailVerified && viewer.approved && creator.canReceiveCampaignInvitations"
-          class="campaign-invite-form"
-          @submit.prevent="sendCampaignInvitation"
-        >
-          <h4>{{ t('campaignChat.inviteTitle') }}</h4>
-          <p>{{ t('campaignChat.inviteDescription') }}</p>
-          <StatusMessage v-if="inviteError" variant="error">{{ inviteError }}</StatusMessage>
-          <StatusMessage v-if="notice">{{ notice }}</StatusMessage>
-          <template v-if="inviteCampaigns.length">
-            <label class="form-field">
-              <span>{{ t('campaignChat.chooseCampaign') }}</span>
-              <select v-model="inviteForm.campaignSlug" required>
-                <option value="" disabled>{{ t('campaignChat.chooseCampaign') }}</option>
-                <option
-                  v-for="campaign in inviteCampaigns"
-                  :key="campaign.id"
-                  :value="campaign.slug"
-                  :disabled="Boolean(campaignInviteStatus(campaign))"
-                >
-                  {{ campaign.title }}{{ campaignInviteStatus(campaign) ? ` — ${campaignInviteStatus(campaign)}` : '' }}
-                </option>
-              </select>
-            </label>
-            <label class="form-field">
-              <span>{{ t('campaignChat.invitationMessage') }}</span>
-              <textarea v-model.trim="inviteForm.message" required minlength="1" maxlength="2000"></textarea>
-            </label>
-            <button
-              class="button button--outline button--full"
-              type="submit"
-              :disabled="inviteBusy || !canSubmitCampaignInvitation"
-            >
-              {{ inviteBusy ? t('campaignChat.sending') : t('campaignChat.inviteButton') }}
-            </button>
-          </template>
-          <StatusMessage v-else variant="empty">{{ t('campaignChat.noInviteCampaigns') }}</StatusMessage>
-        </form>
-      </aside>
-      <FaqSection
-        v-if="profileFaqs.length"
-        class="profile-content-section profile-faqs"
-        :eyebrow="t('creatorProfile.faqEyebrow')"
-        :title="t('creatorProfile.faqTitle')"
-        :items="profileFaqs"
-      />
-      <section
-        v-if="creator.categoryLabels.length"
-        class="profile-content-section profile-related-categories"
-      >
-        <div class="profile-section-heading">
-          <h2>{{ t('creatorProfile.relatedCategories') }}</h2>
-        </div>
-        <div class="profile-related-categories__items">
-          <span v-for="category in creator.categoryLabels" :key="category">{{ category }}</span>
+          </section>
         </div>
       </section>
     </section>

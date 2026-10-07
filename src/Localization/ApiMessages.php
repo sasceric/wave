@@ -57,6 +57,8 @@ final class ApiMessages
             'contact_sent' => 'Hvala na poruci. Javićemo ti se uskoro.',
             'contact_failed' => 'Poruku nije moguće poslati. Pokušaj ponovo malo kasnije.',
             'contact_invalid' => 'Provjeri ime, e-mail, ulogu, temu i poruku od 20 do 4.000 znakova.',
+            'newsletter_subscribed' => 'Uspješno si se prijavio/la na Wave novosti.',
+            'newsletter_email_failed' => 'Potvrdni e-mail nije poslan. Pokušaj ponovo kasnije.',
         ],
         'hr' => [
             'campaign_not_found' => 'Kampanja nije pronađena.',
@@ -110,6 +112,8 @@ final class ApiMessages
             'contact_sent' => 'Hvala na poruci. Javit ćemo ti se uskoro.',
             'contact_failed' => 'Poruku nije moguće poslati. Pokušaj ponovno malo kasnije.',
             'contact_invalid' => 'Provjeri ime, e-mail, ulogu, temu i poruku od 20 do 4.000 znakova.',
+            'newsletter_subscribed' => 'Uspješno si se prijavio/la na Wave novosti.',
+            'newsletter_email_failed' => 'Potvrdna e-pošta nije poslana. Pokušaj ponovno kasnije.',
         ],
         'sr' => [
             'campaign_not_found' => 'Kampanja nije pronađena.',
@@ -163,6 +167,8 @@ final class ApiMessages
             'contact_sent' => 'Hvala na poruci. Javićemo ti se uskoro.',
             'contact_failed' => 'Poruku nije moguće poslati. Pokušaj ponovo malo kasnije.',
             'contact_invalid' => 'Proveri ime, e-mail, ulogu, temu i poruku od 20 do 4.000 znakova.',
+            'newsletter_subscribed' => 'Uspešno si se prijavio/la na Wave novosti.',
+            'newsletter_email_failed' => 'Potvrdni e-mail nije poslat. Pokušaj ponovo kasnije.',
         ],
         'cnr' => [
             'campaign_not_found' => 'Kampanja nije pronađena.',
@@ -216,6 +222,8 @@ final class ApiMessages
             'contact_sent' => 'Hvala na poruci. Javićemo ti se uskoro.',
             'contact_failed' => 'Poruku nije moguće poslati. Pokušaj ponovo malo kasnije.',
             'contact_invalid' => 'Provjeri ime, e-mail, ulogu, temu i poruku od 20 do 4.000 znakova.',
+            'newsletter_subscribed' => 'Uspješno si se prijavio/la na Wave novosti.',
+            'newsletter_email_failed' => 'Potvrdni e-mail nije poslat. Pokušaj ponovo kasnije.',
         ],
         'sl' => [
             'campaign_not_found' => 'Kampanja ni bila najdena.',
@@ -269,6 +277,8 @@ final class ApiMessages
             'contact_sent' => 'Hvala za sporočilo. Kmalu se ti oglasimo.',
             'contact_failed' => 'Sporočila ni bilo mogoče poslati. Poskusi znova pozneje.',
             'contact_invalid' => 'Preveri ime, e-pošto, vlogo, temo in sporočilo z 20–4.000 znaki.',
+            'newsletter_subscribed' => 'Uspešno si se prijavil/a na novice Wave.',
+            'newsletter_email_failed' => 'Potrditvenega e-poštnega sporočila ni bilo mogoče poslati. Poskusi znova pozneje.',
         ],
         'en' => [
             'campaign_not_found' => 'Campaign not found.',
@@ -322,6 +332,8 @@ final class ApiMessages
             'contact_sent' => "Thanks for reaching out. We'll be in touch soon.",
             'contact_failed' => 'Your message could not be sent. Please try again later.',
             'contact_invalid' => 'Check your name, email, role, topic, and make sure the message is 20–4,000 characters.',
+            'newsletter_subscribed' => 'You’re subscribed to Wave updates.',
+            'newsletter_email_failed' => 'The confirmation email could not be sent. Please try again later.',
         ],
     ];
 

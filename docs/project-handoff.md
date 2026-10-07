@@ -20,6 +20,7 @@ Declared dependencies: PHP 8.4+, Symfony 8.1, Doctrine ORM 3, Vue 3, Vue Router,
 | Registration, login, verification, password reset | `AuthController.php`, `src/Security/SessionAuthenticator.php`, `src/Account/` |
 | Google and Apple login | `OAuthController.php`, `src/OAuth/` |
 | Applications, shortlisting, and offers | `MarketplaceWorkflowController.php` |
+| Newsletter subscriptions and confirmation email | `NewsletterSubscriberController.php`, `src/Newsletter/`, `newsletter_subscriber` migration; admins review signups under Marketing → Subscribers |
 | Campaign invitations and private chat | `CampaignInvitationController.php`, `CampaignMessagingController.php` |
 | Notifications and live updates | `src/Service/NotificationDelivery.php`, `RealtimeUpdatePublisher.php`, `WebPushNotificationSender.php`; realtime/push API controllers |
 | Device app badges and push links | `src/Service/UnreadInboxCounter.php`, `frontend/src/lib/appBadge.js`, `notificationNavigation.js`, `frontend/src/sw.js`, `MessagesView.vue`; `docs/server-notifications.md` |
@@ -257,3 +258,103 @@ Migration `Version20261006210000` adds conversation activity and latest inquiry
 message indexes. Normal GitHub deployment applies it; no environment, scheduler or
 worker changes are needed. Validate against PostgreSQL. Further work remains on
 public-directory cursors, admin catalog pagination and representative load testing.
+
+### Companies directory design (2026-10-07)
+
+`CompaniesView.vue` uses the shared `DirectoryHero`, `DirectoryToolbar`, `DirectorySearch`, and `DirectoryFilterPanel` components, with matching SCSS under `scss/components/shared/`. Its view SCSS provides the photographic art and three-column company card layout. Mobile uses single-column cards, horizontally scrollable filter controls, a visible sort control and a modal filter sheet with focus handling and background scroll locking. Grid/list selection applies to desktop. The directory uses the same `.page-width` container as home. The search toolbar sticks below the header on desktop and mobile, moving to the top when the mobile header hides on downward scroll. A bordered card and shadow highlight the sticky state. Industry and country multiselects live only in the sidebar/mobile sheet. Status and sorting use the shared `SingleSelect.vue` component with matching SCSS, keyboard navigation, no search field, and one selected value.
+
+`GET /api/companies/filters` returns industry and country counts from visible, approved companies, using actual company industry values rather than creator categories. Industry labels respect company translations. The directory accepts JSON arrays in `industries` and `countries` (two-letter country codes), and binds both filters into its cursor scope. Country selections match any selected country; the legacy single `country` parameter remains supported. Filters use the existing industry, owner city/country, verified and featured fields; there are no new company-size or collaboration-type fields.
+
+Card responses include a bounded plain-text `summary` and a responsive `coverImage` from an active campaign, fetched as a batch. Companies without a campaign image use decorative industry illustrations; missing descriptions and locations remain omitted. Images use the existing lazy-loading component and thumbnail endpoints. The static product hero is WebP. No migration or worker configuration is required for these changes.
+
+Companies use searchable area multiselects backed by the shared admin-managed
+`MarketplaceCategory` catalog (all six locales) and the indexed `company_industry` relation. The primary
+`company.industry` remains for compatibility. Company covers are owned media in
+`company-cover`; listing cards use cover thumbnails or the bundled
+`/images/company-cover.webp` fallback. Creator profiles use account city; their
+old separate location column is removed by `Version20261007014000`. Standalone
+catalog creators retain a city fallback. Country filters are labelled “Država”.
+
+
+### Creators directory design (2026-10-07)
+
+`CreatorsView.vue` shares the companies hero, search toolbar, sticky card behavior,
+and accessible mobile filter sheet. `CreatorCard.vue` remains the same photo-overlay
+card on desktop and mobile: four columns on desktop and two on mobile. The desktop
+list option changes the column layout without introducing another card component.
+View styling lives in `scss/views/CreatorsView.scss`.
+
+Filters use existing categories, account country/city (with the standalone creator
+city fallback), social profile platforms, and follower counts. Categories, countries,
+and platforms accept multiple selections; filters are combined across groups.
+Only the currently supported TikTok, Instagram, and YouTube platforms are offered.
+Audience bands use the largest channel: small is 1–9,999, medium 10,000–49,999,
+and large 50,000+. Missing follower counts do not match an audience band.
+
+`GET /api/creators/filters` supplies country counts for visible, approved creators.
+`GET /api/creators` accepts JSON arrays in `categories`, `countries`, and `platforms`,
+plus `city`, `audience`, and `sort` (`newest`, `followers`, or `name`). Legacy single
+`category`/`platform` parameters and the default alphabetical order remain supported.
+The directory explicitly requests newest-first and loads 30 cards per cursor batch.
+Filtering and sorting happen in PostgreSQL before bounded page hydration; follower
+metrics are calculated only for audience filtering or follower sorting. Cursors
+bind the filters and sort order, with creator ID as a stable tie breaker. Hidden and
+unapproved profiles are excluded from results and country counts. This creator
+redesign adds no entity fields, migration, environment settings, or worker requirements.
+
+Creators without an uploaded/legacy avatar use `/images/creator-placeholder.webp`
+in cards, the public profile, and the account profile summary. The supplied WebP
+source lives in `frontend/public/images/`; Vite copies it into Symfony's public
+directory during builds. `CREATOR_PLACEHOLDER` in `lib/marketplace.js` keeps this
+presentation fallback separate from saved profile/media data.
+
+The shared `CampaignCard.vue` uses `/images/share.webp` when no campaign cover is
+present. This applies to campaign listings, the home slider, company profiles,
+and saved campaigns through the same component. Uploaded cover images and their
+responsive thumbnails retain priority; fallback images use `CardImage` lazy loading.
+
+
+### Shared areas catalog (2026-10-07)
+
+Creators, companies, and campaigns use one list called “Oblasti” (localized in all
+six catalogs), managed on the existing admin catalog page. `MarketplaceAreaCatalog`
+reads active `MarketplaceCategory` rows in admin-defined order. The legacy
+`/api/marketplace/company-industries` endpoint remains as an alias for the same
+list. Account/registration components reuse the categories response for both
+profile types rather than requesting a separate industry catalog. Company filter
+facets use these choices plus legacy values still used by visible companies;
+existing custom selections are retained.
+
+Migration `Version20261007020000` expands the starter catalog to 48 areas from the
+frozen six-locale snapshot `migrations/data/marketplace-areas-20261007.json`. It only
+inserts missing values, compares keys case-insensitively, and appends them after
+existing positions. Existing labels, active flags, positions, and profile/campaign
+selections remain intact. The migration can safely plan without a live schema,
+is compatible with PostgreSQL, and is idempotent. Admins can add, rename, reorder,
+or deactivate choices later. Deactivation removes a choice from new selections;
+labels remain available for existing profiles. Public company, creator, campaign,
+account, and home responses resolve labels from the shared catalog in batches.
+
+Production must run Doctrine migrations as part of the normal deployment; clearing
+cache alone will not insert the new areas. No environment or worker changes are
+required. Locally, the additive catalog migration has been applied to PostgreSQL.
+
+### Campaign directory design (2026-10-07)
+
+`CampaignsView.vue` shares the creators' `DirectoryHero`, `DirectoryHeroCollage`,
+`DirectoryToolbar`, and `DirectoryFilterPanel`. Its search card sticks on desktop
+and mobile; mobile filters open in the same accessible bottom sheet. The heading
+uses existing local campaign/product/content-production images. Campaign cards
+retain their shared component, four desktop columns and two mobile columns, image
+fallbacks, lazy loading, skeletons and 30-item cursor batches.
+
+Campaign filters use existing `category`, `channels`, `location`, `currency`,
+`budgetMin` and `budgetMax` fields. Areas come from the shared admin catalog.
+Location searches the campaign target location, not company/creator geography.
+Budget ranges overlap the offered range and require a selected currency. Sorting
+supports recommended (featured, then closing date), newest, and closing soon,
+with stable ID tie-breaks. Signed cursors bind every filter and sort. The API
+hydrates only the selected batch, retains the legacy single-category/company/
+featured query parameters and excludes expired/closed campaigns and hidden or
+unapproved companies. This page change adds no migration or server configuration;
+it uses the normal backend/frontend deployment.

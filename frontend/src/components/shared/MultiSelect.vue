@@ -1,9 +1,7 @@
 <script setup>
-import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, useId } from 'vue'
 import { Check, ChevronDown, Search, X } from '@lucide/vue'
 import { getDropdownPlacement } from '../../utils/dropdownPlacement'
-
-let nextId = 0
 
 const props = defineProps({
   modelValue: { type: Array, default: () => [] },
@@ -19,7 +17,7 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['update:modelValue'])
-const id = `multi-select-${++nextId}`
+const id = `multi-select-${useId()}`
 const root = ref(null)
 const trigger = ref(null)
 const searchInput = ref(null)
@@ -157,6 +155,7 @@ onBeforeUnmount(() => {
   window.visualViewport?.removeEventListener('resize', updateMenuPlacement)
   window.visualViewport?.removeEventListener('scroll', updateMenuPlacement)
 })
+defineExpose({ openMenu })
 </script>
 
 <template>
@@ -190,7 +189,7 @@ onBeforeUnmount(() => {
         aria-haspopup="listbox"
         :disabled="disabled"
         @click="toggleMenu"
-        @keydown.esc.prevent="closeMenu(true)"
+        @keydown.esc.prevent.stop="closeMenu(true)"
       >
         <span>{{ selectedOptions.length ? searchPlaceholder : placeholder }}</span>
         <ChevronDown :size="16" aria-hidden="true" />
@@ -228,7 +227,7 @@ onBeforeUnmount(() => {
             @click="toggleOption(option.value)"
             @keydown.down.prevent="focusOption(index + 1)"
             @keydown.up.prevent="focusPreviousOption(index)"
-            @keydown.esc.prevent="closeMenu(true)"
+            @keydown.esc.prevent.stop="closeMenu(true)"
           >
             <span>{{ option.label }}</span>
             <span class="multi-select__check" aria-hidden="true">

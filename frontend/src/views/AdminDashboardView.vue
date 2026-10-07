@@ -71,7 +71,7 @@ const pageTitle = computed(() => t(
 const creatorOptions = computed(() => (candidates.creators.rows).map((creator) => ({
   id: creator.id,
   label: creator.displayName,
-  description: [creator.category, creator.location].filter(Boolean).join(' · '),
+  description: [creator.category, creator.city].filter(Boolean).join(' · '),
 })))
 
 const campaignOptions = computed(() => (candidates.campaigns.rows).map((campaign) => ({
@@ -194,7 +194,7 @@ const tableColumns = computed(() => {
     creators: [
       { key: 'displayName', label: t('adminDashboard.creator'), sortable: true },
       { key: 'category', label: t('adminDashboard.category'), sortable: true },
-      { key: 'location', label: t('adminDashboard.location'), sortable: true },
+      { key: 'city', label: t('auth.city'), sortable: true },
     ],
     companies: [
       { key: 'name', label: t('adminDashboard.company'), sortable: true },

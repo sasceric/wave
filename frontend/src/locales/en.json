@@ -109,8 +109,14 @@
             "If you choose Google or Apple sign-in, the selected provider processes authentication information under its own privacy terms."
           ],
           "links": [
-            { "label": "Google Privacy Policy", "url": "https://policies.google.com/privacy" },
-            { "label": "Apple Privacy Policy", "url": "https://www.apple.com/legal/privacy/" }
+            {
+              "label": "Google Privacy Policy",
+              "url": "https://policies.google.com/privacy"
+            },
+            {
+              "label": "Apple Privacy Policy",
+              "url": "https://www.apple.com/legal/privacy/"
+            }
           ]
         }
       ]
@@ -150,7 +156,10 @@
             "You can withdraw consent later from Cookie preferences. Wave then stops sending analytics events and removes Google Analytics cookies set on this site."
           ],
           "links": [
-            { "label": "Google Privacy Policy", "url": "https://policies.google.com/privacy" }
+            {
+              "label": "Google Privacy Policy",
+              "url": "https://policies.google.com/privacy"
+            }
           ]
         },
         {
@@ -159,7 +168,10 @@
             "Wave loads interface fonts from Google Fonts. When a profile video is displayed, your browser may connect to youtube-nocookie.com, operated by Google. These providers may process technical data or use their own browser storage; Wave does not control that storage."
           ],
           "links": [
-            { "label": "Google Privacy Policy", "url": "https://policies.google.com/privacy" }
+            {
+              "label": "Google Privacy Policy",
+              "url": "https://policies.google.com/privacy"
+            }
           ]
         }
       ]
@@ -178,16 +190,32 @@
     "earlyAccessSubject": "Wave early access",
     "account": "My account",
     "footerTagline": "Good partnerships start with a good fit.",
+    "footerDescription": "We connect creators and brands to make authentic stories that inspire.",
     "sayHello": "Say hello",
     "copyright": "© {year} Wave. Made for the people who make things.",
-    "footerMvp": "Profiles, campaigns & applications · collaborations by agreement",
     "footerExplore": "Explore",
     "footerLegal": "Legal",
     "footerContact": "Get in touch",
     "footerContactText": "Questions about Wave or need help? Send us a note.",
     "footerOperator": "Operated by UD SteelCode",
+    "footerNewsletterTitle": "Stay in the loop",
+    "footerNewsletterText": "Sign up for occasional updates on new campaigns, creators, and ideas.",
+    "footerNewsletterPlaceholder": "Your email address",
+    "footerNewsletterSubmit": "Sign up by email",
+    "footerNewsletterNote": "We’ll email you to confirm your signup.",
+    "footerNewsletterSuccessTitle": "You’re subscribed",
+    "footerNewsletterSuccessMessage": "Thanks! You’ll receive an email shortly confirming your signup for Wave updates.",
+    "footerNewsletterError": "We couldn’t complete your signup. Please try again later.",
+    "footerNewsletterClose": "Close",
+    "footerQuickLinks": "Quick links",
+    "footerProfiles": "Profiles",
+    "footerApplications": "Applications",
+    "footerCollaboration": "Collaborations by agreement",
+    "backToTop": "Back to top",
     "socialLinks": "Wave social media",
-    "socialComingSoon": "Social profiles coming soon",
+    "socialFollow": "Follow us on social media.",
+    "instagram": "Wave on Instagram",
+    "facebook": "Wave on Facebook",
     "language": "Language",
     "openMenu": "Open navigation",
     "closeMenu": "Close navigation",
@@ -313,7 +341,50 @@
     "empty": "Companies will appear here as they join Wave.",
     "viewProfile": "View company",
     "featured": "Featured",
-    "openCampaigns": "Open campaigns"
+    "openCampaigns": "Open campaigns",
+    "filters": "Company filters",
+    "filterTitle": "Filters",
+    "filterButton": "Filters",
+    "clearFilters": "Clear all",
+    "applyFilters": "Show results ({count})",
+    "search": "Search companies…",
+    "searchLabel": "Search companies",
+    "industryLabel": "Categories",
+    "allIndustries": "All categories",
+    "locationLabel": "Country",
+    "locationPlaceholder": "Search a city…",
+    "countryLabel": "Country",
+    "countryPlaceholder": "Search countries…",
+    "statusLabel": "Status",
+    "verifiedOnly": "Verified companies",
+    "featuredOnly": "Featured companies",
+    "sortLabel": "Sort companies",
+    "sortRecommended": "Recommended",
+    "sortCampaigns": "Most open campaigns",
+    "sortName": "Name A–Z",
+    "resultCount": "Showing {count} companies",
+    "noIndustryOptions": "No industries available",
+    "heroBadge": "Brands across different industries",
+    "verified": "Verified company",
+    "cityLabel": "City",
+    "grid": "Grid",
+    "list": "List",
+    "layoutLabel": "Company display",
+    "showMore": "Show more",
+    "showLess": "Show less",
+    "retryFilters": "Try again",
+    "countryNames": {
+      "BA": "Bosnia and Herzegovina",
+      "HR": "Croatia",
+      "RS": "Serbia",
+      "SI": "Slovenia",
+      "ME": "Montenegro",
+      "MK": "North Macedonia"
+    },
+    "verifiedAndFeatured": "Verified and featured",
+    "searchIndustries": "Search categories",
+    "noIndustries": "No categories match your search.",
+    "selectIndustries": "Select categories"
   },
   "home": {
     "kicker": "Creators × brands",
@@ -508,7 +579,9 @@
     "goodFit": "A good fit for",
     "brandsCategory": "Brands who care about {category}.",
     "goodFitDescription": "Explore open briefs and find the right place to start a conversation.",
-    "browseBriefs": "Browse open briefs"
+    "browseBriefs": "Browse open briefs",
+    "openPortfolioItem": "Open work {index}: {title}",
+    "galleryHint": "Swipe or use the arrow keys to browse the portfolio."
   },
   "campaignsPage": {
     "eyebrow": "A good place to begin",
@@ -538,6 +611,11 @@
     "back": "Back to campaigns",
     "loading": "Loading company…",
     "profileLabel": "A Wave brand profile",
+    "profileIntro": "A brand with room for good collaboration.",
+    "aboutEyebrow": "About the company",
+    "aboutTitle": "About {company}",
+    "areas": "Areas",
+    "followUs": "Follow us",
     "openCalls": "Open calls",
     "campaignsFrom": "Campaigns from {company}.",
     "allBriefs": "Browse all briefs",
@@ -624,7 +702,7 @@
     "searchPhoneCountry": "Search by country or calling code",
     "noPhoneCountriesFound": "No matching country or calling code found",
     "phoneInvalid": "Enter a valid phone number for the selected country code.",
-    "category": "Primary category",
+    "category": "Categories",
     "location": "Location",
     "country": "Country",
     "selectCountry": "Choose a country",
@@ -633,7 +711,7 @@
     "countryRequired": "Select a country to continue.",
     "city": "City",
     "cityPlaceholder": "Enter your city",
-    "industry": "Industry",
+    "industry": "Categories",
     "industryPlaceholder": "e.g. travel, fashion, food and beverage, or beauty",
     "signIn": "Sign in",
     "register": "Create account",
@@ -658,6 +736,17 @@
     "companyInvite": "Introduce your company and post campaigns for the right creators."
   },
   "account": {
+    "basicInformation": "Basic information",
+    "additionalInformation": "Additional information",
+    "profileImage": "Profile photo",
+    "imageRecommendations": "Recommendations",
+    "imageRecommendationQuality": "A clear, high-quality photo",
+    "imageRecommendationDimensions": "Recommended size at least 400 × 400",
+    "imageRecommendationFormats": "Format: JPG, PNG or WebP",
+    "sidebarExplore": "Explore",
+    "sidebarSettings": "Settings",
+    "edit": "Edit",
+    "back": "Back",
     "editProfile": "Edit profile",
     "welcomeBack": "Welcome back, {name}!",
     "welcomeIntro": "View and edit your profile details here.",
@@ -667,6 +756,11 @@
     "profileEditorIntro": "Edit the information brands see on your public profile.",
     "profileIncomplete": "Complete the required fields in the highlighted profile section before saving.",
     "socialMetricsHint": "Add your channels and current audience metrics.",
+    "companySocialLinks": "Social links",
+    "companySocialLinksHint": "Add the public channels and website customers can use to find your company.",
+    "addSocialLink": "Add a link",
+    "noSocialLinks": "No social links added yet.",
+    "socialLinkUrl": "Link URL",
     "noSocialProfiles": "You haven't added any channels yet.",
     "noPortfolioItems": "Add photos or a publicly available video to your portfolio.",
     "noPackages": "Add collaboration packages for brands to browse.",
@@ -870,12 +964,18 @@
     "inquiryRejected": "Declined",
     "proposedPrice": "Amount",
     "writeMessage": "Write a message",
-    "sendMessage": "Send message"
+    "sendMessage": "Send message",
+    "companyCover": "Company cover photo",
+    "addCompanyCover": "Add cover photo",
+    "changeCompanyCover": "Change cover photo",
+    "removeCompanyCover": "Remove cover photo",
+    "removeCompanyCoverTitle": "Remove cover photo?",
+    "removeCompanyCoverMessage": "The photo will be removed when you save your changes."
   },
   "moderation": {
     "eyebrow": "Wave catalogue",
-    "title": "Categories and FAQs",
-    "description": "Manage the categories and FAQ content displayed on Wave.",
+    "title": "Categories and FAQ",
+    "description": "Manage the shared categories for creators, companies and campaigns, and frequently asked questions.",
     "loading": "Loading catalogue…",
     "empty": "There are no campaigns to review right now.",
     "noAccess": "This area is only available to Wave moderators.",
@@ -892,7 +992,7 @@
     "rejected": "Campaign rejected.",
     "error": "Could not load the catalogue. Please try again.",
     "decisionError": "Could not save the decision. Refresh the list and try again.",
-    "catalogTab": "Categories and FAQs",
+    "catalogTab": "Categories and FAQ",
     "addCategory": "Add category",
     "editCategory": "Edit category",
     "categoryValue": "Internal category name",
@@ -957,6 +1057,8 @@
     "saved": "Homepage settings saved.",
     "navigationLabel": "Admin sections",
     "navOverview": "Overview",
+    "navMarketing": "Marketing",
+    "navSubscribers": "Subscribers",
     "navRegistrations": "Approvals",
     "navHomepage": "Homepage",
     "navCreators": "Creators",
@@ -975,9 +1077,16 @@
     "companiesPageDescription": "Browse all companies and review their verification status.",
     "campaignsPageTitle": "Campaigns",
     "emailTemplatesPageTitle": "Email templates",
+    "subscribersPageTitle": "Newsletter subscribers",
+    "subscribersPageDescription": "Review the email addresses signed up for Wave updates.",
+    "subscribersCaption": "Wave newsletter subscribers",
+    "subscribersEmpty": "There are no subscribers yet.",
+    "subscribersLoadError": "Could not load subscribers.",
+    "subscriberLanguage": "Language",
+    "subscriberSubscribedAt": "Subscribed",
     "emailTemplatesEyebrow": "EMAIL COMMUNICATION",
     "emailTemplatesTitle": "Edit outgoing messages",
-    "emailTemplatesDescription": "Manage account, campaign application, hiring, unread-message, and contact email templates.",
+    "emailTemplatesDescription": "Manage account, campaign application, hiring, unread-message, contact, and newsletter signup email templates.",
     "chooseEmailTemplate": "Choose a template",
     "verifyEmailTemplate": "Verify email",
     "verifyEmailTemplateHint": "Sent after registration to verify the address and explain the account review.",
@@ -989,6 +1098,8 @@
     "approvalEmailTemplateHint": "Sent when an administrator approves an account.",
     "contactEmailTemplate": "Contact form notification",
     "contactEmailTemplateHint": "Sent to the Wave inbox after a contact form submission.",
+    "subscribedEmailTemplate": "Newsletter signup confirmation",
+    "subscribedEmailTemplateHint": "Sent to the submitted address when someone signs up for Wave updates.",
     "applicationReceivedEmailTemplate": "Campaign application received",
     "applicationReceivedEmailTemplateHint": "Sent to the company with the creator's name and application message.",
     "creatorInquiryEmailTemplate": "Creator package inquiry",
@@ -1021,7 +1132,7 @@
     "accountType": "Account type",
     "approvalStatus": "Approval",
     "emailVerification": "Email verification",
-    "industry": "Industry",
+    "industry": "Categories",
     "category": "Category",
     "actions": "Actions",
     "rowActions": "Actions for {name}",
@@ -1081,7 +1192,7 @@
     "selectedOptions": "{count} selected",
     "removeOption": "Remove {name}",
     "searchCreators": "Search by name, category, or location",
-    "searchCompanies": "Search by company or industry",
+    "searchCompanies": "Search by company or category",
     "searchCampaigns": "Search by campaign, company, or status",
     "noMatches": "No items match this search.",
     "companyFeaturedSaved": "Featured company selections saved."
@@ -1175,5 +1286,41 @@
       "admin": "Development admin worker enabled.",
       "cli": "CLI consumers required."
     }
+  },
+  "creatorDirectory": {
+    "heroBadge": "Authentic creators from different fields",
+    "categoryLabel": "Categories",
+    "searchCategories": "Search categories…",
+    "platformLabel": "Platforms",
+    "searchPlatforms": "Search platforms…",
+    "noPlatforms": "No platforms found.",
+    "audienceLabel": "Audience size",
+    "allAudiences": "All audience sizes",
+    "audienceSmall": "Small (1–10k)",
+    "audienceMedium": "Medium (10–50k)",
+    "audienceLarge": "Large (50k+)",
+    "audienceHint": "Follower count on the largest channel.",
+    "sortLabel": "Sort creators",
+    "sortNewest": "Newest",
+    "sortFollowers": "Most followers",
+    "layoutLabel": "Creator layout",
+    "noCategories": "No categories found."
+  },
+  "campaignDirectory": {
+    "heroBadge": "Campaigns connecting brands and creators",
+    "channelLabel": "Channels",
+    "allChannels": "All channels",
+    "locationLabel": "Campaign location",
+    "locationPlaceholder": "Search campaign location…",
+    "currencyLabel": "Currency",
+    "allCurrencies": "All currencies",
+    "budgetLabel": "Budget",
+    "budgetFrom": "From",
+    "budgetTo": "To",
+    "chooseCurrency": "Choose a currency to filter budgets.",
+    "budgetHint": "Shows campaigns whose budget overlaps your selected range.",
+    "sortLabel": "Sort campaigns",
+    "sortClosing": "Closing soon",
+    "layoutLabel": "Campaign layout"
   }
 }

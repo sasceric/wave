@@ -35,6 +35,7 @@ const routeViews = {
   'admin-companies': adminDashboardView,
   'admin-campaigns': adminDashboardView,
   'admin-email-templates': adminDashboardView,
+  'admin-subscribers': () => import('./views/AdminSubscribersView.vue'),
   'admin-tools': () => import('./views/AdminToolsView.vue'),
   imprint: legalView,
   'privacy-policy': legalView,
@@ -49,6 +50,7 @@ const adminSections = {
   'admin-companies': 'companies',
   'admin-campaigns': 'campaigns',
   'admin-email-templates': 'email-templates',
+  'admin-subscribers': 'subscribers',
   'admin-tools': 'tools',
 }
 
@@ -116,6 +118,7 @@ const legacyPaths = [
   ['/admin/companies', 'admin-companies'],
   ['/admin/campaigns', 'admin-campaigns'],
   ['/admin/email-templates', 'admin-email-templates'],
+  ['/admin/subscribers', 'admin-subscribers'],
   ['/admin/tools', 'admin-tools'],
   ['/imprint', 'imprint'],
   ['/impressum', 'imprint'],

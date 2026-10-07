@@ -33,17 +33,6 @@
     transform: scale(1.045);
   }
 
-  &__placeholder {
-    display: grid;
-    place-items: center;
-    background: #65746a;
-  }
-
-  &__placeholder-logo {
-    width: 92px;
-    height: 92px;
-  }
-
   &__shade {
     position: absolute;
     z-index: 1;

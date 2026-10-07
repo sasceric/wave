@@ -29,7 +29,7 @@ const emit = defineEmits(['authenticated'])
 const route = useRoute()
 const router = useRouter()
 const { t, locale } = useI18n()
-const { categories, error: catalogError } = useMarketplaceCatalog(locale)
+const { categories, industries, error: catalogError } = useMarketplaceCatalog(locale, { includeIndustries: true })
 const mode = ref(route.query.mode === 'register' ? 'register' : 'login')
 const busy = ref(false)
 const error = ref('')
@@ -50,7 +50,7 @@ const form = reactive({
   categories: ['Lifestyle'],
   country: '',
   city: '',
-  industry: '',
+  industries: [],
 })
 const phoneCountry = computed({
   get: () => form.phoneCountry,
@@ -195,9 +195,8 @@ async function submit() {
             name: `${form.firstName.trim()} ${form.lastName.trim()}`,
             category: form.categories[0],
             categories: form.categories,
-            location: `${form.city.trim()}, ${new Intl.DisplayNames(['en'], { type: 'region' }).of(form.country) || form.country}`,
           }
-        : { name: form.companyName.trim(), industry: form.industry }),
+        : { name: form.companyName.trim(), industries: form.industries }),
     })
   }
 
@@ -437,15 +436,16 @@ function changeMode(nextMode) {
               :placeholder="t('auth.companyNamePlaceholder')"
             />
           </label>
-          <label class="form-field form-field--wide">
-            <span>{{ t('auth.industry') }}</span>
-            <input
-              v-model.trim="form.industry"
-              required
-              maxlength="100"
-              :placeholder="t('auth.industryPlaceholder')"
+          <MultiSelect
+              v-model="form.industries"
+              :options="industries || []"
+              :label="t('auth.industry')"
+              :placeholder="t('companyDirectory.selectIndustries')"
+              :search-placeholder="t('companyDirectory.searchIndustries')"
+              :no-results-label="t('companyDirectory.noIndustries')"
+              :remove-label="t('account.remove')"
+              :max-selections="20"
             />
-          </label>
         </template>
         <SearchableSelect
           :model-value="form.country"

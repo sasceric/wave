@@ -1,0 +1,15 @@
+.directory-search {
+  min-width: 0;
+  min-height: 42px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 13px;
+  border: 1px solid #d8dfd8;
+  border-radius: 10px;
+  background: #fffefa;
+  svg { flex-shrink: 0; }
+  input { width: 100%; min-width: 0; padding: 0; border: 0; outline: 0; color: var(--forest); background: transparent; font: inherit; font-size: 13px; }
+  input::placeholder { color: #879590; }
+  &:focus-within { outline: 2px solid #688d80; outline-offset: 2px; }
+}

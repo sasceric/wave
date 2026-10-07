@@ -18,6 +18,7 @@ final class LegacySqlCompatibility
         'questions',
         'selected_packages',
         'social_profiles',
+        'social_links',
         'tags',
         'translations',
     ];

@@ -279,7 +279,7 @@ final class SeoMetadataProvider
             'name' => $creator->getDisplayName(),
             'url' => $this->siteOrigin->url($this->routeMap->localizedPath('creator-profile', $locale, $params)),
             'description' => $creator->getTranslations()[$locale]['bio'] ?? $creator->getBio(),
-            'address' => ['@type' => 'PostalAddress', 'addressLocality' => $creator->getLocation()],
+            'address' => ['@type' => 'PostalAddress', 'addressLocality' => $creator->getCity()],
             'knowsAbout' => $creator->getCategories(),
         ];
         if ($image !== null) {

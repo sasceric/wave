@@ -12,6 +12,7 @@ export async function setupView(path, extraModules = {}, props = {}, globals = {
   windowTarget.cancelAnimationFrame = () => {}
   windowTarget.setTimeout = () => 1
   windowTarget.clearTimeout = () => {}
+  windowTarget.matchMedia = () => ({ matches: false, addEventListener: () => {}, removeEventListener: () => {} })
   const documentTarget = {
     visibilityState: 'visible',
     documentElement: { classList: { toggle: () => {} } },
@@ -26,7 +27,7 @@ export async function setupView(path, extraModules = {}, props = {}, globals = {
   const modules = {
     vue: { ...vue, onMounted: () => {}, onBeforeUnmount: () => {} },
     'vue-router': { isNavigationFailure: () => false, NavigationFailureType: { duplicated: 16 }, RouterView: {}, useRoute: () => ({ query: {}, params: {}, meta: {}, fullPath: '/poruke' }), useRouter: () => ({ replace: async () => {} }) },
-    'vue-i18n': { useI18n: () => ({ locale: vue.ref('bs'), t: (key) => key }) },
+    'vue-i18n': { I18nT: {}, useI18n: () => ({ locale: vue.ref('bs'), t: (key) => key }) },
     '../composables/useCurrentUser': { currentUser, loadCurrentUser: async () => currentUser.value, setCurrentUser: (user) => { currentUser.value = user } },
     './composables/useCurrentUser': { currentUser, loadCurrentUser: async () => currentUser.value, setCurrentUser: (user) => { currentUser.value = user } },
     './composables/useUnreadMessages': { unreadMessageCount },

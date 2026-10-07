@@ -1,0 +1,530 @@
+[
+  {
+    "value": "Beauty",
+    "labels": {
+      "bs": "Ljepota i kozmetika",
+      "hr": "Ljepota i kozmetika",
+      "sr": "Lepota i kozmetika",
+      "sl": "Lepota in kozmetika",
+      "en": "Beauty and cosmetics",
+      "cnr": "Ljepota i kozmetika"
+    }
+  },
+  {
+    "value": "Fashion",
+    "labels": {
+      "bs": "Moda i odjeća",
+      "hr": "Moda i odjeća",
+      "sr": "Moda i odeća",
+      "sl": "Moda in oblačila",
+      "en": "Fashion and clothing",
+      "cnr": "Moda i odjeća"
+    }
+  },
+  {
+    "value": "Food",
+    "labels": {
+      "bs": "Hrana i piće",
+      "hr": "Hrana i piće",
+      "sr": "Hrana i piće",
+      "sl": "Hrana in pijača",
+      "en": "Food and drinks",
+      "cnr": "Hrana i piće"
+    }
+  },
+  {
+    "value": "Lifestyle",
+    "labels": {
+      "bs": "Životni stil",
+      "hr": "Životni stil",
+      "sr": "Životni stil",
+      "sl": "Življenjski slog",
+      "en": "Lifestyle",
+      "cnr": "Životni stil"
+    }
+  },
+  {
+    "value": "Travel",
+    "labels": {
+      "bs": "Putovanja i turizam",
+      "hr": "Putovanja i turizam",
+      "sr": "Putovanja i turizam",
+      "sl": "Potovanja in turizem",
+      "en": "Travel and tourism",
+      "cnr": "Putovanja i turizam"
+    }
+  },
+  {
+    "value": "Wellness",
+    "labels": {
+      "bs": "Zdravlje i dobrobit",
+      "hr": "Zdravlje i dobrobit",
+      "sr": "Zdravlje i dobrobit",
+      "sl": "Zdravje in dobro počutje",
+      "en": "Health and wellness",
+      "cnr": "Zdravlje i dobrobit"
+    }
+  },
+  {
+    "value": "Technology",
+    "labels": {
+      "bs": "Tehnologija i elektronika",
+      "hr": "Tehnologija i elektronika",
+      "sr": "Tehnologija i elektronika",
+      "sl": "Tehnologija in elektronika",
+      "en": "Technology and electronics",
+      "cnr": "Tehnologija i elektronika"
+    }
+  },
+  {
+    "value": "Fitness",
+    "labels": {
+      "bs": "Sport i fitness",
+      "hr": "Sport i fitness",
+      "sr": "Sport i fitnes",
+      "sl": "Šport in fitnes",
+      "en": "Sport and fitness",
+      "cnr": "Sport i fitnes"
+    }
+  },
+  {
+    "value": "Home",
+    "labels": {
+      "bs": "Dom i uređenje",
+      "hr": "Dom i uređenje",
+      "sr": "Dom i uređenje",
+      "sl": "Dom in oprema",
+      "en": "Home and interiors",
+      "cnr": "Dom i uređenje"
+    }
+  },
+  {
+    "value": "Hospitality",
+    "labels": {
+      "bs": "Ugostiteljstvo i smještaj",
+      "hr": "Ugostiteljstvo i smještaj",
+      "sr": "Ugostiteljstvo i smeštaj",
+      "sl": "Gostinstvo in nastanitve",
+      "en": "Hospitality and accommodation",
+      "cnr": "Ugostiteljstvo i smještaj"
+    }
+  },
+  {
+    "value": "Automotive",
+    "labels": {
+      "bs": "Automobili i mobilnost",
+      "hr": "Automobili i mobilnost",
+      "sr": "Automobili i mobilnost",
+      "sl": "Avtomobili in mobilnost",
+      "en": "Automotive and mobility",
+      "cnr": "Automobili i mobilnost"
+    }
+  },
+  {
+    "value": "Education",
+    "labels": {
+      "bs": "Obrazovanje i kursevi",
+      "hr": "Obrazovanje i tečajevi",
+      "sr": "Obrazovanje i kursevi",
+      "sl": "Izobraževanje in tečaji",
+      "en": "Education and courses",
+      "cnr": "Obrazovanje i kursevi"
+    }
+  },
+  {
+    "value": "Finance",
+    "labels": {
+      "bs": "Finansije i osiguranje",
+      "hr": "Financije i osiguranje",
+      "sr": "Finansije i osiguranje",
+      "sl": "Finance in zavarovanje",
+      "en": "Finance and insurance",
+      "cnr": "Finansije i osiguranje"
+    }
+  },
+  {
+    "value": "Real estate",
+    "labels": {
+      "bs": "Nekretnine",
+      "hr": "Nekretnine",
+      "sr": "Nekretnine",
+      "sl": "Nepremičnine",
+      "en": "Real estate",
+      "cnr": "Nekretnine"
+    }
+  },
+  {
+    "value": "Retail",
+    "labels": {
+      "bs": "Trgovina i e-trgovina",
+      "hr": "Trgovina i e-trgovina",
+      "sr": "Trgovina i e-trgovina",
+      "sl": "Trgovina in e-trgovina",
+      "en": "Retail and e-commerce",
+      "cnr": "Trgovina i e-trgovina"
+    }
+  },
+  {
+    "value": "Entertainment",
+    "labels": {
+      "bs": "Zabava, muzika i film",
+      "hr": "Zabava, glazba i film",
+      "sr": "Zabava, muzika i film",
+      "sl": "Zabava, glasba in film",
+      "en": "Entertainment, music and film",
+      "cnr": "Zabava, muzika i film"
+    }
+  },
+  {
+    "value": "Gaming",
+    "labels": {
+      "bs": "Igre i e-sport",
+      "hr": "Igre i e-sport",
+      "sr": "Igre i e-sport",
+      "sl": "Igre in e-šport",
+      "en": "Gaming and esports",
+      "cnr": "Igre i e-sport"
+    }
+  },
+  {
+    "value": "Family",
+    "labels": {
+      "bs": "Porodica i djeca",
+      "hr": "Obitelj i djeca",
+      "sr": "Porodica i deca",
+      "sl": "Družina in otroci",
+      "en": "Family and children",
+      "cnr": "Porodica i djeca"
+    }
+  },
+  {
+    "value": "Pets",
+    "labels": {
+      "bs": "Kućni ljubimci",
+      "hr": "Kućni ljubimci",
+      "sr": "Kućni ljubimci",
+      "sl": "Hišni ljubljenčki",
+      "en": "Pets",
+      "cnr": "Kućni ljubimci"
+    }
+  },
+  {
+    "value": "Sustainability",
+    "labels": {
+      "bs": "Održivost i ekologija",
+      "hr": "Održivost i ekologija",
+      "sr": "Održivost i ekologija",
+      "sl": "Trajnost in ekologija",
+      "en": "Sustainability and environment",
+      "cnr": "Održivost i ekologija"
+    }
+  },
+  {
+    "value": "Business",
+    "labels": {
+      "bs": "Poslovne usluge",
+      "hr": "Poslovne usluge",
+      "sr": "Poslovne usluge",
+      "sl": "Poslovne storitve",
+      "en": "Business services",
+      "cnr": "Poslovne usluge"
+    }
+  },
+  {
+    "value": "Marketing",
+    "labels": {
+      "bs": "Marketing i mediji",
+      "hr": "Marketing i mediji",
+      "sr": "Marketing i mediji",
+      "sl": "Marketing in mediji",
+      "en": "Marketing and media",
+      "cnr": "Marketing i mediji"
+    }
+  },
+  {
+    "value": "Software",
+    "labels": {
+      "bs": "Softver i digitalne usluge",
+      "hr": "Softver i digitalne usluge",
+      "sr": "Softver i digitalne usluge",
+      "sl": "Programska oprema in digitalne storitve",
+      "en": "Software and digital services",
+      "cnr": "Softver i digitalne usluge"
+    }
+  },
+  {
+    "value": "Art",
+    "labels": {
+      "bs": "Umjetnost i kultura",
+      "hr": "Umjetnost i kultura",
+      "sr": "Umetnost i kultura",
+      "sl": "Umetnost in kultura",
+      "en": "Art and culture",
+      "cnr": "Umjetnost i kultura"
+    }
+  },
+  {
+    "value": "Events",
+    "labels": {
+      "bs": "Događaji i organizacija",
+      "hr": "Događaji i organizacija",
+      "sr": "Događaji i organizacija",
+      "sl": "Dogodki in organizacija",
+      "en": "Events and organization",
+      "cnr": "Događaji i organizacija"
+    }
+  },
+  {
+    "value": "Nonprofit",
+    "labels": {
+      "bs": "Udruženja i neprofitni sektor",
+      "hr": "Udruge i neprofitni sektor",
+      "sr": "Udruženja i neprofitni sektor",
+      "sl": "Društva in neprofitni sektor",
+      "en": "Nonprofit and associations",
+      "cnr": "Udruženja i neprofitni sektor"
+    }
+  },
+  {
+    "value": "Industry",
+    "labels": {
+      "bs": "Industrija i proizvodnja",
+      "hr": "Industrija i proizvodnja",
+      "sr": "Industrija i proizvodnja",
+      "sl": "Industrija in proizvodnja",
+      "en": "Industry and manufacturing",
+      "cnr": "Industrija i proizvodnja"
+    }
+  },
+  {
+    "value": "Photography",
+    "labels": {
+      "bs": "Fotografija",
+      "hr": "Fotografija",
+      "sr": "Fotografija",
+      "sl": "Fotografija",
+      "en": "Photography",
+      "cnr": "Fotografija"
+    }
+  },
+  {
+    "value": "Videography",
+    "labels": {
+      "bs": "Video produkcija",
+      "hr": "Video produkcija",
+      "sr": "Video produkcija",
+      "sl": "Video produkcija",
+      "en": "Video production",
+      "cnr": "Video produkcija"
+    }
+  },
+  {
+    "value": "Music",
+    "labels": {
+      "bs": "Muzika",
+      "hr": "Glazba",
+      "sr": "Muzika",
+      "sl": "Glasba",
+      "en": "Music",
+      "cnr": "Muzika"
+    }
+  },
+  {
+    "value": "Dance",
+    "labels": {
+      "bs": "Ples",
+      "hr": "Ples",
+      "sr": "Ples",
+      "sl": "Ples",
+      "en": "Dance",
+      "cnr": "Ples"
+    }
+  },
+  {
+    "value": "Books",
+    "labels": {
+      "bs": "Knjige i književnost",
+      "hr": "Knjige i književnost",
+      "sr": "Knjige i književnost",
+      "sl": "Knjige in književnost",
+      "en": "Books and literature",
+      "cnr": "Knjige i književnost"
+    }
+  },
+  {
+    "value": "Science",
+    "labels": {
+      "bs": "Nauka i istraživanje",
+      "hr": "Znanost i istraživanje",
+      "sr": "Nauka i istraživanje",
+      "sl": "Znanost in raziskovanje",
+      "en": "Science and research",
+      "cnr": "Nauka i istraživanje"
+    }
+  },
+  {
+    "value": "DIY",
+    "labels": {
+      "bs": "Uradi sam i zanati",
+      "hr": "Uradi sam i obrti",
+      "sr": "Uradi sam i zanati",
+      "sl": "Naredi sam in obrti",
+      "en": "DIY and crafts",
+      "cnr": "Uradi sam i zanati"
+    }
+  },
+  {
+    "value": "Gardening",
+    "labels": {
+      "bs": "Vrtlarstvo i biljke",
+      "hr": "Vrtlarstvo i biljke",
+      "sr": "Baštovanstvo i biljke",
+      "sl": "Vrtnarstvo in rastline",
+      "en": "Gardening and plants",
+      "cnr": "Vrtlarstvo i biljke"
+    }
+  },
+  {
+    "value": "Outdoors",
+    "labels": {
+      "bs": "Priroda i aktivnosti na otvorenom",
+      "hr": "Priroda i aktivnosti na otvorenom",
+      "sr": "Priroda i aktivnosti na otvorenom",
+      "sl": "Narava in dejavnosti na prostem",
+      "en": "Nature and outdoor activities",
+      "cnr": "Priroda i aktivnosti na otvorenom"
+    }
+  },
+  {
+    "value": "Agriculture",
+    "labels": {
+      "bs": "Poljoprivreda",
+      "hr": "Poljoprivreda",
+      "sr": "Poljoprivreda",
+      "sl": "Kmetijstvo",
+      "en": "Agriculture",
+      "cnr": "Poljoprivreda"
+    }
+  },
+  {
+    "value": "Construction",
+    "labels": {
+      "bs": "Građevinarstvo",
+      "hr": "Građevinarstvo",
+      "sr": "Građevinarstvo",
+      "sl": "Gradbeništvo",
+      "en": "Construction",
+      "cnr": "Građevinarstvo"
+    }
+  },
+  {
+    "value": "Telecommunications",
+    "labels": {
+      "bs": "Telekomunikacije",
+      "hr": "Telekomunikacije",
+      "sr": "Telekomunikacije",
+      "sl": "Telekomunikacije",
+      "en": "Telecommunications",
+      "cnr": "Telekomunikacije"
+    }
+  },
+  {
+    "value": "Logistics",
+    "labels": {
+      "bs": "Transport i logistika",
+      "hr": "Prijevoz i logistika",
+      "sr": "Prevoz i logistika",
+      "sl": "Prevoz in logistika",
+      "en": "Transport and logistics",
+      "cnr": "Transport i logistika"
+    }
+  },
+  {
+    "value": "Legal",
+    "labels": {
+      "bs": "Pravo i pravne usluge",
+      "hr": "Pravo i pravne usluge",
+      "sr": "Pravo i pravne usluge",
+      "sl": "Pravo in pravne storitve",
+      "en": "Law and legal services",
+      "cnr": "Pravo i pravne usluge"
+    }
+  },
+  {
+    "value": "HR",
+    "labels": {
+      "bs": "Karijera i ljudski resursi",
+      "hr": "Karijera i ljudski resursi",
+      "sr": "Karijera i ljudski resursi",
+      "sl": "Kariera in človeški viri",
+      "en": "Careers and human resources",
+      "cnr": "Karijera i ljudski resursi"
+    }
+  },
+  {
+    "value": "Consulting",
+    "labels": {
+      "bs": "Savjetovanje i poduzetništvo",
+      "hr": "Savjetovanje i poduzetništvo",
+      "sr": "Savetovanje i preduzetništvo",
+      "sl": "Svetovanje in podjetništvo",
+      "en": "Consulting and entrepreneurship",
+      "cnr": "Savjetovanje i preduzetništvo"
+    }
+  },
+  {
+    "value": "Handmade",
+    "labels": {
+      "bs": "Ručni rad i lokalni proizvodi",
+      "hr": "Ručni rad i lokalni proizvodi",
+      "sr": "Ručni rad i lokalni proizvodi",
+      "sl": "Ročna dela in lokalni izdelki",
+      "en": "Handmade and local products",
+      "cnr": "Ručni rad i lokalni proizvodi"
+    }
+  },
+  {
+    "value": "Weddings",
+    "labels": {
+      "bs": "Vjenčanja i proslave",
+      "hr": "Vjenčanja i proslave",
+      "sr": "Venčanja i proslave",
+      "sl": "Poroke in praznovanja",
+      "en": "Weddings and celebrations",
+      "cnr": "Vjenčanja i proslave"
+    }
+  },
+  {
+    "value": "Accessibility",
+    "labels": {
+      "bs": "Pristupačnost i inkluzija",
+      "hr": "Pristupačnost i uključivost",
+      "sr": "Pristupačnost i inkluzija",
+      "sl": "Dostopnost in vključevanje",
+      "en": "Accessibility and inclusion",
+      "cnr": "Pristupačnost i inkluzija"
+    }
+  },
+  {
+    "value": "Design",
+    "labels": {
+      "bs": "Dizajn i arhitektura",
+      "hr": "Dizajn i arhitektura",
+      "sr": "Dizajn i arhitektura",
+      "sl": "Oblikovanje in arhitektura",
+      "en": "Design and architecture",
+      "cnr": "Dizajn i arhitektura"
+    }
+  },
+  {
+    "value": "Other",
+    "labels": {
+      "bs": "Ostalo",
+      "hr": "Ostalo",
+      "sr": "Ostalo",
+      "sl": "Drugo",
+      "en": "Other",
+      "cnr": "Ostalo"
+    }
+  }
+]

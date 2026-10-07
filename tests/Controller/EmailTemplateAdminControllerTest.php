@@ -54,6 +54,7 @@ final class EmailTemplateAdminControllerTest extends WebTestCase
                 'registered',
                 'approval',
                 'contact',
+                'subscribed',
                 'application_received',
                 'creator_inquiry_received',
                 'creator_inquiry_accepted',
@@ -176,15 +177,15 @@ final class EmailTemplateAdminControllerTest extends WebTestCase
             self::assertContains('footer', $templates[4]['variables']);
             self::assertSame($locale, $templates[4]['locale']);
             self::assertSame($contactHeadings[$locale], $templates[4]['preview']['heading']);
-            self::assertSame($applicationSubjects[$locale], $templates[5]['subject']);
-            self::assertSame($inquirySubjects[$locale], $templates[6]['subject']);
-            self::assertContains('details', $templates[6]['variables']);
-            self::assertSame($acceptedInquirySubjects[$locale], $templates[7]['subject']);
+            self::assertSame($applicationSubjects[$locale], $templates[6]['subject']);
+            self::assertSame($inquirySubjects[$locale], $templates[7]['subject']);
             self::assertContains('details', $templates[7]['variables']);
-            self::assertSame($hiredSubjects[$locale], $templates[8]['subject']);
-            self::assertSame($reminderSubjects[$locale], $templates[9]['subject']);
-            self::assertContains('details', $templates[5]['variables']);
-            self::assertSame($locale, $templates[9]['locale']);
+            self::assertSame($acceptedInquirySubjects[$locale], $templates[8]['subject']);
+            self::assertContains('details', $templates[8]['variables']);
+            self::assertSame($hiredSubjects[$locale], $templates[9]['subject']);
+            self::assertSame($reminderSubjects[$locale], $templates[10]['subject']);
+            self::assertContains('details', $templates[6]['variables']);
+            self::assertSame($locale, $templates[10]['locale']);
         }
 
         $htmlBody = '<html><body><h1>{{heading}}</h1><a href="{{actionUrl}}">{{buttonLabel}}</a></body></html>';

@@ -140,6 +140,38 @@ final class BackgroundPipelineTest extends KernelTestCase
         self::assertSame('completed', $this->db->fetchOne('SELECT status FROM background_job WHERE id = ?', [$job['id']]));
     }
 
+    public function testCityAndSecondaryIndustryChangesInvalidateAndRefreshSearchIndexes(): void
+    {
+        $em = self::getContainer()->get(EntityManagerInterface::class);
+        $em->getEventManager()->addEventListener(['onFlush', 'postFlush'], new \App\EventSubscriber\IndexChangesSubscriber($this->jobs, true));
+        $owner = new User('index-city@example.test', 'ROLE_CREATOR');
+        $owner->setPassword('unused');
+        $owner->setCity('Zenica');
+        $creator = new \App\Entity\Creator('index-city', 'Creator', 'Travel', 'Old duplicate', '', []);
+        $owner->setCreator($creator);
+        $company = new \App\Entity\Company('index-industries', 'Company', 'Technology');
+        $company->setIndustries(['Technology', 'Fashion']);
+        foreach ([$owner, $creator, $company] as $entity) {
+            $em->persist($entity);
+        }
+        $em->flush();
+        $indexer = self::getContainer()->get(\App\Background\DirectoryIndexer::class);
+        $indexer->index('creator', [$creator->getId()]);
+        $indexer->index('company', [$company->getId()]);
+        self::assertStringContainsString('zenica', $this->db->fetchOne("SELECT search_text FROM directory_index WHERE kind = 'creator'"));
+        self::assertStringContainsString('fashion', $this->db->fetchOne("SELECT search_text FROM directory_index WHERE kind = 'company'"));
+        $owner->setCity('Mostar');
+        $company->setIndustries(['Technology', 'Food']);
+        $em->flush();
+        self::assertSame(0, (int) $this->db->fetchOne('SELECT COUNT(*) FROM directory_index'));
+        $indexer->index('creator', [$creator->getId()]);
+        $indexer->index('company', [$company->getId()]);
+        self::assertStringContainsString('mostar', $this->db->fetchOne("SELECT search_text FROM directory_index WHERE kind = 'creator'"));
+        $text = $this->db->fetchOne("SELECT search_text FROM directory_index WHERE kind = 'company'");
+        self::assertStringContainsString('food', $text);
+        self::assertStringNotContainsString('fashion', $text);
+    }
+
     public function testIndexingAndSitemapGenerateRealArtifactsFromBoundedSourceQueries(): void
     {
         $em = self::getContainer()->get(EntityManagerInterface::class);
