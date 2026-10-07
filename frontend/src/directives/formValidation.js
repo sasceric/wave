@@ -116,6 +116,13 @@ function renderError(field, result, state) {
   container(field).classList.add('has-field-error')
 }
 
+function resetValidation(form) {
+  const state = states.get(form)
+  if (!state) return
+  state.submitted = false
+  for (const field of state.errors.keys()) renderError(field, null, state)
+}
+
 export function validateForm(form, focus = true) {
   const state = states.get(form)
   if (!state) return true
@@ -142,17 +149,21 @@ export default {
     states.set(form, state)
     form.noValidate = true
     state.submit = (event) => {
-      state.submitted = true
-      if (!validateForm(form)) {
+      const valid = validateForm(form)
+      // After a valid submit, reactive updates may clear fields for the next draft.
+      state.submitted = !valid
+      if (!valid) {
         event.preventDefault()
         event.stopImmediatePropagation()
       }
     }
     state.update = () => { if (state.submitted) validateForm(form, false) }
+    state.reset = () => resetValidation(form)
     form.addEventListener('submit', state.submit, true)
     form.addEventListener('input', state.update)
     form.addEventListener('change', state.update)
     form.addEventListener('focusout', state.update)
+    form.addEventListener('reset', state.reset)
     decorate(form)
   },
   updated(form) {
@@ -166,6 +177,7 @@ export default {
     form.removeEventListener('input', state.update)
     form.removeEventListener('change', state.update)
     form.removeEventListener('focusout', state.update)
+    form.removeEventListener('reset', state.reset)
     form.noValidate = state.originalNoValidate
     states.delete(form)
   },

@@ -108,6 +108,12 @@ checks. The metadata loader uses a disconnected PostgreSQL configuration, so it
 needs no database credentials. PHPDoc is treated as a hint so runtime input
 validation is still checked. There is no suppressed historical-error baseline.
 The validation workflow also runs tests and the frontend production build.
+The shared `formValidation` directive validates every submit, then disarms automatic
+revalidation after a valid submit. This lets successful chat, invitation and campaign
+handlers clear their drafts without showing false required-field errors. Invalid
+submissions retain live correction feedback; native form resets clear validation
+messages and accessibility error state. `formValidation.test.js` covers native and
+custom fields, valid submit/clear cycles, invalid retries and resets.
 See `docs/performance-baseline.md` for pagination, measured local performance,
 the reproducible synthetic benchmark and deployment requirements.
 
