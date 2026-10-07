@@ -3,6 +3,7 @@ import { computed } from 'vue'
 import { Camera, ExternalLink, Handshake, MapPin, MessageCircleQuestion, Pencil, Images, UsersRound } from '@lucide/vue'
 import { useI18n } from 'vue-i18n'
 import LocalizedLink from '../shared/LocalizedLink.vue'
+import CreditBalanceLink from './CreditBalanceLink.vue'
 import SwitchField from '../shared/SwitchField.vue'
 import WaveLogo from '../shared/WaveLogo.vue'
 import { CREATOR_PLACEHOLDER } from '../../lib/marketplace'
@@ -42,6 +43,7 @@ const metrics = computed(() => [
         <h2>{{ name || t('account.title') }}</h2>
         <p class="account-profile-summary__email">{{ user.email }}</p>
         <p v-if="location" class="account-profile-summary__location"><MapPin :size="18" aria-hidden="true" />{{ location }}</p>
+        <CreditBalanceLink v-if="user.approved || user.isAdmin" class="account-profile-summary__credits" />
         <LocalizedLink v-if="profile.slug" class="account-profile-summary__public" :to="{ name: creator ? 'creator-profile' : 'company-profile', params: { slug: profile.slug } }">
           {{ t('account.viewPublicProfile') }}<ExternalLink :size="15" aria-hidden="true" />
         </LocalizedLink>

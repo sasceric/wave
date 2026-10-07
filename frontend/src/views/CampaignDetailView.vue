@@ -1,4 +1,6 @@
 <script setup>
+import CreditActionNotice from '../components/account/CreditActionNotice.vue'
+import { refreshCredits } from '../composables/useCredits'
 import CampaignHiringProgress from '../components/campaigns/CampaignHiringProgress.vue'
 import { campaignPlace } from '../lib/marketplace'
 import { onMounted, ref, watch } from 'vue'
@@ -18,6 +20,7 @@ const route = useRoute()
 const campaign = ref(null)
 const error = ref('')
 const applyError = ref('')
+const applying = ref(false)
 const applicationMessage = ref('')
 const applicationSent = ref(false)
 const applicationFormOpen = ref(false)
@@ -56,16 +59,21 @@ async function loadCampaign() {
 }
 
 async function applyToCampaign() {
+  if (applying.value) return
+  applying.value = true
   applyError.value = ''
   try {
     await apiRequest(`/campaigns/${encodeURIComponent(route.params.slug)}/applications`, {
       method: 'POST',
       body: { message: applicationMessage.value },
     })
+    refreshCredits().catch(() => {})
     applicationSent.value = true
     applicationMessage.value = ''
   } catch (cause) {
     applyError.value = cause.message
+  } finally {
+    applying.value = false
   }
 }
 
@@ -196,6 +204,7 @@ onMounted(loadCampaign)
                 {{ t('account.apply') }} <ArrowRight :size="17" aria-hidden="true" />
               </button>
               <form v-else v-form-validation @submit.prevent="applyToCampaign">
+                <CreditActionNotice action="application" />
                 <label class="field-label" for="application-message">{{ t('account.applicationMessage') }}</label>
                 <textarea
                   id="application-message"
@@ -213,6 +222,7 @@ onMounted(loadCampaign)
                   <button
                     class="button button--dark"
                     type="submit"
+                    :disabled="applying"
                   >
                     {{ t('account.sendApplication') }} <ArrowRight :size="17" aria-hidden="true" />
                   </button>

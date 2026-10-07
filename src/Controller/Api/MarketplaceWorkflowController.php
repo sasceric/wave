@@ -39,6 +39,7 @@ final class MarketplaceWorkflowController
         CsrfTokenManagerInterface $tokenManager,
         NotificationDelivery $notificationDelivery,
         AccountEmailSender $accountEmailSender,
+        \App\Credits\CreditService $credits,
     ): JsonResponse {
         $locale = LocaleContext::fromRequest($request);
         if ($locale === null) {
@@ -95,7 +96,18 @@ final class MarketplaceWorkflowController
             );
             $entityManager->persist($notification);
         }
-        $entityManager->flush();
+        try {
+            $credits->spend($user, 'application', function () use ($entityManager, $application, $campaign): array {
+                if ($entityManager->getRepository(Application::class)->findOneBy(['campaign' => $campaign, 'creator' => $application->getCreator()]) instanceof Application) {
+                    throw new \App\Credits\CreditException('already_applied', 409);
+                }
+                $entityManager->flush();
+
+                return ['id' => $application->getId(), 'title' => $campaign->getTitle()];
+            });
+        } catch (\App\Credits\CreditException $error) {
+            return new JsonResponse(['error' => ApiMessages::get($error->key, $locale), 'code' => $error->key], $error->status);
+        }
         if ($notification instanceof Notification) {
             $notificationDelivery->deliver($notification);
         }

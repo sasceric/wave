@@ -142,7 +142,7 @@ test('the sidebar omits media kit and messages while retaining account workflow 
   })
   assert.ok(!state.navigationItems.value.some((item) => ['account', 'messages'].includes(item.route)))
   assert.ok(state.navigationItems.value.some((item) => item.route === 'account-applications'))
-  assert.deepEqual(Array.from(state.exploreItems.value, (item) => item.route), ['creators'])
+  assert.deepEqual(Array.from(state.exploreItems.value, (item) => item.route), ['companies'])
 })
 
 test('the service worker displays a push and tells open windows to reload authorized inbox data', async () => {

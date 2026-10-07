@@ -107,7 +107,7 @@
     background: #edf0e7;
 
     > img { width: 100%; height: 100%; object-fit: cover; }
-    > .wave-logo { width: 70%; height: 70%; object-fit: contain; }
+    > .wave-logo { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
     &--large { width: 48px; height: 48px; }
   }
 
@@ -647,3 +647,6 @@
     }
   }
 }
+
+.site-header:has(.header-creator-search.is-open),
+.site-header:has(.header-creator-search.is-expanded) { z-index: 120; }

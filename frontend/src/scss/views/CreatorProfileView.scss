@@ -56,6 +56,10 @@
 .profile-column, .profile-sidebar {
   min-width: 0;
 }
+.profile-sidebar {
+  display: grid;
+  grid-template-rows: minmax(calc(var(--profile-hero-height) - 32px + 28px), auto) auto;
+}
 .profile-main {
   display: flex; min-width: 0; flex-direction: column;
   > .profile-heading { order: 1; min-height: calc(var(--profile-hero-height) - 32px + 28px); align-items: flex-start; padding-top: 20px; }
@@ -632,6 +636,7 @@
   .profile-tagline { font-size: 17px; }
   .profile-heading .eyebrow { font-size: 9px; }
   .profile-sidebar-details { padding-top: 22px; }
+  .profile-sidebar { display: block; }
   .profile-faqs {
     padding: 0;
   }

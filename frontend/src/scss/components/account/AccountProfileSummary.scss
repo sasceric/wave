@@ -295,3 +295,13 @@
     transform: translateX(19px);
   }
 }
+
+.account-profile-summary__credits.account-sidebar__link {
+  min-height: 28px;
+  width: max-content;
+  max-width: 100%;
+  padding: 4px 0;
+  gap: 8px;
+  font-size: 12px;
+  .account-sidebar__badge { border-radius: 12px; min-width: 28px; }
+}

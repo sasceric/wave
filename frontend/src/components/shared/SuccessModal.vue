@@ -1,12 +1,13 @@
 <script setup>
 import { nextTick, ref, useId, watch } from 'vue'
-import { Check } from '@lucide/vue'
+import { Check, X } from '@lucide/vue'
 
 const props = defineProps({
   open: { type: Boolean, required: true },
   title: { type: String, required: true },
   message: { type: String, required: true },
   closeLabel: { type: String, required: true },
+  showClose: { type: Boolean, default: false },
 })
 
 const emit = defineEmits(['update:open'])
@@ -37,11 +38,12 @@ function close() {
     @click.self="close"
   >
     <section class="success-modal__content">
-      <span class="success-modal__icon"><Check :size="20" aria-hidden="true" /></span>
+      <button v-if="showClose" class="success-modal__close" type="button" :aria-label="closeLabel" @click="close"><X :size="19" aria-hidden="true" /></button>
+      <span class="success-modal__icon"><slot name="icon"><Check :size="20" aria-hidden="true" /></slot></span>
       <h2 :id="`${id}-title`">{{ title }}</h2>
       <p>{{ message }}</p>
       <footer class="success-modal__actions">
-        <button class="button button--dark" type="button" @click="close">{{ closeLabel }}</button>
+        <slot name="actions"><button class="button button--dark" type="button" @click="close">{{ closeLabel }}</button></slot>
       </footer>
     </section>
   </dialog>

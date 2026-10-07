@@ -199,6 +199,8 @@ watch(
       home: ['homeTitle', 'homeDescription'],
       messages: ['privateTitle', 'privateDescription'],
       'admin-tools': ['privateTitle', 'privateDescription'],
+      'account-credits': ['privateTitle', 'privateDescription'],
+      'admin-credit-settings': ['privateTitle', 'privateDescription'],
       creators: ['creatorsTitle', 'creatorsDescription'],
       'creator-profile': ['creatorsTitle', 'creatorsDescription'],
       companies: ['companiesTitle', 'companiesDescription'],
@@ -211,6 +213,7 @@ watch(
     }
     const [titleKey, descriptionKey] = pageKeys[routeName] || ['notFoundTitle', 'notFoundDescription']
     const noindex = ['account', 'messages', 'verify-email', 'reset-password', 'moderation', 'admin', 'admin-tools'].includes(routeName)
+      || Boolean(route.meta.accountSection || route.meta.adminSection)
       || !pageKeys[routeName]
 
     updateSeo({

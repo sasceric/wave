@@ -31,7 +31,9 @@
     "admin-campaigns": "admin/kampanje",
     "admin-email-templates": "admin/email-predlosci",
     "admin-subscribers": "admin/pretplatnici",
-    "admin-tools": "admin/alati"
+    "admin-tools": "admin/alati",
+    "account-credits": "racun/krediti",
+    "admin-credit-settings": "admin/krediti"
   },
   "hr": {
     "home": "",
@@ -65,7 +67,9 @@
     "admin-campaigns": "admin/kampanje",
     "admin-email-templates": "admin/predlosci-e-poste",
     "admin-subscribers": "admin/pretplatnici",
-    "admin-tools": "admin/alati"
+    "admin-tools": "admin/alati",
+    "account-credits": "racun/krediti",
+    "admin-credit-settings": "admin/krediti"
   },
   "sr": {
     "home": "",
@@ -99,7 +103,9 @@
     "admin-campaigns": "admin/kampanje",
     "admin-email-templates": "admin/email-sabloni",
     "admin-subscribers": "admin/pretplatnici",
-    "admin-tools": "admin/alati"
+    "admin-tools": "admin/alati",
+    "account-credits": "nalog/krediti",
+    "admin-credit-settings": "admin/krediti"
   },
   "cnr": {
     "home": "",
@@ -133,7 +139,9 @@
     "admin-campaigns": "admin/kampanje",
     "admin-email-templates": "admin/email-predlozi",
     "admin-subscribers": "admin/pretplatnici",
-    "admin-tools": "admin/alati"
+    "admin-tools": "admin/alati",
+    "account-credits": "nalog/krediti",
+    "admin-credit-settings": "admin/krediti"
   },
   "sl": {
     "home": "",
@@ -167,7 +175,9 @@
     "admin-campaigns": "admin/kampanje",
     "admin-email-templates": "admin/e-postne-predloge",
     "admin-subscribers": "admin/narocniki",
-    "admin-tools": "admin/orodja"
+    "admin-tools": "admin/orodja",
+    "account-credits": "racun/krediti",
+    "admin-credit-settings": "admin/krediti"
   },
   "en": {
     "home": "",
@@ -201,6 +211,8 @@
     "admin-campaigns": "admin/campaigns",
     "admin-email-templates": "admin/email-templates",
     "admin-subscribers": "admin/subscribers",
-    "admin-tools": "admin/tools"
+    "admin-tools": "admin/tools",
+    "account-credits": "account/credits",
+    "admin-credit-settings": "admin/credit-settings"
   }
 }

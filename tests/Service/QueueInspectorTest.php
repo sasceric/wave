@@ -3,6 +3,7 @@
 namespace App\Tests\Service;
 
 use App\Service\QueueInspector;
+use App\Background\JobCatalog;
 use Doctrine\DBAL\Connection;
 use PHPUnit\Framework\TestCase;
 
@@ -13,8 +14,8 @@ final class QueueInspectorTest extends TestCase
         $db = $this->createMock(Connection::class);
         $db->expects(self::once())->method('fetchAllAssociative')->willReturn([]);
         $rows = (new QueueInspector($db))->queues();
-        self::assertCount(21, $rows);
-        self::assertSame(array_fill(0, 21, 0), array_column($rows, 'count'));
+        self::assertCount(count(JobCatalog::TYPES) + 5, $rows);
+        self::assertSame(array_fill(0, count(JobCatalog::TYPES) + 5, 0), array_column($rows, 'count'));
     }
 
     public function testMessageAndTransportCountsOverlapAndIncludeDelayed(): void
@@ -38,6 +39,6 @@ final class QueueInspectorTest extends TestCase
         $rows = (new QueueInspector($db))->queues();
         self::assertSame([10, 10, 2, 2], array_slice(array_column($rows, 'count'), 0, 4));
         self::assertSame(['SendWebPushMessage', 'messenger.transport.push', 'SendEmailMessage', 'messenger.transport.mail'], array_slice(array_column($rows, 'id'), 0, 4));
-        self::assertSame(array_fill(0, 17, 0), array_slice(array_column($rows, 'count'), 4));
+        self::assertSame(array_fill(0, count(JobCatalog::TYPES) + 1, 0), array_slice(array_column($rows, 'count'), 4));
     }
 }

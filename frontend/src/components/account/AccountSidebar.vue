@@ -2,6 +2,7 @@
 import { computed, onBeforeUnmount, onMounted, watch } from 'vue'
 import {
   ExternalLink,
+  Coins,
   LogOut,
   Building2,
   ClipboardCheck,
@@ -20,6 +21,7 @@ import { ref } from 'vue'
 import { apiRequest } from '../../lib/api'
 import { setCurrentUser } from '../../composables/useCurrentUser'
 import { localizedPath } from '../../routePaths'
+import CreditBalanceLink from './CreditBalanceLink.vue'
 import WaveLogo from '../shared/WaveLogo.vue'
 import LocalizedLink from '../shared/LocalizedLink.vue'
 import LanguageSwitcher from '../shared/LanguageSwitcher.vue'
@@ -65,7 +67,9 @@ const adminMarketingItems = computed(() => navigationItems.value.filter((item) =
   item.group === 'marketing'
 )))
 const exploreItems = computed(() => [
-  { route: 'creators', label: t('app.creatorsNav'), icon: Users },
+  props.user
+    ? { route: 'companies', label: t('app.companies'), icon: Building2 }
+    : { route: 'creators', label: t('app.creatorsNav'), icon: Users },
 ])
 async function signOut() {
   if (signingOut.value) return
@@ -137,6 +141,7 @@ const navigationItems = computed(() => {
       { route: 'admin-companies', labelKey: 'adminDashboard.navCompanies', icon: Building2 },
       { route: 'admin-campaigns', labelKey: 'adminDashboard.navCampaigns', icon: Megaphone },
       { route: 'admin-email-templates', labelKey: 'adminDashboard.navEmailTemplates', icon: Mail },
+      { route: 'admin-credit-settings', labelKey: 'credits.adminTitle', icon: Coins },
       { route: 'admin-tools', labelKey: 'adminTools.title', icon: Wrench },
       {
         route: 'admin-subscribers',
@@ -211,6 +216,7 @@ const navigationItems = computed(() => {
     <div v-if="user" class="account-sidebar__group">
       <p class="account-sidebar__label">{{ t('account.sidebarSettings') }}</p>
       <LocalizedLink class="account-sidebar__link" :to="{ name: 'account' }" @click="closeMobileSidebar"><UserRound :size="20" aria-hidden="true" /><span class="account-sidebar__text">{{ t('app.account') }}</span></LocalizedLink>
+      <CreditBalanceLink v-if="user.approved || user.isAdmin" @click="closeMobileSidebar" />
       <button class="account-sidebar__link account-sidebar__link--signout" type="button" :disabled="signingOut" @click="signOut"><LogOut :size="20" aria-hidden="true" /><span class="account-sidebar__text">{{ t('account.signOut') }}</span></button>
       <p v-if="signOutError" class="account-sidebar__error" role="alert">{{ signOutError }}</p>
     </div>

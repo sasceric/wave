@@ -60,6 +60,7 @@ final class EmailTemplateAdminControllerTest extends WebTestCase
                 'creator_inquiry_accepted',
                 'creator_hired',
                 'unread_message_reminder',
+                'credits_activated',
             ],
             array_column($this->payload()['data']['templates'], 'key'),
         );

@@ -8,6 +8,7 @@ use RuntimeException;
 final class EmailTemplateRenderer
 {
     private const TEMPLATES = [
+        'credits_activated' => 'marketplace_notification.html',
         'account_action' => 'account_action.html',
         'verify' => 'account_action.html',
         'reset' => 'account_action.html',
@@ -23,6 +24,7 @@ final class EmailTemplateRenderer
     ];
 
     private const REQUIRED_VARIABLES = [
+        'credits_activated' => ['locale', 'preheader', 'eyebrow', 'heading', 'greeting', 'message', 'firstLabel', 'firstValue', 'secondLabel', 'secondValue', 'detailsLabel', 'details', 'applicationLabel', 'campaignLabel', 'buttonLabel', 'actionUrl', 'footer'],
         'account_action' => [
             'locale',
             'preheader',

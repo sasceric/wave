@@ -501,6 +501,16 @@ final class AccountEmailSender
         );
     }
 
+    public function sendCreditsActivated(User $user, int $grant, int $applicationCost, int $campaignCost, string $date): void
+    {
+        $copy = CreditsEmailCopy::forLocale($user->getPreferredLocale());
+        $this->sendMarketplaceEmail($user, 'credits_activated', 'account-credits', [
+            'firstValue' => $date,
+            'secondValue' => (string) $grant,
+            'details' => $copy['applicationLabel'] . ': ' . $applicationCost . "\n" . $copy['campaignLabel'] . ': ' . $campaignCost,
+        ]);
+    }
+
     public function defaultSubject(string $template, string $locale): string
     {
         return $this->copyFor($template, $locale)['subject'];
@@ -520,7 +530,9 @@ final class AccountEmailSender
             default => $locale,
         };
         $variables['actionUrl'] = 'https://wave.ba/example-action';
-        if ($template === 'application_received') {
+        if ($template === 'credits_activated') {
+            $variables += ['firstValue' => '2026-10-07', 'secondValue' => '50', 'details' => $variables['applicationLabel'] . ': 10' . "\n" . $variables['campaignLabel'] . ': 30'];
+        } elseif ($template === 'application_received') {
             $variables += [
                 'firstValue' => 'Amina Creator',
                 'secondValue' => 'Summer campaign',
@@ -665,6 +677,9 @@ final class AccountEmailSender
     private function copyFor(string $template, string $locale): array
     {
         $locale = $this->normalizedLocale($locale);
+        if ($template === 'credits_activated') {
+            return CreditsEmailCopy::forLocale($locale);
+        }
         $copy = self::COPY[$locale][$template]
             ?? self::NOTIFICATION_COPY[$locale][$template]
             ?? MarketplaceEmailCopy::forLocale($template, $locale);

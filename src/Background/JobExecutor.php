@@ -31,6 +31,7 @@ final class JobExecutor
         private readonly CachedSitemap $sitemap,
         private readonly DirectoryIndexer $indexer,
         private readonly ReminderBatch $reminders,
+        private readonly \App\Credits\CreditService $credits,
         private readonly LoggerInterface $logger,
         #[Autowire(service: 'cache.app')] private readonly PruneableInterface $cache,
         #[Autowire('%kernel.logs_dir%')] private readonly string $logsDirectory,
@@ -41,6 +42,7 @@ final class JobExecutor
     public function execute(string $type, array $payload, string $id): void
     {
         match ($type) {
+            'CreditsAnnouncementMessage' => $this->credits->announce((string) $payload['announcementId']),
             'SendEmailMessage' => $this->email($payload),
             'SendWebPushMessage' => $this->push->deliver($payload),
             'PublishRealtimeMessage' => $this->realtime($payload),

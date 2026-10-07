@@ -40,6 +40,7 @@ framework:
                     jitter: 0.2
             failed: 'doctrine://default?queue_name=failed&auto_setup=false'
         routing:
+            'App\Message\CreditsAnnouncementMessage': mail
             'App\Message\SendEmailMessage': mail
             'App\Message\SendWebPushMessage': push
             'App\Message\PublishRealtimeMessage': realtime

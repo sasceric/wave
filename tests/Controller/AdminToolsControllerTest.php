@@ -59,8 +59,9 @@ final class AdminToolsControllerTest extends WebTestCase
         self::assertResponseIsSuccessful();
         self::assertSame('unregistered', $this->payload()['data'][0]['status']);
         $this->client->request('GET', '/api/admin/tools/queues?locale=en');
-        self::assertCount(21, $this->payload()['data']);
-        self::assertSame(21, $this->payload()['meta']['total']);
+        self::assertCount(22, $this->payload()['data']);
+        self::assertSame(22, $this->payload()['meta']['total']);
+        self::assertContains('CreditsAnnouncementMessage', array_column($this->payload()['data'], 'id'));
         for ($index = 1; $index <= 35; ++$index) {
             file_put_contents($this->directory . '/prod.log', 'line ' . $index . "\n", FILE_APPEND);
         }

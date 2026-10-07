@@ -18,6 +18,7 @@ const previewDialog = ref(null)
 const htmlEditor = ref(null)
 
 const templateLabels = computed(() => ({
+  credits_activated: { title: t('credits.emailTitle'), description: t('credits.emailHint') },
   verify: {
     title: t('adminDashboard.verifyEmailTemplate'),
     description: t('adminDashboard.verifyEmailTemplateHint'),

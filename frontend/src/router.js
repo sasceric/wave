@@ -9,6 +9,8 @@ const notFoundView = () => import('./views/NotFoundView.vue')
 
 const routeViews = {
   home: () => import('./views/HomeView.vue'),
+  'account-credits': () => import('./views/CreditsView.vue'),
+  'admin-credit-settings': () => import('./views/AdminCreditSettingsView.vue'),
   account: accountView,
   'account-applications': accountView,
   'account-offers': accountView,
@@ -43,6 +45,7 @@ const routeViews = {
 }
 
 const adminSections = {
+  'admin-credit-settings': 'credits',
   admin: 'overview',
   'admin-registrations': 'registrations',
   'admin-homepage': 'homepage',
@@ -55,6 +58,7 @@ const adminSections = {
 }
 
 const accountSections = {
+  'account-credits': 'credits',
   account: 'profile',
   'account-applications': 'applications',
   'account-offers': 'offers',
@@ -98,6 +102,8 @@ const legacyPaths = [
   ['/account/inquiries', 'account-inquiries'],
   ['/account/bookmarks', 'account-bookmarks'],
   ['/account/invitations', 'account-invitations'],
+  ['/account/credits', 'account-credits'],
+  ['/admin/credit-settings', 'admin-credit-settings'],
   ['/account/campaigns', 'account-campaigns'],
   ['/account/campaigns/new', 'account-campaign-create'],
   ['/account/campaigns/:slug', 'account-campaign-detail'],

@@ -1,4 +1,6 @@
 <script setup>
+import CreditActionNotice from '../components/account/CreditActionNotice.vue'
+import { refreshCredits } from '../composables/useCredits'
 import AccountPage from '../components/account/AccountPage.vue'
 import CardGrid from '../components/shared/CardGrid.vue'
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
@@ -711,6 +713,7 @@ function cancelCampaignEditing() {
 }
 
 async function saveCampaign() {
+  if (busy.value) return
   busy.value = true
   error.value = ''
   notice.value = ''
@@ -735,6 +738,7 @@ async function saveCampaign() {
   try {
     const response = await apiRequest(path, { method: editingCampaignId.value ? 'PUT' : 'POST', body })
     const savedCampaign = response.data
+    refreshCredits().catch(() => {})
     const isNewCampaign = !editingCampaignId.value
     notice.value = t('account.campaignSaved')
     setCampaignForm()
@@ -746,7 +750,7 @@ async function saveCampaign() {
       })
     }
   } catch (cause) {
-    const fieldErrors = cause.fields
+    const fieldErrors = (cause.fields || [])
       .filter((field) => typeof field === 'string' && t(`account.campaignFieldErrors.${field}`) !== `account.campaignFieldErrors.${field}`)
       .map((field) => t(`account.campaignFieldErrors.${field}`))
     error.value = fieldErrors.length
@@ -1553,7 +1557,15 @@ onMounted(loadDashboard)
             </div>
             <div class="form-grid">
               <MultiSelect v-model="campaignForm.categories" :label="t('auth.category')" :options="categories" :placeholder="t('categories.all')" :search-placeholder="t('creatorDirectory.searchCategories')" :remove-label="t('account.remove')" required />
-              <SearchableSelect v-model="campaignForm.countryCode" :label="t('auth.country')" :options="countryOptions" :search-placeholder="t('companyDirectory.countryPlaceholder')" required />
+              <SearchableSelect
+                v-model="campaignForm.countryCode"
+                :label="t('auth.country')"
+                :options="countryOptions"
+                :placeholder="t('auth.selectCountry')"
+                :search-placeholder="t('companyDirectory.countryPlaceholder')"
+                :no-results-label="t('auth.noCountriesFound')"
+                required
+              />
               <label class="form-field"><span>{{ t('auth.city') }}</span><input v-model.trim="campaignForm.city" required minlength="2" maxlength="120" /></label>
             </div>
             <MultiSelect
@@ -1595,6 +1607,7 @@ onMounted(loadDashboard)
               <DatePicker v-model="campaignForm.closesAt" :label="t('account.closesAt')" required />
             </div>
             <SingleSelect v-if="editingCampaignId" v-model="campaignForm.status" :label="t('account.status')" :options="[{ value: 'open', label: t('account.open') }, { value: 'closed', label: t('account.closed') }, { value: 'finished', label: t('account.finished') }]" />
+            <CreditActionNotice v-if="!editingCampaignId" action="campaign" />
             <div class="button-row">
               <button class="button button--dark" type="submit" :disabled="busy || !user.emailVerified || !user.approved">
                 {{ editingCampaignId ? t('account.updateCampaign') : t('account.publish') }}

@@ -88,6 +88,7 @@ final class CampaignManagementController
         EntityManagerInterface $entityManager,
         Security $security,
         CsrfTokenManagerInterface $tokenManager,
+        \App\Credits\CreditService $credits,
     ): JsonResponse {
         $locale = LocaleContext::fromRequest($request);
         if ($locale === null) {
@@ -142,7 +143,15 @@ final class CampaignManagementController
             categories: $fields['categories'],
         );
         $entityManager->persist($campaign);
-        $entityManager->flush();
+        try {
+            $credits->spend($user, 'campaign', function () use ($entityManager, $campaign): array {
+                $entityManager->flush();
+
+                return ['id' => $campaign->getId(), 'title' => $campaign->getTitle()];
+            });
+        } catch (\App\Credits\CreditException $error) {
+            return new JsonResponse(['error' => ApiMessages::get($error->key, $locale), 'code' => $error->key], $error->status);
+        }
 
         return new JsonResponse(['data' => CampaignResource::fromEntity($campaign, $locale, categoryLabels: MarketplaceCategoryLabels::forLocale($entityManager, $locale), hiredCount: CampaignHiredCounts::forCampaign($entityManager, $campaign))], 201);
     }

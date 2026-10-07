@@ -23,6 +23,8 @@ export function routeNameFromCanonicalPath(path) {
   const staticRoutes = {
     '/': 'home',
     '/account': 'account',
+    '/account/credits': 'account-credits',
+    '/admin/credit-settings': 'admin-credit-settings',
     '/account/applications': 'account-applications',
     '/account/offers': 'account-offers',
     '/account/inquiries': 'account-inquiries',

@@ -6,6 +6,11 @@ final class ApiMessages
 {
     private const MESSAGES = [
         'bs' => [
+            'credit_insufficient' => 'Nemaš dovoljno kredita. Dodaj kredite na svom računu prije ove radnje.',
+            'credit_invalid_code' => 'Kod nije ispravan, već je iskorišten ili je poništen.',
+            'credit_invalid_settings' => 'Provjeri cijenu, troškove i broj besplatnih kredita.',
+            'credit_settings_changed' => 'Postavke su promijenjene. Osvježi stranicu prije spremanja.',
+            'credit_invalid_pack' => 'Odaberi paket od 50, 100 ili 200 kredita.',
             'campaign_chat_finished' => 'Kampanja je završena. Više nije moguće slati poruke u ovom razgovoru.',
             'campaign_finished' => 'Kampanja je završena. Više nije moguće mijenjati prijave, ponude ili pozive.',
             'campaign_chat_closed' => 'Kampanja je zatvorena. Više nije moguće slati poruke u ovom razgovoru.',
@@ -65,6 +70,11 @@ final class ApiMessages
             'newsletter_email_failed' => 'Potvrdni e-mail nije poslan. Pokušaj ponovo kasnije.',
         ],
         'hr' => [
+            'credit_insufficient' => 'Nemaš dovoljno kredita. Dodaj kredite na svom računu prije ove radnje.',
+            'credit_invalid_code' => 'Kod nije ispravan, već je iskorišten ili je poništen.',
+            'credit_invalid_settings' => 'Provjeri cijenu, troškove i broj besplatnih kredita.',
+            'credit_settings_changed' => 'Postavke su promijenjene. Osvježi stranicu prije spremanja.',
+            'credit_invalid_pack' => 'Odaberi paket od 50, 100 ili 200 kredita.',
             'campaign_chat_finished' => 'Kampanja je završena. Više nije moguće slati poruke u ovom razgovoru.',
             'campaign_finished' => 'Kampanja je završena. Više nije moguće mijenjati prijave, ponude ili pozive.',
             'campaign_chat_closed' => 'Kampanja je zatvorena. Više nije moguće slati poruke u ovom razgovoru.',
@@ -124,6 +134,11 @@ final class ApiMessages
             'newsletter_email_failed' => 'Potvrdna e-pošta nije poslana. Pokušaj ponovno kasnije.',
         ],
         'sr' => [
+            'credit_insufficient' => 'Nemaš dovoljno kredita. Dodaj kredite na svom nalogu pre ove radnje.',
+            'credit_invalid_code' => 'Kod nije ispravan, već je iskorišćen ili je poništen.',
+            'credit_invalid_settings' => 'Proveri cenu, troškove i broj besplatnih kredita.',
+            'credit_settings_changed' => 'Podešavanja su promenjena. Osveži stranicu pre čuvanja.',
+            'credit_invalid_pack' => 'Izaberi paket od 50, 100 ili 200 kredita.',
             'campaign_chat_finished' => 'Kampanja je završena. Više nije moguće slati poruke u ovom razgovoru.',
             'campaign_finished' => 'Kampanja je završena. Više nije moguće menjati prijave, ponude ili pozive.',
             'campaign_chat_closed' => 'Kampanja je zatvorena. Više nije moguće slati poruke u ovom razgovoru.',
@@ -183,6 +198,11 @@ final class ApiMessages
             'newsletter_email_failed' => 'Potvrdni e-mail nije poslat. Pokušaj ponovo kasnije.',
         ],
         'cnr' => [
+            'credit_insufficient' => 'Nemaš dovoljno kredita. Dodaj kredite na svom nalogu prije ove radnje.',
+            'credit_invalid_code' => 'Kod nije ispravan, već je iskorišćen ili je poništen.',
+            'credit_invalid_settings' => 'Provjeri cijenu, troškove i broj besplatnih kredita.',
+            'credit_settings_changed' => 'Podešavanja su promijenjena. Osvježi stranicu prije čuvanja.',
+            'credit_invalid_pack' => 'Izaberi paket od 50, 100 ili 200 kredita.',
             'campaign_chat_finished' => 'Kampanja je završena. Više nije moguće slati poruke u ovom razgovoru.',
             'campaign_finished' => 'Kampanja je završena. Više nije moguće mijenjati prijave, ponude ili pozive.',
             'campaign_chat_closed' => 'Kampanja je zatvorena. Više nije moguće slati poruke u ovom razgovoru.',
@@ -242,6 +262,11 @@ final class ApiMessages
             'newsletter_email_failed' => 'Potvrdni e-mail nije poslat. Pokušaj ponovo kasnije.',
         ],
         'sl' => [
+            'credit_insufficient' => 'Nimate dovolj kreditov. Pred tem dejanjem dodajte kredite na svoj račun.',
+            'credit_invalid_code' => 'Koda ni veljavna, je že uporabljena ali preklicana.',
+            'credit_invalid_settings' => 'Preverite ceno, stroške in število brezplačnih kreditov.',
+            'credit_settings_changed' => 'Nastavitve so se spremenile. Pred shranjevanjem osvežite stran.',
+            'credit_invalid_pack' => 'Izberite paket s 50, 100 ali 200 krediti.',
             'campaign_chat_finished' => 'Kampanja je končana. V tem pogovoru ni več mogoče pošiljati sporočil.',
             'campaign_finished' => 'Kampanja je končana. Prijav, ponudb ali povabil ni več mogoče spreminjati.',
             'campaign_chat_closed' => 'Kampanja je zaprta. V tem pogovoru ni več mogoče pošiljati sporočil.',
@@ -301,6 +326,11 @@ final class ApiMessages
             'newsletter_email_failed' => 'Potrditvenega e-poštnega sporočila ni bilo mogoče poslati. Poskusi znova pozneje.',
         ],
         'en' => [
+            'credit_insufficient' => 'You do not have enough credits. Add credits to your account before continuing.',
+            'credit_invalid_code' => 'This code is invalid, already redeemed or revoked.',
+            'credit_invalid_settings' => 'Check the price, action costs and free-credit amount.',
+            'credit_settings_changed' => 'Settings have changed. Refresh the page before saving.',
+            'credit_invalid_pack' => 'Choose a pack of 50, 100 or 200 credits.',
             'campaign_chat_finished' => 'This campaign is finished. You can no longer send messages in this conversation.',
             'campaign_finished' => 'This campaign is finished. Applications, offers and invitations can no longer be changed.',
             'campaign_chat_closed' => 'This campaign is closed. You can no longer send messages in this conversation.',

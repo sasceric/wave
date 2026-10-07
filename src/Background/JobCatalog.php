@@ -7,6 +7,7 @@ use App\Message\JobMessage;
 final class JobCatalog
 {
     public const TYPES = [
+        'CreditsAnnouncementMessage' => 'mail',
         'SendEmailMessage' => 'mail',
         'SendWebPushMessage' => 'push',
         'PublishRealtimeMessage' => 'realtime',
