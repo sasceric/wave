@@ -135,9 +135,9 @@
   }
 
   &__visibility {
-    padding: 17px;
-    border: 1px solid #e2e6df;
-    border-radius: 12px;
+    display: grid;
+    align-self: start;
+    gap: 10px;
 
     .switch-field {
       width: 100%;
@@ -275,8 +275,9 @@
   .switch-field {
     min-width: 0;
     max-width: none;
-    padding: 0;
-    border: 0;
+    padding: 12px 14px;
+    border: 1px solid #e2e6df;
+    border-radius: 12px;
     background: transparent;
   }
 

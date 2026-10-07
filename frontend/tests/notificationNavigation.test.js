@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import { MessageChannel } from 'node:worker_threads'
-import { requestClientNavigation, startNotificationNavigation } from '../src/lib/notificationNavigation.js'
+import { notificationDestination, requestClientNavigation, startNotificationNavigation } from '../src/lib/notificationNavigation.js'
 
 test('a resumed app routes the exact clicked conversation and acknowledges it', async () => {
   let handler
@@ -70,4 +70,15 @@ test('a closed client and a routing failure return control to native navigation'
   assert.equal(await requestClientNavigation({
     postMessage: (message, ports) => ports[0].postMessage({ type: 'WAVE_NOTIFICATION_NAVIGATION_FAILED' }),
   }, '/messages', { Channel: MessageChannel }), false)
+})
+
+test('creator decisions open company pages and incoming events open creator pages', () => {
+  for (const type of ['invitation_declined', 'offer_declined', 'offer_accepted', 'invitation_accepted', 'application_received']) {
+    assert.equal(notificationDestination({ type }).name, 'account-campaigns')
+  }
+  assert.equal(notificationDestination({ type: 'creator_inquiry_rejected' }).name, 'account-inquiries')
+  assert.equal(notificationDestination({ type: 'campaign_invitation' }).name, 'account-invitations')
+  assert.equal(notificationDestination({ type: 'offer_received' }).name, 'account-offers')
+  assert.equal(notificationDestination({ type: 'application_rejected' }).name, 'account-applications')
+  assert.deepEqual(notificationDestination({ type: 'invitation_accepted', conversationId: 42 }), { name: 'messages', query: { conversation: 42 } })
 })

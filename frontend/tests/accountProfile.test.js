@@ -61,6 +61,48 @@ test('Cancel restores nested profile details, tags and phone country without sav
   assert.equal(requests.length, 0)
 })
 
+test('editing from the campaign listing opens account details and preserves the campaign form', async () => {
+  const { state, requests } = await setupAccount()
+  const navigation = []
+  state.router.push = async (target) => { navigation.push(target) }
+  const campaign = {
+    id: 42, slug: 'summer-campaign', title: 'Summer campaign', summary: 'Campaign summary',
+    description: '<p>Campaign brief</p>', channels: ['Instagram'], deliverables: ['One video'],
+    category: 'Travel', city: 'Zenica', countryCode: 'BA', budgetMin: 300, budgetMax: 800,
+    currency: 'BAM', creatorCount: 4, closesAt: '2026-11-12T12:00:00Z', status: 'open',
+  }
+  await state.editListedCampaign(campaign)
+  assert.equal(navigation.length, 1)
+  assert.equal(navigation[0].params.slug, 'summer-campaign')
+  assert.equal(state.editingCampaignId.value, 42)
+  assert.equal(state.campaignForm.value.title, campaign.title)
+  assert.deepEqual(Array.from(state.campaignForm.value.channels), ['Instagram'])
+  state.campaignForm.value.channels.push('YouTube')
+  assert.deepEqual(campaign.channels, ['Instagram'])
+  assert.deepEqual(Array.from(state.campaignForm.value.deliverables), ['One video'])
+  state.campaignForm.value.deliverables.push('Another video')
+  assert.deepEqual(campaign.deliverables, ['One video'])
+  state.cancelCampaignEditing()
+  assert.equal(state.editingCampaignId.value, null)
+  assert.equal(requests.length, 0)
+})
+
+test('campaign create and edit submit selected channels as arrays', async () => {
+  const { state, requests } = await setupAccount()
+  assert.deepEqual(Array.from(state.campaignForm.value.channels), ['Instagram', 'TikTok'])
+  state.campaignForm.value.channels = ['YouTube', 'Instagram']
+  await state.saveCampaign()
+  assert.equal(requests[0].path, '/company/campaigns')
+  assert.equal(requests[0].method, 'POST')
+  assert.deepEqual(Array.from(requests[0].body.channels), ['YouTube', 'Instagram'])
+  state.editingCampaignId.value = 42
+  state.campaignForm.value.channels = ['TikTok']
+  await state.saveCampaign()
+  assert.equal(requests[1].path, '/company/campaigns/42')
+  assert.equal(requests[1].method, 'PUT')
+  assert.deepEqual(Array.from(requests[1].body.channels), ['TikTok'])
+})
+
 test('editing a section selects its tab and repeated edit actions retain the original Cancel snapshot', async () => {
   const { state, requests } = await setupAccount()
   state.startProfileEdit('portfolio')

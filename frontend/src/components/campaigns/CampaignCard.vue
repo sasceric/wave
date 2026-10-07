@@ -1,4 +1,5 @@
 <script setup>
+import CampaignHiringProgress from './CampaignHiringProgress.vue'
 import '../../scss/components/campaigns/CampaignCard.scss'
 import { computed, ref, watch } from 'vue'
 import { ArrowRight, Bookmark, Camera, CirclePlay, MapPin, Megaphone, Music2 } from '@lucide/vue'
@@ -155,7 +156,7 @@ async function confirmRemoveBookmark() {
     </div>
 
     <div class="campaign-card__footer">
-      <span>{{ t('campaignCard.spotsCloses', { count: campaign.creatorCount, date: formatDate(campaign.closesAt) }) }}</span>
+      <span><CampaignHiringProgress :campaign="campaign" /> · {{ t('campaignCard.closes', { date: formatDate(campaign.closesAt) }) }}</span>
       <RouterLink
         :to="{ name: 'campaign-detail', params: { slug: campaign.slug } }"
         class="campaign-card__cta button button--dark"

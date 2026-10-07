@@ -4,6 +4,7 @@ namespace App\Controller\Api;
 
 use App\Api\ApiAccess;
 use App\Api\CampaignConversationResource;
+use App\Api\CampaignHiredCounts;
 use App\Api\CreatorInquiryResource;
 use App\Entity\CampaignConversation;
 use App\Entity\CreatorInquiry;
@@ -45,7 +46,7 @@ final class InboxController
             }
             if ($thread instanceof CampaignConversation) {
                 $unread = $counter->conversations($user, $id);
-                $data = CampaignConversationResource::fromEntity($thread, $unread[$id] ?? 0, $locale);
+                $data = CampaignConversationResource::fromEntity($thread, $unread[$id] ?? 0, $locale, CampaignHiredCounts::forCampaign($entityManager, $thread->getCampaign()));
             } else {
                 $latest = $entityManager->getRepository(InquiryMessage::class)->findOneBy(['inquiry' => $thread], ['createdAt' => 'DESC', 'id' => 'DESC']);
                 $data = [...CreatorInquiryResource::fromEntity($thread, $user, $latest), 'unreadCount' => $counter->inquiryMessages($user, $id)];

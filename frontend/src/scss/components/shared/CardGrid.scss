@@ -13,7 +13,7 @@
 }
 
 .account-bookmarks-grid {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
 .campaign-grid {
@@ -44,6 +44,10 @@
 }
 
 @include breakpoints.down(1000px) {
+  .account-bookmarks-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .creator-grid {
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }

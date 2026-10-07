@@ -1,0 +1,150 @@
+@use '../../breakpoints';
+
+.company-campaign-list {
+  &__heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 20px;
+    margin-bottom: 30px;
+
+    .button {
+      min-height: 44px;
+      gap: 10px;
+      padding: 10px 18px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 500;
+    }
+  }
+
+  &__campaign {
+    width: 36%;
+  }
+
+  &__identity {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    min-width: 260px;
+  }
+
+  &__cover {
+    position: relative;
+    flex: 0 0 100px;
+    width: 100px;
+    height: 112px;
+    overflow: hidden;
+    border-radius: 10px;
+  }
+
+  &__cover-status {
+    position: absolute;
+    top: 6px;
+    left: 6px;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    max-width: calc(100% - 12px);
+    padding: 4px 6px;
+    border-radius: 20px;
+    color: var(--forest);
+    background: #fffefaf2;
+    font-size: 10px;
+  }
+
+  &__copy {
+    min-width: 0;
+
+    > a {
+      color: var(--forest);
+      font-size: 16px;
+      font-weight: 600;
+      text-decoration: none;
+      overflow-wrap: anywhere;
+
+      &:hover { text-decoration: underline; }
+    }
+
+    > p {
+      margin: 6px 0 10px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.5;
+      overflow-wrap: anywhere;
+    }
+  }
+
+  &__meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 12px;
+    margin-top: 8px;
+    font-size: 11px;
+
+    > span {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      min-width: 0;
+      overflow-wrap: anywhere;
+    }
+
+    svg { flex: 0 0 auto; }
+  }
+
+  &__deadline {
+    display: block;
+    margin: 5px 0 0 24px;
+    color: var(--muted);
+    font-size: 11px;
+  }
+
+  &__hired {
+    color: var(--forest);
+    font-size: 13px;
+  }
+
+  &__status--open { background: #e7f1e7; }
+  &__status--closed { background: #fce8d3; }
+  &__status--finished { background: #eeeee9; }
+  &__dot--open { background: #65ad88; }
+  &__dot--closed { background: #ee9364; }
+  &__dot--finished { background: #8b9691; }
+
+  .creator-offers__budget strong {
+    white-space: normal;
+  }
+
+  :deep(.admin-row-actions__trigger) {
+    min-width: 38px;
+    height: 38px;
+    border: 1px solid #bfc9c1;
+    border-radius: 8px;
+    background: transparent;
+  }
+}
+
+@include breakpoints.down(760px) {
+  .company-campaign-list {
+    &__identity {
+      min-width: 0;
+      align-items: flex-start;
+    }
+
+    &__cover {
+      flex-basis: 92px;
+      width: 92px;
+      height: 110px;
+    }
+
+    &__campaign {
+      width: auto;
+    }
+
+    .creator-offers__actions .button {
+      flex-grow: 1;
+    }
+  }
+}

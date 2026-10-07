@@ -2,6 +2,7 @@
 
 namespace App\Controller\Api;
 
+use App\Api\CampaignHiredCounts;
 use App\Api\ApiAccess;
 use App\Api\CampaignConversationResource;
 use App\Api\CampaignMessageResource;
@@ -61,12 +62,14 @@ final class CampaignMessagingController
             return new JsonResponse(['error' => ApiMessages::get('forbidden', $locale)], 403);
         }
 
+        $hiredCounts = CampaignHiredCounts::forCampaigns($entityManager, array_map(static fn (CampaignConversation $conversation): Campaign => $conversation->getCampaign(), $conversations));
         $unread = $counter->conversations($user);
         $data = array_map(
             fn (CampaignConversation $conversation): array => CampaignConversationResource::fromEntity(
                 $conversation,
                 $unread[$conversation->getId()] ?? 0,
                 $locale,
+                $hiredCounts[$conversation->getCampaign()->getId()] ?? 0,
             ),
             $conversations,
         );
@@ -102,8 +105,8 @@ final class CampaignMessagingController
         if (!$campaign instanceof Campaign) {
             return new JsonResponse(['error' => ApiMessages::get('campaign_not_found', $locale)], 404);
         }
-        if ($campaign->getStatus() === 'closed') {
-            return new JsonResponse(['error' => ApiMessages::get('campaign_chat_closed', $locale)], 409);
+        if (in_array($campaign->getStatus(), ['closed', 'finished'], true)) {
+            return new JsonResponse(['error' => ApiMessages::get($campaign->getStatus() === 'finished' ? 'campaign_chat_finished' : 'campaign_chat_closed', $locale)], 409);
         }
         $data = JsonPayload::fromRequest($request);
         $creatorId = is_array($data) ? ($data['creatorId'] ?? null) : null;
@@ -172,6 +175,7 @@ final class CampaignMessagingController
                 $conversation,
                 $this->unreadCount($entityManager, $conversation, $user),
                 $locale,
+                CampaignHiredCounts::forCampaign($entityManager, $conversation->getCampaign()),
             ),
         ]);
     }
@@ -211,6 +215,7 @@ final class CampaignMessagingController
             'data' => $receipt,
             'conversation' => CampaignConversationResource::fromEntity(
                 $conversation, $this->unreadCount($entityManager, $conversation, $user), $locale,
+                CampaignHiredCounts::forCampaign($entityManager, $conversation->getCampaign()),
             ),
         ]);
     }
@@ -241,8 +246,8 @@ final class CampaignMessagingController
         }
         $data = JsonPayload::fromRequest($request);
         $body = is_array($data) && is_string($data['body'] ?? null) ? trim($data['body']) : '';
-        if ($conversation->getCampaign()->getStatus() === 'closed') {
-            return new JsonResponse(['error' => ApiMessages::get('campaign_chat_closed', $locale)], 409);
+        if (in_array($conversation->getCampaign()->getStatus(), ['closed', 'finished'], true)) {
+            return new JsonResponse(['error' => ApiMessages::get($conversation->getCampaign()->getStatus() === 'finished' ? 'campaign_chat_finished' : 'campaign_chat_closed', $locale)], 409);
         }
         if ($data === null || mb_strlen($body) < 1 || mb_strlen($body) > 2000) {
             return new JsonResponse(['error' => ApiMessages::get('invalid_request', $locale)], 400);
@@ -334,6 +339,7 @@ final class CampaignMessagingController
                 $conversation,
                 $this->unreadCount($entityManager, $conversation, $sender),
                 $locale,
+                CampaignHiredCounts::forCampaign($entityManager, $conversation->getCampaign()),
             ),
             'message' => CampaignMessageResource::fromEntity($message),
         ], $isNew ? 201 : 200);

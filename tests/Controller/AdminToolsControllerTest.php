@@ -84,6 +84,25 @@ final class AdminToolsControllerTest extends WebTestCase
         }
     }
 
+    public function testTasksSortByNextExecutionWithUnscheduledTasksLast(): void
+    {
+        $this->client->loginUser($this->user(true), 'main');
+        $db = static::getContainer()->get(EntityManagerInterface::class)->getConnection();
+        foreach ([
+            ['UnreadMessageReminderTask', 'scheduled', '2030-10-07 12:00:00'],
+            ['SitemapGenerateTask', 'scheduled', '2030-10-07 08:00:00'],
+            ['QueueMaintenanceTask', 'scheduled', '2030-10-07 08:00:00'],
+            ['CachePruneTask', 'inactive', '2030-10-06 08:00:00'],
+        ] as [$name, $status, $next]) {
+            $db->insert('wave_scheduled_task', ['name' => $name, 'interval_seconds' => 300, 'status' => $status, 'next_run_at' => $next]);
+        }
+        $this->client->request('GET', '/api/admin/tools/tasks?locale=en');
+        self::assertResponseIsSuccessful();
+        $rows = $this->payload()['data'];
+        self::assertSame(['QueueMaintenanceTask', 'SitemapGenerateTask', 'UnreadMessageReminderTask'], array_slice(array_column($rows, 'name'), 0, 3));
+        self::assertSame(array_fill(0, 5, null), array_slice(array_column($rows, 'nextExpectedAt'), 3));
+    }
+
     public function testAdminTaskWritesRequireCsrfAndProductionWorkerCannotRun(): void
     {
         $this->client->loginUser($this->user(true), 'main');

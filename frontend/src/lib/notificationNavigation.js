@@ -1,3 +1,24 @@
+export function notificationDestination(notification) {
+  if (notification.conversationId) {
+    return { name: 'messages', query: { conversation: notification.conversationId } }
+  }
+  const destinations = {
+    application_received: 'account-campaigns',
+    application_shortlisted: 'account-applications',
+    application_rejected: 'account-applications',
+    campaign_invitation: 'account-invitations',
+    invitation_accepted: 'account-campaigns',
+    invitation_declined: 'account-campaigns',
+    offer_received: 'account-offers',
+    offer_accepted: 'account-campaigns',
+    offer_declined: 'account-campaigns',
+    creator_inquiry_received: 'account-inquiries',
+    creator_inquiry_accepted: 'account-inquiries',
+    creator_inquiry_rejected: 'account-inquiries',
+  }
+  return { name: destinations[notification.type] || 'account' }
+}
+
 export function requestClientNavigation(client, url, {
   Channel = globalThis.MessageChannel,
   timeoutMs = 1500,

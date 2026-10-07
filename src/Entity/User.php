@@ -52,6 +52,9 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(name: 'hide_my_account', options: ['default' => false])]
     private bool $hideMyAccount = false;
 
+    #[ORM\Column(options: ['default' => true])]
+    private bool $notificationsEnabled = true;
+
     #[ORM\OneToOne(mappedBy: 'owner', targetEntity: Creator::class, cascade: ['persist', 'remove'])]
     private ?Creator $creator = null;
 
@@ -150,6 +153,16 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function isHideMyAccount(): bool
     {
         return $this->hideMyAccount;
+    }
+
+    public function isNotificationsEnabled(): bool
+    {
+        return $this->notificationsEnabled;
+    }
+
+    public function setNotificationsEnabled(bool $enabled): void
+    {
+        $this->notificationsEnabled = $enabled;
     }
 
     public function setHideMyAccount(bool $hideMyAccount): void

@@ -12,8 +12,9 @@ const props = defineProps({
   profile: { type: Object, required: true },
   countryOptions: { type: Array, default: () => [] },
   visibilitySaving: { type: Boolean, default: false },
+  notificationsSaving: { type: Boolean, default: false },
 })
-defineEmits(['edit', 'select-tab', 'visibility'])
+defineEmits(['edit', 'select-tab', 'visibility', 'notifications'])
 const { t } = useI18n()
 const creator = computed(() => props.user.accountType === 'creator')
 const name = computed(() => creator.value ? props.profile.displayName : props.profile.name)
@@ -55,6 +56,7 @@ const metrics = computed(() => [
     </div>
     <div class="account-profile-summary__visibility">
       <SwitchField :model-value="user.hide_my_account" :label="t('account.hideAccount')" :description="t('account.hideAccountHint')" :disabled="visibilitySaving" @update:model-value="$emit('visibility', $event)" />
+      <SwitchField :model-value="user.notificationsEnabled === false ? 0 : 1" :label="t('app.notifications')" :description="t('account.notificationsHint')" :disabled="notificationsSaving || !user.emailVerified" @update:model-value="$emit('notifications', $event === 1)" />
     </div>
   </section>
 </template>

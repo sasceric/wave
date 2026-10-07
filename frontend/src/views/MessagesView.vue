@@ -1,4 +1,5 @@
 <script setup>
+import CampaignHiringProgress from '../components/campaigns/CampaignHiringProgress.vue'
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
@@ -215,7 +216,8 @@ const currentDisplayName = computed(() => (
   || currentUser.value?.email
   || ''
 ))
-const campaignChatClosed = computed(() => selectedCampaign.value?.status === 'closed')
+const campaignChatClosed = computed(() => ['closed', 'finished'].includes(selectedCampaign.value?.status))
+const campaignChatNotice = computed(() => selectedCampaign.value?.status === 'finished' ? 'campaignChat.finishedNotice' : 'campaignChat.closedNotice')
 const canSend = computed(() => Boolean(
   !sending.value
   && !campaignChatClosed.value
@@ -1305,7 +1307,7 @@ function messageTimeDescription(value) {
 
         <button v-if="selectedThread && unseenNewMessages" type="button" class="campaign-messages__new-messages" @click="scrollToLatestMessage">{{ t('campaignChat.newMessages', { count: unseenNewMessages }) }}</button>
         <form v-form-validation v-if="selectedThread || (pendingStart && pendingDetails && currentUser?.accountType === 'company')" class="campaign-messages__composer" @submit.prevent="sendMessage">
-          <p v-if="campaignChatClosed" id="campaign-chat-closed-notice" class="campaign-messages__closed-notice" role="status">{{ t('campaignChat.closedNotice') }}</p>
+          <p v-if="campaignChatClosed" id="campaign-chat-closed-notice" class="campaign-messages__closed-notice" role="status">{{ t(campaignChatNotice) }}</p>
           <label class="campaign-messages__composer-field">
             <span class="sr-only">{{ t(selectedThread ? 'campaignChat.replyPlaceholder' : 'campaignChat.firstMessage') }}</span>
             <input
@@ -1408,6 +1410,7 @@ function messageTimeDescription(value) {
                 </span>
               </div>
               <p class="campaign-messages__summary">{{ selectedCampaign.summary }}</p>
+              <CampaignHiringProgress :campaign="selectedCampaign" />
               <dl class="campaign-messages__facts">
                 <div>
                   <dt><Wallet :size="16" aria-hidden="true" />{{ t('campaignChat.budget') }}</dt>

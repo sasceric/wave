@@ -2,6 +2,7 @@
 
 namespace App\Controller\Api;
 
+use App\Api\CampaignHiredCounts;
 use App\Api\ApiAccess;
 use App\Api\CampaignConversationResource;
 use App\Api\CampaignInvitationResource;
@@ -94,7 +95,7 @@ final class CampaignInvitationController
         $entityManager->flush();
         $notificationDelivery->deliver($notification);
 
-        return new JsonResponse(['data' => CampaignInvitationResource::fromEntity($invitation, $locale)], 201);
+        return new JsonResponse(['data' => CampaignInvitationResource::fromEntity($invitation, $locale, CampaignHiredCounts::forCampaign($entityManager, $invitation->getCampaign()))], 201);
     }
 
     #[Route('/api/me/invitations', name: 'api_my_campaign_invitations', methods: ['GET'])]
@@ -118,9 +119,19 @@ final class CampaignInvitationController
             ['createdAt' => 'DESC'],
         );
 
+        $hiredCounts = CampaignHiredCounts::forCampaigns($entityManager, array_map(static fn (CampaignInvitation $invitation): Campaign => $invitation->getCampaign(), $invitations));
+        $conversationIds = [];
+        foreach ($entityManager->getRepository(CampaignConversation::class)->findBy(['creator' => $creator]) as $conversation) {
+            $conversationIds[$conversation->getCampaign()->getId()] = $conversation->getId();
+        }
         return new JsonResponse([
             'data' => array_map(
-                static fn (CampaignInvitation $invitation): array => CampaignInvitationResource::fromEntity($invitation, $locale),
+                static fn (CampaignInvitation $invitation): array => CampaignInvitationResource::fromEntity(
+                    $invitation,
+                    $locale,
+                    $hiredCounts[$invitation->getCampaign()->getId()] ?? 0,
+                    $invitation->getStatus() === 'accepted' ? ($conversationIds[$invitation->getCampaign()->getId()] ?? null) : null,
+                ),
                 $invitations,
             ),
         ]);
@@ -153,6 +164,12 @@ final class CampaignInvitationController
             || $invitation->getCreator()->getId() !== $creator->getId()
         ) {
             return new JsonResponse(['error' => ApiMessages::get('forbidden', $locale)], 404);
+        }
+        if ($invitation->getCampaign()->getStatus() === 'finished') {
+            return new JsonResponse(['error' => ApiMessages::get('campaign_finished', $locale)], 409);
+        }
+        if ($invitation->getCampaign()->getStatus() !== 'open' || $invitation->getCampaign()->getClosesAt() < new DateTimeImmutable('today')) {
+            return new JsonResponse(['error' => ApiMessages::get('campaign_closed', $locale)], 409);
         }
         if ('pending' !== $invitation->getStatus()) {
             return new JsonResponse(['error' => ApiMessages::get('application_not_pending', $locale)], 409);
@@ -199,9 +216,9 @@ final class CampaignInvitationController
         }
 
         return new JsonResponse([
-            'data' => CampaignInvitationResource::fromEntity($invitation, $locale),
+            'data' => CampaignInvitationResource::fromEntity($invitation, $locale, CampaignHiredCounts::forCampaign($entityManager, $invitation->getCampaign()), $conversation?->getId()),
             'conversation' => $conversation instanceof CampaignConversation
-                ? CampaignConversationResource::fromEntity($conversation, 0, $locale)
+                ? CampaignConversationResource::fromEntity($conversation, 0, $locale, CampaignHiredCounts::forCampaign($entityManager, $conversation->getCampaign()))
                 : null,
         ]);
     }

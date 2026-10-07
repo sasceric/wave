@@ -52,6 +52,16 @@ final class TaskRegistry
             ];
         }
 
+        usort($rows, static function (array $left, array $right): int {
+            if ($left['nextExpectedAt'] === null || $right['nextExpectedAt'] === null) {
+                $order = ($left['nextExpectedAt'] === null) <=> ($right['nextExpectedAt'] === null);
+            } else {
+                $order = strcmp($left['nextExpectedAt'], $right['nextExpectedAt']);
+            }
+
+            return $order ?: strcmp($left['name'], $right['name']);
+        });
+
         return $rows;
     }
 

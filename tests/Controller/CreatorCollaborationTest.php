@@ -274,6 +274,19 @@ final class CreatorCollaborationTest extends WebTestCase
         $this->jsonRequest('POST', '/api/me/inquiries/'.$pending->getId().'/decision', ['decision' => 'reject'], $this->csrfToken());
         self::assertResponseIsSuccessful();
         self::assertSame('rejected', $this->payload()['data']['status']);
+        $this->jsonRequest('POST', '/api/me/inquiries/'.$pending->getId().'/decision', ['decision' => 'reject'], $this->csrfToken());
+        self::assertResponseStatusCodeSame(409);
+        $this->client->loginUser($companyUser, 'main');
+        $this->client->request('GET', '/api/me/notifications?locale=en');
+        self::assertResponseIsSuccessful();
+        $rejections = array_values(array_filter($this->payload()['data'], static fn (array $item): bool => $item['type'] === 'creator_inquiry_rejected'));
+        self::assertCount(1, $rejections);
+        self::assertSame('Inquiry Creator', $rejections[0]['actorName']);
+        $this->client->loginUser($creatorUser, 'main');
+        $this->client->request('GET', '/api/me/notifications?locale=en');
+        self::assertResponseIsSuccessful();
+        self::assertNotContains('creator_inquiry_rejected', array_column($this->payload()['data'], 'type'));
+
         $this->client->request('GET', '/api/me/inquiries/'.$pending->getId().'/messages?locale=bs');
         self::assertResponseStatusCodeSame(409);
     }

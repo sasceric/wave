@@ -6,7 +6,7 @@ use App\Entity\CampaignConversation;
 
 final class CampaignConversationResource
 {
-    public static function fromEntity(CampaignConversation $conversation, int $unreadCount, string $locale): array
+    public static function fromEntity(CampaignConversation $conversation, int $unreadCount, string $locale, int $hiredCount = 0): array
     {
         $campaign = $conversation->getCampaign();
         $company = $campaign->getCompany();
@@ -14,7 +14,7 @@ final class CampaignConversationResource
 
         return [
             'id' => $conversation->getId(),
-            'campaign' => CampaignResource::fromEntity($campaign, $locale),
+            'campaign' => CampaignResource::fromEntity($campaign, $locale, hiredCount: $hiredCount),
             'creator' => [
                 'id' => $creator->getId(),
                 'slug' => $creator->getSlug(),

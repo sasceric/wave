@@ -2,6 +2,7 @@
 
 namespace App\Controller\Api;
 
+use App\Api\CampaignHiredCounts;
 use App\Account\AccountEmailSender;
 use App\Api\AdminCatalog;
 use App\Api\ApiAccess;
@@ -69,6 +70,8 @@ final class HomepageController
             ->getQuery()
             ->getResult();
 
+        $hiredCounts = CampaignHiredCounts::forCampaigns($entityManager, $campaigns);
+
         return new JsonResponse([
             'data' => [
                 'creatorMode' => $mode,
@@ -81,7 +84,7 @@ final class HomepageController
                     ),
                     $creators,
                 ),
-                'campaigns' => array_map(static fn (Campaign $campaign): array => CampaignResource::fromEntity($campaign, $locale, categoryLabels: $categoryLabels), $campaigns),
+                'campaigns' => array_map(static fn (Campaign $campaign): array => CampaignResource::fromEntity($campaign, $locale, categoryLabels: $categoryLabels, hiredCount: $hiredCounts[$campaign->getId()] ?? 0), $campaigns),
             ],
         ]);
     }

@@ -34,6 +34,9 @@ final class WebPushNotificationSender
 
     public function send(Notification $notification, ?CampaignMessage $message = null): void
     {
+        if (!$notification->getRecipient()->isNotificationsEnabled()) {
+            return;
+        }
         if ('' === $this->publicKey || '' === $this->privateKey) {
             return;
         }
@@ -115,7 +118,7 @@ final class WebPushNotificationSender
 
     public function sendInquiry(User $recipient, User $sender, int $inquiryId, string $body, int $messageId): void
     {
-        if (!$this->notificationsEnabled || !$this->queued || $this->jobs === null || $this->publicKey === '' || $this->privateKey === '') {
+        if (!$recipient->isNotificationsEnabled() || !$this->notificationsEnabled || !$this->queued || $this->jobs === null || $this->publicKey === '' || $this->privateKey === '') {
             return;
         }
         foreach ($this->entityManager->getRepository(UserPushSubscription::class)->findBy(['user' => $recipient]) as $subscription) {
@@ -127,6 +130,9 @@ final class WebPushNotificationSender
     {
         $subscription = $this->entityManager->find(UserPushSubscription::class, (int) $payload['subscriptionId']);
         if (!$subscription instanceof UserPushSubscription || $subscription->getUser()->getId() !== (int) $payload['userId']) {
+            return;
+        }
+        if (!$subscription->getUser()->isNotificationsEnabled()) {
             return;
         }
         if ($this->publicKey === '' || $this->privateKey === '') {
@@ -226,8 +232,10 @@ final class WebPushNotificationSender
         }
 
         return match ($notification->getType()) {
-            'campaign_invitation', 'invitation_accepted', 'invitation_declined' => '/account/invitations',
-            'creator_inquiry_received', 'creator_inquiry_accepted' => '/account/inquiries',
+            'campaign_invitation' => '/account/invitations',
+            'application_received', 'invitation_accepted', 'invitation_declined', 'offer_accepted', 'offer_declined' => '/account/campaigns',
+            'application_shortlisted', 'application_rejected' => '/account/applications',
+            'creator_inquiry_received', 'creator_inquiry_accepted', 'creator_inquiry_rejected' => '/account/inquiries',
             'offer_received' => '/account/offers',
             default => '/account',
         };

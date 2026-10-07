@@ -5,6 +5,7 @@ namespace App\Tests\Controller;
 use App\Entity\Campaign;
 use App\Entity\Application as CampaignApplication;
 use App\Entity\CampaignConversation;
+use App\Entity\CampaignInvitation;
 use App\Entity\CampaignMessage;
 use App\Entity\Company;
 use App\Entity\Creator;
@@ -12,6 +13,7 @@ use App\Entity\CreatorInquiry;
 use App\Entity\InquiryMessage;
 use App\Entity\Media;
 use App\Entity\Notification;
+use App\Entity\Offer;
 use App\Entity\User;
 use App\Entity\UserPushSubscription;
 use App\Service\UnreadInboxCounter;
@@ -836,6 +838,7 @@ final class MarketplaceWorkflowTest extends WebTestCase
         $this->jsonRequest('POST', '/api/me/offers/'.$offerId.'/respond', ['decision' => 'accept'], $csrf);
         self::assertResponseIsSuccessful();
         self::assertSame('accepted', $this->payload()['data']['status']);
+        self::assertSame(1, $this->payload()['data']['campaign']['hiredCount']);
         self::assertEmailCount(1);
         $hiredEmail = self::getMailerMessage();
         self::assertInstanceOf(Email::class, $hiredEmail);
@@ -847,8 +850,23 @@ final class MarketplaceWorkflowTest extends WebTestCase
         self::assertResponseIsSuccessful();
         self::assertSame('accepted', $this->payload()['data'][0]['status']);
         self::assertSame($conversationId, $this->payload()['data'][0]['conversationId']);
+        self::assertSame(1, $this->payload()['data'][0]['campaign']['hiredCount']);
+        foreach (['/api/campaigns/small-table', '/api/me/inbox/campaign/'.$conversationId] as $path) {
+            $this->client->request('GET', $path.'?locale=bs');
+            self::assertResponseIsSuccessful();
+            $resource = $this->payload()['data'];
+            self::assertSame(1, ($resource['campaign'] ?? $resource)['hiredCount']);
+        }
+        foreach (['/api/me/offers', '/api/me/conversations'] as $path) {
+            $this->client->request('GET', $path.'?locale=bs');
+            self::assertResponseIsSuccessful();
+            self::assertSame(1, $this->payload()['data'][0]['campaign']['hiredCount']);
+        }
 
         $this->client->loginUser($companyUser, 'main');
+        $this->client->request('GET', '/api/company/campaigns/small-table/applications?locale=bs');
+        self::assertResponseIsSuccessful();
+        self::assertSame(1, $this->payload()['data'][0]['campaign']['hiredCount']);
         $this->jsonRequest('POST', '/api/company/applications/'.$applicationId.'/reject', [], $this->csrfToken());
         self::assertResponseStatusCodeSame(409);
     }
@@ -1029,6 +1047,165 @@ final class MarketplaceWorkflowTest extends WebTestCase
         self::assertSame([], $this->payload()['data']);
     }
 
+    public function testCreatorDeclinesNotifyOnlyTheCompanyAndCannotBeRepeated(): void
+    {
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $companyUser = new User('decline-company@example.test', 'ROLE_COMPANY');
+        $companyUser->setPassword('unused-test-hash');
+        $company = new Company('decline-company', 'Decline Company', 'Food');
+        $companyUser->setCompany($company);
+        $creatorUser = new User('decline-creator@example.test', 'ROLE_CREATOR');
+        $creatorUser->setPassword('unused-test-hash');
+        $creator = new Creator('decline-creator', 'Decline Creator', 'Food', 'Sarajevo', 'A creator profile.', [], []);
+        $creatorUser->setCreator($creator);
+        $campaign = new Campaign(
+            'decline-offer', 'Offer campaign', 'Summary', 'Campaign brief', 'Food', ['Instagram'], ['1 post'],
+            300, 700, 'Sarajevo', 2, new DateTimeImmutable('+20 days'), new DateTimeImmutable('today'), $company,
+        );
+        $invitedCampaign = new Campaign(
+            'decline-invitation', 'Invitation campaign', 'Summary', 'Campaign brief', 'Food', ['Instagram'], ['1 post'],
+            300, 700, 'Sarajevo', 2, new DateTimeImmutable('+20 days'), new DateTimeImmutable('today'), $company,
+        );
+        $application = new CampaignApplication($campaign, $creator, 'An application for this campaign.');
+        $application->setStatus('offered');
+        $offer = new Offer($application, 500, 'A payment offer for this campaign.');
+        $invitation = new CampaignInvitation($invitedCampaign, $creator, $companyUser, 'Please join this campaign.');
+        foreach ([$companyUser, $creatorUser, $campaign, $invitedCampaign, $application, $invitation] as $entity) {
+            $em->persist($entity);
+        }
+        $em->flush();
+        $actions = [
+            ['/api/me/offers/'.$offer->getId().'/respond', 'reject', 'offer_declined'],
+            ['/api/me/invitations/'.$invitation->getId().'/respond', 'decline', 'invitation_declined'],
+        ];
+        foreach ($actions as [$path, $decision, $notificationType]) {
+            $this->client->loginUser($creatorUser, 'main');
+            $this->jsonRequest('POST', $path, ['decision' => $decision], $this->csrfToken());
+            self::assertResponseIsSuccessful();
+            $this->jsonRequest('POST', $path, ['decision' => $decision], $this->csrfToken());
+            self::assertResponseStatusCodeSame(409);
+            $this->client->request('GET', '/api/me/notifications?locale=bs');
+            self::assertResponseIsSuccessful();
+            self::assertNotContains($notificationType, array_column($this->payload()['data'], 'type'));
+            $this->client->loginUser($companyUser, 'main');
+            $this->client->request('GET', '/api/me/notifications?locale=bs');
+            self::assertResponseIsSuccessful();
+            $notifications = array_values(array_filter($this->payload()['data'], static fn (array $item): bool => $item['type'] === $notificationType));
+            self::assertCount(1, $notifications);
+            self::assertSame('Decline Creator', $notifications[0]['actorName']);
+        }
+    }
+
+    public function testFinishingCampaignRejectsUnhiredApplicantsSilentlyAndPreservesHires(): void
+    {
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $companyUser = new User('finish-company@example.test', 'ROLE_COMPANY');
+        $companyUser->setPassword('unused-test-hash');
+        $company = new Company('finish-company', 'Finish Company', 'Food');
+        $companyUser->setCompany($company);
+        $campaign = new Campaign(
+            'finish-campaign', 'Finish campaign', 'A campaign summary', 'A full campaign description.', 'Food',
+            ['Instagram'], ['1 video'], 300, 700, 'Sarajevo', 2,
+            new DateTimeImmutable('-2 days'), new DateTimeImmutable('-20 days'), $company,
+        );
+        $otherCampaign = new Campaign(
+            'other-finish-campaign', 'Other campaign', 'A campaign summary', 'A full campaign description.', 'Food',
+            ['Instagram'], ['1 video'], 300, 700, 'Sarajevo', 2,
+            new DateTimeImmutable('+20 days'), new DateTimeImmutable('today'), $company,
+        );
+        $em->persist($companyUser);
+        $em->persist($campaign);
+        $em->persist($otherCampaign);
+        $creatorUsers = [];
+        $applications = [];
+        foreach (['pending', 'shortlisted', 'offered', 'accepted', 'offer_declined', 'rejected'] as $status) {
+            $user = new User('finish-'.$status.'@example.test', 'ROLE_CREATOR');
+            $user->setPassword('unused-test-hash');
+            $creator = new Creator('finish-'.$status, 'Creator '.$status, 'Food', 'Sarajevo', 'A creator profile.', [], []);
+            $user->setCreator($creator);
+            $application = new CampaignApplication($campaign, $creator, 'My application for this campaign.');
+            if (in_array($status, ['offered', 'accepted', 'offer_declined'], true)) {
+                $offer = new Offer($application, 500, 'A payment offer for this campaign.');
+                if ($status !== 'offered') {
+                    $offer->respond($status === 'accepted' ? 'accepted' : 'rejected');
+                }
+            }
+            $application->setStatus($status);
+            $em->persist($user);
+            $em->persist($application);
+            $creatorUsers[$status] = $user;
+            $applications[$status] = $application;
+        }
+        $unrelatedApplication = new CampaignApplication($otherCampaign, $creatorUsers['pending']->getCreator(), 'Another campaign application.');
+        $invitation = new CampaignInvitation($campaign, $creatorUsers['pending']->getCreator(), $companyUser, 'Please join this campaign.');
+        $conversation = new CampaignConversation($campaign, $creatorUsers['offered']->getCreator(), $companyUser);
+        $message = new CampaignMessage($conversation, $companyUser, 'The conversation remains readable.');
+        foreach ([$unrelatedApplication, $invitation, $conversation, $message] as $entity) {
+            $em->persist($entity);
+        }
+        $em->flush();
+        $campaignId = $campaign->getId();
+        $applicationIds = array_map(static fn (CampaignApplication $application): int => $application->getId(), $applications);
+        $offerId = $applications['offered']->getOffer()->getId();
+        $invitationId = $invitation->getId();
+        $conversationId = $conversation->getId();
+        $unrelatedId = $unrelatedApplication->getId();
+        $fields = [
+            'title' => 'Finish campaign', 'summary' => 'A campaign summary', 'description' => 'A full campaign description.',
+            'categories' => ['Food'], 'channels' => ['Instagram'], 'deliverables' => ['1 video'],
+            'budgetMin' => 300, 'budgetMax' => 700, 'currency' => 'BAM', 'city' => 'Sarajevo', 'countryCode' => 'BA',
+            'creatorCount' => 2, 'closesAt' => (new DateTimeImmutable('-2 days'))->format('Y-m-d'),
+        ];
+        $this->client->loginUser($companyUser, 'main');
+        $this->jsonRequest('PUT', '/api/company/campaigns/'.$campaignId, [...$fields, 'status' => 'closed'], $this->csrfToken());
+        self::assertResponseIsSuccessful();
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        self::assertSame('pending', $em->find(CampaignApplication::class, $applicationIds['pending'])->getStatus());
+        self::assertSame('pending', $em->find(Offer::class, $offerId)->getStatus());
+
+        foreach ([1, 2] as $attempt) {
+            $this->jsonRequest('PUT', '/api/company/campaigns/'.$campaignId, [...$fields, 'status' => 'finished'], $this->csrfToken());
+            self::assertResponseIsSuccessful();
+            self::assertSame('finished', $this->payload()['data']['status']);
+            self::assertSame(1, $this->payload()['data']['hiredCount']);
+            $em = static::getContainer()->get(EntityManagerInterface::class);
+            foreach ($applicationIds as $originalStatus => $applicationId) {
+                $application = $em->find(CampaignApplication::class, $applicationId);
+                self::assertSame($originalStatus === 'accepted' ? 'accepted' : 'rejected', $application->getStatus());
+                if ($application->getOffer()) {
+                    self::assertSame($originalStatus === 'accepted' ? 'accepted' : 'rejected', $application->getOffer()->getStatus());
+                }
+            }
+            self::assertSame('pending', $em->find(CampaignApplication::class, $unrelatedId)->getStatus());
+            self::assertSame(0, $em->getRepository(Notification::class)->count([]));
+            self::assertEmailCount(0);
+        }
+        $this->jsonRequest('POST', '/api/company/applications/'.$applicationIds['pending'].'/shortlist', [], $this->csrfToken());
+        self::assertResponseStatusCodeSame(409);
+        $this->jsonRequest('POST', '/api/company/applications/'.$applicationIds['shortlisted'].'/offer', [
+            'amount' => 500, 'message' => 'This campaign cannot hire anyone else.',
+        ], $this->csrfToken());
+        self::assertResponseStatusCodeSame(409);
+
+        $this->client->loginUser($creatorUsers['offered'], 'main');
+        $this->jsonRequest('POST', '/api/me/offers/'.$offerId.'/respond', ['decision' => 'accept'], $this->csrfToken());
+        self::assertResponseStatusCodeSame(409);
+        foreach ([$creatorUsers['offered'], $companyUser] as $participant) {
+            $this->client->loginUser($participant, 'main');
+            $this->jsonRequest('POST', '/api/me/conversations/'.$conversationId.'/messages', ['body' => 'Cannot send'], $this->csrfToken());
+            self::assertResponseStatusCodeSame(409);
+            self::assertStringContainsString('završena', $this->payload()['error']);
+            $this->client->request('GET', '/api/me/conversations/'.$conversationId.'/messages?locale=bs');
+            self::assertResponseIsSuccessful();
+            self::assertCount(1, $this->payload()['data']);
+        }
+        $this->client->loginUser($creatorUsers['pending'], 'main');
+        $this->jsonRequest('POST', '/api/me/invitations/'.$invitationId.'/respond', ['decision' => 'accept'], $this->csrfToken());
+        self::assertResponseStatusCodeSame(409);
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        self::assertSame(0, $em->getRepository(Notification::class)->count([]));
+    }
+
     public function testClosedCampaignChatsRejectNewMessagesButRetainReadableHistory(): void
     {
         $em = static::getContainer()->get(EntityManagerInterface::class);
@@ -1070,6 +1247,47 @@ final class MarketplaceWorkflowTest extends WebTestCase
             'creatorId' => $creatorId, 'message' => 'Must not start or append a conversation',
         ], $this->csrfToken());
         self::assertResponseStatusCodeSame(409);
+    }
+
+    public function testExpiredCampaignInvitationsCannotBeAnswered(): void
+    {
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $companyUser = new User('expired-company@example.test', 'ROLE_COMPANY');
+        $companyUser->setPassword('unused-test-hash');
+        $company = new Company('expired-company', 'Company', 'Food');
+        $companyUser->setCompany($company);
+        $creatorUser = new User('expired-creator@example.test', 'ROLE_CREATOR');
+        $creatorUser->setPassword('unused-test-hash');
+        $creator = new Creator('expired-creator', 'Creator', 'Food', 'Sarajevo', 'A creator profile.', [], []);
+        $creatorUser->setCreator($creator);
+        $em->persist($companyUser);
+        $em->persist($creatorUser);
+        $ids = [];
+        foreach (['closed', 'deadline'] as $reason) {
+            $campaign = new Campaign(
+                'expired-'.$reason, 'Campaign', 'Summary', 'Campaign brief', 'Food', ['Instagram'], ['1 post'],
+                300, 700, 'Sarajevo', 2, new DateTimeImmutable($reason === 'deadline' ? '-1 day' : '+20 days'), new DateTimeImmutable('today'), $company,
+            );
+            if ($reason === 'closed') {
+                $campaign->setStatus('closed');
+            }
+            $invitation = new CampaignInvitation($campaign, $creator, $companyUser, 'Please join this campaign.');
+            $em->persist($campaign);
+            $em->persist($invitation);
+            $em->flush();
+            $ids[] = $invitation->getId();
+        }
+        $this->client->loginUser($creatorUser, 'main');
+        foreach ($ids as $id) {
+            $this->jsonRequest('POST', '/api/me/invitations/'.$id.'/respond', ['decision' => 'accept'], $this->csrfToken());
+            self::assertResponseStatusCodeSame(409);
+        }
+        $this->client->request('GET', '/api/me/invitations?locale=bs');
+        self::assertResponseIsSuccessful();
+        self::assertSame(['pending', 'pending'], array_column($this->payload()['data'], 'status'));
+        $this->client->request('GET', '/api/me/conversations?locale=bs');
+        self::assertResponseIsSuccessful();
+        self::assertCount(0, $this->payload()['data']);
     }
 
     public function testCampaignConversationsAreScopedAndGenerateNotifications(): void
@@ -1181,7 +1399,11 @@ final class MarketplaceWorkflowTest extends WebTestCase
         self::assertResponseStatusCodeSame(201);
         $invitation = $this->payload()['data'];
         self::assertSame('pending', $invitation['status']);
-        self::assertArrayNotHasKey('conversationId', $invitation);
+        self::assertNull($invitation['conversationId']);
+        self::assertArrayHasKey('summary', $invitation['campaign']);
+        self::assertArrayHasKey('budgetMin', $invitation['campaign']);
+        self::assertArrayHasKey('closesAt', $invitation['campaign']);
+        self::assertArrayHasKey('coverImage', $invitation['campaign']);
 
         $this->client->request('GET', '/api/me/campaigns?locale=bs');
         self::assertResponseIsSuccessful();
@@ -1250,6 +1472,11 @@ final class MarketplaceWorkflowTest extends WebTestCase
         self::assertSame('accepted', $this->payload()['data']['status']);
         $secondConversation = $this->payload()['conversation'];
         self::assertNotSame($firstConversation['id'], $secondConversation['id']);
+        self::assertSame($secondConversation['id'], $this->payload()['data']['conversationId']);
+        $this->client->request('GET', '/api/me/invitations?locale=bs');
+        self::assertResponseIsSuccessful();
+        self::assertSame($secondConversation['id'], $this->payload()['data'][0]['conversationId']);
+        self::assertSame('accepted', $this->payload()['data'][0]['status']);
         $this->client->request('GET', '/api/me/conversations?locale=bs');
         self::assertResponseIsSuccessful();
         self::assertCount(2, $this->payload()['data']);
@@ -1362,6 +1589,40 @@ final class MarketplaceWorkflowTest extends WebTestCase
         $this->client->request('GET', '/api/me/notifications?locale=bs');
         self::assertResponseIsSuccessful();
         self::assertCount(30, $this->payload()['data']);
+        self::assertSame(32, $this->payload()['unreadCount']);
+        $ids = [];
+        $cursor = null;
+        do {
+            $this->client->request('GET', '/api/me/notifications?locale=bs&limit=5'.($cursor ? '&before='.$cursor : ''));
+            self::assertResponseIsSuccessful();
+            $page = $this->payload();
+            self::assertLessThanOrEqual(5, count($page['data']));
+            $ids = [...$ids, ...array_column($page['data'], 'id')];
+            $cursor = $page['meta']['nextCursor'];
+        } while ($cursor !== null);
+        self::assertCount(33, array_unique($ids));
+        self::assertCount(33, $ids);
+        self::assertSame(0, $page['meta']['remaining']);
+        foreach (['limit=0', 'limit=31', 'before=-1'] as $query) {
+            $this->client->request('GET', '/api/me/notifications?'.$query);
+            self::assertResponseStatusCodeSame(400);
+        }
+        $this->jsonRequest('PUT', '/api/me/notifications/settings', ['enabled' => false], 'invalid-csrf');
+        self::assertResponseStatusCodeSame(403);
+        $this->jsonRequest('PUT', '/api/me/notifications/settings', ['enabled' => 'false'], $this->csrfToken());
+        self::assertResponseStatusCodeSame(400);
+        $this->jsonRequest('PUT', '/api/me/notifications/settings', ['enabled' => false], $this->csrfToken());
+        self::assertResponseIsSuccessful();
+        self::assertFalse($this->payload()['data']['notificationsEnabled']);
+        $this->client->request('GET', '/api/me/notifications?locale=bs');
+        self::assertSame(0, $this->payload()['unreadCount']);
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        self::assertTrue($em->find(User::class, $companyUser->getId())->isNotificationsEnabled());
+        self::assertSame(1, static::getContainer()->get(UnreadInboxCounter::class)->total($em->find(User::class, $creatorUser->getId())));
+        $this->jsonRequest('PUT', '/api/me/notifications/settings', ['enabled' => true], $this->csrfToken());
+        self::assertResponseIsSuccessful();
+        self::assertTrue($this->payload()['data']['notificationsEnabled']);
+        $this->client->request('GET', '/api/me/notifications?locale=bs');
         self::assertSame(32, $this->payload()['unreadCount']);
         $this->client->request('GET', '/api/me/conversations/'.$conversation->getId().'/messages?locale=bs');
         self::assertResponseIsSuccessful();
@@ -1511,6 +1772,52 @@ final class MarketplaceWorkflowTest extends WebTestCase
         ], $this->csrfToken());
         self::assertResponseIsSuccessful();
         self::assertSame(0, $entityManager->getRepository(UserPushSubscription::class)->count(['user' => $user]));
+    }
+
+    public function testCompanyApplicationRejectionDoesNotNotifyTheCreator(): void
+    {
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $companyUser = new User('silent-rejection-company@example.test', 'ROLE_COMPANY');
+        $companyUser->setPassword('unused');
+        $company = new Company('silent-rejection-company', 'Company', 'Food');
+        $companyUser->setCompany($company);
+        $creatorUser = new User('silent-rejection-creator@example.test', 'ROLE_CREATOR');
+        $creatorUser->setPassword('unused');
+        $creator = new Creator('silent-rejection-creator', 'Creator', 'Food', 'Sarajevo', '', [], []);
+        $creatorUser->setCreator($creator);
+        $campaign = new Campaign('silent-rejection', 'Campaign', 'Summary', 'Brief', 'Food', ['Instagram'], ['Post'], 10, 20, 'Sarajevo', 4, new DateTimeImmutable('+1 month'), new DateTimeImmutable(), $company);
+        $application = new CampaignApplication($campaign, $creator, 'An application.');
+        foreach ([$companyUser, $creatorUser, $campaign, $application] as $entity) {
+            $em->persist($entity);
+        }
+        $em->flush();
+        $this->client->loginUser($companyUser);
+        $this->jsonRequest('POST', '/api/company/applications/'.$application->getId().'/reject', [], $this->csrfToken());
+        self::assertResponseIsSuccessful();
+        self::assertSame('rejected', $this->payload()['data']['status']);
+        self::assertSame(0, static::getContainer()->get(EntityManagerInterface::class)->getRepository(Notification::class)->count([]));
+        self::assertEmailCount(0);
+    }
+
+    public function testDisabledAccountsSkipAlreadyQueuedDeviceNotifications(): void
+    {
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $user = new User('disabled-notifications@example.test', 'ROLE_CREATOR');
+        $user->setPassword('unused-test-hash');
+        $user->setCreator(new Creator('disabled-notifications', 'Creator', 'Food', 'Sarajevo', '', [], []));
+        $user->setNotificationsEnabled(false);
+        $subscription = new UserPushSubscription($user, 'https://push.example.test/subscription', 'unused-public-key', 'unused-auth', 'bs');
+        $em->persist($user);
+        $em->persist($subscription);
+        $em->flush();
+        $sender = new \App\Service\WebPushNotificationSender($em, new \Psr\Log\NullLogger(), '', '', '', new UnreadInboxCounter($em));
+        $payload = ['subscriptionId' => $subscription->getId(), 'userId' => $user->getId(), 'title' => 'Wave', 'body' => 'Queued before disabling', 'url' => '/account'];
+        $sender->deliver($payload);
+        self::assertSame(1, $em->getRepository(UserPushSubscription::class)->count([]));
+        $user->setNotificationsEnabled(true);
+        $this->expectException(\Symfony\Component\Messenger\Exception\UnrecoverableMessageHandlingException::class);
+        // Re-enabling reaches transport validation; disabling exits before it.
+        $sender->deliver($payload);
     }
 
     private function csrfToken(): string

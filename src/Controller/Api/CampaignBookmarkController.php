@@ -2,6 +2,7 @@
 
 namespace App\Controller\Api;
 
+use App\Api\CampaignHiredCounts;
 use App\Api\ApiAccess;
 use App\Api\CampaignResource;
 use App\Api\MarketplaceCategoryLabels;
@@ -53,6 +54,7 @@ final class CampaignBookmarkController
             ->getQuery()
             ->getResult();
         $categoryLabels = MarketplaceCategoryLabels::forLocale($entityManager, $locale);
+        $hiredCounts = CampaignHiredCounts::forCampaigns($entityManager, array_map(static fn (CampaignBookmark $bookmark): Campaign => $bookmark->getCampaign(), $bookmarks));
 
         return new JsonResponse([
             'data' => array_map(
@@ -61,6 +63,7 @@ final class CampaignBookmarkController
                     $locale,
                     $categoryLabels[$bookmark->getCampaign()->getCategory()] ?? null,
                     categoryLabels: $categoryLabels,
+                    hiredCount: $hiredCounts[$bookmark->getCampaign()->getId()] ?? 0,
                 ),
                 $bookmarks,
             ),
@@ -108,6 +111,7 @@ final class CampaignBookmarkController
                 $locale,
                 $categoryLabels[$campaign->getCategory()] ?? null,
                 categoryLabels: $categoryLabels,
+                hiredCount: CampaignHiredCounts::forCampaign($entityManager, $campaign),
             ),
         ], $created ? 201 : 200);
     }

@@ -6,7 +6,7 @@ use App\Entity\Offer;
 
 final class OfferResource
 {
-    public static function fromEntity(Offer $offer, string $locale): array
+    public static function fromEntity(Offer $offer, string $locale, int $hiredCount = 0): array
     {
         return [
             'id' => $offer->getId(),
@@ -16,7 +16,7 @@ final class OfferResource
             'createdAt' => $offer->getCreatedAt()->format(DATE_ATOM),
             'respondedAt' => $offer->getRespondedAt()?->format(DATE_ATOM),
             'applicationId' => $offer->getApplication()->getId(),
-            'campaign' => CampaignResource::fromEntity($offer->getApplication()->getCampaign(), $locale),
+            'campaign' => CampaignResource::fromEntity($offer->getApplication()->getCampaign(), $locale, hiredCount: $hiredCount),
             'creator' => CreatorResource::fromEntity($offer->getApplication()->getCreator(), $locale),
         ];
     }

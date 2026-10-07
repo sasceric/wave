@@ -16,6 +16,9 @@ final class UnreadInboxCounter
 
     public function notifications(User $user): int
     {
+        if (!$user->isNotificationsEnabled()) {
+            return 0;
+        }
         return (int) $this->entityManager->createQueryBuilder()
             ->select('COUNT(notification.id)')
             ->from(Notification::class, 'notification')

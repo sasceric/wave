@@ -256,6 +256,7 @@
   &--accepted { background: #65ad88; }
   &--rejected { background: #d47b70; }
   &--closed { background: #8b9691; }
+  &--expired { background: #8b9691; }
 }
 
 .creator-offer {
@@ -283,6 +284,7 @@
     &--accepted { background: #e7f1e7; }
     &--rejected { background: #fae6e0; }
     &--closed { background: #eeeee9; }
+    &--expired { background: #eeeee9; }
   }
 
   &__summary {
@@ -640,6 +642,72 @@
       .button {
         flex: 1 1 auto;
       }
+    }
+  }
+}
+
+.campaign-invitations {
+  &__campaign {
+    width: 30%;
+
+    .creator-offers__campaign-identity > .card-image {
+      flex-basis: 92px;
+      width: 92px;
+      height: 96px;
+    }
+
+    .offer-campaign-meta {
+      gap: 8px 12px;
+      margin-top: 10px;
+      font-size: 11px;
+    }
+  }
+
+  .creator-offers__budget strong {
+    white-space: normal;
+  }
+
+  &__deadline-hint {
+    display: block;
+    margin: 5px 0 0 24px;
+    color: var(--muted);
+    font-size: 11px;
+  }
+
+  &__actions {
+    align-items: center;
+    gap: 10px;
+    white-space: normal;
+
+    .admin-row-actions__trigger {
+      width: 36px;
+      height: 40px;
+      border: 1px solid #dfe4dc;
+      background: #fffefa;
+    }
+  }
+
+  &__primary-actions {
+    display: grid;
+    gap: 6px;
+    width: 190px;
+
+    .button {
+      width: 100%;
+      text-align: center;
+    }
+  }
+}
+
+@include breakpoints.down(760px) {
+  .campaign-invitations {
+    &__campaign .creator-offers__campaign-identity {
+      align-items: flex-start;
+    }
+
+    &__primary-actions {
+      flex: 1;
+      width: auto;
     }
   }
 }

@@ -2,6 +2,7 @@
 
 namespace App\Controller\Api;
 
+use App\Api\CampaignHiredCounts;
 use App\Api\CampaignResource;
 use App\Api\Currency;
 use App\Api\DirectoryCursor;
@@ -178,6 +179,7 @@ final class CampaignController
             $meta['offset'] = $offset;
         }
         $categoryLabels = self::categoryLabels($entityManager, $locale);
+        $hiredCounts = CampaignHiredCounts::forCampaigns($entityManager, $campaigns);
 
         return new JsonResponse([
             'data' => array_map(
@@ -187,6 +189,7 @@ final class CampaignController
                     $categoryLabels[$campaign->getCategory()] ?? null,
                     $card,
                     $categoryLabels,
+                    $hiredCounts[$campaign->getId()] ?? 0,
                 ),
                 $campaigns,
             ),
@@ -236,7 +239,7 @@ final class CampaignController
         $categoryLabels = self::categoryLabels($entityManager, $locale);
 
         return new JsonResponse([
-            'data' => CampaignResource::fromEntity($campaign, $locale, $categoryLabels[$campaign->getCategory()] ?? null, categoryLabels: $categoryLabels),
+            'data' => CampaignResource::fromEntity($campaign, $locale, $categoryLabels[$campaign->getCategory()] ?? null, categoryLabels: $categoryLabels, hiredCount: CampaignHiredCounts::forCampaign($entityManager, $campaign)),
         ]);
     }
 

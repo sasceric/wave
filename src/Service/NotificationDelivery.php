@@ -16,7 +16,7 @@ final class NotificationDelivery
 
     public function deliver(Notification $notification, ?CampaignMessage $message = null): void
     {
-        if (!$this->enabled) {
+        if (!$this->enabled || !$notification->getRecipient()->isNotificationsEnabled()) {
             return;
         }
 

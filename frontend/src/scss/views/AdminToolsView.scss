@@ -127,12 +127,29 @@
   }
 
   &__status {
-    display: inline-block;
-    padding: 5px 8px;
-    border-radius: 5px;
-    background: #eff1ee;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 9px;
+    border: 1px solid transparent;
+    border-radius: 999px;
+    background: #edf0ed;
+    color: #55635c;
+    font-size: 11px;
+    line-height: 1.4;
+    white-space: nowrap;
+
+    &::before {
+      content: '';
+      width: 6px;
+      height: 6px;
+      flex-shrink: 0;
+      border-radius: 50%;
+      background: currentColor;
+    }
   }
 
+  &__status--scheduled,
   &__status--success,
   &__status--available {
     background: #e3f2e8;
@@ -147,7 +164,8 @@
   }
 
   &__status--overdue,
-  &__status--neverRun {
+  &__status--neverRun,
+  &__status--queued {
     background: #faf0d8;
     color: #755914;
   }
@@ -155,5 +173,11 @@
   &__status--running {
     background: #e4edf8;
     color: #355882;
+  }
+
+  &__status--unregistered {
+    border-color: #c8d0c9;
+    border-style: dashed;
+    background: transparent;
   }
 }

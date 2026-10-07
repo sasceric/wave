@@ -34,7 +34,12 @@ final class QueueInspector
             }
         }
 
-        return array_values($rows);
+        $rows = array_values($rows);
+        usort($rows, static fn (array $left, array $right): int =>
+            ($right['count'] <=> $left['count']) ?: strcmp($left['id'], $right['id'])
+        );
+
+        return $rows;
     }
 
     public function workers(): array

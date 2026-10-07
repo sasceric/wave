@@ -6,22 +6,18 @@ use App\Entity\CampaignInvitation;
 
 final class CampaignInvitationResource
 {
-    public static function fromEntity(CampaignInvitation $invitation, string $locale): array
+    public static function fromEntity(CampaignInvitation $invitation, string $locale, int $hiredCount = 0, ?int $conversationId = null): array
     {
         $campaign = $invitation->getCampaign();
-        $translation = $campaign->getTranslations()[$locale] ?? [];
 
         return [
             'id' => $invitation->getId(),
             'status' => $invitation->getStatus(),
+            'conversationId' => $conversationId,
             'message' => $invitation->getMessage(),
             'createdAt' => $invitation->getCreatedAt()->format(DATE_ATOM),
             'respondedAt' => $invitation->getRespondedAt()?->format(DATE_ATOM),
-            'campaign' => [
-                'id' => $campaign->getId(),
-                'slug' => $campaign->getSlug(),
-                'title' => $translation['title'] ?? $campaign->getTitle(),
-            ],
+            'campaign' => CampaignResource::fromEntity($campaign, $locale, hiredCount: $hiredCount),
             'company' => [
                 'name' => $campaign->getCompany()->getName(),
             ],

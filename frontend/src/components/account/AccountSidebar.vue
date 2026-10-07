@@ -177,7 +177,7 @@ const navigationItems = computed(() => {
       <div><strong>{{ name }}</strong><LocalizedLink v-if="publicRoute" :to="publicRoute" @click="closeMobileSidebar">{{ t('account.viewPublicProfile') }}<ExternalLink :size="12" aria-hidden="true" /></LocalizedLink></div>
     </div>
     <div class="account-sidebar__group account-sidebar__group--public">
-      <div class="account-sidebar__language">
+      <div v-if="!user" class="account-sidebar__language">
         <LanguageSwitcher expanded />
       </div>
       <LocalizedLink v-for="item in exploreItems" :key="item.route" class="account-sidebar__link" :class="{ 'is-active': route.meta.routeName === item.route }" :to="{ name: item.route }" @click="closeMobileSidebar"><component :is="item.icon" :size="20" aria-hidden="true" /><span class="account-sidebar__text">{{ item.label }}</span></LocalizedLink>

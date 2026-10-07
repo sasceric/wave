@@ -19,6 +19,10 @@ final class NotificationResource
             'id' => $notification->getId(),
             'type' => $notification->getType(),
             'actorName' => $actorName,
+            'actorImageUrl' => $actor?->getCreator()?->getAvatarMedia()?->getUrl()
+                ?? $actor?->getCreator()?->getAvatarUrl()
+                ?? $actor?->getCompany()?->getLogoMedia()?->getUrl()
+                ?? $actor?->getCompany()?->getLogoUrl(),
             'createdAt' => $notification->getCreatedAt()->format(DATE_ATOM),
             'readAt' => $notification->getReadAt()?->format(DATE_ATOM),
             'campaign' => $campaign === null ? null : [

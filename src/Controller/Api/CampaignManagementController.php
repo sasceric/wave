@@ -2,6 +2,7 @@
 
 namespace App\Controller\Api;
 
+use App\Api\CampaignHiredCounts;
 use App\Api\ApiAccess;
 use App\Api\CampaignResource;
 use App\Api\MarketplaceCategoryLabels;
@@ -68,10 +69,11 @@ final class CampaignManagementController
             }
         }
         $categoryLabels = MarketplaceCategoryLabels::forLocale($entityManager, $locale);
+        $hiredCounts = CampaignHiredCounts::forCampaigns($entityManager, $campaigns);
         $campaignResources = [];
         foreach ($campaigns as $campaign) {
             $campaignId = $campaign->getId();
-            $resource = CampaignResource::fromEntity($campaign, $locale, categoryLabels: $categoryLabels);
+            $resource = CampaignResource::fromEntity($campaign, $locale, categoryLabels: $categoryLabels, hiredCount: $hiredCounts[$campaignId] ?? 0);
             $resource['invitedCreatorIds'] = null !== $campaignId ? ($invitedCreatorIdsByCampaign[$campaignId] ?? []) : [];
             $resource['appliedCreatorIds'] = null !== $campaignId ? ($appliedCreatorIdsByCampaign[$campaignId] ?? []) : [];
             $campaignResources[] = $resource;
@@ -142,7 +144,7 @@ final class CampaignManagementController
         $entityManager->persist($campaign);
         $entityManager->flush();
 
-        return new JsonResponse(['data' => CampaignResource::fromEntity($campaign, $locale, categoryLabels: MarketplaceCategoryLabels::forLocale($entityManager, $locale))], 201);
+        return new JsonResponse(['data' => CampaignResource::fromEntity($campaign, $locale, categoryLabels: MarketplaceCategoryLabels::forLocale($entityManager, $locale), hiredCount: CampaignHiredCounts::forCampaign($entityManager, $campaign))], 201);
     }
 
     #[Route('/api/company/campaigns/{id}', name: 'api_company_campaign_update', methods: ['PUT'])]
@@ -205,9 +207,31 @@ final class CampaignManagementController
             $fields['categories'],
         );
         $campaign->setCoverMedia($coverMedia);
+        if ($campaign->getStatus() === 'finished') {
+            $applications = $entityManager->createQueryBuilder()
+                ->select('application', 'offer')
+                ->from(Application::class, 'application')
+                ->leftJoin('application.offer', 'offer')
+                ->where('application.campaign = :campaign')
+                ->andWhere('application.status != :hired')
+                ->setParameter('campaign', $campaign)
+                ->setParameter('hired', 'accepted')
+                ->getQuery()
+                ->getResult();
+            foreach ($applications as $application) {
+                $offer = $application->getOffer();
+                if ($offer?->getStatus() === 'accepted') {
+                    continue;
+                }
+                if ($offer?->getStatus() === 'pending') {
+                    $offer->respond('rejected');
+                }
+                $application->setStatus('rejected');
+            }
+        }
         $entityManager->flush();
 
-        return new JsonResponse(['data' => CampaignResource::fromEntity($campaign, $locale, categoryLabels: MarketplaceCategoryLabels::forLocale($entityManager, $locale))]);
+        return new JsonResponse(['data' => CampaignResource::fromEntity($campaign, $locale, categoryLabels: MarketplaceCategoryLabels::forLocale($entityManager, $locale), hiredCount: CampaignHiredCounts::forCampaign($entityManager, $campaign))]);
     }
 
     private function campaignFields(array $data, bool $allowStatus, array &$invalidFields): ?array
@@ -276,7 +300,7 @@ final class CampaignManagementController
         if (!is_string($closesAtInput)) {
             $invalidFields[] = 'closesAt';
         }
-        if (!in_array($status, $allowStatus ? ['open', 'closed'] : ['open'], true)) {
+        if (!in_array($status, $allowStatus ? ['open', 'closed', 'finished'] : ['open'], true)) {
             $invalidFields[] = 'status';
         }
         $closesAt = null;
@@ -287,8 +311,10 @@ final class CampaignManagementController
                 $invalidFields[] = 'closesAt';
             }
         }
+        $requiresFutureDeadline = !$allowStatus || $status === 'open';
         if ($closesAt instanceof DateTimeImmutable
-            && ($closesAt <= new DateTimeImmutable('today') || $closesAt > new DateTimeImmutable('+1 year'))
+            && (($requiresFutureDeadline && $closesAt <= new DateTimeImmutable('today'))
+                || $closesAt > new DateTimeImmutable('+1 year'))
         ) {
             $invalidFields[] = 'closesAt';
         }

@@ -4,6 +4,8 @@ namespace App\Controller\Api;
 
 use App\Api\ApiAccess;
 use App\Api\NotificationResource;
+use App\Api\JsonPayload;
+use App\Api\UserResource;
 use App\Entity\Notification;
 use App\Localization\ApiMessages;
 use App\Localization\LocaleContext;
@@ -19,6 +21,30 @@ use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
 
 final class NotificationController
 {
+    #[Route('/api/me/notifications/settings', name: 'api_my_notification_settings', methods: ['PUT'])]
+    public function settings(Request $request, EntityManagerInterface $entityManager, Security $security, CsrfTokenManagerInterface $tokenManager): JsonResponse
+    {
+        $locale = LocaleContext::fromRequest($request);
+        if ($locale === null) {
+            return new JsonResponse(['error' => ApiMessages::get('unsupported_language', 'bs')], 400);
+        }
+        if ($csrfError = ApiAccess::requireCsrf($request, $tokenManager, $locale)) {
+            return $csrfError;
+        }
+        $user = ApiAccess::requireParticipant($security, $locale, requireVerified: true);
+        if ($user instanceof JsonResponse) {
+            return $user;
+        }
+        $data = JsonPayload::fromRequest($request);
+        if (!is_array($data) || !is_bool($data['enabled'] ?? null)) {
+            return new JsonResponse(['error' => ApiMessages::get('invalid_request', $locale)], 400);
+        }
+        $user->setNotificationsEnabled($data['enabled']);
+        $entityManager->flush();
+
+        return new JsonResponse(['data' => UserResource::fromEntity($user, $locale)]);
+    }
+
     #[Route('/api/me/notifications', name: 'api_my_notifications', methods: ['GET'])]
     public function index(
         Request $request,
@@ -34,18 +60,31 @@ final class NotificationController
         if ($user instanceof JsonResponse) {
             return $user;
         }
-        $notifications = $entityManager->getRepository(Notification::class)->createQueryBuilder('notification')
+        $limit = $request->query->getInt('limit', 30);
+        $before = $request->query->getInt('before', 0);
+        if ($limit < 1 || $limit > 30 || $before < 0) {
+            return new JsonResponse(['error' => ApiMessages::get('invalid_request', $locale)], 400);
+        }
+        $query = $entityManager->getRepository(Notification::class)->createQueryBuilder('notification')
             ->andWhere('notification.recipient = :recipient')
             ->andWhere('notification.type <> :chatMessage')
             ->setParameter('recipient', $user)
             ->setParameter('chatMessage', 'chat_message')
-            ->orderBy('notification.createdAt', SortDirection::Descending)
-            ->setMaxResults(30)
+            ->orderBy('notification.id', SortDirection::Descending);
+        if ($before > 0) {
+            $query->andWhere('notification.id < :before')->setParameter('before', $before);
+        }
+        $remaining = (int) (clone $query)->select('COUNT(notification.id)')->resetDQLPart('orderBy')->getQuery()->getSingleScalarResult();
+        $notifications = $query->setMaxResults($limit)
             ->getQuery()
             ->getResult();
 
         return new JsonResponse([
             'unreadCount' => $unreadInboxCounter->notifications($user),
+            'meta' => [
+                'remaining' => max(0, $remaining - count($notifications)),
+                'nextCursor' => count($notifications) < $remaining ? $notifications[array_key_last($notifications)]->getId() : null,
+            ],
             'data' => array_map(
                 static fn (Notification $notification): array => NotificationResource::fromEntity($notification, $locale),
                 $notifications,

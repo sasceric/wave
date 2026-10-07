@@ -1,0 +1,178 @@
+@use '../../breakpoints';
+
+.company-campaign-detail {
+  min-width: 0;
+
+  &__overview {
+    display: grid;
+    grid-template-columns: minmax(180px, .85fr) minmax(0, 1.2fr) minmax(200px, .8fr);
+    align-items: start;
+    gap: 22px;
+  }
+
+  &__cover {
+    aspect-ratio: 1.6;
+    overflow: hidden;
+    border-radius: 10px;
+  }
+
+  &__content {
+    min-width: 0;
+
+    h1 {
+      margin: 6px 0 12px;
+      color: var(--forest);
+      font-size: clamp(25px, 2.4vw, 32px);
+      overflow-wrap: anywhere;
+    }
+
+    :deep(.profile-bio) {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.65;
+      overflow-wrap: anywhere;
+    }
+  }
+
+  &__category {
+    margin: 0;
+    color: var(--muted);
+    font-size: 12px;
+  }
+
+  &__summary {
+    margin: 0 0 10px;
+    color: var(--forest);
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 1.6;
+    overflow-wrap: anywhere;
+  }
+
+  &__meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 14px 18px;
+    margin: 22px 0 0;
+    color: var(--muted);
+    font-size: 12px;
+
+    > div {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr);
+      gap: 3px 8px;
+    }
+
+    > div > svg {
+      grid-row: 1 / 3;
+      align-self: center;
+    }
+
+    dd {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 0;
+    }
+
+    .sr-only + dd {
+      grid-column: 1 / -1;
+    }
+  }
+
+  &__facts {
+    display: grid;
+    gap: 18px;
+    margin: 0;
+    padding-left: 22px;
+    border-left: 1px solid var(--line);
+
+    dt {
+      margin-bottom: 6px;
+      color: var(--muted);
+      font-size: 10px;
+      letter-spacing: .05em;
+      text-transform: uppercase;
+    }
+
+    dd {
+      margin: 0;
+      color: var(--forest);
+      font-size: 13px;
+      line-height: 1.6;
+      overflow-wrap: anywhere;
+    }
+
+    ul {
+      margin: 0;
+      padding-left: 16px;
+    }
+  }
+}
+
+.company-campaign-applicants {
+  margin-top: 28px;
+
+  h2 {
+    scroll-margin-top: 110px;
+    margin: 0 0 6px;
+    color: var(--forest);
+    font-size: clamp(25px, 2.8vw, 34px);
+  }
+
+  .creator-offers__toolbar {
+    justify-content: flex-end;
+  }
+
+  .creator-offers__campaign {
+    width: 42%;
+  }
+
+  .creator-offers__campaign-identity > .card-image {
+    width: 48px;
+    height: 48px;
+    flex-basis: 48px;
+    border-radius: 50%;
+  }
+
+  &__time {
+    display: block;
+    margin: 5px 0 0 24px;
+    color: var(--muted);
+    font-size: 11px;
+  }
+}
+
+@include breakpoints.down(1100px) {
+  .company-campaign-detail {
+    &__overview {
+      grid-template-columns: minmax(180px, .8fr) minmax(0, 1.2fr);
+    }
+
+    &__facts {
+      grid-column: 1 / -1;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      padding: 18px 0 0;
+      border-left: 0;
+      border-top: 1px solid var(--line);
+    }
+  }
+}
+
+@include breakpoints.down(760px) {
+  .company-campaign-detail {
+    &__overview,
+    &__facts {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    &__cover {
+      max-height: 240px;
+    }
+  }
+
+  .company-campaign-applicants .creator-offers__table td:first-child {
+    width: auto;
+  }
+}

@@ -5,7 +5,7 @@ import { test } from 'node:test'
 import * as vue from 'vue'
 import { setupView } from './setupView.js'
 
-test('closed campaigns block sending drafts, while open campaigns and direct inquiries can send', async () => {
+test('closed and finished campaigns block sending drafts, while open campaigns and direct inquiries can send', async () => {
   const requests = []
   const { state } = await setupView('../src/views/MessagesView.vue', {
     '../lib/api': { apiGet: async () => {}, apiRequest: async (path) => { requests.push(path) }, formatDate: () => '', formatMoney: () => '' },
@@ -18,6 +18,12 @@ test('closed campaigns block sending drafts, while open campaigns and direct inq
   await state.sendMessage()
   assert.equal(requests.length, 0)
   assert.equal(state.draft.value, 'A message that cannot be sent')
+  state.conversations.value[0].campaign.status = 'finished'
+  assert.equal(state.campaignChatClosed.value, true)
+  assert.equal(state.campaignChatNotice.value, 'campaignChat.finishedNotice')
+  assert.equal(state.canSend.value, false)
+  await state.sendMessage()
+  assert.equal(requests.length, 0)
   state.conversations.value[0].campaign.status = 'open'
   assert.equal(state.canSend.value, true)
   state.selectedConversationId.value = null

@@ -2,6 +2,7 @@
 
 namespace App\Controller\Api;
 
+use App\Api\CampaignHiredCounts;
 use App\Account\AccountEmailSender;
 use App\Api\ApiAccess;
 use App\Api\ApplicationResource;
@@ -107,7 +108,7 @@ final class MarketplaceWorkflowController
             );
         }
 
-        return new JsonResponse(['data' => ApplicationResource::fromEntity($application, $locale)], 201);
+        return new JsonResponse(['data' => ApplicationResource::fromEntity($application, $locale, hiredCount: CampaignHiredCounts::forCampaign($entityManager, $application->getCampaign()))], 201);
     }
 
     #[Route('/api/me/applications', name: 'api_my_applications', methods: ['GET'])]
@@ -126,6 +127,7 @@ final class MarketplaceWorkflowController
             return new JsonResponse(['error' => ApiMessages::get('profile_unavailable', $locale)], 409);
         }
         $applications = $entityManager->getRepository(Application::class)->findBy(['creator' => $creator], ['createdAt' => 'DESC']);
+        $hiredCounts = CampaignHiredCounts::forCampaigns($entityManager, array_map(static fn (Application $application): Campaign => $application->getCampaign(), $applications));
         $conversationIdsByCampaign = [];
         foreach ($entityManager->getRepository(CampaignConversation::class)->findBy(['creator' => $creator]) as $conversation) {
             $campaignId = $conversation->getCampaign()->getId();
@@ -137,11 +139,11 @@ final class MarketplaceWorkflowController
 
         return new JsonResponse([
             'data' => array_map(
-                static function (Application $application) use ($locale, $conversationIdsByCampaign): array {
+                static function (Application $application) use ($locale, $conversationIdsByCampaign, $hiredCounts): array {
                     $campaignId = $application->getCampaign()->getId();
                     $conversationId = $campaignId === null ? null : ($conversationIdsByCampaign[$campaignId] ?? null);
 
-                    return ApplicationResource::fromEntity($application, $locale, $conversationId);
+                    return ApplicationResource::fromEntity($application, $locale, $conversationId, $hiredCounts[$campaignId] ?? 0);
                 },
                 $applications,
             ),
@@ -166,7 +168,8 @@ final class MarketplaceWorkflowController
         }
         $applications = $entityManager->getRepository(Application::class)->findBy(['campaign' => $campaign], ['createdAt' => 'ASC']);
 
-        return new JsonResponse(['data' => array_map(static fn (Application $application): array => ApplicationResource::fromEntity($application, $locale), $applications)]);
+        $hiredCount = CampaignHiredCounts::forCampaign($entityManager, $campaign);
+        return new JsonResponse(['data' => array_map(static fn (Application $application): array => ApplicationResource::fromEntity($application, $locale, hiredCount: $hiredCount), $applications)]);
     }
 
     #[Route('/api/company/applications/{id}/shortlist', name: 'api_company_application_shortlist', methods: ['POST'])]
@@ -196,6 +199,9 @@ final class MarketplaceWorkflowController
             || $application->getCampaign()->getCompany()->getId() !== $company->getId()
         ) {
             return new JsonResponse(['error' => ApiMessages::get('application_not_found', $locale)], 404);
+        }
+        if ($application->getCampaign()->getStatus() === 'finished') {
+            return new JsonResponse(['error' => ApiMessages::get('campaign_finished', $locale)], 409);
         }
         if ($application->getStatus() !== 'pending') {
             return new JsonResponse(['error' => ApiMessages::get('application_not_pending', $locale)], 409);
@@ -232,7 +238,7 @@ final class MarketplaceWorkflowController
         }
 
         return new JsonResponse([
-            'data' => ApplicationResource::fromEntity($application, $locale),
+            'data' => ApplicationResource::fromEntity($application, $locale, hiredCount: CampaignHiredCounts::forCampaign($entityManager, $application->getCampaign())),
             'conversationId' => $conversation->getId(),
         ]);
     }
@@ -244,7 +250,6 @@ final class MarketplaceWorkflowController
         EntityManagerInterface $entityManager,
         Security $security,
         CsrfTokenManagerInterface $tokenManager,
-        NotificationDelivery $notificationDelivery,
     ): JsonResponse {
         $locale = LocaleContext::fromRequest($request);
         if ($locale === null) {
@@ -262,27 +267,16 @@ final class MarketplaceWorkflowController
         if (!$application instanceof Application || !$company instanceof Company || $application->getCampaign()->getCompany()->getId() !== $company->getId()) {
             return new JsonResponse(['error' => ApiMessages::get('application_not_found', $locale)], 404);
         }
+        if ($application->getCampaign()->getStatus() === 'finished') {
+            return new JsonResponse(['error' => ApiMessages::get('campaign_finished', $locale)], 409);
+        }
         if ($application->getStatus() !== 'pending') {
             return new JsonResponse(['error' => ApiMessages::get('application_not_pending', $locale)], 409);
         }
         $application->setStatus('rejected');
-        $creatorOwner = $application->getCreator()->getOwner();
-        $notification = null;
-        if ($creatorOwner instanceof User) {
-            $notification = new Notification(
-                $creatorOwner,
-                'application_rejected',
-                $user,
-                $application->getCampaign(),
-            );
-            $entityManager->persist($notification);
-        }
         $entityManager->flush();
-        if ($notification instanceof Notification) {
-            $notificationDelivery->deliver($notification);
-        }
 
-        return new JsonResponse(['data' => ApplicationResource::fromEntity($application, $locale)]);
+        return new JsonResponse(['data' => ApplicationResource::fromEntity($application, $locale, hiredCount: CampaignHiredCounts::forCampaign($entityManager, $application->getCampaign()))]);
     }
 
     #[Route('/api/company/applications/{id}/offer', name: 'api_company_application_offer', methods: ['POST'])]
@@ -309,6 +303,9 @@ final class MarketplaceWorkflowController
         $company = $user->getCompany();
         if (!$application instanceof Application || !$company instanceof Company || $application->getCampaign()->getCompany()->getId() !== $company->getId()) {
             return new JsonResponse(['error' => ApiMessages::get('application_not_found', $locale)], 404);
+        }
+        if ($application->getCampaign()->getStatus() === 'finished') {
+            return new JsonResponse(['error' => ApiMessages::get('campaign_finished', $locale)], 409);
         }
         if ($application->getStatus() !== 'shortlisted') {
             return new JsonResponse(['error' => ApiMessages::get('application_not_pending', $locale)], 409);
@@ -343,7 +340,7 @@ final class MarketplaceWorkflowController
             $notificationDelivery->deliver($notification);
         }
 
-        return new JsonResponse(['data' => OfferResource::fromEntity($offer, $locale)], 201);
+        return new JsonResponse(['data' => OfferResource::fromEntity($offer, $locale, CampaignHiredCounts::forCampaign($entityManager, $offer->getApplication()->getCampaign()))], 201);
     }
 
     #[Route('/api/me/offers', name: 'api_my_offers', methods: ['GET'])]
@@ -371,7 +368,8 @@ final class MarketplaceWorkflowController
             ->getQuery()
             ->getResult();
 
-        return new JsonResponse(['data' => array_map(static fn (Offer $offer): array => OfferResource::fromEntity($offer, $locale), $offers)]);
+        $hiredCounts = CampaignHiredCounts::forCampaigns($entityManager, array_map(static fn (Offer $offer): Campaign => $offer->getApplication()->getCampaign(), $offers));
+        return new JsonResponse(['data' => array_map(static fn (Offer $offer): array => OfferResource::fromEntity($offer, $locale, $hiredCounts[$offer->getApplication()->getCampaign()->getId()] ?? 0), $offers)]);
     }
 
     #[Route('/api/me/offers/{id}/respond', name: 'api_creator_offer_respond', methods: ['POST'])]
@@ -399,6 +397,9 @@ final class MarketplaceWorkflowController
         $offer = $entityManager->getRepository(Offer::class)->find($id);
         if (!$offer instanceof Offer || !$creator instanceof Creator || $offer->getApplication()->getCreator()->getId() !== $creator->getId()) {
             return new JsonResponse(['error' => ApiMessages::get('offer_not_found', $locale)], 404);
+        }
+        if ($offer->getApplication()->getCampaign()->getStatus() === 'finished') {
+            return new JsonResponse(['error' => ApiMessages::get('campaign_finished', $locale)], 409);
         }
         if ($offer->getStatus() !== 'pending') {
             return new JsonResponse(['error' => ApiMessages::get('offer_not_pending', $locale)], 409);
@@ -451,6 +452,6 @@ final class MarketplaceWorkflowController
             }
         }
 
-        return new JsonResponse(['data' => OfferResource::fromEntity($offer, $locale)]);
+        return new JsonResponse(['data' => OfferResource::fromEntity($offer, $locale, CampaignHiredCounts::forCampaign($entityManager, $offer->getApplication()->getCampaign()))]);
     }
 }

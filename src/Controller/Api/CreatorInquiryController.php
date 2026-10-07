@@ -273,10 +273,10 @@ final class CreatorInquiryController
         $companyOwner = $inquiry->getCompany()->getOwner();
         $creatorOwner = $inquiry->getCreator()->getOwner();
         $notification = null;
-        if ($decision === 'accept' && $companyOwner instanceof User) {
+        if ($companyOwner instanceof User) {
             $notification = new Notification(
                 $companyOwner,
-                'creator_inquiry_accepted',
+                $decision === 'accept' ? 'creator_inquiry_accepted' : 'creator_inquiry_rejected',
                 $creatorOwner,
             );
             $entityManager->persist($notification);

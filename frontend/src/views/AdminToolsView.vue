@@ -54,6 +54,10 @@ function date(value) {
   return new Intl.DateTimeFormat(language, { dateStyle: 'short', timeStyle: 'medium' }).format(new Date(value))
 }
 
+function taskStatus(row) {
+  return row.status === 'scheduled' && row.overdue ? 'overdue' : row.status
+}
+
 async function load() {
   const ticket = ++requestId
   const selected = tab.value
@@ -221,9 +225,9 @@ onBeforeUnmount(() => { requestId++ })
             </template>
             <template #cell-kind="{ value }">{{ t(`adminTools.${value}Kind`) }}</template>
             <template #cell-lastStartedAt="{ value }">{{ date(value) }}</template>
-            <template #cell-lastFinishedAt="{ value, row }">{{ date(value) }}<small v-if="row.lastOutcome" class="admin-tools__command">{{ t(`adminTools.statuses.${row.lastOutcome}`) }}</small></template>
+            <template #cell-lastFinishedAt="{ value, row }">{{ date(value) }}<small v-if="row.lastOutcome" class="admin-tools__command"><span class="admin-tools__status" :class="`admin-tools__status--${row.lastOutcome}`">{{ t(`adminTools.statuses.${row.lastOutcome}`) }}</span></small></template>
             <template #cell-nextExpectedAt="{ value }">{{ date(value) }}</template>
-            <template #cell-status="{ value }"><span class="admin-tools__status" :class="`admin-tools__status--${value}`">{{ t(`adminTools.statuses.${value}`) }}</span></template>
+            <template #cell-status="{ row }"><span class="admin-tools__status" :class="`admin-tools__status--${taskStatus(row)}`">{{ t(`adminTools.statuses.${taskStatus(row)}`) }}</span></template>
             <template #cell-time="{ value }">{{ date(value) }}</template>
             <template #cell-file="{ value }"><code>{{ value }}</code></template>
             <template #cell-message="{ row, value }"><button type="button" class="admin-tools__log-preview" @click="openLog(row)">{{ value }}</button><small v-if="row.truncated">{{ t('adminTools.truncated') }}</small></template>

@@ -1,27 +1,28 @@
 <script setup>
-import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { isNavigationFailure, NavigationFailureType, RouterView, useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import { Bell, Building2, Download, House, LogOut, Menu, Megaphone, MessageCircle, UserRound, UsersRound, X } from '@lucide/vue'
+import { Bell, Building2, ChevronRight, Download, House, LogOut, Menu, Megaphone, MessageCircle, UserRound, UsersRound, X } from '@lucide/vue'
 import { registerSW } from 'virtual:pwa-register'
 import AccountSidebar from './components/account/AccountSidebar.vue'
 import LanguageSwitcher from './components/shared/LanguageSwitcher.vue'
 import HeaderCreatorSearch from './components/shared/HeaderCreatorSearch.vue'
 import LocalizedLink from './components/shared/LocalizedLink.vue'
+import WaveLogo from './components/shared/WaveLogo.vue'
 import WaveWordmark from './components/shared/WaveWordmark.vue'
 import FooterNewsletterSignup from './components/shared/FooterNewsletterSignup.vue'
 import SuccessModal from './components/shared/SuccessModal.vue'
 import CookieConsentBanner from './components/shared/CookieConsentBanner.vue'
-import LoadingSkeleton from './components/shared/LoadingSkeleton.vue'
+import NotificationsPanel from './components/shared/NotificationsPanel.vue'
 import { currentUser, setCurrentUser } from './composables/useCurrentUser'
 import { useAdminWorker } from './composables/useAdminWorker'
 import { unreadMessageCount } from './composables/useUnreadMessages'
 import { mobileAccountSidebarOpen } from './composables/useMobileAccountSidebar'
 import { setLocale } from './i18n'
-import { apiGet, apiRequest, formatDate } from './lib/api'
+import { apiGet, apiRequest } from './lib/api'
 import { startInboxSync } from './lib/inboxSync'
 import { updateAppBadge } from './lib/appBadge'
-import { startNotificationNavigation } from './lib/notificationNavigation'
+import { notificationDestination, startNotificationNavigation } from './lib/notificationNavigation'
 import { updateSeo } from './lib/seo'
 import { trackPageView } from './lib/privacyMetrics'
 import { localizedPath } from './routePaths'
@@ -50,12 +51,19 @@ const authMenuOpen = ref(false)
 const authMenu = ref(null)
 const authMenuTrigger = ref(null)
 const authMenuError = ref('')
+const failedAccountImage = ref('')
+const accountName = computed(() => currentUser.value?.profile?.displayName || currentUser.value?.profile?.name || currentUser.value?.name || currentUser.value?.email || t('app.account'))
+const accountImage = computed(() => currentUser.value?.profile?.avatarUrl || currentUser.value?.profile?.logoUrl || '')
 const signingOut = ref(false)
 const notificationsMenuOpen = ref(false)
 const notificationsMenu = ref(null)
 const notifications = ref([])
 const unreadNotificationTotal = ref(0)
 const notificationsLoaded = ref(false)
+const notificationsRemaining = ref(0)
+const notificationsCursor = ref(null)
+const loadingMoreNotifications = ref(false)
+const enablingNotifications = ref(false)
 const unreadMessagesLoaded = ref(false)
 const notificationsError = ref('')
 const markingAllRead = ref(false)
@@ -71,7 +79,7 @@ const updateError = ref('')
 const installHelpVisible = ref(false)
 const installAvailable = ref(false)
 const installHint = computed(() => isIosDevice() ? t('app.installIosHint') : t('app.installHint'))
-const unreadNotificationCount = computed(() => (
+const unreadNotificationCount = computed(() => currentUser.value?.notificationsEnabled === false ? 0 : (
   unreadNotificationTotal.value
   + optimisticUnreadNotificationIds.value.length
 ))
@@ -153,6 +161,9 @@ watch(currentUser, (user, previousUser) => {
     notifications.value = []
     unreadNotificationTotal.value = 0
     notificationsLoaded.value = false
+    notificationsRemaining.value = 0
+    notificationsCursor.value = null
+    loadingMoreNotifications.value = false
     unreadMessagesLoaded.value = false
     optimisticUnreadNotificationIds.value = []
     unreadMessageCount.value = 0
@@ -284,16 +295,25 @@ async function loadNotifications() {
   const userId = currentUser.value?.id
   if (!userId) return
   const requestVersion = ++notificationsRequestVersion
+  loadingMoreNotifications.value = false
   const pendingIds = new Set(optimisticUnreadNotificationIds.value)
   try {
-    const response = await apiGet('/me/notifications')
+    const response = await apiGet('/me/notifications?limit=5')
     if (
       currentUser.value?.id !== userId
       || requestVersion !== notificationsRequestVersion
     ) {
       return
     }
-    notifications.value = response.data
+    const refreshed = new Map(response.data.map(item => [item.id, item]))
+    // Retain older pages only while the refreshed head overlaps the loaded range.
+    // Otherwise five or more arrivals could leave an unseen gap above the old cursor.
+    if (notifications.value.some(item => refreshed.has(item.id))) {
+      for (const item of notifications.value) if (!refreshed.has(item.id)) refreshed.set(item.id, item)
+    }
+    notifications.value = [...refreshed.values()].sort((a, b) => b.id - a.id)
+    notificationsRemaining.value = Math.max(0, (response.meta?.remaining ?? 0) - (notifications.value.length - response.data.length))
+    notificationsCursor.value = notificationsRemaining.value > 0 ? notifications.value.at(-1)?.id : null
     unreadNotificationTotal.value = response.unreadCount ?? response.data.filter((item) => !item.readAt).length
     notificationsLoaded.value = true
     const loadedIds = new Set(response.data.map((notification) => notification.id))
@@ -309,6 +329,50 @@ async function loadNotifications() {
     }
     notificationsError.value = cause.message
   }
+}
+
+async function loadMoreNotifications() {
+  if (loadingMoreNotifications.value || !notificationsCursor.value) return
+  const userId = currentUser.value?.id
+  const version = notificationsRequestVersion
+  const cursor = notificationsCursor.value
+  loadingMoreNotifications.value = true
+  try {
+    const response = await apiGet(`/me/notifications?limit=5&before=${cursor}`)
+    if (currentUser.value?.id !== userId || version !== notificationsRequestVersion) return
+    const items = new Map(notifications.value.map(item => [item.id, item]))
+    for (const item of response.data) items.set(item.id, item)
+    notifications.value = [...items.values()].sort((a, b) => b.id - a.id)
+    notificationsRemaining.value = response.meta?.remaining ?? 0
+    notificationsCursor.value = response.meta?.nextCursor ?? null
+    notificationsError.value = ''
+  } catch (cause) {
+    if (currentUser.value?.id === userId && version === notificationsRequestVersion) notificationsError.value = cause.message
+  } finally {
+    if (currentUser.value?.id === userId && version === notificationsRequestVersion) loadingMoreNotifications.value = false
+  }
+}
+
+async function enableAccountNotifications() {
+  if (enablingNotifications.value || !currentUser.value) return
+  const userId = currentUser.value.id
+  enablingNotifications.value = true
+  notificationsError.value = ''
+  try {
+    const response = await apiRequest('/me/notifications/settings', { method: 'PUT', body: { enabled: true } })
+    if (currentUser.value?.id !== userId) return
+    setCurrentUser(response.data)
+    if (pushSupported.value && pushConfig.value.enabled && !pushSubscribed.value) await togglePushNotifications()
+  } catch (cause) {
+    notificationsError.value = cause.message
+  } finally {
+    enablingNotifications.value = false
+  }
+}
+
+function closeNotifications() {
+  notificationsMenuOpen.value = false
+  notificationsMenu.value?.querySelector('.header-notifications__trigger')?.focus()
 }
 
 async function loadUnreadMessages() {
@@ -745,29 +809,26 @@ async function openNotification(notification) {
     )
     notificationsMenuOpen.value = false
     void loadNotifications()
-    if (notification.conversationId) {
-      await router.push({
-        path: localizedPath('messages', locale.value),
-        query: { conversation: notification.conversationId },
-      })
-      return
-    }
-    const destination = notification.type === 'offer_received'
-      ? 'account-offers'
-      : ['campaign_invitation', 'invitation_declined'].includes(notification.type)
-        ? 'account-invitations'
-        : ['creator_inquiry_received', 'creator_inquiry_accepted'].includes(notification.type)
-          ? 'account-inquiries'
-          : ['application_received', 'application_rejected'].includes(notification.type)
-            ? 'account-applications'
-            : 'account'
-    await router.push({ path: localizedPath(destination, locale.value) })
+    const destination = notificationDestination(notification)
+    await router.push({ path: localizedPath(destination.name, locale.value), query: destination.query })
   } catch (cause) {
     notificationsError.value = cause.message
   }
 }
 
+async function toggleAuthMenu() {
+  resetMobileChrome()
+  authMenuOpen.value = !authMenuOpen.value
+  notificationsMenuOpen.value = false
+  if (authMenuOpen.value) {
+    await nextTick()
+    authMenu.value?.querySelector('.header-user-menu__item')?.focus()
+  }
+}
+
 function toggleNotifications() {
+  resetMobileChrome()
+  authMenuOpen.value = false
   notificationsMenuOpen.value = !notificationsMenuOpen.value
   if (notificationsMenuOpen.value) void loadNotifications()
 }
@@ -870,7 +931,7 @@ async function signOut() {
             v-if="currentUser"
             ref="notificationsMenu"
             class="header-notifications"
-            @keydown.esc.stop.prevent="notificationsMenuOpen = false"
+            @keydown.esc.stop.prevent="closeNotifications"
           >
             <button
               class="header-notifications__trigger"
@@ -883,54 +944,26 @@ async function signOut() {
             >
               <Bell :size="19" stroke-width="1.8" aria-hidden="true" />
               <span v-if="unreadNotificationCount" class="header-notifications__badge" aria-hidden="true">
-                {{ unreadNotificationCount > 99 ? '99+' : unreadNotificationCount }}
               </span>
             </button>
-            <div
+            <NotificationsPanel
               v-if="notificationsMenuOpen"
-              id="header-notifications-panel"
-              class="header-notifications__panel"
-            >
-              <div class="header-notifications__heading">
-                <h2>{{ t('app.notifications') }}</h2>
-                <button
-                  v-if="unreadNotificationCount"
-                  type="button"
-                  :disabled="markingAllRead"
-                  @click="markAllNotificationsRead"
-                >{{ t('app.markAllRead') }}</button>
-              </div>
-              <p v-if="notificationsError" class="header-notifications__error" role="alert">
-                {{ notificationsError }}
-              </p>
-              <div v-if="currentUser" class="header-notifications__push">
-                <button
-                  v-if="pushSupported && pushConfig.enabled"
-                  type="button"
-                  :disabled="pushBusy"
-                  @click="togglePushNotifications"
-                >{{ t(pushSubscribed ? 'app.pushDisable' : 'app.pushEnable') }}</button>
-                <p v-if="pushStatus" role="status">{{ t(`app.${pushStatus}`) }}</p>
-              </div>
-              <LoadingSkeleton v-if="!notificationsError && !notificationsLoaded" :count="3" />
-              <p v-else-if="!notificationsError && !notifications.length">{{ t('app.noNotifications') }}</p>
-              <div v-else-if="!notificationsError" class="header-notifications__list">
-                <button
-                  v-for="notification in notifications"
-                  :key="notification.id"
-                  class="header-notifications__item"
-                  :class="{ 'is-unread': !notification.readAt }"
-                  type="button"
-                  @click="openNotification(notification)"
-                >
-                  <span>{{ t(`campaignChat.notificationTypes.${notification.type}`, {
-                    actor: notification.actorName,
-                    campaign: notification.campaign?.title || '',
-                  }) }}</span>
-                  <time :datetime="notification.createdAt">{{ formatDate(notification.createdAt) }}</time>
-                </button>
-              </div>
-            </div>
+              :items="notifications"
+              :loaded="notificationsLoaded"
+              :disabled="currentUser?.notificationsEnabled === false"
+              :mobile="isMobileFooter"
+              :error="notificationsError"
+              :unread="unreadNotificationCount"
+              :marking-read="markingAllRead"
+              :enabling="enablingNotifications || pushBusy"
+              :loading-more="loadingMoreNotifications"
+              :remaining="notificationsRemaining"
+              @close="closeNotifications"
+              @read-all="markAllNotificationsRead"
+              @open="openNotification"
+              @enable="enableAccountNotifications"
+              @load-more="loadMoreNotifications"
+            />
           </div>
           <LocalizedLink
             v-if="currentUser"
@@ -969,23 +1002,44 @@ async function signOut() {
             <button
               ref="authMenuTrigger"
               class="header-user-menu__trigger"
+              :class="{ 'header-user-menu__trigger--signed-in': currentUser }"
               type="button"
               :aria-label="t('app.account')"
               aria-haspopup="true"
               aria-controls="header-user-menu-panel"
               :aria-expanded="authMenuOpen"
-              @click="authMenuOpen = !authMenuOpen"
+              @click="toggleAuthMenu"
             >
-              <UserRound :size="19" stroke-width="1.8" aria-hidden="true" />
+              <template v-if="currentUser">
+                <span class="header-user-menu__avatar">
+                  <img v-if="accountImage && failedAccountImage !== accountImage" :src="accountImage" alt="" @error="failedAccountImage = accountImage" />
+                  <WaveLogo v-else mark />
+                </span>
+                <span class="header-user-menu__name">{{ accountName }}</span>
+              </template>
+              <UserRound v-else :size="19" stroke-width="1.8" aria-hidden="true" />
             </button>
+            <div v-if="authMenuOpen && currentUser" class="header-user-menu__backdrop" aria-hidden="true" @click="closeAuthMenuAndRestoreFocus"></div>
             <div v-if="authMenuOpen" id="header-user-menu-panel" class="header-user-menu__panel">
               <template v-if="currentUser">
+                <div class="header-user-menu__identity">
+                  <span class="header-user-menu__avatar header-user-menu__avatar--large">
+                    <img v-if="accountImage && failedAccountImage !== accountImage" :src="accountImage" alt="" @error="failedAccountImage = accountImage" />
+                    <WaveLogo v-else mark />
+                  </span>
+                  <div><h2>{{ accountName }}</h2><p>{{ currentUser.email }}</p></div>
+                </div>
                 <LocalizedLink class="header-user-menu__item" :to="{ name: 'account' }" @click="authMenuOpen = false">
-                  <UserRound :size="16" stroke-width="1.8" aria-hidden="true" />
-                  {{ t('app.account') }}
+                  <UserRound :size="23" stroke-width="1.8" aria-hidden="true" />
+                  {{ t('app.myProfile') }}
+                  <ChevronRight class="header-user-menu__chevron" :size="20" aria-hidden="true" />
                 </LocalizedLink>
-                <button class="header-user-menu__item" type="button" :disabled="signingOut" @click="signOut">
-                  <LogOut :size="16" stroke-width="1.8" aria-hidden="true" />
+                <div class="header-user-menu__language">
+                  <span>{{ t('app.language') }}</span>
+                  <LanguageSwitcher expanded />
+                </div>
+                <button class="header-user-menu__item header-user-menu__item--sign-out" type="button" :disabled="signingOut" @click="signOut">
+                  <LogOut :size="23" stroke-width="1.8" aria-hidden="true" />
                   {{ t('account.signOut') }}
                 </button>
                 <p v-if="authMenuError" class="header-user-menu__error" role="alert">{{ authMenuError }}</p>
@@ -1000,7 +1054,7 @@ async function signOut() {
               </template>
             </div>
           </div>
-          <div class="desktop-language-switcher">
+          <div v-if="!currentUser" class="desktop-language-switcher">
             <LanguageSwitcher />
           </div>
         </div>

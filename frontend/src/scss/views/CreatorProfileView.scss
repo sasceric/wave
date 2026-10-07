@@ -51,23 +51,25 @@
   &__backdrop span:nth-child(3) { width: 430px; height: 430px; top: 75px; right: max(0px, calc((100vw - 1160px) / 2 - 95px)); background: #527066; }
 }
 .profile-layout {
-  grid-template-rows: minmax(calc(var(--profile-hero-height) - 32px), auto) auto;
-  display: grid; grid-template-columns: minmax(0, 1fr) 285px; grid-template-areas: 'summary fit' 'packages details'; column-gap: 61px; row-gap: 28px; align-items: start; padding-top: 32px; padding-bottom: 93px;
+  display: grid; grid-template-columns: minmax(0, 1fr) 285px; column-gap: 61px; align-items: start; padding-top: 32px; padding-bottom: 93px;
+}
+.profile-column, .profile-sidebar {
+  min-width: 0;
 }
 .profile-main {
-  grid-area: summary; display: flex; min-width: 0; flex-direction: column;
-  > .profile-heading { order: 1; }
+  display: flex; min-width: 0; flex-direction: column;
+  > .profile-heading { order: 1; min-height: calc(var(--profile-hero-height) - 32px + 28px); align-items: flex-start; padding-top: 20px; }
   > .profile-portfolio { order: 2; margin: 27px 0 0; }
   > .profile-bio { order: 3; max-width: none; margin: 20px 0 0; line-height: 1.65; }
   > .profile-tags { order: 4; margin-top: 12px; }
   > .notice { order: 5; margin: 18px 0 0; }
 }
-.profile-layout > .profile-packages {
-  grid-area: packages; margin: 0; padding-top: 24px; border-top: 1px solid #dfe4de;
+.profile-column > .profile-packages {
+  margin: 28px 0 0; padding-top: 24px; border-top: 1px solid #dfe4de;
   > .profile-section-heading { margin: 0 0 18px; padding-bottom: 0; border: 0; }
 }
 .profile-sidebar-details {
-  grid-area: details; min-width: 0; padding-top: 24px; border-top: 1px solid #dfe4de;
+  margin-top: 28px; min-width: 0; padding-top: 24px; border-top: 1px solid #dfe4de;
   .profile-faqs { margin: 0; }
   > .profile-related-categories { margin-top: 26px; padding-top: 0; }
   > .profile-related-categories:first-child { margin-top: 0; }
@@ -102,7 +104,6 @@
 }
 
 .profile-aside {
-  grid-area: fit;
   align-self: start;
   margin-top: 0;
   padding: 22px;
@@ -637,8 +638,6 @@
 
   .profile-layout {
     grid-template-columns: 1fr;
-    grid-template-rows: minmax(calc(var(--profile-hero-height) - 32px), auto) auto auto auto;
-    grid-template-areas: 'summary' 'packages' 'fit' 'details';
     gap: 24px;
     padding-top: 32px;
     padding-bottom: 60px;
@@ -672,6 +671,8 @@
   }
 
   .profile-main {
+    > .profile-heading { padding-top: 0; }
+
     > .profile-portfolio {
       margin-top: 17px;
     }

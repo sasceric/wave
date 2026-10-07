@@ -17,6 +17,15 @@ async function settle() {
   await new Promise((resolve) => setImmediate(resolve))
 }
 
+test('only overdue scheduled tasks use the overdue status badge', async () => {
+  const { state } = await tools(async () => ({ data: [], meta: {} }))
+  assert.equal(state.taskStatus({ status: 'scheduled', overdue: true }), 'overdue')
+  assert.equal(state.taskStatus({ status: 'scheduled', overdue: false }), 'scheduled')
+  for (const status of ['queued', 'running', 'failed', 'inactive', 'unregistered']) {
+    assert.equal(state.taskStatus({ status, overdue: true }), status)
+  }
+})
+
 test('log pagination uses snapshot cursors and page-size changes reset the snapshot', async () => {
   const requests = []
   const { state } = await tools(async (path) => {

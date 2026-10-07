@@ -386,14 +386,18 @@ show the existing featured flag on home and directory listings.
 
 All admin table footers use `AdminPagination`; task/failed-job actions reuse
 `AdminRowActions`. Logs retain cursor paging and can revisit already loaded page
-cursors. The account sidebar hides directory/language controls on desktop; mobile
+cursors. Tools queues sort by message count descending, and scheduled tasks by
+next execution ascending before pagination, with missing dates last and stable
+name tie-breaks. Task badges distinguish scheduled/success (green), queued/overdue
+(amber), running (blue), failed (red), and inactive/unregistered (gray).
+The account sidebar hides directory/language controls on desktop; mobile
 shows a full-width language picker and Creators. Profile, Messages, Notifications,
 and the duplicate creator FAQs entry are omitted from sidebar navigation.
 
 ### Account activity tables and closed campaign chats (2026-10-07)
 
 `CreatorCampaignActivity.vue` shares the table, status filters, search and numbered
-pagination for offers, applications and direct inquiries. It pages the already
+pagination for offers, applications, direct inquiries and campaign invitations. It pages the already
 loaded account records at ten items per page; the existing API endpoints and
 ownership checks are unchanged. Chat actions target the exact application
 conversation ID or accepted inquiry ID. Company inquiries show their creator
@@ -404,8 +408,69 @@ brief and campaign facts. It has no detail tabs or application submission action
 Inquiry dialogs use their own message and selected packages rather than campaign
 fields. Mobile tables become stacked rows, with pagination and controls retained.
 
+Company campaign lists use `CompanyCampaignList.vue` with cover images, campaign
+facts, hiring progress, status filters, search and a shared three-dot edit menu.
+`CompanyCampaignDetail.vue` wraps the brief in an account card and shows searchable
+applicants without status filter buttons. Both tables use the same ten-item numbered
+pagination and clamp their page when filtered/refreshed results shrink. Applicant
+Chat links target the existing conversation ID; View opens the existing applicant
+dialog. Campaign pages omit the profile summary; detail/edit pages include a back
+link to the campaign list. Editing preserves the existing form and API, with card
+radii, colors and typography matching the detail view. New copy is in all six locales.
+Campaign create/edit channels use the shared required multiselect for Instagram,
+TikTok and YouTube, preserving the channels array used by the API. Company inquiry
+pages also omit the profile summary; creator activity pages omit it as well; the summary remains on the account profile page.
+
+Invitation tables show
+cover images, channels, company, areas, budget, deadline and hiring progress.
+`/me/invitations` includes the full campaign resource and the accepted invitation's
+conversation ID, scoped to its creator. Pending invitations to closed, finished or
+past-deadline campaigns are shown as expired and cannot be answered. Accepted chats
+remain accessible. The shared details dialog and three-dot menu retain access to
+the brief. Saved campaigns use the existing cards in a four-column desktop grid,
+two columns on tablets and one on mobile, inside the matching account card.
+
 Closed campaigns disable the messages composer and display a localized notice.
 The campaign messaging API also rejects POST messages and company conversation
-starts with HTTP 409 while retaining readable chat history. Only explicit campaign
-`status=closed` blocks chat; passing the application deadline does not end an
+starts with HTTP 409 while retaining readable chat history. Explicit campaign
+`status=closed` or `status=finished` blocks chat; passing the application deadline does not end an
 existing collaboration. No database migration or additional configuration is needed.
+
+### Finished campaigns and creator declines
+
+Company campaign editing supports `open`, `closed`, and `finished`. Saving `finished`
+rejects every unhired application and pending payment offer in the same flush, while
+preserving accepted hires and offers. This automatic rejection creates no notifications
+or emails. A closed campaign alone does not reject applicants. Closed/finished chat
+history remains readable, but sending is disabled in both the UI and API. Finished
+campaigns cannot shortlist, issue offers, accept offers or respond to invitations;
+they can be finalized after their application deadline has passed.
+
+A creator's explicit invitation decline, offer decline, or collaboration inquiry
+rejection does notify the company. Inquiry rejection uses `creator_inquiry_rejected`
+and has copy in all six locales. Company campaign events open its campaign management
+page; inquiry events open the inquiry list. Conversation-linked notifications continue
+to open the exact chat. Notification creation and frontend routing are covered by
+`MarketplaceWorkflowTest`, `CreatorCollaborationTest`, and `notificationNavigation.test.js`.
+
+
+### Hiring progress and notification preferences
+
+Campaign responses include `hiredCount`, derived from accepted payment offers by
+`CampaignHiredCounts`. List endpoints aggregate it in one query, and the same
+progress component is used on cards, campaign details, account activity and chat.
+Accepting an invitation alone does not count as a hire.
+
+`User.notificationsEnabled` defaults to true; migration `Version20261007170000`
+adds its column. PUT `/api/me/notifications/settings` requires a verified participant,
+a CSRF token and a boolean `enabled`. Disabling it suppresses notification badges,
+realtime notification delivery and device pushes (including already queued pushes).
+Notification history remains stored; chat messages and email delivery are unchanged.
+The bell loads five records at a time with a stable `before` ID cursor. Disabled
+panels show informational examples, not fabricated notifications.
+
+The account summary stacks matching visibility and notification switches. Header
+account menus use the profile image/company logo, falling back to the Wave mark,
+and show a desktop name plus profile, language and sign-out controls. Signed-in
+language selection lives in this dropdown. Creator profile content and sidebar
+are independent columns, with the biography below the decorative hero.

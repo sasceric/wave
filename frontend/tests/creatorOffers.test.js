@@ -123,3 +123,62 @@ test('inquiries resolve their own chat and counterpart without inventing a campa
   assert.equal(state.campaign.value, undefined)
   assert.equal(state.selectedItem.value.id, 23)
 })
+
+test('finished campaigns preserve hired and rejected application outcomes in activity filters', async () => {
+  const { state, props } = await setupOffers()
+  props.kind = 'applications'
+  props.items = [
+    { id: 1, status: 'accepted', campaign: { status: 'finished', company: { name: 'Brand' } } },
+    { id: 2, status: 'rejected', campaign: { status: 'finished', company: { name: 'Brand' } } },
+  ]
+  assert.equal(state.statusLabel(props.items[0]), 'account.accepted')
+  assert.equal(state.statusLabel(props.items[1]), 'account.rejected')
+  state.statusFilter.value = 'accepted'
+  assert.equal(state.filteredItems.value.length, 1)
+  assert.equal(state.filteredItems.value[0].id, 1)
+  state.statusFilter.value = 'rejected'
+  assert.equal(state.filteredItems.value.length, 1)
+  assert.equal(state.filteredItems.value[0].id, 2)
+})
+
+test('invitations separate declined and expired invitations while preserving accepted chats', async () => {
+  const { state, props } = await setupOffers()
+  props.kind = 'invitations'
+  const campaign = { status: 'open', closesAt: '2100-11-12', channels: ['Instagram'], company: { name: 'Natura' } }
+  props.items = [
+    { id: 1, status: 'pending', campaign },
+    { id: 2, status: 'accepted', conversationId: 56, campaign: { ...campaign, status: 'finished' } },
+    { id: 3, status: 'declined', campaign },
+    { id: 4, status: 'pending', campaign: { ...campaign, closesAt: '2000-01-01' } },
+    { id: 5, status: 'pending', campaign: { ...campaign, status: 'closed' } },
+  ]
+  assert.deepEqual(Array.from(props.items, item => state.statusGroup(item)), ['pending', 'accepted', 'rejected', 'expired', 'expired'])
+  assert.equal(state.statusLabel(props.items[2]), 'account.rejected')
+  assert.equal(state.statusLabel(props.items[3]), 'account.invitationExpired')
+  assert.equal(state.chatRoute(props.items[1]).query.conversation, 56)
+  assert.equal(state.hasChat(props.items[0]), false)
+  assert.equal(state.titleKey.value, 'account.campaignInvitations')
+  assert.deepEqual(Array.from(state.statusFilters.value, filter => filter.count), [5, 1, 1, 1, 2])
+})
+
+test('invitation search and filters apply across ten-item pages', async () => {
+  const { state, props } = await setupOffers()
+  props.kind = 'invitations'
+  props.items = Array.from({ length: 23 }, (_, index) => ({
+    id: index + 1, status: index < 12 ? 'pending' : 'accepted',
+    campaign: { status: 'open', closesAt: '2100-01-01', title: `Campaign ${index}`, summary: 'A brief', channels: ['YouTube'], categories: ['Travel'], company: { name: 'Natura' } },
+  }))
+  await nextTick()
+  state.page.value = 3
+  assert.deepEqual(Array.from(state.pageItems.value, item => item.id), [21, 22, 23])
+  state.query.value = 'youtube'
+  await nextTick()
+  assert.equal(state.page.value, 1)
+  assert.equal(state.filteredItems.value.length, 23)
+  state.statusFilter.value = 'accepted'
+  await nextTick()
+  assert.equal(state.filteredItems.value.length, 11)
+  state.query.value = 'missing'
+  await nextTick()
+  assert.equal(state.filteredItems.value.length, 0)
+})

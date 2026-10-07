@@ -687,8 +687,74 @@
   margin-top: 12px;
 }
 
+.account-campaign-back {
+  display: inline-flex;
+  align-items: center;
+  justify-self: start;
+  gap: 9px;
+  color: var(--forest);
+  font-size: 13px;
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
 .account-campaign-form {
   scroll-margin-top: 24px;
+  padding: 20px 24px;
+  border-color: #e2e6df;
+  border-radius: 17px;
+  background: rgba(255, 255, 255, .65);
+  color: var(--forest);
+
+  .company-campaigns__header {
+    margin-bottom: 24px;
+
+    h2 {
+      font-size: clamp(25px, 2.4vw, 32px);
+      font-weight: 400;
+    }
+  }
+
+  .form-field {
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 400;
+  }
+
+  .form-grid {
+    gap: 0 18px;
+  }
+
+  .single-select__trigger,
+  .multi-select__trigger,
+  .rich-text-editor .ql-editor,
+  .rich-text-editor .ql-editor.ql-blank::before {
+    font-size: 13px;
+    font-weight: 400;
+  }
+
+  .account-profile-card {
+    margin: 4px 0 20px;
+  }
+
+  .button {
+    min-height: 40px;
+    gap: 9px;
+    padding: 9px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 500;
+  }
+
+  .form-stack > .button-row {
+    justify-content: flex-end;
+    margin-top: 8px;
+    padding-top: 20px;
+    border-top: 1px solid #e2e6df;
+  }
 }
 
 .company-campaigns {
@@ -716,222 +782,6 @@
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    white-space: nowrap;
-  }
-}
-
-.company-campaign-list,
-.company-applicants__list {
-  display: grid;
-  border: 1px solid #e4e8e1;
-  border-radius: 6px;
-  background: #fffefa;
-}
-
-.company-campaign-row {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto auto auto;
-  align-items: center;
-  gap: 18px;
-  padding: 14px 16px;
-  border-bottom: 1px solid #e9ece6;
-}
-
-.company-campaign-row:last-child,
-.company-applicant-row:last-child {
-  border-bottom: 0;
-}
-
-.company-campaign-row {
-  &__main {
-    min-width: 0;
-  }
-
-  &__title {
-    color: var(--forest);
-    font-size: 12px;
-    font-weight: 650;
-    text-decoration: none;
-  }
-
-  &__title:hover {
-    text-decoration: underline;
-    text-underline-offset: 3px;
-  }
-
-  &__main p {
-    margin: 4px 0 0;
-    overflow: hidden;
-    color: #7b887f;
-    font-size: 10px;
-    line-height: 1.5;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  &__applicants {
-    color: #77847c;
-    font-size: 10px;
-    white-space: nowrap;
-  }
-
-  &__applicants strong {
-    color: var(--forest);
-  }
-
-  &__view {
-    min-height: 34px;
-    padding: 7px 10px;
-    font-size: 10px;
-    white-space: nowrap;
-  }
-}
-
-.company-campaign-detail {
-  &__cover {
-    display: block;
-    width: 100%;
-    max-height: 330px;
-    margin: 16px 0 22px;
-    border-radius: 3px;
-    object-fit: cover;
-  }
-
-  &__summary {
-    color: var(--forest);
-    font-size: 16px;
-    font-weight: 600;
-    line-height: 1.6;
-  }
-
-  &__description {
-    color: #65756b;
-    font-size: 12px;
-    line-height: 1.8;
-    white-space: pre-line;
-  }
-
-  &__facts {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 14px 20px;
-    margin: 22px 0 0;
-    padding-top: 18px;
-    border-top: 1px solid #e4e7e0;
-  }
-
-  &__facts > div {
-    min-width: 0;
-  }
-
-  &__facts dt {
-    margin-bottom: 5px;
-    color: #839087;
-    font-size: 9px;
-    font-weight: 700;
-    letter-spacing: .06em;
-    text-transform: uppercase;
-  }
-
-  &__facts dd {
-    margin: 0;
-    color: #40574d;
-    font-size: 11px;
-    line-height: 1.6;
-    overflow-wrap: anywhere;
-  }
-}
-
-.company-applicants {
-  &__count {
-    display: grid;
-    width: 32px;
-    height: 32px;
-    place-items: center;
-    border-radius: 50%;
-    color: var(--forest);
-    background: #eef2eb;
-    font-size: 12px;
-    font-weight: 700;
-  }
-}
-
-.company-applicant-card {
-  &__statuses {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: flex-end;
-    gap: 6px;
-  }
-
-  &__hired {
-    color: #236343;
-    background: #e4f2e8;
-    font-weight: 700;
-  }
-}
-
-.company-applicant-row {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto auto;
-  align-items: center;
-  gap: 16px;
-  padding: 10px 14px;
-  border-bottom: 1px solid #e9ece6;
-
-  &__identity {
-    min-width: 0;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 0;
-    border: 0;
-    color: inherit;
-    background: transparent;
-    font: inherit;
-    text-align: left;
-    cursor: pointer;
-  }
-
-  &__identity > img,
-  &__identity > span:first-child {
-    display: grid;
-    width: 36px;
-    height: 36px;
-    flex: 0 0 auto;
-    place-items: center;
-    border-radius: 50%;
-    color: var(--forest);
-    background: #edf1e9;
-    object-fit: cover;
-  }
-
-  &__creator {
-    min-width: 0;
-    display: grid;
-    gap: 4px;
-  }
-
-  &__creator strong {
-    overflow: hidden;
-    color: var(--forest);
-    font-size: 11px;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  &__creator small {
-    overflow: hidden;
-    color: #859087;
-    font-size: 9px;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  &__view {
-    min-height: 34px;
-    padding: 7px 10px;
-    font-size: 10px;
     white-space: nowrap;
   }
 }
@@ -1066,6 +916,10 @@
 }
 
 @include breakpoints.down(640px) {
+  .account-campaign-form {
+    padding: 20px;
+  }
+
   .company-campaigns {
     &__header {
       align-items: flex-start;
@@ -1074,55 +928,6 @@
 
     &__header .button-row {
       margin-top: 0;
-    }
-  }
-
-  .company-campaign-detail {
-    &__facts {
-      grid-template-columns: 1fr;
-    }
-  }
-
-  .company-applicant-card {
-    &__statuses {
-      justify-content: flex-start;
-    }
-  }
-
-  .company-campaign-row {
-    grid-template-columns: minmax(0, 1fr) auto;
-    gap: 8px 10px;
-    padding: 12px;
-
-    &__main {
-      grid-column: 1 / -1;
-    }
-
-    &__applicants {
-      grid-column: 1;
-    }
-
-    &__view {
-      grid-column: 2;
-      justify-self: end;
-    }
-  }
-
-  .company-applicant-row {
-    grid-template-columns: minmax(0, 1fr) auto;
-    gap: 9px;
-    padding: 10px;
-
-    &__identity {
-      grid-column: 1;
-    }
-
-    &__view {
-      grid-column: 2;
-    }
-
-    .company-applicant-card__statuses {
-      grid-column: 1 / -1;
     }
   }
 
@@ -1440,4 +1245,23 @@
   }
 
   > button { justify-self: start; }
+}
+
+.account-bookmarks {
+  padding: 24px;
+  border: 1px solid #e2e6df;
+  border-radius: 17px;
+  background: rgba(255, 255, 255, .65);
+
+  > h1 {
+    margin: 0 0 22px;
+    color: var(--forest);
+    font-size: clamp(28px, 3vw, 38px);
+  }
+}
+
+@include breakpoints.down(760px) {
+  .account-bookmarks {
+    padding: 18px;
+  }
 }

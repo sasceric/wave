@@ -6,7 +6,7 @@ use App\Entity\Campaign;
 
 final class CampaignResource
 {
-    public static function fromEntity(Campaign $campaign, string $locale, ?string $categoryLabel = null, bool $card = false, array $categoryLabels = []): array
+    public static function fromEntity(Campaign $campaign, string $locale, ?string $categoryLabel = null, bool $card = false, array $categoryLabels = [], int $hiredCount = 0): array
     {
         $translation = $campaign->getTranslations()[$locale] ?? [];
         $categoryLabel ??= $categoryLabels[$campaign->getCategory()] ?? null;
@@ -29,6 +29,7 @@ final class CampaignResource
             'categories' => $campaign->getCategories(),
             'categoryLabels' => array_map(static fn (string $category): string => $categoryLabels[$category] ?? $category, $campaign->getCategories()),
             'creatorCount' => $campaign->getCreatorCount(),
+            'hiredCount' => $hiredCount,
             'closesAt' => $campaign->getClosesAt()->format(DATE_ATOM),
             'publishedAt' => $campaign->getPublishedAt()->format(DATE_ATOM),
             'status' => $campaign->getStatus(),

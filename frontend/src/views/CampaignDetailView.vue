@@ -1,4 +1,5 @@
 <script setup>
+import CampaignHiringProgress from '../components/campaigns/CampaignHiringProgress.vue'
 import { campaignPlace } from '../lib/marketplace'
 import { onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
@@ -158,7 +159,7 @@ onMounted(loadCampaign)
             <div class="brief-hero-fact">
               <UsersRound :size="18" aria-hidden="true" />
               <span>{{ t('campaignDetail.spots') }}</span>
-              <strong>{{ campaign.creatorCount }}</strong>
+              <strong><CampaignHiringProgress :campaign="campaign" /></strong>
             </div>
             <div class="brief-hero-fact">
               <CalendarDays :size="18" aria-hidden="true" />
@@ -283,7 +284,7 @@ onMounted(loadCampaign)
           <div class="brief-fact">
             <UsersRound :size="18" aria-hidden="true" />
             <span>{{ t('campaignDetail.spots') }}</span>
-            <strong>{{ campaign.creatorCount }}</strong>
+            <strong><CampaignHiringProgress :campaign="campaign" /></strong>
           </div>
           <div class="brief-fact">
             <CalendarDays :size="18" aria-hidden="true" />
