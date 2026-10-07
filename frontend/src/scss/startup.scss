@@ -1,0 +1,65 @@
+// Loaded directly by index.html so the splash appears before Vue downloads.
+.app-startup {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  box-sizing: border-box;
+  padding: max(24px, env(safe-area-inset-top)) max(24px, env(safe-area-inset-right)) max(24px, env(safe-area-inset-bottom)) max(24px, env(safe-area-inset-left));
+  background: #f6f2ea;
+  color: #173d36;
+  font-family: 'DM Sans', sans-serif;
+
+  &__logo {
+    border-radius: 24px;
+  }
+
+  &__brand {
+    font-size: 42px;
+    font-weight: 700;
+    line-height: 1;
+    letter-spacing: -2px;
+
+    span { color: #d98368; }
+  }
+
+  &__activity {
+    display: flex;
+    gap: 8px;
+    margin-top: 10px;
+
+    span {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #173d36;
+      animation: startup-pulse 1.2s ease-in-out infinite;
+
+      &:nth-child(2) { animation-delay: 0.15s; }
+      &:nth-child(3) { animation-delay: 0.3s; }
+    }
+  }
+
+  &__label {
+    min-height: 20px;
+    font-size: 14px;
+    color: #596d65;
+  }
+}
+
+html.app-starting {
+  overflow: hidden;
+}
+
+@keyframes startup-pulse {
+  0%, 100% { opacity: 0.35; transform: translateY(0); }
+  50% { opacity: 1; transform: translateY(-4px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app-startup__activity span { animation: none; }
+}

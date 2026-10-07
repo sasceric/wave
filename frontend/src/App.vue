@@ -13,7 +13,7 @@ import FooterNewsletterSignup from './components/shared/FooterNewsletterSignup.v
 import SuccessModal from './components/shared/SuccessModal.vue'
 import CookieConsentBanner from './components/shared/CookieConsentBanner.vue'
 import LoadingSkeleton from './components/shared/LoadingSkeleton.vue'
-import { currentUser, loadCurrentUser, setCurrentUser } from './composables/useCurrentUser'
+import { currentUser, setCurrentUser } from './composables/useCurrentUser'
 import { useAdminWorker } from './composables/useAdminWorker'
 import { unreadMessageCount } from './composables/useUnreadMessages'
 import { mobileAccountSidebarOpen } from './composables/useMobileAccountSidebar'
@@ -247,7 +247,6 @@ onMounted(() => {
   }
   window.addEventListener('scroll', handleMobileScroll, { passive: true })
   window.addEventListener('resize', resetMobileChrome)
-  loadCurrentUser().catch((cause) => console.error('Unable to load the current Wave account.', cause))
   window.addEventListener('beforeinstallprompt', captureInstallPrompt)
   window.addEventListener('appinstalled', onAppInstalled)
   window.addEventListener('wave:conversations-updated', handleConversationsUpdated)
