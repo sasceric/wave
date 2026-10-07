@@ -43,6 +43,10 @@ Install the matching public key in the deployment user's
 `php8.4 bin/console`, npm, and Doctrine migrations in the deployment directory
 without an interactive password prompt. The checkout must have `origin`
 pointing to this repository and a `main` branch.
+The current workflow expects systemd-managed Wave services. The deployment user
+also needs root or non-interactive sudo access to stop/start those units, repair
+`var/` ownership, run console commands as `steelcodeweb`, and reload the active
+`php8.4-fpm` service. It does not control Supervisor/cron installations.
 
 ## Server requirements
 
@@ -111,8 +115,9 @@ The Tools/background-processing release adds durable PostgreSQL queues, protecte
 job records, a task registry and directory projections. **Production needs
 supervised consumers and the scheduled-task dispatcher before queued deliveries
 can progress.** Follow [the first-deployment instructions](server-operations.md#first-deployment-step-by-step).
-The workflow migrates, registers missing tasks, builds the frontend and requests
-a graceful consumer restart; it does not install or enable systemd/Supervisor.
+The workflow pauses existing systemd consumers, migrates, registers missing tasks,
+builds the frontend and resumes previously active units. It does not install or
+enable systemd/Supervisor services.
 
 
 ## Listing images and skeletons
@@ -157,15 +162,24 @@ and per-contact polling should not be used for this feature.
 
 ## Deployment steps
 
-The workflow updates the checkout, runs Composer explicitly with PHP 8.4, and
+The workflow pauses the installed Wave systemd consumers and scheduler before
+updating the checkout, runs Composer explicitly with PHP 8.4, and
 sets `COMPOSER_ALLOW_SUPERUSER=1` so Composer does not disable Symfony Flex
 when the SSH login is root. Keep the deployment checkout and locked
 dependencies trusted; using a dedicated non-root deployment user is safer.
 After installing dependencies, it runs `composer dump-env prod` so web requests
 use the compiled production environment instead of the development default in
-`.env`. After cache clearing, it assigns
+`.env`. Before any Symfony command runs, it assigns
 `/home/steelcodeweb/web/wave.ba/public_html/var` to `steelcodeweb:steelcodeweb`
-and ensures the owner can write there, including logs, cache, and media.
+and ensures the owner can write there, including logs, cache, and media. Composer
+installation skips automatic scripts to avoid a second cache replacement. The
+workflow runs migrations, cache clear/warmup, asset installation and task
+registration as `steelcodeweb`, with debug disabled. The compiled environment
+belongs to that user with mode `640`. An active `php8.4-fpm` service is reloaded,
+then previously active workers and scheduler timer are started and checked.
+Inactive units stay inactive; on failure, inspect and repair the release before
+resuming services. See the cache-error recovery procedure in
+[server operations](server-operations.md#missing-container-files-or-cache-permission-errors).
 The deploy step preserves server-local frontend environment files such as
 `frontend/.env.production`. If `composer.lock` has local edits, it saves a patch
 under the ignored `var/deploy-backups/` directory and restores the tracked
@@ -330,8 +344,8 @@ before clearing the production cache and restarting workers.
 ## Company industries, covers and creator city (2026-10-07)
 
 The standard deployment workflow already builds the frontend, applies Doctrine
-migrations, clears production cache and stops workers so systemd restarts them
-with the new code. No additional environment variables or services are needed.
+migrations and rebuilds production cache with systemd workers paused, then resumes
+them with the new code. No additional environment variables or services are needed.
 Database migrations are required; clearing cache alone is insufficient.
 
 - `Version20261007013000` adds company cover media and `company_industry`,
@@ -348,10 +362,10 @@ Database migrations are required; clearing cache alone is insufficient.
 - “Država” on the companies directory filters `wave_user.country_code`;
   “Grad” filters account city. There is no company location column to remove.
 
-For a manual deployment, follow the normal deployment steps above, including
-`APP_ENV=prod php8.4 bin/console doctrine:migrations:migrate --no-interaction`,
-`APP_ENV=prod php8.4 bin/console cache:clear`, and
-`APP_ENV=prod php8.4 bin/console messenger:stop-workers --no-interaction`.
+For a manual deployment, pause the dispatcher/consumers before code or cache
+replacement and run migrations/cache commands as `steelcodeweb` with
+`APP_ENV=prod APP_DEBUG=0`. Follow the service lifecycle described above; a late
+`messenger:stop-workers` alone cannot protect an in-place cache replacement.
 Use the normal database backup procedure before applying schema changes.
 
 

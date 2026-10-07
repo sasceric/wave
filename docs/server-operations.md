@@ -158,16 +158,73 @@ Do not log every message body or every heartbeat when thousands of users connect
 
 ## Later deployments
 
-The workflow runs `messenger:stop-workers` after migration/cache preparation.
-Consumers finish their current job, exit and are restarted by systemd/Supervisor.
-The worker stop signal uses `cache.app`; do not switch to a per-release cache path
-without arranging an equivalent restart. For emergency configuration changes,
-rebuild `.env.local.php`, clear cache, then restart the four units explicitly.
+The production workflow pauses the installed systemd dispatcher and consumers
+before pulling code or replacing cache. An explicit `systemctl stop` waits for
+shutdown and prevents `Restart=always` from relaunching a consumer during the
+deployment. Previously active consumers and the timer resume only after migrations,
+cache warmup, task registration and permission checks. A failed deployment stops
+before resuming them; repair it and verify/restart the listed services manually.
+Previously inactive units stay inactive. The workflow does not manage Supervisor
+or cron; those installations must pause their manager/dispatcher explicitly.
+
+Composer installation uses `--no-scripts`; cache clearing and asset installation
+run explicitly once. All Symfony console commands run as `steelcodeweb` with
+`APP_ENV=prod APP_DEBUG=0`. Existing `var/` ownership is repaired before those
+commands, and the dumped environment is readable only by its owner/group. An
+active `php8.4-fpm.service` is reloaded after warmup to refresh its environment and
+opcode cache. No other FPM service name is assumed.
+
+For emergency configuration changes, pause these same units, rebuild
+`.env.local.php`, repair ownership, clear/warm cache as the web account, then
+reload FPM and restart consumers. Do not run cache-building commands as root.
 
 The current in-place deployment is not an atomic release switch. For schema
 changes incompatible with a running consumer, stop the dispatcher and consumers
 before pulling/deploying, then start them after migrations. Scheduler/job rows
 retain work through restarts. Never truncate the Messenger table to unblock it.
+
+### Missing container files or cache permission errors
+
+A `Failed opening required .../Container.../getConsole_ErrorListenerService.php`
+error means a console process references a container file that no longer exists.
+The preceding warning and fatal error describe the same failure. A concurrent
+cache replacement while a consumer is running is a likely cause; inspect the
+deployment and worker journal around the timestamp to establish which process
+failed. This log does not establish an application validation or database error.
+
+`Permission denied` while writing `var/cache/prod/pools/system` establishes a
+filesystem permissions problem. Symfony CLI and PHP-FPM must both be able to
+write cache; for this host they should run as `steelcodeweb`. Fixing ownership
+only at the end of deployment leaves a window where root-owned cache fails.
+
+For recovery during a maintenance window, run as root on the documented systemd
+installation (confirm the PHP-FPM service and pool user first):
+
+```sh
+cd /home/steelcodeweb/web/wave.ba/public_html
+systemctl stop wave-scheduler.timer wave-scheduler.service
+systemctl stop wave-worker@realtime wave-worker@mail wave-worker@push wave-worker@background
+chown -R steelcodeweb:steelcodeweb var
+chmod -R u+rwX var
+# Preserve the broken compiled cache rather than deleting it; no DB/media changes.
+if [ -d var/cache/prod ]; then
+  mv var/cache/prod "var/cache/prod.recovery-$(date -u +%Y%m%dT%H%M%SZ)"
+fi
+runuser -u steelcodeweb -- env APP_ENV=prod APP_DEBUG=0 php8.4 bin/console cache:warmup --no-debug --no-interaction
+systemctl reload php8.4-fpm
+systemctl start wave-worker@realtime wave-worker@mail wave-worker@push wave-worker@background
+systemctl start wave-scheduler.timer
+systemctl is-active wave-worker@realtime wave-worker@mail wave-worker@push wave-worker@background wave-scheduler.timer
+```
+
+Do not run a second deployment or cache clear during recovery. If warmup fails,
+resolve its original error before starting workers. Retain the old cache until
+recovery is confirmed, then remove that recovery copy during normal maintenance.
+Inspect new logs and load an authenticated page; verify jobs drain and realtime
+delivery works. In-place deployments can still overlap live HTTP requests; an
+atomic release switch or drained maintenance window is needed to eliminate that
+remaining window. The workflow changes have not been applied to the live server
+by this investigation.
 
 ## Supervisor alternative
 

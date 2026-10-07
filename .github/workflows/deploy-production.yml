@@ -30,6 +30,40 @@ jobs:
           script: |
             set -e
             cd /home/steelcodeweb/web/wave.ba/public_html/
+            export APP_ENV=prod APP_DEBUG=0
+            deploy_php="$(command -v php8.4)"
+            deploy_composer="$(command -v composer)"
+            as_root() {
+              if [ "$(id -u)" -eq 0 ]; then "$@"; else sudo -n "$@"; fi
+            }
+            as_web() {
+              if [ "$(id -un)" = steelcodeweb ]; then
+                "$@"
+              else
+                as_root runuser -u steelcodeweb -- "$@"
+              fi
+            }
+            node -e 'const [major, minor] = process.versions.node.split(".").map(Number); if (major !== 22 || minor < 12) { console.error("Node.js 22.12+ is required"); process.exit(1); }'
+            as_web env APP_ENV=prod APP_DEBUG=0 "$deploy_php" --version
+            # Stop through systemd so Restart=always cannot bring old consumers
+            # back while Composer/migrations replace their code and container.
+            deploy_workers="wave-worker@realtime.service wave-worker@mail.service wave-worker@push.service wave-worker@background.service"
+            deploy_resume_units=""
+            trap 'echo "Deployment failed; verify Wave service state, repair the release, and restart the previously active services: $deploy_resume_units" >&2' EXIT
+            for deploy_unit in wave-scheduler.timer wave-scheduler.service $deploy_workers; do
+              if [ "$(systemctl show "$deploy_unit" --property=LoadState --value)" = loaded ]; then
+                if systemctl is-active --quiet "$deploy_unit"; then
+                  if [ "$deploy_unit" != wave-scheduler.service ]; then
+                    deploy_resume_units="$deploy_resume_units $deploy_unit"
+                  fi
+                fi
+                as_root systemctl stop "$deploy_unit"
+              fi
+            done
+            # Repair old root-owned cache before any Symfony kernel boots.
+            mkdir -p var
+            as_root chown -R steelcodeweb:steelcodeweb var
+            as_root chmod -R u+rwX var
             if ! git diff --quiet HEAD -- composer.lock; then
               lockfile_backup="var/deploy-backups/composer.lock.$(date -u +%Y%m%dT%H%M%SZ).patch"
               mkdir -p "$(dirname "$lockfile_backup")"
@@ -38,16 +72,25 @@ jobs:
               git restore --source=HEAD --staged --worktree -- composer.lock
             fi
             git pull --ff-only origin main
-            COMPOSER_ALLOW_SUPERUSER=1 APP_ENV=prod php8.4 "$(command -v composer)" install --no-dev --prefer-dist --optimize-autoloader --no-interaction
-            COMPOSER_ALLOW_SUPERUSER=1 APP_ENV=prod php8.4 "$(command -v composer)" dump-env prod
-            node -e 'const [major, minor] = process.versions.node.split(".").map(Number); if (major !== 22 || minor < 12) { console.error("Node.js 22.12+ is required"); process.exit(1); }'
+            COMPOSER_ALLOW_SUPERUSER=1 "$deploy_php" "$deploy_composer" install --no-dev --prefer-dist --optimize-autoloader --no-interaction --no-scripts
+            COMPOSER_ALLOW_SUPERUSER=1 "$deploy_php" "$deploy_composer" dump-env prod
+            as_root chown steelcodeweb:steelcodeweb .env.local.php
+            as_root chmod 640 .env.local.php
             cd frontend
             npm ci
             npm run build
             cd ..
-            APP_ENV=prod php8.4 bin/console doctrine:migrations:migrate --no-interaction
-            APP_ENV=prod php8.4 bin/console cache:clear
-            APP_ENV=prod php8.4 bin/console app:scheduled-tasks register --no-interaction
-            chown -R steelcodeweb:steelcodeweb /home/steelcodeweb/web/wave.ba/public_html/var
-            chmod -R u+rwX /home/steelcodeweb/web/wave.ba/public_html/var
-            APP_ENV=prod php8.4 bin/console messenger:stop-workers --no-interaction
+            as_web env APP_ENV=prod APP_DEBUG=0 "$deploy_php" bin/console doctrine:migrations:migrate --no-interaction
+            as_web env APP_ENV=prod APP_DEBUG=0 "$deploy_php" bin/console cache:clear --no-debug --no-interaction
+            as_web env APP_ENV=prod APP_DEBUG=0 "$deploy_php" bin/console assets:install public --no-interaction
+            as_web env APP_ENV=prod APP_DEBUG=0 "$deploy_php" bin/console app:scheduled-tasks register --no-interaction
+            if systemctl is-active --quiet php8.4-fpm.service; then
+              as_root systemctl reload php8.4-fpm.service
+            fi
+            if [ -n "$deploy_resume_units" ]; then
+              as_root systemctl start $deploy_resume_units
+              for deploy_unit in $deploy_resume_units; do
+                systemctl is-active --quiet "$deploy_unit"
+              done
+            fi
+            trap - EXIT
