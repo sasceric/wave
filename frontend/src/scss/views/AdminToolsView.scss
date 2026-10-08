@@ -6,8 +6,44 @@
     gap: 12px;
   }
 
-  :deep(.admin-table__header > button) {
-    width: auto;
+  &__toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    width: 100%;
+
+    > .button {
+      width: auto;
+    }
+  }
+
+  &__refresh {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--forest);
+    cursor: pointer;
+
+    &:hover:not(:disabled) {
+      color: var(--muted);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--forest);
+      outline-offset: 2px;
+    }
+
+    &:disabled {
+      opacity: 0.45;
+      cursor: wait;
+    }
   }
 
   &__heading {
@@ -52,6 +88,7 @@
     display: grid;
     gap: 6px;
     max-width: 100%;
+    min-width: 0;
     font-size: 13px;
   }
 

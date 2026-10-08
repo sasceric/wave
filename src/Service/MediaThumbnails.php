@@ -91,7 +91,7 @@ final class MediaThumbnails
                     throw new \RuntimeException('Unable to allocate thumbnail file.');
                 }
                 try {
-                    $this->processor->writeWebp($this->storagePath . '/' . $relativePath, $temporary, $width);
+                    $this->processor->writeWebp($this->storagePath . '/' . $relativePath, $temporary, $width, 82);
                     $this->filesystem->chmod($temporary, 0644);
                     $this->filesystem->rename($temporary, $destination, true);
                 } finally {

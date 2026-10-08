@@ -8,6 +8,17 @@
   > main {
     flex: 1;
   }
+
+  &--footer-visible > main {
+    min-height: calc(100svh - 82px);
+  }
+
+  &__loading {
+    display: grid;
+    gap: 20px;
+    padding-top: 54px;
+    padding-bottom: 54px;
+  }
 }
 
 .site-header {
@@ -166,7 +177,7 @@
   &__language {
     display: grid;
     gap: 8px;
-    margin-top: 12px;
+    margin-top: 0;
     > span { color: #81908b; font-size: 12px; }
     .language-switcher__menu { position: static; margin-top: 8px; box-shadow: none; }
   }
@@ -399,6 +410,10 @@
 
     &--footer-visible {
       padding-bottom: 0;
+
+      > main {
+        min-height: calc(100svh - 62px);
+      }
     }
   }
 

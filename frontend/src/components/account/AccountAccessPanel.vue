@@ -557,7 +557,7 @@ function changeMode(nextMode) {
               ? t('auth.register')
               : t('auth.requestReset')
         }}
-        <span aria-hidden="true">↗</span>
+        <span aria-hidden="true">→</span>
       </button>
       <button
         v-if="mode === 'login'"

@@ -110,7 +110,7 @@ You can also invite a creator from their profile; the private conversation opens
 
 ### Marketplace email notifications
 
-Outgoing email templates are editable in the admin dashboard for each supported language. A new campaign application emails the company owner with the creator's name and application message; accepting an offer emails the creator. Unread chat reminders contain the campaign and sender names, but never include private message text. The reminder is sent once after the oldest incoming message has been unread for an hour, coalesces other unread messages in that conversation, and does not repeat until the recipient opens the conversation and marks it read.
+Outgoing email templates are editable in the admin dashboard for each supported language. A new campaign application emails the company owner with the creator's name and application message; accepting an offer emails the creator. Unread chat reminders contain the campaign and sender names, but never include private message text. The hourly task checks for messages unread for at least an hour, so reminders normally arrive about one to two hours after the oldest unread message. It coalesces other unread messages in that conversation and does not repeat until the recipient opens the conversation and marks it read.
 
 Apply database migrations before using the new reminder tracking fields:
 
@@ -124,10 +124,10 @@ For local testing, run the reminder command manually after leaving a conversatio
 php bin/console app:send-unread-message-reminders
 ```
 
-On a server with a configured mail transport, schedule it every five minutes. Use `flock` to avoid overlapping runs:
+For a legacy server without the task dispatcher, schedule it hourly. Use `flock` to avoid overlapping runs:
 
 ```cron
-*/5 * * * * cd /home/steelcodeweb/web/wave.ba/public_html && APP_ENV=prod /usr/bin/flock -n var/unread-message-reminders.lock /usr/bin/php8.4 bin/console app:send-unread-message-reminders --env=prod --no-interaction >> var/log/unread-message-reminders.log 2>&1
+0 * * * * cd /home/steelcodeweb/web/wave.ba/public_html && APP_ENV=prod /usr/bin/flock -n var/unread-message-reminders.lock /usr/bin/php8.4 bin/console app:send-unread-message-reminders --env=prod --no-interaction >> var/log/unread-message-reminders.log 2>&1
 ```
 
 Install this entry in the `steelcodeweb` crontab; verify executable paths and
@@ -222,9 +222,20 @@ The admin dashboard is limited to accounts granted `ROLE_ADMIN` by a trusted ope
 
 ### Search engine metadata
 
-Set `APP_BASE_URL` to the site's public origin (scheme and host, with no path) in each deployment. Symfony emits route-specific titles, descriptions, Open Graph/Twitter metadata, canonical URLs, and `hreflang` alternates in the initial HTML response; the Vue SEO helper keeps the same metadata current during in-app navigation. Bosnian is the `x-default` language, and Serbian alternates use `sr-Latn`. Public creator and company profiles and open, approved campaigns receive schema.org structured data; campaign briefs use `CreativeWork` rather than employment `JobPosting` markup. Localized legal pages are indexable, included in the sitemap, and receive self-canonical URLs and language alternates. Legacy English aliases redirect to their canonical localized URLs.
+Set `APP_BASE_URL` to the site's public origin (scheme and host, with no path) in each deployment. Symfony emits route-specific titles, descriptions, Open Graph/Twitter metadata, canonical URLs, and `hreflang` alternates in the initial HTML response; the Vue SEO helper keeps the same metadata current during in-app navigation. Bosnian is the `x-default` language, and Serbian and Montenegrin alternates use `sr-RS` and `sr-ME`; the app keeps separate `sr` and `cnr` catalogs. Public creator and company profiles and open, approved campaigns receive schema.org structured data; campaign briefs use `CreativeWork` rather than employment `JobPosting` markup. Localized legal pages are indexable, included in the sitemap, and receive self-canonical URLs and language alternates. Legacy English aliases redirect to their canonical localized URLs.
 
 `GET /sitemap.xml` dynamically lists localized public landing pages and public profiles/campaigns with multilingual alternate links. `GET /robots.txt` advertises that sitemap, leaves public APIs available for crawler rendering, and disallows private account, authentication, moderation, and admin API routes. Private frontend routes also receive `noindex, nofollow` and are excluded from the sitemap.
+
+Country SEO directories and three practical collaboration guides are documented
+in [the country SEO plan](docs/seo-keyword-plan.md). Canonical country prefixes
+are `/hr`, `/rs`, `/me`, and `/si`; older `/sr`, `/cnr`, and `/sl` links redirect
+permanently while translation identifiers stay unchanged. Country directories
+filter real public profiles by owner country and remain `noindex` until populated.
+The initial HTML includes their readable content and links. Both the dynamic
+sitemap and the production cached sitemap include populated country directories
+and all localized guides. Run `SitemapGenerateTask` in Admin Tools after deploying
+to refresh the existing cache, then submit `/sitemap.xml` in Search Console.
+
 
 Configure optional Google integrations without committing local settings:
 

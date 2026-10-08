@@ -1,9 +1,14 @@
 export function paginationItems(current, count) {
   const total = Math.max(1, Math.floor(count))
   const page = Math.min(total, Math.max(1, current))
+  const candidates = page <= 3
+    ? [1, 2, 3, page + 1, total - 2, total - 1, total]
+    : page >= total - 2
+      ? [1, 2, 3, page - 1, total - 2, total - 1, total]
+      : [1, page - 1, page, page + 1, total]
   const numbers = total <= 7
     ? Array.from({ length: total }, (_, index) => index + 1)
-    : [...new Set([1, 2, 3, page - 1, page, page + 1, total - 2, total - 1, total])]
+    : [...new Set(candidates)]
       .filter((number) => number >= 1 && number <= total)
       .sort((left, right) => left - right)
   const items = []

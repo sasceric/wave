@@ -9,6 +9,7 @@ use Symfony\Component\DependencyInjection\Attribute\Autowire;
 final class LocalizedRouteMap
 {
     private array $routes;
+    private array $prefixes;
 
     public function __construct(#[Autowire('%kernel.project_dir%')] string $projectDir)
     {
@@ -23,6 +24,11 @@ final class LocalizedRouteMap
         }
 
         $this->routes = $routes;
+        $prefixes = file_get_contents($projectDir.'/config/localized_route_prefixes.json');
+        if ($prefixes === false) {
+            throw new RuntimeException('Unable to read the localized route prefixes.');
+        }
+        $this->prefixes = json_decode($prefixes, true, flags: JSON_THROW_ON_ERROR);
     }
 
     public function locales(): array
@@ -37,7 +43,7 @@ final class LocalizedRouteMap
         }
 
         $segment = $this->routes[$locale][$routeName];
-        $prefix = $locale === 'bs' ? '' : '/'.$locale;
+        $prefix = $this->prefixes[$locale] === '' ? '' : '/'.$this->prefixes[$locale];
         if ($segment === '') {
             return $prefix !== '' ? $prefix.'/' : '/';
         }
@@ -62,8 +68,11 @@ final class LocalizedRouteMap
         $alternates = [];
         foreach ($this->locales() as $locale) {
             $language = match ($locale) {
-                'sr' => 'sr-Latn',
-                'cnr' => 'cnr-Latn-ME',
+                'bs' => $routeName === 'country-creators' ? 'bs-BA' : 'bs',
+                'hr' => $routeName === 'country-creators' ? 'hr-HR' : 'hr',
+                'sl' => $routeName === 'country-creators' ? 'sl-SI' : 'sl',
+                'sr' => 'sr-RS',
+                'cnr' => 'sr-ME',
                 default => $locale,
             };
             $alternates[$language] = $this->localizedPath($routeName, $locale, $params);
@@ -75,6 +84,14 @@ final class LocalizedRouteMap
 
     public function resolve(string $path): ?array
     {
+        // Keep every old language-prefixed URL as a permanent alias, including
+        // account, email and profile deep links. Locale identifiers stay unchanged.
+        foreach ($this->prefixes as $locale => $prefix) {
+            if ($locale !== $prefix && $locale !== 'bs' && ($path === '/'.$locale || str_starts_with($path, '/'.$locale.'/'))) {
+                $path = '/'.$prefix.substr($path, strlen('/'.$locale));
+                break;
+            }
+        }
         $path = $path !== '/' ? rtrim($path, '/') : $path;
         foreach ($this->routes as $locale => $routes) {
             foreach ($routes as $routeName => $segment) {
@@ -95,7 +112,7 @@ final class LocalizedRouteMap
                     }
                 }
 
-                $prefix = $locale === 'bs' ? '' : '/'.preg_quote($locale, '~');
+                $prefix = $this->prefixes[$locale] === '' ? '' : '/'.preg_quote($this->prefixes[$locale], '~');
                 if (preg_match('~^'.$prefix.'/'.$pattern.'$~', $path, $matches) !== 1) {
                     continue;
                 }

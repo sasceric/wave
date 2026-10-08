@@ -19,6 +19,7 @@ final class SeoMetadataProvider
         private readonly EntityManagerInterface $entityManager,
         private readonly LocalizedRouteMap $routeMap,
         private readonly SiteOrigin $siteOrigin,
+        private readonly RegionalSeoContent $regionalContent,
         #[Autowire('%kernel.project_dir%')] string $projectDir,
     ) {
         foreach ($this->routeMap->locales() as $locale) {
@@ -44,6 +45,13 @@ final class SeoMetadataProvider
         $locale = $route['locale'];
         $name = $route['name'];
         $params = $route['params'];
+        $countryCode = $name === 'country-creators' ? $this->regionalContent->countryCode($params['country']) : null;
+        $regionalCopy = in_array($name, ['country-creators', 'seo-guides', 'seo-guide', 'creator-guides', 'creator-guide', 'how-it-works'], true) ? $this->regionalContent->catalog($locale) : [];
+        if (($name === 'country-creators' && $countryCode === null)
+            || ($name === 'seo-guide' && !isset($regionalCopy['guides'][$params['guide']]))
+            || ($name === 'creator-guide' && !isset($regionalCopy['creatorGuides']['guides'][$params['guide']]))) {
+            return $this->notFoundMetadata();
+        }
         $private = $name === 'account'
             || str_starts_with($name, 'account-')
             || $name === 'admin'
@@ -74,6 +82,39 @@ final class SeoMetadataProvider
         $image = $name === 'home' ? $this->absoluteUrl('/images/share.webp') : null;
         $entitySchema = null;
         $indexable = !$private;
+        $contentHtml = null;
+
+        if ($name === 'country-creators') {
+            $copy = $regionalCopy['countries'][$countryCode];
+            $title = $copy['title'].' | Wave';
+            $description = $copy['description'];
+            $creators = $this->regionalContent->creators($countryCode);
+            $indexable = $creators !== [];
+            $entitySchema = [
+                '@type' => 'ItemList',
+                'itemListElement' => array_map(fn (array $creator, int $index): array => [
+                    '@type' => 'ListItem',
+                    'position' => $index + 1,
+                    'name' => $creator['name'],
+                    'url' => $this->siteOrigin->url($this->routeMap->localizedPath('creator-profile', $locale, ['slug' => $creator['slug']])),
+                ], $creators, array_keys($creators)),
+            ];
+            $contentHtml = $this->regionalContent->html($name, $locale, $params, $this->routeMap, $creators);
+        } elseif ($name === 'how-it-works') {
+            $title = $regionalCopy['howItWorks']['title'].' | Wave';
+            $description = $regionalCopy['howItWorks']['intro'];
+            $contentHtml = $this->regionalContent->html($name, $locale, $params, $this->routeMap);
+        } elseif (in_array($name, ['seo-guides', 'seo-guide', 'creator-guides', 'creator-guide'], true)) {
+            $forCreators = str_starts_with($name, 'creator-');
+            $guideCopy = $forCreators ? $regionalCopy['creatorGuides'] : ['title' => $regionalCopy['guideTitle'], 'intro' => $regionalCopy['guideIntro'], 'guides' => $regionalCopy['guides']];
+            $copy = isset($params['guide']) ? $guideCopy['guides'][$params['guide']] : null;
+            $title = ($copy['title'] ?? $guideCopy['title']).' | Wave';
+            $description = $copy['intro'] ?? $guideCopy['intro'];
+            if ($copy !== null) {
+                $entitySchema = ['@type' => 'Article', 'headline' => $copy['title'], 'description' => $copy['intro'], 'author' => ['@type' => 'Organization', 'name' => 'Wave'], 'publisher' => ['@id' => $this->siteOrigin->url('/').'#organization']];
+            }
+            $contentHtml = $this->regionalContent->html($name, $locale, $params, $this->routeMap);
+        }
 
         if ($name === 'creator-profile') {
             $creator = $this->entityManager->getRepository(Creator::class)->createQueryBuilder('creator')
@@ -172,6 +213,7 @@ final class SeoMetadataProvider
             'image' => $image,
             'preloadImage' => $name === 'home' ? '/images/banner-girl.webp' : null,
             'noindex' => !$indexable,
+            'contentHtml' => $contentHtml,
             'structuredData' => $indexable ? $this->structuredData($title, $description, $canonicalUrl, $locale, $name, $entitySchema) : [],
         ];
     }
@@ -198,7 +240,7 @@ final class SeoMetadataProvider
     ): array {
         $language = match ($locale) {
             'sr' => 'sr-Latn',
-            'cnr' => 'cnr-Latn-ME',
+            'cnr' => 'sr-Latn-ME',
             default => $locale,
         };
         $websiteUrl = $this->siteOrigin->url('/');
@@ -247,13 +289,13 @@ final class SeoMetadataProvider
                 '@type' => 'ContactPoint',
                 'contactType' => 'customer support',
                 'email' => 'info@wave.ba',
-                'availableLanguage' => ['bs', 'hr', 'sr-Latn', 'cnr-Latn-ME', 'sl', 'en'],
+                'availableLanguage' => ['bs', 'hr', 'sr-Latn', 'sr-Latn-ME', 'sl', 'en'],
             ],
         ];
         $page = [
             '@context' => 'https://schema.org',
             '@type' => match ($routeName) {
-                'creators', 'companies', 'campaigns' => 'CollectionPage',
+                'creators', 'companies', 'campaigns', 'country-creators', 'seo-guides', 'creator-guides' => 'CollectionPage',
                 'creator-profile', 'company-profile' => 'ProfilePage',
                 default => 'WebPage',
             },

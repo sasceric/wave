@@ -149,7 +149,22 @@
   }
 
   &__actions {
+    position: sticky;
+    right: 0;
+    z-index: 1;
+    width: 68px;
+    min-width: 68px;
     text-align: right;
+    box-shadow: -1px 0 0 #e1e6e0, -7px 0 10px -9px rgba(23, 61, 54, .35);
+  }
+
+  &__table th.admin-table__actions {
+    z-index: 2;
+  }
+
+  &__scroll:focus-visible {
+    outline: 2px solid var(--forest);
+    outline-offset: -2px;
   }
 
   &__empty {

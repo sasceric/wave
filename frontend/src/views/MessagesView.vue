@@ -29,6 +29,7 @@ import { currentUser, loadCurrentUser } from '../composables/useCurrentUser'
 import { apiGet, apiRequest, formatDate, formatMoney } from '../lib/api'
 import { localizedRouteName } from '../routePaths'
 import { areChatMessagesGrouped, createChatTimeFormatter, groupChatMessages } from '../lib/chatTime'
+import { campaignPlace } from '../lib/marketplace'
 
 const route = useRoute()
 const router = useRouter()
@@ -182,6 +183,12 @@ const newConversationLabel = computed(() => t(
 ))
 const selectedCampaign = computed(() => (
   selectedConversation.value?.campaign || pendingDetails.value?.campaign || null
+))
+// Inbox rows only contain a title and slug. Render the brief after the
+// authorized thread endpoint supplies its complete campaign resource.
+const campaignDetailsReady = computed(() => Boolean(
+  (selectedDetails.value?.threadType === 'campaign' && selectedDetails.value.id === selectedConversationId.value)
+  || pendingDetails.value?.campaign,
 ))
 const selectedCompany = computed(() => (
   selectedConversation.value?.company
@@ -1344,7 +1351,7 @@ function messageTimeDescription(value) {
       </section>
 
       <aside
-        v-if="selectedCampaign"
+        v-if="selectedCampaign && campaignDetailsReady"
         id="campaign-details-panel"
         class="campaign-messages__details"
         :class="{ 'is-open': detailsOpen }"
@@ -1430,7 +1437,7 @@ function messageTimeDescription(value) {
                 </div>
                 <div>
                   <dt><MapPin :size="16" aria-hidden="true" />{{ t('campaignChat.location') }}</dt>
-                  <dd>{{ selectedCampaign.location }}</dd>
+                  <dd>{{ campaignPlace(selectedCampaign, locale) }}</dd>
                 </div>
               </dl>
               <p v-if="selectedCampaign.channels.length" class="campaign-messages__channels">

@@ -8,10 +8,13 @@ final class ImageUploadProcessor
     private const MAX_WEBP_DIMENSION = 16383;
     private const MAX_SOURCE_PIXELS = 64_000_000;
 
-    public function writeWebp(string $source, string $destination, int $maxWidth = self::MAX_WIDTH): int
+    public function writeWebp(string $source, string $destination, int $maxWidth = self::MAX_WIDTH, ?int $quality = null): int
     {
         if ($maxWidth < 1 || $maxWidth > self::MAX_WIDTH) {
             throw new \InvalidArgumentException('Unsupported image width.');
+        }
+        if ($quality !== null && ($quality < 1 || $quality > 100)) {
+            throw new \InvalidArgumentException('Unsupported WebP quality.');
         }
         if (!function_exists('imagewebp') || !function_exists('exif_read_data')
             || !defined('IMG_WEBP_LOSSLESS') || !(gd_info()['WebP Support'] ?? false)
@@ -60,7 +63,7 @@ final class ImageUploadProcessor
                 $image = $resized;
             }
 
-            if (!imagewebp($image, $destination, IMG_WEBP_LOSSLESS)) {
+            if (!imagewebp($image, $destination, $quality ?? IMG_WEBP_LOSSLESS)) {
                 throw new \RuntimeException('Unable to encode WebP image.');
             }
             clearstatcache(true, $destination);

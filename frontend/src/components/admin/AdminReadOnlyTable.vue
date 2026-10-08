@@ -26,10 +26,10 @@ const pageCount = computed(() => props.total === null
 <template>
   <AdminTableFrame :busy="busy">
     <template #toolbar><slot name="toolbar" /></template>
-    <div class="admin-table__scroll">
+    <div class="admin-table__scroll" tabindex="0" role="region" :aria-label="labels.caption">
       <table class="admin-table__table">
         <caption class="sr-only">{{ labels.caption }}</caption>
-        <thead><tr><th v-for="column in columns" :key="column.key" scope="col">{{ column.label }}</th></tr></thead>
+        <thead><tr><th v-for="column in columns" :key="column.key" scope="col" :class="{ 'admin-table__actions': column.key === 'actions' }">{{ column.label }}</th></tr></thead>
         <tbody>
           <tr v-for="row in rows" :key="row.id">
             <td v-for="column in columns" :key="column.key" :class="{ 'admin-table__actions': column.key === 'actions' }">
@@ -37,7 +37,7 @@ const pageCount = computed(() => props.total === null
             </td>
           </tr>
           <tr v-for="index in busy && !rows.length ? 5 : 0" :key="`loading-${index}`" aria-hidden="true">
-            <td v-for="column in columns" :key="column.key"><SkeletonBlock width="80%" /></td>
+            <td v-for="column in columns" :key="column.key" :class="{ 'admin-table__actions': column.key === 'actions' }"><SkeletonBlock width="80%" /></td>
           </tr>
           <tr v-if="!rows.length && !busy && showEmpty"><td :colspan="columns.length" class="admin-table__empty">{{ labels.empty }}</td></tr>
         </tbody>

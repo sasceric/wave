@@ -6,6 +6,27 @@ and `components/shared/DirectoryFilters.vue` uses
 `scss/components/shared/DirectoryFilters.scss`. Sass is a locked frontend
 development dependency; Vite compiles it during development and the production build.
 
+## Brand palette
+
+The user reconfirmed these exact brand colors on 2026-10-08. Preserve them during
+SEO, performance, and accessibility work; do not replace brand colors to improve
+an audit score. Preserve the existing DM Sans, DM Serif Display, and La Belle
+Aurore fonts as well.
+
+| Role | Hex | Existing token |
+| --- | --- | --- |
+| Primary | `#173D36` | `--forest` |
+| Accent | `#D98368` | `--coral` |
+| Background | `#F6F2EA` | `--paper` |
+| Surface | `#E8E2DA` | `--surface` (`--line` aliases it) |
+| Secondary | `#8EA39B` | `--secondary` |
+| Text | `#1F2A28` | `--ink` |
+
+Use these shared tokens for new brand elements. Existing neutral form/card
+backgrounds, muted text shades, and semantic status colors remain part of the
+surrounding design; do not introduce a darker brand palette without the user's
+request. The shared foundations live in `frontend/src/scss/_tokens.scss`.
+
 ## Where styles belong
 
 - `frontend/src/scss/global.scss` imports only app-wide foundations: tokens,

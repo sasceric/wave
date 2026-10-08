@@ -29,7 +29,12 @@
   }
 
   &--dark span {
-    color: var(--gold);
+    color: inherit;
+  }
+
+  &--dark span[aria-hidden="true"] {
+    font-size: 18px;
+    line-height: 1;
   }
 
   &--text {

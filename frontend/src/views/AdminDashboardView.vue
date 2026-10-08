@@ -211,6 +211,7 @@ const tableColumns = computed(() => {
 })
 
 const tableLabels = computed(() => ({
+  caption: pageTitle.value,
   loading: t('adminDashboard.loading'),
   actions: t('adminDashboard.actions'),
   deleteSelected: t('adminDashboard.deleteSelected'),

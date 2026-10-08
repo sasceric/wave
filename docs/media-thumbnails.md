@@ -38,7 +38,7 @@ controls, and shimmer is disabled for reduced-motion preferences.
 
 `ImageUploadProcessor` still creates a lossless WebP master at most 600px wide,
 without cropping or upscaling, preserving alpha and JPEG orientation. New uploads
-queue generation of lossless WebP thumbnails at fixed maximum widths of **96, 320 and
+queue generation of WebP thumbnails at quality 82 at fixed maximum widths of **96, 320 and
 480px**. Each thumbnail keeps proportional height. Directory cards use thumbnail
 URLs; profile detail views retain the master URL.
 
@@ -54,7 +54,7 @@ listing card responses omit portfolio associations and detail fields.
 `MediaThumbnails` stores derivatives outside the web root:
 
 ```text
-var/media/thumbnails/v1/{sha256-of-source-storage-path}/{96|320|480}.webp
+var/media/thumbnails/v2/{sha256-of-source-storage-path}/{96|320|480}.webp
 ```
 
 The fixed sizes prevent arbitrary client-requested transformations. Each media
@@ -78,12 +78,11 @@ command below remains available for diagnostics. The temporary synchronous fallb
 
 Seeded Unsplash URLs use that provider's existing resize parameters for the same
 three listing sizes. Arbitrary external image URLs retain their provider's file;
-Wave does not download, proxy or index arbitrary remote URLs. Lossless generation
-and local caching apply to images in Wave's owned media library.
+Wave does not download, proxy or index arbitrary remote URLs. Compressed derivatives and local caching apply to images in Wave's owned media library.
 
 ## Caching and access
 
-`GET /api/media/{id}/thumbnail/v1/{96|320|480}` uses the same approval, account
+`GET /api/media/{id}/thumbnail/v2/{96|320|480}` uses the same approval, account
 visibility, media reference and ownership checks as the master file endpoint.
 Authorization runs before thumbnail lookup and before conditional cache handling.
 Unknown versions/sizes are rejected. A guessed thumbnail URL or matching ETag
@@ -144,7 +143,7 @@ service-worker cache serving private images after account/session changes.
    including failures. Do not delete source images when clearing thumbnails.
 4. Reopen the site/PWA after deployment. On a slow connection, verify skeletons
    on all three directories and stable existing cards during the next batch.
-   Uploaded card images should request `/thumbnail/v1/…` URLs, with WebP MIME
+   Uploaded card images should request `/thumbnail/v2/…` URLs, with WebP MIME
    type. Revisit the page to confirm HTTP cache hits or 304 revalidation. Check
    a hidden/unapproved profile with a fresh request: thumbnail access must follow
    the same visibility rules as its master image.

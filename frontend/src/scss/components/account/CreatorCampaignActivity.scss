@@ -125,6 +125,18 @@
       text-align: right;
     }
 
+    .creator-offers__action-cell {
+      position: sticky;
+      right: 0;
+      z-index: 1;
+      background: #fffefa;
+      box-shadow: -1px 0 0 #e2e6df, -7px 0 10px -9px rgba(23, 61, 54, .35);
+    }
+
+    th.creator-offers__action-cell {
+      z-index: 2;
+    }
+
     time {
       white-space: nowrap;
     }
@@ -568,6 +580,12 @@
     &__table td {
       padding: 0;
       border: 0;
+    }
+
+    &__table .creator-offers__action-cell {
+      position: static;
+      box-shadow: none;
+      background: transparent;
     }
 
     &__table td:first-child, &__table td:last-child {

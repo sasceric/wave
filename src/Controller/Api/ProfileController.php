@@ -3,6 +3,7 @@
 namespace App\Controller\Api;
 
 use App\Account\CreatorBirthday;
+use App\Account\CreatorTypes;
 use App\Api\ApiAccess;
 use App\Api\Currency;
 use App\Api\CreatorResource;
@@ -86,6 +87,12 @@ final class ProfileController
                 return new JsonResponse(['error' => ApiMessages::get('profile_unavailable', $locale)], 409);
             }
             $name = $this->text($data, 'displayName', 2, 120);
+            $creatorTypes = array_key_exists('creatorTypes', $data)
+                ? CreatorTypes::parse($data['creatorTypes'])
+                : $creator->getCreatorTypes();
+            if ($creatorTypes === null) {
+                return new JsonResponse(['error' => ApiMessages::get('invalid_profile', $locale), 'fields' => ['creatorTypes']], 400);
+            }
             $birthday = array_key_exists('birthday', $data) ? CreatorBirthday::parse($data['birthday']) : $creator->getBirthday();
             if ($birthday === false) {
                 return new JsonResponse(['error' => ApiMessages::get('invalid_birthday', $locale), 'fields' => ['birthday']], 400);
@@ -128,6 +135,7 @@ final class ProfileController
             $creator->updateProfile($name, $category, $city ?? '', $bio, $socialProfiles, $tags, $avatarUrl, $tagline, $portfolio['items'], $packages, $categories, $faqs);
             $creator->setAvatarMedia($avatarMedia);
             $creator->setBirthday($birthday);
+            $creator->setCreatorTypes($creatorTypes);
             $user->setPhone($phone);
             $user->setCity($city);
             $user->setCountryCode($countryCode);

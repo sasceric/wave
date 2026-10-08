@@ -26,7 +26,7 @@ final class OAuthControllerTest extends WebTestCase
     {
         $this->client->request('GET', '/api/auth/oauth/google/start?locale=sl&mode=register&accountType=company');
 
-        self::assertResponseRedirects('/sl/racun?mode=register&oauth=error');
+        self::assertResponseRedirects('/si/racun?mode=register&oauth=error');
     }
 
     public function testCallbackWithoutSessionStateIsRejected(): void

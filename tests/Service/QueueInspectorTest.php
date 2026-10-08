@@ -32,13 +32,16 @@ final class QueueInspectorTest extends TestCase
     public function testQueuesSortByNumericMessageCountDescendingWithStableTies(): void
     {
         $db = $this->createMock(Connection::class);
-        $db->expects(self::once())->method('fetchAllAssociative')->willReturn([
-            ['queue_name' => 'mail', 'type' => 'App\\Message\\SendEmailMessage', 'size' => '2', 'delayed' => '0', 'in_flight' => '0'],
-            ['queue_name' => 'push', 'type' => 'App\\Message\\SendWebPushMessage', 'size' => '10', 'delayed' => '1', 'in_flight' => '0'],
-        ]);
+        $types = ['SendEmailMessage', 'SendWebPushMessage', 'UnreadMessageReminderTask', 'SitemapGenerateTask', 'ExpiredTokenCleanupTask', 'QueueMaintenanceTask'];
+        $counts = [100, 90, 78, 10, 5, 1];
+        $db->expects(self::once())->method('fetchAllAssociative')->willReturn(array_reverse(array_map(
+            static fn (string $type, int $count): array => ['queue_name' => JobCatalog::TYPES[$type], 'type' => 'App\\Message\\'.$type, 'size' => (string) $count, 'delayed' => '0', 'in_flight' => '0'],
+            $types, $counts,
+        )));
         $rows = (new QueueInspector($db))->queues();
-        self::assertSame([10, 10, 2, 2], array_slice(array_column($rows, 'count'), 0, 4));
-        self::assertSame(['SendWebPushMessage', 'messenger.transport.push', 'SendEmailMessage', 'messenger.transport.mail'], array_slice(array_column($rows, 'id'), 0, 4));
-        self::assertSame(array_fill(0, count(JobCatalog::TYPES) + 1, 0), array_slice(array_column($rows, 'count'), 4));
+        self::assertSame([100, 100, 94, 90, 90, 78, 10, 5, 1], array_slice(array_column($rows, 'count'), 0, 9));
+        self::assertSame(['SendEmailMessage', 'messenger.transport.mail'], array_slice(array_column($rows, 'id'), 0, 2));
+        self::assertSame($counts, array_values(array_column(array_filter($rows, static fn (array $row): bool => $row['kind'] === 'message' && $row['count'] > 0), 'count')));
+        self::assertSame(array_fill(0, count(JobCatalog::TYPES) - 4, 0), array_slice(array_column($rows, 'count'), 9));
     }
 }

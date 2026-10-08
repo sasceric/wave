@@ -1,13 +1,15 @@
 import { localizedPath, routeSegments } from '../routePaths'
+import { regionalLanguageTags } from './regionalSeo'
 
 const languageTags = {
   bs: 'bs',
   hr: 'hr',
   sr: 'sr-Latn',
-  cnr: 'cnr-Latn-ME',
+  cnr: 'sr-Latn-ME',
   sl: 'sl',
   en: 'en',
 }
+const hreflangTags = { bs: 'bs', hr: 'hr', sr: 'sr-RS', cnr: 'sr-ME', sl: 'sl', en: 'en' }
 
 function setMeta(attribute, key, value) {
   let element = document.head.querySelector(`meta[${attribute}="${key}"]`)
@@ -60,13 +62,14 @@ export function updateSeo({
   document.title = title
   document.documentElement.lang = languageTags[locale] || locale
   const origin = getSeoOrigin()
+  const routeName = route.meta?.routeName
+  const knownRoute = routeSegments[locale]?.[routeName] !== undefined
   setMeta('name', 'description', description)
-  setMeta('name', 'robots', noindex ? 'noindex, nofollow' : 'index, follow')
+  setMeta('name', 'robots', noindex || !knownRoute ? 'noindex, nofollow' : 'index, follow')
   setMeta('property', 'og:type', 'website')
   setMeta('property', 'og:site_name', 'Wave')
   setMeta('property', 'og:title', title)
   setMeta('property', 'og:description', description)
-  const routeName = route.meta?.routeName
   const verificationToken = import.meta.env.VITE_GOOGLE_SITE_VERIFICATION?.trim()
   if (verificationToken) {
     setMeta('name', 'google-site-verification', verificationToken)
@@ -75,7 +78,7 @@ export function updateSeo({
     bs: 'bs_BA',
     hr: 'hr_HR',
     sr: 'sr_RS',
-    cnr: 'cnr_ME',
+    cnr: 'sr_ME',
     sl: 'sl_SI',
     en: 'en_US',
   })[locale] || 'en_US')
@@ -84,12 +87,14 @@ export function updateSeo({
   setMeta('name', 'twitter:title', title)
   setMeta('name', 'twitter:description', description)
 
-  const canonicalPath = routeSegments[locale]?.[routeName] !== undefined
-    ? localizedPath(routeName, locale, route.params)
-    : route.path
-  const canonicalUrl = new URL(canonicalPath, origin).href
-  setCanonical(canonicalUrl)
-  setMeta('property', 'og:url', canonicalUrl)
+  const canonicalUrl = knownRoute ? new URL(localizedPath(routeName, locale, route.params), origin).href : null
+  if (canonicalUrl) {
+    setCanonical(canonicalUrl)
+    setMeta('property', 'og:url', canonicalUrl)
+  } else {
+    document.head.querySelector('link[rel="canonical"]')?.remove()
+    document.head.querySelector('meta[property="og:url"]')?.remove()
+  }
 
   const fallbackImage = routeName === 'home'
     ? '/images/share.webp'
@@ -101,11 +106,11 @@ export function updateSeo({
   setMeta('name', 'twitter:image', ogImage)
   const alternates = document.head.querySelectorAll('link[rel="alternate"][hreflang]')
   alternates.forEach((element) => element.remove())
-  if (!noindex && routeSegments[locale]?.[routeName] !== undefined) {
+  if (!noindex && knownRoute) {
     for (const alternateLocale of Object.keys(routeSegments)) {
       const link = document.createElement('link')
       link.rel = 'alternate'
-      link.hreflang = languageTags[alternateLocale]
+      link.hreflang = (routeName === 'country-creators' ? regionalLanguageTags : hreflangTags)[alternateLocale]
       link.href = new URL(localizedPath(routeName, alternateLocale, route.params), origin).href
       link.dataset.waveHreflang = 'true'
       document.head.append(link)
@@ -118,7 +123,7 @@ export function updateSeo({
     document.head.append(defaultLink)
   }
 
-  if (noindex) {
+  if (noindex || !knownRoute) {
     setStructuredData([])
     return
   }
@@ -169,12 +174,12 @@ export function updateSeo({
       '@type': 'ContactPoint',
       contactType: 'customer support',
       email: 'info@wave.ba',
-      availableLanguage: ['bs', 'hr', 'sr-Latn', 'cnr-Latn-ME', 'sl', 'en'],
+      availableLanguage: ['bs', 'hr', 'sr-Latn', 'sr-Latn-ME', 'sl', 'en'],
     },
   }
   const page = {
     '@context': 'https://schema.org',
-    '@type': ['creators', 'companies', 'campaigns'].includes(routeName)
+    '@type': ['creators', 'companies', 'campaigns', 'country-creators', 'seo-guides', 'creator-guides'].includes(routeName)
       ? 'CollectionPage'
       : ['creator-profile', 'company-profile'].includes(routeName)
         ? 'ProfilePage'

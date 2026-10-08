@@ -319,14 +319,14 @@ alone does not prove an external side effect never occurred.
 
 | Registered task | Initial recurrence | Notes |
 | --- | --- | --- |
-| `UnreadMessageReminderTask` | Every 5 minutes | Preserve campaign reminder policy; direct inquiries remain an explicitly separate feature |
+| `UnreadMessageReminderTask` | Hourly | Messages qualify after one hour unread; delivery can wait until the next hourly check. Direct inquiries remain an explicitly separate feature |
 | `SitemapGenerateTask` | Hourly fallback, plus coalesced content-change trigger | Rebuild only when dirty or expiry affects visibility |
 | `ExpiredTokenCleanupTask` | Hourly | Add expiry index and bounded deletes |
 | `QueueMaintenanceTask` | Every 15 minutes | Claim recovery and terminal metadata retention |
-| `LogCleanupTask` | Daily at 02:10 UTC | Existing 14-day log setting; active files excluded |
-| `CachePruneTask` | Daily at 02:17 UTC | Replaces the direct prune timer when migrated |
-| `MediaMaintenanceTask` | Daily at 02:30 UTC | Incremental/reporting; no automatic master deletion |
-| `IndexReconcileTask` | Daily at 03:00 UTC | Incremental sweep; event-driven indexing remains primary |
+| `LogCleanupTask` | Every 24 hours | Existing 14-day log setting; active files excluded |
+| `CachePruneTask` | Every 24 hours | Replaces the direct prune timer when migrated |
+| `MediaMaintenanceTask` | Every 24 hours | Incremental/reporting; no automatic master deletion |
+| `IndexReconcileTask` | Every 24 hours | Incremental sweep; event-driven indexing remains primary |
 
 Creator/campaign/company indexing and thumbnail generation are event-triggered
 messages, not full rebuilds scheduled every minute. Full rebuild is a separate
@@ -485,9 +485,12 @@ Viewer requirements:
   activation opens a responsive modal with complete available redacted record,
   context and exception. Reuse accessible dialog patterns, focus trapping,
   Escape close and return focus.
-- 25/50/100 rows, bounded backwards cursor reads, stable snapshots, rotation/expiry
-  notices. Full detail is separately bounded; label truncation rather than claiming
-  an 8KB preview is the entire original exception. No whole-file scans for totals.
+- 25/50/100 rows, numbered pagination with direct last-page access, stable snapshots
+  and rotation/expiry notices. A compact cached timestamp/byte-offset index computes
+  totals once per file version and extends on append. Page requests read only the
+  selected bounded records; last-page jumps traverse the index from the oldest end.
+  Full detail is separately bounded; label truncation rather than claiming an 8KB
+  preview is the entire original exception. The older cursor API remains compatible.
 - Keep current path allowlisting, symlink rejection, `ROLE_ADMIN`, private/no-store
   responses and safe text rendering. Compressed host archives and journald remain
   separate unless a dedicated access-limited reader is built.

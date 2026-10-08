@@ -62,6 +62,15 @@ Do not commit that temporary override if it is only your local preference.
 
 ## Production
 
+Both development and production main logs record WARNING and above. Routine
+authentication, SQL, route and connection diagnostics are no longer written to
+the main file; debugging remains enabled independently through APP_DEBUG.
+Separate background INFO logs retain
+task actions, queued work and mutation outcomes for operational troubleshooting;
+the search INFO log provides the requested search history. Deprecations are kept
+in a dedicated file so they remain actionable. File retention is bounded by
+`LOG_RETENTION_DAYS`. Production must use `APP_ENV=prod` and `APP_DEBUG=0`.
+
 Keep the server configured with:
 
 ```dotenv

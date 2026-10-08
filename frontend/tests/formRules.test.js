@@ -37,9 +37,9 @@ test('phone display strips the selected calling code while storage remains inter
   assert.equal(formatInternationalPhoneNumber('not a number', 'BA'), null)
 })
 
-test('pagination retains first and last three pages with gaps and the current neighborhood', () => {
+test('pagination retains endpoint pages and the current neighborhood in the middle', () => {
   assert.deepEqual(paginationItems(1, 47).map((item) => item.page), [1, 2, 3, null, 45, 46, 47])
-  assert.deepEqual(paginationItems(24, 47).map((item) => item.page), [1, 2, 3, null, 23, 24, 25, null, 45, 46, 47])
+  assert.deepEqual(paginationItems(24, 47).map((item) => item.page), [1, null, 23, 24, 25, null, 47])
   assert.deepEqual(paginationItems(47, 47).map((item) => item.page), [1, 2, 3, null, 45, 46, 47])
   assert.deepEqual(paginationItems(1, 1).map((item) => item.page), [1])
   assert.deepEqual(paginationItems(2, 5).map((item) => item.page), [1, 2, 3, 4, 5])

@@ -6,8 +6,8 @@
   "seo": {
     "homeTitle": "Wave — creator and brand partnerships",
     "homeDescription": "A place for creators and brands to find the right partners.",
-    "creatorsTitle": "Creators for brand partnerships | Wave",
-    "creatorsDescription": "Discover creator profiles, audiences, and ideas for working with brands.",
+    "creatorsTitle": "Influencer and UGC creator directory | Wave",
+    "creatorsDescription": "Find influencers and UGC creators for brand collaborations. Filter by country, topic and platform, then compare portfolios and Instagram, TikTok and YouTube packages.",
     "companiesTitle": "Companies partnering with creators | Wave",
     "companiesDescription": "Meet companies on Wave and explore brands looking for creative partners.",
     "campaignsTitle": "Creator campaigns | Wave",
@@ -105,7 +105,7 @@
         {
           "heading": "External services",
           "paragraphs": [
-            "Wave loads fonts from Google Fonts and may display privacy-enhanced YouTube videos added to profiles. Those providers may receive technical request data when your browser connects to their services. Google Analytics may process usage data only if you opt in.",
+            "Wave serves fonts locally and may display privacy-enhanced YouTube videos added to profiles. Those providers may receive technical request data when your browser connects to their services. Google Analytics may process usage data only if you opt in.",
             "If you choose Google or Apple sign-in, the selected provider processes authentication information under its own privacy terms."
           ],
           "links": [
@@ -165,7 +165,7 @@
         {
           "heading": "External fonts and video",
           "paragraphs": [
-            "Wave loads interface fonts from Google Fonts. When a profile video is displayed, your browser may connect to youtube-nocookie.com, operated by Google. These providers may process technical data or use their own browser storage; Wave does not control that storage."
+            "Interface fonts are served locally by Wave. When a profile video is displayed, your browser may connect to youtube-nocookie.com, operated by Google. These providers may process technical data or use their own browser storage; Wave does not control that storage."
           ],
           "links": [
             {
@@ -215,6 +215,7 @@
     "socialLinks": "Wave social media",
     "socialFollow": "Follow us on social media.",
     "instagram": "Wave on Instagram",
+    "tiktok": "Wave on TikTok",
     "facebook": "Wave on Facebook",
     "language": "Language",
     "openMenu": "Open navigation",
@@ -357,6 +358,8 @@
   "companyDirectory": {
     "eyebrow": "GOOD PEOPLE TO WORK WITH",
     "title": "Meet the companies on Wave",
+    "headlineLead": "Meet the companies",
+    "headlineEmphasis": "on Wave",
     "description": "Explore brands looking for creative partners and browse their open campaigns.",
     "loading": "Loading companies…",
     "empty": "Companies will appear here as they join Wave.",
@@ -413,6 +416,7 @@
     "headlineEmphasis": "the right people",
     "headlineTail": "work together.",
     "description": "A platform connecting creators and brands for real opportunities.",
+    "findCreator": "Find your creator",
     "exploreCampaigns": "Explore opportunities",
     "howItWorks": "How it works",
     "creatorSearchPlaceholder": "Name, niche, or location",
@@ -487,11 +491,11 @@
     "contactForCreators": "For creators",
     "contactForBrands": "For brands",
     "contactForPartnerships": "For partnerships",
-    "contactRoleLabel": "YOUR ROLE",
+    "contactRoleLabel": "Your role",
     "contactRoleCreator": "Creator",
     "contactRoleBrand": "Brand",
     "contactRoleAgency": "Agency",
-    "contactInterest": "WHAT ARE YOU INTERESTED IN?",
+    "contactInterest": "What are you interested in?",
     "contactInterestCollaboration": "Collaboration",
     "contactInterestCampaign": "Campaign",
     "contactInterestPartnership": "Partnership",
@@ -553,8 +557,8 @@
   },
   "creatorsPage": {
     "eyebrow": "The people behind the good work",
-    "headlineLead": "Find someone who",
-    "headlineEmphasis": "gets it.",
+    "headlineLead": "Find a creator",
+    "headlineEmphasis": "for your brand.",
     "description": "Thoughtful creators, honest media kits, and a little more about what makes them them.",
     "search": "Name, location, or something they love",
     "searchLabel": "Search creators",
@@ -1383,6 +1387,21 @@
       "cli": "CLI consumers required."
     }
   },
+  "creatorTypes": {
+    "label": "Creator type",
+    "select": "Choose creator types",
+    "all": "All creator types",
+    "search": "Search creator types…",
+    "empty": "No creator types found.",
+    "hint": "Choose one or more types that describe your work.",
+    "options": {
+      "influencer": "Influencer",
+      "ugc-creator": "UGC creator",
+      "photographer": "Photographer",
+      "videographer": "Videographer",
+      "model": "Model"
+    }
+  },
   "creatorDirectory": {
     "heroBadge": "Authentic creators from different fields",
     "categoryLabel": "Categories",
@@ -1569,5 +1588,264 @@
     "error": "Results are currently unavailable.",
     "retry": "Try again",
     "seeAll": "See all results for “{query}”"
+  },
+  "adminQr": {
+    "title": "QR codes",
+    "description": "Create QR codes with permanent Wave links. Change the destination without reprinting.",
+    "label": "Name",
+    "destination": "Destination link",
+    "url": "Permanent Wave link",
+    "actions": "Actions",
+    "empty": "No QR codes yet.",
+    "create": "New QR code",
+    "edit": "Edit",
+    "hint": "Enter a full http:// or https:// link. Images are generated locally, without an external QR service.",
+    "generate": "Generate QR code",
+    "save": "Save changes",
+    "saving": "Saving…",
+    "cancel": "Cancel",
+    "show": "QR code",
+    "imageAlt": "QR code: {label}",
+    "permanent": "This QR code stays the same when you change its destination.",
+    "downloadSvg": "Download SVG",
+    "downloadPng": "Download PNG",
+    "close": "Close",
+    "loadError": "Unable to load QR codes.",
+    "saveError": "QR code was not saved.",
+    "imageError": "Unable to generate the QR image.",
+    "scans": "Scans",
+    "lastScanAt": "Last scan",
+    "statistics": "Statistics",
+    "viewStatistics": "Statistics for {label}: {count} scans",
+    "statisticsHint": "QR link opens. Repeat opens count; known bots and link previews are excluded.",
+    "locations": "Locations",
+    "location": "Location",
+    "locationHint": "Approximate city and country from Cloudflare, when available. This is not a precise GPS location.",
+    "unknownLocation": "Unknown location",
+    "daily": "Activity in the last 30 days (UTC)",
+    "day": "Date",
+    "noScans": "No scans yet.",
+    "noRecentScans": "No scans in the last 30 days.",
+    "statisticsLoading": "Loading statistics…",
+    "statisticsError": "Unable to load statistics.",
+    "scansHint": "Total QR link opens",
+    "lastScanHint": "Date and time of the latest open",
+    "dailyHint": "Daily scan counts over the last 30 days."
+  },
+  "regionalSeo": {
+    "regionalIntro": "Explore creators across the region and find the right match for your brand.",
+    "regionalAsideTitle": "Local talent, regional reach",
+    "regionalAsideBody": "Connect with creators across the region and find the right match for your campaign.",
+    "eyebrow": "Creators for brand collaborations",
+    "countriesTitle": "Find creators by country",
+    "guideTitle": "Guides to working with creators",
+    "guideIntro": "Practical steps from choosing a creator to writing a clear campaign brief.",
+    "browse": "Browse all creators",
+    "campaign": "Post a campaign",
+    "directory": "Influencer and UGC creator directory",
+    "selectTitle": "How do you choose a creator?",
+    "selectBody": "Start with your audience and the topic you want to share. Browse portfolios and platforms, then compare package formats, scope and prices. Follower counts are profile information; ask for context about the audience and previous collaborations.",
+    "processTitle": "From profile to collaboration",
+    "processBody": "Browse packages on a profile and send a collaboration inquiry. You can also post a campaign with a budget, deadlines and deliverables, or invite a creator to your campaign. Private chat becomes available after the relevant acceptance or invitation to discuss an application.",
+    "empty": "There are no public creator profiles in this country yet. Browse another country or the full directory.",
+    "back": "All guides",
+    "countries": {
+      "BA": {
+        "name": "Bosnia and Herzegovina",
+        "title": "Influencers in Bosnia and Herzegovina for brand collaborations",
+        "description": "Find influencers and UGC creators in Bosnia and Herzegovina. Explore Instagram, TikTok and YouTube profiles, portfolios and collaboration packages on Wave.",
+        "intro": "Looking for a creator for your brand? This directory lists public creator profiles in Bosnia and Herzegovina. Compare their content, channels and packages before proposing a collaboration."
+      },
+      "HR": {
+        "name": "Croatia",
+        "title": "Influencers in Croatia for brand collaborations",
+        "description": "Find influencers and UGC creators in Croatia. Explore Instagram, TikTok and YouTube profiles, portfolios and collaboration packages on Wave.",
+        "intro": "Looking for a creator for your brand? This directory lists public creator profiles in Croatia. Compare their content, channels and packages before proposing a collaboration."
+      },
+      "RS": {
+        "name": "Serbia",
+        "title": "Influencers in Serbia for brand collaborations",
+        "description": "Find influencers and UGC creators in Serbia. Explore Instagram, TikTok and YouTube profiles, portfolios and collaboration packages on Wave.",
+        "intro": "Looking for a creator for your brand? This directory lists public creator profiles in Serbia. Compare their content, channels and packages before proposing a collaboration."
+      },
+      "ME": {
+        "name": "Montenegro",
+        "title": "Influencers in Montenegro for brand collaborations",
+        "description": "Find influencers and UGC creators in Montenegro. Explore Instagram, TikTok and YouTube profiles, portfolios and collaboration packages on Wave.",
+        "intro": "Looking for a creator for your brand? This directory lists public creator profiles in Montenegro. Compare their content, channels and packages before proposing a collaboration."
+      },
+      "SI": {
+        "name": "Slovenia",
+        "title": "Influencers in Slovenia for brand collaborations",
+        "description": "Find influencers and UGC creators in Slovenia. Explore Instagram, TikTok and YouTube profiles, portfolios and collaboration packages on Wave.",
+        "intro": "Looking for a creator for your brand? This directory lists public creator profiles in Slovenia. Compare their content, channels and packages before proposing a collaboration."
+      }
+    },
+    "guides": {
+      "find-creators": {
+        "title": "How to find an influencer for a collaboration",
+        "intro": "From your campaign goal to a shortlist of creators who fit your brand.",
+        "sections": [
+          {
+            "heading": "Start with your goal and audience",
+            "body": "Write down who you want to reach and what you want to achieve: introduce a product, explain a service or share an experience. Choose the country and platform where that audience is active."
+          },
+          {
+            "heading": "Review the content, not just the numbers",
+            "body": "Filter the directory by country, category and platform. Open profiles and portfolios. Consider each creator’s style, topics and approach to presenting brands."
+          },
+          {
+            "heading": "Propose a concrete next step",
+            "body": "Send a package inquiry with a description of your task, or create a campaign with clear requirements. Compare relevant responses and discuss the details before starting the collaboration."
+          }
+        ]
+      },
+      "choose-package": {
+        "title": "How to choose a creator package",
+        "intro": "Compare content, scope and prices before sending a collaboration inquiry.",
+        "sections": [
+          {
+            "heading": "Check what the package includes",
+            "body": "Review the platform, number of posts, format and package description. Distinguish content posted on a creator’s channel from UGC a brand plans to use on its own channels."
+          },
+          {
+            "heading": "Compare scope and price",
+            "body": "Creators set the prices shown on their profiles. Ask about filming, editing, revisions, deadlines and content usage. Compare offers with the same scope rather than assuming an average market price."
+          },
+          {
+            "heading": "Send a detailed inquiry",
+            "body": "Include the product, content you need, deadline and available budget. Once the creator accepts the inquiry, continue the conversation and confirm the agreed scope before production."
+          }
+        ]
+      },
+      "campaign-brief": {
+        "title": "How to write a campaign brief",
+        "intro": "A clear brief helps creators understand the task, deadlines and budget.",
+        "sections": [
+          {
+            "heading": "Explain the idea and deliverables",
+            "body": "Write a short summary, introduce the product and describe the audience. Choose Instagram, TikTok or YouTube and specify the format and number of deliverables."
+          },
+          {
+            "heading": "Include budget, timing and creator count",
+            "body": "Enter a budget range, location, application deadline and the number of creators you need. Explain content delivery timing and required materials in the campaign description."
+          },
+          {
+            "heading": "Leave room for creativity",
+            "body": "Separate essential information from suggestions. Review applicants’ profiles, invite suitable creators to a conversation and agree on the final plan."
+          }
+        ]
+      }
+    },
+    "creatorGuides": {
+      "eyebrow": "Your work, new opportunities",
+      "title": "Guides for creators",
+      "intro": "Build your profile, present your services and find campaigns that fit your work.",
+      "browse": "Browse campaigns",
+      "profile": "Edit your profile",
+      "guides": {
+        "create-profile": {
+          "title": "How to build your creator profile",
+          "intro": "Show what you do and help brands understand why they should work with you.",
+          "sections": [
+            {
+              "heading": "Introduce your work",
+              "body": "Add a profile photo, a short bio, your city and areas of interest in your account. Choose the creator types that describe your work, such as influencer, UGC creator, photographer or videographer. Creator types describe your services; platforms are the channels where you publish."
+            },
+            {
+              "heading": "Add channels and portfolio",
+              "body": "Link your social profiles and enter accurate audience figures. Add portfolio examples that show your style: photographs, videos or previous collaborations. A few relevant pieces with context help brands assess your work better than a large, unstructured collection."
+            },
+            {
+              "heading": "Review your public profile",
+              "body": "Check your public profile preview, including the photo, bio, portfolio and packages. Add frequently asked questions so brands know what to expect. Confirm your email and follow your account approval status. Hiding your account makes your profile unavailable to other users."
+            }
+          ]
+        },
+        "offer-packages": {
+          "title": "How to present your services",
+          "intro": "Create clear packages brands can understand and compare before sending an inquiry.",
+          "sections": [
+            {
+              "heading": "Define content and scope",
+              "body": "In your collaboration packages, describe what you create, for which platform and in what quantity. A package might include one short video or a set of photographs. Distinguish content production from publication on your own channel and explain what the price includes."
+            },
+            {
+              "heading": "Set pricing and terms",
+              "body": "State your price, delivery timeframe and included revisions. Specify when usage rights, additional versions or travel costs require a separate agreement. For work without a fixed scope, offer a custom inquiry and ask for a concrete brief."
+            },
+            {
+              "heading": "Respond to collaboration inquiries",
+              "body": "When a company requests your package, review its message and expectations before accepting. After acceptance, discuss details in the conversation. Decline if the project does not fit your work or availability; the company will be notified."
+            }
+          ]
+        },
+        "apply-to-campaigns": {
+          "title": "How to apply to a campaign",
+          "intro": "Find a relevant brief and send an application that shows how you can help the brand.",
+          "sections": [
+            {
+              "heading": "Choose the right campaign",
+              "body": "Check the campaign category, platforms, deliverables, budget and application deadline. Review the location and number of creators needed. Apply when you can deliver the work and the brand fits your audience or creative style."
+            },
+            {
+              "heading": "Send a specific application",
+              "body": "Explain why you fit the campaign and propose a short content idea. Highlight relevant portfolio work and confirm your availability."
+            },
+            {
+              "heading": "Follow the response and agree on details",
+              "body": "Track applications in your account. A company can also invite you directly without a prior application; you can accept or decline. After acceptance, agree on the brief, deadlines and delivery in the conversation. Applying does not automatically mean you have been hired."
+            }
+          ]
+        }
+      },
+      "relatedIntro": "Explore guides for your profile, services and working with brands."
+    },
+    "howItWorks": {
+      "title": "How Wave works",
+      "intro": "Wave connects creators and companies through profiles, service packages and campaigns. Choose the path that fits your role.",
+      "creators": {
+        "title": "For creators",
+        "guides": "Guides for creators",
+        "steps": [
+          {
+            "heading": "Introduce yourself",
+            "body": "Create an account, confirm your email and complete your profile. Add your interests, creator types, channels and portfolio."
+          },
+          {
+            "heading": "Find an opportunity",
+            "body": "Browse open campaigns and send a relevant application. Companies can also invite you directly or inquire about your services."
+          },
+          {
+            "heading": "Agree on the collaboration",
+            "body": "After acceptance, agree on content, deadlines and delivery in chat. Track applications, invitations and inquiries in your account."
+          }
+        ],
+        "intro": "Introduce yourself, find opportunities and work with brands."
+      },
+      "companies": {
+        "title": "For companies",
+        "guides": "Guides to working with creators",
+        "steps": [
+          {
+            "heading": "Introduce your brand",
+            "body": "Create a company account, confirm your email and complete your public profile. Add your brand description and business details."
+          },
+          {
+            "heading": "Find a creator or publish a campaign",
+            "body": "Search by creator type, category, country and platform. Request a package or publish a campaign with a brief, budget and deadlines."
+          },
+          {
+            "heading": "Choose collaborators",
+            "body": "Review applications and choose creators who fit your campaign. Agree on details in the conversation and follow the work."
+          }
+        ],
+        "intro": "Find the right creators, launch campaigns and grow your brand."
+      },
+      "start": "Open your account",
+      "startTitle": "Ready to collaborate?",
+      "startIntro": "Introduce your work or brand, find the right match and start a new collaboration."
+    },
+    "guideRelatedIntro": "From choosing a creator to writing a clear brief: find the next step for your brand."
   }
 }

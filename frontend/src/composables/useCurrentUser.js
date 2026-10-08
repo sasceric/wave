@@ -9,7 +9,7 @@ export function setCurrentUser(user) {
 
 export async function loadCurrentUser() {
   try {
-    const response = await apiGet('/auth/me')
+    const response = await apiGet('/auth/session')
     setCurrentUser(response.data)
   } catch (cause) {
     if (cause.status !== 401) {

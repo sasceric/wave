@@ -111,8 +111,8 @@ final class NewsletterSubscriberController
 
         $repository = $entityManager->getRepository(NewsletterSubscriber::class);
         $subscribers = $repository->createQueryBuilder('subscriber')
-            ->orderBy('subscriber.subscribedAt', 'DESC')
-            ->addOrderBy('subscriber.id', 'DESC')
+            ->orderBy('subscriber.subscribedAt', \SortDirection::Descending)
+            ->addOrderBy('subscriber.id', \SortDirection::Descending)
             ->setFirstResult(($page - 1) * $pageSize)
             ->setMaxResults($pageSize + 1)
             ->getQuery()

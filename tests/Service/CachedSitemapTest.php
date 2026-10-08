@@ -80,6 +80,6 @@ final class CachedSitemapTest extends TestCase
         $db->method('fetchAllAssociative')->willReturn([]);
         $jobs = new JobDispatcher($db, $this->createStub(MessageBusInterface::class), new PayloadCipher('test-only-secret'), new NullLogger());
 
-        return new CachedSitemap($db, new LocalizedRouteMap(dirname(__DIR__, 2)), new SiteOrigin('https://wave.example'), $jobs, $filesystem, $this->directory);
+        return new CachedSitemap($db, new LocalizedRouteMap(dirname(__DIR__, 2)), new SiteOrigin('https://wave.example'), $jobs, $filesystem, $this->directory, new \App\Service\RegionalSeoContent($db, dirname(__DIR__, 2)));
     }
 }

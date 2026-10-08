@@ -74,8 +74,8 @@ final class MediaThumbnailsTest extends TestCase
             self::assertSame([80, 120], array_slice(getimagesize($this->thumbnails->path($media, $width)), 0, 2));
         }
         $resource = MediaImageResource::fromEntity($media);
-        self::assertSame('/api/media/42/thumbnail/v1/320', $resource['src']);
-        self::assertSame('/api/media/42/thumbnail/v1/96 80w', $resource['srcset']);
+        self::assertSame('/api/media/42/thumbnail/v2/320', $resource['src']);
+        self::assertSame('/api/media/42/thumbnail/v2/96 80w', $resource['srcset']);
         self::assertSame(80, $resource['width']);
         self::assertSame(120, $resource['height']);
     }
@@ -104,6 +104,24 @@ final class MediaThumbnailsTest extends TestCase
     {
         $this->expectException(\InvalidArgumentException::class);
         $this->thumbnails->path($this->media('image.png'), 10000);
+    }
+
+    public function testPhotographicDerivativesAreCompressedWithoutReplacingTheLosslessMaster(): void
+    {
+        $image = imagecreatetruecolor(600, 400);
+        for ($y = 0; $y < 400; ++$y) {
+            for ($x = 0; $x < 600; ++$x) {
+                imagesetpixel($image, $x, $y, (($x * 7 + $y) % 256) << 16 | (($y * 3 + $x) % 256) << 8 | (($x + $y * 5) % 256));
+            }
+        }
+        imagewebp($image, $this->directory.'/photo.webp', IMG_WEBP_LOSSLESS);
+        $hash = hash_file('sha256', $this->directory.'/photo.webp');
+        $this->thumbnails->warm('photo.webp');
+        (new ImageUploadProcessor())->writeWebp($this->directory.'/photo.webp', $this->directory.'/lossless.webp', 320);
+        $thumbnail = $this->thumbnails->path($this->media('photo.webp'), 320);
+        self::assertLessThan(filesize($this->directory.'/lossless.webp'), filesize($thumbnail));
+        self::assertSame($hash, hash_file('sha256', $this->directory.'/photo.webp'));
+        self::assertSame([320, 213], array_slice(getimagesize($thumbnail), 0, 2));
     }
 
     private function media(string $path): Media

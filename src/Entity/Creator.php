@@ -61,6 +61,10 @@ class Creator
     #[ORM\Column(type: 'json', options: ['default' => '[]'])]
     private array $categories = [];
 
+    /** @var list<string> */
+    #[ORM\Column(type: 'json', options: ['default' => '[]'])]
+    private array $creatorTypes = [];
+
     #[ORM\Column(options: ['default' => false])]
     private bool $featured = false;
 
@@ -136,6 +140,18 @@ class Creator
     public function getCategory(): string
     {
         return $this->category;
+    }
+
+    /** @return list<string> */
+    public function getCreatorTypes(): array
+    {
+        return $this->creatorTypes;
+    }
+
+    /** @param list<string> $creatorTypes */
+    public function setCreatorTypes(array $creatorTypes): void
+    {
+        $this->creatorTypes = $creatorTypes;
     }
 
     public function isFeatured(): bool

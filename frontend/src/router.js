@@ -1,6 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { localeNames, setLocale } from './i18n'
-import { defaultLocale, localizedPath, localizedRouteName, routeSegments } from './routePaths'
+import { defaultLocale, localizedPath, localizedRouteName, routeSegments, localePrefixes } from './routePaths'
 
 const accountView = () => import('./views/AccountView.vue')
 const adminDashboardView = () => import('./views/AdminDashboardView.vue')
@@ -9,6 +9,12 @@ const notFoundView = () => import('./views/NotFoundView.vue')
 
 const routeViews = {
   home: () => import('./views/HomeView.vue'),
+  'country-creators': () => import('./views/CountryCreatorsView.vue'),
+  'seo-guides': () => import('./views/SeoGuidesView.vue'),
+  'seo-guide': () => import('./views/SeoGuidesView.vue'),
+  'creator-guides': () => import('./views/SeoGuidesView.vue'),
+  'creator-guide': () => import('./views/SeoGuidesView.vue'),
+  'how-it-works': () => import('./views/HowItWorksView.vue'),
   'account-credits': () => import('./views/CreditsView.vue'),
   'admin-credit-settings': () => import('./views/AdminCreditSettingsView.vue'),
   account: accountView,
@@ -38,6 +44,7 @@ const routeViews = {
   'admin-campaigns': adminDashboardView,
   'admin-email-templates': adminDashboardView,
   'admin-subscribers': () => import('./views/AdminSubscribersView.vue'),
+  'admin-qr': () => import('./views/AdminQrView.vue'),
   'admin-tools': () => import('./views/AdminToolsView.vue'),
   imprint: legalView,
   'privacy-policy': legalView,
@@ -55,6 +62,7 @@ const adminSections = {
   'admin-email-templates': 'email-templates',
   'admin-subscribers': 'subscribers',
   'admin-tools': 'tools',
+  'admin-qr': 'qr',
 }
 
 const accountSections = {
@@ -88,6 +96,7 @@ const localizedRoutes = Object.entries(routeSegments).flatMap(([locale, routes])
     meta: {
       locale,
       routeName: name,
+      accountAccessPage: routeViews[name] === accountView,
       adminSection: adminSections[name],
       accountSection: accountSections[name],
       accountCampaignPage: accountCampaignPages[name],
@@ -162,8 +171,13 @@ const router = createRouter({
   routes: [
     ...localizedRoutes,
     ...legacyRoutes,
-    ...Object.keys(localeNames).filter((locale) => locale !== defaultLocale).map((locale) => ({
+    ...Object.entries(localePrefixes).filter(([locale, prefix]) => locale !== 'bs' && locale !== prefix).map(([locale, prefix]) => ({
       path: `/${locale}/:pathMatch(.*)*`,
+      name: `legacy-prefix-${locale}`,
+      redirect: to => ({ path: `/${prefix}/${Array.isArray(to.params.pathMatch) ? to.params.pathMatch.join('/') : to.params.pathMatch || ''}`, query: to.query, hash: to.hash }),
+    })),
+    ...Object.keys(localeNames).filter((locale) => locale !== defaultLocale).map((locale) => ({
+      path: `/${localePrefixes[locale]}/:pathMatch(.*)*`,
       name: localizedRouteName('not-found', locale),
       component: notFoundView,
       meta: { locale, routeName: 'not-found' },
@@ -172,9 +186,9 @@ const router = createRouter({
   ],
 })
 
-router.beforeEach((to) => {
+router.beforeEach(async (to) => {
   if (to.meta.locale) {
-    setLocale(to.meta.locale)
+    await setLocale(to.meta.locale)
   }
 })
 

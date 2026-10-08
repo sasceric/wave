@@ -26,14 +26,16 @@ test('only overdue scheduled tasks use the overdue status badge', async () => {
   }
 })
 
-test('log pagination uses snapshot cursors and page-size changes reset the snapshot', async () => {
+test('log pagination jumps directly to the last page and resets snapshots on filter changes', async () => {
   const requests = []
   const { state } = await tools(async (path) => {
     requests.push(path)
     if (path.includes('log-files')) return { data: { files: [{ name: 'prod.log' }] } }
     if (path.includes('/logs?')) {
-      const cursor = new URLSearchParams(path.split('?')[1]).get('cursor')
-      return { data: [{ id: cursor || 'first' }], meta: { cursor: cursor || 'snapshot-first', nextCursor: cursor === 'snapshot-next' ? null : 'snapshot-next', hasMore: cursor !== 'snapshot-next' } }
+      const query = new URLSearchParams(path.split('?')[1])
+      const cursor = query.get('cursor')
+      const page = Number(query.get('page'))
+      return { data: [{ id: cursor || 'first' }], meta: { page, total: 875, cursor: cursor || 'snapshot-first', hasMore: page < 35 } }
     }
     return { data: [], meta: { total: 0, hasMore: false } }
   })
@@ -44,10 +46,11 @@ test('log pagination uses snapshot cursors and page-size changes reset the snaps
   state.file.value = '__all__'
   await settle()
   assert.equal(state.rows.value[0].id, 'first')
-  state.navigatePage(2)
+  state.navigatePage(35)
   await settle()
-  assert.equal(state.page.value, 2)
-  assert.equal(state.rows.value[0].id, 'snapshot-next')
+  assert.equal(state.page.value, 35)
+  assert.ok(requests.at(-1).includes('page=35'))
+  assert.equal(state.rows.value[0].id, 'snapshot-first')
   state.navigatePage(1)
   await settle()
   assert.equal(state.page.value, 1)

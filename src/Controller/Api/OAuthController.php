@@ -374,7 +374,8 @@ final class OAuthController extends AbstractController
         $segment = is_array($routes) && is_array($routes[$locale] ?? null) && is_string($routes[$locale]['account'] ?? null)
             ? $routes[$locale]['account']
             : 'account';
-        $prefix = $locale === 'bs' ? '' : '/'.$locale;
+        $prefixes = json_decode((string) file_get_contents(dirname($localizedRoutesFile).'/localized_route_prefixes.json'), true, 32, JSON_THROW_ON_ERROR);
+        $prefix = $locale === 'bs' ? '' : '/'.$prefixes[$locale];
 
         return new RedirectResponse($prefix.'/'.$segment.'?'.http_build_query(['mode' => $mode, 'oauth' => $status]));
     }

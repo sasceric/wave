@@ -4,6 +4,7 @@ namespace App\Background;
 
 use App\Localization\LocalizedRouteMap;
 use App\Service\SiteOrigin;
+use App\Service\RegionalSeoContent;
 use Doctrine\DBAL\Connection;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\Filesystem\Filesystem;
@@ -17,6 +18,7 @@ final class CachedSitemap
         private readonly JobDispatcher $jobs,
         private readonly Filesystem $filesystem,
         #[Autowire('%kernel.project_dir%/var/sitemaps')] private readonly string $directory,
+        private readonly RegionalSeoContent $regionalContent,
     ) {
     }
 
@@ -119,6 +121,7 @@ final class CachedSitemap
 
     private function pages(): \Generator
     {
+        yield from $this->regionalContent->extraPages();
         foreach (['home', 'creators', 'companies', 'campaigns', 'imprint', 'privacy-policy', 'cookie-policy'] as $route) {
             yield [$route, []];
         }

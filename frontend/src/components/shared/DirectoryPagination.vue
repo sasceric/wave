@@ -2,6 +2,7 @@
 import { computed, watch } from 'vue'
 import { ChevronLeft, ChevronRight } from '@lucide/vue'
 import { useI18n } from 'vue-i18n'
+import { paginationItems } from '../../lib/pagination'
 
 const props = defineProps({
   page: { type: Number, required: true },
@@ -17,24 +18,7 @@ const emit = defineEmits(['update:page', 'update:pageSize'])
 const { t } = useI18n()
 
 const pageCount = computed(() => Math.ceil(props.total / props.pageSize))
-const pageItems = computed(() => {
-  const numbers = pageCount.value <= 7
-    ? Array.from({ length: pageCount.value }, (_, index) => index + 1)
-    : [...new Set([1, props.page - 1, props.page, props.page + 1, pageCount.value])]
-      .filter((number) => number >= 1 && number <= pageCount.value)
-      .sort((left, right) => left - right)
-  const items = []
-
-  numbers.forEach((number, index) => {
-    const previous = numbers[index - 1]
-    if (previous && number - previous > 1) {
-      items.push({ key: `ellipsis-${previous}-${number}`, page: null })
-    }
-    items.push({ key: `page-${number}`, page: number })
-  })
-
-  return items
-})
+const pageItems = computed(() => paginationItems(props.page, pageCount.value))
 
 watch(pageCount, (count) => {
   if (props.page > count && count > 0) {

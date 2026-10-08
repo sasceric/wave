@@ -65,17 +65,56 @@ final class BackgroundPipelineTest extends KernelTestCase
     {
         $tasks = self::getContainer()->get(TaskRegistry::class);
         self::assertSame(8, $tasks->register());
+        $reminder = $this->db->fetchAssociative("SELECT * FROM wave_scheduled_task WHERE name = 'UnreadMessageReminderTask'");
+        self::assertSame(3600, (int) $reminder['interval_seconds']);
+        self::assertEqualsWithDelta(time() + 3600, strtotime($reminder['next_run_at'].' UTC'), 5);
         self::assertSame(0, $tasks->register());
+        self::assertSame($reminder, $this->db->fetchAssociative("SELECT * FROM wave_scheduled_task WHERE name = 'UnreadMessageReminderTask'"));
         $id = $tasks->action('CachePruneTask', 'run');
         self::assertSame('queued', $this->db->fetchOne("SELECT status FROM wave_scheduled_task WHERE name = 'CachePruneTask'"));
+        self::assertEqualsWithDelta(time() + 86400, strtotime($this->db->fetchOne("SELECT next_run_at FROM wave_scheduled_task WHERE name = 'CachePruneTask'").' UTC'), 5);
         $this->work('background');
         self::assertSame('completed', $this->db->fetchOne('SELECT status FROM background_job WHERE id = ?', [$id]));
         self::assertSame('', $this->db->fetchOne('SELECT payload FROM background_job WHERE id = ?', [$id]));
         self::assertSame('success', $this->db->fetchOne("SELECT last_outcome FROM wave_scheduled_task WHERE name = 'CachePruneTask'"));
         self::assertSame(0, (int) $this->db->fetchOne('SELECT COUNT(*) FROM messenger_messages'));
         $tasks->action('CachePruneTask', 'inactive');
+        self::assertSame(0, $tasks->register());
+        self::assertSame('inactive', $this->db->fetchOne("SELECT status FROM wave_scheduled_task WHERE name = 'CachePruneTask'"));
         $this->db->executeStatement('UPDATE wave_scheduled_task SET next_run_at = ?', ['2000-01-01 00:00:00']);
         self::assertSame(7, $tasks->dispatchDue());
+        self::assertSame(0, $tasks->dispatchDue());
+    }
+
+    public function testAdminRegistrationResetsAllIntervalsWithoutDuplicatingActiveJobs(): void
+    {
+        $tasks = self::getContainer()->get(TaskRegistry::class);
+        $tasks->register();
+        $id = $tasks->action('SitemapGenerateTask', 'run');
+        $tasks->started($id);
+        $tasks->action('CachePruneTask', 'inactive');
+        $this->db->update('wave_scheduled_task', ['status' => 'failed', 'last_outcome' => 'failed'], ['name' => 'ExpiredTokenCleanupTask']);
+        $this->db->update('wave_scheduled_task', ['interval_seconds' => 7200], ['name' => 'UnreadMessageReminderTask']);
+        $this->db->executeStatement('UPDATE wave_scheduled_task SET next_run_at = ?', ['2000-01-01 00:00:00']);
+        $this->db->delete('wave_scheduled_task', ['name' => 'LogCleanupTask']);
+        $before = $this->db->fetchAllAssociativeIndexed('SELECT * FROM wave_scheduled_task');
+
+        self::assertSame(8, $tasks->registerAndReschedule());
+        $rows = $this->db->fetchAllAssociativeIndexed('SELECT * FROM wave_scheduled_task');
+        $origins = [];
+        foreach ($rows as $name => $row) {
+            $origin = strtotime($row['next_run_at'].' UTC') - (int) $row['interval_seconds'];
+            self::assertEqualsWithDelta(time(), $origin, 5);
+            $origins[] = $origin;
+            if (isset($before[$name])) {
+                $old = $before[$name];
+                unset($row['next_run_at'], $old['next_run_at']);
+                self::assertSame($old, $row);
+            }
+        }
+        self::assertCount(1, array_unique($origins));
+        self::assertSame('scheduled', $rows['LogCleanupTask']['status']);
+        self::assertSame(1, (int) $this->db->fetchOne('SELECT COUNT(*) FROM messenger_messages'));
         self::assertSame(0, $tasks->dispatchDue());
     }
 
@@ -190,7 +229,7 @@ final class BackgroundPipelineTest extends KernelTestCase
         self::assertSame(1, (int) $this->db->fetchOne("SELECT available_campaign_count FROM directory_index WHERE kind = 'company'"));
         $directory = sys_get_temp_dir() . '/wave-sitemap-test-' . bin2hex(random_bytes(6));
         $files = new \Symfony\Component\Filesystem\Filesystem();
-        $sitemap = new \App\Background\CachedSitemap($this->db, self::getContainer()->get(\App\Localization\LocalizedRouteMap::class), new \App\Service\SiteOrigin('https://wave.example'), $this->jobs, $files, $directory);
+        $sitemap = new \App\Background\CachedSitemap($this->db, self::getContainer()->get(\App\Localization\LocalizedRouteMap::class), new \App\Service\SiteOrigin('https://wave.example'), $this->jobs, $files, $directory, self::getContainer()->get(\App\Service\RegionalSeoContent::class));
         try {
             $sitemap->generate();
             $xml = file_get_contents($sitemap->index());

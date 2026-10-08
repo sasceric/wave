@@ -103,7 +103,7 @@ function chatRoute(application) {
             <th scope="col">{{ t('auth.creator') }}</th>
             <th scope="col">{{ t('account.applicationDate') }}</th>
             <th scope="col">{{ t('account.activityStatus') }}</th>
-            <th scope="col">{{ t('account.activityActions') }}</th>
+            <th scope="col" class="creator-offers__action-cell">{{ t('account.activityActions') }}</th>
           </tr></thead>
           <tbody>
             <tr v-for="application in pageApplications" :key="application.id">
@@ -115,7 +115,7 @@ function chatRoute(application) {
               </td>
               <td><span class="creator-offers__mobile-label">{{ t('account.applicationDate') }}</span><span v-if="application.createdAt" class="creator-offers__deadline"><CalendarDays :size="17" aria-hidden="true" /><time :datetime="application.createdAt">{{ formatDate(application.createdAt) }}</time></span><small v-if="application.createdAt" class="company-campaign-applicants__time">{{ timeFormatter.ago(application.createdAt, Date.now()) }}</small></td>
               <td><span class="creator-offer__status" :class="`creator-offer__status--${statusGroup(application)}`"><i :class="`activity-dot activity-dot--${statusGroup(application)}`" aria-hidden="true"></i>{{ statusLabel(application) }}</span></td>
-              <td><div class="creator-offers__actions">
+              <td class="creator-offers__action-cell"><div class="creator-offers__actions">
                 <LocalizedLink v-if="application.conversationId" class="button button--outline" :to="chatRoute(application)"><MessageCircle :size="16" aria-hidden="true" />{{ t('account.activityChat') }}</LocalizedLink>
                 <button class="button button--dark" type="button" :aria-label="`${t('account.viewApplication')}: ${application.creator.displayName}`" @click="emit('view-application', application)">{{ t('account.viewApplication') }}<ArrowRight :size="16" aria-hidden="true" /></button>
               </div></td>

@@ -57,6 +57,25 @@ final class AuthController extends AbstractController
         return new JsonResponse(['data' => UserResource::fromEntity($user, $locale, MarketplaceCategoryLabels::forLocale($entityManager, $locale))]);
     }
 
+    // Checking whether a browser has a session is a successful read for guests.
+    // Keep /auth/me and all account endpoints' authentication requirements intact.
+    #[Route('/api/auth/session', name: 'api_auth_session', methods: ['GET'])]
+    public function session(Request $request, Security $security, EntityManagerInterface $entityManager): JsonResponse
+    {
+        $locale = LocaleContext::fromRequest($request);
+        if ($locale === null) {
+            return new JsonResponse(['error' => ApiMessages::get('unsupported_language', 'bs')], 400);
+        }
+        $user = $security->getUser();
+
+        $response = new JsonResponse(['data' => $user instanceof User
+            ? UserResource::fromEntity($user, $locale, MarketplaceCategoryLabels::forLocale($entityManager, $locale))
+            : null]);
+        $response->headers->set('Cache-Control', 'private, no-store');
+
+        return $response;
+    }
+
     #[Route('/api/auth/register', name: 'api_auth_register', methods: ['POST'])]
     public function register(
         Request $request,

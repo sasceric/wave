@@ -1,6 +1,7 @@
 <script setup>
 import SingleSelect from '../components/shared/SingleSelect.vue'
 import CardGrid from '../components/shared/CardGrid.vue'
+import CountryDirectoryLinks from '../components/shared/CountryDirectoryLinks.vue'
 import { computed, nextTick, onMounted, reactive, ref, useId, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { ArrowRight, ArrowUpRight, Building2, Camera, CircleCheck, ClipboardCheck, CreditCard, FileCheck2, FileText, HelpCircle, Mail, Map, Search, ShieldCheck, UserRound, UsersRound } from '@lucide/vue'
@@ -117,7 +118,7 @@ onMounted(loadHome)
             {{ t('home.exploreCampaigns') }}
             <span aria-hidden="true">→</span>
           </LocalizedLink>
-          <a class="button button--outline" href="#how-it-works">{{ t('home.howItWorks') }}</a>
+          <LocalizedLink class="button button--outline" to="/creators">{{ t('home.findCreator') }}</LocalizedLink>
         </div>
       </div>
     </div>
@@ -129,6 +130,10 @@ onMounted(loadHome)
       <img
         class="hero-art__portrait"
         src="/images/banner-girl.webp"
+        srcset="/images/banner-girl-360.webp 360w, /images/banner-girl-600.webp 600w, /images/banner-girl-900.webp 900w, /images/banner-girl.webp 1086w"
+        sizes="(max-width: 420px) 289px, (max-width: 760px) 355px, max(587px, calc((100svh - 164px) * .938))"
+        width="1086"
+        height="1448"
         alt=""
         fetchpriority="high"
       />
@@ -155,7 +160,7 @@ onMounted(loadHome)
         </p>
         <h2>{{ t('home.creatorsTitleLead') }} <em>{{ t('home.creatorsTitleEmphasis') }}</em></h2>
       </div>
-      <LocalizedLink class="text-link" to="/creators">{{ t('home.findPeople') }} <span aria-hidden="true">↗</span></LocalizedLink>
+      <LocalizedLink class="text-link" to="/creators">{{ t('home.findPeople') }} <span aria-hidden="true">→</span></LocalizedLink>
     </div>
     <StatusMessage v-if="creatorsError" variant="error">{{ creatorsError }}</StatusMessage>
     <CardGrid v-else-if="creators.length || loading" kind="creator" layout="home" :aria-busy="loading">
@@ -164,13 +169,14 @@ onMounted(loadHome)
       <span v-if="loading" class="sr-only" role="status">{{ t('home.loadingCreators') }}</span>
     </CardGrid>
     <StatusMessage v-else variant="empty">{{ t('home.emptyCreators') }}</StatusMessage>
+    <CountryDirectoryLinks />
   </section>
 
   <section class="campaign-section">
     <div class="page-width section">
       <div class="section-heading">
         <div><p class="eyebrow">{{ t('home.featuredCampaignsEyebrow') }}</p><h2>{{ t('home.campaignsTitleLead') }} <em>{{ t('home.campaignsTitleEmphasis') }}</em></h2></div>
-        <LocalizedLink class="text-link" to="/campaigns">{{ t('home.allCampaigns') }} <span aria-hidden="true">↗</span></LocalizedLink>
+        <LocalizedLink class="text-link" to="/campaigns">{{ t('home.allCampaigns') }} <span aria-hidden="true">→</span></LocalizedLink>
       </div>
       <StatusMessage v-if="campaignsError" variant="error">{{ campaignsError }}</StatusMessage>
       <CardGrid v-else-if="campaigns.length || loading" kind="campaign" layout="home" :aria-busy="loading">
@@ -241,7 +247,7 @@ onMounted(loadHome)
           <div class="step__visual">
             <span class="step__icon" aria-hidden="true"><component :is="icon" :size="30" stroke-width="1.7" /></span>
             <span class="step__number" aria-hidden="true">0{{ index + 1 }}</span>
-            <img :src="`/images/home-step-${['match', 'brief', 'create'][index]}.webp`" alt="" loading="lazy" decoding="async" />
+            <img :src="`/images/home-step-${['match', 'brief', 'create'][index]}-320.webp`" alt="" loading="lazy" decoding="async" width="320" height="240" />
             <div v-if="index === 1" class="step__brief" aria-hidden="true">
               <strong>{{ t('home.briefTitle') }}</strong>
               <span v-for="key in ['Brief', 'Budget', 'Deadline', 'Deliverables']" :key="key"><CircleCheck :size="11" />{{ t(`home.brief${key}`) }}</span>

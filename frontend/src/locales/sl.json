@@ -6,8 +6,8 @@
   "seo": {
     "homeTitle": "Wave — sodelovanja ustvarjalcev in blagovnih znamk",
     "homeDescription": "Prostor, kjer ustvarjalci in blagovne znamke najdejo prave partnerje.",
-    "creatorsTitle": "Ustvarjalci za sodelovanje z blagovnimi znamkami | Wave",
-    "creatorsDescription": "Odkrijte ustvarjalce, njihove profile, občinstvo in zamisli za sodelovanje z blagovnimi znamkami.",
+    "creatorsTitle": "Seznam vplivnežev in UGC ustvarjalcev | Wave",
+    "creatorsDescription": "Poišči vplivneže in UGC ustvarjalce za sodelovanje. Filtriraj po državi, področju in platformi ter primerjaj portfelje in pakete za Instagram, TikTok in YouTube.",
     "companiesTitle": "Podjetja, ki sodelujejo z ustvarjalci | Wave",
     "companiesDescription": "Spoznajte podjetja na Waveu in raziščite blagovne znamke, ki iščejo ustvarjalne partnerje.",
     "campaignsTitle": "Kampanje za ustvarjalce | Wave",
@@ -106,7 +106,7 @@
         {
           "heading": "Zunanje storitve",
           "paragraphs": [
-            "Wave naloži pisave iz storitve Google Fonts in lahko prikaže videoposnetke YouTube, dodane v profile. Ti ponudniki lahko prejmejo tehnične podatke zahteve, ko se vaš brskalnik poveže z njihovimi storitvami.",
+            "Wave naloži pisave lokalno in lahko prikaže videoposnetke YouTube, dodane v profile. Ti ponudniki lahko prejmejo tehnične podatke zahteve, ko se vaš brskalnik poveže z njihovimi storitvami.",
             "Če izberete prijavo z Googlom ali Applom, izbrani ponudnik obdeluje podatke za prijavo v skladu s svojimi pravili zasebnosti. Google Analytics lahko obdeluje podatke o uporabi le, če ga dovolite."
           ],
           "links": [
@@ -166,7 +166,7 @@
         {
           "heading": "Zunanje pisave in videoposnetki",
           "paragraphs": [
-            "Wave naloži pisave vmesnika iz storitve Google Fonts. Ko se prikaže videoposnetek iz profila, se lahko brskalnik poveže z youtube-nocookie.com, ki ga upravlja Google. Ti ponudniki lahko obdelujejo tehnične podatke ali uporabljajo lastno shrambo brskalnika; Wave te shrambe ne upravlja."
+            "Pisave vmesnika se naložijo lokalno s storitve Wave. Ko se prikaže videoposnetek iz profila, se lahko brskalnik poveže z youtube-nocookie.com, ki ga upravlja Google. Ti ponudniki lahko obdelujejo tehnične podatke ali uporabljajo lastno shrambo brskalnika; Wave te shrambe ne upravlja."
           ],
           "links": [
             {
@@ -216,6 +216,7 @@
     "socialLinks": "Wave na družbenih omrežjih",
     "socialFollow": "Spremljajte nas na družbenih omrežjih.",
     "instagram": "Wave na Instagramu",
+    "tiktok": "Wave na TikToku",
     "facebook": "Wave na Facebooku",
     "language": "Jezik",
     "openMenu": "Odpri navigacijo",
@@ -358,6 +359,8 @@
   "companyDirectory": {
     "eyebrow": "DOBRI POSLOVNI PARTNERJI",
     "title": "Spoznaj podjetja na Waveu",
+    "headlineLead": "Spoznaj podjetja",
+    "headlineEmphasis": "na Waveu",
     "description": "Razišči blagovne znamke, ki iščejo ustvarjalne partnerje, in si oglej njihove odprte kampanje.",
     "loading": "Nalaganje podjetij…",
     "empty": "Podjetja se bodo prikazala tukaj, ko se pridružijo Waveu.",
@@ -414,6 +417,7 @@
     "headlineEmphasis": "pravi ljudje",
     "headlineTail": "sodelujejo.",
     "description": "Platforma, ki povezuje ustvarjalce in blagovne znamke za resnične priložnosti.",
+    "findCreator": "Poišči ustvarjalca",
     "exploreCampaigns": "Razišči priložnosti",
     "howItWorks": "Kako deluje",
     "creatorSearchPlaceholder": "Ime, kategorija ali lokacija",
@@ -488,11 +492,11 @@
     "contactForCreators": "Za ustvarjalce",
     "contactForBrands": "Za blagovne znamke",
     "contactForPartnerships": "Za partnerstva",
-    "contactRoleLabel": "TVOJA VLOGA",
+    "contactRoleLabel": "Tvoja vloga",
     "contactRoleCreator": "Ustvarjalec",
     "contactRoleBrand": "Znamka",
     "contactRoleAgency": "Agencija",
-    "contactInterest": "KAJ TE ZANIMA?",
+    "contactInterest": "Kaj te zanima?",
     "contactInterestCollaboration": "Sodelovanje",
     "contactInterestCampaign": "Kampanja",
     "contactInterestPartnership": "Partnerstvo",
@@ -554,8 +558,8 @@
   },
   "creatorsPage": {
     "eyebrow": "Ljudje za dobrimi zgodbami",
-    "headlineLead": "Poišči nekoga, ki",
-    "headlineEmphasis": "te razume.",
+    "headlineLead": "Poišči ustvarjalca",
+    "headlineEmphasis": "za svojo znamko.",
     "description": "Ustvarjalci s karakterjem, iskreni predstavitveni paketi in zgodbe, ki jih delajo posebne.",
     "search": "Ime, lokacija ali nekaj, kar imajo radi",
     "searchLabel": "Išči ustvarjalce",
@@ -1384,6 +1388,21 @@
       "cli": "Potrebni so delavci CLI."
     }
   },
+  "creatorTypes": {
+    "label": "Vrsta ustvarjalca",
+    "select": "Izberi vrsto ustvarjalca",
+    "all": "Vse vrste ustvarjalcev",
+    "search": "Poišči vrste ustvarjalcev…",
+    "empty": "Ni najdenih vrst ustvarjalcev.",
+    "hint": "Izberi eno ali več vrst, ki opisujejo tvoje delo.",
+    "options": {
+      "influencer": "Vplivnež",
+      "ugc-creator": "UGC ustvarjalec",
+      "photographer": "Fotograf",
+      "videographer": "Videograf",
+      "model": "Model"
+    }
+  },
   "creatorDirectory": {
     "heroBadge": "Pristni ustvarjalci z različnih področij",
     "categoryLabel": "Področja",
@@ -1570,5 +1589,264 @@
     "error": "Rezultati trenutno niso na voljo.",
     "retry": "Poskusi znova",
     "seeAll": "Prikaži vse rezultate za »{query}«"
+  },
+  "adminQr": {
+    "title": "QR kode",
+    "description": "Ustvari QR kodo s trajno povezavo Wave. Cilj lahko spremeniš brez ponovnega tiskanja.",
+    "label": "Naziv",
+    "destination": "Ciljna povezava",
+    "url": "Trajna povezava Wave",
+    "actions": "Dejanja",
+    "empty": "QR kod še ni.",
+    "create": "Nova QR koda",
+    "edit": "Uredi",
+    "hint": "Vnesi celotno povezavo http:// ali https://. Slika se ustvari lokalno, brez zunanje storitve QR.",
+    "generate": "Ustvari QR kodo",
+    "save": "Shrani spremembe",
+    "saving": "Shranjevanje…",
+    "cancel": "Prekliči",
+    "show": "QR koda",
+    "imageAlt": "QR koda: {label}",
+    "permanent": "Ta QR koda ostane enaka tudi, ko spremeniš cilj.",
+    "downloadSvg": "Prenesi SVG",
+    "downloadPng": "Prenesi PNG",
+    "close": "Zapri",
+    "loadError": "QR kod ni mogoče naložiti.",
+    "saveError": "QR koda ni shranjena.",
+    "imageError": "Slike QR ni mogoče ustvariti.",
+    "scans": "Skeniranja",
+    "lastScanAt": "Zadnje skeniranje",
+    "statistics": "Statistika",
+    "viewStatistics": "Statistika za {label}: {count} skeniranj",
+    "statisticsHint": "Število odpiranj povezave QR. Ponovna odpiranja se štejejo; znani boti in predogledi povezav so izključeni.",
+    "locations": "Lokacije",
+    "location": "Lokacija",
+    "locationHint": "Približno mesto in država iz Cloudflarea, ko sta na voljo. To ni natančna lokacija GPS.",
+    "unknownLocation": "Neznana lokacija",
+    "daily": "Aktivnost v zadnjih 30 dneh (UTC)",
+    "day": "Datum",
+    "noScans": "Skeniranj še ni.",
+    "noRecentScans": "V zadnjih 30 dneh ni skeniranj.",
+    "statisticsLoading": "Nalaganje statistike…",
+    "statisticsError": "Statistike ni mogoče naložiti.",
+    "scansHint": "Skupno število odprtij QR povezave",
+    "lastScanHint": "Datum in čas zadnjega odprtja",
+    "dailyHint": "Število skeniranj po dnevih v zadnjih 30 dneh."
+  },
+  "regionalSeo": {
+    "regionalIntro": "Razišči ustvarjalce iz celotne regije in poišči pravo povezavo za svojo znamko.",
+    "regionalAsideTitle": "Lokalni talent, regionalni doseg",
+    "regionalAsideBody": "Poveži se z ustvarjalci iz regije in poišči pravo povezavo za svojo kampanjo.",
+    "eyebrow": "Ustvarjalci za sodelovanje",
+    "countriesTitle": "Poišči ustvarjalce v regiji",
+    "guideTitle": "Vodniki za sodelovanje z ustvarjalci",
+    "guideIntro": "Praktični koraki od izbire ustvarjalca do jasnega opisa kampanje.",
+    "browse": "Oglej si vse ustvarjalce",
+    "campaign": "Objavi kampanjo",
+    "directory": "Seznam vplivnežev in UGC ustvarjalcev",
+    "selectTitle": "Kako izbrati ustvarjalca za sodelovanje?",
+    "selectBody": "Začni s ciljno skupino in temo, ki jo želiš predstaviti. Oglej si portfelje in platforme ter primerjaj obliko, obseg in ceno paketov. Število sledilcev je podatek profila; prosi za dodatne informacije o občinstvu in preteklih sodelovanjih.",
+    "processTitle": "Od profila do dogovora",
+    "processBody": "Na profilu si oglej pakete in pošlji povpraševanje za sodelovanje. Objaviš lahko tudi kampanjo s proračunom, roki in želeno vsebino ali povabiš ustvarjalca v kampanjo. Zasebni pogovor je na voljo po ustreznem sprejetju ali povabilu k pogovoru.",
+    "empty": "V tej državi še ni javnih profilov ustvarjalcev. Oglej si druge države ali celoten imenik.",
+    "back": "Vsi vodniki",
+    "countries": {
+      "BA": {
+        "name": "Bosna in Hercegovina",
+        "title": "Vplivneži v Bosni in Hercegovini za sodelovanje",
+        "description": "Poišči vplivneže in UGC ustvarjalce v Bosni in Hercegovini. Oglej si profile na Instagramu, TikToku in YouTubu, portfelje in pakete sodelovanja na Waveu.",
+        "intro": "Iščeš ustvarjalca za svojo znamko? Ta seznam prikazuje javne profile ustvarjalcev v Bosni in Hercegovini. Primerjaj njihove vsebine, kanale in pakete, preden predlagaš sodelovanje."
+      },
+      "HR": {
+        "name": "Hrvaška",
+        "title": "Vplivneži na Hrvaškem za sodelovanje",
+        "description": "Poišči vplivneže in UGC ustvarjalce na Hrvaškem. Oglej si profile na Instagramu, TikToku in YouTubu, portfelje in pakete sodelovanja na Waveu.",
+        "intro": "Iščeš ustvarjalca za svojo znamko? Ta seznam prikazuje javne profile ustvarjalcev na Hrvaškem. Primerjaj njihove vsebine, kanale in pakete, preden predlagaš sodelovanje."
+      },
+      "RS": {
+        "name": "Srbija",
+        "title": "Vplivneži v Srbiji za sodelovanje",
+        "description": "Poišči vplivneže in UGC ustvarjalce v Srbiji. Oglej si profile na Instagramu, TikToku in YouTubu, portfelje in pakete sodelovanja na Waveu.",
+        "intro": "Iščeš ustvarjalca za svojo znamko? Ta seznam prikazuje javne profile ustvarjalcev v Srbiji. Primerjaj njihove vsebine, kanale in pakete, preden predlagaš sodelovanje."
+      },
+      "ME": {
+        "name": "Črna gora",
+        "title": "Vplivneži v Črni gori za sodelovanje",
+        "description": "Poišči vplivneže in UGC ustvarjalce v Črni gori. Oglej si profile na Instagramu, TikToku in YouTubu, portfelje in pakete sodelovanja na Waveu.",
+        "intro": "Iščeš ustvarjalca za svojo znamko? Ta seznam prikazuje javne profile ustvarjalcev v Črni gori. Primerjaj njihove vsebine, kanale in pakete, preden predlagaš sodelovanje."
+      },
+      "SI": {
+        "name": "Slovenija",
+        "title": "Vplivneži v Sloveniji za sodelovanje",
+        "description": "Poišči vplivneže in UGC ustvarjalce v Sloveniji. Oglej si profile na Instagramu, TikToku in YouTubu, portfelje in pakete sodelovanja na Waveu.",
+        "intro": "Iščeš ustvarjalca za svojo znamko? Ta seznam prikazuje javne profile ustvarjalcev v Sloveniji. Primerjaj njihove vsebine, kanale in pakete, preden predlagaš sodelovanje."
+      }
+    },
+    "guides": {
+      "find-creators": {
+        "title": "Kako najti vplivneža za sodelovanje",
+        "intro": "Od cilja kampanje do ožjega izbora ustvarjalcev, ki ustrezajo tvoji znamki.",
+        "sections": [
+          {
+            "heading": "Začni s ciljem in občinstvom",
+            "body": "Zapiši, koga želiš nagovoriti in kaj želiš doseči: predstaviti izdelek, pojasniti storitev ali prikazati izkušnjo. Izberi državo in platformo, kjer je to občinstvo aktivno."
+          },
+          {
+            "heading": "Oglej si vsebino, ne le številk",
+            "body": "V imeniku filtriraj ustvarjalce po državi, področju in platformi. Odpri profile in portfelje. Upoštevaj njihov slog, teme in način predstavljanja znamk."
+          },
+          {
+            "heading": "Predlagaj konkreten naslednji korak",
+            "body": "Pošlji povpraševanje za paket z opisom naloge ali ustvari kampanjo z jasnimi zahtevami. Primerjaj odgovore in se pred začetkom sodelovanja pogovori o podrobnostih."
+          }
+        ]
+      },
+      "choose-package": {
+        "title": "Kako izbrati paket ustvarjalca",
+        "intro": "Pred povpraševanjem primerjaj vsebino, obseg in ceno.",
+        "sections": [
+          {
+            "heading": "Preveri, kaj paket vključuje",
+            "body": "Oglej si platformo, število objav, obliko in opis paketa. Loči vsebino za objavo na kanalu ustvarjalca od UGC vsebine, ki jo znamka želi uporabljati na lastnih kanalih."
+          },
+          {
+            "heading": "Primerjaj obseg in ceno",
+            "body": "Cene na profilih določajo ustvarjalci. Vprašaj o snemanju, montaži, popravkih, rokih in uporabi vsebine. Primerjaj ponudbe za enak obseg, ne domnevne povprečne tržne cene."
+          },
+          {
+            "heading": "Pošlji podrobno povpraševanje",
+            "body": "Navedi izdelek, želeno vsebino, rok in razpoložljivi proračun. Ko ustvarjalec sprejme povpraševanje, nadaljuj pogovor in pred izvedbo potrdi dogovor."
+          }
+        ]
+      },
+      "campaign-brief": {
+        "title": "Kako napisati opis kampanje",
+        "intro": "Jasen opis pomaga ustvarjalcem razumeti nalogo, roke in proračun.",
+        "sections": [
+          {
+            "heading": "Pojasni idejo in vsebino",
+            "body": "Napiši kratek povzetek, predstavi izdelek in opiši občinstvo. Izberi Instagram, TikTok ali YouTube ter navedi obliko in število želenih vsebin."
+          },
+          {
+            "heading": "Navedi proračun, rok in število ustvarjalcev",
+            "body": "Vnesi razpon proračuna, lokacijo, rok za prijave in število ustvarjalcev. Roke oddaje vsebin in potrebna gradiva pojasni v opisu kampanje."
+          },
+          {
+            "heading": "Pusti prostor za ustvarjalnost",
+            "body": "Loči obvezne informacije od predlogov. Preglej profile prijavljenih ustvarjalcev, povabi primerne k pogovoru in uskladi končni načrt."
+          }
+        ]
+      }
+    },
+    "creatorGuides": {
+      "eyebrow": "Tvoje delo, nove priložnosti",
+      "title": "Vodniki za ustvarjalce",
+      "intro": "Uredi profil, predstavi svoje storitve in poišči kampanje, ki ustrezajo tvojemu delu.",
+      "browse": "Preglej kampanje",
+      "profile": "Uredi svoj profil",
+      "guides": {
+        "create-profile": {
+          "title": "Kako ustvariti profil ustvarjalca",
+          "intro": "Predstavi svoje delo in znamkam pokaži, zakaj naj sodelujejo s teboj.",
+          "sections": [
+            {
+              "heading": "Predstavi svoje delo",
+              "body": "V računu dodaj profilno fotografijo, kratek opis, mesto in področja zanimanja. Izberi vrste ustvarjalcev, ki opisujejo tvoje delo, na primer vplivnež, ustvarjalec UGC, fotograf ali videograf. Vrsta ustvarjalca opisuje storitev; platforma je kanal, kjer objavljaš vsebino."
+            },
+            {
+              "heading": "Dodaj kanale in portfelj",
+              "body": "Poveži družbene profile in vnesi točne podatke o občinstvu. V portfelj dodaj fotografije, videoposnetke ali pretekla sodelovanja, ki pokažejo tvoj slog. Nekaj relevantnih primerov s kontekstom pomaga znamki bolje oceniti tvoje delo."
+            },
+            {
+              "heading": "Preveri javni profil",
+              "body": "V predogledu preveri fotografijo, opis, portfelj in pakete. Dodaj pogosta vprašanja, da znamke vedo, kaj lahko pričakujejo. Potrdi e-pošto in spremljaj odobritev računa. Če račun skriješ, profil drugim uporabnikom ne bo dostopen."
+            }
+          ]
+        },
+        "offer-packages": {
+          "title": "Kako predstaviti svoje storitve",
+          "intro": "Oblikuj jasne pakete, ki jih znamke razumejo in primerjajo pred povpraševanjem.",
+          "sections": [
+            {
+              "heading": "Določi vsebino in obseg",
+              "body": "V paketih sodelovanja opiši, kaj ustvariš, za katero platformo in v kakšni količini. Paket lahko vključuje kratek video ali serijo fotografij. Loči izdelavo vsebine od objave na svojem kanalu in pojasni, kaj vključuje cena."
+            },
+            {
+              "heading": "Določi ceno in pogoje",
+              "body": "Navedi ceno, rok izdelave in vključene popravke. Pojasni, če se pravice uporabe, dodatne različice ali potni stroški dogovorijo posebej. Za delo brez fiksnega obsega ponudi dogovor po povpraševanju in prosi za konkreten brief."
+            },
+            {
+              "heading": "Odgovori na povpraševanje",
+              "body": "Ko podjetje pošlje povpraševanje za paket, pred sprejemom preveri sporočilo in pričakovanja. Po sprejemu se o podrobnostih dogovori v pogovoru. Če projekt ne ustreza tvojemu delu ali razpoložljivosti, ga zavrni; podjetje bo obveščeno."
+            }
+          ]
+        },
+        "apply-to-campaigns": {
+          "title": "Kako se prijaviti na kampanjo",
+          "intro": "Poišči ustrezen brief in pokaži, kako lahko pomagaš znamki.",
+          "sections": [
+            {
+              "heading": "Izberi ustrezno kampanjo",
+              "body": "Preveri področje, zahtevane platforme, vsebine, proračun in rok za prijavo. Upoštevaj lokacijo in število potrebnih ustvarjalcev. Prijavi se, ko lahko izpolniš nalogo in se znamka ujema s tvojim občinstvom ali slogom."
+            },
+            {
+              "heading": "Pošlji konkretno prijavo",
+              "body": "Pojasni, zakaj ustrezaš kampanji, in predlagaj kratko idejo. Izpostavi relevantne primere iz portfelja ter potrdi razpoložljivost."
+            },
+            {
+              "heading": "Spremljaj odgovor",
+              "body": "Prijave spremljaj v računu. Podjetje te lahko tudi neposredno povabi, brez predhodne prijave; povabilo sprejmi ali zavrni. Po sprejemu se v pogovoru dogovori o briefu, rokih in dostavi. Prijava sama še ne pomeni angažmaja."
+            }
+          ]
+        }
+      },
+      "relatedIntro": "Razišči vodnike za svoj profil, storitve in sodelovanje z znamkami."
+    },
+    "howItWorks": {
+      "title": "Kako deluje Wave",
+      "intro": "Wave povezuje ustvarjalce in podjetja prek profilov, paketov storitev in kampanj. Izberi pot za svojo vlogo.",
+      "creators": {
+        "title": "Za ustvarjalce",
+        "guides": "Vodniki za ustvarjalce",
+        "steps": [
+          {
+            "heading": "Predstavi se",
+            "body": "Ustvari račun, potrdi e-pošto in uredi profil. Dodaj področja, vrste ustvarjalca, kanale in portfelj."
+          },
+          {
+            "heading": "Poišči priložnost",
+            "body": "Preglej odprte kampanje in pošlji relevantno prijavo. Podjetja te lahko povabijo neposredno ali pošljejo povpraševanje za tvojo storitev."
+          },
+          {
+            "heading": "Dogovori sodelovanje",
+            "body": "Po sprejetju se v pogovoru dogovori o vsebini, rokih in dostavi. V računu spremljaj svoje prijave, povabila in povpraševanja."
+          }
+        ],
+        "intro": "Predstavi se, poišči priložnosti in sodeluj z znamkami."
+      },
+      "companies": {
+        "title": "Za podjetja",
+        "guides": "Vodniki za sodelovanje z ustvarjalci",
+        "steps": [
+          {
+            "heading": "Predstavi znamko",
+            "body": "Ustvari račun podjetja, potrdi e-pošto in uredi javni profil. Dodaj opis znamke in podatke, ki predstavljajo tvoje podjetje."
+          },
+          {
+            "heading": "Poišči ustvarjalca ali objavi kampanjo",
+            "body": "Išči ustvarjalce po vrsti, področju, državi in platformi. Pošlji povpraševanje za paket ali objavi kampanjo z briefom, proračunom in roki."
+          },
+          {
+            "heading": "Izberi sodelavce",
+            "body": "Preglej prijave in izberi ustvarjalce, ki ustrezajo tvoji kampanji. Dogovori se o podrobnostih v pogovoru in spremljaj izvedbo."
+          }
+        ],
+        "intro": "Poišči prave ustvarjalce, zaženi kampanje in razvij svojo znamko."
+      },
+      "start": "Odpri svoj račun",
+      "startTitle": "Pripravljen na sodelovanje?",
+      "startIntro": "Predstavi svoje delo ali znamko, poišči pravo povezavo in začni novo sodelovanje."
+    },
+    "guideRelatedIntro": "Od izbire ustvarjalca do jasnega briefa: poišči naslednji korak za svojo znamko."
   }
 }

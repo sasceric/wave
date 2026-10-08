@@ -36,11 +36,13 @@ import { useMarketplaceCatalog } from '../composables/useMarketplaceCatalog'
 import { currentUser, setCurrentUser } from '../composables/useCurrentUser'
 import { useCampaignBookmarks } from '../composables/useCampaignBookmarks'
 import { COMPANY_SOCIAL_PLATFORMS, CURRENCIES, SOCIAL_PLATFORMS } from '../lib/marketplace'
+import { creatorTypeOptions } from '../lib/creatorTypes'
 import { formatInternationalPhoneNumber } from '../lib/phoneNumbers'
 import { localizedRouteName } from '../routePaths'
 import countries from '../data/countries.json'
 
 const { t, locale } = useI18n()
+const typeOptions = computed(() => creatorTypeOptions(t))
 const route = useRoute()
 const router = useRouter()
 const { categories, industries: catalogIndustries, error: catalogError } = useMarketplaceCatalog(locale, { includeIndustries: true })
@@ -293,7 +295,7 @@ async function loadDashboard() {
         ...profile.value,
         ...(response.data.accountType === 'company' ? { industries: profile.value.industries || [profile.value.industry].filter(Boolean) } : {}),
         ...(response.data.accountType === 'company' ? { socialLinks: profile.value.socialLinks || [] } : {}),
-        ...(response.data.accountType === 'creator' ? { birthday: profile.value.birthday || '' } : {}),
+        ...(response.data.accountType === 'creator' ? { birthday: profile.value.birthday || '', creatorTypes: profile.value.creatorTypes || [] } : {}),
         phone: response.data.phone || '',
         city: response.data.city || '',
         countryCode: response.data.countryCode || '',
@@ -522,6 +524,7 @@ async function saveProfile() {
         displayName: profile.value.displayName,
         category: profile.value.categories[0] || profile.value.category,
         categories: profile.value.categories,
+        creatorTypes: profile.value.creatorTypes,
         birthday: profile.value.birthday || null,
         phone: normalizedPhone,
         city: profile.value.city.trim(),
@@ -1059,6 +1062,16 @@ onMounted(loadDashboard)
                 :remove-label="t('account.remove')"
                 :helper-text="t('account.categoriesHint')"
                 :max-selections="5"
+              />
+              <MultiSelect
+                v-model="profile.creatorTypes"
+                :options="typeOptions"
+                :label="t('creatorTypes.label')"
+                :placeholder="t('creatorTypes.select')"
+                :search-placeholder="t('creatorTypes.search')"
+                :no-results-label="t('creatorTypes.empty')"
+                :remove-label="t('account.remove')"
+                :helper-text="t('creatorTypes.hint')"
               />
 
               <SearchableSelect required

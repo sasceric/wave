@@ -14,6 +14,7 @@ import {
   UserRound,
   Users,
   Wrench,
+  QrCode,
 } from '@lucide/vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
@@ -143,6 +144,7 @@ const navigationItems = computed(() => {
       { route: 'admin-email-templates', labelKey: 'adminDashboard.navEmailTemplates', icon: Mail },
       { route: 'admin-credit-settings', labelKey: 'credits.adminTitle', icon: Coins },
       { route: 'admin-tools', labelKey: 'adminTools.title', icon: Wrench },
+      { route: 'admin-qr', labelKey: 'adminQr.title', icon: QrCode },
       {
         route: 'admin-subscribers',
         labelKey: 'adminDashboard.navSubscribers',

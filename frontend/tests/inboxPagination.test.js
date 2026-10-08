@@ -1,5 +1,9 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
+import { readFile } from 'node:fs/promises'
+import vm from 'node:vm'
+import { compile } from '@vue/compiler-dom'
+import * as vue from 'vue'
 import { setupView } from './setupView.js'
 
 const card = (id, type = 'campaign') => ({
@@ -10,6 +14,34 @@ const card = (id, type = 'campaign') => ({
 const page = (data, cursor = null) => ({ data, meta: { hasMore: Boolean(cursor), nextCursor: cursor } })
 const modules = (apiGet) => ({ '../lib/api': { apiGet, apiRequest: async () => {}, formatDate: () => '', formatMoney: () => '' } })
 const settle = () => new Promise((resolve) => setImmediate(resolve))
+
+test('the campaign brief waits for full thread metadata and survives summary-only inbox refreshes', async () => {
+  let finishMetadata
+  const { state } = await setupView('../src/views/MessagesView.vue', modules((path) => {
+    if (path === '/me/inbox/campaign/1') return new Promise((resolve) => { finishMetadata = resolve })
+    return Promise.resolve({ data: [] })
+  }))
+  const source = await readFile(new URL('../src/views/MessagesView.vue', import.meta.url), 'utf8')
+  const start = source.indexOf('<aside\n        v-if="selectedCampaign')
+  const brief = source.slice(start, source.indexOf('</aside>', start) + '</aside>'.length)
+  const render = vm.runInNewContext(`(function () { ${compile(brief, { mode: 'function' }).code} })()`, {
+    Vue: { ...vue, resolveComponent: (name) => name },
+  })
+  const context = vue.proxyRefs(state)
+  state.conversations.value = [card(1)]
+  const selection = state.selectConversation(card(1), false)
+  // The real template used to call deliverables.join() on this summary row.
+  assert.equal(render(context, []).type, vue.Comment)
+  finishMetadata({ data: { ...card(1), campaign: {
+    title: 'Complete campaign', slug: 'complete', status: 'open',
+    deliverables: ['One video'], channels: ['Instagram'], closesAt: '2026-11-01',
+  } } })
+  await selection
+  assert.equal(render(context, []).props.id, 'campaign-details-panel')
+  state.upsertConversation(card(1))
+  assert.deepEqual(Array.from(state.selectedCampaign.value.deliverables), ['One video'])
+  assert.equal(render(context, []).props.id, 'campaign-details-panel')
+})
 
 test('inbox batches merge both chat types, deduplicate rows, and stop at the last cursor', async () => {
   const requests = []

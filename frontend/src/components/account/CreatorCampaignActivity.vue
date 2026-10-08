@@ -203,7 +203,7 @@ onBeforeUnmount(() => {
             <th v-if="!isInquiries" scope="col">{{ t(isInvitations ? 'account.closesAt' : 'account.offerDeadline') }}</th>
             <th scope="col">{{ t(isInvitations ? 'account.hiredCreators' : isOffers || isInquiries ? 'account.activityReceived' : 'account.activitySubmitted') }}</th>
             <th scope="col">{{ t('account.activityStatus') }}</th>
-            <th scope="col">{{ t('account.activityActions') }}</th>
+            <th scope="col" class="creator-offers__action-cell">{{ t('account.activityActions') }}</th>
           </tr></thead>
           <tbody>
             <tr v-for="offer in pageItems" :key="offer.id">
@@ -229,7 +229,7 @@ onBeforeUnmount(() => {
               <td v-if="isInvitations"><span class="creator-offers__mobile-label">{{ t('account.hiredCreators') }}</span><CampaignHiringProgress :campaign="offer.campaign" /></td>
               <td v-else><span class="creator-offers__mobile-label">{{ t(isOffers || isInquiries ? 'account.activityReceived' : 'account.activitySubmitted') }}</span><time v-if="offer.createdAt" :datetime="offer.createdAt">{{ formatDate(offer.createdAt) }}</time></td>
               <td><span class="creator-offer__status" :class="`creator-offer__status--${statusGroup(offer)}`"><i :class="`activity-dot activity-dot--${statusGroup(offer)}`" aria-hidden="true"></i>{{ statusLabel(offer) }}</span></td>
-              <td v-if="isInvitations"><div class="creator-offers__actions campaign-invitations__actions">
+              <td v-if="isInvitations" class="creator-offers__action-cell"><div class="creator-offers__actions campaign-invitations__actions">
                 <div class="campaign-invitations__primary-actions">
                   <template v-if="statusGroup(offer) === 'pending'">
                     <button class="button button--dark" type="button" :disabled="!canRespond || responding" @click="emit('respond', offer, 'accept')">{{ t('account.acceptInvitation') }}</button>
@@ -243,7 +243,7 @@ onBeforeUnmount(() => {
                   <LocalizedLink class="admin-row-actions__item" role="menuitem" :to="{ name: 'campaign-detail', params: { slug: offer.campaign.slug } }"><ExternalLink :size="16" aria-hidden="true" />{{ t('campaignCard.viewBrief') }}</LocalizedLink>
                 </AdminRowActions>
               </div></td>
-              <td v-else><div class="creator-offers__actions">
+              <td v-else class="creator-offers__action-cell"><div class="creator-offers__actions">
                 <LocalizedLink v-if="hasChat(offer)" class="button button--outline" :to="chatRoute(offer)"><MessageCircle :size="16" aria-hidden="true" />{{ t('account.activityChat') }}</LocalizedLink>
                 <button class="button button--dark" type="button" :aria-label="`${t(isInquiries ? 'account.activityView' : 'campaignCard.viewBrief')}: ${itemTitle(offer)}`" @click="openCampaign(offer)">{{ t('account.activityView') }}<ArrowRight :size="16" aria-hidden="true" /></button>
               </div></td>

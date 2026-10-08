@@ -26,6 +26,31 @@ final class ApiControllerTest extends WebTestCase
         $schemaTool->createSchema($metadata);
     }
 
+    public function testSessionDiscoveryIsSuccessfulForGuestsButAccountAccessRemainsProtected(): void
+    {
+        $this->client->request('GET', '/api/auth/session?locale=bs');
+        self::assertResponseIsSuccessful();
+        self::assertSame(['data' => null], json_decode($this->client->getResponse()->getContent(), true));
+        self::assertStringContainsString('no-store', $this->client->getResponse()->headers->get('Cache-Control'));
+        $this->client->request('GET', '/api/auth/me?locale=bs');
+        self::assertResponseStatusCodeSame(401);
+
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $user = new User('session-discovery@example.test', 'ROLE_COMPANY');
+        $user->setPassword('not-used-by-session-discovery-test');
+        $em->persist($user);
+        $em->flush();
+        $this->client->loginUser($user);
+        $this->client->request('GET', '/api/auth/session?locale=en');
+        self::assertResponseIsSuccessful();
+        $session = json_decode($this->client->getResponse()->getContent(), true)['data'];
+        self::assertSame($user->getId(), $session['id']);
+        $this->client->request('GET', '/api/auth/me?locale=en');
+        self::assertSame($session, json_decode($this->client->getResponse()->getContent(), true)['data']);
+        $this->client->request('GET', '/api/auth/session?locale=invalid');
+        self::assertResponseStatusCodeSame(400);
+    }
+
     public function testAdminAreasAreSharedByCompaniesCreatorsAndCampaigns(): void
     {
         $em = static::getContainer()->get(EntityManagerInterface::class);
@@ -403,7 +428,7 @@ final class ApiControllerTest extends WebTestCase
         $this->client->request('GET', '/api/companies?view=card');
         self::assertResponseIsSuccessful();
         $cards = json_decode($this->client->getResponse()->getContent(), true, flags: JSON_THROW_ON_ERROR)['data'];
-        self::assertSame('/api/media/' . $media->getId() . '/thumbnail/v1/480', $cards[0]['coverImage']['src']);
+        self::assertSame('/api/media/' . $media->getId() . '/thumbnail/v2/480', $cards[0]['coverImage']['src']);
         self::assertSame(480, $cards[0]['coverImage']['width']);
         self::assertSame(320, $cards[0]['coverImage']['height']);
         $em = static::getContainer()->get(EntityManagerInterface::class);

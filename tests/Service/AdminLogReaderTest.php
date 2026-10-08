@@ -43,6 +43,48 @@ final class AdminLogReaderTest extends TestCase
         self::assertStringEndsWith('new entry', $this->reader->page('', '', 25)['data'][0]['message']);
     }
 
+    public function testNumberedPagesJumpToTheEndAndKeepTheirSnapshotWhileFilesGrow(): void
+    {
+        for ($index = 1; $index <= 61; ++$index) {
+            $date = (new \DateTimeImmutable('2026-10-06T10:00:00+00:00'))->modify('+'.$index.' seconds');
+            $line = json_encode(['datetime' => $date->format(DATE_ATOM), 'level_name' => 'INFO', 'message' => 'entry '.$index], JSON_THROW_ON_ERROR)."\n";
+            file_put_contents($this->directory.'/'.($index % 2 ? 'prod.log' : 'reminders.log'), $line, FILE_APPEND);
+        }
+        $first = $this->reader->numberedPage('', '', 25, 1);
+        self::assertSame(61, $first['meta']['total']);
+        self::assertSame('entry 61', $first['data'][0]['message']);
+        $last = $this->reader->numberedPage('', $first['meta']['cursor'], 25, 3);
+        self::assertCount(11, $last['data']);
+        self::assertSame('entry 11', $last['data'][0]['message']);
+        self::assertSame('entry 1', $last['data'][10]['message']);
+        self::assertFalse($last['meta']['hasMore']);
+        file_put_contents($this->directory.'/prod.log', '[2026-10-06T11:00:00+00:00] app.INFO: newest' . "\n", FILE_APPEND);
+        self::assertSame($first['data'], $this->reader->numberedPage('', $first['meta']['cursor'], 25, 1)['data']);
+        $fresh = $this->reader->numberedPage('', '', 25, 1);
+        self::assertSame(62, $fresh['meta']['total']);
+        self::assertStringEndsWith('newest', $fresh['data'][0]['message']);
+        self::assertSame(3, $this->reader->numberedPage('', $fresh['meta']['cursor'], 25, 999)['meta']['page']);
+    }
+
+    public function testNumberedPagesHandlePartialLinesRotationAndRedaction(): void
+    {
+        $path = $this->directory.'/prod.log';
+        file_put_contents($path, '[2026-10-06T10:00:00+00:00] app.INFO: first' . "\n" . '[2026-10-06T11:00:00+00:00] app.ERROR: password=private');
+        $first = $this->reader->numberedPage('prod.log', '', 25, 1);
+        self::assertStringNotContainsString('private', $first['data'][0]['message']);
+        file_put_contents($path, '-continued' . "\n", FILE_APPEND);
+        $fresh = $this->reader->numberedPage('prod.log', '', 25, 1);
+        self::assertSame(2, $fresh['meta']['total']);
+        self::assertStringNotContainsString('private', $fresh['data'][0]['detail']);
+        unlink($path);
+        $rotated = $this->reader->numberedPage('prod.log', $first['meta']['cursor'], 25, 1);
+        self::assertTrue($rotated['meta']['changed']);
+        self::assertSame(0, $rotated['meta']['total']);
+        self::assertSame([], $rotated['data']);
+        $this->expectException(\InvalidArgumentException::class);
+        $this->reader->numberedPage('', $fresh['meta']['cursor'], 25, 1);
+    }
+
     public function testStructuredLogColumnsAndModalDetailAreParsedAndMasked(): void
     {
         file_put_contents($this->directory . '/prod.log', json_encode(['datetime' => '2026-10-06T10:00:00+00:00', 'channel' => 'background', 'level_name' => 'INFO', 'message' => 'background.job.completed', 'context' => ['password' => 'hidden-password']], JSON_THROW_ON_ERROR) . "\n");

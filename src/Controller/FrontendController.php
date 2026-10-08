@@ -61,7 +61,7 @@ final class FrontendController
                 $siteOrigin->url('/pwa-512.png'),
                 $this->googleSiteVerification,
             ),
-            Response::HTTP_OK,
+            $seo['canonical'] === null ? Response::HTTP_NOT_FOUND : Response::HTTP_OK,
             ['Content-Type' => 'text/html; charset=UTF-8'],
         );
     }
@@ -79,7 +79,7 @@ final class FrontendController
         $description = $this->escape($seo['description']);
         $language = match ($seo['locale']) {
             'sr' => 'sr-Latn',
-            'cnr' => 'cnr-Latn-ME',
+            'cnr' => 'sr-Latn-ME',
             default => $seo['locale'],
         };
         $html = preg_replace('/(<html\b[^>]*\blang=")[^"]*(")/i', '$1'.$language.'$2', $html, 1) ?? $html;
@@ -90,7 +90,10 @@ final class FrontendController
         $head .= "\n    <meta name=\"wave:origin\" content=\"".$this->escape($siteOrigin)."\" />";
         $preloadImage = $seo['preloadImage'] ?? null;
         if (is_string($preloadImage) && $preloadImage !== '') {
-            $head .= "\n    <link rel=\"preload\" as=\"image\" href=\"".$this->escape($preloadImage)."\" fetchpriority=\"high\" />";
+            $responsive = $preloadImage === '/images/banner-girl.webp'
+                ? ' imagesrcset="/images/banner-girl-360.webp 360w, /images/banner-girl-600.webp 600w, /images/banner-girl-900.webp 900w, /images/banner-girl.webp 1086w" imagesizes="(max-width: 420px) 289px, (max-width: 760px) 355px, max(587px, calc((100svh - 164px) * .938))"'
+                : '';
+            $head .= "\n    <link rel=\"preload\" as=\"image\" href=\"".$this->escape($preloadImage).'"'.$responsive." fetchpriority=\"high\" />";
         }
         if ($googleSiteVerification !== '') {
             $head .= "\n    <meta name=\"google-site-verification\" content=\"".$this->escape($googleSiteVerification)."\" />";
@@ -123,6 +126,10 @@ final class FrontendController
             $head .= "\n    <script id=\"wave-schema\" type=\"application/ld+json\">".$structuredData.'</script>';
         }
 
+        if (is_string($seo['contentHtml'] ?? null)) {
+            $html = str_replace('<div id="app"></div>', '<div id="app">'.$seo['contentHtml'].'</div>', $html);
+        }
+
         return str_replace('</head>', $head."\n  </head>", $html);
     }
 
@@ -137,7 +144,7 @@ final class FrontendController
             'bs' => 'bs_BA',
             'hr' => 'hr_HR',
             'sr' => 'sr_RS',
-            'cnr' => 'cnr_ME',
+            'cnr' => 'sr_ME',
             'sl' => 'sl_SI',
             default => 'en_US',
         };

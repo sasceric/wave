@@ -33,7 +33,14 @@
     "admin-subscribers": "admin/pretplatnici",
     "admin-tools": "admin/alati",
     "account-credits": "racun/krediti",
-    "admin-credit-settings": "admin/krediti"
+    "admin-credit-settings": "admin/krediti",
+    "admin-qr": "admin/qr",
+    "country-creators": "influenseri/:country",
+    "seo-guides": "vodici",
+    "seo-guide": "vodici/:guide",
+    "creator-guides": "vodici-za-kreatore",
+    "creator-guide": "vodici-za-kreatore/:guide",
+    "how-it-works": "kako-funkcionise"
   },
   "hr": {
     "home": "",
@@ -69,7 +76,14 @@
     "admin-subscribers": "admin/pretplatnici",
     "admin-tools": "admin/alati",
     "account-credits": "racun/krediti",
-    "admin-credit-settings": "admin/krediti"
+    "admin-credit-settings": "admin/krediti",
+    "admin-qr": "admin/qr",
+    "country-creators": "influenceri/:country",
+    "seo-guides": "vodici",
+    "seo-guide": "vodici/:guide",
+    "creator-guides": "vodici-za-kreatore",
+    "creator-guide": "vodici-za-kreatore/:guide",
+    "how-it-works": "kako-funkcionise"
   },
   "sr": {
     "home": "",
@@ -105,7 +119,14 @@
     "admin-subscribers": "admin/pretplatnici",
     "admin-tools": "admin/alati",
     "account-credits": "nalog/krediti",
-    "admin-credit-settings": "admin/krediti"
+    "admin-credit-settings": "admin/krediti",
+    "admin-qr": "admin/qr",
+    "country-creators": "influenseri/:country",
+    "seo-guides": "vodici",
+    "seo-guide": "vodici/:guide",
+    "creator-guides": "vodici-za-kreatore",
+    "creator-guide": "vodici-za-kreatore/:guide",
+    "how-it-works": "kako-funkcionise"
   },
   "cnr": {
     "home": "",
@@ -141,7 +162,14 @@
     "admin-subscribers": "admin/pretplatnici",
     "admin-tools": "admin/alati",
     "account-credits": "nalog/krediti",
-    "admin-credit-settings": "admin/krediti"
+    "admin-credit-settings": "admin/krediti",
+    "admin-qr": "admin/qr",
+    "country-creators": "influenseri/:country",
+    "seo-guides": "vodici",
+    "seo-guide": "vodici/:guide",
+    "creator-guides": "vodici-za-kreatore",
+    "creator-guide": "vodici-za-kreatore/:guide",
+    "how-it-works": "kako-funkcionise"
   },
   "sl": {
     "home": "",
@@ -177,7 +205,14 @@
     "admin-subscribers": "admin/narocniki",
     "admin-tools": "admin/orodja",
     "account-credits": "racun/krediti",
-    "admin-credit-settings": "admin/krediti"
+    "admin-credit-settings": "admin/krediti",
+    "admin-qr": "admin/qr",
+    "country-creators": "vplivnezi/:country",
+    "seo-guides": "vodniki",
+    "seo-guide": "vodniki/:guide",
+    "creator-guides": "vodniki-za-ustvarjalce",
+    "creator-guide": "vodniki-za-ustvarjalce/:guide",
+    "how-it-works": "kako-deluje"
   },
   "en": {
     "home": "",
@@ -213,6 +248,13 @@
     "admin-subscribers": "admin/subscribers",
     "admin-tools": "admin/tools",
     "account-credits": "account/credits",
-    "admin-credit-settings": "admin/credit-settings"
+    "admin-credit-settings": "admin/credit-settings",
+    "admin-qr": "admin/qr",
+    "country-creators": "influencers/:country",
+    "seo-guides": "guides",
+    "seo-guide": "guides/:guide",
+    "creator-guides": "creator-guides",
+    "creator-guide": "creator-guides/:guide",
+    "how-it-works": "how-it-works"
   }
 }

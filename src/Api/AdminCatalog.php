@@ -62,7 +62,8 @@ final class AdminCatalog
         }
         $total = (int) (clone $builder)->select('COUNT(item.id)')->getQuery()->getSingleScalarResult();
         $page = min($page, max(1, (int) ceil($total / $limit)));
-        $items = $builder->orderBy($columns[$sort], $direction)->addOrderBy('item.id', $direction)
+        $sortDirection = $direction === 'ASC' ? \SortDirection::Ascending : \SortDirection::Descending;
+        $items = $builder->orderBy($columns[$sort], $sortDirection)->addOrderBy('item.id', $sortDirection)
             ->setFirstResult(($page - 1) * $limit)->setMaxResults($limit)->getQuery()->getResult();
 
         $categoryLabels = $kind === 'companies' ? MarketplaceCategoryLabels::forLocale($this->entityManager, $locale) : [];
@@ -78,7 +79,7 @@ final class AdminCatalog
         $categoryLabels = $kind === 'companies' ? MarketplaceCategoryLabels::forLocale($this->entityManager, $locale) : [];
 
         return array_map(fn (object $item): array => $this->resource($item, $locale, $categoryLabels),
-            $this->query($kind)->andWhere('item.featured = :featured')->setParameter('featured', true)->orderBy('item.id', 'ASC')->getQuery()->getResult());
+            $this->query($kind)->andWhere('item.featured = :featured')->setParameter('featured', true)->orderBy('item.id', \SortDirection::Ascending)->getQuery()->getResult());
     }
 
     private function query(string $kind): QueryBuilder

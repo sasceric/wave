@@ -1,6 +1,7 @@
 import routeSegments from '../../config/localized_routes.json'
+import localePrefixes from '../../config/localized_route_prefixes.json'
 
-export { routeSegments }
+export { routeSegments, localePrefixes }
 
 export const defaultLocale = 'bs'
 export const localizedRouteNames = new Set(Object.keys(routeSegments[defaultLocale]))
@@ -11,7 +12,7 @@ export function localizedRouteName(name, locale) {
 
 export function localizedPath(name, locale, params = {}) {
   const segment = routeSegments[locale]?.[name] ?? routeSegments[defaultLocale][name]
-  const prefix = locale === defaultLocale ? '' : `/${locale}`
+  const prefix = localePrefixes[locale] ? `/${localePrefixes[locale]}` : ''
   if (!segment) return prefix ? `${prefix}/` : '/'
 
   return `${prefix}/${segment.replace(/:([A-Za-z0-9_]+)/g, (match, key) => (

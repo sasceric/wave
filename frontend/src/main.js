@@ -1,4 +1,4 @@
-import { createApp } from 'vue'
+import { createApp, nextTick } from 'vue'
 import './scss/global.scss'
 import App from './App.vue'
 import i18n from './i18n'
@@ -14,6 +14,6 @@ showStartupLoader({
   ready: Promise.allSettled([
     router.isReady(),
     loadCurrentUser().catch((cause) => console.error('Unable to load the current Wave account.', cause)),
-  ]),
+  ]).then(() => nextTick()),
 })
 app.mount('#app')

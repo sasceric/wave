@@ -205,3 +205,52 @@ test('the shared sentinel observes the inbox scroll container and reconnects whe
   assert.equal(observers[1].observed, true)
   unmounted()
 })
+
+test('country creator pages retain their country when filters are cleared and use country availability for indexing', async () => {
+  const filters = {}
+  const creators = vue.ref([])
+  const metadata = []
+  const route = vue.reactive({ query: {}, params: { country: 'bosna-i-hercegovina' }, meta: { routeName: 'country-creators' } })
+  let available = true
+  const { state } = await setupView('../src/views/CreatorsView.vue', {
+    'vue-router': { useRoute: () => route },
+    '../composables/useInfiniteDirectory': { useInfiniteDirectory: (endpoint, locale, parameters, limit) => {
+      assert.equal(limit, 24)
+      Object.assign(filters, parameters)
+      return { items: creators, total: vue.ref(0), loading: vue.ref(false), error: vue.ref(''), hasMore: vue.ref(false), loadMore: () => {} }
+    } },
+    '../composables/useMarketplaceCatalog': { useMarketplaceCatalog: () => ({ categories: vue.ref([]), error: vue.ref('') }) },
+    '../lib/api': { apiGet: async () => ({ data: { countries: available ? [{ value: 'BA', count: 1 }] : [] } }) },
+    '../lib/marketplace': { SOCIAL_PLATFORMS: ['Instagram', 'TikTok', 'YouTube'] },
+    '../lib/seo': { updateSeo: value => metadata.push(value), getSeoOrigin: () => 'https://wave.ba' },
+    '../lib/regionalSeo': { countryCodeForSlug: slug => slug === 'bosna-i-hercegovina' ? 'BA' : null },
+    '../routePaths': { localizedPath: (name, locale, params) => `/kreatori/${params.slug}` },
+  }, { countryCode: 'BA' })
+  assert.equal(filters.countries.value, '["BA"]')
+  state.selectedCountries.value = ['HR']
+  state.selectedCategories.value = ['Lifestyle']
+  state.selectedCreatorTypes.value = ['photographer', 'videographer']
+  assert.equal(filters.creatorTypes.value, '["photographer","videographer"]')
+  assert.equal(state.activeFilterCount.value, 4)
+  state.clearFilters()
+  assert.equal(filters.creatorTypes.value, '')
+  assert.equal(state.activeFilterCount.value, 0)
+  assert.equal(filters.countries.value, '["BA"]')
+  await state.loadFacets()
+  await vue.nextTick()
+  assert.equal(metadata.at(-1).noindex, false)
+  // An empty search result does not mean the underlying country is empty.
+  state.search.value = 'no match'
+  creators.value = []
+  await vue.nextTick()
+  assert.equal(metadata.at(-1).noindex, false)
+  available = false
+  await state.loadFacets()
+  await vue.nextTick()
+  assert.equal(metadata.at(-1).noindex, true)
+  const previousCount = metadata.length
+  route.meta.routeName = 'seo-guides'
+  creators.value = [{ slug: 'late-creator', displayName: 'Late creator' }]
+  await vue.nextTick()
+  assert.equal(metadata.length, previousCount)
+})

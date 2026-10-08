@@ -2,6 +2,7 @@
 
 namespace App\Controller\Api;
 
+use App\Account\CreatorTypes;
 use App\Api\CreatorResource;
 use App\Api\DirectoryCursor;
 use App\Api\MarketplaceCategoryLabels;
@@ -33,6 +34,10 @@ final class CreatorController
         }
         try {
             $categories = $this->selectedValues($request, 'categories', 80);
+            $creatorTypes = CreatorTypes::parse($this->selectedValues($request, 'creatorTypes', 30));
+            if ($creatorTypes === null) {
+                throw new \InvalidArgumentException();
+            }
             $platforms = $this->selectedValues($request, 'platforms', 30);
             $countries = $this->selectedValues($request, 'countries', 2);
             foreach ($countries as $country) {
@@ -81,6 +86,14 @@ final class CreatorController
             }
             $conditions[] = '(' . implode(' OR ', $parts) . ')';
         }
+        if ($creatorTypes !== []) {
+            $parts = [];
+            foreach ($creatorTypes as $index => $value) {
+                $parts[] = "CAST(creator_types AS TEXT) LIKE :creatorType$index";
+                $params['creatorType' . $index] = '%"' . $value . '"%';
+            }
+            $conditions[] = '(' . implode(' OR ', $parts) . ')';
+        }
         if ($platforms !== []) {
             $parts = [];
             foreach (array_unique($platforms) as $index => $value) {
@@ -111,7 +124,7 @@ final class CreatorController
             };
         }
         $metric = ($sort === 'followers' || $audience !== '') ? self::followersSql('c.social_profiles') : '0';
-        $base = "SELECT c.id, c.display_name, c.created_at, c.category, c.categories, c.bio, c.tags, c.social_profiles,
+        $base = "SELECT c.id, c.display_name, c.created_at, c.category, c.categories, c.creator_types, c.bio, c.tags, c.social_profiles,
             COALESCE(u.city, c.city) AS city, u.country_code, i.search_text, i.tag_text, i.platform_keys, $metric AS followers
             FROM creator c LEFT JOIN wave_user u ON u.id = c.owner_id
             LEFT JOIN directory_index i ON i.kind = 'creator' AND i.entity_id = c.id
@@ -190,7 +203,7 @@ final class CreatorController
         if ($locale === null) {
             return new JsonResponse(['error' => ApiMessages::get('unsupported_language', 'bs')], 400);
         }
-        $rows = $entityManager->getConnection()->fetchAllAssociative("SELECT u.country_code AS value, COUNT(*) AS count FROM creator c LEFT JOIN wave_user u ON u.id = c.owner_id WHERE (u.id IS NULL OR (u.approved = TRUE AND u.hide_my_account = FALSE)) AND u.country_code IS NOT NULL AND u.country_code <> '' GROUP BY u.country_code ORDER BY u.country_code");
+        $rows = $entityManager->getConnection()->fetchAllAssociative("SELECT UPPER(u.country_code) AS value, COUNT(*) AS count FROM creator c LEFT JOIN wave_user u ON u.id = c.owner_id WHERE (u.id IS NULL OR (u.approved = TRUE AND u.hide_my_account = FALSE)) AND u.country_code IS NOT NULL AND u.country_code <> '' GROUP BY UPPER(u.country_code) ORDER BY UPPER(u.country_code)");
         return new JsonResponse(['data' => ['countries' => array_map(static fn (array $row): array => ['value' => $row['value'], 'count' => (int) $row['count']], $rows)]]);
     }
 

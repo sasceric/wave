@@ -585,6 +585,9 @@ onBeforeUnmount(() => packageDescriptionObserver?.disconnect())
                   <p class="eyebrow">{{ categoryLabel }}<template v-if="creator.city"> · {{ creator.city }}</template></p>
                   <h1>{{ creator.displayName }}</h1>
                   <p v-if="creator.tagline" class="profile-tagline">{{ creator.tagline }}</p>
+                  <div v-if="creator.creatorTypes?.length" class="profile-stat-pills" :aria-label="t('creatorTypes.label')" role="group">
+                    <span v-for="type in creator.creatorTypes" :key="type">{{ t(`creatorTypes.options.${type}`) }}</span>
+                  </div>
                   <div
                     v-if="creator.socialProfiles.length || creator.city"
                     class="profile-stat-pills"

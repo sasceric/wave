@@ -1,5 +1,4 @@
 import i18n from '../i18n'
-import { formatInternationalPhoneNumber } from '../lib/phoneNumbers'
 import { fieldValidationError } from '../lib/validationRules'
 
 const states = new WeakMap()
@@ -34,7 +33,7 @@ function descriptor(field, form) {
     patternMismatch: field.validity?.patternMismatch,
     stepMismatch: field.validity?.stepMismatch,
     badInput: field.validity?.badInput,
-    phoneInvalid: rule === 'phone' && value?.trim() && !formatInternationalPhoneNumber(value, field.dataset.phoneCountry || 'BA'),
+    phoneInvalid: rule === 'phone' && value?.trim() && field.dataset.phoneInvalid === 'true',
   }
 }
 
@@ -58,10 +57,15 @@ function controlFor(field) {
 }
 
 function decorate(form) {
+  const decoratedLabels = new Set()
   for (const field of fields(form)) {
-    const required = descriptor(field, form).required
-    const label = labelFor(field)
-    if (!label) continue
+    const legend = field.type === 'radio' ? field.closest('fieldset')?.querySelector(':scope > legend') : null
+    const required = legend
+      ? Array.from(form.elements).some(element => element.type === 'radio' && element.name === field.name && element.required)
+      : descriptor(field, form).required
+    const label = legend || labelFor(field)
+    if (!label || decoratedLabels.has(label)) continue
+    decoratedLabels.add(label)
     let star = label.querySelector(':scope > .validation-required')
     if (required && !star) {
       star = document.createElement('span')

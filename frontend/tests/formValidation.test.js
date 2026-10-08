@@ -4,6 +4,46 @@ import vm from 'node:vm'
 import { test } from 'node:test'
 import { fieldValidationError } from '../src/lib/validationRules.js'
 
+test('required radio choices show one asterisk on their group legend, not on an option', async () => {
+  const stars = []
+  const legend = {
+    textContent: 'Your role',
+    querySelector: () => stars[0],
+    append: star => stars.push(star),
+  }
+  const optionLabels = Array.from({ length: 3 }, () => ({
+    querySelector: () => null,
+    append: () => { throw new Error('A radio option must not receive the group asterisk') },
+  }))
+  const fieldset = { querySelector: selector => selector === ':scope > legend' ? legend : null }
+  const radios = optionLabels.map((label, index) => ({
+    type: 'radio', name: 'contact-role', required: index === 0, checked: index === 0,
+    disabled: false, dataset: {}, labels: [label], parentElement: label,
+    hasAttribute: () => false, matches: () => false,
+    closest: selector => selector === 'form' ? form : selector === 'fieldset' ? fieldset : null,
+  }))
+  const form = { elements: radios, querySelectorAll: () => radios, addEventListener: () => {} }
+  const document = { createElement: () => ({ setAttribute: () => {}, remove() { stars.splice(stars.indexOf(this), 1) } }) }
+  const context = vm.createContext({ document })
+  const module = new vm.SourceTextModule(await readFile(new URL('../src/directives/formValidation.js', import.meta.url), 'utf8'), { context })
+  const modules = {
+    '../i18n': { default: { global: { t: key => key } } },
+    '../lib/validationRules': { fieldValidationError },
+  }
+  await module.link(specifier => new vm.SyntheticModule(Object.keys(modules[specifier]), function () {
+    for (const [name, value] of Object.entries(modules[specifier])) this.setExport(name, value)
+  }, { context }))
+  await module.evaluate()
+  module.namespace.default.mounted(form)
+  assert.equal(stars.length, 1)
+  assert.equal(stars[0].textContent, ' *')
+  module.namespace.default.updated(form)
+  assert.equal(stars.length, 1)
+  radios[0].required = false
+  module.namespace.default.updated(form)
+  assert.equal(stars.length, 0)
+})
+
 async function validationFixture({ custom = false, value = '', required = true } = {}) {
   const messages = []
   const listeners = new Map()

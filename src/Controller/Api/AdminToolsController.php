@@ -68,6 +68,9 @@ final class AdminToolsController
             return $locale;
         }
         try {
+            if ($request->query->has('page')) {
+                return $this->response($reader->numberedPage($request->query->getString('file'), $request->query->getString('cursor'), $request->query->getInt('pageSize', 25), $request->query->getInt('page', 1)));
+            }
             return $this->response($reader->page($request->query->getString('file'), $request->query->getString('cursor'), $request->query->getInt('pageSize', 25)));
         } catch (\InvalidArgumentException) {
             return $this->response(['error' => ApiMessages::get('invalid_request', $locale)], 400);
@@ -86,7 +89,7 @@ final class AdminToolsController
             return $error;
         }
         try {
-            return $this->response(['data' => $name === null ? ['registered' => $tasks->register()] : ['jobId' => $tasks->action($name, $action ?? '')]], 202);
+            return $this->response(['data' => $name === null ? ['registered' => $tasks->registerAndReschedule()] : ['jobId' => $tasks->action($name, $action ?? '')]], 202);
         } catch (\InvalidArgumentException|\DomainException $error) {
             return $this->response(['error' => ApiMessages::get('invalid_request', $locale)], $error instanceof \DomainException ? 409 : 400);
         }

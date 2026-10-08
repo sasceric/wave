@@ -92,6 +92,27 @@
     .language-switcher__name { flex: 1; text-align: left; }
     .language-switcher__menu { width: 100%; }
   }
+
+  &--row {
+    .language-switcher__trigger {
+      gap: 16px;
+      padding: 10px 4px;
+      border: 0;
+      border-radius: 6px;
+      color: var(--forest);
+      background: transparent;
+    }
+
+    .language-switcher__trigger:hover,
+    .language-switcher__trigger:focus-visible,
+    .language-switcher__trigger[aria-expanded="true"] {
+      background: #edf2eb;
+    }
+
+    .language-flag { width: 24px; }
+    .language-switcher__arrow { flex: 0 0 auto; color: #81908b; }
+    .language-switcher__trigger[aria-expanded="true"] .language-switcher__arrow { transform: rotate(90deg); }
+  }
 }
 
 @include breakpoints.down(760px) {

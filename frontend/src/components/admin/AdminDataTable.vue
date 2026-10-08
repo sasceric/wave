@@ -110,7 +110,7 @@ function sortBy(column) {
         </button>
       </div>
     </template>
-    <div class="admin-table__scroll">
+    <div class="admin-table__scroll" tabindex="0" role="region" :aria-label="labels.caption">
       <table class="admin-table__table">
         <thead>
           <tr>
@@ -127,7 +127,7 @@ function sortBy(column) {
               </button>
               <span v-else>{{ column.label }}</span>
             </th>
-            <th>{{ labels.actions }}</th>
+            <th class="admin-table__actions" scope="col">{{ labels.actions }}</th>
           </tr>
         </thead>
         <tbody>

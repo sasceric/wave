@@ -19,3 +19,6 @@
     > p:last-child { max-width: 83%; font-size: 15px; line-height: 1.55; }
   }
 }
+@include breakpoints.down(420px) {
+  .directory-hero { margin-inline: -16px; padding-inline: 16px; }
+}

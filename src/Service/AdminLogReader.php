@@ -11,6 +11,8 @@ final class AdminLogReader
     private const MAX_FILES = 256;
     private const MAX_LINE_BYTES = 65536;
     private const CACHE_PREFIX = 'admin.logs.v1.';
+    private const NUMBERED_PREFIX = 'admin.logs.numbered.v1.';
+    private const INDEX_ROW_BYTES = 24;
 
     public function __construct(
         #[Autowire('%kernel.logs_dir%')] private readonly string $logsDirectory,
@@ -41,6 +43,179 @@ final class AdminLogReader
         usort($files, static fn (array $a, array $b): int => strcmp($b['modifiedAt'], $a['modifiedAt']) ?: strcmp($a['name'], $b['name']));
 
         return ['files' => $files, 'limited' => $count > self::MAX_FILES];
+    }
+
+    public function numberedPage(string $file, string $cursor, int $pageSize, int $page): array
+    {
+        if (!in_array($pageSize, [25, 50, 100], true) || $page < 1 || $page > 1000000000) {
+            throw new \InvalidArgumentException('Invalid log page.');
+        }
+        if ($cursor === '') {
+            $listed = $this->files();
+            $files = $file === '' ? $listed['files'] : array_values(array_filter($listed['files'], static fn (array $row): bool => $row['name'] === $file));
+            if ($file !== '' && $files === []) {
+                throw new \InvalidArgumentException('Unknown log file.');
+            }
+            $state = ['file' => $file, 'files' => [], 'limited' => $listed['limited']];
+            foreach ($files as $row) {
+                $path = $this->safePath($row['name']);
+                $handle = $path === null ? false : @fopen($path, 'rb');
+                if ($handle === false) {
+                    continue;
+                }
+                try {
+                    $stat = fstat($handle);
+                    if ($stat === false) {
+                        continue;
+                    }
+                    $prefixBytes = min(512, $stat['size']);
+                    $fingerprint = $this->fingerprint($handle, $prefixBytes);
+                    $state['files'][$row['name']] = [
+                        'position' => $stat['size'], 'inode' => $stat['ino'], 'modified' => $stat['mtime'],
+                        'prefixBytes' => $prefixBytes, 'prefixHash' => $fingerprint,
+                        'index' => $this->fileIndex($handle, $row['name'], $stat, $fingerprint),
+                    ];
+                } finally {
+                    fclose($handle);
+                }
+            }
+            $cursor = bin2hex(random_bytes(16));
+            $this->cache->get(self::NUMBERED_PREFIX.$cursor, static function (ItemInterface $item) use ($state): array {
+                $item->expiresAfter(1800);
+
+                return $state;
+            });
+        } else {
+            if (preg_match('/^[a-f0-9]{32}$/D', $cursor) !== 1) {
+                throw new \InvalidArgumentException('Invalid log cursor.');
+            }
+            $state = $this->cache->get(self::NUMBERED_PREFIX.$cursor, self::expiredCursor(...));
+            if (!is_array($state) || $state['file'] !== $file) {
+                throw new \InvalidArgumentException('Expired log cursor.');
+            }
+        }
+
+        $handles = [];
+        $changed = false;
+        try {
+            foreach ($state['files'] as $name => $snapshot) {
+                $path = $this->safePath($name);
+                $handle = $path === null ? false : @fopen($path, 'rb');
+                $stat = $handle === false ? false : fstat($handle);
+                if ($stat === false || $stat['ino'] !== $snapshot['inode'] || $stat['size'] < $snapshot['position']
+                    || $this->fingerprint($handle, $snapshot['prefixBytes']) !== $snapshot['prefixHash']) {
+                    if (is_resource($handle)) {
+                        fclose($handle);
+                    }
+                    unset($state['files'][$name]);
+                    $changed = true;
+                    continue;
+                }
+                $handles[$name] = $handle;
+            }
+            $total = array_sum(array_map(static fn (array $snapshot): int => intdiv(strlen($snapshot['index']), self::INDEX_ROW_BYTES), $state['files']));
+            $page = min($page, max(1, (int) ceil($total / $pageSize)));
+            $offset = ($page - 1) * $pageSize;
+            $limit = min($pageSize, $total - $offset);
+            // Walk from the closer end. Last-page jumps read only the oldest page.
+            $oldestFirst = $offset > $total - $offset - $limit;
+            $skip = $oldestFirst ? $total - $offset - $limit : $offset;
+            $queue = new \SplPriorityQueue();
+            $queue->setExtractFlags(\SplPriorityQueue::EXTR_DATA);
+            foreach ($state['files'] as $name => $snapshot) {
+                $count = intdiv(strlen($snapshot['index']), self::INDEX_ROW_BYTES);
+                if ($count > 0) {
+                    $this->indexCandidate($queue, $name, $snapshot['index'], $oldestFirst ? 0 : $count - 1, $oldestFirst);
+                }
+            }
+            $rows = [];
+            for ($seen = 0; !$queue->isEmpty() && $seen < $skip + $limit; ++$seen) {
+                $candidate = $queue->extract();
+                $name = $candidate['name'];
+                $snapshot = $state['files'][$name];
+                if ($seen >= $skip) {
+                    fseek($handles[$name], $candidate['position']);
+                    $text = fread($handles[$name], $candidate['length']);
+                    if ($text === false) {
+                        throw new \RuntimeException('Unable to read application log.');
+                    }
+                    $row = $this->entry(rtrim($text, "\r\n"), $name, $candidate['position'], $snapshot['modified']);
+                    unset($row['position'], $row['sortTime']);
+                    $rows[] = $row;
+                }
+                $next = $candidate['row'] + ($oldestFirst ? 1 : -1);
+                if ($next >= 0 && $next < intdiv(strlen($snapshot['index']), self::INDEX_ROW_BYTES)) {
+                    $this->indexCandidate($queue, $name, $snapshot['index'], $next, $oldestFirst);
+                }
+            }
+
+            return ['data' => $oldestFirst ? array_reverse($rows) : $rows, 'meta' => [
+                'page' => $page, 'pageSize' => $pageSize, 'total' => $total, 'cursor' => $cursor,
+                'hasMore' => $offset + $limit < $total, 'changed' => $changed, 'limited' => $state['limited'],
+            ]];
+        } finally {
+            foreach ($handles as $handle) {
+                fclose($handle);
+            }
+        }
+    }
+
+    /** Cache compact timestamp/offset/length records, never log bodies or secrets. */
+    private function fileIndex(mixed $handle, string $name, array $stat, string $fingerprint): string
+    {
+        $key = 'admin.logs.index.v1.'.hash('sha256', $name.':'.$stat['ino'].':'.$fingerprint);
+        $cached = $this->cache->get($key, self::expiredCursor(...));
+        if (is_array($cached) && $cached['size'] === $stat['size'] && $cached['modified'] === $stat['mtime']) {
+            return $cached['index'];
+        }
+        $index = '';
+        $position = 0;
+        if (is_array($cached) && $cached['size'] < $stat['size']) {
+            $index = $cached['index'];
+            $position = $cached['size'];
+            // Re-index a final partial line when new bytes complete it.
+            if (!$cached['newline'] && $index !== '') {
+                $last = unpack('dtime/Jposition/Jlength', substr($index, -self::INDEX_ROW_BYTES));
+                $position = $last['position'];
+                $index = substr($index, 0, -self::INDEX_ROW_BYTES);
+            }
+        }
+        fseek($handle, $position);
+        $newline = true;
+        while ($position < $stat['size']) {
+            $text = fgets($handle, min(self::MAX_LINE_BYTES, $stat['size'] - $position) + 1);
+            if ($text === false) {
+                throw new \RuntimeException('Unable to index application log.');
+            }
+            $length = strlen($text);
+            $time = (float) $stat['mtime'];
+            if (preg_match('/^\[([^\]]{1,64})\]|"datetime"\s*:\s*"([^"\\\\]+)"/', $text, $matches)) {
+                try {
+                    $date = new \DateTimeImmutable($matches[2] ?? $matches[1]);
+                    $time = (float) $date->format('U.u');
+                } catch (\Exception) {
+                }
+            }
+            $index .= pack('dJJ', $time, $position, $length);
+            $position += $length;
+            $newline = str_ends_with($text, "\n");
+        }
+        $value = ['index' => $index, 'size' => $stat['size'], 'modified' => $stat['mtime'], 'newline' => $newline];
+        $this->cache->delete($key);
+        $this->cache->get($key, static function (ItemInterface $item) use ($value): array {
+            $item->expiresAfter(1800);
+
+            return $value;
+        });
+
+        return $index;
+    }
+
+    private function indexCandidate(\SplPriorityQueue $queue, string $name, string $index, int $row, bool $oldestFirst): void
+    {
+        $record = unpack('dtime/Jposition/Jlength', substr($index, $row * self::INDEX_ROW_BYTES, self::INDEX_ROW_BYTES));
+        $queue->insert(['name' => $name, 'row' => $row, 'position' => $record['position'], 'length' => $record['length']],
+            $oldestFirst ? [-$record['time'], ~$name, -$row] : [$record['time'], $name, $row]);
     }
 
     public function page(string $file, string $cursor, int $pageSize): array
@@ -200,6 +375,11 @@ final class AdminLogReader
             }
             $text = $block . $text;
         }
+        return $this->entry($text, $name, $start, $modified);
+    }
+
+    private function entry(string $text, string $name, int $start, int $modified): array
+    {
         $text = mb_convert_encoding(rtrim($text, "\r"), 'UTF-8', 'UTF-8');
         $time = null;
         $level = null;

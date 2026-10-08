@@ -9,9 +9,10 @@ function initializeGoogleAnalytics() {
   }
 
   window.dataLayer = window.dataLayer || []
-  window.gtag = (...arguments_) => window.dataLayer.push(arguments_)
+  // Google processes gtag commands as Arguments objects, not data-layer arrays.
+  window.gtag = function () { window.dataLayer.push(arguments) }
+  window.gtag('consent', 'default', { analytics_storage: 'denied', ad_storage: 'denied', ad_user_data: 'denied', ad_personalization: 'denied' })
   window.gtag('js', new Date())
-  window.gtag('consent', 'default', { analytics_storage: 'denied' })
   window.gtag('config', measurementId, { send_page_view: false })
 
   const script = document.createElement('script')

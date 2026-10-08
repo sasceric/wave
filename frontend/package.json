@@ -19,12 +19,14 @@
     "@vueup/vue-quill": "^1.5.5",
     "date-fns": "^4.4.0",
     "libphonenumber-js": "^1.13.14",
+    "qrcode": "^1.5.4",
     "vue": "^3.5.43",
     "vue-i18n": "^11.4.13",
     "vue-router": "^5.3.1"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.5",
+    "@intlify/unplugin-vue-i18n": "^11.2.5",
     "@vitejs/plugin-vue": "^6.0.8",
     "eslint": "^9.39.5",
     "eslint-plugin-vue": "^10.11.1",

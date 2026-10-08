@@ -1,13 +1,16 @@
 <script setup>
 import { onBeforeUnmount, onMounted, ref } from 'vue'
-import { ChevronDown } from '@lucide/vue'
+import { ChevronDown, ChevronRight } from '@lucide/vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import LanguageFlag from './LanguageFlag.vue'
 import { localeNames } from '../../i18n'
-import { defaultLocale, localizedRouteName, localizedRouteNames } from '../../routePaths'
+import { defaultLocale, localizedRouteName, localizedRouteNames, localePrefixes } from '../../routePaths'
 
-defineProps({ expanded: { type: Boolean, default: false } })
+defineProps({
+  expanded: { type: Boolean, default: false },
+  row: { type: Boolean, default: false },
+})
 
 const { locale, t } = useI18n()
 const route = useRoute()
@@ -23,7 +26,6 @@ function closeOnOutsideClick(event) {
 }
 
 function selectLocale(code) {
-  locale.value = code
   isOpen.value = false
 
   if (localizedRouteNames.has(route.meta.routeName)) {
@@ -40,8 +42,8 @@ function selectLocale(code) {
     ? route.params.pathMatch.join('/')
     : route.params.pathMatch
   const path = pathMatch
-    ? (code === defaultLocale ? `/${pathMatch}` : `/${code}/${pathMatch}`)
-    : (code === defaultLocale ? '/' : `/${code}/`)
+    ? (code === defaultLocale ? `/${pathMatch}` : `/${localePrefixes[code]}/${pathMatch}`)
+    : (code === defaultLocale ? '/' : `/${localePrefixes[code]}/`)
   router.replace({
     path,
     query: route.query,
@@ -57,7 +59,7 @@ onBeforeUnmount(() => document.removeEventListener('pointerdown', closeOnOutside
   <div
     ref="menu"
     class="language-switcher"
-    :class="{ 'language-switcher--expanded': expanded }"
+    :class="{ 'language-switcher--expanded': expanded || row, 'language-switcher--row': row }"
     @keydown.esc.stop.prevent="isOpen = false"
   >
     <button
@@ -69,8 +71,9 @@ onBeforeUnmount(() => document.removeEventListener('pointerdown', closeOnOutside
       @click="isOpen = !isOpen"
     >
       <LanguageFlag :locale="locale" />
-      <span v-if="expanded" class="language-switcher__name">{{ localeNames[locale] }}</span>
-      <ChevronDown v-if="expanded" :size="16" aria-hidden="true" />
+      <span v-if="expanded || row" class="language-switcher__name">{{ localeNames[locale] }}</span>
+      <ChevronRight v-if="row" class="language-switcher__arrow" :size="20" aria-hidden="true" />
+      <ChevronDown v-else-if="expanded" :size="16" aria-hidden="true" />
     </button>
     <div v-if="isOpen" class="language-switcher__menu" role="menu" :aria-label="t('app.language')">
       <button

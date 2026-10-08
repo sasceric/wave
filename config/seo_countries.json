@@ -1,0 +1,22 @@
+{
+  "BA": {
+    "slug": "bosna-i-hercegovina",
+    "locale": "bs"
+  },
+  "HR": {
+    "slug": "hrvatska",
+    "locale": "hr"
+  },
+  "RS": {
+    "slug": "srbija",
+    "locale": "sr"
+  },
+  "ME": {
+    "slug": "crna-gora",
+    "locale": "cnr"
+  },
+  "SI": {
+    "slug": "slovenija",
+    "locale": "sl"
+  }
+}

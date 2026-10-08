@@ -1,5 +1,6 @@
 import { rmSync } from 'node:fs'
 import vue from '@vitejs/plugin-vue'
+import VueI18nPlugin from '@intlify/unplugin-vue-i18n/vite'
 import { fileURLToPath } from 'node:url'
 import { VitePWA } from 'vite-plugin-pwa'
 import { defineConfig } from 'vite'
@@ -16,6 +17,11 @@ export default defineConfig({
       },
     },
     vue(),
+    VueI18nPlugin({
+      include: fileURLToPath(new URL('./src/locales/**', import.meta.url)),
+      compositionOnly: true,
+      dropMessageCompiler: true,
+    }),
     VitePWA({
       strategies: 'injectManifest',
       srcDir: 'src',
@@ -42,7 +48,7 @@ export default defineConfig({
         ],
       },
       injectManifest: {
-        globPatterns: ['**/*.{css,html,ico,js,png,svg,webp}'],
+        globPatterns: ['**/*.{css,html,ico,js,png,svg,webp,woff2}'],
       },
     }),
   ],

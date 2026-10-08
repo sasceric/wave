@@ -76,16 +76,33 @@ final class AdminToolsControllerTest extends WebTestCase
         self::assertFalse($this->payload()['meta']['hasMore']);
     }
 
+    public function testNumberedLogsExposeTotalAndAllowDirectLastPageAccess(): void
+    {
+        $this->client->loginUser($this->user(true), 'main');
+        for ($index = 1; $index <= 81; ++$index) {
+            file_put_contents($this->directory.'/prod.log', 'line '.$index."\n", FILE_APPEND);
+        }
+        $this->client->request('GET', '/api/admin/tools/logs?locale=en&page=1&pageSize=25');
+        self::assertResponseIsSuccessful();
+        $first = $this->payload();
+        self::assertSame(81, $first['meta']['total']);
+        $this->client->request('GET', '/api/admin/tools/logs?locale=en&page=4&pageSize=25&cursor='.$first['meta']['cursor']);
+        self::assertResponseIsSuccessful();
+        self::assertCount(6, $this->payload()['data']);
+        self::assertSame('line 6', $this->payload()['data'][0]['message']);
+        self::assertSame(4, $this->payload()['meta']['page']);
+    }
+
     public function testInvalidPaginationCursorsAndPathsAreRejected(): void
     {
         $this->client->loginUser($this->user(true), 'main');
-        foreach (['tasks?page=0', 'tasks?pageSize=10', 'queues?pageSize=10', 'queues?pageSize=1000', 'logs?pageSize=10', 'logs?pageSize=1000', 'logs?file=../.env.local', 'logs?cursor=unknown'] as $query) {
+        foreach (['tasks?page=0', 'tasks?pageSize=10', 'queues?pageSize=10', 'queues?pageSize=1000', 'logs?pageSize=10', 'logs?pageSize=1000', 'logs?file=../.env.local', 'logs?cursor=unknown', 'logs?page=0', 'logs?page=1&cursor=unknown'] as $query) {
             $this->client->request('GET', '/api/admin/tools/' . $query . '&locale=en');
             self::assertResponseStatusCodeSame(400);
         }
     }
 
-    public function testTasksSortByNextExecutionWithUnscheduledTasksLast(): void
+    public function testTasksSortByNextExecutionAscendingWithUnscheduledTasksLast(): void
     {
         $this->client->loginUser($this->user(true), 'main');
         $db = static::getContainer()->get(EntityManagerInterface::class)->getConnection();
@@ -114,6 +131,14 @@ final class AdminToolsControllerTest extends WebTestCase
         $this->client->request('POST', '/api/admin/tools/tasks/register?locale=en', server: ['HTTP_X_CSRF_TOKEN' => $token]);
         self::assertResponseStatusCodeSame(202);
         self::assertSame(8, $this->payload()['data']['registered']);
+        $db = static::getContainer()->get(EntityManagerInterface::class)->getConnection();
+        $db->executeStatement('UPDATE wave_scheduled_task SET next_run_at = ?', ['2000-01-01 00:00:00']);
+        $this->client->request('POST', '/api/admin/tools/tasks/register?locale=en', server: ['HTTP_X_CSRF_TOKEN' => $token]);
+        self::assertResponseStatusCodeSame(202);
+        self::assertSame(8, $this->payload()['data']['registered']);
+        foreach ($db->fetchAllAssociative('SELECT next_run_at, interval_seconds FROM wave_scheduled_task') as $row) {
+            self::assertEqualsWithDelta(time() + (int) $row['interval_seconds'], strtotime($row['next_run_at'].' UTC'), 5);
+        }
         $this->client->request('POST', '/api/admin/tools/tasks/CachePruneTask/run?locale=en', server: ['HTTP_X_CSRF_TOKEN' => $token]);
         self::assertResponseStatusCodeSame(202);
         $this->client->request('POST', '/api/admin/tools/tasks/CachePruneTask/run?locale=en', server: ['HTTP_X_CSRF_TOKEN' => $token]);

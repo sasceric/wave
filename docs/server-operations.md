@@ -60,6 +60,20 @@ with the temporary fallback it uses the original synchronous generator.
 
 The workflow installs dependencies, builds the SPA, applies migrations, clears
 cache and registers missing tasks without resetting existing task state.
+The admin **Register all tasks** button adds missing tasks and resets every known
+task's next execution to a single current instant plus its stored interval.
+This includes daily tasks, whose interval is 24 hours; all task scheduling uses
+current time plus interval, without fixed clock times. Task status, active jobs and history
+remain intact; the reset does not run or reactivate paused tasks.
+The deployment CLI registration still only adds missing tasks, so deployments
+do not postpone existing schedules. Use each task's schedule/immediate/run
+action to change its state explicitly.
+The scheduled-task list sorts by next execution ascending (earliest first), with
+unscheduled tasks last. The queue list sorts by numeric message count descending
+before pagination, including transport totals and individual message types.
+`UnreadMessageReminderTask` runs hourly. Migration `Version20261008090000`
+updates existing 300-second schedules to 3600 seconds and sets their next check
+one hour ahead, preserving paused/running state, active job IDs and history.
 For manual deployment, run the same steps and:
 
 ```sh

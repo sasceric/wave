@@ -16,6 +16,7 @@ final class SitemapGenerator
         private readonly EntityManagerInterface $entityManager,
         private readonly LocalizedRouteMap $routeMap,
         private readonly SiteOrigin $siteOrigin,
+        private readonly RegionalSeoContent $regionalContent,
     ) {
     }
 
@@ -30,6 +31,7 @@ final class SitemapGenerator
             ['privacy-policy', []],
             ['cookie-policy', []],
         ];
+        $pages = array_merge($pages, $this->regionalContent->extraPages());
 
         $creators = $this->entityManager->getRepository(Creator::class)->createQueryBuilder('creator')
             ->leftJoin('creator.owner', 'owner')

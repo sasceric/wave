@@ -9,14 +9,14 @@ use Psr\Log\LoggerInterface;
 final class TaskRegistry
 {
     public const DEFINITIONS = [
-        'UnreadMessageReminderTask' => [300, null],
+        'UnreadMessageReminderTask' => [3600, null],
         'SitemapGenerateTask' => [3600, null],
         'ExpiredTokenCleanupTask' => [3600, null],
         'QueueMaintenanceTask' => [900, null],
-        'LogCleanupTask' => [86400, '02:10'],
-        'CachePruneTask' => [86400, '02:17'],
-        'MediaMaintenanceTask' => [86400, '02:30'],
-        'IndexReconcileTask' => [86400, '03:00'],
+        'LogCleanupTask' => [86400, null],
+        'CachePruneTask' => [86400, null],
+        'MediaMaintenanceTask' => [86400, null],
+        'IndexReconcileTask' => [86400, null],
     ];
 
     public function __construct(private readonly Connection $connection, private readonly JobDispatcher $jobs, private readonly LoggerInterface $logger)
@@ -27,22 +27,43 @@ final class TaskRegistry
     {
         $added = 0;
         foreach (self::DEFINITIONS as $name => [$interval]) {
-            $added += $this->connection->executeStatement('INSERT INTO wave_scheduled_task (name, interval_seconds, status, next_run_at) VALUES (?, ?, ?, ?) ON CONFLICT (name) DO NOTHING', [$name, $interval, 'scheduled', $this->next($name, $interval)]);
+            $added += $this->connection->executeStatement('INSERT INTO wave_scheduled_task (name, interval_seconds, status, next_run_at) VALUES (?, ?, ?, ?) ON CONFLICT (name) DO NOTHING', [$name, $interval, 'scheduled', $this->next($interval)]);
         }
         $this->logger->info('scheduler.registered', ['added' => $added]);
 
         return $added;
     }
 
+    public function registerAndReschedule(): int
+    {
+        return $this->connection->transactional(function (): int {
+            $this->register();
+            $rows = $this->connection->fetchAllAssociative('SELECT name, interval_seconds FROM wave_scheduled_task ORDER BY name FOR UPDATE');
+            $now = new \DateTimeImmutable('now', new \DateTimeZone('UTC'));
+            $updated = 0;
+            foreach ($rows as $row) {
+                if (!isset(self::DEFINITIONS[$row['name']])) {
+                    continue;
+                }
+                // Explicit admin reset also offsets daily tasks from this instant.
+                $next = $now->modify('+'.(int) $row['interval_seconds'].' seconds');
+                $updated += $this->connection->update('wave_scheduled_task', ['next_run_at' => $next->format('Y-m-d H:i:s')], ['name' => $row['name']]);
+            }
+            $this->logger->info('scheduler.rescheduled', ['count' => $updated]);
+
+            return $updated;
+        });
+    }
+
     public function tasks(): array
     {
         $states = $this->connection->fetchAllAssociativeIndexed('SELECT name, interval_seconds, status, next_run_at, active_job_id, last_started_at, last_finished_at, last_outcome FROM wave_scheduled_task');
         $rows = [];
-        foreach (self::DEFINITIONS as $name => [$interval, $time]) {
+        foreach (self::DEFINITIONS as $name => [$interval]) {
             $state = $states[$name] ?? null;
             $rows[] = [
                 'id' => $name, 'name' => $name, 'intervalSeconds' => $state ? (int) $state['interval_seconds'] : $interval,
-                'schedule' => $time === null ? (string) ($state['interval_seconds'] ?? $interval) . 's' : $time . ' UTC',
+                'schedule' => (string) ($state['interval_seconds'] ?? $interval) . 's',
                 'status' => $state['status'] ?? 'unregistered', 'lastOutcome' => $state['last_outcome'] ?? null,
                 'activeJobId' => $state['active_job_id'] ?? null,
                 'lastStartedAt' => $this->iso($state['last_started_at'] ?? null),
@@ -84,7 +105,7 @@ final class TaskRegistry
             } else {
                 $values = ['status' => $action === 'inactive' ? 'inactive' : ($row['active_job_id'] === null ? 'scheduled' : ($row['status'] === 'running' ? 'running' : 'queued'))];
                 if ($action !== 'inactive') {
-                    $values['next_run_at'] = $action === 'immediate' ? gmdate('Y-m-d H:i:s') : $this->next($name, (int) $row['interval_seconds']);
+                    $values['next_run_at'] = $action === 'immediate' ? gmdate('Y-m-d H:i:s') : $this->next((int) $row['interval_seconds']);
                 }
                 $this->connection->update('wave_scheduled_task', $values, ['name' => $name]);
                 $id = null;
@@ -120,21 +141,15 @@ final class TaskRegistry
     private function queue(array $row): string
     {
         $id = $this->jobs->enqueue($row['name'], ['taskName' => $row['name']], 'task:' . $row['name'] . ':' . bin2hex(random_bytes(16)));
-        $this->connection->update('wave_scheduled_task', ['active_job_id' => $id, 'status' => $row['status'] === 'inactive' ? 'inactive' : 'queued', 'next_run_at' => $this->next($row['name'], (int) $row['interval_seconds'])], ['name' => $row['name']]);
+        $this->connection->update('wave_scheduled_task', ['active_job_id' => $id, 'status' => $row['status'] === 'inactive' ? 'inactive' : 'queued', 'next_run_at' => $this->next((int) $row['interval_seconds'])], ['name' => $row['name']]);
 
         return $id;
     }
 
-    private function next(string $name, int $interval): string
+    private function next(int $interval): string
     {
         $now = new \DateTimeImmutable('now', new \DateTimeZone('UTC'));
-        $time = self::DEFINITIONS[$name][1];
-        $next = $time === null ? $now->modify('+' . $interval . ' seconds') : new \DateTimeImmutable('today ' . $time, new \DateTimeZone('UTC'));
-        if ($next <= $now) {
-            $next = $next->modify('+1 day');
-        }
-
-        return $next->format('Y-m-d H:i:s');
+        return $now->modify('+' . $interval . ' seconds')->format('Y-m-d H:i:s');
     }
 
     private function iso(?string $value): ?string

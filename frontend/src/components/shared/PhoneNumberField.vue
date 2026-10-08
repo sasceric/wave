@@ -2,7 +2,7 @@
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { getCountries, getCountryCallingCode, parsePhoneNumberFromString } from 'libphonenumber-js/min'
-import { nationalPhoneNumber } from '../../lib/phoneNumbers'
+import { formatInternationalPhoneNumber, nationalPhoneNumber } from '../../lib/phoneNumbers'
 import SearchableSelect from './SearchableSelect.vue'
 
 const props = defineProps({
@@ -49,6 +49,7 @@ function flagEmoji(countryCode) {
 }
 
 const displayedPhone = computed(() => nationalPhoneNumber(props.modelValue, props.countryCode))
+const phoneInvalid = computed(() => Boolean(displayedPhone.value.trim() && !formatInternationalPhoneNumber(displayedPhone.value, props.countryCode)))
 
 function updateCountry(countryCode) {
   const phone = displayedPhone.value
@@ -84,6 +85,7 @@ function updatePhone(event) {
       <input
         data-validation-rule="phone"
         :data-phone-country="countryCode"
+        :data-phone-invalid="phoneInvalid"
         :value="displayedPhone"
         type="tel"
         inputmode="tel"

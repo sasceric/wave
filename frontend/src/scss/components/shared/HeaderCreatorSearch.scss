@@ -67,7 +67,8 @@
   .header-creator-search {
     width: 36px; min-width: 36px; height: 36px; flex: 0 0 36px; justify-content: center; padding: 0; border: 0; background: transparent;
     & > &__field, & > &__type { display: none; }
-    &__submit { color: #52685e; background: transparent; }
+    &__submit, &__submit:hover, &__submit:focus, &__submit:active { color: #52685e; background: transparent; }
+    &__submit:focus-visible { outline: 2px solid #df8267; outline-offset: 1px; }
     &.is-expanded { position: absolute; z-index: 21; top: calc(100% + 8px); right: 16px; left: 16px; width: auto; height: 50px; padding: 6px; border: 1px solid #dce3da; background: #fffefa; box-shadow: 0 12px 28px rgba(31, 42, 40, .14); }
     &.is-expanded &__field, &.is-expanded &__type { display: flex; }
     &.is-expanded &__close { display: grid; }

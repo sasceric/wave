@@ -81,7 +81,7 @@ function deadlineLabel(campaign) {
           <th scope="col">{{ t('account.closesAt') }}</th>
           <th scope="col">{{ t('account.hiredCreators') }}</th>
           <th scope="col">{{ t('account.activityStatus') }}</th>
-          <th scope="col">{{ t('account.activityActions') }}</th>
+          <th scope="col" class="creator-offers__action-cell">{{ t('account.activityActions') }}</th>
         </tr></thead>
         <tbody>
           <tr v-for="campaign in pageCampaigns" :key="campaign.id">
@@ -101,7 +101,7 @@ function deadlineLabel(campaign) {
             <td><span class="creator-offers__mobile-label">{{ t('account.closesAt') }}</span><span v-if="campaign.closesAt" class="creator-offers__deadline"><CalendarDays :size="17" aria-hidden="true" /><time :datetime="campaign.closesAt">{{ formatDate(campaign.closesAt) }}</time></span><small class="company-campaign-list__deadline">{{ deadlineLabel(campaign) }}</small></td>
             <td class="company-campaign-list__hired"><span class="creator-offers__mobile-label">{{ t('account.hiredCreators') }}</span><CampaignHiringProgress :campaign="campaign" /></td>
             <td><span class="creator-offer__status" :class="`company-campaign-list__status--${campaign.status}`">{{ t(`account.${campaign.status}`) }}</span></td>
-            <td><div class="creator-offers__actions">
+            <td class="creator-offers__action-cell"><div class="creator-offers__actions">
               <LocalizedLink class="button button--outline" :to="detailRoute(campaign)">{{ t('account.viewCampaign') }}</LocalizedLink>
               <AdminRowActions :label="`${t('account.activityActions')}: ${campaign.title}`">
                 <button class="admin-row-actions__item" role="menuitem" type="button" @click="emit('edit', campaign)"><Pencil :size="16" aria-hidden="true" />{{ t('account.editCampaign') }}</button>

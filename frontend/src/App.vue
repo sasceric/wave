@@ -1,19 +1,17 @@
 <script setup>
-import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { computed, defineAsyncComponent, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { isNavigationFailure, NavigationFailureType, RouterView, useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { Bell, Building2, ChevronRight, Download, House, LogOut, Menu, Megaphone, MessageCircle, UserRound, UsersRound, X } from '@lucide/vue'
 import { registerSW } from 'virtual:pwa-register'
-import AccountSidebar from './components/account/AccountSidebar.vue'
 import LanguageSwitcher from './components/shared/LanguageSwitcher.vue'
 import HeaderCreatorSearch from './components/shared/HeaderCreatorSearch.vue'
 import LocalizedLink from './components/shared/LocalizedLink.vue'
 import WaveLogo from './components/shared/WaveLogo.vue'
 import WaveWordmark from './components/shared/WaveWordmark.vue'
 import FooterNewsletterSignup from './components/shared/FooterNewsletterSignup.vue'
-import SuccessModal from './components/shared/SuccessModal.vue'
+import SkeletonBlock from './components/shared/SkeletonBlock.vue'
 import CookieConsentBanner from './components/shared/CookieConsentBanner.vue'
-import NotificationsPanel from './components/shared/NotificationsPanel.vue'
 import { currentUser, setCurrentUser } from './composables/useCurrentUser'
 import { useAdminWorker } from './composables/useAdminWorker'
 import { unreadMessageCount } from './composables/useUnreadMessages'
@@ -24,8 +22,13 @@ import { startInboxSync } from './lib/inboxSync'
 import { updateAppBadge } from './lib/appBadge'
 import { notificationDestination, startNotificationNavigation } from './lib/notificationNavigation'
 import { updateSeo } from './lib/seo'
+import { regionalMetadata } from './lib/regionalSeo'
 import { trackPageView } from './lib/privacyMetrics'
 import { localizedPath } from './routePaths'
+
+const AccountSidebar = defineAsyncComponent(() => import('./components/account/AccountSidebar.vue'))
+const SuccessModal = defineAsyncComponent(() => import('./components/shared/SuccessModal.vue'))
+const NotificationsPanel = defineAsyncComponent(() => import('./components/shared/NotificationsPanel.vue'))
 
 const route = useRoute()
 const router = useRouter()
@@ -195,6 +198,18 @@ watch(
   () => [route.fullPath, locale.value],
   () => {
     const routeName = route.meta.routeName
+    const regional = regionalMetadata(route, t)
+    if (regional) {
+      updateSeo({
+        route: regional.invalid ? { ...route, meta: { ...route.meta, routeName: 'not-found' } } : route,
+        locale: locale.value,
+        title: regional.title || t('seo.notFoundTitle'),
+        description: regional.description || t('seo.notFoundDescription'),
+        noindex: Boolean(regional.invalid),
+        mainEntity: routeName === 'seo-guide' && !regional.invalid ? { '@type': 'Article', headline: t(`regionalSeo.guides.${route.params.guide}.title`), description: regional.description, author: { '@type': 'Organization', name: 'Wave' } } : null,
+      })
+      return
+    }
     const pageKeys = {
       home: ['homeTitle', 'homeDescription'],
       messages: ['privateTitle', 'privateDescription'],
@@ -243,7 +258,8 @@ onMounted(() => {
   })
   if (!import.meta.env.DEV && 'serviceWorker' in navigator) {
     updateServiceWorker = registerSW({
-      immediate: true,
+      // Let the page's fonts and hero image finish before precaching the app.
+      immediate: false,
       onNeedRefresh() {
         updateAvailable.value = true
         updateError.value = ''
@@ -896,10 +912,10 @@ async function signOut() {
       'site-shell--mobile-chrome-hidden': mobileChromeHidden,
       'site-shell--account': hideSiteFooter,
       'site-shell--footer-visible': !hideSiteFooter,
-      'site-shell--registration': route.meta.routeName === 'account'
+      'site-shell--registration': route.meta.accountAccessPage
         && route.query.mode === 'register'
         && !currentUser,
-      'site-shell--auth-splash': route.meta.routeName === 'account'
+      'site-shell--auth-splash': route.meta.accountAccessPage
         && route.query.mode !== 'register'
         && route.query.mode !== 'reset'
         && !currentUser,
@@ -911,7 +927,7 @@ async function signOut() {
         <nav class="main-nav" :aria-label="t('app.mainNavigation')">
           <LocalizedLink
             to="/creators"
-            :class="{ 'is-active': ['creators', 'creator-profile'].includes(route.meta.routeName) }"
+            :class="{ 'is-active': ['creators', 'creator-profile', 'country-creators'].includes(route.meta.routeName) }"
           >
             {{ t('app.creators') }}
           </LocalizedLink>
@@ -1038,8 +1054,7 @@ async function signOut() {
                   <ChevronRight class="header-user-menu__chevron" :size="20" aria-hidden="true" />
                 </LocalizedLink>
                 <div class="header-user-menu__language">
-                  <span>{{ t('app.language') }}</span>
-                  <LanguageSwitcher expanded />
+                  <LanguageSwitcher row />
                 </div>
                 <button class="header-user-menu__item header-user-menu__item--sign-out" type="button" :disabled="signingOut" @click="signOut">
                   <LogOut :size="23" stroke-width="1.8" aria-hidden="true" />
@@ -1078,18 +1093,25 @@ async function signOut() {
     </header>
 
     <AccountSidebar
-      v-if="!isMobileAccountNavigationPage"
+      v-if="!isMobileAccountNavigationPage && mobileNavigationOpen"
       :user="currentUser"
       :profile="currentUser?.profile"
       mobile-only
     />
 
     <main>
-      <RouterView />
+      <RouterView v-slot="{ Component }">
+        <component :is="Component" v-if="Component" />
+        <div v-else class="page-width site-shell__loading" role="status" aria-busy="true">
+          <span class="sr-only">{{ t('app.loading') }}</span>
+          <SkeletonBlock shape="title" width="50%" />
+          <SkeletonBlock v-for="index in 3" :key="index" :width="index === 3 ? '65%' : '90%'" />
+        </div>
+      </RouterView>
     </main>
 
     <footer
-      v-if="!hideSiteFooter"
+      v-if="route.name && !hideSiteFooter"
       class="site-footer"
       :class="{ 'site-footer--admin': route.meta.adminSection }"
     >
@@ -1117,11 +1139,11 @@ async function signOut() {
                 <circle class="site-footer__social-dot" cx="17.7" cy="6.7" r="1" />
               </svg>
             </a>
-            <span class="site-footer__social-icon site-footer__social-icon--tiktok" aria-hidden="true">
-              <svg viewBox="0 0 24 24">
+            <a href="https://www.tiktok.com/@waveapp5" target="_blank" rel="noopener noreferrer" :aria-label="t('app.tiktok')" class="site-footer__social-icon site-footer__social-icon--tiktok">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
                 <path d="M19.4 8.2a7.4 7.4 0 0 1-4.3-1.4v7.1a5.6 5.6 0 1 1-5.6-5.6c.4 0 .8 0 1.2.1v3.1a2.6 2.6 0 1 0 1.8 2.5V2h3.1c.3 2 1.9 3.6 3.9 3.8v2.4Z" />
               </svg>
-            </span>
+            </a>
             <a
               class="site-footer__social-icon site-footer__social-icon--facebook"
               href="https://www.facebook.com/app.wave.ba"
@@ -1133,11 +1155,8 @@ async function signOut() {
                 <path d="M13.5 21v-8h2.7l.4-3.1h-3.1v-2c0-.9.3-1.5 1.6-1.5h1.7V3.6c-.3 0-1.3-.1-2.5-.1-2.5 0-4.2 1.5-4.2 4.3v2.1H7.3V13h2.8v8h3.4Z" />
               </svg>
             </a>
-            <span class="site-footer__social-icon site-footer__social-icon--x" aria-hidden="true">
-              <svg viewBox="0 0 24 24">
-                <path d="m4 3 16 18M20 3 4 21" />
-              </svg>
-            </span>
+
+
           </nav>
           <span class="site-footer__social-note">{{ t('app.socialFollow') }}</span>
         </div>
@@ -1167,9 +1186,11 @@ async function signOut() {
               <LocalizedLink to="/creators">{{ t('app.creatorsNav') }}</LocalizedLink>
               <LocalizedLink to="/companies">{{ t('app.companies') }}</LocalizedLink>
               <LocalizedLink to="/campaigns">{{ t('app.campaigns') }}</LocalizedLink>
-              <a :href="localizedPath('home', locale) + '#how-it-works'">
+              <LocalizedLink :to="{ name: 'seo-guides' }">{{ t('regionalSeo.guideTitle') }}</LocalizedLink>
+              <LocalizedLink :to="{ name: 'creator-guides' }">{{ t('regionalSeo.creatorGuides.title') }}</LocalizedLink>
+              <LocalizedLink :to="{ name: 'how-it-works' }">
                 {{ t('home.howItWorks') }}
-              </a>
+              </LocalizedLink>
             </div>
           </details>
         </nav>
@@ -1212,7 +1233,7 @@ async function signOut() {
             <div class="site-footer__accordion-content">
               <p>{{ t('app.footerContactText') }}</p>
               <a class="site-footer__email" href="mailto:info@wave.ba">
-                info@wave.ba <span aria-hidden="true">↗</span>
+                info@wave.ba <span aria-hidden="true">→</span>
               </a>
               <span class="site-footer__operator">{{ t('app.footerOperator') }}</span>
             </div>
@@ -1270,6 +1291,7 @@ async function signOut() {
       </div>
     </footer>
     <SuccessModal
+      v-if="newsletterSuccessOpen"
       v-model:open="newsletterSuccessOpen"
       :title="t('app.footerNewsletterSuccessTitle')"
       :message="t('app.footerNewsletterSuccessMessage')"
@@ -1306,7 +1328,7 @@ async function signOut() {
         to="/creators"
         class="mobile-bottom-nav__link"
         :aria-label="t('app.creatorsNav')"
-        :class="{ 'is-active': ['creators', 'creator-profile'].includes(route.meta.routeName) }"
+        :class="{ 'is-active': ['creators', 'creator-profile', 'country-creators'].includes(route.meta.routeName) }"
       >
         <UsersRound :size="21" stroke-width="1.8" aria-hidden="true" />
       </LocalizedLink>

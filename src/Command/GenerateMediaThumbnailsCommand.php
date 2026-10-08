@@ -47,7 +47,7 @@ final class GenerateMediaThumbnailsCommand extends Command
             $media = $this->entityManager->getRepository(Media::class)->createQueryBuilder('media')
                 ->where('media.id > :afterId')
                 ->setParameter('afterId', $afterId)
-                ->orderBy('media.id', 'ASC')
+                ->orderBy('media.id', \SortDirection::Ascending)
                 ->setMaxResults($size)
                 ->getQuery()->getResult();
             foreach ($media as $image) {

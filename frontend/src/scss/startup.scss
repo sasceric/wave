@@ -53,6 +53,8 @@
 
 html.app-starting {
   overflow: hidden;
+
+  #app { visibility: hidden; }
 }
 
 @keyframes startup-pulse {

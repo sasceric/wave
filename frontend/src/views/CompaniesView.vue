@@ -88,7 +88,7 @@ function clearFilters() {
   <section class="page-width company-directory">
     <DirectoryHero>
         <p class="eyebrow">{{ t('companyDirectory.eyebrow') }}</p>
-        <h1>{{ t('companyDirectory.title') }}</h1>
+        <h1>{{ t('companyDirectory.headlineLead') }} <em>{{ t('companyDirectory.headlineEmphasis') }}</em></h1>
         <p>{{ t('companyDirectory.description') }}</p>
       <template #art><div class="company-directory__hero-art" aria-hidden="true">
         <img class="company-directory__hero-photo" src="/images/companies-hero.webp" alt="" width="900" height="600" fetchpriority="high" />

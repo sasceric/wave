@@ -12,6 +12,38 @@ Declared dependencies: PHP 8.4+, Symfony 8.1, Doctrine ORM 3, Vue 3, Vue Router,
 
 ## Where to work
 
+Creator profiles support optional multiple creator types (influencer, UGC creator,
+photographer, videographer and model), independently of topics and social platforms.
+The shared catalog is `config/creator_types.json`; `Account/CreatorTypes.php` validates
+profile writes and directory filters. `creatorTypes` is exposed by full/card creator
+resources and accepts a JSON array in GET `/api/creators`. Selected types match any
+of those types, combined with the other filters, and are part of the signed cursor
+scope. Migration `Version20261008150000` adds an empty JSON list for existing profiles;
+omitted profile fields preserve the stored types. The account editor and public
+profile labels use all six locale catalogs.
+
+The guides index map uses local Natural Earth v5.1.2 country boundaries in
+`frontend/src/assets/creator-region-map.svg`, with a shared Mercator projection.
+The source and extent are documented in the SVG; preserve its geographic outlines
+when changing map colors. Guide cards have no numbered badges.
+
+`SeoGuidesView.vue` serves both company guides (`/vodici`) and creator guides
+(`/vodici-za-kreatore`), including three creator articles about profiles, packages
+and applications. `/kako-funkcionise` uses `HowItWorksView.vue` for both audiences.
+All six locales share route mappings and catalog-backed server-readable content
+through `RegionalSeoContent.php`; both sitemap generators include these pages.
+Creators-directory guide/country links live below desktop filters and are hidden
+on mobile. The shared guides layout keeps the 1400px container. Guide articles use icon step
+cards and compact related-guide links; their regional panel reuses the same map.
+`SeoHeroArtwork.vue` shares the decorative artwork across guide and how-it-works
+headers. The how-it-works page has audience workflow cards and a collaboration
+call to action; public guides do not describe internal credit settings.
+
+Admin QR scan counts use `QrScanStatistics.php` and `wave_qr_scan_daily`, added by
+`Version20261008160000`. Counts are daily location aggregates, not visitor records.
+Cloudflare location headers are accepted only from allowlisted edge peers; see
+`docs/admin-qr-codes.md` for configuration and counting semantics.
+
 | Concern | Starting points |
 | --- | --- |
 | API endpoints and workflows | `src/Controller/Api/` |
@@ -32,11 +64,13 @@ Declared dependencies: PHP 8.4+, Symfony 8.1, Doctrine ORM 3, Vue 3, Vue Router,
 | Visual styles | `frontend/src/scss/` mirrors Vue component/view folders; `frontend/src/scss/global.scss` holds foundations; `docs/frontend-styles.md` |
 | Localized navigation | `config/localized_routes.json`, `frontend/src/routePaths.js`, `frontend/src/router.js` |
 | Translations | `frontend/src/locales/`, `src/Localization/` |
+| Country SEO and guides | `RegionalSeoContent.php`, `CountryCreatorsView.vue`, `SeoGuidesView.vue`, `config/seo_countries.json`; `docs/seo-keyword-plan.md` |
 | SEO and server-rendered metadata | `src/Controller/FrontendController.php`, `SeoController.php`, `src/Service/SeoMetadataProvider.php`, `SitemapGenerator.php`, `frontend/src/lib/seo.js` |
 | Service worker and app shell | `frontend/src/sw.js`, `frontend/vite.config.js`, `frontend/src/App.vue` |
 | Tests | `tests/Controller/` plus API, OAuth, service, command, and migration tests |
 | Deployment and server jobs | `.github/workflows/deploy-production.yml`, `docs/deployment.md`, `docs/server-operations.md`, `docs/mercure-server-setup.md` |
 | Admin operational tools | `AdminToolsController.php`, `Background/TaskRegistry.php`, `Background/AdminWorker.php`, `QueueInspector.php`, `AdminLogReader.php`, `frontend/src/views/AdminToolsView.vue` |
+| Admin QR links | `AdminQrController.php`, `src/Controller/QrRedirectController.php`, `src/Entity/QrLink.php`, `frontend/src/views/AdminQrView.vue`; `docs/admin-qr-codes.md` |
 | Environment configuration | `config/packages/dev/`, `prod/`, `test/`; `docs/environment-configuration.md` |
 | Background processing | `docs/background-processing-plan.md`: FroshTools comparison, queue/task catalog, indexing, logging, admin controls and rollout |
 
@@ -51,8 +85,11 @@ Controller filenames in this table are under `src/Controller/Api/` unless a full
 - Unread chat reminder emails omit message text. The scheduled command is `app:send-unread-message-reminders`; the README explains timing and deduplication.
 - The PWA caches static app assets, not private API content. Preserve the service worker's API exclusions.
 - The full-screen startup splash lives in `frontend/index.html` with critical SCSS in `frontend/src/scss/startup.scss`, so it displays before Vue loads. `main.js` restores the session once and removes the splash after the initial route and session settle, with a ten-second fallback for stalled requests. Later navigation, page requests, and chat history use their existing skeletons; do not wait for images, realtime connections, or service-worker updates to dismiss startup.
+- Canonical prefixes are configured separately in `config/localized_route_prefixes.json`: `/rs`, `/me` and `/si` permanently replace `/sr`, `/cnr` and `/sl`; locale identifiers do not change.
 - Supported frontend locales are `bs` (default), `hr`, `sr` (Latin), `sl`, `en`, and `cnr` (Montenegrin). Older documentation lists only five; the current `i18n.js` loads all six. Keep new interface copy in the catalogs and update localized routes consistently when adding pages.
 - Reuse existing UI components and design styles before adding new patterns.
+- Preserve the exact brand palette and fonts documented in `docs/frontend-styles.md`;
+  performance and SEO changes must not replace them.
 - New JPEG/PNG/WebP uploads are processed centrally into lossless WebP, at most 600px wide, with proportional height, no cropping and no upscaling. Preserve alpha and apply JPEG EXIF orientation before measuring. Record the encoded MIME type and byte size. Existing media stays unchanged; preserve media ownership and public visibility checks.
 - Schema changes need Doctrine migrations. Historical SQLite migrations have a PostgreSQL compatibility layer in `src/Migration/`; avoid manual schema baselining.
 - Edit source assets in `frontend/public/` and frontend source files, then rebuild. The Vite build writes into `public/` and preserves Symfony's entry point; generated bundles are not the place to edit features.
@@ -179,9 +216,9 @@ cover home, account, profiles, campaign details, chat and admin loading states;
 see `docs/media-thumbnails.md` for behavior and accessibility. `CardImage.vue` preserves media slots, lazy-loads responsive images,
 reveals cache hits immediately and settles errors on a logo fallback. Skeletons
 reuse card styles and respect reduced motion. Uploaded listing images use
-96/320/480px lossless WebP variants via the authorized media controller; resources
+96/320/480px WebP variants at quality 82 via the authorized media controller; resources
 include dimensions and `srcset` metadata without filesystem work. Thumbnail files
-persist under `var/media/thumbnails/v1/` with locks and atomic writes. New uploads
+persist under `var/media/thumbnails/v2/` with locks and atomic writes. New uploads
 warm variants automatically. Migration `Version20261006180000` records nullable
 media dimensions, and `app:media:generate-thumbnails` backfills existing images in
 resumable ID batches. See `docs/media-thumbnails.md` for caching/access behavior,
@@ -226,11 +263,18 @@ requests via `useAdminWorker`; prod requires the checked-in systemd/Supervisor
 examples. See `docs/server-operations.md`; do not install old reminder/cache cron
 jobs alongside the new dispatcher.
 
+The Tools register-all button resets each known task's next execution to one
+current UTC timestamp plus its stored interval. Daily maintenance tasks share
+an 86400-second interval; they do not use fixed UTC clock times. Task lists sort
+by next execution ascending, and queue lists sort by message count descending.
+
 Index projections are invalidated on source mutations and queried with source
 fallbacks; source visibility/date checks remain authoritative. Media masters are
 normalized synchronously; derivative creation, repair and backfills are queued.
 Sitemap generation streams scalar batches to immutable split files and swaps the
-index after success. Logs retain bounded reverse cursor paging and modal details.
+index after success. Logs support numbered pagination using a stable snapshot
+and cached timestamp/offset indexes, plus modal details. Legacy reverse cursor
+paging remains available to API consumers.
 
 The old ScheduledTaskMonitor observes direct legacy command invocations only;
 new Tools task state comes from TaskRegistry, not that command observer.

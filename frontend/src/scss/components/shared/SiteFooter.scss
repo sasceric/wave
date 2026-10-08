@@ -96,7 +96,7 @@
     place-items: center;
     border: 1px solid rgba(231, 239, 231, .55);
     border-radius: 50%;
-    color: var(--gold);
+    color: #fff;
     line-height: 1;
     text-decoration: none;
     transition: border-color .18s ease, color .18s ease, background .18s ease;
@@ -127,9 +127,9 @@
 
   &__social-icon:hover,
   &__social-icon:focus-visible {
-    border-color: var(--coral);
+    border-color: #fff;
     color: #fff;
-    background: rgba(217, 131, 104, .17);
+    background: rgba(255, 255, 255, .08);
   }
 
   &__social-note {
@@ -214,6 +214,12 @@
     font-size: 14px;
     font-weight: 600;
     text-decoration: none;
+
+    span {
+      color: inherit;
+      font-size: 18px;
+      line-height: 1;
+    }
   }
 
   &__operator {
@@ -404,9 +410,9 @@
 
   &__back-to-top:hover,
   &__back-to-top:focus-visible {
-    border-color: var(--coral);
+    border-color: #fff;
     color: #fff;
-    background: rgba(217, 131, 104, .17);
+    background: rgba(255, 255, 255, .08);
   }
 
   &__back-to-top svg {

@@ -27,7 +27,7 @@ final class ChatMessageHistory
         $query = $this->entityManager->createQueryBuilder()
             ->select('message')->from($messageClass, 'message')
             ->where('message.'.$association.' = :thread')->setParameter('thread', $thread)
-            ->orderBy('message.id', $after === null ? 'DESC' : 'ASC')
+            ->orderBy('message.id', $after === null ? \SortDirection::Descending : \SortDirection::Ascending)
             ->setMaxResults($limit + 1);
         if ($before !== null || $after !== null) {
             $query->andWhere('message.id '.($after === null ? '<' : '>').' :cursor')
@@ -43,7 +43,7 @@ final class ChatMessageHistory
         $lastRead = $this->entityManager->createQueryBuilder()
             ->select('message.id, message.readAt')->from($messageClass, 'message')
             ->where('message.'.$association.' = :thread')->andWhere('message.sender = :viewer')
-            ->andWhere('message.readAt IS NOT NULL')->orderBy('message.id', 'DESC')->setMaxResults(1)
+            ->andWhere('message.readAt IS NOT NULL')->orderBy('message.id', \SortDirection::Descending)->setMaxResults(1)
             ->setParameter('thread', $thread)->setParameter('viewer', $viewer)->getQuery()->getOneOrNullResult();
 
         $creatorOwner = $thread->getCreator()->getOwner();
@@ -53,7 +53,7 @@ final class ChatMessageHistory
         $firstUnread = $counterpart === null ? null : $this->entityManager->createQueryBuilder()
             ->select('message.id')->from($messageClass, 'message')
             ->where('message.'.$association.' = :thread')->andWhere('message.sender = :sender')
-            ->andWhere('message.readAt IS NULL')->orderBy('message.id', 'ASC')->setMaxResults(1)
+            ->andWhere('message.readAt IS NULL')->orderBy('message.id', \SortDirection::Ascending)->setMaxResults(1)
             ->setParameter('thread', $thread)->setParameter('sender', $counterpart)
             ->getQuery()->getOneOrNullResult();
 
