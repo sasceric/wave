@@ -54,6 +54,7 @@ export default defineConfig({
   ],
   build: {
     cssCodeSplit: true,
+    manifest: 'build/manifest.json',
     outDir: '../public',
     assetsDir: 'build/assets',
     emptyOutDir: false,

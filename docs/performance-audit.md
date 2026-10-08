@@ -119,3 +119,47 @@ These changes have not been deployed; rerun production PageSpeed after deploymen
 Validation: 209 frontend tests, ESLint, production build, and diff whitespace
 checks passed. The accompanying CI migration test repair passed all 220 backend
 tests (272,598 assertions) on an isolated PostgreSQL database, plus PHPStan.
+
+
+## GA and mobile follow-up — 8 October, 21:15 CEST
+
+The user's [live mobile report](https://pagespeed.web.dev/analysis/https-wave-ba/ev4ydw8i6m?form_factor=mobile)
+scored 94 performance and 100 for accessibility, best practices and SEO, with
+4/4 applicable agent checks. LCP was 3.0 seconds, blocking time 20 ms and layout
+shift zero. These are the deployed measurements, before the change below.
+
+GA stream 16044159577 uses `G-VHWT5SS3MW`, matching the live bundle. Google's
+installation test reported “Your Google tag was detected on your website.”
+Realtime pages showed Wave home, creator and campaign page views (24 views and
+3 active users in the inspected 30-minute window, including diagnostic visits).
+The inactive-collection banner was still visible in stream settings; it was not
+confirmed cleared. The live tag uses the correct gtag Arguments queue, waits
+for analytics consent, and sends explicit SPA page views. No analytics settings
+or consent behavior were changed during this follow-up.
+
+Symfony now reads Vite's generated asset manifest to include the existing
+homepage stylesheet in the initial HTML for all six home URLs. Other routes
+retain lazy loading. This avoids waiting for the homepage JavaScript before
+requesting its CSS; Vite reuses the stylesheet instead of requesting it twice.
+A preload-only experiment was discarded because it did not improve the result.
+
+A warmed, sequential local production comparison used Lighthouse 13.5 and the
+same gzip proxy. Host benchmarks were 3799 before and 3831 after:
+
+| Mobile lab metric | Before | After |
+| --- | --- | --- |
+| Performance | 88 | 89 |
+| LCP | 3.67 s | 3.55 s |
+| Blocking time | 99 ms | 86 ms |
+| FCP | 1.72 s | 1.81 s |
+| Layout shift | 0 | 0 |
+| Accessibility / best practices / SEO | 100 / 100 / 100 | 100 / 100 / 100 |
+
+This small local improvement does not predict a production score. The mobile
+slider layout, partial next card, fonts, user uploads, compression and thumbnail
+settings are unchanged. Deploy and rerun the live report to measure the effect.
+
+Validation: 16 backend tests (781 assertions) covering SEO, all six homepage
+URLs and manifest fallbacks, 216 frontend tests, PHPStan, ESLint, the production
+build and diff whitespace checks passed. The mobile next-card preview was also
+verified visually.

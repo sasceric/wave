@@ -6,6 +6,7 @@ use App\Entity\Campaign;
 use App\Entity\Company;
 use App\Entity\Creator;
 use App\Localization\LocalizedRouteMap;
+use App\Service\FrontendAssets;
 use DateTimeImmutable;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Tools\SchemaTool;
@@ -308,6 +309,32 @@ final class SeoControllerTest extends WebTestCase
         self::assertStringContainsString('property="og:image" content="http://127.0.0.1:8000/images/share.webp"', $html);
         self::assertStringContainsString('hreflang="x-default" href="http://127.0.0.1:8000/"', $html);
         self::assertStringContainsString('"@type":"WebSite"', $html);
+    }
+
+    public function testHomepageStylesLoadEarlyWithoutLoadingThemOnDirectoryPages(): void
+    {
+        $path = tempnam(sys_get_temp_dir(), 'wave-home-styles-');
+        self::assertIsString($path);
+        try {
+            file_put_contents($path, json_encode([
+                'src/views/HomeView.vue' => ['css' => ['build/assets/HomeView-test.css']],
+            ], JSON_THROW_ON_ERROR));
+            $this->client->disableReboot();
+            static::getContainer()->set(FrontendAssets::class, new FrontendAssets($path));
+            foreach (['/', '/en/', '/hr/', '/rs/', '/me/', '/si/'] as $homepage) {
+                $this->client->request('GET', $homepage);
+                self::assertSame(200, $this->client->getResponse()->getStatusCode(), $homepage);
+                self::assertStringContainsString(
+                    'rel="stylesheet" crossorigin href="/build/assets/HomeView-test.css"',
+                    $this->client->getResponse()->getContent(),
+                );
+            }
+            $this->client->request('GET', '/en/creators');
+            self::assertResponseIsSuccessful();
+            self::assertStringNotContainsString('HomeView-test.css', $this->client->getResponse()->getContent());
+        } finally {
+            unlink($path);
+        }
     }
 
     public function testPublicLocaleCanonicalsAndAlternatesAreReciprocalAndMatchTheSitemap(): void

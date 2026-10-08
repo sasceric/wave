@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Localization\ApiMessages;
 use App\Localization\LocaleContext;
+use App\Service\FrontendAssets;
 use App\Service\SeoMetadataProvider;
 use App\Service\SiteOrigin;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
@@ -24,7 +25,7 @@ final class FrontendController
 
     #[Route('/', name: 'frontend_home', methods: ['GET'])]
     #[Route('/{path}', name: 'frontend_route', requirements: ['path' => '.*'], methods: ['GET'], priority: -100)]
-    public function __invoke(Request $request, SeoMetadataProvider $seoMetadataProvider, SiteOrigin $siteOrigin): Response
+    public function __invoke(Request $request, SeoMetadataProvider $seoMetadataProvider, SiteOrigin $siteOrigin, FrontendAssets $frontendAssets): Response
     {
         if (str_starts_with($request->getPathInfo(), '/api')) {
             $locale = LocaleContext::fromRequest($request) ?? 'bs';
@@ -60,18 +61,21 @@ final class FrontendController
                 $siteOrigin->base(),
                 $siteOrigin->url('/pwa-512.png'),
                 $this->googleSiteVerification,
+                ($seo['preloadImage'] ?? null) === '/images/banner-girl.webp' ? $frontendAssets->homepageStyles() : [],
             ),
             $seo['canonical'] === null ? Response::HTTP_NOT_FOUND : Response::HTTP_OK,
             ['Content-Type' => 'text/html; charset=UTF-8'],
         );
     }
 
+    /** @param list<string> $homepageStyles */
     private function injectSeoMetadata(
         string $html,
         array $seo,
         string $siteOrigin,
         string $defaultImage,
         string $googleSiteVerification,
+        array $homepageStyles,
     ): string
     {
         $googleSiteVerification = trim($googleSiteVerification);
@@ -88,6 +92,9 @@ final class FrontendController
 
         $head = "\n    <meta name=\"description\" content=\"".$description."\" />";
         $head .= "\n    <meta name=\"wave:origin\" content=\"".$this->escape($siteOrigin)."\" />";
+        foreach ($homepageStyles as $style) {
+            $head .= "\n    <link rel=\"stylesheet\" crossorigin href=\"".$this->escape($style)."\" />";
+        }
         $preloadImage = $seo['preloadImage'] ?? null;
         if (is_string($preloadImage) && $preloadImage !== '') {
             $responsive = $preloadImage === '/images/banner-girl.webp'

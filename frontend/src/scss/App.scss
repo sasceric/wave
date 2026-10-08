@@ -119,7 +119,7 @@
 
     > img { width: 100%; height: 100%; object-fit: cover; }
     > .wave-logo { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
-    &--large { width: 48px; height: 48px; }
+    &--large { width: 36px; height: 36px; }
   }
 
   &__name { max-width: 140px; padding-right: 10px; overflow: hidden; font-size: 13px; text-overflow: ellipsis; white-space: nowrap; }
@@ -128,13 +128,13 @@
   &__panel {
     position: absolute;
     z-index: 90;
-    top: calc(100% + 18px);
+    top: calc(100% + 12px);
     right: 0;
-    width: 300px;
+    width: 260px;
     max-width: calc(100vw - 28px);
-    padding: 16px;
+    padding: 8px;
     border: 1px solid #e0e6dd;
-    border-radius: 18px;
+    border-radius: 12px;
     background: #fffefa;
     box-shadow: 0 18px 45px rgb(31 42 40 / 18%);
 
@@ -144,22 +144,22 @@
   &__identity {
     display: flex;
     align-items: center;
-    gap: 12px;
-    margin-bottom: 8px;
-    padding-bottom: 14px;
+    gap: 9px;
+    margin-bottom: 4px;
+    padding: 2px 4px 8px;
     border-bottom: 1px solid #e0e6dd;
     > div { min-width: 0; }
-    h2 { margin: 0 0 5px; font-family: var(--serif); font-size: 19px; line-height: 1.2; }
-    p { margin: 0; color: #81908b; font-size: 13px; overflow-wrap: anywhere; }
+    h2 { margin: 0 0 2px; font-family: var(--serif); font-size: 14px; line-height: 1.2; }
+    p { margin: 0; color: #81908b; font-size: 12px; overflow-wrap: anywhere; }
   }
 
   &__item {
     width: 100%;
-    min-height: 44px;
+    min-height: 36px;
     display: flex;
     align-items: center;
-    gap: 16px;
-    padding: 10px 4px;
+    gap: 10px;
+    padding: 6px 4px;
     border: 0;
     border-radius: 6px;
     color: var(--forest);
@@ -170,16 +170,21 @@
     text-align: left;
     text-decoration: none;
     cursor: pointer;
-    > svg { flex: 0 0 auto; }
-    &--sign-out { margin-top: 12px; padding-top: 14px; border-top: 1px solid #e0e6dd; border-radius: 0; color: #db6648; }
+    > svg { width: 20px; height: 20px; flex: 0 0 auto; }
+    &--sign-out { margin-top: 6px; padding-top: 8px; border-top: 1px solid #e0e6dd; border-radius: 0; color: #db6648; }
   }
-  &:has(&__panel)::after { position: absolute; z-index: 91; top: calc(100% + 10px); right: 15px; width: 16px; height: 16px; transform: rotate(45deg); border-top: 1px solid #e0e6dd; border-left: 1px solid #e0e6dd; background: #fffefa; content: ''; }
+  &:has(&__panel)::after { position: absolute; z-index: 91; top: calc(100% + 6px); right: 15px; width: 12px; height: 12px; transform: rotate(45deg); border-top: 1px solid #e0e6dd; border-left: 1px solid #e0e6dd; background: #fffefa; content: ''; }
   &__language {
     display: grid;
-    gap: 8px;
+    gap: 4px;
     margin-top: 0;
     > span { color: #81908b; font-size: 12px; }
-    .language-switcher__menu { position: static; margin-top: 8px; box-shadow: none; }
+    .language-switcher--row {
+      .language-switcher__trigger { min-height: 36px; gap: 10px; padding: 6px 4px; }
+      .language-flag { width: 20px; }
+    }
+    .language-switcher__menu { position: static; margin-top: 4px; box-shadow: none; }
+    .language-switcher__option { padding: 6px 8px; }
   }
   &__panel { max-height: calc(100dvh - 95px); overflow-y: auto; }
   &__chevron { margin-left: auto; color: #81908b; }
@@ -192,7 +197,6 @@
   .header-user-menu {
     &__name { display: none; }
     &__trigger { position: relative; z-index: 90; }
-    &__panel { width: min(350px, calc(100vw - 28px)); }
     &__backdrop { display: block; position: fixed; z-index: 80; inset: 0; background: rgb(20 31 27 / 44%); }
   }
 }
