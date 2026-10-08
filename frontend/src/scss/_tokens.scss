@@ -9,11 +9,15 @@
   --forest: #173d36;
   --paper: #f6f2ea;
   --muted: #77847e;
+  // Text contrast variants leave the original decorative palette intact.
+  --muted-text: #5c7167;
   --surface: #e8e2da;
   --line: var(--surface);
   --sage: #e7eee7;
   --secondary: #8ea39b;
   --coral: #d98368;
+  --coral-heading: #be7058;
+  --coral-text: #a95e49;
   --gold: #f0c078;
   --serif: 'DM Serif Display', Georgia, serif;
 }

@@ -37,7 +37,7 @@ select:focus-visible {
 
 .eyebrow {
   margin: 0 0 15px;
-  color: #6b8378;
+  color: var(--muted-text);
   font-size: 10px;
   font-weight: 700;
   letter-spacing: 1.35px;
@@ -72,6 +72,6 @@ h2 {
 
 h1 em,
 h2 em {
-  color: var(--coral);
+  color: var(--coral-heading);
   font-weight: 400;
 }

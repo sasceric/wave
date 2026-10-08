@@ -12,6 +12,7 @@ import StatusMessage from '../components/shared/StatusMessage.vue'
 import FaqSection from '../components/shared/FaqSection.vue'
 import LocalizedLink from '../components/shared/LocalizedLink.vue'
 import { apiGet, apiRequest } from '../lib/api'
+import { HOME_IMAGE_SIZES } from '../lib/listingImage'
 
 const creators = ref([])
 const campaigns = ref([])
@@ -164,7 +165,7 @@ onMounted(loadHome)
     </div>
     <StatusMessage v-if="creatorsError" variant="error">{{ creatorsError }}</StatusMessage>
     <CardGrid v-else-if="creators.length || loading" kind="creator" layout="home" :aria-busy="loading">
-      <CreatorCard v-for="creator in creators" :key="creator.id" :creator="creator" />
+      <CreatorCard v-for="creator in creators" :key="creator.id" :creator="creator" :image-sizes="HOME_IMAGE_SIZES" />
       <DirectorySkeletonCard v-for="index in loading && !creators.length ? 4 : 0" :key="`loading-${index}`" kind="creator" />
       <span v-if="loading" class="sr-only" role="status">{{ t('home.loadingCreators') }}</span>
     </CardGrid>
@@ -180,7 +181,7 @@ onMounted(loadHome)
       </div>
       <StatusMessage v-if="campaignsError" variant="error">{{ campaignsError }}</StatusMessage>
       <CardGrid v-else-if="campaigns.length || loading" kind="campaign" layout="home" :aria-busy="loading">
-        <CampaignCard v-for="campaign in campaigns" :key="campaign.id" :campaign="campaign" />
+        <CampaignCard v-for="campaign in campaigns" :key="campaign.id" :campaign="campaign" :image-sizes="HOME_IMAGE_SIZES" />
         <DirectorySkeletonCard v-for="index in loading && !campaigns.length ? 4 : 0" :key="`loading-${index}`" kind="campaign" />
         <span v-if="loading" class="sr-only" role="status">{{ t('home.loadingCampaigns') }}</span>
       </CardGrid>
@@ -191,7 +192,7 @@ onMounted(loadHome)
   <section class="audience-promo">
     <article class="audience-promo__card">
       <div class="audience-promo__visual" aria-hidden="true">
-        <img src="/images/sunlit-profile.webp" alt="" loading="lazy" decoding="async" />
+        <img src="/images/sunlit-profile-480.webp" srcset="/images/sunlit-profile-480.webp 480w, /images/sunlit-profile-768.webp 768w, /images/sunlit-profile.webp 1122w" sizes="(max-width: 900px) max(53vw, 432px), max(26.5vw, 420px)" width="1122" height="1402" alt="" loading="lazy" decoding="async" />
       </div>
       <div class="audience-promo__copy">
         <p class="audience-promo__eyebrow">{{ t('home.creatorsPromoEyebrow') }}</p>
@@ -205,12 +206,12 @@ onMounted(loadHome)
         <LocalizedLink class="audience-promo__button" to="/campaigns">{{ t('home.creatorsPromoAction') }}<ArrowRight :size="21" aria-hidden="true" /></LocalizedLink>
       </div>
       <svg class="audience-promo__sketch" viewBox="0 0 70 70" aria-hidden="true"><path d="M48 4 15 48 43 21M15 16 12 51 50 35M28 60 61 39" /></svg>
-      <div v-if="campaigns.length" class="audience-promo__campaign"><CampaignCard :campaign="campaigns[0]" /></div>
+      <div v-if="campaigns.length" class="audience-promo__campaign"><CampaignCard :campaign="campaigns[0]" image-sizes="220px" /></div>
     </article>
 
     <article class="audience-promo__card audience-promo__card--brands">
       <div class="audience-promo__visual" aria-hidden="true">
-        <img src="/images/minimalist-wave.webp" alt="" loading="lazy" decoding="async" />
+        <img src="/images/minimalist-wave-480.webp" srcset="/images/minimalist-wave-480.webp 480w, /images/minimalist-wave-768.webp 768w, /images/minimalist-wave.webp 1122w" sizes="(max-width: 900px) max(53vw, 432px), max(26.5vw, 420px)" width="1122" height="1402" alt="" loading="lazy" decoding="async" />
       </div>
       <div class="audience-promo__copy">
         <p class="audience-promo__eyebrow">{{ t('home.brandsPromoEyebrow') }}</p>
@@ -247,7 +248,7 @@ onMounted(loadHome)
           <div class="step__visual">
             <span class="step__icon" aria-hidden="true"><component :is="icon" :size="30" stroke-width="1.7" /></span>
             <span class="step__number" aria-hidden="true">0{{ index + 1 }}</span>
-            <img :src="`/images/home-step-${['match', 'brief', 'create'][index]}-320.webp`" alt="" loading="lazy" decoding="async" width="320" height="240" />
+            <img :src="`/images/home-step-${['match', 'brief', 'create'][index]}-160.webp`" :srcset="`/images/home-step-${['match', 'brief', 'create'][index]}-160.webp 160w, /images/home-step-${['match', 'brief', 'create'][index]}-320.webp 320w`" sizes="156px" alt="" loading="lazy" decoding="async" width="320" height="240" />
             <div v-if="index === 1" class="step__brief" aria-hidden="true">
               <strong>{{ t('home.briefTitle') }}</strong>
               <span v-for="key in ['Brief', 'Budget', 'Deadline', 'Deliverables']" :key="key"><CircleCheck :size="11" />{{ t(`home.brief${key}`) }}</span>
@@ -281,7 +282,7 @@ onMounted(loadHome)
       </div>
       <div class="contact-visual" aria-hidden="true">
         <span class="contact-visual__sun"></span>
-        <img src="/images/banner-girl.webp" alt="" loading="lazy" decoding="async" />
+        <img src="/images/banner-girl-600.webp" srcset="/images/banner-girl-360.webp 360w, /images/banner-girl-600.webp 600w, /images/banner-girl-900.webp 900w, /images/banner-girl.webp 1086w" sizes="(max-width: 760px) 255px, (max-width: 1100px) 547px, clamp(547px, 72svh, 691px)" width="1086" height="1448" alt="" loading="lazy" decoding="async" />
         <p class="contact-visual__stamp">
           <span>{{ t('home.heroStampLead') }}</span>
           <span>{{ t('home.heroStampEmphasis') }}</span>
@@ -428,7 +429,7 @@ onMounted(loadHome)
   <section class="home-faq" aria-labelledby="faq-title">
     <div class="home-faq__inner page-width">
       <div class="home-faq__visual home-faq__visual--creator" aria-hidden="true">
-        <img src="/images/home-faq-creator.webp" alt="" loading="lazy" decoding="async" />
+        <img src="/images/home-faq-creator-320.webp" srcset="/images/home-faq-creator-320.webp 320w, /images/home-faq-creator-480.webp 480w, /images/home-faq-creator.webp 700w" sizes="(max-width: 1100px) calc((100vw - 120px) * .233), (max-width: 1464px) calc((100vw - 160px) / 3.6), 363px" width="700" height="875" alt="" loading="lazy" decoding="async" />
         <p class="home-faq__note">{{ t('home.faqCreatorNote') }}</p>
       </div>
       <FaqSection
@@ -442,7 +443,7 @@ onMounted(loadHome)
       </FaqSection>
       <div class="home-faq__visual home-faq__visual--desk" aria-hidden="true">
         <p class="home-faq__note">{{ t('home.faqDeskNote') }}</p>
-        <img src="/images/home-step-match.webp" alt="" loading="lazy" decoding="async" />
+        <img src="/images/home-step-match-320.webp" srcset="/images/home-step-match-320.webp 320w, /images/home-step-match.webp 500w" sizes="(max-width: 1100px) calc((100vw - 120px) * .233), (max-width: 1464px) calc((100vw - 160px) / 3.6), 363px" width="500" height="375" alt="" loading="lazy" decoding="async" />
       </div>
     </div>
   </section>

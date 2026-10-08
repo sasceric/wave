@@ -172,10 +172,10 @@ onBeforeUnmount(() => {
   <form ref="form" class="header-creator-search" :class="{ 'is-expanded': expanded, 'is-open': open }" role="search" @submit.prevent="handleSubmit">
     <label class="header-creator-search__field">
       <Search :size="17" aria-hidden="true" />
-      <input ref="input" v-model="query" type="search" maxlength="200" :placeholder="t('globalSearch.placeholder')" :aria-label="t('globalSearch.placeholder')" :aria-expanded="open" :aria-controls="open ? panelId : undefined" @focus="handleInputFocus" @keydown.down.prevent="focusResult" />
+      <input ref="input" v-model="query" type="search" maxlength="200" :placeholder="t('globalSearch.placeholder')" :aria-label="t('globalSearch.placeholder')" :aria-controls="open ? panelId : undefined" @focus="handleInputFocus" @keydown.down.prevent="focusResult" />
     </label>
     <SingleSelect v-model="type" class="header-creator-search__type" :options="options" :label="t('globalSearch.type')" :show-label="false" />
-    <button class="header-creator-search__submit" type="submit" :aria-label="t('globalSearch.search')"><Search :size="19" aria-hidden="true" /></button>
+    <button class="header-creator-search__submit" type="submit" :aria-label="t('globalSearch.search')" :aria-expanded="open" :aria-controls="open ? panelId : undefined"><Search :size="19" aria-hidden="true" /></button>
     <button v-if="mobile && expanded" class="header-creator-search__close" type="button" :aria-label="t('app.closeSearch')" @click="closeSearch(true)"><X :size="18" aria-hidden="true" /></button>
   </form>
   <Teleport to="body">

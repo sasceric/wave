@@ -57,3 +57,15 @@ test('broken images settle on a fallback and recover when a new source arrives',
   await vue.nextTick()
   assert.equal(state.state.value, 'loading')
 })
+
+test('the built-in creator placeholder has local responsive sources without rewriting other images', () => {
+  const image = listingImage(null, '/images/creator-placeholder.webp')
+  assert.equal(image.src, '/images/creator-placeholder-480.webp')
+  assert.equal(image.width, 1373)
+  assert.equal(image.height, 1145)
+  assert.ok(image.srcset.includes('/images/creator-placeholder-320.webp 320w'))
+  assert.ok(image.srcset.includes('/images/creator-placeholder.webp 1373w'))
+  const campaign = listingImage(null, '/images/share.webp')
+  assert.equal(campaign.src, '/images/share-320.webp')
+  assert.ok(campaign.srcset.includes('/images/share-640.webp 640w'))
+})

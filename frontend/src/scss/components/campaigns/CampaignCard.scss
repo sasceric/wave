@@ -165,7 +165,7 @@
     min-height: 18px;
     margin: 0 0 10px;
     overflow: hidden;
-    color: #78847d;
+    color: var(--muted-text);
     font-size: 11px;
     line-height: 1.5;
     -webkit-box-orient: vertical;
@@ -193,7 +193,7 @@
     flex-wrap: wrap;
     align-items: center;
     gap: 9px 14px;
-    color: #6e7b74;
+    color: var(--muted-text);
     font-size: 11px;
   }
 
@@ -215,7 +215,7 @@
     display: grid;
     gap: 10px;
     padding: 12px 10px 10px;
-    color: #859088;
+    color: var(--muted-text);
     font-size: 10px;
   }
 

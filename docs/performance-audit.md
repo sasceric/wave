@@ -68,3 +68,54 @@ are intentional. Historical logs remain intact; errors are not filtered away.
 Production logs and cache permissions were not rechecked on the live server.
 The LastPass WebSocket failure is from an extension; the install-banner message
 is expected when the app stores the install prompt for its existing install button.
+
+## Follow-up audit — 8 October, 17:48 CEST
+
+A fresh [production PageSpeed report](https://pagespeed.web.dev/analysis/https-wave-ba/1nm37vpr01?form_factor=desktop)
+scored 95 performance on desktop and mobile. Desktop scored 91 accessibility
+and passed 3/4 applicable agent checks; mobile scored 96 accessibility and passed
+4/4. Both scored 100 best practices and SEO. Desktop's failing agent check was
+an unsupported `aria-expanded` attribute on the header search input.
+
+The expansion state now belongs to the search button. The search input retains
+its association with the results panel, and keyboard result focus and Escape
+behavior remain intact. Desktop and mobile search interactions were checked.
+
+Homepage cards now declare their actual four-column desktop and horizontal
+mobile sizes. Contact, audience and FAQ illustrations use responsive local
+variants; small journey illustrations and built-in placeholders also have
+smaller sources. The existing original images and fonts are unchanged. New WebP
+variants were resized proportionally using cwebp quality 82; no image was upscaled.
+
+The six exact brand tokens remain unchanged. Text-only contrast variants are
+`--muted-text: #5C7167`, `--coral-heading: #BE7058` and `--coral-text: #A95E49`.
+They address faint captions and accent text; artwork retains the original palette.
+The company audience action now uses the same original forest button style as
+the creator action. Contrast was evaluated against the
+[WCAG text contrast thresholds](https://www.w3.org/WAI/WCAG22/Understanding/contrast-minimum.html).
+
+Final Lighthouse 13.5 results used the compiled app and a temporary production-mode
+Symfony server behind local gzip compression, with email disabled:
+
+| Check | Desktop | Mobile |
+| --- | --- | --- |
+| Performance | 99 | 90 |
+| Accessibility | 100 | 100 |
+| Best practices | 100 | 100 |
+| SEO | 100 | 100 |
+| Applicable agent checks | 4/4 | 4/4 |
+| Largest contentful paint | 0.8 s | 3.4 s |
+| Total blocking time | 0 ms | 90 ms |
+| Layout shift | 0 | 0.001 |
+| Transferred resources | 661 KiB | 691 KiB |
+
+A separate same-server mobile comparison before the final placeholder changes
+improved performance from 82 to 85, LCP from 4.4 s to 4.1 s, and blocking time
+from 160 ms to 100 ms; host benchmark indexes were 3850 and 3827. This static
+comparison omitted Symfony metadata and is only a performance comparison.
+Local scores do not establish a production improvement or a guaranteed 100.
+These changes have not been deployed; rerun production PageSpeed after deployment.
+
+Validation: 209 frontend tests, ESLint, production build, and diff whitespace
+checks passed. The accompanying CI migration test repair passed all 220 backend
+tests (272,598 assertions) on an isolated PostgreSQL database, plus PHPStan.
