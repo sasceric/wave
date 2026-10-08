@@ -88,6 +88,8 @@ final class OAuthRegistrationFlowTest extends WebTestCase
         $this->client->request('GET', '/api/auth/me?locale=en');
         self::assertResponseIsSuccessful();
         self::assertSame('creator@example.test', $this->payload()['data']['email']);
+        self::assertTrue($this->payload()['data']['emailVerified']);
+        self::assertFalse($this->payload()['data']['approved']);
     }
 
     private function payload(): array

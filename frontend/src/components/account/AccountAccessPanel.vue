@@ -208,11 +208,11 @@ async function submit() {
     const endpoint = isSocialRegistration
       ? '/auth/oauth/complete'
       : `/auth/${isRegistration ? 'register' : 'login'}`
-    await apiRequest(endpoint, {
+    const response = await apiRequest(endpoint, {
       method: 'POST',
       body,
     })
-    emit('authenticated')
+    emit('authenticated', response.data)
   } catch (cause) {
     error.value = cause.message
   } finally {

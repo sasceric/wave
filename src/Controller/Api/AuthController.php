@@ -54,7 +54,10 @@ final class AuthController extends AbstractController
             return new JsonResponse(['error' => ApiMessages::get('authentication_required', $locale)], 401);
         }
 
-        return new JsonResponse(['data' => UserResource::fromEntity($user, $locale, MarketplaceCategoryLabels::forLocale($entityManager, $locale))]);
+        $response = new JsonResponse(['data' => UserResource::fromEntity($user, $locale, MarketplaceCategoryLabels::forLocale($entityManager, $locale))]);
+        $response->headers->set('Cache-Control', 'private, no-store');
+
+        return $response;
     }
 
     // Checking whether a browser has a session is a successful read for guests.

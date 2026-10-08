@@ -6,6 +6,7 @@ use App\Account\UserActionTokenManager;
 use App\Account\EmailTemplateRenderer;
 use App\Entity\Company;
 use App\Entity\Creator;
+use App\Entity\OAuthIdentity;
 use App\Entity\User;
 use DateTimeImmutable;
 use Doctrine\ORM\EntityManagerInterface;
@@ -57,6 +58,16 @@ final class EmailAccountFlowTest extends WebTestCase
         $this->assertBrandedEmail(0, 'Registracija za Wave je zaprimljena', 'Potvrdi e-mail adresu', $originalToken);
         self::assertEmailHtmlBodyContains(self::getMailerMessage(), 'račun će čekati odobrenje');
 
+        foreach (['/api/auth/me?locale=bs', '/api/auth/session?locale=bs'] as $endpoint) {
+            $this->client->request('GET', $endpoint);
+            self::assertResponseIsSuccessful();
+            $cacheControl = $this->client->getResponse()->headers->get('Cache-Control') ?? '';
+            self::assertStringContainsString('no-store', $cacheControl);
+            self::assertStringContainsString('private', $cacheControl);
+            self::assertFalse($this->payload()['data']['emailVerified']);
+            self::assertFalse($this->payload()['data']['approved']);
+        }
+
         $this->jsonRequest('POST', '/api/auth/verification-email', [], $registration['csrfToken']);
         self::assertResponseIsSuccessful();
         self::assertEmailCount(1);
@@ -76,6 +87,59 @@ final class EmailAccountFlowTest extends WebTestCase
             ->getRepository(User::class)->findOneBy(['email' => 'verify@example.test']);
         self::assertTrue($verifiedUser->isEmailVerified());
         self::assertFalse($verifiedUser->isApproved());
+    }
+
+    public function testPasswordRegistrationAfterDeletingGoogleAccountStartsUnverified(): void
+    {
+        $entityManager = static::getContainer()->get(EntityManagerInterface::class);
+        $googleUser = new User('recreated@example.test', 'ROLE_CREATOR');
+        $googleUser->setPassword('unused-test-hash');
+        $googleUser->setEmailVerified(true);
+        $googleUser->setApproved(false);
+        $googleUser->setCreator(new Creator('google-creator', 'Google Creator', 'Travel', 'Sarajevo', '', [], []));
+        $admin = new User('admin@example.test', 'ROLE_COMPANY');
+        $admin->setPassword('unused-test-hash');
+        $admin->setAdmin(true);
+        $entityManager->persist($googleUser);
+        $entityManager->persist(new OAuthIdentity($googleUser, 'google', 'deleted-google-subject'));
+        $entityManager->persist($admin);
+        $entityManager->flush();
+        $deletedId = $googleUser->getId();
+
+        $this->client->loginUser($admin, 'main');
+        $this->jsonRequest('DELETE', '/api/admin/registrations/bulk-delete', ['ids' => [$deletedId]], $this->csrfToken());
+        self::assertResponseIsSuccessful();
+        self::assertSame(1, $this->payload()['data']['deleted']);
+        $entityManager = static::getContainer()->get(EntityManagerInterface::class);
+        self::assertNull($entityManager->find(User::class, $deletedId));
+        self::assertSame(0, $entityManager->getRepository(OAuthIdentity::class)->count([]));
+
+        $this->jsonRequest('POST', '/api/auth/register', [
+            'accountType' => 'creator',
+            'email' => 'recreated@example.test',
+            'password' => 'a-long-passphrase-for-wave',
+            'firstName' => 'Password',
+            'lastName' => 'Creator',
+            'phone' => '+387 61 123 456',
+            'category' => 'Travel',
+            'city' => 'Sarajevo',
+            'country' => 'BA',
+        ], $this->csrfToken());
+        self::assertResponseStatusCodeSame(201);
+        $registration = $this->payload()['data'];
+        self::assertNotSame($deletedId, $registration['id']);
+        self::assertFalse($registration['emailVerified']);
+        self::assertFalse($registration['approved']);
+        self::assertEmailCount(1);
+        $this->assertBrandedEmail(0, 'Registracija za Wave je zaprimljena', 'Potvrdi e-mail adresu', $this->tokenFromMessage(0));
+
+        foreach (['/api/auth/me?locale=bs', '/api/auth/session?locale=bs'] as $endpoint) {
+            $this->client->request('GET', $endpoint);
+            self::assertResponseIsSuccessful();
+            self::assertSame($registration['id'], $this->payload()['data']['id']);
+            self::assertFalse($this->payload()['data']['emailVerified']);
+            self::assertFalse($this->payload()['data']['approved']);
+        }
     }
 
     public function testPasswordResetResponseDoesNotRevealAccountAndChangesPassword(): void

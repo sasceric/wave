@@ -19,6 +19,7 @@ async function getCsrfToken(locale = i18n.global.locale.value) {
   const response = await fetch(localizedPath('/api/auth/csrf', locale), {
     headers: { Accept: 'application/json' },
     credentials: 'same-origin',
+    cache: 'no-store',
   })
   const payload = await response.json()
   if (!response.ok || typeof payload.csrfToken !== 'string') {
@@ -39,6 +40,7 @@ export async function apiRequest(path, { method = 'GET', body, locale } = {}) {
     method,
     headers,
     credentials: 'same-origin',
+    cache: path.startsWith('/auth/') ? 'no-store' : 'default',
     body: body === undefined ? undefined : JSON.stringify(body),
   })
 

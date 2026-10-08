@@ -106,6 +106,7 @@ const offerForms = ref({})
 const applicantDialog = ref(null)
 const selectedApplication = ref(null)
 let noticeTimeout = null
+let dashboardRequestId = 0
 const campaignPage = computed(() => route.meta.accountCampaignPage ?? 'list')
 const selectedCampaign = computed(() => campaigns.value.find((campaign) => campaign.slug === route.params.slug) ?? null)
 const selectedCampaignApplications = computed(() => selectedCampaign.value
@@ -126,6 +127,7 @@ watch(notice, (message) => {
 })
 
 onBeforeUnmount(() => {
+  dashboardRequestId += 1
   if (noticeTimeout) {
     window.clearTimeout(noticeTimeout)
   }
@@ -139,6 +141,7 @@ watch(catalogError, (value) => {
 
 watch(currentUser, (authenticatedUser) => {
   if (!authenticatedUser) {
+    dashboardRequestId += 1
     user.value = null
     profile.value = null
     editingProfile.value = false
@@ -215,9 +218,9 @@ function cancelProfileEdit() {
   notice.value = ''
 }
 
-async function handleAuthenticated() {
+async function handleAuthenticated(authenticatedUser) {
   document.activeElement?.blur()
-  await loadDashboard()
+  await loadDashboard(authenticatedUser)
   await nextTick()
   // Login replaces this view in place, so the login form's scroll position survives.
   window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
@@ -281,12 +284,14 @@ function incompleteProfileTab() {
   return ''
 }
 
-async function loadDashboard() {
+async function loadDashboard(authenticatedUser = null) {
+  const requestId = ++dashboardRequestId
   dashboardLoading.value = true
   if (!user.value) dashboardReady.value = false
   let pendingBookmarkRedirect = null
   try {
-    const response = await apiGet('/auth/me')
+    const response = authenticatedUser ? { data: authenticatedUser } : await apiGet('/auth/me')
+    if (requestId !== dashboardRequestId) return
     user.value = response.data
     setCurrentUser(response.data)
     profile.value = structuredClone(response.data.profile)
@@ -307,12 +312,14 @@ async function loadDashboard() {
     const canAccessMarketplace = response.data.approved || response.data.isAdmin
     if (route.query.bookmark && canAccessMarketplace) {
       pendingBookmarkRedirect = await completePendingBookmark(response.data)
+      if (requestId !== dashboardRequestId) return
     }
     if (user.value.accountType === 'creator') {
       if (isAccountTab(route.query.tab)) {
         accountTab.value = route.query.tab
       } else if (typeof route.query.tab === 'string' && LEGACY_ACCOUNT_TABS[route.query.tab]) {
         await router.replace({ name: localizedRouteName(LEGACY_ACCOUNT_TABS[route.query.tab], locale.value) })
+        if (requestId !== dashboardRequestId) return
         accountTab.value = 'about'
       } else {
         accountTab.value = 'about'
@@ -330,6 +337,7 @@ async function loadDashboard() {
           apiGet('/me/invitations'),
           loadCampaignBookmarks(),
         ])
+        if (requestId !== dashboardRequestId) return
         applications.value = applicationResponse.data
         offers.value = offerResponse.data
         invitations.value = invitationResponse.data
@@ -346,10 +354,12 @@ async function loadDashboard() {
       }
       if (canAccessMarketplace) {
         const campaignResponse = await apiGet('/me/campaigns')
+        if (requestId !== dashboardRequestId) return
         campaigns.value = campaignResponse.data
         const applicationResponses = await Promise.all(
           campaigns.value.map((campaign) => apiGet(`/company/campaigns/${encodeURIComponent(campaign.slug)}/applications`)),
         )
+        if (requestId !== dashboardRequestId) return
         companyApplications.value = applicationResponses.flatMap((response) => response.data)
         if (selectedApplication.value) {
           selectedApplication.value = companyApplications.value.find(
@@ -367,11 +377,13 @@ async function loadDashboard() {
     }
     if (canAccessMarketplace) {
       const inquiryResponse = await apiGet('/me/inquiries')
+      if (requestId !== dashboardRequestId) return
       inquiries.value = inquiryResponse.data
     } else {
       inquiries.value = []
     }
   } catch (cause) {
+    if (requestId !== dashboardRequestId) return
     if (cause.status === 401) {
       user.value = null
       profile.value = null
@@ -381,10 +393,12 @@ async function loadDashboard() {
     }
     error.value = cause.message
   } finally {
-    dashboardLoading.value = false
-    dashboardReady.value = true
-    if (pendingBookmarkRedirect) {
-      await router.replace(pendingBookmarkRedirect)
+    if (requestId === dashboardRequestId) {
+      dashboardLoading.value = false
+      dashboardReady.value = true
+      if (pendingBookmarkRedirect) {
+        await router.replace(pendingBookmarkRedirect)
+      }
     }
   }
 }
