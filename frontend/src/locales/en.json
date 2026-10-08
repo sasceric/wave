@@ -224,6 +224,15 @@
     "notifications": "Notifications",
     "noNotifications": "No notifications yet. New updates will appear here.",
     "messages": "Messages",
+    "showAllMessages": "Show all messages",
+    "closeMessages": "Close messages",
+    "unreadMessages": "Unread messages: {count}",
+    "inboxGroups": {
+      "today": "Today",
+      "yesterday": "Yesterday",
+      "thisWeek": "This week",
+      "earlier": "Earlier"
+    },
     "installApp": "Install Wave as an app",
     "installHint": "Install Wave for a quick, app-like experience.",
     "installIosHint": "On iPhone, tap Share, then Add to Home Screen.",

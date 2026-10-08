@@ -305,6 +305,14 @@ the authorized metadata of an unloaded chat. Event-driven catch-up refreshes the
 head while retaining older rows/cursors; no inbox polling was introduced. Local
 thread revisions prevent a slow batch from undoing live previews or read receipts.
 
+The desktop header lazy-loads `MessagesPanel.vue` on demand using
+`/api/me/inbox?limit=5&filter=all`. It groups the latest chats by local calendar
+date, displays each thread's unread count, and refreshes from existing inbox/live
+events without polling or read acknowledgements. Individual rows open explicit
+conversation/inquiry links. “Show all messages” and direct inbox navigation clear
+the selection immediately; only an explicit chat link opens message history.
+The mobile notification panel uses a compact header with icon controls.
+
 Migration `Version20261006210000` adds conversation activity and latest inquiry
 message indexes. Normal GitHub deployment applies it; no environment, scheduler or
 worker changes are needed. Validate against PostgreSQL. Further work remains on

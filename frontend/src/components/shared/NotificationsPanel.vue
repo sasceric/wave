@@ -61,9 +61,9 @@ function relativeTime(date) {
 <template>
   <section id="header-notifications-panel" ref="panel" class="notifications-panel" role="dialog" :aria-modal="mobile || undefined" aria-labelledby="notifications-panel-title" @keydown="trapFocus" @keydown.esc.stop.prevent="emit('close')">
     <header class="notifications-panel__heading">
-      <button class="notifications-panel__close" type="button" :aria-label="t('app.closeNotifications')" @click="emit('close')"><X :size="24" aria-hidden="true" /></button>
       <h2 id="notifications-panel-title" ref="heading" tabindex="-1">{{ t('app.notifications') }}</h2>
-      <button v-if="!disabled" class="notifications-panel__read" type="button" :disabled="markingRead || !unread" @click="emit('read-all')">{{ t('app.markAllRead') }}<Check :size="20" aria-hidden="true" /></button>
+      <button v-if="!disabled" class="notifications-panel__read" type="button" :aria-label="t('app.markAllRead')" :title="t('app.markAllRead')" :disabled="markingRead || !unread" @click="emit('read-all')"><span>{{ t('app.markAllRead') }}</span><Check :size="16" aria-hidden="true" /></button>
+      <button class="notifications-panel__close" type="button" :aria-label="t('app.closeNotifications')" @click="emit('close')"><X :size="20" aria-hidden="true" /></button>
     </header>
     <p v-if="error" class="notifications-panel__error" role="alert">{{ error }}</p>
     <div v-if="disabled" class="notifications-panel__disabled">

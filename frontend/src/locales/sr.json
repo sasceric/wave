@@ -225,6 +225,15 @@
     "notifications": "Obaveštenja",
     "noNotifications": "Još nema obaveštenja. Nova će se pojaviti ovde.",
     "messages": "Poruke",
+    "showAllMessages": "Prikaži sve poruke",
+    "closeMessages": "Zatvori poruke",
+    "unreadMessages": "Nepročitane poruke: {count}",
+    "inboxGroups": {
+      "today": "Danas",
+      "yesterday": "Juče",
+      "thisWeek": "Ove nedelje",
+      "earlier": "Ranije"
+    },
     "installApp": "Инсталирај Wave као апликацију",
     "installHint": "Инсталирај Wave за брзо искуство као у апликацији.",
     "installIosHint": "На iPhone-у додирни Дели, а затим Додај на почетни екран.",

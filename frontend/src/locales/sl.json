@@ -225,6 +225,15 @@
     "notifications": "Obvestila",
     "noNotifications": "Za zdaj še ni obvestil. Nova se bodo prikazala tukaj.",
     "messages": "Sporočila",
+    "showAllMessages": "Prikaži vsa sporočila",
+    "closeMessages": "Zapri sporočila",
+    "unreadMessages": "Neprebrana sporočila: {count}",
+    "inboxGroups": {
+      "today": "Danes",
+      "yesterday": "Včeraj",
+      "thisWeek": "Ta teden",
+      "earlier": "Prej"
+    },
     "installApp": "Namesti Wave kot aplikacijo",
     "installHint": "Namesti Wave za hitro izkušnjo, podobno aplikaciji.",
     "installIosHint": "V iPhonu tapni Deli in nato Dodaj na začetni zaslon.",

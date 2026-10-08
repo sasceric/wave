@@ -15,6 +15,35 @@ const page = (data, cursor = null) => ({ data, meta: { hasMore: Boolean(cursor),
 const modules = (apiGet) => ({ '../lib/api': { apiGet, apiRequest: async () => {}, formatDate: () => '', formatMoney: () => '' } })
 const settle = () => new Promise((resolve) => setImmediate(resolve))
 
+test('opening the inbox without a chat query leaves all chats unselected and unread', async () => {
+  const requests = []
+  const { state } = await setupView('../src/views/MessagesView.vue', modules(async path => {
+    requests.push(path)
+    return page([card(1), card(2, 'inquiry')])
+  }))
+  await state.loadInbox()
+  assert.deepEqual(requests, ['/me/inbox?limit=30&filter=all'])
+  assert.equal(state.selectedThread.value, null)
+  assert.equal(state.conversationMessages.value.length, 0)
+  assert.equal(state.threads.value[0].unreadCount, 1)
+})
+
+test('showing all messages clears a previously selected chat and its history', async () => {
+  let finish
+  const { state } = await setupView('../src/views/MessagesView.vue', modules(() => new Promise(resolve => { finish = resolve })))
+  state.selectedConversationId.value = 1
+  state.selectedDetails.value = card(1)
+  state.conversationMessages.value = [{ id: 1, body: 'Previously selected' }]
+  const loading = state.loadInbox()
+  // Clear before a slow inbox response; the old chat must not acknowledge new messages.
+  assert.equal(state.selectedThread.value, null)
+  assert.equal(state.conversationMessages.value.length, 0)
+  finish(page([card(1)]))
+  await loading
+  assert.equal(state.selectedThread.value, null)
+  assert.equal(state.conversationMessages.value.length, 0)
+})
+
 test('the campaign brief waits for full thread metadata and survives summary-only inbox refreshes', async () => {
   let finishMetadata
   const { state } = await setupView('../src/views/MessagesView.vue', modules((path) => {

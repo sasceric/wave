@@ -29,6 +29,7 @@ import { localizedPath } from './routePaths'
 const AccountSidebar = defineAsyncComponent(() => import('./components/account/AccountSidebar.vue'))
 const SuccessModal = defineAsyncComponent(() => import('./components/shared/SuccessModal.vue'))
 const NotificationsPanel = defineAsyncComponent(() => import('./components/shared/NotificationsPanel.vue'))
+const MessagesPanel = defineAsyncComponent(() => import('./components/shared/MessagesPanel.vue'))
 
 const route = useRoute()
 const router = useRouter()
@@ -60,6 +61,8 @@ const accountImage = computed(() => currentUser.value?.profile?.avatarUrl || cur
 const signingOut = ref(false)
 const notificationsMenuOpen = ref(false)
 const notificationsMenu = ref(null)
+const messagesMenuOpen = ref(false)
+const messagesMenu = ref(null)
 const notifications = ref([])
 const unreadNotificationTotal = ref(0)
 const notificationsLoaded = ref(false)
@@ -137,6 +140,7 @@ watch(() => route.fullPath, () => {
   mobileAccountSidebarOpen.value = false
   authMenuOpen.value = false
   notificationsMenuOpen.value = false
+  messagesMenuOpen.value = false
   resetMobileChrome()
   if (route.meta.routeName === 'messages' && currentUser.value) {
     void loadNotifications()
@@ -156,6 +160,7 @@ watch(() => route.path, (path) => {
 watch(currentUser, (user, previousUser) => {
   mobileAccountSidebarOpen.value = false
   authMenuOpen.value = false
+  messagesMenuOpen.value = false
   if (user?.id !== previousUser?.id) {
     if (user && previousUser?.id) void updateAppBadge(0)
     closeRealtime()
@@ -284,6 +289,7 @@ onMounted(() => {
   document.addEventListener('pointerdown', closeMobileMenuOnOutsideClick)
   document.addEventListener('pointerdown', closeAuthMenuOnOutsideClick)
   document.addEventListener('pointerdown', closeNotificationsOnOutsideClick)
+  document.addEventListener('pointerdown', closeMessagesOnOutsideClick)
 })
 onBeforeUnmount(() => {
   footerMobileBreakpoint.removeEventListener('change', handleFooterBreakpointChange)
@@ -302,6 +308,7 @@ onBeforeUnmount(() => {
   document.removeEventListener('pointerdown', closeMobileMenuOnOutsideClick)
   document.removeEventListener('pointerdown', closeAuthMenuOnOutsideClick)
   document.removeEventListener('pointerdown', closeNotificationsOnOutsideClick)
+  document.removeEventListener('pointerdown', closeMessagesOnOutsideClick)
 })
 
 function refreshAppBadge() {
@@ -718,6 +725,7 @@ async function openNewsletterSignup({ website = '' } = {}) {
 
 function handleFooterBreakpointChange(event) {
   isMobileFooter.value = event.matches
+  if (event.matches) messagesMenuOpen.value = false
   mobileFooterSectionsOpen.value = {
     explore: false,
     legal: false,
@@ -839,6 +847,7 @@ async function toggleAuthMenu() {
   resetMobileChrome()
   authMenuOpen.value = !authMenuOpen.value
   notificationsMenuOpen.value = false
+  messagesMenuOpen.value = false
   if (authMenuOpen.value) {
     await nextTick()
     authMenu.value?.querySelector('.header-user-menu__item')?.focus()
@@ -848,6 +857,7 @@ async function toggleAuthMenu() {
 function toggleNotifications() {
   resetMobileChrome()
   authMenuOpen.value = false
+  messagesMenuOpen.value = false
   notificationsMenuOpen.value = !notificationsMenuOpen.value
   if (notificationsMenuOpen.value) void loadNotifications()
 }
@@ -871,6 +881,24 @@ function closeNotificationsOnOutsideClick(event) {
   }
 }
 
+function toggleMessages() {
+  resetMobileChrome()
+  authMenuOpen.value = false
+  notificationsMenuOpen.value = false
+  messagesMenuOpen.value = !messagesMenuOpen.value
+}
+
+function closeMessages() {
+  messagesMenuOpen.value = false
+  messagesMenu.value?.querySelector('.header-messages__trigger')?.focus()
+}
+
+function closeMessagesOnOutsideClick(event) {
+  if (messagesMenu.value && event.target instanceof Node && !messagesMenu.value.contains(event.target)) {
+    messagesMenuOpen.value = false
+  }
+}
+
 function closeAuthMenuAndRestoreFocus() {
   authMenuOpen.value = false
   authMenuTrigger.value?.focus()
@@ -880,6 +908,7 @@ function openSidebarNotifications() {
   if (!currentUser.value) return
   mobileAccountSidebarOpen.value = false
   resetMobileChrome()
+  messagesMenuOpen.value = false
   notificationsMenuOpen.value = true
   void loadNotifications()
 }
@@ -984,11 +1013,27 @@ async function signOut() {
               @load-more="loadMoreNotifications"
             />
           </div>
+          <div v-if="currentUser && !isMobileFooter" ref="messagesMenu" class="header-messages" @keydown.esc.stop.prevent="closeMessages">
+            <button
+              class="header-messages__trigger"
+              type="button"
+              :class="{ 'is-active': route.meta.routeName === 'messages' }"
+              :aria-label="unreadMessageCount ? `${t('app.messages')} (${unreadMessageCount})` : t('app.messages')"
+              aria-haspopup="dialog"
+              :aria-controls="messagesMenuOpen ? 'header-messages-panel' : undefined"
+              :aria-expanded="messagesMenuOpen"
+              @click="toggleMessages"
+            >
+              <MessageCircle :size="19" stroke-width="1.8" aria-hidden="true" />
+              <span v-if="unreadMessageCount" class="header-messages__badge" aria-hidden="true">{{ unreadMessageCount > 99 ? '99+' : unreadMessageCount }}</span>
+            </button>
+            <MessagesPanel v-if="messagesMenuOpen" :user="currentUser" @close="closeMessages" />
+          </div>
           <LocalizedLink
-            v-if="currentUser"
+            v-else-if="currentUser"
             class="header-messages__trigger"
             :class="{ 'is-active': route.meta.routeName === 'messages' }"
-            :to="{ name: 'messages' }"
+            :to="{ name: 'messages', query: {} }"
             :aria-label="unreadMessageCount ? `${t('app.messages')} (${unreadMessageCount})` : t('app.messages')"
             :title="t('app.messages')"
           >

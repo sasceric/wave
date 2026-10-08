@@ -510,6 +510,9 @@ async function loadInboxPage(refresh = false) {
 async function loadInbox() {
   const openVersion = ++inboxOpenVersion
   messagesRequestVersion += 1
+  if (route.query.conversation === undefined && route.query.inquiry === undefined && !pendingStart.value) {
+    backToInbox(false)
+  }
   loading.value = true
   error.value = ''
   authRequired.value = false
@@ -539,11 +542,6 @@ async function loadInbox() {
         await loadPendingDetails()
       }
       return
-    }
-    if (threads.value.length && !isMobileView.value) {
-      await selectConversation(threads.value[0])
-    } else {
-      backToInbox(false)
     }
   } catch (cause) {
     if (!unmounted && openVersion === inboxOpenVersion) handleLoadError(cause)
