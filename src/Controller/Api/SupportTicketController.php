@@ -6,6 +6,9 @@ use App\Account\EmailTemplateRenderer;
 use App\Api\ApiAccess;
 use App\Api\JsonPayload;
 use App\Entity\SupportTicket;
+use App\Entity\SupportTicketMessage;
+use App\Entity\User;
+use App\Support\TicketAlerts;
 use App\Localization\ApiMessages;
 use App\Localization\LocaleContext;
 use App\Localization\LocalizedRouteMap;
@@ -17,10 +20,8 @@ use Psr\Log\LoggerInterface;
 use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\DependencyInjection\Attribute\Target;
-use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpFoundation\ResponseHeaderBag;
 use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\Mime\Address;
 use Symfony\Component\Mime\Email;
@@ -38,6 +39,7 @@ final class SupportTicketController
         private readonly TicketAttachments $attachments,
         private readonly SiteOrigin $origin,
         private readonly LocalizedRouteMap $routes,
+        private readonly TicketAlerts $alerts,
     ) {
     }
 
@@ -81,6 +83,9 @@ final class SupportTicketController
         $existing = $this->em->getRepository(SupportTicket::class)->findOneBy(['submissionKey' => $data['submissionKey']]);
         if ($existing instanceof SupportTicket) return $this->created($existing);
         $ticket = new SupportTicket($data, $locale, $data['submissionKey']);
+        $user = $this->security->getUser();
+        $owner = $user instanceof User ? $user : $this->em->getRepository(User::class)->createQueryBuilder('u')->where('LOWER(u.email) = :email')->setParameter('email', strtolower($data['email']))->orderBy('u.id', 'ASC')->setMaxResults(1)->getQuery()->getOneOrNullResult();
+        $ticket->setOwner($owner instanceof User ? $owner : null);
         try {
             $stored = $this->attachments->store($ticket, $files);
             $ticket->setAttachments($stored);
@@ -117,6 +122,8 @@ final class SupportTicketController
             $logger->error('support.ticket.receipt_failed', ['ticket_id' => $ticket->getId(), 'exception' => $error]);
         }
 
+        $this->alerts->send($ticket, $user instanceof User ? $user : null, 'support_ticket_created', true);
+
         return $this->created($ticket, 201);
     }
 
@@ -133,50 +140,21 @@ final class SupportTicketController
             ? $this->em->getRepository(SupportTicket::class)->findOneBy(['trackingToken' => $token]) : null;
         if (!$ticket instanceof SupportTicket) return $this->response(['error' => $this->copy->get($locale, 'notFound')], 404);
 
-        return $this->response(['data' => ['number' => $ticket->getNumber(), 'title' => $ticket->getTitle(), 'status' => $ticket->getStatus(), 'createdAt' => $ticket->getCreatedAt()->format(DATE_ATOM)]]);
-    }
+        $before = $data['before'] ?? 0;
+        if (!is_int($before) || $before < 0) return $this->response(['error' => $this->copy->get($locale, 'invalid')], 400);
+        $qb = $this->em->getRepository(SupportTicketMessage::class)->createQueryBuilder('m')->where('m.ticket = :ticket AND m.internal = false')->setParameter('ticket', $ticket);
+        if ($before) $qb->andWhere('m.id < :before')->setParameter('before', $before);
+        $rows = $qb->orderBy('m.id', 'DESC')->setMaxResults(31)->getQuery()->getResult();
+        $more = count($rows) > 30;
+        if ($more) array_pop($rows);
+        $last = end($rows);
+        $viewer = $this->security->getUser();
 
-    #[Route('/api/admin/support-tickets', methods: ['GET'])]
-    public function list(Request $request): JsonResponse
-    {
-        $locale = LocaleContext::fromRequest($request);
-        if ($locale === null) return $this->response(['error' => ApiMessages::get('unsupported_language', 'bs')], 400);
-        $access = ApiAccess::requireRole($this->security, 'ROLE_ADMIN', $locale);
-        if ($access instanceof JsonResponse) return $access;
-        $page = $request->query->getInt('page', 1);
-        $size = $request->query->getInt('pageSize', 25);
-        if ($page < 1 || $page > 1000000 || !in_array($size, [25, 50, 100], true)) return $this->response(['error' => ApiMessages::get('invalid_request', $locale)], 400);
-        $repository = $this->em->getRepository(SupportTicket::class);
-        $total = $repository->count([]);
-        $page = min($page, max(1, (int) ceil($total / $size)));
-        $rows = $repository->findBy([], ['id' => 'DESC'], $size, ($page - 1) * $size);
-
-        return $this->response(['data' => array_map(static fn (SupportTicket $ticket): array => [
-            'id' => $ticket->getId(), 'number' => $ticket->getNumber(), 'name' => $ticket->getName(), 'email' => $ticket->getEmail(),
-            'phone' => $ticket->getPhone(), 'kind' => $ticket->getKind(), 'category' => $ticket->getCategory(), 'title' => $ticket->getTitle(),
-            'description' => $ticket->getDescription(), 'locale' => $ticket->getLocale(), 'status' => $ticket->getStatus(),
-            'createdAt' => $ticket->getCreatedAt()->format(DATE_ATOM),
-            'attachments' => array_map(static fn (array $file, int $index): array => ['name' => $file['name'], 'size' => $file['size'], 'url' => '/api/admin/support-tickets/'.$ticket->getId().'/attachments/'.$index], $ticket->getAttachments(), array_keys($ticket->getAttachments())),
-        ], $rows), 'meta' => ['page' => $page, 'pageSize' => $size, 'total' => $total]]);
-    }
-
-    #[Route('/api/admin/support-tickets/{id}/attachments/{index}', requirements: ['id' => '\d+', 'index' => '\d+'], methods: ['GET'])]
-    public function download(Request $request, int $id, int $index): BinaryFileResponse|JsonResponse
-    {
-        $locale = LocaleContext::fromRequest($request);
-        if ($locale === null) return $this->response(['error' => ApiMessages::get('unsupported_language', 'bs')], 400);
-        $access = ApiAccess::requireRole($this->security, 'ROLE_ADMIN', $locale);
-        if ($access instanceof JsonResponse) return $access;
-        $ticket = $this->em->find(SupportTicket::class, $id);
-        $file = $ticket?->getAttachments()[$index] ?? null;
-        if (!$ticket instanceof SupportTicket || !$file || !is_file($path = $this->attachments->path($ticket, $file))) return $this->response(['error' => $this->copy->get($locale, 'notFound')], 404);
-        $response = new BinaryFileResponse($path);
-        $response->setContentDisposition(ResponseHeaderBag::DISPOSITION_ATTACHMENT, $file['name'], 'attachment');
-        $response->headers->set('Content-Type', 'application/octet-stream');
-        $response->headers->set('X-Content-Type-Options', 'nosniff');
-        $response->headers->set('Cache-Control', 'private, no-store');
-
-        return $response;
+        return $this->response(['data' => ['number' => $ticket->getNumber(), 'title' => $ticket->getTitle(), 'status' => $ticket->getStatus(), 'createdAt' => $ticket->getCreatedAt()->format(DATE_ATOM),
+            'accountTicketId' => $viewer instanceof User && $ticket->getOwner()?->getId() === $viewer->getId() ? $ticket->getId() : null,
+            'messages' => array_map(static fn (SupportTicketMessage $message): array => ['id' => $message->getId(), 'name' => $message->getSenderName(), 'body' => $message->getBody(), 'createdAt' => $message->getCreatedAt()->format(DATE_ATOM)], array_reverse($rows)),
+            'hasMore' => $more, 'nextCursor' => $more && $last ? $last->getId() : null,
+        ]]);
     }
 
     private function trackingUrl(SupportTicket $ticket): string
@@ -186,7 +164,7 @@ final class SupportTicketController
 
     private function created(SupportTicket $ticket, int $status = 200): JsonResponse
     {
-        return $this->response(['data' => ['number' => $ticket->getNumber(), 'trackingUrl' => $this->trackingUrl($ticket), 'receiptSent' => $ticket->isReceiptSent()]], $status);
+        return $this->response(['data' => ['id' => $ticket->getId(), 'number' => $ticket->getNumber(), 'trackingUrl' => $this->trackingUrl($ticket), 'receiptSent' => $ticket->isReceiptSent()]], $status);
     }
 
     private function response(array $payload, int $status = 200, array $headers = []): JsonResponse

@@ -180,3 +180,5 @@
   .support-actions .button { padding-inline: 16px; font-size: 13px; }
   .support-success .success-modal__content { padding: 30px 22px; }
 }
+
+.support-tracking__reply { margin: 18px 0; padding: 16px; border-radius: 10px; background: #edf1eb; text-align: left; strong { font-size: 13px; } small { margin-left: 12px; color: var(--muted-text); font-size: 11px; } p { white-space: pre-wrap; overflow-wrap: anywhere; font-size: 14px; line-height: 1.6; } }

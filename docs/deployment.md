@@ -382,7 +382,8 @@ page. This change needs no additional worker or environment setting.
 
 ## Support tickets (2026-10-09)
 
-The normal workflow applies `Version20261009090000`, rebuilds the SPA and warms
+The normal workflow applies `Version20261009090000` and
+`Version20261009110000`, rebuilds the SPA and warms
 cache. Ticket attachments live privately in `var/support`, which must remain
 writable by `steelcodeweb` and included in persistent-file backups. Existing
 mail workers send receipts; no new secrets or services are needed. For three

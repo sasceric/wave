@@ -29,6 +29,8 @@ final class NotificationResource
                 'slug' => $campaign->getSlug(),
                 'title' => $campaignTranslation['title'] ?? $campaign->getTitle(),
             ],
+            'supportTicketId' => $notification->getSupportTicket()?->getId(),
+            'supportAdmin' => $notification->getRecipient()->hasRole('ROLE_ADMIN'),
             'conversationId' => $notification->getConversation()?->getId(),
         ];
     }

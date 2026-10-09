@@ -348,7 +348,10 @@
       "creator_inquiry_received": "{actor} ti je poslal povpraševanje za sodelovanje.",
       "creator_inquiry_accepted": "{actor} je sprejel tvoje povpraševanje za sodelovanje.",
       "creator_inquiry_rejected": "{actor} je zavrnil/a tvoje povpraševanje za sodelovanje.",
-      "chat_message": "{actor} vam je poslal sporočilo o kampanji {campaign}."
+      "chat_message": "{actor} vam je poslal sporočilo o kampanji {campaign}.",
+      "support_ticket_created": "Prejet je nov zahtevek za podporo.",
+      "support_ticket_reply": "{actor} je odgovoril na zahtevek.",
+      "support_ticket_updated": "{actor} je posodobil zahtevek."
     },
     "closedNotice": "Kampanja je zaprta. V tem pogovoru ni več mogoče pošiljati sporočil.",
     "finishedNotice": "Kampanja je končana. V tem pogovoru ni več mogoče pošiljati sporočil."
@@ -1946,6 +1949,54 @@
       "technical": "Tehnična težava",
       "other": "Drugo"
     },
-    "loading": "Nalagamo zahtevek…"
+    "loading": "Nalagamo zahtevek…",
+    "myTickets": "Moji zahtevki",
+    "inboxIntro": "Prijavi napako in spremljaj odgovor naše ekipe.",
+    "searchTickets": "Išči zahtevke…",
+    "allTickets": "Vsi zahtevki",
+    "chooseTicket": "Izberi zahtevek",
+    "chooseTicketHint": "Izberi prijavo s seznama in preberi odgovore.",
+    "ticketInfo": "Podatki o zahtevku",
+    "reply": "Odgovor",
+    "internalNote": "Interna opomba",
+    "replyPlaceholder": "Napiši odgovor…",
+    "sendReply": "Pošlji odgovor",
+    "sendingReply": "Pošiljanje…",
+    "olderReplies": "Naloži starejše odgovore",
+    "staff": "Podpora",
+    "user": "Uporabnik",
+    "priority": "Prednost",
+    "assignedTo": "Dodeljeno",
+    "unassigned": "Ni dodeljeno",
+    "lastUpdate": "Zadnja sprememba",
+    "publicProfile": "Javni profil",
+    "replyNotice": "Odgovori niso klepet v živo. O novem odgovoru te obvestimo po e-pošti in z obvestilom.",
+    "newActivity": "Morda so na voljo novi odgovori. Osveži zahtevek.",
+    "ticketUpdated": "Novost v zahtevku",
+    "replyEmail": "V tvojem zahtevku je nova aktivnost. Odpri zahtevek za podrobnosti.",
+    "all": "Vsi",
+    "open": "Odprt",
+    "inProgress": "V obravnavi",
+    "onHold": "Na čakanju",
+    "resolved": "Rešen",
+    "low": "Nizka",
+    "normal": "Običajna",
+    "high": "Visoka",
+    "saved": "Shranjeno",
+    "signInTickets": "Prijavi se za ogled svojih zahtevkov.",
+    "yourReports": "Oglej si svoje zahtevke",
+    "loadFailed": "Zahtevka ni mogoče naložiti. Poskusi znova.",
+    "statuses": {
+      "open": "Odprt",
+      "in_progress": "V obravnavi",
+      "on_hold": "Na čakanju",
+      "resolved": "Rešen",
+      "received": "Odprt"
+    },
+    "priorities": {
+      "low": "Nizka",
+      "normal": "Običajna",
+      "high": "Visoka"
+    }
   }
 }

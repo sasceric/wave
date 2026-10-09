@@ -1,6 +1,5 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { ref } from 'vue'
 import { setupView } from './setupView.js'
 import { ticketSubmissionKey, validTicketFiles, ticketKinds, ticketCategories, ticketMaxBytes } from '../src/lib/supportTicket.js'
 
@@ -73,36 +72,4 @@ test('failed sends preserve the submission key for retry and a tracking link nev
   await state.loadTracking()
   assert.equal(state.error.value, 'support.notFound')
   assert.equal(state.tracked.value, null)
-})
-
-test('admin ticket page clears private rows on access failure and paginates remotely', async () => {
-  let forbidden = false
-  const requested = []
-  const { state } = await setupView('../src/views/AdminSupportView.vue', {
-    '../composables/useCurrentUser': { currentUser: ref({ id: 1, isAdmin: true }) },
-    '../lib/api': { formatDate: value => value, apiGet: async path => { requested.push(path); if (forbidden) throw Object.assign(new Error('Forbidden'), { status: 403 }); return { data: [{ id: 1 }], meta: { total: 30, page: path.includes('page=2') ? 2 : 1 } } } },
-  })
-  await state.load()
-  assert.equal(state.access.value, 'allowed')
-  state.navigate(2)
-  await Promise.resolve()
-  assert.ok(requested[1].includes('page=2'))
-  forbidden = true
-  await state.load()
-  assert.equal(state.access.value, 'forbidden')
-  assert.equal(state.rows.value.length, 0)
-})
-
-
-test('admin ticket details open the shared action without requiring slot arguments', async () => {
-  const { state } = await setupView('../src/views/AdminSupportView.vue', {
-    '../composables/useCurrentUser': { currentUser: ref({ id: 1, admin: true }) },
-    '../lib/api': { apiGet: async () => ({ data: [], meta: { page: 1, total: 0 } }), formatDate: value => value },
-  })
-  let opened = false
-  state.dialog.value = { showModal: () => { opened = true } }
-  const row = { id: 7, title: 'Report details' }
-  await state.view(row)
-  assert.equal(state.selected.value.id, 7)
-  assert.equal(opened, true)
 })

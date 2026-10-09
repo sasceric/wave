@@ -113,7 +113,7 @@ onBeforeUnmount(() => {
 const navigationItems = computed(() => {
   const canUseMarketplace = props.user?.approved || props.user?.isAdmin
   const creator = props.user?.accountType === 'creator'
-  const items = []
+  const items = props.user ? [{ route: 'account-support', labelKey: 'support.myTickets', icon: LifeBuoy }] : []
 
   if (canUseMarketplace && creator) {
     items.push(

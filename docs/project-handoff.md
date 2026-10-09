@@ -12,12 +12,14 @@ Declared dependencies: PHP 8.4+, Symfony 8.1, Doctrine ORM 3, Vue 3, Vue Router,
 
 ## Where to work
 
-Support tickets use `SupportTicketController`, `SupportTicket`, and `Support/`
+Support tickets use `SupportTicketController`, `SupportInboxController`, `SupportTicket`,
+`SupportTicketMessage`, and `Support/`
 for guest submission, receipts, private uploads and capability-link tracking.
-`SupportView.vue` handles the landing page and three-step form; admin-only
-`AdminSupportView.vue` uses the shared table and action menu. See
+`SupportView.vue` handles the landing page and three-step form; `TicketInboxView.vue` shares the cursor-based admin/customer inbox and reply
+history. Signed-in reports store account ownership; guests match by email. Public
+replies notify by email and bell, with no live conversation subscription. See
 [support tickets](support-tickets.md) for limits, file compression, deployment
-and the initial read-only admin scope.
+and support access rules.
 
 Creator profiles support optional multiple creator types (influencer, UGC creator,
 photographer, videographer and model), independently of topics and social platforms.

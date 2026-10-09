@@ -11,7 +11,8 @@ const routeViews = {
   support: () => import('./views/SupportView.vue'),
   'support-create': () => import('./views/SupportView.vue'),
   'support-track': () => import('./views/SupportView.vue'),
-  'admin-support': () => import('./views/AdminSupportView.vue'),
+  'admin-support': () => import('./views/TicketInboxView.vue'),
+  'account-support': () => import('./views/TicketInboxView.vue'),
   home: () => import('./views/HomeView.vue'),
   'country-creators': () => import('./views/CountryCreatorsView.vue'),
   'seo-guides': () => import('./views/SeoGuidesView.vue'),
@@ -71,6 +72,7 @@ const adminSections = {
 }
 
 const accountSections = {
+  'account-support': 'support',
   'account-credits': 'credits',
   account: 'profile',
   'account-applications': 'applications',

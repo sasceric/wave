@@ -347,7 +347,10 @@
       "creator_inquiry_received": "{actor} sent you a collaboration inquiry.",
       "creator_inquiry_accepted": "{actor} accepted your collaboration inquiry.",
       "creator_inquiry_rejected": "{actor} declined your collaboration inquiry.",
-      "chat_message": "{actor} sent a message about {campaign}."
+      "chat_message": "{actor} sent a message about {campaign}.",
+      "support_ticket_created": "New support ticket received.",
+      "support_ticket_reply": "{actor} replied to a support ticket.",
+      "support_ticket_updated": "{actor} updated a support ticket."
     },
     "closedNotice": "This campaign is closed. You can no longer send messages in this conversation.",
     "finishedNotice": "This campaign is finished. You can no longer send messages in this conversation."
@@ -1945,6 +1948,54 @@
       "technical": "Technical issue",
       "other": "Other"
     },
-    "loading": "Loading ticket…"
+    "loading": "Loading ticket…",
+    "myTickets": "My tickets",
+    "inboxIntro": "Report a bug and follow our team’s response.",
+    "searchTickets": "Search tickets…",
+    "allTickets": "All tickets",
+    "chooseTicket": "Choose a ticket",
+    "chooseTicketHint": "Select a report from the list to read its replies.",
+    "ticketInfo": "Ticket information",
+    "reply": "Reply",
+    "internalNote": "Internal note",
+    "replyPlaceholder": "Write a reply…",
+    "sendReply": "Send reply",
+    "sendingReply": "Sending…",
+    "olderReplies": "Load older replies",
+    "staff": "Support",
+    "user": "User",
+    "priority": "Priority",
+    "assignedTo": "Assigned to",
+    "unassigned": "Unassigned",
+    "lastUpdate": "Last update",
+    "publicProfile": "Public profile",
+    "replyNotice": "Replies are not a live chat. We will send an email and notification when there is a new reply.",
+    "newActivity": "New replies may be available. Refresh this ticket.",
+    "ticketUpdated": "Ticket update",
+    "replyEmail": "There is new activity on your ticket. Open the ticket for details.",
+    "all": "All",
+    "open": "Open",
+    "inProgress": "In progress",
+    "onHold": "On hold",
+    "resolved": "Resolved",
+    "low": "Low",
+    "normal": "Normal",
+    "high": "High",
+    "saved": "Saved",
+    "signInTickets": "Sign in to see your tickets.",
+    "yourReports": "View your tickets",
+    "loadFailed": "Unable to load this ticket. Please try again.",
+    "statuses": {
+      "open": "Open",
+      "in_progress": "In progress",
+      "on_hold": "On hold",
+      "resolved": "Resolved",
+      "received": "Open"
+    },
+    "priorities": {
+      "low": "Low",
+      "normal": "Normal",
+      "high": "High"
+    }
   }
 }

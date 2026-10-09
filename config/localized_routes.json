@@ -44,7 +44,8 @@
     "support": "podrska",
     "support-create": "podrska/novi-tiket",
     "support-track": "podrska/tiket",
-    "admin-support": "admin/tiketi"
+    "admin-support": "admin/tiketi",
+    "account-support": "racun/tiketi"
   },
   "hr": {
     "home": "",
@@ -91,7 +92,8 @@
     "support": "podrska",
     "support-create": "podrska/novi-tiket",
     "support-track": "podrska/tiket",
-    "admin-support": "admin/tiketi"
+    "admin-support": "admin/tiketi",
+    "account-support": "racun/tiketi"
   },
   "sr": {
     "home": "",
@@ -138,7 +140,8 @@
     "support": "podrska",
     "support-create": "podrska/novi-tiket",
     "support-track": "podrska/tiket",
-    "admin-support": "admin/tiketi"
+    "admin-support": "admin/tiketi",
+    "account-support": "racun/tiketi"
   },
   "cnr": {
     "home": "",
@@ -185,7 +188,8 @@
     "support": "podrska",
     "support-create": "podrska/novi-tiket",
     "support-track": "podrska/tiket",
-    "admin-support": "admin/tiketi"
+    "admin-support": "admin/tiketi",
+    "account-support": "racun/tiketi"
   },
   "sl": {
     "home": "",
@@ -232,7 +236,8 @@
     "support": "podpora",
     "support-create": "podpora/nov",
     "support-track": "podpora/zahtevek",
-    "admin-support": "admin/zahtevki"
+    "admin-support": "admin/zahtevki",
+    "account-support": "racun/zahtevki"
   },
   "en": {
     "home": "",
@@ -279,6 +284,7 @@
     "support": "support",
     "support-create": "support/new",
     "support-track": "support/ticket",
-    "admin-support": "admin/support-tickets"
+    "admin-support": "admin/support-tickets",
+    "account-support": "account/tickets"
   }
 }

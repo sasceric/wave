@@ -1,4 +1,7 @@
 export function notificationDestination(notification) {
+  if (notification.supportTicketId) {
+    return { name: notification.supportAdmin ? 'admin-support' : 'account-support', query: { ticket: notification.supportTicketId } }
+  }
   if (notification.conversationId) {
     return { name: 'messages', query: { conversation: notification.conversationId } }
   }

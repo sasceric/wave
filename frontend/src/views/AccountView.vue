@@ -38,7 +38,7 @@ import { useCampaignBookmarks } from '../composables/useCampaignBookmarks'
 import { COMPANY_SOCIAL_PLATFORMS, CURRENCIES, SOCIAL_PLATFORMS } from '../lib/marketplace'
 import { creatorTypeOptions } from '../lib/creatorTypes'
 import { formatInternationalPhoneNumber } from '../lib/phoneNumbers'
-import { localizedRouteName } from '../routePaths'
+import { localizedPath, localizedRouteName } from '../routePaths'
 import countries from '../data/countries.json'
 
 const { t, locale } = useI18n()
@@ -294,6 +294,14 @@ async function loadDashboard(authenticatedUser = null) {
     if (requestId !== dashboardRequestId) return
     user.value = response.data
     setCurrentUser(response.data)
+    const supportReturn = getSafeBookmarkReturnTo()
+    const supportPaths = [localizedPath('account-support', locale.value)]
+    if (response.data.isAdmin) supportPaths.push(localizedPath('admin-support', locale.value))
+    if (!route.query.bookmark && supportReturn && supportPaths.includes(new URL(supportReturn, window.location.origin).pathname)) {
+      // Reporting account problems must remain possible before profile completion.
+      await router.replace(supportReturn)
+      return
+    }
     profile.value = structuredClone(response.data.profile)
     if (response.data.profile) {
       profile.value = {

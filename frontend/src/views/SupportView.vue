@@ -114,13 +114,18 @@ async function send() {
   }
 }
 async function trackCreated() {
+  if (currentUser.value && result.value.id) {
+    successOpen.value = false
+    await router.push({ name: localizedRouteName('account-support', locale.value), query: { ticket: result.value.id } })
+    return
+  }
   const hash = new URL(result.value.trackingUrl, window.location.origin).hash
   successOpen.value = false
   await router.push({ name: localizedRouteName('support-track', locale.value), hash })
 }
-async function loadTracking() {
+async function loadTracking(before = 0) {
   const version = ++trackingVersion
-  tracked.value = null
+  if (!Number.isInteger(before) || before === 0) tracked.value = null
   error.value = ''
   if (!tracking.value) return
   const token = new URLSearchParams(route.hash.slice(1)).get('token') || ''
@@ -130,8 +135,11 @@ async function loadTracking() {
   }
   trackingLoading.value = true
   try {
-    const response = await apiRequest('/support/tickets/track', { method: 'POST', body: { token } })
-    if (version === trackingVersion) tracked.value = response.data
+    const response = await apiRequest('/support/tickets/track', { method: 'POST', body: { token, before: Number.isInteger(before) ? before : 0 } })
+    if (version === trackingVersion) {
+      if (Number.isInteger(before) && before > 0 && tracked.value) response.data.messages = [...response.data.messages, ...tracked.value.messages]
+      tracked.value = response.data
+    }
   } catch (cause) {
     if (version === trackingVersion) error.value = cause.message
   } finally {
@@ -169,8 +177,12 @@ onBeforeUnmount(() => { trackingVersion++ })
       <StatusMessage v-if="error" variant="error">{{ error }}</StatusMessage>
       <section v-if="tracked" class="support-tracking">
         <span class="support-tracking__icon"><Check :size="28" aria-hidden="true" /></span><h2>#{{ tracked.number }} · {{ tracked.title }}</h2>
-        <dl><div><dt>{{ t('support.status') }}</dt><dd>{{ t('support.received') }}</dd></div><div><dt>{{ t('support.createdAt') }}</dt><dd>{{ formatDate(tracked.createdAt) }}</dd></div></dl>
+        <dl><div><dt>{{ t('support.status') }}</dt><dd>{{ t(`support.statuses.${tracked.status}`) }}</dd></div><div><dt>{{ t('support.createdAt') }}</dt><dd>{{ formatDate(tracked.createdAt) }}</dd></div></dl>
         <p>{{ t('support.keepLink') }}</p>
+        <button v-if="tracked.hasMore" type="button" class="button button--outline" :disabled="trackingLoading" @click="loadTracking(tracked.nextCursor)">{{ t('support.olderReplies') }}</button>
+        <article v-for="message in tracked.messages" :key="message.id" class="support-tracking__reply"><strong>{{ message.name }}</strong><small>{{ formatDate(message.createdAt) }}</small><p>{{ message.body }}</p></article>
+        <LocalizedLink v-if="tracked.accountTicketId" class="button button--outline" :to="{ name: 'account-support', query: { ticket: tracked.accountTicketId } }">{{ t('support.yourReports') }}<ArrowRight :size="17" aria-hidden="true" /></LocalizedLink>
+        <LocalizedLink v-else class="button button--outline" :to="{ name: 'account-support' }">{{ t('support.yourReports') }}<ArrowRight :size="17" aria-hidden="true" /></LocalizedLink>
       </section>
       <button type="button" class="button button--dark" @click="start()">{{ t('support.newTicket') }}<ArrowRight :size="17" aria-hidden="true" /></button>
     </template>

@@ -348,7 +348,10 @@
       "creator_inquiry_received": "{actor} ti je poslao/la upit za saradnju.",
       "creator_inquiry_accepted": "{actor} je prihvatio/la tvoj upit za saradnju.",
       "creator_inquiry_rejected": "{actor} je odbio/la tvoj upit za saradnju.",
-      "chat_message": "{actor} ti je poslao/la poruku o kampanji {campaign}."
+      "chat_message": "{actor} ti je poslao/la poruku o kampanji {campaign}.",
+      "support_ticket_created": "Primljen je novi tiket za podršku.",
+      "support_ticket_reply": "{actor} je odgovorio na tiket.",
+      "support_ticket_updated": "{actor} je izmenio tiket."
     },
     "closedNotice": "Kampanja je zatvorena. Više nije moguće slati poruke u ovom razgovoru.",
     "finishedNotice": "Kampanja je završena. Više nije moguće slati poruke u ovom razgovoru."
@@ -1946,6 +1949,54 @@
       "technical": "Tehnički problem",
       "other": "Ostalo"
     },
-    "loading": "Učitavamo tiket…"
+    "loading": "Učitavamo tiket…",
+    "myTickets": "Moji tiketi",
+    "inboxIntro": "Prijavi grešku i prati odgovor našeg tima.",
+    "searchTickets": "Pretraži tikete…",
+    "allTickets": "Svi tiketi",
+    "chooseTicket": "Izaberi tiket",
+    "chooseTicketHint": "Izaberi prijavu sa liste da pročitaš odgovore.",
+    "ticketInfo": "Informacije o tiketu",
+    "reply": "Odgovor",
+    "internalNote": "Interna beleška",
+    "replyPlaceholder": "Napiši odgovor…",
+    "sendReply": "Pošalji odgovor",
+    "sendingReply": "Slanje…",
+    "olderReplies": "Učitaj ranije odgovore",
+    "staff": "Podrška",
+    "user": "Korisnik",
+    "priority": "Prioritet",
+    "assignedTo": "Dodeljeno",
+    "unassigned": "Nije dodeljeno",
+    "lastUpdate": "Poslednja izmena",
+    "publicProfile": "Javni profil",
+    "replyNotice": "Odgovori nisu razgovor uživo. O novom odgovoru obavestićemo te e-mailom i obaveštenjem.",
+    "newActivity": "Nove poruke mogu biti dostupne. Osveži tiket.",
+    "ticketUpdated": "Novost na tiketu",
+    "replyEmail": "Tvoj tiket ima novu aktivnost. Otvori tiket za detalje.",
+    "all": "Svi",
+    "open": "Otvoren",
+    "inProgress": "U obradi",
+    "onHold": "Na čekanju",
+    "resolved": "Rešen",
+    "low": "Nizak",
+    "normal": "Normalan",
+    "high": "Visok",
+    "saved": "Sačuvano",
+    "signInTickets": "Prijavi se da vidiš svoje tikete.",
+    "yourReports": "Pregledaj svoje tikete",
+    "loadFailed": "Nije moguće učitati tiket. Pokušaj ponovo.",
+    "statuses": {
+      "open": "Otvoren",
+      "in_progress": "U obradi",
+      "on_hold": "Na čekanju",
+      "resolved": "Rešen",
+      "received": "Otvoren"
+    },
+    "priorities": {
+      "low": "Nizak",
+      "normal": "Normalan",
+      "high": "Visok"
+    }
   }
 }

@@ -7,6 +7,7 @@ use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity]
 #[ORM\Table(name: 'wave_notification')]
+#[ORM\Index(name: 'idx_notification_support', columns: ['recipient_id', 'support_ticket_id', 'read_at'])]
 class Notification
 {
     #[ORM\Id]
@@ -30,6 +31,10 @@ class Notification
     #[ORM\JoinColumn(nullable: true, onDelete: 'CASCADE')]
     private ?CampaignConversation $conversation;
 
+    #[ORM\ManyToOne(targetEntity: SupportTicket::class)]
+    #[ORM\JoinColumn(nullable: true, onDelete: 'CASCADE')]
+    private ?SupportTicket $supportTicket;
+
     #[ORM\Column(length: 40)]
     private string $type;
 
@@ -45,12 +50,14 @@ class Notification
         ?User $actor = null,
         ?Campaign $campaign = null,
         ?CampaignConversation $conversation = null,
+        ?SupportTicket $supportTicket = null,
     ) {
         $this->recipient = $recipient;
         $this->type = $type;
         $this->actor = $actor;
         $this->campaign = $campaign;
         $this->conversation = $conversation;
+        $this->supportTicket = $supportTicket;
         $this->createdAt = new DateTimeImmutable();
     }
 
@@ -77,6 +84,11 @@ class Notification
     public function getConversation(): ?CampaignConversation
     {
         return $this->conversation;
+    }
+
+    public function getSupportTicket(): ?SupportTicket
+    {
+        return $this->supportTicket;
     }
 
     public function getType(): string

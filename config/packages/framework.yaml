@@ -51,6 +51,10 @@ framework:
             policy: sliding_window
             limit: 5
             interval: '1 hour'
+        wave_support_reply:
+            policy: 'sliding_window'
+            limit: 30
+            interval: '1 hour'
         wave_support_tracking:
             policy: sliding_window
             limit: 30

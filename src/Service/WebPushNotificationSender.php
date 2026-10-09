@@ -7,6 +7,7 @@ use App\Entity\CampaignMessage;
 use App\Entity\Notification;
 use App\Entity\User;
 use App\Entity\UserPushSubscription;
+use App\Localization\LocalizedRouteMap;
 use Doctrine\ORM\EntityManagerInterface;
 use Minishlink\WebPush\Subscription;
 use Minishlink\WebPush\WebPush;
@@ -29,6 +30,7 @@ final class WebPushNotificationSender
         #[Autowire('%wave.queue.enabled%')] private readonly bool $queued = false,
         #[Autowire('%env(bool:WAVE_NOTIFICATIONS_ENABLED)%')] private readonly bool $notificationsEnabled = true,
         private readonly ?HttpClientInterface $httpClient = null,
+        private readonly ?LocalizedRouteMap $routes = null,
     ) {
     }
 
@@ -227,6 +229,13 @@ final class WebPushNotificationSender
 
     private function targetFor(Notification $notification): string
     {
+        if ($ticket = $notification->getSupportTicket()) {
+            $recipient = $notification->getRecipient();
+            $route = $recipient->hasRole('ROLE_ADMIN') ? 'admin-support' : 'account-support';
+            $path = $this->routes?->localizedPath($route, $recipient->getPreferredLocale()) ?? ($route === 'admin-support' ? '/admin/tiketi' : '/racun/tiketi');
+
+            return $path.'?ticket='.$ticket->getId();
+        }
         if (null !== $notification->getConversation()?->getId()) {
             return '/messages?conversation=' . $notification->getConversation()->getId();
         }
