@@ -261,6 +261,7 @@ final class AdminDashboardTest extends WebTestCase
         $approvalEmail = self::getMailerMessage();
         self::assertInstanceOf(Email::class, $approvalEmail);
         self::assertEmailSubjectContains($approvalEmail, 'Your Wave account has been approved');
+        self::assertEmailTextBodyContains($approvalEmail, 'Turn off “Hide my account”');
         self::assertTrue($entityManager->getRepository(User::class)->find($creatorUser->getId())->isApproved());
         $this->client->request(
             'POST',
@@ -300,7 +301,7 @@ final class AdminDashboardTest extends WebTestCase
         self::assertNull($entityManager->getRepository(Campaign::class)->find($campaign->getId()));
     }
 
-    public function testBulkApprovalKeepsUnapprovedProfilesPrivateAndMovesApprovedProfilesIntoDirectories(): void
+    public function testBulkApprovalKeepsProfilesHiddenUntilOwnersEnableVisibility(): void
     {
         $entityManager = static::getContainer()->get(EntityManagerInterface::class);
         $admin = new User('admin@example.test', 'ROLE_COMPANY');
@@ -420,6 +421,18 @@ final class AdminDashboardTest extends WebTestCase
         self::assertSame(1, $this->payload()['data']['skippedUnverified']);
         self::assertSame(1, $this->payload()['data']['skippedIncomplete']);
         self::assertEmailCount(2);
+        foreach ([$creatorUser, $companyUser] as $approvedUser) {
+            $this->client->loginUser($approvedUser, 'main');
+            $this->client->request('GET', '/api/auth/me?locale=en');
+            self::assertTrue($this->payload()['data']['approved']);
+            self::assertSame(1, $this->payload()['data']['hide_my_account']);
+            $this->client->request('PUT', '/api/me/account-visibility?locale=en', server: [
+                'CONTENT_TYPE' => 'application/json',
+                'HTTP_X_CSRF_TOKEN' => $this->csrfToken(),
+            ], content: json_encode(['hide_my_account' => 0], JSON_THROW_ON_ERROR));
+            self::assertResponseIsSuccessful();
+        }
+        $this->client->loginUser($admin, 'main');
 
         $this->client->request('GET', '/api/admin/dashboard?locale=en');
         self::assertResponseIsSuccessful();

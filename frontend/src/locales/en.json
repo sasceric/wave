@@ -756,7 +756,7 @@
     "accountType": "I am joining as a",
     "creator": "Creator",
     "company": "Company",
-    "name": "Your name or company name",
+    "name": "Full name or company name",
     "firstName": "First name",
     "lastName": "Last name",
     "companyName": "Company name",
@@ -798,7 +798,8 @@
     "verificationInvalid": "This verification link is invalid or expired. Sign in and request a new one.",
     "resetInvalid": "This password reset link is invalid or expired. Request a new one.",
     "creatorInvite": "Show what you make and find brands worth working with.",
-    "companyInvite": "Introduce your company and post campaigns for the right creators."
+    "companyInvite": "Introduce your company and post campaigns for the right creators.",
+    "namePlaceholder": "E.g. Ana Kovac or Studio Wave"
   },
   "account": {
     "basicInformation": "Basic information",
@@ -1084,7 +1085,9 @@
     "activityNoResults": "No results match this search.",
     "inquiriesIntro": "Direct collaboration requests and conversations about your packages.",
     "activityShown": "Showing {shown} of {total}",
-    "notificationsHint": "Receive notifications about offers, messages and campaigns."
+    "notificationsHint": "Receive notifications about offers, messages and campaigns.",
+    "visibilityPendingHint": "Your profile stays hidden until an administrator approves your account. You can change its visibility after approval.",
+    "profileApprovedHiddenNotice": "Your profile is approved and active. Turn off “Hide my account” to make it visible to others."
   },
   "moderation": {
     "eyebrow": "Wave catalogue",
@@ -1151,12 +1154,12 @@
     "campaigns": "Campaigns",
     "pendingApplications": "Applications awaiting review",
     "pendingRegistrations": "Registrations awaiting approval",
-    "registrationPendingNotice": "Your email is verified. Your account will become visible after Wave approves it.",
+    "registrationPendingNotice": "Your email is verified. After approval, you can make your profile visible.",
     "homepageEyebrow": "Homepage",
     "homepageTitle": "Content curation",
     "homepageDescription": "Choose the creator section and select featured creators and campaigns.",
     "creatorMode": "Creator section",
-    "latestCreators": "Latest creators",
+    "latestCreators": "Featured, then newest",
     "featuredCreators": "Featured creators",
     "creatorPicks": "Featured creator selection",
     "creatorPicksHint": "Choose the creators shown when the homepage section is set to Featured.",
@@ -1433,7 +1436,8 @@
     "sortNewest": "Newest",
     "sortFollowers": "Most followers",
     "layoutLabel": "Creator layout",
-    "noCategories": "No categories found."
+    "noCategories": "No categories found.",
+    "sortRecommended": "Featured first"
   },
   "campaignDirectory": {
     "heroBadge": "Campaigns connecting brands and creators",
@@ -1888,7 +1892,7 @@
     "detailsIntro": "Describe the issue in detail so we can help you sooner.",
     "reviewTitle": "Review your ticket",
     "reviewIntro": "Check your information before sending.",
-    "name": "Full name",
+    "name": "Full name or company name",
     "email": "Email address",
     "phone": "Phone (optional)",
     "category": "Category",
@@ -1897,7 +1901,7 @@
     "description": "Description",
     "titlePlaceholder": "Briefly describe why you are contacting us",
     "descriptionPlaceholder": "What happened? What did you expect? Which steps can we repeat?",
-    "namePlaceholder": "Your full name",
+    "namePlaceholder": "E.g. Ana Kovac or Studio Wave",
     "emailPlaceholder": "you{'@'}example.com",
     "cancel": "Cancel",
     "back": "Back",

@@ -48,11 +48,12 @@ final class CreatorController
             $countries = array_map(strtoupper(...), $countries);
             $sort = $request->query->getString('sort', 'name');
             $audience = $request->query->getString('audience');
-            if (!in_array($sort, ['name', 'newest', 'followers'], true) || !in_array($audience, ['', 'small', 'medium', 'large'], true)) {
+            if (!in_array($sort, ['recommended', 'name', 'newest', 'followers'], true) || !in_array($audience, ['', 'small', 'medium', 'large'], true)) {
                 throw new \InvalidArgumentException();
             }
             $cursorMode = $cursor->enabled($request);
             $positionTypes = match ($sort) {
+                'recommended' => ['featured' => 'bool', 'date' => 'date', 'id' => 'int'],
                 'newest' => ['date' => 'date', 'id' => 'int'],
                 'followers' => ['followers' => 'int', 'id' => 'int'],
                 default => ['name' => 'string', 'id' => 'int'],
@@ -124,7 +125,7 @@ final class CreatorController
             };
         }
         $metric = ($sort === 'followers' || $audience !== '') ? self::followersSql('c.social_profiles') : '0';
-        $base = "SELECT c.id, c.display_name, c.created_at, c.category, c.categories, c.creator_types, c.bio, c.tags, c.social_profiles,
+        $base = "SELECT c.id, c.featured, c.display_name, c.created_at, c.category, c.categories, c.creator_types, c.bio, c.tags, c.social_profiles,
             COALESCE(u.city, c.city) AS city, u.country_code, i.search_text, i.tag_text, i.platform_keys, $metric AS followers
             FROM creator c LEFT JOIN wave_user u ON u.id = c.owner_id
             LEFT JOIN directory_index i ON i.kind = 'creator' AND i.entity_id = c.id
@@ -132,16 +133,21 @@ final class CreatorController
         $filtered = ' FROM (' . $base . ') ranked WHERE 1 = 1' . ($conditions === [] ? '' : ' AND ' . implode(' AND ', $conditions));
         $connection = $entityManager->getConnection();
         $total = $position !== null ? null : (int) $connection->fetchOne('SELECT COUNT(*)' . $filtered, $params, $types);
-        $sql = 'SELECT id, display_name, created_at, followers' . $filtered;
+        $sql = 'SELECT id, featured, display_name, created_at, followers' . $filtered;
         if ($position !== null) {
             $sql .= match ($sort) {
+                'recommended' => ' AND (featured < :featured OR (featured = :featured AND (created_at < :date OR (created_at = :date AND id < :id))))',
                 'newest' => ' AND (created_at < :date OR (created_at = :date AND id < :id))',
                 'followers' => ' AND (followers < :followers OR (followers = :followers AND id < :id))',
                 default => ' AND (display_name > :name OR (display_name = :name AND id > :id))',
             };
             $params += $position;
+            if ($sort === 'recommended') {
+                $types['featured'] = \Doctrine\DBAL\ParameterType::BOOLEAN;
+            }
         }
         $sql .= ' ORDER BY ' . match ($sort) {
+            'recommended' => 'featured DESC, created_at DESC, id DESC',
             'newest' => 'created_at DESC, id DESC',
             'followers' => 'followers DESC, id DESC',
             default => 'display_name ASC, id ASC',
@@ -165,6 +171,7 @@ final class CreatorController
             $last = $rows === [] ? null : $rows[array_key_last($rows)];
             $meta['hasMore'] = $hasMore;
             $meta['nextCursor'] = !$hasMore || $last === null ? null : $cursor->encode($request, 'creator', match ($sort) {
+                'recommended' => ['featured' => (bool) $last['featured'], 'date' => (new \DateTimeImmutable($last['created_at']))->format('Y-m-d H:i:s'), 'id' => (int) $last['id']],
                 'newest' => ['date' => (new \DateTimeImmutable($last['created_at']))->format('Y-m-d H:i:s'), 'id' => (int) $last['id']],
                 'followers' => ['followers' => (int) $last['followers'], 'id' => (int) $last['id']],
                 default => ['name' => $last['display_name'], 'id' => (int) $last['id']],

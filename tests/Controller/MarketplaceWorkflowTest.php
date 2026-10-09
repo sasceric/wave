@@ -65,6 +65,64 @@ final class MarketplaceWorkflowTest extends WebTestCase
         parent::tearDown();
     }
 
+    public function testPendingAccountsCanPreparePrivateProfileImagesButCannotPublish(): void
+    {
+        foreach (['creator', 'company'] as $type) {
+            $this->jsonRequest('POST', '/api/auth/register', [
+                'accountType' => $type,
+                'email' => $type.'-pending-image@example.test',
+                'password' => 'a-long-passphrase-for-wave',
+                'name' => 'Pending '.$type,
+                'birthday' => '2000-02-29',
+                'phone' => '+38761123456',
+                'country' => 'BA',
+                'city' => 'Sarajevo',
+                'categories' => ['Travel'],
+                'industries' => ['Travel'],
+            ], $this->csrfToken());
+            self::assertResponseStatusCodeSame(201);
+            $registered = $this->payload();
+            $csrf = $registered['csrfToken'];
+            self::assertFalse($registered['data']['emailVerified']);
+            self::assertFalse($registered['data']['approved']);
+            self::assertSame(1, $registered['data']['hide_my_account']);
+            $images = [];
+            foreach ($type === 'creator' ? ['creator-avatar'] : ['company-logo', 'company-cover'] as $folder) {
+                $uploaded = $this->uploadImage($folder, $csrf, 'profile.png');
+                self::assertResponseStatusCodeSame(201);
+                $media = $uploaded['data'];
+                $this->uploadedMediaIds[] = $media['id'];
+                $images[$folder] = $media;
+                self::assertSame('image/webp', $media['mimeType']);
+                $this->client->request('GET', $media['url']);
+                self::assertResponseIsSuccessful();
+                self::assertStringContainsString('private', $this->client->getResponse()->headers->get('Cache-Control'));
+                self::assertStringContainsString('no-store', $this->client->getResponse()->headers->get('Cache-Control'));
+            }
+            $profile = $type === 'creator'
+                ? ['displayName' => 'Pending creator', 'categories' => ['Travel'], 'bio' => '', 'tags' => [], 'socialProfiles' => [], 'avatarMediaId' => $images['creator-avatar']['id']]
+                : ['name' => 'Pending company', 'industries' => ['Travel'], 'logoMediaId' => $images['company-logo']['id'], 'coverMediaId' => $images['company-cover']['id']];
+            $this->jsonRequest('PUT', '/api/me/profile', $profile, $csrf);
+            self::assertResponseIsSuccessful();
+            foreach ([0, 1] as $visibility) {
+                $this->jsonRequest('PUT', '/api/me/account-visibility', ['hide_my_account' => $visibility], $csrf);
+                self::assertResponseStatusCodeSame(403);
+            }
+            $this->uploadImage($type === 'creator' ? 'creator-portfolio' : 'campaign-cover', $csrf, 'restricted.png');
+            self::assertResponseStatusCodeSame(403);
+            $this->uploadImage($type === 'creator' ? 'company-logo' : 'creator-avatar', $csrf, 'wrong-role.png');
+            self::assertResponseStatusCodeSame(403);
+            $this->uploadImage(array_key_first($images), 'invalid-csrf', 'invalid.png');
+            self::assertResponseStatusCodeSame(403);
+            $this->jsonRequest('POST', '/api/auth/logout', [], $csrf);
+            self::assertResponseIsSuccessful();
+            foreach ($images as $media) {
+                $this->client->request('GET', $media['url']);
+                self::assertResponseStatusCodeSame(404);
+            }
+        }
+    }
+
     public function testAuthenticationSessionCookiePersistsForNinetyDays(): void
     {
         $sessionOptions = static::getContainer()->getParameter('session.storage.options');
@@ -104,8 +162,7 @@ final class MarketplaceWorkflowTest extends WebTestCase
             'accountType' => 'creator',
             'email' => 'creator@example.test',
             'password' => 'a-long-passphrase-for-wave',
-            'firstName' => 'Avery',
-            'lastName' => 'Creator',
+            'name' => 'Avery Creator',
             'birthday' => '2000-02-29',
             'phone' => '+387 61 123 456',
             'category' => 'Travel',
@@ -135,6 +192,9 @@ final class MarketplaceWorkflowTest extends WebTestCase
         self::assertResponseIsSuccessful();
         self::assertSame('creator@example.test', $this->payload()['data']['email']);
         self::assertFalse($registered['approved']);
+        self::assertSame(1, $registered['hide_my_account']);
+        $this->jsonRequest('PUT', '/api/me/account-visibility', ['hide_my_account' => 0], $csrf);
+        self::assertResponseStatusCodeSame(403);
         $this->client->request('GET', '/api/creators/'.$registered['profile']['slug'].'?locale=en');
         self::assertResponseStatusCodeSame(404);
 
@@ -154,6 +214,11 @@ final class MarketplaceWorkflowTest extends WebTestCase
         self::assertResponseIsSuccessful();
         $this->client->loginUser($registeredUser, 'main');
         $csrf = $this->csrfToken();
+        $this->client->request('GET', '/api/auth/me?locale=bs');
+        self::assertTrue($this->payload()['data']['approved']);
+        self::assertSame(1, $this->payload()['data']['hide_my_account']);
+        $this->jsonRequest('PUT', '/api/me/account-visibility', ['hide_my_account' => 0], $csrf);
+        self::assertResponseIsSuccessful();
 
         $this->jsonRequest('PUT', '/api/me/profile', [
             'displayName' => 'Avery Creator',
@@ -923,8 +988,7 @@ final class MarketplaceWorkflowTest extends WebTestCase
             'accountType' => 'creator',
             'email' => 'required-fields@example.test',
             'password' => 'a-long-passphrase-for-wave',
-            'firstName' => 'Avery',
-            'lastName' => 'Creator',
+            'name' => 'Avery Creator',
             'phone' => '+387 61 123 456',
             'category' => 'Travel',
             'categories' => ['Travel'],
@@ -933,11 +997,17 @@ final class MarketplaceWorkflowTest extends WebTestCase
             'location' => 'Sarajevo, Bosnia and Herzegovina',
         ];
 
-        foreach (['firstName', 'lastName', 'phone', 'city', 'country'] as $requiredField) {
+        foreach (['name', 'phone', 'city', 'country'] as $requiredField) {
             $payload = $creatorPayload;
             unset($payload[$requiredField]);
             $this->jsonRequest('POST', '/api/auth/register', $payload, $this->csrfToken());
             self::assertResponseStatusCodeSame(400, sprintf('Missing creator field: %s', $requiredField));
+        }
+
+        foreach (['', ' ', 'A', str_repeat('A', 121), ['Invalid name']] as $name) {
+            $payload = array_replace($creatorPayload, ['name' => $name, 'firstName' => 'Old', 'lastName' => 'Payload']);
+            $this->jsonRequest('POST', '/api/auth/register', $payload, $this->csrfToken());
+            self::assertResponseStatusCodeSame(400);
         }
 
         $companyPayload = [
@@ -951,7 +1021,7 @@ final class MarketplaceWorkflowTest extends WebTestCase
             'country' => 'BA',
         ];
 
-        foreach (['phone', 'city', 'country'] as $requiredField) {
+        foreach (['name', 'phone', 'city', 'country'] as $requiredField) {
             $payload = $companyPayload;
             unset($payload[$requiredField]);
             $this->jsonRequest('POST', '/api/auth/register', $payload, $this->csrfToken());

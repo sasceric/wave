@@ -98,7 +98,9 @@ final class MediaController
         if ($folderSettings === null) {
             return new JsonResponse(['error' => ApiMessages::get('invalid_media', $locale)], 400);
         }
-        $user = ApiAccess::requireRole($security, $folderSettings['role'], $locale);
+        // Own profile images can be prepared while the account awaits approval.
+        $profileImage = in_array($folderSlug, ['creator-avatar', 'company-logo', 'company-cover'], true);
+        $user = ApiAccess::requireRole($security, $folderSettings['role'], $locale, requireApproved: !$profileImage);
         if ($user instanceof JsonResponse) {
             return $user;
         }

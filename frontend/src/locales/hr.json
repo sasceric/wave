@@ -757,7 +757,7 @@
     "accountType": "Želim se pridružiti kao",
     "creator": "Kreator/ica",
     "company": "Tvrtka",
-    "name": "Ime ili naziv tvrtke",
+    "name": "Ime i Prezime ili naziv tvrtke",
     "firstName": "Ime",
     "lastName": "Prezime",
     "companyName": "Naziv tvrtke",
@@ -799,7 +799,8 @@
     "verificationInvalid": "Poveznica za potvrdu nije valjana ili je istekla. Prijavi se i zatraži novu.",
     "resetInvalid": "Poveznica za promjenu lozinke nije valjana ili je istekla. Zatraži novu.",
     "creatorInvite": "Pokaži što stvaraš i pronađi brendove s kojima vrijedi surađivati.",
-    "companyInvite": "Predstavi svoju tvrtku i objavi kampanje za prave kreatore."
+    "companyInvite": "Predstavi svoju tvrtku i objavi kampanje za prave kreatore.",
+    "namePlaceholder": "Npr. Ana Kovač ili Studio Wave"
   },
   "account": {
     "basicInformation": "Osnovne informacije",
@@ -1085,7 +1086,9 @@
     "activityNoResults": "Nema rezultata za ovu pretragu.",
     "inquiriesIntro": "Zahtjevi za izravnu suradnju i razgovori o tvojim paketima.",
     "activityShown": "Prikazano {shown} od {total}",
-    "notificationsHint": "Primaj obavijesti o ponudama, porukama i kampanjama."
+    "notificationsHint": "Primaj obavijesti o ponudama, porukama i kampanjama.",
+    "visibilityPendingHint": "Profil je skriven dok administrator ne odobri račun. Nakon odobrenja možeš promijeniti vidljivost.",
+    "profileApprovedHiddenNotice": "Tvoj profil je odobren i aktivan. Isključi „Sakrij moj račun” da bude vidljiv drugima."
   },
   "moderation": {
     "eyebrow": "Wave katalog",
@@ -1152,12 +1155,12 @@
     "campaigns": "Kampanje",
     "pendingApplications": "Prijave na čekanju pregleda",
     "pendingRegistrations": "Registracije na čekanju odobrenja",
-    "registrationPendingNotice": "E-pošta je potvrđena. Račun će biti vidljiv nakon što ga Wave odobri.",
+    "registrationPendingNotice": "E-pošta je potvrđena. Nakon odobrenja moći ćeš uključiti vidljivost svog profila.",
     "homepageEyebrow": "Početna stranica",
     "homepageTitle": "Uređivanje sadržaja",
     "homepageDescription": "Odaberi sekciju kreatora te istaknute kreatore i kampanje.",
     "creatorMode": "Sekcija kreatora",
-    "latestCreators": "Najnoviji kreatori",
+    "latestCreators": "Izdvojeni, zatim najnoviji",
     "featuredCreators": "Istaknuti kreatori",
     "creatorPicks": "Odabir istaknutih kreatora",
     "creatorPicksHint": "Odaberi kreatore koji će se prikazivati kada je sekcija postavljena na istaknute.",
@@ -1434,7 +1437,8 @@
     "sortNewest": "Najnoviji",
     "sortFollowers": "Najveći broj pratitelja",
     "layoutLabel": "Prikaz kreatora",
-    "noCategories": "Nema pronađenih područja."
+    "noCategories": "Nema pronađenih područja.",
+    "sortRecommended": "Izdvojeni prvo"
   },
   "campaignDirectory": {
     "heroBadge": "Kampanje koje povezuju brendove i kreatore",
@@ -1889,7 +1893,7 @@
     "detailsIntro": "Opiši svoj problem što detaljnije kako bismo ti mogli brže pomoći.",
     "reviewTitle": "Pregled tiketa",
     "reviewIntro": "Provjeri unesene informacije prije slanja.",
-    "name": "Ime i prezime",
+    "name": "Ime i Prezime ili naziv tvrtke",
     "email": "Adresa e-pošte",
     "phone": "Telefon (opcionalno)",
     "category": "Kategorija",
@@ -1898,7 +1902,7 @@
     "description": "Opis",
     "titlePlaceholder": "Ukratko opiši zbog čega nam se javljaš",
     "descriptionPlaceholder": "Šta se dogodilo? Šta si očekivao/la? Koje korake možemo ponoviti?",
-    "namePlaceholder": "Tvoje ime i prezime",
+    "namePlaceholder": "Npr. Ana Kovač ili Studio Wave",
     "emailPlaceholder": "tvoj{'@'}email.com",
     "cancel": "Odustani",
     "back": "Nazad",

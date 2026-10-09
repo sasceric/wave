@@ -47,7 +47,8 @@ final class HomepageController
             $creatorQuery->andWhere('creator.featured = :featured')->setParameter('featured', true);
         }
         $creators = $creatorQuery
-            ->orderBy('creator.createdAt', \SortDirection::Descending)
+            ->orderBy('creator.featured', \SortDirection::Descending)
+            ->addOrderBy('creator.createdAt', \SortDirection::Descending)
             ->addOrderBy('creator.id', \SortDirection::Descending)
             ->setMaxResults(4)
             ->getQuery()
@@ -273,6 +274,7 @@ final class HomepageController
 
             return new JsonResponse(['error' => ApiMessages::get('approval_email_failed', $locale)], 503);
         }
+        $user->setHideMyAccount(true);
         $user->setApproved(true);
         $entityManager->flush();
 
@@ -350,6 +352,7 @@ final class HomepageController
                 continue;
             }
 
+            $user->setHideMyAccount(true);
             $user->setApproved(true);
             ++$approved;
         }

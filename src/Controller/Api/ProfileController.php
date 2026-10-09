@@ -45,6 +45,9 @@ final class ProfileController
         if (!$user instanceof User) {
             return new JsonResponse(['error' => ApiMessages::get('authentication_required', $locale)], 401);
         }
+        if (!$user->isApproved()) {
+            return new JsonResponse(['error' => ApiMessages::get('account_pending_approval', $locale)], 403);
+        }
         $data = JsonPayload::fromRequest($request);
         $hideMyAccount = is_array($data) ? ($data['hide_my_account'] ?? null) : null;
         if (!is_int($hideMyAccount) || !in_array($hideMyAccount, [0, 1], true)) {

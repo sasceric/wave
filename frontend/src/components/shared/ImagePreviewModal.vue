@@ -1,14 +1,12 @@
 <script setup>
 import { nextTick, ref, useId, watch } from 'vue'
-import { Download, X } from '@lucide/vue'
+import { X } from '@lucide/vue'
 
 const props = defineProps({
   open: { type: Boolean, required: true },
   title: { type: String, default: '' },
   src: { type: String, default: '' },
-  downloadUrl: { type: String, default: '' },
   closeLabel: { type: String, required: true },
-  downloadLabel: { type: String, required: true },
 })
 const emit = defineEmits(['update:open'])
 const dialog = ref(null)
@@ -30,7 +28,6 @@ watch(() => props.open, async (open) => {
         <button type="button" :aria-label="closeLabel" @click="emit('update:open', false)"><X :size="20" aria-hidden="true" /></button>
       </header>
       <div class="image-preview-modal__image"><img v-if="open && src" :src="src" :alt="title" /></div>
-      <footer><a class="button button--outline" :href="downloadUrl" download><Download :size="16" aria-hidden="true" />{{ downloadLabel }}</a></footer>
     </section>
   </dialog>
 </template>

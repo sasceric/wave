@@ -14,7 +14,7 @@ use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
 
 final class ApiAccess
 {
-    public static function requireRole(Security $security, string $role, string $locale, bool $requireVerified = false): User|JsonResponse
+    public static function requireRole(Security $security, string $role, string $locale, bool $requireVerified = false, bool $requireApproved = true): User|JsonResponse
     {
         $user = $security->getUser();
         if (!$user instanceof User) {
@@ -23,7 +23,7 @@ final class ApiAccess
         if (!$user->hasRole($role)) {
             return new JsonResponse(['error' => ApiMessages::get('forbidden', $locale)], 403);
         }
-        if (!$user->hasRole('ROLE_ADMIN') && !$user->isApproved()) {
+        if ($requireApproved && !$user->hasRole('ROLE_ADMIN') && !$user->isApproved()) {
             return new JsonResponse(['error' => ApiMessages::get('account_pending_approval', $locale)], 403);
         }
         if ($requireVerified && !$user->isEmailVerified()) {

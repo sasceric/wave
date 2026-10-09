@@ -20,6 +20,7 @@ final class OAuthAccountFactoryTest extends KernelTestCase
         self::assertSame('ROLE_CREATOR', $user->getRoles()[0]);
         self::assertTrue($user->isEmailVerified());
         self::assertFalse($user->isApproved());
+        self::assertTrue($user->isHideMyAccount());
         self::assertFalse($user->hasCompleteProfile());
         self::assertInstanceOf(Creator::class, $user->getCreator());
         self::assertNull($user->getCompany());
@@ -39,6 +40,7 @@ final class OAuthAccountFactoryTest extends KernelTestCase
         self::assertSame('ROLE_COMPANY', $user->getRoles()[0]);
         self::assertTrue($user->isEmailVerified());
         self::assertFalse($user->isApproved());
+        self::assertTrue($user->isHideMyAccount());
         self::assertFalse($user->hasCompleteProfile());
         self::assertInstanceOf(Company::class, $user->getCompany());
         self::assertNull($user->getCreator());

@@ -41,6 +41,7 @@ final class OAuthAccountFactory
         $user->setPreferredLocale($locale);
         $user->setEmailVerified(true);
         $user->setApproved(false);
+        $user->setHideMyAccount(true);
 
         if ($accountType === 'creator') {
             $user->setCreator(new Creator(ProfileSlug::fromName($name), $name, '', '', '', []));

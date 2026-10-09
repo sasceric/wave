@@ -111,19 +111,21 @@ final class AuthController extends AbstractController
         if (!filter_var($email, FILTER_VALIDATE_EMAIL) || mb_strlen($email) > 180 || mb_strlen($password) < 12 || mb_strlen($password) > 4096 || !in_array($type, ['creator', 'company'], true) || $phone === '' || mb_strlen($phone) > 40 || $city === '' || mb_strlen($city) > 70 || preg_match('/^[A-Z]{2}$/', $countryCode) !== 1) {
             return new JsonResponse(['error' => ApiMessages::get('invalid_registration', $locale)], 400);
         }
+        $name = is_string($data['name'] ?? null) ? trim($data['name']) : '';
         if ($type === 'creator') {
             $birthday = CreatorBirthday::parse($data['birthday'] ?? null);
             if ($birthday === false) {
                 return new JsonResponse(['error' => ApiMessages::get('invalid_birthday', $locale), 'fields' => ['birthday']], 400);
             }
-            $firstName = is_string($data['firstName'] ?? null) ? trim($data['firstName']) : '';
-            $lastName = is_string($data['lastName'] ?? null) ? trim($data['lastName']) : '';
-            if ($firstName === '' || $lastName === '' || mb_strlen($firstName) > 60 || mb_strlen($lastName) > 60) {
-                return new JsonResponse(['error' => ApiMessages::get('invalid_registration', $locale)], 400);
+            // Accept the previous payload while cached registration forms are still in use.
+            if (!array_key_exists('name', $data)) {
+                $firstName = is_string($data['firstName'] ?? null) ? trim($data['firstName']) : '';
+                $lastName = is_string($data['lastName'] ?? null) ? trim($data['lastName']) : '';
+                if ($firstName === '' || $lastName === '' || mb_strlen($firstName) > 60 || mb_strlen($lastName) > 60) {
+                    return new JsonResponse(['error' => ApiMessages::get('invalid_registration', $locale)], 400);
+                }
+                $name = $firstName.' '.$lastName;
             }
-            $name = $firstName.' '.$lastName;
-        } else {
-            $name = is_string($data['name'] ?? null) ? trim($data['name']) : '';
         }
         if (mb_strlen($name) < 2 || mb_strlen($name) > 120) {
             return new JsonResponse(['error' => ApiMessages::get('invalid_registration', $locale)], 400);
@@ -143,6 +145,7 @@ final class AuthController extends AbstractController
         $user->setPreferredLocale($locale);
         $user->setEmailVerified(false);
         $user->setApproved(false);
+        $user->setHideMyAccount(true);
         if ($type === 'creator') {
             $category = is_string($data['category'] ?? null) ? trim($data['category']) : '';
             $categories = $this->categoryList($data['categories'] ?? [$category]);

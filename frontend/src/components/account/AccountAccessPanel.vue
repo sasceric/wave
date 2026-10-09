@@ -44,10 +44,8 @@ const form = reactive({
   email: '',
   password: '',
   accountType: 'creator',
-  firstName: '',
+  name: '',
   birthday: '',
-  lastName: '',
-  companyName: '',
   phone: '',
   phoneCountry: defaultPhoneCountry(locale.value),
   categories: ['Lifestyle'],
@@ -129,8 +127,7 @@ async function loadOAuthState() {
   try {
     const response = await apiRequest('/auth/oauth/pending')
     form.email = response.data.email
-    form.firstName = response.data.firstName
-    form.lastName = response.data.lastName
+    form.name = response.data.name || [response.data.firstName, response.data.lastName].filter(Boolean).join(' ')
     form.accountType = response.data.accountType
     socialPending.value = true
     notice.value = t('auth.socialAuthPending')
@@ -188,19 +185,17 @@ async function submit() {
   if (isRegistration) {
     Object.assign(body, {
       accountType: form.accountType,
+      name: form.name.trim(),
       country: form.country,
       city: form.city.trim(),
       phone: normalizedPhone,
       ...(form.accountType === 'creator'
         ? {
-            firstName: form.firstName.trim(),
-            lastName: form.lastName.trim(),
-            name: `${form.firstName.trim()} ${form.lastName.trim()}`,
             category: form.categories[0],
             categories: form.categories,
             birthday: form.birthday || null,
           }
-        : { name: form.companyName.trim(), industries: form.industries }),
+        : { industries: form.industries }),
     })
   }
 
@@ -396,25 +391,18 @@ function changeMode(nextMode) {
             </label>
             </div>
         </fieldset>
+        <label class="form-field form-field--wide">
+          <span>{{ t('auth.name') }}</span>
+          <input
+            v-model.trim="form.name"
+            required
+            minlength="2"
+            maxlength="120"
+            :autocomplete="form.accountType === 'creator' ? 'name' : 'organization'"
+            :placeholder="t('auth.namePlaceholder')"
+          />
+        </label>
         <template v-if="form.accountType === 'creator'">
-          <label class="form-field">
-            <span>{{ t('auth.firstName') }}</span>
-            <input
-              v-model.trim="form.firstName"
-              required
-              maxlength="60"
-              autocomplete="given-name"
-            />
-          </label>
-          <label class="form-field">
-            <span>{{ t('auth.lastName') }}</span>
-            <input
-              v-model.trim="form.lastName"
-              required
-              maxlength="60"
-              autocomplete="family-name"
-            />
-          </label>
           <DatePicker v-model="form.birthday" :label="t('account.birthday')" :helper-text="t('account.birthdayPrivate')" min="1900-01-01" :max="dateOnly()" />
           <MultiSelect required
             class="form-field--wide"
@@ -430,17 +418,6 @@ function changeMode(nextMode) {
           />
         </template>
         <template v-else>
-          <label class="form-field form-field--wide">
-            <span>{{ t('auth.companyName') }}</span>
-            <input
-              v-model.trim="form.companyName"
-              required
-              minlength="2"
-              maxlength="120"
-              autocomplete="organization"
-              :placeholder="t('auth.companyNamePlaceholder')"
-            />
-          </label>
           <MultiSelect required
               v-model="form.industries"
               :options="industries || []"

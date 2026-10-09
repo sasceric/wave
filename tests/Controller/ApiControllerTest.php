@@ -118,6 +118,36 @@ final class ApiControllerTest extends WebTestCase
         self::assertSame('2026-09-18', $payload['data'][0]['socialProfiles'][0]['lastUpdated']);
     }
 
+    public function testFeaturedCreatorsLeadHomepageAndRecommendedCursorPages(): void
+    {
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        foreach ([['highlight-new', true, '-10 days'], ['highlight-old', true, '-20 days'], ['regular-new', false, '-1 day'], ['regular-old', false, '-2 days']] as [$slug, $featured, $date]) {
+            $creator = new Creator($slug, $slug, 'Travel', 'Sarajevo', 'Profile', [], createdAt: new \DateTimeImmutable($date));
+            $creator->setFeatured($featured);
+            $em->persist($creator);
+        }
+        $em->flush();
+        $expected = ['highlight-new', 'highlight-old', 'regular-new', 'regular-old'];
+        $this->client->request('GET', '/api/homepage');
+        self::assertResponseIsSuccessful();
+        $payload = json_decode($this->client->getResponse()->getContent(), true, flags: JSON_THROW_ON_ERROR);
+        self::assertSame($expected, array_column($payload['data']['creators'], 'slug'));
+        $slugs = [];
+        $next = null;
+        do {
+            $this->client->request('GET', '/api/creators?pagination=cursor&sort=recommended&limit=1'.($next === null ? '' : '&cursor='.urlencode($next)));
+            self::assertResponseIsSuccessful();
+            $payload = json_decode($this->client->getResponse()->getContent(), true, flags: JSON_THROW_ON_ERROR);
+            $slugs = [...$slugs, ...array_column($payload['data'], 'slug')];
+            $next = $payload['meta']['nextCursor'];
+        } while ($next !== null && count($slugs) < 6);
+        self::assertSame($expected, $slugs);
+        $this->client->request('GET', '/api/creators?sort=newest&limit=4');
+        self::assertResponseIsSuccessful();
+        $payload = json_decode($this->client->getResponse()->getContent(), true, flags: JSON_THROW_ON_ERROR);
+        self::assertSame(['regular-new', 'regular-old', 'highlight-new', 'highlight-old'], array_column($payload['data'], 'slug'));
+    }
+
     public function testCreatorFiltersAndSortingUseVisibleExistingFieldsAcrossCursorPages(): void
     {
         $em = static::getContainer()->get(EntityManagerInterface::class);

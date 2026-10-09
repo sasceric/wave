@@ -42,7 +42,7 @@ const platforms = computed(() => encodeSelection(selectedPlatforms.value))
 const countries = computed(() => encodeSelection(props.countryCode ? [props.countryCode] : selectedCountries.value))
 const city = ref('')
 const audience = ref('')
-const sort = ref('newest')
+const sort = ref('recommended')
 const layout = ref('grid')
 const filtersOpen = ref(false)
 const facets = ref({ countries: [] })
@@ -64,6 +64,7 @@ const audienceOptions = computed(() => [
   { value: 'large', label: t('creatorDirectory.audienceLarge') },
 ])
 const sortOptions = computed(() => [
+  { value: 'recommended', label: t('creatorDirectory.sortRecommended') },
   { value: 'newest', label: t('creatorDirectory.sortNewest') },
   { value: 'followers', label: t('creatorDirectory.sortFollowers') },
   { value: 'name', label: t('companyDirectory.sortName') },

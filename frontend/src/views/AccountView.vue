@@ -477,7 +477,7 @@ async function resendVerification() {
 }
 
 async function updateAccountVisibility(value) {
-  if (!user.value || visibilitySaving.value) {
+  if (!user.value || !user.value.approved || visibilitySaving.value) {
     return
   }
 
@@ -972,6 +972,9 @@ onMounted(loadDashboard)
     <div v-else-if="!user.approved" class="verification-banner" role="status">
       <p>{{ user.profileComplete ? t('account.approvalPendingNotice') : t('account.profileIncomplete') }}</p>
     </div>
+    <div v-else-if="user.hide_my_account" class="verification-banner" role="status">
+      <p>{{ t('account.profileApprovedHiddenNotice') }}</p>
+    </div>
 
     <div class="account-layout">
       <AccountSidebar :user="user" :profile="profile" />
@@ -1066,7 +1069,7 @@ onMounted(loadDashboard)
                 :remove-message="t('account.profileImageRemoveMessage')"
                 :confirm-label="t('account.remove')"
                 :cancel-label="t('account.richTextCancel')"
-                :disabled="busy || !user.approved"
+                :disabled="busy"
               />
             </div>
             <div class="form-grid profile-edit-basics">
@@ -1383,7 +1386,7 @@ onMounted(loadDashboard)
               :remove-message="t('account.profileImageRemoveMessage')"
               :confirm-label="t('account.remove')"
               :cancel-label="t('account.richTextCancel')"
-              :disabled="busy || !user.approved"
+              :disabled="busy"
             />
             <div><h3>{{ t('account.companyCover') }}</h3>
             <ProfileImageField
@@ -1401,7 +1404,7 @@ onMounted(loadDashboard)
               :remove-message="t('account.removeCompanyCoverMessage')"
               :confirm-label="t('account.remove')"
               :cancel-label="t('account.richTextCancel')"
-              :disabled="busy || !user.approved"
+              :disabled="busy"
             />
             </div>
           </div>

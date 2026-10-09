@@ -47,6 +47,7 @@ final class OAuthRegistrationFlowTest extends WebTestCase
         self::assertResponseIsSuccessful();
         self::assertSame('creator@example.test', $this->payload()['data']['email']);
         self::assertSame('Avery', $this->payload()['data']['firstName']);
+        self::assertSame('Avery Creator', $this->payload()['data']['name']);
 
         $this->client->request(
             'POST',
@@ -58,8 +59,7 @@ final class OAuthRegistrationFlowTest extends WebTestCase
             ],
             content: json_encode([
                 'accountType' => 'creator',
-                'firstName' => 'Avery',
-                'lastName' => 'Creator',
+                'name' => 'Avery Creator',
                 'birthday' => '2000-02-29',
                 'phone' => '+387 61 123 456',
                 'country' => 'BA',
@@ -75,8 +75,10 @@ final class OAuthRegistrationFlowTest extends WebTestCase
         self::assertInstanceOf(User::class, $user);
         self::assertTrue($user->isEmailVerified());
         self::assertFalse($user->isApproved());
+        self::assertTrue($user->isHideMyAccount());
         self::assertTrue($user->hasCompleteProfile());
         self::assertSame('en', $user->getPreferredLocale());
+        self::assertSame('Avery Creator', $user->getCreator()->getDisplayName());
         self::assertSame('2000-02-29', $user->getCreator()->getBirthday()->format('Y-m-d'));
         self::assertInstanceOf(OAuthIdentity::class, $entityManager->getRepository(OAuthIdentity::class)
             ->findOneBy(['provider' => 'google', 'subject' => 'provider-user-1']));

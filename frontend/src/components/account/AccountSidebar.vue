@@ -61,13 +61,14 @@ const publicRoute = computed(() => identity.value.slug ? {
   name: props.user?.accountType === 'creator' ? 'creator-profile' : 'company-profile',
   params: { slug: identity.value.slug },
 } : null)
-const primaryItems = computed(() => navigationItems.value.filter((item) => !item.route.startsWith('admin')))
+const primaryItems = computed(() => navigationItems.value.filter((item) => !item.route.startsWith('admin') && item.group !== 'settings'))
 const adminItems = computed(() => navigationItems.value.filter((item) => (
-  item.route.startsWith('admin') && item.group !== 'marketing'
+  item.route.startsWith('admin') && item.group !== 'marketing' && item.group !== 'settings'
 )))
 const adminMarketingItems = computed(() => navigationItems.value.filter((item) => (
   item.group === 'marketing'
 )))
+const settingsItems = computed(() => navigationItems.value.filter((item) => item.group === 'settings'))
 const exploreItems = computed(() => [
   props.user
     ? { route: 'companies', label: t('app.companies'), icon: Building2 }
@@ -113,7 +114,7 @@ onBeforeUnmount(() => {
 const navigationItems = computed(() => {
   const canUseMarketplace = props.user?.approved || props.user?.isAdmin
   const creator = props.user?.accountType === 'creator'
-  const items = props.user ? [{ route: 'account-support', labelKey: 'support.myTickets', icon: LifeBuoy }] : []
+  const items = props.user ? [{ route: 'account-support', labelKey: 'support.myTickets', icon: LifeBuoy, group: 'settings' }] : []
 
   if (canUseMarketplace && creator) {
     items.push(
@@ -145,7 +146,7 @@ const navigationItems = computed(() => {
       { route: 'admin-email-templates', labelKey: 'adminDashboard.navEmailTemplates', icon: Mail },
       { route: 'admin-credit-settings', labelKey: 'credits.adminTitle', icon: Coins },
       { route: 'admin-tools', labelKey: 'adminTools.title', icon: Wrench },
-      { route: 'admin-support', labelKey: 'support.adminTitle', icon: LifeBuoy },
+      { route: 'admin-support', labelKey: 'support.adminTitle', icon: LifeBuoy, group: 'settings' },
       { route: 'admin-qr', labelKey: 'adminQr.title', icon: QrCode },
       {
         route: 'admin-subscribers',
@@ -191,7 +192,7 @@ const navigationItems = computed(() => {
       </div>
       <LocalizedLink v-for="item in exploreItems" :key="item.route" class="account-sidebar__link" :class="{ 'is-active': route.meta.routeName === item.route }" :to="{ name: item.route }" @click="closeMobileSidebar"><component :is="item.icon" :size="20" aria-hidden="true" /><span class="account-sidebar__text">{{ item.label }}</span></LocalizedLink>
     </div>
-    <div v-if="user" class="account-sidebar__group">
+    <div v-if="user && primaryItems.length" class="account-sidebar__group">
     <p class="account-sidebar__label">{{ t('account.navigation') }}</p>
     <LocalizedLink
       v-for="item in primaryItems"
@@ -220,6 +221,7 @@ const navigationItems = computed(() => {
     <div v-if="user" class="account-sidebar__group">
       <p class="account-sidebar__label">{{ t('account.sidebarSettings') }}</p>
       <LocalizedLink class="account-sidebar__link" :to="{ name: 'account' }" @click="closeMobileSidebar"><UserRound :size="20" aria-hidden="true" /><span class="account-sidebar__text">{{ t('app.account') }}</span></LocalizedLink>
+      <LocalizedLink v-for="item in settingsItems" :key="item.route" class="account-sidebar__link" :class="{ 'is-active': route.meta.routeName === item.route }" :to="{ name: item.route }" :aria-current="route.meta.routeName === item.route ? 'page' : undefined" @click="closeMobileSidebar"><component :is="item.icon" :size="20" aria-hidden="true" /><span class="account-sidebar__text">{{ item.label }}</span></LocalizedLink>
       <CreditBalanceLink v-if="user.approved || user.isAdmin" @click="closeMobileSidebar" />
       <button class="account-sidebar__link account-sidebar__link--signout" type="button" :disabled="signingOut" @click="signOut"><LogOut :size="20" aria-hidden="true" /><span class="account-sidebar__text">{{ t('account.signOut') }}</span></button>
       <p v-if="signOutError" class="account-sidebar__error" role="alert">{{ signOutError }}</p>

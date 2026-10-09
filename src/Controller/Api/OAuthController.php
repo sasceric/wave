@@ -220,6 +220,7 @@ final class OAuthController extends AbstractController
         return new JsonResponse([
             'data' => [
                 'email' => $pending['email'],
+                'name' => trim(implode(' ', array_filter([$pending['givenName'] ?? null, $pending['familyName'] ?? null], 'is_string'))),
                 'firstName' => is_string($pending['givenName'] ?? null) ? $pending['givenName'] : '',
                 'lastName' => is_string($pending['familyName'] ?? null) ? $pending['familyName'] : '',
                 'accountType' => in_array($pending['accountType'] ?? null, ['creator', 'company'], true) ? $pending['accountType'] : 'creator',
@@ -277,19 +278,21 @@ final class OAuthController extends AbstractController
             return new JsonResponse(['error' => ApiMessages::get('invalid_registration', $locale)], 400);
         }
 
+        $name = is_string($data['name'] ?? null) ? trim($data['name']) : '';
         if ($type === 'creator') {
             $birthday = CreatorBirthday::parse($data['birthday'] ?? null);
             if ($birthday === false) {
                 return new JsonResponse(['error' => ApiMessages::get('invalid_birthday', $locale), 'fields' => ['birthday']], 400);
             }
-            $firstName = is_string($data['firstName'] ?? null) ? trim($data['firstName']) : '';
-            $lastName = is_string($data['lastName'] ?? null) ? trim($data['lastName']) : '';
-            if ($firstName === '' || $lastName === '' || mb_strlen($firstName) > 60 || mb_strlen($lastName) > 60) {
-                return new JsonResponse(['error' => ApiMessages::get('invalid_registration', $locale)], 400);
+            // Accept the previous payload while cached registration forms are still in use.
+            if (!array_key_exists('name', $data)) {
+                $firstName = is_string($data['firstName'] ?? null) ? trim($data['firstName']) : '';
+                $lastName = is_string($data['lastName'] ?? null) ? trim($data['lastName']) : '';
+                if ($firstName === '' || $lastName === '' || mb_strlen($firstName) > 60 || mb_strlen($lastName) > 60) {
+                    return new JsonResponse(['error' => ApiMessages::get('invalid_registration', $locale)], 400);
+                }
+                $name = $firstName.' '.$lastName;
             }
-            $name = $firstName.' '.$lastName;
-        } else {
-            $name = is_string($data['name'] ?? null) ? trim($data['name']) : '';
         }
         if (mb_strlen($name) < 2 || mb_strlen($name) > 120) {
             return new JsonResponse(['error' => ApiMessages::get('invalid_registration', $locale)], 400);
@@ -317,6 +320,7 @@ final class OAuthController extends AbstractController
         $user->setPreferredLocale($locale);
         $user->setEmailVerified(true);
         $user->setApproved(false);
+        $user->setHideMyAccount(true);
 
         if ($type === 'creator') {
             $categories = $this->categoryList($data['categories'] ?? []);

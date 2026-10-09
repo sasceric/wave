@@ -9,6 +9,8 @@ const modules = {
 }
 test('creator selections use stable values and clear without changing sorting', async () => {
   const { state } = await setupView('../src/views/CreatorsView.vue', modules)
+  assert.equal(state.sort.value, 'recommended')
+  state.sort.value = 'followers'
   state.selectedCategories.value = ['Travel', 'Food']
   state.selectedCountries.value = ['BA', 'HR']
   state.selectedPlatforms.value = ['TikTok', 'Instagram']
@@ -20,7 +22,7 @@ test('creator selections use stable values and clear without changing sorting', 
   state.clearFilters()
   assert.equal(state.activeFilterCount.value, 0)
   assert.equal(state.countries.value, '')
-  assert.equal(state.sort.value, 'newest')
+  assert.equal(state.sort.value, 'followers')
 })
 test('creator platform links retain their filter and reject unsupported platforms', async () => {
   const { state } = await setupView('../src/views/CreatorsView.vue', modules)

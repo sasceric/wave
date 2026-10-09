@@ -366,7 +366,7 @@ onBeforeUnmount(() => { ++contextVersion; ++listVersion; ++detailVersion; window
         </div>
       </section>
     </div>
-    <ImagePreviewModal v-model:open="previewOpen" :title="previewFile?.name || ''" :src="previewFile?.previewUrl ? `${previewFile.previewUrl}?locale=${locale}` : ''" :download-url="previewFile ? attachmentUrl(previewFile) : ''" :close-label="t('support.close')" :download-label="t('support.download')" />
+    <ImagePreviewModal v-model:open="previewOpen" :title="previewFile?.name || ''" :src="previewFile?.previewUrl ? `${previewFile.previewUrl}?locale=${locale}` : ''" :close-label="t('support.close')" />
   </AdminPage>
 </template>
 

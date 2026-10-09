@@ -272,6 +272,21 @@ Google Search Console is separate and does require property ownership verificati
 
 Registration and login use hashed passwords, rate limits, and same-origin server sessions with HTTP-only, same-site cookies and CSRF validation on all writes. Obtain the current CSRF token from `/api/auth/csrf` and send it in the `X-CSRF-Token` header. Email/password registrations must verify their email before the admin can approve the account; verified accounts still wait for admin approval before participating in marketplace actions. The registration email explains both steps, and an approval email is sent when an admin approves the account. Google and Apple registration accept the provider's verified email, still collect all required creator/company profile fields, send a registration-pending email, and remain unapproved until an admin reviews them. Profile editing and reading remain available while approval is pending. Verification links expire after 24 hours, reset links after one hour, and both are single-use. Password-reset requests return the same response whether or not an account exists.
 
+Password and social registration use one required `name` field (2–120 characters)
+for the creator's full name or company name. The API also accepts the previous
+creator `firstName`/`lastName` payload when `name` is absent, so cached forms can
+finish registration during a release.
+
+New accounts start hidden. Owners can upload their profile image (and company
+logo/cover) before email verification or approval; these images stay private.
+The visibility switch is locked until admin approval. Approval keeps the profile
+hidden and the approval email explains how to make it visible in account settings.
+
+Homepage creator lists prioritize admin-selected featured creators before newer
+profiles; featured-only mode still excludes other profiles. The creators directory
+defaults to featured-first (`sort=recommended`) with cursor pagination that includes
+the featured flag. Explicit newest, followers and name sorts keep their own order.
+
 ### Google and Apple sign-in
 
 Google and Apple buttons are always visible on the login and registration screens. A button is enabled only after that provider's required credentials are configured. You can set up either provider independently.

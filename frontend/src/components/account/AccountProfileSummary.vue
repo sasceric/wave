@@ -57,7 +57,7 @@ const metrics = computed(() => [
       </button>
     </div>
     <div class="account-profile-summary__visibility">
-      <SwitchField :model-value="user.hide_my_account" :label="t('account.hideAccount')" :description="t('account.hideAccountHint')" :disabled="visibilitySaving" @update:model-value="$emit('visibility', $event)" />
+      <SwitchField :model-value="user.hide_my_account" :label="t('account.hideAccount')" :description="t(user.approved ? 'account.hideAccountHint' : 'account.visibilityPendingHint')" :disabled="visibilitySaving || !user.approved" @update:model-value="$emit('visibility', $event)" />
       <SwitchField :model-value="user.notificationsEnabled === false ? 0 : 1" :label="t('app.notifications')" :description="t('account.notificationsHint')" :disabled="notificationsSaving || !user.emailVerified" @update:model-value="$emit('notifications', $event === 1)" />
     </div>
   </section>
