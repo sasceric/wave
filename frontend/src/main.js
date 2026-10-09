@@ -6,6 +6,9 @@ import router from './router'
 import { loadCurrentUser } from './composables/useCurrentUser'
 import { showStartupLoader } from './lib/startupLoader'
 import formValidation from './directives/formValidation'
+import { configureIOSViewport } from './lib/iosViewport'
+
+configureIOSViewport()
 
 const app = createApp(App).use(router).use(i18n)
 app.directive('form-validation', formValidation)
