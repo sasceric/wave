@@ -237,17 +237,27 @@ Set `WAVE_NOTIFICATIONS_ENABLED=true` explicitly in production. It gates both Me
 
 For this Hestia deployment, put these values in
 `/home/steelcodeweb/web/wave.ba/public_html/.env.local`, preserving the other
-production settings already there. Restrict the file, then regenerate Symfony's
-compiled production environment and clear its cache:
+production settings already there. Pause the Wave dispatcher and consumers using
+[the deployment procedure](server-operations.md#later-deployments), restrict the
+file, then regenerate Symfony's compiled production environment and clear its
+cache as the web account:
 
 ```sh
 sudo chmod 640 /home/steelcodeweb/web/wave.ba/public_html/.env.local
 cd /home/steelcodeweb/web/wave.ba/public_html
 COMPOSER_ALLOW_SUPERUSER=1 APP_ENV=prod php8.4 "$(command -v composer)" dump-env prod
-APP_ENV=prod php8.4 bin/console cache:clear
+sudo chown steelcodeweb:steelcodeweb .env.local.php
+sudo chmod 640 .env.local.php
+sudo chown -R steelcodeweb:steelcodeweb var
+sudo chmod -R u+rwX var
+sudo -u steelcodeweb env APP_ENV=prod APP_DEBUG=0 php8.4 bin/console cache:clear --no-debug --no-interaction
 ```
 
-Editing `.env.local` or clearing cache alone does not regenerate `.env.local.php`. Run both commands after environment changes. The [notification checklist](server-notifications.md#apply-configuration-changes) includes the non-secret flag check and cache ownership steps for root deployments.
+Editing `.env.local` or clearing cache alone does not regenerate `.env.local.php`.
+After successful warmup, reload the active PHP-FPM service and resume previously
+active Wave units using the deployment procedure. The
+[notification checklist](server-notifications.md#apply-configuration-changes)
+includes the non-secret flag check and cache ownership steps for root deployments.
 
 The Symfony Mercure component automatically scopes the subscriber cookie to
 `.wave.ba` when the app origin is `wave.ba` and the Hub is on

@@ -1996,6 +1996,8 @@
       "low": "Low",
       "normal": "Normal",
       "high": "High"
-    }
+    },
+    "statusChangedTo": "Status changed to: {status}",
+    "download": "Download"
   }
 }

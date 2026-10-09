@@ -147,18 +147,22 @@ final class SupportInboxController
         $existing = $this->em->getRepository(SupportTicketMessage::class)->findOneBy(['ticket' => $ticket, 'submissionKey' => $key]);
         if ($existing) {
             if ($existing->getSender()?->getId() !== $user->getId()) return $this->invalid($request);
-            return $this->response(['data' => $this->message($existing, $scope), 'status' => $ticket->getStatus()]);
+            $event = $this->em->getRepository(SupportTicketMessage::class)->findOneBy(['ticket' => $ticket, 'submissionKey' => hash('sha256', 'status:'.$key)]);
+            return $this->response(['data' => $this->message($existing, $scope), 'status' => $ticket->getStatus(), 'statusEvent' => $event ? $this->message($event, $scope) : null]);
         }
         if (!$limiter->create((string) $user->getId())->consume()->isAccepted()) return $this->response(['error' => ApiMessages::get('rate_limited', LocaleContext::fromRequest($request) ?? 'bs')], 429);
         $files = $request->files->all('attachments');
         if (!$this->attachments->validate($files)) return $this->response(['error' => $this->copy->get(LocaleContext::fromRequest($request) ?? 'bs', 'invalidFiles')], 400);
         $message = new SupportTicketMessage($ticket, $user, $body, $internal, $key);
+        $event = null;
         try {
             $message->setAttachments($this->attachments->store($ticket, $files));
             $this->em->persist($message);
             if (!$internal) {
+                $previousStatus = $ticket->getStatus();
                 $ticket->touch($body);
                 $ticket->setStatus($scope === 'me' ? 'open' : ($ticket->getStatus() === 'open' ? 'in_progress' : $ticket->getStatus()));
+                if ($previousStatus !== $ticket->getStatus()) $event = $this->statusEvent($ticket, $user, hash('sha256', 'status:'.$key));
             }
             $this->em->flush();
         } catch (\InvalidArgumentException $error) {
@@ -169,7 +173,7 @@ final class SupportInboxController
             throw $error;
         }
         if (!$internal) $this->alerts->send($ticket, $user, 'support_ticket_reply', $scope === 'me');
-        return $this->response(['data' => $this->message($message, $scope), 'status' => $ticket->getStatus()], 201);
+        return $this->response(['data' => $this->message($message, $scope), 'status' => $ticket->getStatus(), 'statusEvent' => $event ? $this->message($event, $scope) : null], 201);
     }
 
     #[Route('/{id}', requirements: ['id' => '\d+'], methods: ['PATCH'])]
@@ -194,10 +198,14 @@ final class SupportInboxController
         if (isset($data['category'])) $ticket->setCategory($data['category']);
         if (array_key_exists('assignedToId', $data)) $ticket->setAssignedTo($assigned);
         $ticket->touch();
-        $this->em->flush();
         $actor = $this->security->getUser();
+        $event = $changedStatus && $actor instanceof User ? $this->statusEvent($ticket, $actor, bin2hex(random_bytes(32))) : null;
+        $this->em->flush();
         if ($changedStatus && $actor instanceof User) $this->alerts->send($ticket, $actor, 'support_ticket_updated', false);
-        return $this->detail($request, $scope, $id);
+        $response = $this->detail($request, $scope, $id);
+        $payload = json_decode($response->getContent(), true, flags: JSON_THROW_ON_ERROR);
+        $payload['statusEvent'] = $event ? $this->message($event, $scope) : null;
+        return $this->response($payload);
     }
 
     #[Route('/{id}/read', requirements: ['id' => '\d+'], methods: ['POST'])]
@@ -214,7 +222,9 @@ final class SupportInboxController
 
     #[Route('/{id}/attachments/{index}', requirements: ['id' => '\d+', 'index' => '\d+'], methods: ['GET'])]
     #[Route('/{id}/messages/{messageId}/attachments/{index}', requirements: ['id' => '\d+', 'messageId' => '\d+', 'index' => '\d+'], methods: ['GET'])]
-    public function download(Request $request, string $scope, int $id, int $index, ?int $messageId = null): BinaryFileResponse|JsonResponse
+    #[Route('/{id}/attachments/{index}/preview', defaults: ['preview' => true], requirements: ['id' => '\d+', 'index' => '\d+'], methods: ['GET'])]
+    #[Route('/{id}/messages/{messageId}/attachments/{index}/preview', defaults: ['preview' => true], requirements: ['id' => '\d+', 'messageId' => '\d+', 'index' => '\d+'], methods: ['GET'])]
+    public function download(Request $request, string $scope, int $id, int $index, ?int $messageId = null, bool $preview = false): BinaryFileResponse|JsonResponse
     {
         $ticket = $this->ticket($request, $scope, $id);
         if ($ticket instanceof JsonResponse) return $ticket;
@@ -226,9 +236,10 @@ final class SupportInboxController
         }
         $file = $files[$index] ?? null;
         if (!$file || !is_file($path = $this->attachments->path($ticket, $file))) return $this->missing($request);
+        if ($preview && !in_array($file['mime'], ['image/webp', 'image/jpeg', 'image/png', 'image/gif'], true)) return $this->missing($request);
         $response = new BinaryFileResponse($path);
-        $response->setContentDisposition(ResponseHeaderBag::DISPOSITION_ATTACHMENT, $file['name'], 'attachment');
-        $response->headers->set('Content-Type', 'application/octet-stream');
+        $response->setContentDisposition($preview ? ResponseHeaderBag::DISPOSITION_INLINE : ResponseHeaderBag::DISPOSITION_ATTACHMENT, $file['name'], 'attachment');
+        $response->headers->set('Content-Type', $preview ? $file['mime'] : 'application/octet-stream');
         $response->headers->set('X-Content-Type-Options', 'nosniff');
         $response->headers->set('Cache-Control', 'private, no-store');
         return $response;
@@ -267,13 +278,27 @@ final class SupportInboxController
     {
         return ['avatarUrl' => $message->getSender()?->getCreator()?->getAvatarMedia()?->getUrl() ?? $message->getSender()?->getCreator()?->getAvatarUrl() ?? $message->getSender()?->getCompany()?->getLogoMedia()?->getUrl() ?? $message->getSender()?->getCompany()?->getLogoUrl(),
             'id' => $message->getId(), 'senderId' => $message->getSender()?->getId(), 'senderName' => $message->getSenderName(), 'staff' => $message->isStaff(),
-            'internal' => $message->isInternal(), 'body' => $message->getBody(), 'createdAt' => $message->getCreatedAt()->format(DATE_ATOM),
+            'internal' => $message->isInternal(), 'eventStatus' => $message->getEventStatus(), 'body' => $message->getBody(), 'createdAt' => $message->getCreatedAt()->format(DATE_ATOM),
             'attachments' => $this->files($message->getTicket(), $message->getAttachments(), $scope, $message->getId())];
+    }
+
+    private function statusEvent(SupportTicket $ticket, User $actor, string $key): SupportTicketMessage
+    {
+        $label = $this->copy->get($ticket->getLocale(), 'statuses.'.$ticket->getStatus());
+        $body = str_replace('{status}', $label, $this->copy->get($ticket->getLocale(), 'statusChangedTo'));
+        $event = new SupportTicketMessage($ticket, $actor, $body, false, $key);
+        $event->setEventStatus($ticket->getStatus());
+        $this->em->persist($event);
+        return $event;
     }
 
     private function files(SupportTicket $ticket, array $files, string $scope, ?int $messageId = null): array
     {
-        return array_map(static fn (array $file, int $index): array => ['name' => $file['name'], 'size' => $file['size'], 'url' => '/api/'.$scope.'/support-tickets/'.$ticket->getId().($messageId ? '/messages/'.$messageId : '').'/attachments/'.$index], $files, array_keys($files));
+        return array_map(static function (array $file, int $index) use ($ticket, $scope, $messageId): array {
+            $url = '/api/'.$scope.'/support-tickets/'.$ticket->getId().($messageId ? '/messages/'.$messageId : '').'/attachments/'.$index;
+            return ['name' => $file['name'], 'size' => $file['size'], 'url' => $url,
+                'previewUrl' => in_array($file['mime'], ['image/webp', 'image/jpeg', 'image/png', 'image/gif'], true) ? $url.'/preview' : null];
+        }, $files, array_keys($files));
     }
 
     private function userName(User $user): string { return $user->getCreator()?->getDisplayName() ?? $user->getCompany()?->getName() ?? $user->getEmail(); }

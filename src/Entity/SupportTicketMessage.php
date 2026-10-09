@@ -35,6 +35,9 @@ class SupportTicketMessage
     #[ORM\Column(type: 'text')]
     private string $body;
 
+    #[ORM\Column(length: 20, nullable: true)]
+    private ?string $eventStatus = null;
+
     #[ORM\Column(type: 'json')]
     private array $attachments = [];
 
@@ -63,6 +66,8 @@ class SupportTicketMessage
     public function isStaff(): bool { return $this->staff; }
     public function isInternal(): bool { return $this->internal; }
     public function getBody(): string { return $this->body; }
+    public function getEventStatus(): ?string { return $this->eventStatus; }
+    public function setEventStatus(string $status): void { $this->eventStatus = $status; }
     public function getAttachments(): array { return $this->attachments; }
     public function setAttachments(array $files): void { $this->attachments = $files; }
     public function getCreatedAt(): \DateTimeImmutable { return $this->createdAt; }

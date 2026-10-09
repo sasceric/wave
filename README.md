@@ -325,7 +325,7 @@ GOOGLE_OAUTH_REDIRECT_URI="https://wave.ba/api/auth/oauth/google/callback"
 APPLE_OAUTH_REDIRECT_URI="https://wave.ba/api/auth/oauth/apple/callback"
 ```
 
-The Google start URL must contain that production Google callback as `redirect_uri`; if it still shows `http://127.0.0.1:8000/...`, the production environment value is wrong. Clear the production cache after changing server environment settings with `php8.4 bin/console cache:clear`.
+The Google start URL must contain that production Google callback as `redirect_uri`; if it still shows `http://127.0.0.1:8000/...`, the production environment value is wrong. After changing server environment settings, regenerate the compiled environment and clear production cache as `steelcodeweb`, with Wave workers paused; follow [the configuration-change procedure](docs/server-notifications.md#apply-configuration-changes).
 
 Use the same callback URL in the provider console and Wave configuration. Restart Symfony after changing local environment values. Check `GET /api/auth/oauth/providers`; it should report `true` for each configured provider, and those buttons will then be enabled.
 

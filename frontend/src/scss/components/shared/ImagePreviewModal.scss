@@ -1,0 +1,20 @@
+.image-preview-modal {
+  width: min(960px, calc(100vw - 32px));
+  max-width: none;
+  max-height: calc(100dvh - 32px);
+  padding: 0;
+  border: 1px solid #e3e5de;
+  border-radius: 12px;
+  color: var(--forest);
+  background: #fffefa;
+  box-shadow: 0 22px 60px #0f171440;
+  &::backdrop { background: #0f171499; }
+  section { padding: 16px; }
+  header { display: flex; align-items: center; gap: 16px; margin-bottom: 12px; }
+  h2 { flex: 1; margin: 0; overflow-wrap: anywhere; font-family: inherit; font-size: 14px; font-weight: 600; }
+  header button { display: grid; place-items: center; width: 34px; height: 34px; flex-shrink: 0; border: 0; border-radius: 6px; background: transparent; color: inherit; &:hover { background: #e8ede5; } }
+  &__image { display: grid; place-items: center; background: #f6f2ea; img { display: block; max-width: 100%; max-height: calc(100dvh - 180px); object-fit: contain; } }
+  footer { display: flex; justify-content: flex-end; margin-top: 12px; }
+  .button { min-height: 36px; padding: 8px 12px; font-size: 12px; }
+  button, a { &:focus-visible { outline: 2px solid var(--coral); outline-offset: 3px; } }
+}

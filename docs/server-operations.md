@@ -76,14 +76,21 @@ updates existing 300-second schedules to 3600 seconds and sets their next check
 one hour ahead, preserving paused/running state, active job IDs and history.
 For manual deployment, run the same steps and:
 
+On an existing installation, pause the dispatcher and consumers as described in
+[later deployments](#later-deployments) before these commands. Repair ownership
+before booting Symfony, and run every Symfony command as the web account even
+when the SSH login is root.
+
 ```sh
 cd /home/steelcodeweb/web/wave.ba/public_html
-APP_ENV=prod php8.4 "$(command -v composer)" dump-env prod
-APP_ENV=prod php8.4 bin/console doctrine:migrations:migrate --no-interaction
-APP_ENV=prod php8.4 bin/console cache:clear
-APP_ENV=prod php8.4 bin/console app:scheduled-tasks register --no-interaction
+COMPOSER_ALLOW_SUPERUSER=1 APP_ENV=prod php8.4 "$(command -v composer)" dump-env prod
+sudo chown steelcodeweb:steelcodeweb .env.local.php
+sudo chmod 640 .env.local.php
 sudo chown -R steelcodeweb:steelcodeweb var
 sudo chmod -R u+rwX var
+sudo -u steelcodeweb env APP_ENV=prod APP_DEBUG=0 php8.4 bin/console doctrine:migrations:migrate --no-interaction
+sudo -u steelcodeweb env APP_ENV=prod APP_DEBUG=0 php8.4 bin/console cache:clear --no-debug --no-interaction
+sudo -u steelcodeweb env APP_ENV=prod APP_DEBUG=0 php8.4 bin/console app:scheduled-tasks register --no-interaction
 ```
 
 These migrations create `messenger_messages`, `background_job`,
@@ -210,6 +217,23 @@ failed. This log does not establish an application validation or database error.
 filesystem permissions problem. Symfony CLI and PHP-FPM must both be able to
 write cache; for this host they should run as `steelcodeweb`. Fixing ownership
 only at the end of deployment leaves a window where root-owned cache fails.
+
+If the only error is a cache-pool write permission warning after a manual clear,
+repair the existing cache first; another clear is unnecessary:
+
+```sh
+cd /home/steelcodeweb/web/wave.ba/public_html
+sudo chown -R steelcodeweb:steelcodeweb var/cache
+sudo chmod -R u+rwX var/cache
+sudo -u steelcodeweb find var/cache/prod -type d ! -writable -print
+```
+
+The last command should print nothing. Confirm the Wave PHP-FPM pool runs as
+`steelcodeweb`, then load a database-backed page and check for new warnings.
+Ownership is a likely cause after clearing as root, but the warning alone does
+not establish which account created the directory. If it persists, inspect
+the failing path with `namei -l` and its ACL with `getfacl`, plus the actual FPM
+pool and worker users. Do not make compiled PHP cache world-writable.
 
 For recovery during a maintenance window, run as root on the documented systemd
 installation (confirm the PHP-FPM service and pool user first):

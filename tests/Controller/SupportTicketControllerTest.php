@@ -263,14 +263,15 @@ final class SupportTicketControllerTest extends WebTestCase
         self::assertSame(1, $em->getRepository(Notification::class)->count(['recipient' => $owner, 'supportTicket' => $ticket]));
         $this->post('/api/admin/support-tickets/'.$id.'/messages?locale=en', $reply, $this->csrf());
         self::assertResponseIsSuccessful(); self::assertEmailCount(0);
-        self::assertSame(1, $em->getRepository(SupportTicketMessage::class)->count(['ticket' => $ticket]));
+        self::assertSame(2, $em->getRepository(SupportTicketMessage::class)->count(['ticket' => $ticket]));
+        self::assertSame('in_progress', $this->payload()['statusEvent']['eventStatus']);
         $this->post('/api/admin/support-tickets/'.$id.'/messages?locale=en', ['body' => 'Private debugging credentials must not be exposed', 'submissionKey' => bin2hex(random_bytes(32)), 'internal' => true], $this->csrf());
         self::assertResponseStatusCodeSame(201); self::assertEmailCount(0);
         $noteId = $this->payload()['data']['id'];
         self::assertSame($reply['body'], $em->find(SupportTicket::class, $id)->getLastReplyPreview());
         $this->client->loginUser($owner, 'main');
         $this->client->request('GET', '/api/me/support-tickets/'.$id.'/messages');
-        self::assertCount(1, $this->payload()['data']);
+        self::assertCount(2, $this->payload()['data']);
         self::assertStringNotContainsString('Private debugging', $this->client->getResponse()->getContent());
         $this->client->request('GET', '/api/me/support-tickets/'.$id.'/messages/'.$noteId.'/attachments/0');
         self::assertResponseStatusCodeSame(404);
@@ -280,7 +281,7 @@ final class SupportTicketControllerTest extends WebTestCase
         self::assertResponseStatusCodeSame(201); self::assertEmailCount(1);
         self::assertSame(1, $em->getRepository(Notification::class)->count(['recipient' => $admin, 'supportTicket' => $ticket]));
         $this->post('/api/support/tickets/track', ['token' => $ticket->getTrackingToken()], $this->csrf());
-        self::assertCount(2, $this->payload()['data']['messages']);
+        self::assertCount(4, $this->payload()['data']['messages']);
         self::assertStringNotContainsString('Private debugging', $this->client->getResponse()->getContent());
     }
 
@@ -344,9 +345,25 @@ final class SupportTicketControllerTest extends WebTestCase
         $this->client->jsonRequest('PATCH', $url, ['status' => 'resolved', 'priority' => 'high', 'assignedToId' => $admin->getId()], ['HTTP_X_CSRF_TOKEN' => $csrf]);
         self::assertResponseIsSuccessful(); self::assertEmailCount(1);
         self::assertSame('resolved', $this->payload()['data']['status']); self::assertSame($admin->getId(), $this->payload()['data']['assignedToId']);
+        $event = $this->payload()['statusEvent'];
+        self::assertSame('resolved', $event['eventStatus']);
+        self::assertSame('Status changed to: Resolved', $event['body']);
+        self::assertFalse($event['internal']);
+        $this->client->jsonRequest('PATCH', $url, ['status' => 'resolved'], ['HTTP_X_CSRF_TOKEN' => $csrf]);
+        self::assertResponseIsSuccessful(); self::assertNull($this->payload()['statusEvent']); self::assertEmailCount(0);
         $this->client->loginUser($owner, 'main');
-        $this->post('/api/me/support-tickets/'.$ticket->getId().'/messages', ['body' => 'It is still happening.', 'submissionKey' => bin2hex(random_bytes(32))], $this->csrf());
+        $historyUrl = '/api/me/support-tickets/'.$ticket->getId().'/messages';
+        $this->client->request('GET', $historyUrl);
+        self::assertResponseIsSuccessful(); self::assertSame([$event['id']], array_column($this->payload()['data'], 'id'));
+        $key = bin2hex(random_bytes(32));
+        $this->post($historyUrl, ['body' => 'It is still happening.', 'submissionKey' => $key], $this->csrf());
         self::assertResponseStatusCodeSame(201); self::assertSame('open', $this->payload()['status']);
+        $reply = $this->payload();
+        self::assertSame('open', $reply['statusEvent']['eventStatus']);
+        $this->post($historyUrl, ['body' => 'It is still happening.', 'submissionKey' => $key], $this->csrf());
+        self::assertResponseIsSuccessful(); self::assertSame($reply['statusEvent']['id'], $this->payload()['statusEvent']['id']);
+        $this->client->request('GET', $historyUrl);
+        self::assertSame([$event['id'], $reply['data']['id'], $reply['statusEvent']['id']], array_column($this->payload()['data'], 'id'));
     }
 
     public function testReplyUploadsAreCompressedAndProtectedForBothAccountsAndInternalNotes(): void
@@ -361,17 +378,26 @@ final class SupportTicketControllerTest extends WebTestCase
         $this->client->request('POST', '/api/me/support-tickets/'.$ticket->getId().'/messages', ['body' => 'Screenshot of the bug', 'submissionKey' => bin2hex(random_bytes(32))], ['attachments' => [new UploadedFile($path, 'proof.png', 'image/png', null, true)]], ['HTTP_X_CSRF_TOKEN' => $csrf]);
         self::assertResponseStatusCodeSame(201);
         $messageId = $this->payload()['data']['id']; $url = $this->payload()['data']['attachments'][0]['url'];
+        self::assertSame($url.'/preview', $this->payload()['data']['attachments'][0]['previewUrl']);
         $message = $em->find(SupportTicketMessage::class, $messageId); $file = $message->getAttachments()[0];
         $stored = static::getContainer()->get(TicketAttachments::class)->path($em->find(SupportTicket::class, $ticket->getId()), $file); $this->storedPaths[] = $stored;
         self::assertSame('image/webp', $file['mime']); self::assertLessThan($original, $file['size']); self::assertSame([2560, 1280], array_slice(getimagesize($stored), 0, 2));
         $this->client->request('GET', $url); self::assertResponseIsSuccessful();
+        $this->client->request('GET', $url.'/preview'); self::assertResponseIsSuccessful();
+        self::assertSame('image/webp', $this->client->getResponse()->headers->get('Content-Type'));
+        self::assertStringContainsString('inline;', $this->client->getResponse()->headers->get('Content-Disposition'));
+        self::assertStringContainsString('no-store', $this->client->getResponse()->headers->get('Cache-Control'));
         $this->client->loginUser($other, 'main'); $this->client->request('GET', $url); self::assertResponseStatusCodeSame(404);
+        $this->client->request('GET', $url.'/preview'); self::assertResponseStatusCodeSame(404);
         $this->client->loginUser($admin, 'main'); $this->client->request('GET', str_replace('/me/', '/admin/', $url)); self::assertResponseIsSuccessful();
         $notePath = tempnam(sys_get_temp_dir(), 'wave-reply-note-'); file_put_contents($notePath, "%PDF-1.4\nPrivate note");
         $this->client->request('POST', '/api/admin/support-tickets/'.$ticket->getId().'/messages', ['body' => 'Private staff attachment', 'internal' => '1', 'submissionKey' => bin2hex(random_bytes(32))], ['attachments' => [new UploadedFile($notePath, 'note.pdf', 'application/pdf', null, true)]], ['HTTP_X_CSRF_TOKEN' => $this->csrf()]);
         self::assertResponseStatusCodeSame(201); $noteId = $this->payload()['data']['id'];
+        self::assertNull($this->payload()['data']['attachments'][0]['previewUrl']);
         $note = $em->find(SupportTicketMessage::class, $noteId); $this->storedPaths[] = static::getContainer()->get(TicketAttachments::class)->path($em->find(SupportTicket::class, $ticket->getId()), $note->getAttachments()[0]);
+        $this->client->request('GET', '/api/admin/support-tickets/'.$ticket->getId().'/messages/'.$noteId.'/attachments/0/preview'); self::assertResponseStatusCodeSame(404);
         $this->client->loginUser($owner, 'main'); $this->client->request('GET', '/api/me/support-tickets/'.$ticket->getId().'/messages/'.$noteId.'/attachments/0'); self::assertResponseStatusCodeSame(404);
+        $this->client->request('GET', '/api/me/support-tickets/'.$ticket->getId().'/messages/'.$noteId.'/attachments/0/preview'); self::assertResponseStatusCodeSame(404);
     }
 
     public function testNewTicketAlertsHaveDeepLinksAndReplyRateLimitIsApplied(): void

@@ -7,6 +7,10 @@ import LocalizedLink from '../components/shared/LocalizedLink.vue'
 import DirectoryLoadMore from '../components/shared/DirectoryLoadMore.vue'
 import SingleSelect from '../components/shared/SingleSelect.vue'
 import StatusMessage from '../components/shared/StatusMessage.vue'
+import ImagePreviewModal from '../components/shared/ImagePreviewModal.vue'
+import AdminPage from '../components/admin/AdminPage.vue'
+import AccountSidebar from '../components/account/AccountSidebar.vue'
+import AdminRowActions from '../components/admin/AdminRowActions.vue'
 import { currentUser } from '../composables/useCurrentUser'
 import { apiRequest, formatDate } from '../lib/api'
 import { localizedRouteName } from '../routePaths'
@@ -45,9 +49,13 @@ const replyError = ref('')
 const saving = ref(false)
 const saveError = ref('')
 const staff = ref([])
+const previewOpen = ref(false)
+const previewFile = ref(null)
 const submissionKey = ref(ticketSubmissionKey())
 const statuses = ['all', 'open', 'in_progress', 'on_hold', 'resolved']
+const tabStatuses = ['all', 'open', 'in_progress', 'resolved']
 const statusOptions = computed(() => statuses.slice(1).map(value => ({ value, label: t(`support.statuses.${value}`) })))
+const filterOptions = computed(() => [{ value: 'all', label: t('support.allTickets') }, ...statusOptions.value])
 const priorityOptions = computed(() => ['low', 'normal', 'high'].map(value => ({ value, label: t(`support.priorities.${value}`) })))
 const categoryOptions = computed(() => ticketCategories.map(value => ({ value, label: t(`support.categories.${value}`) })))
 const staffOptions = computed(() => [{ value: '', label: t('support.unassigned') }, ...staff.value.map(user => ({ value: user.id, label: user.name }))])
@@ -61,6 +69,17 @@ function dateTime(value) {
 }
 function initials(name) { return (name || 'W').split(/\s+/).slice(0, 2).map(part => part[0]).join('').toUpperCase() }
 function attachmentUrl(file) { return `${file.url}?locale=${encodeURIComponent(locale.value)}` }
+function openPreview(file) {
+  previewFile.value = file
+  previewOpen.value = true
+}
+function closePreview() {
+  previewOpen.value = false
+  previewFile.value = null
+}
+function appendStatusEvent(event) {
+  if (event && !messages.value.some(message => message.id === event.id)) messages.value.push(event)
+}
 async function loadList(reset = false) {
   if (listBusy.value && !reset) return
   const version = reset ? ++listVersion : listVersion
@@ -81,7 +100,7 @@ async function loadList(reset = false) {
   } catch (cause) {
     if (version !== listVersion) return
     listError.value = cause.message
-    if ([401, 403].includes(cause.status)) { rows.value = []; selected.value = null; messages.value = []; access.value = cause.status === 401 ? 'anonymous' : 'forbidden' }
+    if ([401, 403].includes(cause.status)) { closePreview(); rows.value = []; selected.value = null; messages.value = []; access.value = cause.status === 401 ? 'anonymous' : 'forbidden' }
     else access.value = 'allowed'
   } finally { if (version === listVersion) listBusy.value = false }
 }
@@ -92,6 +111,7 @@ async function clearSelection() {
   await router.push({ name: localizedRouteName(admin.value ? 'admin-support' : 'account-support', locale.value) })
 }
 async function loadDetail() {
+  closePreview()
   const version = ++detailVersion
   selected.value = null
   messages.value = []
@@ -175,6 +195,7 @@ async function sendReply() {
     const response = await apiRequest(`${base.value}/${id}/messages`, { method: 'POST', body: form })
     if (version !== detailVersion) return
     if (!messages.value.some(message => message.id === response.data.id)) messages.value.push(response.data)
+    appendStatusEvent(response.statusEvent)
     selected.value.status = response.status
     if (!response.data.internal) {
       selected.value.preview = response.data.body
@@ -198,11 +219,17 @@ async function updateTicket(field, value) {
     const response = await apiRequest(`${base.value}/${selected.value.id}`, { method: 'PATCH', body: { [field]: field === 'assignedToId' && value === '' ? null : value } })
     if (version !== detailVersion) return
     selected.value = response.data
+    appendStatusEvent(response.statusEvent)
+    if (response.statusEvent) {
+      await nextTick()
+      if (historyRoot.value) historyRoot.value.scrollTop = historyRoot.value.scrollHeight
+    }
     loadList(true)
   } catch (cause) { if (version === detailVersion) saveError.value = cause.message }
   finally { if (version === detailVersion) saving.value = false }
 }
 async function initialize() {
+  closePreview()
   ++listVersion; ++detailVersion
   rows.value = []; selected.value = null; messages.value = []; staff.value = []
   access.value = 'loading'
@@ -224,54 +251,123 @@ onBeforeUnmount(() => { ++contextVersion; ++listVersion; ++detailVersion; window
 </script>
 
 <template>
-  <section class="page-width ticket-inbox" :class="{ 'ticket-inbox--selected': selected || detailBusy || detailError }">
-    <LocalizedLink class="ticket-inbox__back" :to="{ name: admin ? 'admin' : 'account' }"><ArrowLeft :size="15" aria-hidden="true" />{{ t('support.back') }}</LocalizedLink>
-    <header class="ticket-inbox__heading"><div><h1>{{ t(admin ? 'support.adminTitle' : 'support.myTickets') }}</h1><p>{{ t('support.inboxIntro') }}</p></div><LocalizedLink class="button button--dark" :to="{ name: 'support-create' }"><Plus :size="17" aria-hidden="true" />{{ t('support.newTicket') }}</LocalizedLink></header>
-    <StatusMessage v-if="access === 'anonymous'">{{ t('support.signInTickets') }} <LocalizedLink :to="{ name: 'account', query: { mode: 'login', returnTo: route.fullPath } }">{{ t('auth.signIn') }}</LocalizedLink></StatusMessage>
-    <StatusMessage v-else-if="access === 'forbidden'" variant="error">{{ t('adminDashboard.noAccess') }}</StatusMessage>
-    <div v-else class="ticket-inbox__grid">
-      <section class="ticket-list" :aria-label="t(admin ? 'support.allTickets' : 'support.myTickets')">
-        <div class="ticket-list__search"><Search :size="17" aria-hidden="true" /><input v-model="search" type="search" :placeholder="t('support.searchTickets')" :aria-label="t('support.searchTickets')" /></div>
-        <div class="ticket-list__tabs" :aria-label="t('support.status')"><button v-for="value in statuses" :key="value" type="button" :aria-pressed="filter === value" :class="{ 'is-active': filter === value }" @click="filter = value">{{ t(value === 'all' ? 'support.all' : `support.statuses.${value}`) }}<span>{{ counts[value] || 0 }}</span></button></div>
-        <div ref="listRoot" class="ticket-list__scroll">
-          <button v-for="ticket in rows" :key="ticket.id" class="ticket-list__row" :class="{ 'is-selected': ticket.id === selected?.id }" type="button" :aria-pressed="ticket.id === selected?.id" @click="selectTicket(ticket.id)">
-            <span class="ticket-avatar"><img v-if="ticket.avatarUrl" :src="ticket.avatarUrl" alt="" loading="lazy" /><span v-else>{{ initials(ticket.name) }}</span></span>
-            <span class="ticket-list__text"><strong>{{ ticket.title }}</strong><span>{{ ticket.preview }}</span><small>#{{ ticket.number }} · {{ formatDate(ticket.updatedAt) }}</small></span>
-            <span class="ticket-list__meta"><span class="ticket-status" :class="`ticket-status--${ticket.status}`">{{ t(`support.statuses.${ticket.status}`) }}</span><b v-if="ticket.unreadCount" class="ticket-unread">{{ ticket.unreadCount }}</b></span>
-          </button>
-          <p v-if="!rows.length && !listBusy && !listError" class="ticket-list__empty">{{ t('support.empty') }}</p>
-          <DirectoryLoadMore :loading="listBusy" :has-more="hasMore" :error="listError" :count="rows.length" :root="listRoot" @load="loadList()" />
+  <AdminPage class="ticket-page">
+    <div class="admin-dashboard__layout">
+      <AccountSidebar v-if="currentUser" :user="currentUser" :admin-layout="admin" />
+      <section class="admin-dashboard__main ticket-inbox" :class="{ 'ticket-inbox--selected': selected || detailBusy || detailError }">
+        <header class="ticket-inbox__heading">
+          <div>
+            <h1>{{ t(admin ? 'support.adminTitle' : 'support.myTickets') }}</h1>
+            <p>{{ t(admin ? 'support.adminIntro' : 'support.inboxIntro') }}</p>
+          </div>
+          <div class="ticket-inbox__toolbar">
+            <label class="ticket-search">
+              <Search :size="17" aria-hidden="true" />
+              <span class="sr-only">{{ t('support.searchTickets') }}</span>
+              <input v-model="search" type="search" :placeholder="t('support.searchTickets')" />
+            </label>
+            <SingleSelect v-model="filter" :options="filterOptions" :label="t('support.status')" :show-label="false" />
+            <LocalizedLink class="button button--dark" :to="{ name: 'support-create' }"><Plus :size="17" aria-hidden="true" />{{ t('support.newTicket') }}</LocalizedLink>
+          </div>
+        </header>
+        <StatusMessage v-if="access === 'anonymous'">{{ t('support.signInTickets') }} <LocalizedLink :to="{ name: 'account', query: { mode: 'login', returnTo: route.fullPath } }">{{ t('auth.signIn') }}</LocalizedLink></StatusMessage>
+        <StatusMessage v-else-if="access === 'forbidden'" variant="error">{{ t('adminDashboard.noAccess') }}</StatusMessage>
+        <div v-else class="ticket-inbox__grid">
+          <section class="ticket-list" :aria-label="t(admin ? 'support.allTickets' : 'support.myTickets')">
+            <div class="ticket-list__tabs" :aria-label="t('support.status')">
+              <button v-for="value in tabStatuses" :key="value" type="button" :aria-pressed="filter === value" :class="{ 'is-active': filter === value }" @click="filter = value">
+                {{ t(value === 'all' ? 'support.all' : `support.statuses.${value}`) }}<span>{{ counts[value] || 0 }}</span>
+              </button>
+            </div>
+            <div ref="listRoot" class="ticket-list__scroll">
+              <button v-for="ticket in rows" :key="ticket.id" class="ticket-list__row" :class="{ 'is-selected': ticket.id === selected?.id }" type="button" :aria-pressed="ticket.id === selected?.id" @click="selectTicket(ticket.id)">
+                <span class="ticket-avatar"><img v-if="ticket.avatarUrl" :src="ticket.avatarUrl" alt="" loading="lazy" /><span v-else>{{ initials(ticket.name) }}</span></span>
+                <span class="ticket-list__text"><strong>{{ ticket.title }}</strong><span>{{ ticket.preview }}</span></span>
+                <span class="ticket-list__meta"><time :datetime="ticket.updatedAt">{{ formatDate(ticket.updatedAt) }}</time><span class="ticket-status" :class="`ticket-status--${ticket.status}`">{{ t(`support.statuses.${ticket.status}`) }}</span><b v-if="ticket.unreadCount" class="ticket-unread">{{ ticket.unreadCount }}</b></span>
+              </button>
+              <p v-if="!rows.length && !listBusy && !listError" class="ticket-list__empty">{{ t('support.empty') }}</p>
+              <DirectoryLoadMore :loading="listBusy" :has-more="hasMore" :error="listError" :count="rows.length" :root="listRoot" @load="loadList()" />
+            </div>
+          </section>
+          <section class="ticket-thread" :aria-label="selected?.title || t('support.chooseTicket')" :aria-busy="detailBusy">
+            <p v-if="detailBusy" class="ticket-thread__empty" role="status">{{ t('support.loading') }}</p>
+            <StatusMessage v-else-if="detailError" variant="error">
+              {{ detailError }}
+              <button type="button" @click="loadDetail">{{ t('directoryLoading.retry') }}</button>
+              <button type="button" @click="clearSelection">{{ t('support.back') }}</button>
+            </StatusMessage>
+            <template v-else-if="selected">
+              <header class="ticket-thread__heading">
+                <button class="ticket-thread__mobile-back ticket-icon" type="button" :aria-label="t('support.back')" @click="clearSelection"><ArrowLeft :size="18" /></button>
+                <div><h2>{{ selected.title }}</h2><p>#{{ selected.number }}</p></div>
+                <SingleSelect v-if="admin" class="ticket-thread__status" :class="`ticket-status--${selected.status}`" :model-value="selected.status" :options="statusOptions" :label="t('support.status')" :show-label="false" :disabled="saving" @update:model-value="updateTicket('status', $event)" />
+                <span v-else class="ticket-status" :class="`ticket-status--${selected.status}`">{{ t(`support.statuses.${selected.status}`) }}</span>
+                <AdminRowActions :label="t('adminDashboard.actions')"><button role="menuitem" type="button" @click="loadDetail"><RefreshCw :size="16" aria-hidden="true" />{{ t('adminTools.refresh') }}</button></AdminRowActions>
+              </header>
+              <div ref="historyRoot" class="ticket-thread__history" @scroll.passive="scrollHistory">
+                <StatusMessage v-if="historyError" variant="error">{{ historyError }}</StatusMessage>
+                <button v-if="historyMore" class="ticket-thread__older" type="button" :disabled="historyBusy" @click="loadOlder">{{ t(historyBusy ? 'support.loading' : 'support.olderReplies') }}</button>
+                <article v-if="!historyMore" class="ticket-message">
+                  <header><span class="ticket-avatar"><img v-if="selected.avatarUrl" :src="selected.avatarUrl" alt="" loading="lazy" /><span v-else>{{ initials(selected.name) }}</span></span><strong>{{ selected.name }}</strong><time :datetime="selected.createdAt">{{ dateTime(selected.createdAt) }}</time></header>
+                  <p>{{ selected.description }}</p>
+                  <ul v-if="selected.attachments.length" class="ticket-files"><li v-for="file in selected.attachments" :key="file.url"><button v-if="file.previewUrl" type="button" @click="openPreview(file)"><img :src="`${file.previewUrl}?locale=${locale}`" alt="" loading="lazy" /><span>{{ file.name }}<small>{{ Math.ceil(file.size / 1024) }} KB</small></span></button><a v-else :href="attachmentUrl(file)" download><Paperclip :size="16" aria-hidden="true" /><span>{{ file.name }}<small>{{ Math.ceil(file.size / 1024) }} KB</small></span></a></li></ul>
+                </article>
+                <template v-for="message in messages" :key="message.id">
+                <div v-if="message.eventStatus" class="ticket-status-event"><span>{{ t('support.statusChangedTo', { status: t(`support.statuses.${message.eventStatus}`) }) }}</span><time :datetime="message.createdAt">{{ dateTime(message.createdAt) }}</time></div>
+                <article v-else class="ticket-message" :class="{ 'ticket-message--staff': message.staff, 'ticket-message--internal': message.internal }">
+                  <header><span class="ticket-avatar"><img v-if="message.avatarUrl" :src="message.avatarUrl" alt="" loading="lazy" /><span v-else>{{ initials(message.senderName) }}</span></span><strong>{{ message.senderName }}<small v-if="message.internal">{{ t('support.internalNote') }}</small></strong><time :datetime="message.createdAt">{{ dateTime(message.createdAt) }}</time></header>
+                  <p>{{ message.body }}</p>
+                  <ul v-if="message.attachments.length" class="ticket-files"><li v-for="file in message.attachments" :key="file.url"><button v-if="file.previewUrl" type="button" @click="openPreview(file)"><img :src="`${file.previewUrl}?locale=${locale}`" alt="" loading="lazy" /><span>{{ file.name }}<small>{{ Math.ceil(file.size / 1024) }} KB</small></span></button><a v-else :href="attachmentUrl(file)" download><Paperclip :size="16" aria-hidden="true" /><span>{{ file.name }}<small>{{ Math.ceil(file.size / 1024) }} KB</small></span></a></li></ul>
+                </article>
+                </template>
+              </div>
+              <form class="ticket-composer" @submit.prevent="sendReply">
+                <div v-if="admin" class="ticket-composer__tabs"><button type="button" :aria-pressed="!internal" :class="{ 'is-active': !internal }" @click="internal = false">{{ t('support.reply') }}</button><button type="button" :aria-pressed="internal" :class="{ 'is-active': internal }" @click="internal = true">{{ t('support.internalNote') }}</button></div>
+                <div class="ticket-composer__box">
+                  <label class="sr-only" for="ticket-reply">{{ t(internal ? 'support.internalNote' : 'support.reply') }}</label>
+                  <textarea id="ticket-reply" v-model="body" maxlength="4000" required :disabled="sending" :placeholder="t('support.replyPlaceholder')" />
+                  <StatusMessage v-if="replyError" variant="error">{{ replyError }}</StatusMessage>
+                  <ul v-if="files.length" class="ticket-files ticket-files--pending"><li v-for="(file, index) in files" :key="index">{{ file.name }}<button type="button" :disabled="sending" :aria-label="`${t('support.removeFile')}: ${file.name}`" @click="files.splice(index, 1)"><X :size="14" aria-hidden="true" /></button></li></ul>
+                  <div class="ticket-composer__actions">
+                    <label class="ticket-icon ticket-attach" :title="t('support.attachments')"><Paperclip :size="18" aria-hidden="true" /><span class="sr-only">{{ t('support.attachments') }}</span><input type="file" multiple accept="image/png,image/jpeg,image/webp,image/gif,video/mp4,application/pdf" :disabled="sending" @change="addFiles" /></label>
+                    <small>{{ body.length }} / 4000</small>
+                    <button type="submit" class="button button--dark" :disabled="sending || !body.trim()"><Send :size="16" aria-hidden="true" />{{ t(sending ? 'support.sendingReply' : 'support.sendReply') }}</button>
+                  </div>
+                </div>
+                <p class="ticket-composer__notice">{{ t('support.replyNotice') }}</p>
+              </form>
+            </template>
+            <div v-else class="ticket-thread__empty"><LifeBuoy :size="30" aria-hidden="true" /><h2>{{ t('support.chooseTicket') }}</h2><p>{{ t('support.chooseTicketHint') }}</p></div>
+          </section>
+          <aside v-if="selected" class="ticket-details">
+            <section class="ticket-info">
+              <h2>{{ t('support.ticketInfo') }}</h2>
+              <StatusMessage v-if="saveError" variant="error">{{ saveError }}</StatusMessage>
+              <dl>
+                <div><dt>ID</dt><dd>#{{ selected.number }}</dd></div>
+                <template v-if="admin">
+                  <div><dt>{{ t('support.status') }}</dt><dd><SingleSelect :class="`ticket-status--${selected.status}`" :model-value="selected.status" :options="statusOptions" :label="t('support.status')" :show-label="false" :disabled="saving" @update:model-value="updateTicket('status', $event)" /></dd></div>
+                  <div><dt>{{ t('support.priority') }}</dt><dd><SingleSelect :model-value="selected.priority" :options="priorityOptions" :label="t('support.priority')" :show-label="false" :disabled="saving" @update:model-value="updateTicket('priority', $event)" /></dd></div>
+                  <div><dt>{{ t('support.category') }}</dt><dd><SingleSelect :model-value="selected.category" :options="categoryOptions" :label="t('support.category')" :show-label="false" :disabled="saving" @update:model-value="updateTicket('category', $event)" /></dd></div>
+                  <div><dt>{{ t('support.assignedTo') }}</dt><dd><SingleSelect :model-value="selected.assignedToId || ''" :options="staffOptions" :label="t('support.assignedTo')" :show-label="false" :disabled="saving" @update:model-value="updateTicket('assignedToId', $event)" /></dd></div>
+                </template>
+                <div v-else><dt>{{ t('support.category') }}</dt><dd>{{ t(`support.categories.${selected.category}`) }}</dd></div>
+                <div><dt>{{ t('support.createdAt') }}</dt><dd>{{ dateTime(selected.createdAt) }}</dd></div>
+                <div><dt>{{ t('support.lastUpdate') }}</dt><dd>{{ dateTime(selected.updatedAt) }}</dd></div>
+              </dl>
+            </section>
+            <section class="ticket-user">
+              <h2>{{ t('support.user') }}</h2>
+              <div class="ticket-user__identity"><span class="ticket-avatar"><img v-if="selected.avatarUrl" :src="selected.avatarUrl" alt="" loading="lazy" /><span v-else>{{ initials(selected.owner?.name || selected.name) }}</span></span><strong>{{ selected.owner?.name || selected.name }}</strong></div>
+              <dl><div><dt>{{ t('support.email') }}</dt><dd><a :href="`mailto:${selected.owner?.email || selected.email}`">{{ selected.owner?.email || selected.email }}</a></dd></div><div v-if="selected.phone"><dt>{{ t('support.phone') }}</dt><dd>{{ selected.phone }}</dd></div></dl>
+              <LocalizedLink v-if="selected.owner?.slug" class="ticket-user__profile" :to="{ name: selected.owner.creator ? 'creator-profile' : 'company-profile', params: { slug: selected.owner.slug } }">{{ t('support.publicProfile') }}<ArrowRight :size="15" aria-hidden="true" /></LocalizedLink>
+            </section>
+          </aside>
         </div>
       </section>
-      <section class="ticket-thread" :aria-label="selected?.title || t('support.chooseTicket')" :aria-busy="detailBusy">
-        <p v-if="detailBusy" class="ticket-thread__empty" role="status">{{ t('support.loading') }}</p>
-        <StatusMessage v-else-if="detailError" variant="error">{{ detailError }}<button type="button" @click="loadDetail">{{ t('directoryLoading.retry') }}</button><button type="button" @click="clearSelection">{{ t('support.back') }}</button></StatusMessage>
-        <template v-else-if="selected">
-          <header class="ticket-thread__heading"><button class="ticket-thread__mobile-back" type="button" :aria-label="t('support.back')" @click="clearSelection"><ArrowLeft :size="18" /></button><div><h2>{{ selected.title }}</h2><p>#{{ selected.number }}</p></div><span class="ticket-status" :class="`ticket-status--${selected.status}`">{{ t(`support.statuses.${selected.status}`) }}</span><button class="ticket-icon" type="button" :aria-label="t('adminTools.refresh')" :title="t('adminTools.refresh')" @click="loadDetail"><RefreshCw :size="17" aria-hidden="true" /></button></header>
-          <div ref="historyRoot" class="ticket-thread__history" @scroll.passive="scrollHistory">
-            <StatusMessage v-if="historyError" variant="error">{{ historyError }}</StatusMessage>
-            <button v-if="historyMore" class="ticket-thread__older" type="button" :disabled="historyBusy" @click="loadOlder">{{ t(historyBusy ? 'support.loading' : 'support.olderReplies') }}</button>
-            <article v-if="!historyMore" class="ticket-message"><header><span class="ticket-avatar">{{ initials(selected.name) }}</span><strong>{{ selected.name }}</strong><time :datetime="selected.createdAt">{{ dateTime(selected.createdAt) }}</time></header><p>{{ selected.description }}</p><ul v-if="selected.attachments.length" class="ticket-files"><li v-for="file in selected.attachments" :key="file.url"><a :href="attachmentUrl(file)" download><Paperclip :size="15" aria-hidden="true" />{{ file.name }} · {{ Math.ceil(file.size / 1024) }} KB</a></li></ul></article>
-            <article v-for="message in messages" :key="message.id" class="ticket-message" :class="{ 'ticket-message--staff': message.staff, 'ticket-message--internal': message.internal }"><header><span class="ticket-avatar"><img v-if="message.avatarUrl" :src="message.avatarUrl" alt="" loading="lazy" /><span v-else>{{ initials(message.senderName) }}</span></span><strong>{{ message.senderName }}<small v-if="message.staff">{{ t(message.internal ? 'support.internalNote' : 'support.staff') }}</small></strong><time :datetime="message.createdAt">{{ dateTime(message.createdAt) }}</time></header><p>{{ message.body }}</p><ul v-if="message.attachments.length" class="ticket-files"><li v-for="file in message.attachments" :key="file.url"><a :href="attachmentUrl(file)" download><Paperclip :size="15" aria-hidden="true" />{{ file.name }} · {{ Math.ceil(file.size / 1024) }} KB</a></li></ul></article>
-          </div>
-          <form class="ticket-composer" @submit.prevent="sendReply">
-            <div v-if="admin" class="ticket-composer__tabs"><button type="button" :aria-pressed="!internal" :class="{ 'is-active': !internal }" @click="internal = false">{{ t('support.reply') }}</button><button type="button" :aria-pressed="internal" :class="{ 'is-active': internal }" @click="internal = true">{{ t('support.internalNote') }}</button></div>
-            <label class="sr-only" for="ticket-reply">{{ t(internal ? 'support.internalNote' : 'support.reply') }}</label><textarea id="ticket-reply" v-model="body" maxlength="4000" required :disabled="sending" :placeholder="t('support.replyPlaceholder')" />
-            <StatusMessage v-if="replyError" variant="error">{{ replyError }}</StatusMessage>
-            <ul v-if="files.length" class="ticket-files"><li v-for="(file, index) in files" :key="index">{{ file.name }}<button type="button" :disabled="sending" :aria-label="`${t('support.removeFile')}: ${file.name}`" @click="files.splice(index, 1)"><X :size="14" aria-hidden="true" /></button></li></ul>
-            <div class="ticket-composer__actions"><label class="ticket-icon ticket-attach" :title="t('support.attachments')"><Paperclip :size="18" aria-hidden="true" /><span class="sr-only">{{ t('support.attachments') }}</span><input type="file" multiple accept="image/png,image/jpeg,image/webp,image/gif,video/mp4,application/pdf" :disabled="sending" @change="addFiles" /></label><small>{{ body.length }} / 4000</small><button type="submit" class="button button--dark" :disabled="sending || !body.trim()"><Send :size="16" aria-hidden="true" />{{ t(sending ? 'support.sendingReply' : 'support.sendReply') }}</button></div>
-            <p class="ticket-composer__notice">{{ t('support.replyNotice') }}</p>
-          </form>
-        </template>
-        <div v-else class="ticket-thread__empty"><LifeBuoy :size="30" aria-hidden="true" /><h2>{{ t('support.chooseTicket') }}</h2><p>{{ t('support.chooseTicketHint') }}</p></div>
-      </section>
-      <aside v-if="selected" class="ticket-info"><h2>{{ t('support.ticketInfo') }}</h2><p class="ticket-info__number">#{{ selected.number }}</p><StatusMessage v-if="saveError" variant="error">{{ saveError }}</StatusMessage>
-        <template v-if="admin"><SingleSelect :model-value="selected.status" :options="statusOptions" :label="t('support.status')" :disabled="saving" @update:model-value="updateTicket('status', $event)" /><SingleSelect :model-value="selected.priority" :options="priorityOptions" :label="t('support.priority')" :disabled="saving" @update:model-value="updateTicket('priority', $event)" /><SingleSelect :model-value="selected.category" :options="categoryOptions" :label="t('support.category')" :disabled="saving" @update:model-value="updateTicket('category', $event)" /><SingleSelect :model-value="selected.assignedToId || ''" :options="staffOptions" :label="t('support.assignedTo')" :disabled="saving" @update:model-value="updateTicket('assignedToId', $event)" /></template>
-        <dl><div v-if="!admin"><dt>{{ t('support.category') }}</dt><dd>{{ t(`support.categories.${selected.category}`) }}</dd></div><div><dt>{{ t('support.createdAt') }}</dt><dd>{{ dateTime(selected.createdAt) }}</dd></div><div><dt>{{ t('support.lastUpdate') }}</dt><dd>{{ dateTime(selected.updatedAt) }}</dd></div></dl>
-        <div class="ticket-info__user"><h3>{{ t('support.user') }}</h3><strong>{{ selected.owner?.name || selected.name }}</strong><a :href="`mailto:${selected.owner?.email || selected.email}`">{{ selected.owner?.email || selected.email }}</a><p v-if="selected.phone">{{ selected.phone }}</p><LocalizedLink v-if="selected.owner?.slug" :to="{ name: selected.owner.creator ? 'creator-profile' : 'company-profile', params: { slug: selected.owner.slug } }">{{ t('support.publicProfile') }}<ArrowRight :size="15" aria-hidden="true" /></LocalizedLink></div>
-      </aside>
     </div>
-  </section>
+    <ImagePreviewModal v-model:open="previewOpen" :title="previewFile?.name || ''" :src="previewFile?.previewUrl ? `${previewFile.previewUrl}?locale=${locale}` : ''" :download-url="previewFile ? attachmentUrl(previewFile) : ''" :close-label="t('support.close')" :download-label="t('support.download')" />
+  </AdminPage>
 </template>
 
 <style lang="scss" src="../scss/views/TicketInboxView.scss"></style>

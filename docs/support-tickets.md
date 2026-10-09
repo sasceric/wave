@@ -20,6 +20,9 @@ random storage names under `var/support`, outside the public directory. The
 download endpoints check ticket ownership or `ROLE_ADMIN` on every request,
 including reply files. Internal-note attachments are admin-only. Downloads use
 `nosniff` and `no-store`; knowing a ticket/message/file ID never grants access.
+Image attachments open in a native modal with a download action. Their `/preview`
+endpoints use the same ownership checks and return only validated image MIME
+types inline; PDFs and videos keep the download behavior.
 
 Receipts use the existing mailer/queue and branded email renderer. They contain
 a ticket number and an unguessable private tracking link, without the report or
@@ -53,6 +56,10 @@ inbox never selects a ticket automatically; notification/email links select the
 explicit ticket ID. Admins can change status, priority, category and assignment,
 and write internal notes. Customers cannot see notes, note attachments or their
 content in list previews. A customer reply reopens a resolved report.
+Both inboxes reuse the existing account/admin sidebar. Status changes create
+public timeline entries, including automatic changes after a reply. Selecting
+the same status again creates no duplicate entry or alert. The stored status
+code is localized when the inbox renders it; reply retries reuse the same event.
 
 Replies require CSRF and an idempotency key and allow 30 new replies per user per
 hour. They reuse the original upload validation/compression limits. Public replies
@@ -68,8 +75,8 @@ observed at open time, preserving any newer alerts.
 
 ## Deployment and operations
 
-Normal deployment applies `Version20261009090000` and
-`Version20261009110000` and builds the frontend.
+Normal deployment applies `Version20261009090000`, `Version20261009110000`,
+and `Version20261009160000` (status timeline metadata), then builds the frontend.
 No new environment settings, workers or external storage services are required.
 The existing mail consumer handles receipts and reply alerts. Ensure the PHP-FPM account can
 write `var/support`; the production workflow already assigns `var/` to
