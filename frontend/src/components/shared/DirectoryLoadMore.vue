@@ -43,7 +43,7 @@ onBeforeUnmount(() => observer?.disconnect())
   <div ref="sentinel" class="directory-load-more" :aria-busy="loading">
     <p v-if="error" class="directory-load-more__error" role="alert">{{ error }}</p>
     <p v-if="loading" role="status">{{ t('directoryLoading.loading') }}</p>
-    <button v-else-if="hasMore" type="button" @click="emit('load')">
+    <button v-else-if="error || hasMore" type="button" @click="emit('load')">
       {{ t(error ? 'directoryLoading.retry' : 'directoryLoading.loadMore') }}
     </button>
     <p v-else role="status">{{ t('directoryLoading.end') }}</p>

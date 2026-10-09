@@ -63,20 +63,25 @@ cors_origins https://wave.ba
 
 ## Apply configuration changes
 
-After editing Symfony's `.env.local`, run from the checkout using the deployment account. These match the production workflow, including its Composer setting for root SSH deployments:
+After editing Symfony's `.env.local`, pause the dispatcher and consumers using
+[the deployment procedure](server-operations.md#later-deployments). Run from the
+checkout using the deployment account, but execute Symfony as `steelcodeweb`:
 
 ```sh
 cd /home/steelcodeweb/web/wave.ba/public_html
 COMPOSER_ALLOW_SUPERUSER=1 APP_ENV=prod php8.4 "$(command -v composer)" dump-env prod
-APP_ENV=prod php8.4 bin/console cache:clear
+sudo chown steelcodeweb:steelcodeweb .env.local.php
+sudo chmod 640 .env.local.php
+sudo chown -R steelcodeweb:steelcodeweb var
+sudo chmod -R u+rwX var
+sudo -u steelcodeweb env APP_ENV=prod APP_DEBUG=0 php8.4 bin/console cache:clear --no-debug --no-interaction
 ```
 
-**Clearing cache alone does not regenerate `.env.local.php`.** The normal deployment workflow performs both steps. If commands run as root, restore writable-directory ownership as the workflow does:
-
-```sh
-sudo chown -R steelcodeweb:steelcodeweb /home/steelcodeweb/web/wave.ba/public_html/var
-sudo chmod -R u+rwX /home/steelcodeweb/web/wave.ba/public_html/var
-```
+**Clearing cache alone does not regenerate `.env.local.php`.** The normal
+deployment workflow performs both steps. Repair ownership before cache building;
+do not clear as root and change ownership afterward. Reload the active PHP-FPM
+service and resume the previously active Wave units after successful warmup, as
+described in the deployment procedure.
 
 Inspect only the loaded, non-secret notification flag in this CLI environment:
 

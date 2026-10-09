@@ -1970,7 +1970,7 @@
     "unassigned": "Nije dodeljeno",
     "lastUpdate": "Poslednja izmena",
     "publicProfile": "Javni profil",
-    "replyNotice": "Odgovori nisu razgovor uživo. O novom odgovoru obavestićemo te e-mailom i obaveštenjem.",
+    "replyNotice": "Odgovori nisu razgovor uživo. O novom odgovoru obavestićemo te e-mailom i notifikacijom.",
     "newActivity": "Nove poruke mogu biti dostupne. Osveži tiket.",
     "ticketUpdated": "Novost na tiketu",
     "replyEmail": "Tvoj tiket ima novu aktivnost. Otvori tiket za detalje.",
@@ -1997,6 +1997,8 @@
       "low": "Nizak",
       "normal": "Normalan",
       "high": "Visok"
-    }
+    },
+    "statusChangedTo": "Status je promijenjen u: {status}",
+    "download": "Preuzmi"
   }
 }

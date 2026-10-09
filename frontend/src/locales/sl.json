@@ -1997,6 +1997,8 @@
       "low": "Nizka",
       "normal": "Običajna",
       "high": "Visoka"
-    }
+    },
+    "statusChangedTo": "Status je spremenjen v: {status}",
+    "download": "Prenesi"
   }
 }

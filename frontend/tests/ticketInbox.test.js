@@ -123,3 +123,28 @@ test('support deep links survive login even while profile completion is pending'
   assert.deepEqual(replaced, ['/racun/tiketi?ticket=12'])
   assert.equal(view.state.error.value, '')
 })
+
+test('status updates append a timeline event without clearing a reply draft or duplicating events', async () => {
+  const event = { id: 22, eventStatus: 'resolved', body: 'Status changed to: Resolved' }
+  const { state } = await inbox(async (path, options) => options?.method === 'PATCH'
+    ? { data: { id: 10, status: 'resolved' }, statusEvent: event }
+    : { data: [], meta: { hasMore: false, counts: {} } }, { meta: { routeName: 'admin-support' }, query: {} })
+  state.selected.value = { id: 10, status: 'open' }
+  state.body.value = 'Keep my draft.'
+  state.messages.value = [{ id: 21, body: 'Original reply' }]
+  await state.updateTicket('status', 'resolved')
+  await state.updateTicket('status', 'resolved')
+  assert.equal(state.selected.value.status, 'resolved')
+  assert.equal(state.body.value, 'Keep my draft.')
+  assert.deepEqual(Array.from(state.messages.value, message => message.id), [21, 22])
+})
+
+test('image previews open locally and are cleared when switching tickets', async () => {
+  const { state } = await inbox(async () => ({ data: [], meta: { hasMore: false, counts: {} } }))
+  state.openPreview({ name: 'proof.webp', previewUrl: '/api/me/support-tickets/1/attachments/0/preview' })
+  assert.equal(state.previewOpen.value, true)
+  assert.equal(state.previewFile.value.name, 'proof.webp')
+  await state.loadDetail()
+  assert.equal(state.previewOpen.value, false)
+  assert.equal(state.previewFile.value, null)
+})
