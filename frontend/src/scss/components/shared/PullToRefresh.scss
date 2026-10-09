@@ -1,0 +1,40 @@
+html.pwa-pull-to-refresh,
+html.pwa-pull-to-refresh body {
+  overscroll-behavior-y: contain;
+}
+
+.pull-to-refresh {
+  position: fixed;
+  z-index: 130;
+  top: calc(env(safe-area-inset-top) + 8px);
+  left: 50%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  max-width: calc(100% - 32px);
+  padding: 9px 13px;
+  border: 1px solid var(--surface);
+  border-radius: 24px;
+  color: var(--forest);
+  background: var(--paper);
+  box-shadow: 0 4px 14px rgba(23, 61, 54, .12);
+  font-size: 12px;
+  pointer-events: none;
+  transform: translate(-50%, var(--pull-offset));
+
+  svg {
+    flex-shrink: 0;
+  }
+
+  &--busy svg {
+    animation: pull-refresh-spin .8s linear infinite;
+  }
+}
+
+@keyframes pull-refresh-spin {
+  to { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pull-to-refresh--busy svg { animation: none; }
+}

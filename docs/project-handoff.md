@@ -93,6 +93,14 @@ Controller filenames in this table are under `src/Controller/Api/` unless a full
 - Mercure delivers private per-user live events containing notification identifiers and, for campaign chat, the new message. The frontend applies messages immediately; explicit CSRF-protected POST `/api/me/conversations/{id}/read` and `/api/me/inquiries/{id}/read` acknowledge the latest rendered message only in a visible chat at the bottom. Private `chat_read` events update outgoing seen checks. Direct inquiry message events also use the private user stream. Web Push provides background device notifications and signals open app windows to reconcile their inbox. There is no periodic inbox polling.
 - Unread chat reminder emails omit message text. The scheduled command is `app:send-unread-message-reminders`; the README explains timing and deduplication.
 - The PWA caches static app assets, not private API content. Preserve the service worker's API exclusions.
+- Installed PWAs support pull-to-refresh through `PullToRefresh.vue` and
+  `lib/pullToRefresh.js`. A single-finger downward pull of at least 96px from
+  the document top reloads the current URL on release. Browser tabs keep their
+  existing behavior. Nested scrolling, horizontal carousels, pinch zoom,
+  offline state and open dialogs do not trigger the gesture. Editing a form or
+  draft blocks refresh conservatively until that form leaves the DOM; custom
+  select clicks and dropped uploads are included. No worker or server setup is
+  needed. Validate native gestures on installed iOS/Android apps before release.
 - The full-screen startup splash lives in `frontend/index.html` with critical SCSS in `frontend/src/scss/startup.scss`, so it displays before Vue loads. `main.js` restores the session once and removes the splash after the initial route and session settle, with a ten-second fallback for stalled requests. Later navigation, page requests, and chat history use their existing skeletons; do not wait for images, realtime connections, or service-worker updates to dismiss startup.
 - Canonical prefixes are configured separately in `config/localized_route_prefixes.json`: `/rs`, `/me` and `/si` permanently replace `/sr`, `/cnr` and `/sl`; locale identifiers do not change.
 - Supported frontend locales are `bs` (default), `hr`, `sr` (Latin), `sl`, `en`, and `cnr` (Montenegrin). Older documentation lists only five; the current `i18n.js` loads all six. Keep new interface copy in the catalogs and update localized routes consistently when adding pages.

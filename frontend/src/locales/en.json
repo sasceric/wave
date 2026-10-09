@@ -181,6 +181,9 @@
   },
   "app": {
     "loading": "Loading…",
+    "pullRefresh": "Pull to refresh",
+    "pullRelease": "Release to refresh",
+    "pullRefreshing": "Refreshing…",
     "homeAria": "Wave home",
     "home": "Home",
     "mainNavigation": "Main navigation",

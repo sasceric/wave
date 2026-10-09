@@ -12,6 +12,7 @@ import WaveWordmark from './components/shared/WaveWordmark.vue'
 import FooterNewsletterSignup from './components/shared/FooterNewsletterSignup.vue'
 import SkeletonBlock from './components/shared/SkeletonBlock.vue'
 import CookieConsentBanner from './components/shared/CookieConsentBanner.vue'
+import PullToRefresh from './components/shared/PullToRefresh.vue'
 import { currentUser, setCurrentUser } from './composables/useCurrentUser'
 import { useAdminWorker } from './composables/useAdminWorker'
 import { unreadMessageCount } from './composables/useUnreadMessages'
@@ -955,6 +956,7 @@ async function signOut() {
         && !currentUser,
     }"
   >
+    <PullToRefresh />
     <header class="site-header">
       <div class="site-header__inner">
         <WaveWordmark :aria-label="t('app.homeAria')" />

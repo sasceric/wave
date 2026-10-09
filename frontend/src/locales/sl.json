@@ -182,6 +182,9 @@
   },
   "app": {
     "loading": "Nalaganje…",
+    "pullRefresh": "Povleci za osvežitev",
+    "pullRelease": "Spusti za osvežitev",
+    "pullRefreshing": "Osveževanje…",
     "homeAria": "Začetna stran Wave",
     "home": "Domov",
     "mainNavigation": "Glavna navigacija",
