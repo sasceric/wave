@@ -32,8 +32,9 @@ export async function apiRequest(path, { method = 'GET', body, locale } = {}) {
   const unsafe = !['GET', 'HEAD', 'OPTIONS'].includes(method.toUpperCase())
   if (unsafe && !csrfToken) await getCsrfToken(locale)
 
+  const multipart = typeof FormData !== 'undefined' && body instanceof FormData
   const headers = { Accept: 'application/json' }
-  if (body !== undefined) headers['Content-Type'] = 'application/json'
+  if (body !== undefined && !multipart) headers['Content-Type'] = 'application/json'
   if (unsafe) headers['X-CSRF-Token'] = csrfToken
 
   const response = await fetch(localizedPath(`/api${path}`, locale), {
@@ -41,7 +42,7 @@ export async function apiRequest(path, { method = 'GET', body, locale } = {}) {
     headers,
     credentials: 'same-origin',
     cache: path.startsWith('/auth/') ? 'no-store' : 'default',
-    body: body === undefined ? undefined : JSON.stringify(body),
+    body: body === undefined ? undefined : multipart ? body : JSON.stringify(body),
   })
 
   let payload

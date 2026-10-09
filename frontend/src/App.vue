@@ -2,7 +2,7 @@
 import { computed, defineAsyncComponent, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { isNavigationFailure, NavigationFailureType, RouterView, useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import { Bell, Building2, ChevronRight, Download, House, LogOut, Menu, Megaphone, MessageCircle, UserRound, UsersRound, X } from '@lucide/vue'
+import { Bell, LifeBuoy, Building2, ChevronRight, Download, House, LogOut, Menu, Megaphone, MessageCircle, UserRound, UsersRound, X } from '@lucide/vue'
 import { registerSW } from 'virtual:pwa-register'
 import LanguageSwitcher from './components/shared/LanguageSwitcher.vue'
 import HeaderCreatorSearch from './components/shared/HeaderCreatorSearch.vue'
@@ -216,6 +216,9 @@ watch(
       return
     }
     const pageKeys = {
+      support: ['supportTitle', 'supportDescription'],
+      'support-create': ['supportTitle', 'supportDescription'],
+      'support-track': ['supportTitle', 'supportDescription'],
       home: ['homeTitle', 'homeDescription'],
       messages: ['privateTitle', 'privateDescription'],
       'admin-tools': ['privateTitle', 'privateDescription'],
@@ -232,7 +235,7 @@ watch(
       'cookie-policy': ['cookiesTitle', 'cookiesDescription'],
     }
     const [titleKey, descriptionKey] = pageKeys[routeName] || ['notFoundTitle', 'notFoundDescription']
-    const noindex = ['account', 'messages', 'verify-email', 'reset-password', 'moderation', 'admin', 'admin-tools'].includes(routeName)
+    const noindex = ['support-create', 'support-track', 'account', 'messages', 'verify-email', 'reset-password', 'moderation', 'admin', 'admin-tools'].includes(routeName)
       || Boolean(route.meta.accountSection || route.meta.adminSection)
       || !pageKeys[routeName]
 
@@ -975,6 +978,9 @@ async function signOut() {
         </nav>
         <HeaderCreatorSearch />
         <div class="site-header__actions">
+          <LocalizedLink class="header-messages__trigger header-support" :to="{ name: 'support' }" :aria-label="t('support.label')" :title="t('support.label')">
+            <LifeBuoy :size="19" stroke-width="1.8" aria-hidden="true" />
+          </LocalizedLink>
           <div
             v-if="currentUser"
             ref="notificationsMenu"

@@ -8,6 +8,10 @@ const legalView = () => import('./views/LegalView.vue')
 const notFoundView = () => import('./views/NotFoundView.vue')
 
 const routeViews = {
+  support: () => import('./views/SupportView.vue'),
+  'support-create': () => import('./views/SupportView.vue'),
+  'support-track': () => import('./views/SupportView.vue'),
+  'admin-support': () => import('./views/AdminSupportView.vue'),
   home: () => import('./views/HomeView.vue'),
   'country-creators': () => import('./views/CountryCreatorsView.vue'),
   'seo-guides': () => import('./views/SeoGuidesView.vue'),
@@ -52,6 +56,7 @@ const routeViews = {
 }
 
 const adminSections = {
+  'admin-support': 'support',
   'admin-credit-settings': 'credits',
   admin: 'overview',
   'admin-registrations': 'registrations',

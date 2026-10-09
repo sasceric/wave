@@ -12,6 +12,13 @@ Declared dependencies: PHP 8.4+, Symfony 8.1, Doctrine ORM 3, Vue 3, Vue Router,
 
 ## Where to work
 
+Support tickets use `SupportTicketController`, `SupportTicket`, and `Support/`
+for guest submission, receipts, private uploads and capability-link tracking.
+`SupportView.vue` handles the landing page and three-step form; admin-only
+`AdminSupportView.vue` uses the shared table and action menu. See
+[support tickets](support-tickets.md) for limits, file compression, deployment
+and the initial read-only admin scope.
+
 Creator profiles support optional multiple creator types (influencer, UGC creator,
 photographer, videographer and model), independently of topics and social platforms.
 The shared catalog is `config/creator_types.json`; `Account/CreatorTypes.php` validates

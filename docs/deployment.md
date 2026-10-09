@@ -379,3 +379,12 @@ with `APP_ENV=prod` before warming the cache. Cache clearing alone does not popu
 the list. Include `migrations/data/marketplace-areas-20261007.json` in the checkout.
 Manage subsequent additions and translations through the existing admin catalog
 page. This change needs no additional worker or environment setting.
+
+## Support tickets (2026-10-09)
+
+The normal workflow applies `Version20261009090000`, rebuilds the SPA and warms
+cache. Ticket attachments live privately in `var/support`, which must remain
+writable by `steelcodeweb` and included in persistent-file backups. Existing
+mail workers send receipts; no new secrets or services are needed. For three
+10 MiB attachments, use `upload_max_filesize >= 10M`, `post_max_size >= 32M` and
+an equivalent proxy body limit. See [support tickets](support-tickets.md).

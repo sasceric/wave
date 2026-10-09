@@ -10,7 +10,7 @@ final class ImageUploadProcessor
 
     public function writeWebp(string $source, string $destination, int $maxWidth = self::MAX_WIDTH, ?int $quality = null): int
     {
-        if ($maxWidth < 1 || $maxWidth > self::MAX_WIDTH) {
+        if ($maxWidth < 1 || $maxWidth > self::MAX_WEBP_DIMENSION) {
             throw new \InvalidArgumentException('Unsupported image width.');
         }
         if ($quality !== null && ($quality < 1 || $quality > 100)) {

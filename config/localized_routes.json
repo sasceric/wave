@@ -40,7 +40,11 @@
     "seo-guide": "vodici/:guide",
     "creator-guides": "vodici-za-kreatore",
     "creator-guide": "vodici-za-kreatore/:guide",
-    "how-it-works": "kako-funkcionise"
+    "how-it-works": "kako-funkcionise",
+    "support": "podrska",
+    "support-create": "podrska/novi-tiket",
+    "support-track": "podrska/tiket",
+    "admin-support": "admin/tiketi"
   },
   "hr": {
     "home": "",
@@ -83,7 +87,11 @@
     "seo-guide": "vodici/:guide",
     "creator-guides": "vodici-za-kreatore",
     "creator-guide": "vodici-za-kreatore/:guide",
-    "how-it-works": "kako-funkcionise"
+    "how-it-works": "kako-funkcionise",
+    "support": "podrska",
+    "support-create": "podrska/novi-tiket",
+    "support-track": "podrska/tiket",
+    "admin-support": "admin/tiketi"
   },
   "sr": {
     "home": "",
@@ -126,7 +134,11 @@
     "seo-guide": "vodici/:guide",
     "creator-guides": "vodici-za-kreatore",
     "creator-guide": "vodici-za-kreatore/:guide",
-    "how-it-works": "kako-funkcionise"
+    "how-it-works": "kako-funkcionise",
+    "support": "podrska",
+    "support-create": "podrska/novi-tiket",
+    "support-track": "podrska/tiket",
+    "admin-support": "admin/tiketi"
   },
   "cnr": {
     "home": "",
@@ -169,7 +181,11 @@
     "seo-guide": "vodici/:guide",
     "creator-guides": "vodici-za-kreatore",
     "creator-guide": "vodici-za-kreatore/:guide",
-    "how-it-works": "kako-funkcionise"
+    "how-it-works": "kako-funkcionise",
+    "support": "podrska",
+    "support-create": "podrska/novi-tiket",
+    "support-track": "podrska/tiket",
+    "admin-support": "admin/tiketi"
   },
   "sl": {
     "home": "",
@@ -212,7 +228,11 @@
     "seo-guide": "vodniki/:guide",
     "creator-guides": "vodniki-za-ustvarjalce",
     "creator-guide": "vodniki-za-ustvarjalce/:guide",
-    "how-it-works": "kako-deluje"
+    "how-it-works": "kako-deluje",
+    "support": "podpora",
+    "support-create": "podpora/nov",
+    "support-track": "podpora/zahtevek",
+    "admin-support": "admin/zahtevki"
   },
   "en": {
     "home": "",
@@ -255,6 +275,10 @@
     "seo-guide": "guides/:guide",
     "creator-guides": "creator-guides",
     "creator-guide": "creator-guides/:guide",
-    "how-it-works": "how-it-works"
+    "how-it-works": "how-it-works",
+    "support": "support",
+    "support-create": "support/new",
+    "support-track": "support/ticket",
+    "admin-support": "admin/support-tickets"
   }
 }

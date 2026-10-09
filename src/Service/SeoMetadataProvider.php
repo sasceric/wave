@@ -56,8 +56,9 @@ final class SeoMetadataProvider
             || str_starts_with($name, 'account-')
             || $name === 'admin'
             || str_starts_with($name, 'admin-')
-            || in_array($name, ['messages', 'verify-email', 'reset-password', 'moderation'], true);
+            || in_array($name, ['support-create', 'support-track', 'messages', 'verify-email', 'reset-password', 'moderation'], true);
         $titleKey = match ($name) {
+            'support', 'support-create', 'support-track' => 'supportTitle',
             'home' => 'homeTitle',
             'creators', 'creator-profile' => 'creatorsTitle',
             'companies', 'company-profile' => 'companiesTitle',
@@ -68,6 +69,7 @@ final class SeoMetadataProvider
             default => 'privateTitle',
         };
         $descriptionKey = match ($name) {
+            'support', 'support-create', 'support-track' => 'supportDescription',
             'home' => 'homeDescription',
             'creators', 'creator-profile' => 'creatorsDescription',
             'companies', 'company-profile' => 'companiesDescription',

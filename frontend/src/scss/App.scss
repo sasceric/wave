@@ -676,3 +676,21 @@
 
 .site-header:has(.header-creator-search.is-open),
 .site-header:has(.header-creator-search.is-expanded) { z-index: 120; }
+
+@include breakpoints.down(760px) {
+  .site-header__actions .header-support {
+    display: grid;
+    width: 30px;
+    height: 34px;
+  }
+}
+
+@include breakpoints.down(360px) {
+  .site-header__actions {
+    gap: 1px;
+    .header-support { width: 24px; }
+    .header-notifications__trigger, .header-install__trigger { width: 28px; }
+    .header-user-menu__trigger--signed-in { width: 34px; }
+    .header-user-menu__avatar { width: 32px; height: 32px; }
+  }
+}
