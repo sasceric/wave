@@ -212,7 +212,7 @@ final class MediaController
         EntityManagerInterface $entityManager,
         Security $security,
         CsrfTokenManagerInterface $tokenManager,
-        MediaStorage $storage,
+        \App\Service\StoredFileCleanup $cleanup,
     ): JsonResponse {
         $locale = LocaleContext::fromRequest($request);
         if ($locale === null) {
@@ -239,9 +239,10 @@ final class MediaController
             return new JsonResponse(['error' => ApiMessages::get('media_in_use', $locale)], 409);
         }
 
-        $entityManager->remove($media);
-        $entityManager->flush();
-        $storage->remove($media);
+        $entityManager->wrapInTransaction(function () use ($entityManager, $cleanup, $media): void {
+            $cleanup->schedule('media', $media->getStoragePath());
+            $entityManager->remove($media);
+        });
 
         return new JsonResponse(['data' => ['id' => $id]]);
     }

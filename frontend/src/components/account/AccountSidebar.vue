@@ -24,6 +24,7 @@ import { apiRequest } from '../../lib/api'
 import { setCurrentUser } from '../../composables/useCurrentUser'
 import { localizedPath } from '../../routePaths'
 import CreditBalanceLink from './CreditBalanceLink.vue'
+import AccountDeletionAction from './AccountDeletionAction.vue'
 import WaveLogo from '../shared/WaveLogo.vue'
 import LocalizedLink from '../shared/LocalizedLink.vue'
 import LanguageSwitcher from '../shared/LanguageSwitcher.vue'
@@ -223,6 +224,7 @@ const navigationItems = computed(() => {
       <LocalizedLink class="account-sidebar__link" :to="{ name: 'account' }" @click="closeMobileSidebar"><UserRound :size="20" aria-hidden="true" /><span class="account-sidebar__text">{{ t('app.account') }}</span></LocalizedLink>
       <LocalizedLink v-for="item in settingsItems" :key="item.route" class="account-sidebar__link" :class="{ 'is-active': route.meta.routeName === item.route }" :to="{ name: item.route }" :aria-current="route.meta.routeName === item.route ? 'page' : undefined" @click="closeMobileSidebar"><component :is="item.icon" :size="20" aria-hidden="true" /><span class="account-sidebar__text">{{ item.label }}</span></LocalizedLink>
       <CreditBalanceLink v-if="user.approved || user.isAdmin" @click="closeMobileSidebar" />
+      <AccountDeletionAction v-if="!user.isAdmin && !user.isModerator" @opened="closeMobileSidebar" />
       <button class="account-sidebar__link account-sidebar__link--signout" type="button" :disabled="signingOut" @click="signOut"><LogOut :size="20" aria-hidden="true" /><span class="account-sidebar__text">{{ t('account.signOut') }}</span></button>
       <p v-if="signOutError" class="account-sidebar__error" role="alert">{{ signOutError }}</p>
     </div>

@@ -223,8 +223,8 @@ const currentDisplayName = computed(() => (
   || currentUser.value?.email
   || ''
 ))
-const campaignChatClosed = computed(() => ['closed', 'finished'].includes(selectedCampaign.value?.status))
-const campaignChatNotice = computed(() => selectedCampaign.value?.status === 'finished' ? 'campaignChat.finishedNotice' : 'campaignChat.closedNotice')
+const campaignChatClosed = computed(() => selectedThread.value?.readOnly || ['closed', 'finished'].includes(selectedCampaign.value?.status))
+const campaignChatNotice = computed(() => selectedThread.value?.readOnly ? 'campaignChat.deletedAccountNotice' : selectedCampaign.value?.status === 'finished' ? 'campaignChat.finishedNotice' : 'campaignChat.closedNotice')
 const canSend = computed(() => Boolean(
   !sending.value
   && !campaignChatClosed.value

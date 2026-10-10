@@ -28,6 +28,7 @@ final class JobExecutor
         private readonly WebPushNotificationSender $push,
         private readonly HubInterface $hub,
         private readonly MediaThumbnails $thumbnails,
+        private readonly \App\Service\StoredFileCleanup $fileCleanup,
         private readonly CachedSitemap $sitemap,
         private readonly DirectoryIndexer $indexer,
         private readonly ReminderBatch $reminders,
@@ -54,13 +55,19 @@ final class JobExecutor
             'IndexReconcileTask' => $this->indexer->rebuild($payload['kind'] ?? 'creator', (int) ($payload['after'] ?? 0), isset($payload['upper']) ? (int) $payload['upper'] : null),
             'SitemapGenerateTask' => $this->sitemap->generate(),
             'UnreadMessageReminderTask' => $this->reminders->run(),
-            'MediaMaintenanceTask' => $this->mediaBatch([]),
+            'MediaMaintenanceTask' => $this->maintainMedia(),
             'CachePruneTask' => $this->cache->prune(),
             'LogCleanupTask' => $this->cleanupLogs(),
             'ExpiredTokenCleanupTask' => $this->cleanupTokens(),
             'QueueMaintenanceTask' => $this->cleanupJobs(),
             default => throw new \Symfony\Component\Messenger\Exception\UnrecoverableMessageHandlingException('Unknown job type.'),
         };
+    }
+
+    private function maintainMedia(): void
+    {
+        $this->fileCleanup->run(10000);
+        $this->mediaBatch([]);
     }
 
     private function email(array $payload): void
@@ -70,7 +77,8 @@ final class JobExecutor
 
             return;
         }
-        if (($r = $payload['reminder'] ?? null) !== null && (int) $this->connection->fetchOne('SELECT COALESCE(MIN(id), 0) FROM campaign_message WHERE conversation_id = ? AND sender_id != ? AND read_at IS NULL', [$r['conversationId'], $r['recipientId']]) !== (int) $r['firstId']) {
+        $reminder = $payload['reminder'] ?? null;
+        if ($reminder !== null && !$this->isCurrentReminder($reminder)) {
             $this->logger->info('mail.skipped', ['reason' => 'reminder_no_longer_current']);
 
             return;
@@ -82,9 +90,31 @@ final class JobExecutor
         $this->mailTransport->send(new RawMessage($raw), new Envelope(new Address($payload['sender']), array_map(static fn (string $email): Address => new Address($email), $payload['recipients'])));
     }
 
+    private function isCurrentReminder(array $reminder): bool
+    {
+        $sql = <<<'SQL'
+            SELECT t.id FROM campaign_conversation t
+            JOIN campaign c ON c.id = t.campaign_id
+            JOIN creator cr ON cr.id = t.creator_id
+            JOIN company co ON co.id = c.company_id
+            JOIN wave_user creator_owner ON creator_owner.id = cr.owner_id
+            JOIN wave_user company_owner ON company_owner.id = co.owner_id
+            WHERE t.id = ? AND creator_owner.deleted_at IS NULL AND company_owner.deleted_at IS NULL
+                AND (creator_owner.id = ? OR company_owner.id = ?)
+            SQL;
+        if (!$this->connection->fetchOne($sql, [$reminder['conversationId'], $reminder['recipientId'], $reminder['recipientId']])) {
+            return false;
+        }
+
+        return (int) $this->connection->fetchOne(
+            'SELECT COALESCE(MIN(id), 0) FROM campaign_message WHERE conversation_id = ? AND sender_id != ? AND read_at IS NULL',
+            [$reminder['conversationId'], $reminder['recipientId']],
+        ) === (int) $reminder['firstId'];
+    }
+
     private function realtime(array $payload): void
     {
-        if (!$this->connection->fetchOne('SELECT id FROM wave_user WHERE id = ?', [$payload['userId']])) {
+        if (!$this->connection->fetchOne('SELECT id FROM wave_user WHERE id = ? AND deleted_at IS NULL', [$payload['userId']])) {
             return;
         }
         $result = $this->hub->publish(new Update('https://wave.local/users/' . (int) $payload['userId'], json_encode($payload['payload'], JSON_THROW_ON_ERROR), true, $payload['eventId']));

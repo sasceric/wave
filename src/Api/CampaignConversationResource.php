@@ -3,6 +3,8 @@
 namespace App\Api;
 
 use App\Entity\CampaignConversation;
+use App\Account\AccountDeletion;
+use App\Localization\ApiMessages;
 
 final class CampaignConversationResource
 {
@@ -14,11 +16,13 @@ final class CampaignConversationResource
 
         return [
             'id' => $conversation->getId(),
+            'readOnly' => AccountDeletion::sharedHistoryDeleted($creator, $company),
             'campaign' => CampaignResource::fromEntity($campaign, $locale, hiredCount: $hiredCount),
             'creator' => [
                 'id' => $creator->getId(),
                 'slug' => $creator->getSlug(),
-                'displayName' => $creator->getDisplayName(),
+                'displayName' => $creator->getOwner()?->isDeleted() ? ApiMessages::get('deleted_account', $locale) : $creator->getDisplayName(),
+                'deleted' => $creator->getOwner()?->isDeleted() ?? false,
                 'avatarUrl' => $creator->getAvatarMedia()?->getUrl() ?? $creator->getAvatarUrl(),
             ],
             'company' => CompanyResource::fromEntity($company, $locale),

@@ -2,6 +2,8 @@
 
 namespace App\Api;
 
+use App\Account\AccountDeletion;
+
 use App\Entity\Application;
 
 final class ApplicationResource
@@ -12,6 +14,7 @@ final class ApplicationResource
 
         return [
             'id' => $application->getId(),
+            'readOnly' => AccountDeletion::sharedHistoryDeleted($application->getCreator(), $application->getCampaign()->getCompany()),
             'message' => $application->getMessage(),
             'status' => $application->getStatus(),
             'conversationId' => $conversationId,

@@ -17,6 +17,7 @@ security:
             security: false
         main:
             lazy: true
+            user_checker: App\Security\AccountUserChecker
             provider: wave_users
             custom_authenticators:
                 - App\Security\SessionAuthenticator

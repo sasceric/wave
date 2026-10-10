@@ -68,7 +68,15 @@ final class MediaStorage
 
     public function remove(Media $media): void
     {
-        $this->filesystem->remove($this->absolutePath($media->getStoragePath()));
-        $this->thumbnails->remove($media->getStoragePath());
+        $this->removePath($media->getStoragePath());
+    }
+
+    public function removePath(string $path): void
+    {
+        if ($path === '' || str_starts_with($path, '/') || str_contains($path, '\\') || str_contains($path, "\0") || array_intersect(['.', '..', ''], explode('/', $path)) !== [] || is_dir($this->absolutePath($path))) {
+            throw new \InvalidArgumentException('Invalid stored media path.');
+        }
+        $this->filesystem->remove($this->absolutePath($path));
+        $this->thumbnails->remove($path);
     }
 }

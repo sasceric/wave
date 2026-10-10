@@ -4,6 +4,7 @@ namespace App\Controller\Api;
 
 use App\Api\CampaignHiredCounts;
 use App\Api\ApiAccess;
+use App\Account\AccountDeletion;
 use App\Api\CampaignConversationResource;
 use App\Api\CampaignMessageResource;
 use App\Api\JsonPayload;
@@ -246,6 +247,9 @@ final class CampaignMessagingController
         }
         $data = JsonPayload::fromRequest($request);
         $body = is_array($data) && is_string($data['body'] ?? null) ? trim($data['body']) : '';
+        if (AccountDeletion::sharedHistoryDeleted($conversation->getCreator(), $conversation->getCampaign()->getCompany())) {
+            return new JsonResponse(['error' => ApiMessages::get('account_deleted_history', $locale)], 409);
+        }
         if (in_array($conversation->getCampaign()->getStatus(), ['closed', 'finished'], true)) {
             return new JsonResponse(['error' => ApiMessages::get($conversation->getCampaign()->getStatus() === 'finished' ? 'campaign_chat_finished' : 'campaign_chat_closed', $locale)], 409);
         }

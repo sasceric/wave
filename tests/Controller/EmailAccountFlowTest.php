@@ -111,7 +111,8 @@ final class EmailAccountFlowTest extends WebTestCase
         self::assertResponseIsSuccessful();
         self::assertSame(1, $this->payload()['data']['deleted']);
         $entityManager = static::getContainer()->get(EntityManagerInterface::class);
-        self::assertNull($entityManager->find(User::class, $deletedId));
+        self::assertTrue($entityManager->find(User::class, $deletedId)->isDeleted());
+        self::assertNotSame('recreated@example.test', $entityManager->find(User::class, $deletedId)->getEmail());
         self::assertSame(0, $entityManager->getRepository(OAuthIdentity::class)->count([]));
 
         $this->jsonRequest('POST', '/api/auth/register', [

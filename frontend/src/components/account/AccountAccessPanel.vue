@@ -35,7 +35,7 @@ const { categories, industries, error: catalogError } = useMarketplaceCatalog(lo
 const mode = ref(route.query.mode === 'register' ? 'register' : 'login')
 const busy = ref(false)
 const error = ref('')
-const notice = ref('')
+const notice = ref(route.query.deleted === '1' ? t('accountDeletion.success') : '')
 const showPassword = ref(false)
 const socialPending = ref(false)
 const phoneCountryWasManuallySelected = ref(false)
@@ -403,7 +403,7 @@ function changeMode(nextMode) {
           />
         </label>
         <template v-if="form.accountType === 'creator'">
-          <DatePicker v-model="form.birthday" :label="t('account.birthday')" :helper-text="t('account.birthdayPrivate')" min="1900-01-01" :max="dateOnly()" />
+          <DatePicker class="form-field--wide" v-model="form.birthday" :label="t('account.birthday')" :helper-text="t('account.birthdayPrivate')" min="1900-01-01" :max="dateOnly()" />
           <MultiSelect required
             class="form-field--wide"
             v-model="form.categories"

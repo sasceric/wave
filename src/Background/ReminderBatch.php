@@ -21,7 +21,7 @@ final class ReminderBatch
     {
         $db = $this->entityManager->getConnection();
         // One bounded row per unread thread/recipient, rather than hydrating its backlog.
-        $sql = 'SELECT t.id, cr.owner_id AS recipient, co.owner_id AS sender, MIN(m.id) AS first_id, COUNT(m.id) AS unread_count FROM campaign_conversation t JOIN campaign c ON c.id = t.campaign_id JOIN company co ON co.id = c.company_id JOIN creator cr ON cr.id = t.creator_id JOIN campaign_message m ON m.conversation_id = t.id AND m.sender_id = co.owner_id WHERE t.creator_unread_reminder_sent_at IS NULL AND cr.owner_id IS NOT NULL AND m.read_at IS NULL GROUP BY t.id, cr.owner_id, co.owner_id HAVING MIN(m.created_at) <= ? UNION ALL SELECT t.id, co.owner_id AS recipient, cr.owner_id AS sender, MIN(m.id) AS first_id, COUNT(m.id) AS unread_count FROM campaign_conversation t JOIN campaign c ON c.id = t.campaign_id JOIN company co ON co.id = c.company_id JOIN creator cr ON cr.id = t.creator_id JOIN campaign_message m ON m.conversation_id = t.id AND m.sender_id = cr.owner_id WHERE t.company_unread_reminder_sent_at IS NULL AND co.owner_id IS NOT NULL AND m.read_at IS NULL GROUP BY t.id, co.owner_id, cr.owner_id HAVING MIN(m.created_at) <= ? ORDER BY id, recipient LIMIT 100';
+        $sql = 'SELECT t.id, cr.owner_id AS recipient, co.owner_id AS sender, MIN(m.id) AS first_id, COUNT(m.id) AS unread_count FROM campaign_conversation t JOIN campaign c ON c.id = t.campaign_id JOIN company co ON co.id = c.company_id JOIN creator cr ON cr.id = t.creator_id JOIN campaign_message m ON m.conversation_id = t.id AND m.sender_id = co.owner_id WHERE cr.owner_id IN (SELECT id FROM wave_user WHERE deleted_at IS NULL) AND co.owner_id IN (SELECT id FROM wave_user WHERE deleted_at IS NULL) AND t.creator_unread_reminder_sent_at IS NULL AND cr.owner_id IS NOT NULL AND m.read_at IS NULL GROUP BY t.id, cr.owner_id, co.owner_id HAVING MIN(m.created_at) <= ? UNION ALL SELECT t.id, co.owner_id AS recipient, cr.owner_id AS sender, MIN(m.id) AS first_id, COUNT(m.id) AS unread_count FROM campaign_conversation t JOIN campaign c ON c.id = t.campaign_id JOIN company co ON co.id = c.company_id JOIN creator cr ON cr.id = t.creator_id JOIN campaign_message m ON m.conversation_id = t.id AND m.sender_id = cr.owner_id WHERE cr.owner_id IN (SELECT id FROM wave_user WHERE deleted_at IS NULL) AND co.owner_id IN (SELECT id FROM wave_user WHERE deleted_at IS NULL) AND t.company_unread_reminder_sent_at IS NULL AND co.owner_id IS NOT NULL AND m.read_at IS NULL GROUP BY t.id, co.owner_id, cr.owner_id HAVING MIN(m.created_at) <= ? ORDER BY id, recipient LIMIT 100';
         $cutoff = (new \DateTimeImmutable('-1 hour'))->format('Y-m-d H:i:s');
         $rows = $db->fetchAllAssociative($sql, [$cutoff, $cutoff]);
         $count = 0;
@@ -34,7 +34,7 @@ final class ReminderBatch
                 $conversation = $this->entityManager->find(CampaignConversation::class, (int) $row['id']);
                 $recipient = $this->entityManager->find(User::class, (int) $row['recipient']);
                 $sender = $this->entityManager->find(User::class, (int) $row['sender']);
-                if (!$conversation || !$recipient || !$sender) {
+                if (!$conversation || !$recipient || !$sender || $recipient->isDeleted() || $sender->isDeleted()) {
                     return 0;
                 }
                 $creator = $conversation->getCreator()->getOwner()?->getId() === $recipient->getId();

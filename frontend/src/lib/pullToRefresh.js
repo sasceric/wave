@@ -38,7 +38,7 @@ export function startPullToRefresh({
       && documentTarget.visibilityState !== 'hidden'
       && editedForms.size === 0
       && !documentTarget.activeElement?.matches?.(editable)
-      && !documentTarget.querySelector('[aria-modal="true"], [role="dialog"], .mobile-menu__panel, .header-user-menu__panel, .header-notifications__panel, .header-messages__panel')
+      && !documentTarget.querySelector('[aria-modal="true"]:not(dialog:not([open])), [role="dialog"]:not(dialog:not([open])), .mobile-menu__panel, .header-user-menu__panel, .header-notifications__panel, .header-messages__panel')
       && windowTarget.getComputedStyle(documentTarget.body).overflowY !== 'hidden'
   }
 

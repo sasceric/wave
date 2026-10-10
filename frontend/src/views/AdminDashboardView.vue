@@ -229,9 +229,12 @@ const tableLabels = computed(() => ({
 const deleteConfirmationMessage = computed(() => {
   if (!deleteRequest.value) return ''
 
-  return deleteRequest.value.name
+  const selection = deleteRequest.value.name
     ? t('adminDashboard.confirmDeleteOne', { name: deleteRequest.value.name })
     : t('adminDashboard.confirmDelete', { count: deleteRequest.value.ids.length })
+  return ['creators', 'companies', 'registrations'].includes(section.value)
+    ? `${selection} ${t('accountDeletion.admin')}`
+    : selection
 })
 
 async function loadDashboard() {

@@ -352,7 +352,7 @@ final class AuthController extends AbstractController
         }
 
         $user = $entityManager->getRepository(User::class)->findOneBy(['email' => $email]);
-        if (!$user instanceof User || !$passwordHasher->isPasswordValid($user, $data['password'])) {
+        if (!$user instanceof User || $user->isDeleted() || !$passwordHasher->isPasswordValid($user, $data['password'])) {
             return new JsonResponse(['error' => ApiMessages::get('invalid_credentials', $locale)], 401);
         }
 

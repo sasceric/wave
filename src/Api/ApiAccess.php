@@ -17,7 +17,7 @@ final class ApiAccess
     public static function requireRole(Security $security, string $role, string $locale, bool $requireVerified = false, bool $requireApproved = true): User|JsonResponse
     {
         $user = $security->getUser();
-        if (!$user instanceof User) {
+        if (!$user instanceof User || $user->isDeleted()) {
             return new JsonResponse(['error' => ApiMessages::get('authentication_required', $locale)], 401);
         }
         if (!$user->hasRole($role)) {

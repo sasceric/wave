@@ -3,6 +3,7 @@
 namespace App\Api;
 
 use App\Entity\Company;
+use App\Localization\ApiMessages;
 
 final class CompanyResource
 {
@@ -13,7 +14,8 @@ final class CompanyResource
         $resource = [
             'id' => $company->getId(),
             'slug' => $company->getSlug(),
-            'name' => $company->getName(),
+            'name' => $company->getOwner()?->isDeleted() ? ApiMessages::get('deleted_account', $locale) : $company->getName(),
+            'deleted' => $company->getOwner()?->isDeleted() ?? false,
             'industries' => $company->getIndustries(),
             'industryLabels' => array_map(
                 static fn (string $value): string => $categoryLabels[$value] ?? ($value === $company->getIndustry() ? ($translation['industry'] ?? $value) : $value),

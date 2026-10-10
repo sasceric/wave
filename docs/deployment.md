@@ -389,3 +389,30 @@ writable by `steelcodeweb` and included in persistent-file backups. Existing
 mail workers send receipts; no new secrets or services are needed. For three
 10 MiB attachments, use `upload_max_filesize >= 10M`, `post_max_size >= 32M` and
 an equivalent proxy body limit. See [support tickets](support-tickets.md).
+
+## Account deletion (2026-10-10)
+
+Apply `Version20261010100000` before serving the updated API and SPA. It adds
+`wave_user.deleted_at` and the durable `stored_file_deletion` cleanup journal.
+The local migration has the same PostgreSQL/SQLite compatibility as the app.
+
+Account settings and admin creator/company/registration deletion share
+`AccountDeletion`. Personal profile data, login identities, verification/reset
+tokens, bookmarks, subscriptions, private support tickets and owned media rows
+are erased. Minimal anonymous user/profile references retain other participants'
+applications, offers, invitations and conversations; company campaigns close and
+leave public discovery. Conversations become read-only. Re-registering the same
+email creates a fresh account and does not inherit the anonymous history.
+
+File removal runs only after the account transaction commits. It deletes originals,
+all thumbnail versions and private ticket attachment directories. Failed removals
+remain in the journal and retry in the existing `MediaMaintenanceTask`; no new
+worker, cron or environment variable is needed. To retry after repairing filesystem
+permissions, run as the normal application owner:
+
+```bash
+php8.4 bin/console app:media:cleanup-deleted --env=prod --no-debug
+```
+
+This policy applies to new account deletions. It does not sweep previously orphaned
+uploads or remove another participant's media or message history.

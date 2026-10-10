@@ -55,6 +55,9 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(options: ['default' => true])]
     private bool $notificationsEnabled = true;
 
+    #[ORM\Column(type: 'datetime_immutable', nullable: true)]
+    private ?\DateTimeImmutable $deletedAt = null;
+
     #[ORM\OneToOne(mappedBy: 'owner', targetEntity: Creator::class, cascade: ['persist', 'remove'])]
     private ?Creator $creator = null;
 
@@ -70,6 +73,22 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function getId(): ?int
     {
         return $this->id;
+    }
+
+    public function isDeleted(): bool
+    {
+        return $this->deletedAt !== null;
+    }
+
+    public function anonymize(): void
+    {
+        $this->deletedAt = new \DateTimeImmutable('now', new \DateTimeZone('UTC'));
+        $this->email = 'deleted-'.bin2hex(random_bytes(16)).'@deleted.invalid';
+        $this->password = bin2hex(random_bytes(64));
+        $this->phone = $this->city = $this->countryCode = null;
+        $this->role = 'ROLE_DELETED';
+        $this->approved = $this->emailVerified = $this->moderator = $this->admin = $this->notificationsEnabled = false;
+        $this->hideMyAccount = true;
     }
 
     public function getEmail(): string

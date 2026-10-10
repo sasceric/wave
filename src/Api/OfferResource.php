@@ -2,6 +2,8 @@
 
 namespace App\Api;
 
+use App\Account\AccountDeletion;
+
 use App\Entity\Offer;
 
 final class OfferResource
@@ -10,6 +12,7 @@ final class OfferResource
     {
         return [
             'id' => $offer->getId(),
+            'readOnly' => AccountDeletion::sharedHistoryDeleted($offer->getApplication()->getCreator(), $offer->getApplication()->getCampaign()->getCompany()),
             'amount' => $offer->getAmount(),
             'message' => $offer->getMessage(),
             'status' => $offer->getStatus(),

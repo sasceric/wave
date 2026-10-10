@@ -3,6 +3,7 @@
 namespace App\Api;
 
 use App\Entity\Notification;
+use App\Localization\ApiMessages;
 
 final class NotificationResource
 {
@@ -18,7 +19,7 @@ final class NotificationResource
         return [
             'id' => $notification->getId(),
             'type' => $notification->getType(),
-            'actorName' => $actorName,
+            'actorName' => $actor?->isDeleted() ? ApiMessages::get('deleted_account', $locale) : $actorName,
             'actorImageUrl' => $actor?->getCreator()?->getAvatarMedia()?->getUrl()
                 ?? $actor?->getCreator()?->getAvatarUrl()
                 ?? $actor?->getCompany()?->getLogoMedia()?->getUrl()

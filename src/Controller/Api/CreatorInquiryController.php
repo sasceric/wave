@@ -4,6 +4,7 @@ namespace App\Controller\Api;
 
 use App\Account\AccountEmailSender;
 use App\Api\ApiAccess;
+use App\Account\AccountDeletion;
 use App\Api\CreatorInquiryResource;
 use App\Api\Currency;
 use App\Api\JsonPayload;
@@ -189,7 +190,7 @@ final class CreatorInquiryController
             );
         }
 
-        return new JsonResponse(['data' => CreatorInquiryResource::fromEntity($inquiry, $user)], 201);
+        return new JsonResponse(['data' => CreatorInquiryResource::fromEntity($inquiry, $user, locale: $locale)], 201);
     }
 
     #[Route('/api/me/inquiries', name: 'api_my_inquiries', methods: ['GET'])]
@@ -217,7 +218,7 @@ final class CreatorInquiryController
 
         return new JsonResponse([
             'data' => array_map(
-                static function (CreatorInquiry $inquiry) use ($entityManager, $user, $unread): array {
+                static function (CreatorInquiry $inquiry) use ($entityManager, $user, $unread, $locale): array {
                     $lastMessage = $inquiry->getStatus() === 'accepted'
                         ? $entityManager->getRepository(InquiryMessage::class)->findOneBy(
                             ['inquiry' => $inquiry],
@@ -225,7 +226,7 @@ final class CreatorInquiryController
                         )
                         : null;
 
-                    return [...CreatorInquiryResource::fromEntity($inquiry, $user, $lastMessage), 'unreadCount' => $unread[$inquiry->getId()] ?? 0];
+                    return [...CreatorInquiryResource::fromEntity($inquiry, $user, $lastMessage, $locale), 'unreadCount' => $unread[$inquiry->getId()] ?? 0];
                 },
                 $inquiries,
             ),
@@ -259,6 +260,9 @@ final class CreatorInquiryController
         }
         if ($inquiry->getCreator()->getOwner()?->getId() !== $user->getId()) {
             return new JsonResponse(['error' => ApiMessages::get('forbidden', $locale)], 403);
+        }
+        if (AccountDeletion::sharedHistoryDeleted($inquiry->getCreator(), $inquiry->getCompany())) {
+            return new JsonResponse(['error' => ApiMessages::get('account_deleted_history', $locale)], 409);
         }
         if ($inquiry->getStatus() !== 'pending') {
             return new JsonResponse(['error' => ApiMessages::get('invalid_request', $locale)], 409);
@@ -299,7 +303,7 @@ final class CreatorInquiryController
             );
         }
 
-        return new JsonResponse(['data' => CreatorInquiryResource::fromEntity($inquiry, $user)]);
+        return new JsonResponse(['data' => CreatorInquiryResource::fromEntity($inquiry, $user, locale: $locale)]);
     }
 
     #[Route('/api/me/inquiries/{id}/messages', name: 'api_creator_inquiry_messages', methods: ['GET'])]
@@ -408,6 +412,9 @@ final class CreatorInquiryController
         }
         if (!self::isParticipant($inquiry, $user)) {
             return new JsonResponse(['error' => ApiMessages::get('forbidden', $locale)], 403);
+        }
+        if (AccountDeletion::sharedHistoryDeleted($inquiry->getCreator(), $inquiry->getCompany())) {
+            return new JsonResponse(['error' => ApiMessages::get('account_deleted_history', $locale)], 409);
         }
         if ($inquiry->getStatus() !== 'accepted') {
             return new JsonResponse(['error' => ApiMessages::get('invalid_request', $locale)], 409);

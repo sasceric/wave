@@ -4,6 +4,7 @@ namespace App\Controller\Api;
 
 use App\Api\CampaignHiredCounts;
 use App\Api\ApiAccess;
+use App\Account\AccountDeletion;
 use App\Api\CampaignConversationResource;
 use App\Api\CampaignInvitationResource;
 use App\Api\JsonPayload;
@@ -164,6 +165,9 @@ final class CampaignInvitationController
             || $invitation->getCreator()->getId() !== $creator->getId()
         ) {
             return new JsonResponse(['error' => ApiMessages::get('forbidden', $locale)], 404);
+        }
+        if (AccountDeletion::sharedHistoryDeleted($invitation->getCreator(), $invitation->getCampaign()->getCompany())) {
+            return new JsonResponse(['error' => ApiMessages::get('account_deleted_history', $locale)], 409);
         }
         if ($invitation->getCampaign()->getStatus() === 'finished') {
             return new JsonResponse(['error' => ApiMessages::get('campaign_finished', $locale)], 409);

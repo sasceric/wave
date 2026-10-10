@@ -3,6 +3,7 @@
 namespace App\Service;
 
 use App\Entity\User;
+use App\Localization\ApiMessages;
 use App\Media\ImageVariants;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
@@ -41,12 +42,15 @@ final class InboxHistory
                     creator.avatar_url, creator.avatar_media_id,
                     company.id AS company_id, company.slug AS company_slug, company.name AS company_name,
                     company.logo_url, company.logo_media_id,
+                    (creator_owner.deleted_at IS NOT NULL) AS creator_deleted, (company_owner.deleted_at IS NOT NULL) AS company_deleted,
                     (SELECT COUNT(*) FROM campaign_message message WHERE message.conversation_id = thread.id
                         AND message.sender_id <> :viewer AND message.read_at IS NULL) AS unread_count
                 FROM campaign_conversation thread
                 JOIN campaign ON campaign.id = thread.campaign_id
                 JOIN creator ON creator.id = thread.creator_id
                 JOIN company ON company.id = campaign.company_id
+                LEFT JOIN wave_user creator_owner ON creator_owner.id = creator.owner_id
+                LEFT JOIN wave_user company_owner ON company_owner.id = company.owner_id
                 WHERE $companyScope
                 UNION ALL
                 SELECT thread.id, 'inquiry' AS thread_type, COALESCE(latest.created_at, thread.created_at) AS activity_at,
@@ -56,11 +60,14 @@ final class InboxHistory
                     creator.avatar_url, creator.avatar_media_id,
                     company.id AS company_id, company.slug AS company_slug, company.name AS company_name,
                     company.logo_url, company.logo_media_id,
+                    (creator_owner.deleted_at IS NOT NULL) AS creator_deleted, (company_owner.deleted_at IS NOT NULL) AS company_deleted,
                     (SELECT COUNT(*) FROM inquiry_message message WHERE message.inquiry_id = thread.id
                         AND message.sender_id <> :viewer AND message.read_at IS NULL) AS unread_count
                 FROM creator_inquiry thread
                 JOIN creator ON creator.id = thread.creator_id
                 JOIN company ON company.id = thread.company_id
+                LEFT JOIN wave_user creator_owner ON creator_owner.id = creator.owner_id
+                LEFT JOIN wave_user company_owner ON company_owner.id = company.owner_id
                 LEFT JOIN LATERAL (SELECT body, created_at, sender_id FROM inquiry_message
                     WHERE inquiry_id = thread.id ORDER BY created_at DESC, id DESC LIMIT 1) latest ON TRUE
                 WHERE thread.$scope = :profile AND thread.status = 'accepted'
@@ -85,7 +92,7 @@ final class InboxHistory
         $last = $rows === [] ? null : $rows[array_key_last($rows)];
 
         return [
-            'data' => array_map($this->resource(...), $rows),
+            'data' => array_map(fn (array $row): array => $this->resource($row, $locale), $rows),
             'meta' => [
                 'limit' => $limit,
                 'hasMore' => $hasMore,
@@ -96,7 +103,7 @@ final class InboxHistory
         ];
     }
 
-    private function resource(array $row): array
+    private function resource(array $row, string $locale): array
     {
         $type = $row['thread_type'];
         $id = (int) $row['id'];
@@ -105,13 +112,16 @@ final class InboxHistory
             'id' => $id,
             'threadType' => $type,
             'threadKey' => $type . '-' . $id,
+            'readOnly' => (bool) $row['creator_deleted'] || (bool) $row['company_deleted'],
             'campaign' => ['slug' => $row['campaign_slug'], 'title' => $row['title']],
             'creator' => [
-                'id' => (int) $row['creator_id'], 'slug' => $row['creator_slug'], 'displayName' => $row['display_name'],
+                'id' => (int) $row['creator_id'], 'slug' => $row['creator_slug'], 'displayName' => $row['creator_deleted'] ? ApiMessages::get('deleted_account', $locale) : $row['display_name'],
+                'deleted' => (bool) $row['creator_deleted'],
                 'avatarUrl' => $row['avatar_media_id'] === null ? $row['avatar_url'] : '/api/media/' . $row['avatar_media_id'] . '/thumbnail/' . ImageVariants::VERSION . '/96',
             ],
             'company' => [
-                'id' => (int) $row['company_id'], 'slug' => $row['company_slug'], 'name' => $row['company_name'],
+                'id' => (int) $row['company_id'], 'slug' => $row['company_slug'], 'name' => $row['company_deleted'] ? ApiMessages::get('deleted_account', $locale) : $row['company_name'],
+                'deleted' => (bool) $row['company_deleted'],
                 'logoUrl' => $row['logo_media_id'] === null ? $row['logo_url'] : '/api/media/' . $row['logo_media_id'] . '/thumbnail/' . ImageVariants::VERSION . '/96',
             ],
             'packageTitle' => $type === 'inquiry' ? $row['title'] : null,

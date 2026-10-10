@@ -125,9 +125,9 @@ final class HomepageController
         }
         $data = [
             'metrics' => [
-                'users' => $entityManager->getRepository(User::class)->count([]),
-                'creators' => $entityManager->getRepository(Creator::class)->count([]),
-                'companies' => $entityManager->getRepository(Company::class)->count([]),
+                'users' => $entityManager->getRepository(User::class)->count(['deletedAt' => null]),
+                'creators' => (int) $entityManager->createQuery('SELECT COUNT(c.id) FROM App\\Entity\\Creator c LEFT JOIN c.owner u WHERE u.deletedAt IS NULL')->getSingleScalarResult(),
+                'companies' => (int) $entityManager->createQuery('SELECT COUNT(c.id) FROM App\\Entity\\Company c LEFT JOIN c.owner u WHERE u.deletedAt IS NULL')->getSingleScalarResult(),
                 'campaigns' => $entityManager->getRepository(Campaign::class)->count([]),
                 'pendingApplications' => $entityManager->getRepository(Application::class)->count(['status' => 'pending']),
                 'pendingRegistrations' => $entityManager->getRepository(User::class)->count(['role' => ['ROLE_CREATOR', 'ROLE_COMPANY'], 'admin' => false, 'moderator' => false, 'approved' => false]),
@@ -383,6 +383,7 @@ final class HomepageController
         EntityManagerInterface $entityManager,
         Security $security,
         CsrfTokenManagerInterface $tokenManager,
+        \App\Account\AccountDeletion $deletion,
     ): JsonResponse {
         $locale = LocaleContext::fromRequest($request);
         if ($locale === null) {
@@ -427,13 +428,19 @@ final class HomepageController
             return new JsonResponse(['error' => ApiMessages::get('invalid_request', $locale)], 404);
         }
         foreach ($entities as $entity) {
-            if ($entity instanceof Creator || $entity instanceof Company) {
-                $entityManager->remove($entity->getOwner() ?? $entity);
-            } else {
-                $entityManager->remove($entity);
+            $owner = $entity instanceof User ? $entity : ($entity instanceof Creator || $entity instanceof Company ? $entity->getOwner() : null);
+            if ($owner?->hasRole('ROLE_ADMIN') || $owner?->hasRole('ROLE_MODERATOR')) {
+                return new JsonResponse(['error' => ApiMessages::get('forbidden', $locale)], 403);
             }
         }
-        $entityManager->flush();
+        if ($resource === 'campaigns') {
+            foreach ($entities as $entity) {
+                $entityManager->remove($entity);
+            }
+            $entityManager->flush();
+        } else {
+            $deletion->delete($entities);
+        }
 
         return new JsonResponse(['data' => ['deleted' => count($entities)]]);
     }

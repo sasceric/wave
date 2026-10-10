@@ -350,4 +350,15 @@ class Creator
         $this->faqs = $faqs;
         $this->translations = [];
     }
+
+    public function anonymize(): void
+    {
+        $this->updateProfile('Deleted account', '', '', '', [], [], null, '', [], [], [], []);
+        $this->slug = 'deleted-creator-'.bin2hex(random_bytes(12));
+        $this->avatarMedia = null;
+        $this->birthday = null;
+        $this->featured = false;
+        $this->creatorTypes = [];
+        $this->clearPortfolioMedia();
+    }
 }

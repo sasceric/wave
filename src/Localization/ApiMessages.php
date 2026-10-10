@@ -6,6 +6,8 @@ final class ApiMessages
 {
     private const MESSAGES = [
         'bs' => [
+            'deleted_account' => 'Obrisan račun',
+            'account_deleted_history' => 'Račun učesnika je obrisan. Historija ostaje dostupna, ali nije moguće slati poruke ili mijenjati saradnju.',
             'credit_insufficient' => 'Nemaš dovoljno kredita. Dodaj kredite na svom računu prije ove radnje.',
             'credit_invalid_code' => 'Kod nije ispravan, već je iskorišten ili je poništen.',
             'credit_invalid_settings' => 'Provjeri cijenu, troškove i broj besplatnih kredita.',
@@ -70,6 +72,8 @@ final class ApiMessages
             'newsletter_email_failed' => 'Potvrdni e-mail nije poslan. Pokušaj ponovo kasnije.',
         ],
         'hr' => [
+            'deleted_account' => 'Izbrisan račun',
+            'account_deleted_history' => 'Račun sudionika je izbrisan. Povijest ostaje dostupna, ali nije moguće slati poruke ili mijenjati suradnju.',
             'credit_insufficient' => 'Nemaš dovoljno kredita. Dodaj kredite na svom računu prije ove radnje.',
             'credit_invalid_code' => 'Kod nije ispravan, već je iskorišten ili je poništen.',
             'credit_invalid_settings' => 'Provjeri cijenu, troškove i broj besplatnih kredita.',
@@ -134,6 +138,8 @@ final class ApiMessages
             'newsletter_email_failed' => 'Potvrdna e-pošta nije poslana. Pokušaj ponovno kasnije.',
         ],
         'sr' => [
+            'deleted_account' => 'Obrisan nalog',
+            'account_deleted_history' => 'Nalog učesnika je obrisan. Istorija ostaje dostupna, ali nije moguće slati poruke ili menjati saradnju.',
             'credit_insufficient' => 'Nemaš dovoljno kredita. Dodaj kredite na svom nalogu pre ove radnje.',
             'credit_invalid_code' => 'Kod nije ispravan, već je iskorišćen ili je poništen.',
             'credit_invalid_settings' => 'Proveri cenu, troškove i broj besplatnih kredita.',
@@ -198,6 +204,8 @@ final class ApiMessages
             'newsletter_email_failed' => 'Potvrdni e-mail nije poslat. Pokušaj ponovo kasnije.',
         ],
         'cnr' => [
+            'deleted_account' => 'Obrisan račun',
+            'account_deleted_history' => 'Račun učesnika je obrisan. Istorija ostaje dostupna, ali nije moguće slati poruke ili mijenjati saradnju.',
             'credit_insufficient' => 'Nemaš dovoljno kredita. Dodaj kredite na svom nalogu prije ove radnje.',
             'credit_invalid_code' => 'Kod nije ispravan, već je iskorišćen ili je poništen.',
             'credit_invalid_settings' => 'Provjeri cijenu, troškove i broj besplatnih kredita.',
@@ -262,6 +270,8 @@ final class ApiMessages
             'newsletter_email_failed' => 'Potvrdni e-mail nije poslat. Pokušaj ponovo kasnije.',
         ],
         'sl' => [
+            'deleted_account' => 'Izbrisan račun',
+            'account_deleted_history' => 'Račun udeleženca je izbrisan. Zgodovina ostane dostopna, vendar ni mogoče pošiljati sporočil ali spreminjati sodelovanja.',
             'credit_insufficient' => 'Nimate dovolj kreditov. Pred tem dejanjem dodajte kredite na svoj račun.',
             'credit_invalid_code' => 'Koda ni veljavna, je že uporabljena ali preklicana.',
             'credit_invalid_settings' => 'Preverite ceno, stroške in število brezplačnih kreditov.',
@@ -326,6 +336,8 @@ final class ApiMessages
             'newsletter_email_failed' => 'Potrditvenega e-poštnega sporočila ni bilo mogoče poslati. Poskusi znova pozneje.',
         ],
         'en' => [
+            'deleted_account' => 'Deleted account',
+            'account_deleted_history' => 'A participant’s account has been deleted. History remains available, but messages and collaboration changes are disabled.',
             'credit_insufficient' => 'You do not have enough credits. Add credits to your account before continuing.',
             'credit_invalid_code' => 'This code is invalid, already redeemed or revoked.',
             'credit_invalid_settings' => 'Check the price, action costs and free-credit amount.',

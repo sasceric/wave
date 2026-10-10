@@ -49,7 +49,7 @@ final class InboxController
                 $data = CampaignConversationResource::fromEntity($thread, $unread[$id] ?? 0, $locale, CampaignHiredCounts::forCampaign($entityManager, $thread->getCampaign()));
             } else {
                 $latest = $entityManager->getRepository(InquiryMessage::class)->findOneBy(['inquiry' => $thread], ['createdAt' => 'DESC', 'id' => 'DESC']);
-                $data = [...CreatorInquiryResource::fromEntity($thread, $user, $latest), 'unreadCount' => $counter->inquiryMessages($user, $id)];
+                $data = [...CreatorInquiryResource::fromEntity($thread, $user, $latest, $locale), 'unreadCount' => $counter->inquiryMessages($user, $id)];
             }
 
             return new JsonResponse(['data' => [...$data, 'threadType' => $type, 'threadKey' => $type . '-' . $id]]);

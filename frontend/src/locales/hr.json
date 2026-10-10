@@ -357,7 +357,8 @@
       "support_ticket_updated": "{actor} je ažurirao tiket."
     },
     "closedNotice": "Kampanja je zatvorena. Više nije moguće slati poruke u ovom razgovoru.",
-    "finishedNotice": "Kampanja je završena. Više nije moguće slati poruke u ovom razgovoru."
+    "finishedNotice": "Kampanja je završena. Više nije moguće slati poruke u ovom razgovoru.",
+    "deletedAccountNotice": "Račun sudionika je izbrisan. Povijest ostaje dostupna, ali nije moguće slati poruke ili mijenjati suradnju."
   },
   "directoryLoading": {
     "loading": "Učitavanje rezultata…",
@@ -803,7 +804,7 @@
     "resetInvalid": "Poveznica za promjenu lozinke nije valjana ili je istekla. Zatraži novu.",
     "creatorInvite": "Pokaži što stvaraš i pronađi brendove s kojima vrijedi surađivati.",
     "companyInvite": "Predstavi svoju tvrtku i objavi kampanje za prave kreatore.",
-    "namePlaceholder": "Npr. Ana Kovač ili Studio Wave"
+    "namePlaceholder": "Npr. Amina Kovač ili Studio Wave"
   },
   "account": {
     "basicInformation": "Osnovne informacije",
@@ -2007,5 +2008,15 @@
     },
     "statusChangedTo": "Status je promijenjen u: {status}",
     "download": "Preuzmi"
+  },
+  "accountDeletion": {
+    "action": "Izbriši račun",
+    "title": "Trajno izbrisati račun?",
+    "intro": "Ova se radnja ne može poništiti.",
+    "profile": "Tvoj profil, kontakt podaci, slike, portfolio i privatni prilozi bit će izbrisani, zajedno s datotekama i sličicama.",
+    "history": "Tvoje otvorene kampanje bit će zatvorene. Prijave, ponude i razgovori ostaju drugim sudionicima kao povijest pod oznakom „Izbrisan račun“. Razgovori više neće primati poruke.",
+    "session": "Bit ćeš odjavljen/a. Novi račun neće vratiti ovu povijest.",
+    "success": "Tvoj račun je izbrisan.",
+    "admin": "Profil, osobni podaci i datoteke bit će izbrisani. Kampanje će biti zatvorene, a prijave i razgovori sačuvani kao anonimna povijest za druge sudionike."
   }
 }

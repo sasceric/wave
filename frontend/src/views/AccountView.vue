@@ -1701,9 +1701,10 @@ onMounted(loadDashboard)
             <strong>{{ t('account.yourMessage') }}</strong>
             <p>{{ selectedApplication.message }}</p>
           </div>
+          <StatusMessage v-if="selectedApplication.readOnly" variant="info">{{ t('campaignChat.deletedAccountNotice') }}</StatusMessage>
           <div class="company-applicant-dialog__actions">
             <button
-              v-if="selectedApplication.status === 'pending'"
+              v-if="selectedApplication.status === 'pending' && !selectedApplication.readOnly"
               class="button button--dark"
               type="button"
               :disabled="!user.emailVerified || !user.approved"
@@ -1727,6 +1728,7 @@ onMounted(loadDashboard)
               {{ t('campaignChat.messageApplicant') }}
             </RouterLink>
             <RouterLink
+              v-if="!selectedApplication.creator.deleted"
               class="button button--outline"
               :to="{ name: localizedRouteName('creator-profile', locale), params: { slug: selectedApplication.creator.slug } }"
               @click="closeApplicant"
@@ -1734,7 +1736,7 @@ onMounted(loadDashboard)
               {{ t('account.viewPublicProfile') }} ↗
             </RouterLink>
           </div>
-          <form v-if="selectedApplication.status === 'shortlisted'" v-form-validation class="form-stack company-applicant-card__offer" @submit.prevent="sendOffer(selectedApplication)">
+          <form v-if="selectedApplication.status === 'shortlisted' && !selectedApplication.readOnly" v-form-validation class="form-stack company-applicant-card__offer" @submit.prevent="sendOffer(selectedApplication)">
             <label class="form-field">
               <span>{{ t('account.offerAmount') }} ({{ selectedApplication.campaign.currency }})</span>
               <input

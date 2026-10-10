@@ -129,12 +129,13 @@ onMounted(loadCampaign)
             <p class="eyebrow">
               {{ (campaign.categoryLabels || [campaign.categoryLabel || campaign.category]).join(', ') }}
               <span aria-hidden="true">·</span>
-              {{ t('campaignDetail.openCampaign') }}
+              {{ campaign.status === 'open' ? t('campaignDetail.openCampaign') : t(`account.${campaign.status}`) }}
             </p>
             <h1>{{ campaign.title }}</h1>
             <p class="brief-hero__summary">{{ campaign.summary }}</p>
             <RouterLink
               class="brief-hero__brand brief-hero__brand-link"
+              v-if="!campaign.company.deleted"
               :to="{ name: 'company-profile', params: { slug: campaign.company.slug } }"
             >
               <span class="brand-avatar brand-avatar--large">
@@ -156,8 +157,8 @@ onMounted(loadCampaign)
 
           <aside class="brief-application-card" aria-labelledby="campaign-application-title">
             <div class="brief-application-card__top">
-              <p id="campaign-application-title" class="eyebrow">{{ t('campaignDetail.openCampaign') }}</p>
-              <span class="brief-status"><i></i>{{ t('campaignDetail.open') }}</span>
+              <p id="campaign-application-title" class="eyebrow">{{ campaign.status === 'open' ? t('campaignDetail.openCampaign') : t(`account.${campaign.status}`) }}</p>
+              <span class="brief-status"><i></i>{{ t(`account.${campaign.status}`) }}</span>
             </div>
             <div class="brief-hero-fact">
               <DollarSign :size="18" aria-hidden="true" />
@@ -175,8 +176,9 @@ onMounted(loadCampaign)
               <strong>{{ formatDate(campaign.closesAt) }}</strong>
             </div>
 
+            <div v-if="campaign.readOnly" class="brief-notice" role="status">{{ t('campaignChat.deletedAccountNotice') }}</div>
             <div
-              v-if="user?.accountType === 'creator' && user.emailVerified === false"
+              v-else-if="!campaign.readOnly && user?.accountType === 'creator' && user.emailVerified === false"
               class="brief-notice"
             >
               <p>{{ t('account.emailUnverified') }}</p>
@@ -191,6 +193,7 @@ onMounted(loadCampaign)
             >
               {{ t('account.approvalPendingNotice') }}
             </div>
+            <div v-else-if="campaign.status !== 'open'" class="brief-notice" role="status">{{ t(`account.${campaign.status}`) }}</div>
             <div v-else-if="user?.accountType === 'creator' && alreadyApplied" class="brief-notice" role="status">
               {{ t('campaignDetail.alreadyApplied') }}
             </div>
@@ -324,6 +327,7 @@ onMounted(loadCampaign)
             </div>
             <RouterLink
               class="brief-company-card__link"
+              v-if="!campaign.company.deleted"
               :to="{ name: 'company-profile', params: { slug: campaign.company.slug } }"
             >
               {{ t('companyDirectory.viewProfile') }} <ArrowRight :size="15" aria-hidden="true" />

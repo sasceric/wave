@@ -73,4 +73,12 @@ final class TicketAttachments
             if (is_file($path)) unlink($path);
         }
     }
+
+    public function removeTicketFiles(string $token): void
+    {
+        if (preg_match('/^[a-f0-9]{64}$/D', $token) !== 1) {
+            throw new \InvalidArgumentException('Invalid attachment directory.');
+        }
+        (new \Symfony\Component\Filesystem\Filesystem())->remove($this->directory.'/'.$token);
+    }
 }

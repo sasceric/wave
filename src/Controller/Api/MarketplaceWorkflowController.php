@@ -5,6 +5,7 @@ namespace App\Controller\Api;
 use App\Api\CampaignHiredCounts;
 use App\Account\AccountEmailSender;
 use App\Api\ApiAccess;
+use App\Account\AccountDeletion;
 use App\Api\ApplicationResource;
 use App\Api\JsonPayload;
 use App\Api\OfferResource;
@@ -212,6 +213,9 @@ final class MarketplaceWorkflowController
         ) {
             return new JsonResponse(['error' => ApiMessages::get('application_not_found', $locale)], 404);
         }
+        if (AccountDeletion::sharedHistoryDeleted($application->getCreator(), $application->getCampaign()->getCompany())) {
+            return new JsonResponse(['error' => ApiMessages::get('account_deleted_history', $locale)], 409);
+        }
         if ($application->getCampaign()->getStatus() === 'finished') {
             return new JsonResponse(['error' => ApiMessages::get('campaign_finished', $locale)], 409);
         }
@@ -279,6 +283,9 @@ final class MarketplaceWorkflowController
         if (!$application instanceof Application || !$company instanceof Company || $application->getCampaign()->getCompany()->getId() !== $company->getId()) {
             return new JsonResponse(['error' => ApiMessages::get('application_not_found', $locale)], 404);
         }
+        if (AccountDeletion::sharedHistoryDeleted($application->getCreator(), $application->getCampaign()->getCompany())) {
+            return new JsonResponse(['error' => ApiMessages::get('account_deleted_history', $locale)], 409);
+        }
         if ($application->getCampaign()->getStatus() === 'finished') {
             return new JsonResponse(['error' => ApiMessages::get('campaign_finished', $locale)], 409);
         }
@@ -315,6 +322,9 @@ final class MarketplaceWorkflowController
         $company = $user->getCompany();
         if (!$application instanceof Application || !$company instanceof Company || $application->getCampaign()->getCompany()->getId() !== $company->getId()) {
             return new JsonResponse(['error' => ApiMessages::get('application_not_found', $locale)], 404);
+        }
+        if (AccountDeletion::sharedHistoryDeleted($application->getCreator(), $application->getCampaign()->getCompany())) {
+            return new JsonResponse(['error' => ApiMessages::get('account_deleted_history', $locale)], 409);
         }
         if ($application->getCampaign()->getStatus() === 'finished') {
             return new JsonResponse(['error' => ApiMessages::get('campaign_finished', $locale)], 409);
@@ -409,6 +419,9 @@ final class MarketplaceWorkflowController
         $offer = $entityManager->getRepository(Offer::class)->find($id);
         if (!$offer instanceof Offer || !$creator instanceof Creator || $offer->getApplication()->getCreator()->getId() !== $creator->getId()) {
             return new JsonResponse(['error' => ApiMessages::get('offer_not_found', $locale)], 404);
+        }
+        if (AccountDeletion::sharedHistoryDeleted($offer->getApplication()->getCreator(), $offer->getApplication()->getCampaign()->getCompany())) {
+            return new JsonResponse(['error' => ApiMessages::get('account_deleted_history', $locale)], 409);
         }
         if ($offer->getApplication()->getCampaign()->getStatus() === 'finished') {
             return new JsonResponse(['error' => ApiMessages::get('campaign_finished', $locale)], 409);

@@ -33,6 +33,7 @@ final class CampaignResource
             'closesAt' => $campaign->getClosesAt()->format(DATE_ATOM),
             'publishedAt' => $campaign->getPublishedAt()->format(DATE_ATOM),
             'status' => $campaign->getStatus(),
+            'readOnly' => $campaign->getCompany()->getOwner()?->isDeleted() ?? false,
             'featured' => $campaign->isFeatured(),
             'coverMediaId' => $campaign->getCoverMedia()?->getId(),
             'coverImageUrl' => $campaign->getCoverMedia()?->getUrl(),

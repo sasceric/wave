@@ -211,4 +211,14 @@ class Company
         $this->about = $about;
         $this->translations = [];
     }
+
+    public function anonymize(): void
+    {
+        $this->updateProfile('Deleted account', '', null, null);
+        $this->slug = 'deleted-company-'.bin2hex(random_bytes(12));
+        $this->logoMedia = $this->coverMedia = null;
+        $this->socialLinks = [];
+        $this->industrySelections->clear();
+        $this->verified = $this->featured = false;
+    }
 }

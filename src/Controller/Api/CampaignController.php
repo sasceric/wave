@@ -7,6 +7,11 @@ use App\Api\CampaignResource;
 use App\Api\Currency;
 use App\Api\DirectoryCursor;
 use App\Entity\Campaign;
+use App\Entity\Application;
+use App\Entity\CampaignConversation;
+use App\Entity\CampaignInvitation;
+use App\Entity\User;
+use Symfony\Bundle\SecurityBundle\Security;
 use App\Entity\MarketplaceCategory;
 use App\Localization\ApiMessages;
 use App\Localization\LocaleContext;
@@ -213,13 +218,14 @@ final class CampaignController
     }
 
     #[Route('/api/campaigns/{slug}', name: 'api_campaigns_show', methods: ['GET'])]
-    public function show(string $slug, Request $request, EntityManagerInterface $entityManager): JsonResponse
+    public function show(string $slug, Request $request, EntityManagerInterface $entityManager, Security $security): JsonResponse
     {
         $locale = LocaleContext::fromRequest($request);
         if ($locale === null) {
             return new JsonResponse(['error' => ApiMessages::get('unsupported_language', 'bs')], 400);
         }
 
+        $privateHistory = false;
         $campaign = $entityManager->getRepository(Campaign::class)->createQueryBuilder('campaign')
             ->join('campaign.company', 'company')
             ->leftJoin('company.owner', 'companyOwner')
@@ -233,14 +239,25 @@ final class CampaignController
             ->getQuery()
             ->getOneOrNullResult();
         if (!$campaign instanceof Campaign || $campaign->getClosesAt() < new \DateTimeImmutable('today')) {
-            return new JsonResponse(['error' => ApiMessages::get('campaign_not_found', $locale)], 404);
+            $history = $entityManager->getRepository(Campaign::class)->findOneBy(['slug' => $slug]);
+            $user = $security->getUser();
+            $creator = $user instanceof User && !$user->isDeleted() ? $user->getCreator() : null;
+            $canView = $history instanceof Campaign && $creator !== null
+                && ($entityManager->getRepository(Application::class)->count(['campaign' => $history, 'creator' => $creator]) > 0
+                    || $entityManager->getRepository(CampaignInvitation::class)->count(['campaign' => $history, 'creator' => $creator]) > 0
+                    || $entityManager->getRepository(CampaignConversation::class)->count(['campaign' => $history, 'creator' => $creator]) > 0);
+            if (!$canView) {
+                return new JsonResponse(['error' => ApiMessages::get('campaign_not_found', $locale)], 404);
+            }
+            $campaign = $history;
+            $privateHistory = true;
         }
 
         $categoryLabels = self::categoryLabels($entityManager, $locale);
 
         return new JsonResponse([
             'data' => CampaignResource::fromEntity($campaign, $locale, $categoryLabels[$campaign->getCategory()] ?? null, categoryLabels: $categoryLabels, hiredCount: CampaignHiredCounts::forCampaign($entityManager, $campaign)),
-        ]);
+        ], headers: $privateHistory ? ['Cache-Control' => 'private, no-store'] : []);
     }
 
     private function selectedValues(Request $request, string $key, int $maxLength): array

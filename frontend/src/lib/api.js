@@ -61,7 +61,7 @@ export async function apiRequest(path, { method = 'GET', body, locale } = {}) {
   }
 
   if (typeof payload.csrfToken === 'string') csrfToken = payload.csrfToken
-  else if (path === '/auth/logout') csrfToken = ''
+  else if (path === '/auth/logout' || path === '/me/account' && method.toUpperCase() === 'DELETE') csrfToken = ''
 
   return payload
 }

@@ -549,3 +549,27 @@ account menus use the profile image/company logo, falling back to the Wave mark,
 and show a desktop name plus profile, language and sign-out controls. Signed-in
 language selection lives in this dropdown. Creator profile content and sidebar
 are independent columns, with the biography below the decorative hero.
+
+### Account deletion and shared history (2026-10-10)
+
+`src/Account/AccountDeletion.php` is the single deletion policy used by admin bulk
+profile/registration deletion and `DELETE /api/me/account`. Account settings expose
+it through `AccountDeletionAction.vue` and the shared confirmation dialog in all
+six locales. Operator accounts cannot use this flow.
+
+Deletion anonymizes the minimal user/profile references instead of deleting their
+foreign keys: shared campaign applications, offers, invitations and message bodies
+remain for other participants. Company campaigns close; API resources return
+localized deleted-account labels and `readOnly`. Message/offer/invitation/inquiry
+writes are blocked for deleted participants. Closed campaign briefs are accessible
+only to existing participants through the private history fallback.
+
+Personal fields, OAuth identities, action tokens, subscriptions, bookmarks,
+private support tickets and owned media are erased in one transaction. Queued
+personal deliveries are discarded and directory projections invalidated. The
+`StoredFileCleanup` journal records files before row removal; its response subscriber
+runs after API commit, and `MediaMaintenanceTask` retries failures. Originals,
+versioned thumbnails and complete private support directories are removed. See
+`docs/deployment.md` for migration `Version20261010100000` and the manual retry
+command. Do not replace this flow with `EntityManager::remove(User)` or cascades,
+which would destroy other participants' history.

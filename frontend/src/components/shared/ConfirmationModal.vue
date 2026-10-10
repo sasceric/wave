@@ -43,6 +43,7 @@ function dismiss() {
       <span class="confirmation-modal__icon"><AlertTriangle :size="19" aria-hidden="true" /></span>
       <h2 :id="`${id}-title`">{{ title }}</h2>
       <p :id="`${id}-message`">{{ message }}</p>
+      <slot />
       <footer class="confirmation-modal__actions">
         <button class="button button--outline" type="button" :disabled="loading" @click="dismiss">
           {{ cancelLabel }}

@@ -231,7 +231,7 @@ onBeforeUnmount(() => {
               <td><span class="creator-offer__status" :class="`creator-offer__status--${statusGroup(offer)}`"><i :class="`activity-dot activity-dot--${statusGroup(offer)}`" aria-hidden="true"></i>{{ statusLabel(offer) }}</span></td>
               <td v-if="isInvitations" class="creator-offers__action-cell"><div class="creator-offers__actions campaign-invitations__actions">
                 <div class="campaign-invitations__primary-actions">
-                  <template v-if="statusGroup(offer) === 'pending'">
+                  <template v-if="statusGroup(offer) === 'pending' && !offer.readOnly">
                     <button class="button button--dark" type="button" :disabled="!canRespond || responding" @click="emit('respond', offer, 'accept')">{{ t('account.acceptInvitation') }}</button>
                     <button class="button button--outline" type="button" :disabled="!canRespond || responding" @click="emit('respond', offer, 'decline')">{{ t('account.declineInvitation') }}</button>
                   </template>
@@ -277,7 +277,8 @@ onBeforeUnmount(() => {
           <button class="offer-campaign-modal__close" type="button" :aria-label="t('creatorProfile.closeRequest')" @click="closeCampaign"><X :size="22" aria-hidden="true" /></button>
         </header>
         <div v-if="campaign" class="offer-campaign-modal__content">
-          <StatusMessage v-if="campaign.status === 'finished'" variant="info">{{ t('account.campaignFinishedNotice') }}</StatusMessage>
+          <StatusMessage v-if="selectedItem.readOnly" variant="info">{{ t('campaignChat.deletedAccountNotice') }}</StatusMessage>
+          <StatusMessage v-else-if="campaign.status === 'finished'" variant="info">{{ t('account.campaignFinishedNotice') }}</StatusMessage>
           <CampaignHiringProgress :campaign="campaign" />
           <section>
             <h3>{{ t('account.offerCampaignAbout') }}</h3>
@@ -294,7 +295,7 @@ onBeforeUnmount(() => {
             <strong>{{ formatMoney(selectedItem.amount, campaign.currency) }}</strong>
             <p v-if="selectedItem.message">{{ selectedItem.message }}</p>
             <span class="creator-offer__status" :class="`creator-offer__status--${statusGroup(selectedItem)}`">{{ statusLabel(selectedItem) }}</span>
-            <div v-if="selectedItem.status === 'pending' && campaign.status !== 'finished'" class="button-row">
+            <div v-if="selectedItem.status === 'pending' && campaign.status !== 'finished' && !selectedItem.readOnly" class="button-row">
               <button class="button button--dark" type="button" :disabled="!canRespond || responding" @click="emit('respond', selectedItem, 'accept')">{{ t('account.accept') }}</button>
               <button class="button button--outline" type="button" :disabled="!canRespond || responding" @click="emit('respond', selectedItem, 'reject')">{{ t('account.reject') }}</button>
             </div>
@@ -303,7 +304,7 @@ onBeforeUnmount(() => {
             <h3>{{ t(isInvitations ? 'campaignChat.invitationMessage' : 'account.applicationMessage') }}</h3>
             <p>{{ selectedItem.message }}</p>
             <span class="creator-offer__status">{{ statusLabel(selectedItem) }}</span>
-            <div v-if="isInvitations && statusGroup(selectedItem) === 'pending'" class="button-row">
+            <div v-if="isInvitations && statusGroup(selectedItem) === 'pending' && !selectedItem.readOnly" class="button-row">
               <button class="button button--dark" type="button" :disabled="!canRespond || responding" @click="emit('respond', selectedItem, 'accept')">{{ t('account.acceptInvitation') }}</button>
               <button class="button button--outline" type="button" :disabled="!canRespond || responding" @click="emit('respond', selectedItem, 'decline')">{{ t('account.declineInvitation') }}</button>
             </div>
@@ -312,6 +313,7 @@ onBeforeUnmount(() => {
         </div>
         <div v-else class="offer-campaign-modal__content">
           <h3>{{ t('account.directRequests') }}</h3>
+          <StatusMessage v-if="selectedItem.readOnly" variant="info">{{ t('campaignChat.deletedAccountNotice') }}</StatusMessage>
           <p class="offer-campaign-modal__inquiry-message">{{ selectedItem.message }}</p>
           <dl class="offer-campaign-modal__facts">
             <div><Wallet :size="23" aria-hidden="true" /><dt>{{ t('account.proposedPrice') }}</dt><dd>{{ itemBudget(selectedItem) }}</dd></div>
@@ -322,7 +324,7 @@ onBeforeUnmount(() => {
             <ul v-if="selectedItem.selectedPackages?.length"><li v-for="(selection, index) in selectedItem.selectedPackages" :key="index">{{ packageLabel(selection) }}</li></ul>
             <p v-else>{{ selectedItem.packageTitle }}</p>
           </section>
-          <div v-if="selectedItem.role === 'creator' && selectedItem.status === 'pending'" class="button-row">
+          <div v-if="selectedItem.role === 'creator' && selectedItem.status === 'pending' && !selectedItem.readOnly" class="button-row">
             <button class="button button--dark" type="button" :disabled="!canRespond || responding" @click="emit('respond', selectedItem, 'accept')">{{ t('account.accept') }}</button>
             <button class="button button--outline" type="button" :disabled="!canRespond || responding" @click="emit('respond', selectedItem, 'reject')">{{ t('account.reject') }}</button>
           </div>

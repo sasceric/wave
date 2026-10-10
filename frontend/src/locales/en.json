@@ -356,7 +356,8 @@
       "support_ticket_updated": "{actor} updated a support ticket."
     },
     "closedNotice": "This campaign is closed. You can no longer send messages in this conversation.",
-    "finishedNotice": "This campaign is finished. You can no longer send messages in this conversation."
+    "finishedNotice": "This campaign is finished. You can no longer send messages in this conversation.",
+    "deletedAccountNotice": "A participant’s account has been deleted. History remains available, but messages and collaboration changes are disabled."
   },
   "directoryLoading": {
     "loading": "Loading results…",
@@ -802,7 +803,7 @@
     "resetInvalid": "This password reset link is invalid or expired. Request a new one.",
     "creatorInvite": "Show what you make and find brands worth working with.",
     "companyInvite": "Introduce your company and post campaigns for the right creators.",
-    "namePlaceholder": "E.g. Ana Kovac or Studio Wave"
+    "namePlaceholder": "E.g. Amina Kovac or Studio Wave"
   },
   "account": {
     "basicInformation": "Basic information",
@@ -2006,5 +2007,15 @@
     },
     "statusChangedTo": "Status changed to: {status}",
     "download": "Download"
+  },
+  "accountDeletion": {
+    "action": "Delete account",
+    "title": "Permanently delete your account?",
+    "intro": "This action cannot be undone.",
+    "profile": "Your profile, contact details, images, portfolio and private attachments will be removed, including stored files and thumbnails.",
+    "history": "Any open campaigns you own will be closed. Applications, offers and conversations remain as history for other participants under “Deleted account”. Conversations will become read-only.",
+    "session": "You will be signed out. A new account will not restore this history.",
+    "success": "Your account has been deleted.",
+    "admin": "The profile, personal details and files will be removed. Campaigns will be closed, while applications and conversations remain as anonymous history for other participants."
   }
 }
