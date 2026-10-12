@@ -13,7 +13,8 @@ import FooterNewsletterSignup from './components/shared/FooterNewsletterSignup.v
 import SkeletonBlock from './components/shared/SkeletonBlock.vue'
 import CookieConsentBanner from './components/shared/CookieConsentBanner.vue'
 import PullToRefresh from './components/shared/PullToRefresh.vue'
-import { currentUser, setCurrentUser } from './composables/useCurrentUser'
+import { logoutAccount } from './lib/pushSession'
+import { currentUser, loadCurrentUser, setCurrentUser } from './composables/useCurrentUser'
 import { useAdminWorker } from './composables/useAdminWorker'
 import { unreadMessageCount } from './composables/useUnreadMessages'
 import { mobileAccountSidebarOpen } from './composables/useMobileAccountSidebar'
@@ -24,6 +25,7 @@ import { updateAppBadge } from './lib/appBadge'
 import { notificationDestination, startNotificationNavigation } from './lib/notificationNavigation'
 import { updateSeo } from './lib/seo'
 import { regionalMetadata } from './lib/regionalSeo'
+import { routeMetadata } from './lib/routeMetadata'
 import { trackPageView } from './lib/privacyMetrics'
 import { localizedPath } from './routePaths'
 
@@ -115,6 +117,7 @@ let realtimeConnectionVersion = 0
 let realtimeLastEventId = ''
 let inboxSync = null
 let stopNotificationNavigation = null
+let pushSettingsVersion = 0
 let notificationsRequestVersion = 0
 let unreadMessagesRequestVersion = 0
 const seenRealtimeNotificationIds = new Set()
@@ -163,6 +166,9 @@ watch(currentUser, (user, previousUser) => {
   authMenuOpen.value = false
   messagesMenuOpen.value = false
   if (user?.id !== previousUser?.id) {
+    pushSettingsVersion += 1
+    pushSubscribed.value = false
+    pushStatus.value = ''
     if (user && previousUser?.id) void updateAppBadge(0)
     closeRealtime()
     realtimeLastEventId = ''
@@ -198,10 +204,12 @@ watch(currentUser, (user, previousUser) => {
   void loadNotifications()
   void loadUnreadMessages()
   void connectRealtime()
-  void loadPushSettings()
+  if (user.id !== previousUser?.id || (!pushBusy.value && (pushStatus.value === 'pushError' || !pushSupported.value))) {
+    void loadPushSettings()
+  }
 })
 watch(
-  () => [route.fullPath, locale.value],
+  () => [route.fullPath, locale.value, route.meta.accountAccessPage && Boolean(currentUser.value)],
   () => {
     const routeName = route.meta.routeName
     const regional = regionalMetadata(route, t)
@@ -216,36 +224,10 @@ watch(
       })
       return
     }
-    const pageKeys = {
-      support: ['supportTitle', 'supportDescription'],
-      'support-create': ['supportTitle', 'supportDescription'],
-      'support-track': ['supportTitle', 'supportDescription'],
-      home: ['homeTitle', 'homeDescription'],
-      messages: ['privateTitle', 'privateDescription'],
-      'admin-tools': ['privateTitle', 'privateDescription'],
-      'account-credits': ['privateTitle', 'privateDescription'],
-      'admin-credit-settings': ['privateTitle', 'privateDescription'],
-      creators: ['creatorsTitle', 'creatorsDescription'],
-      'creator-profile': ['creatorsTitle', 'creatorsDescription'],
-      companies: ['companiesTitle', 'companiesDescription'],
-      'company-profile': ['companiesTitle', 'companiesDescription'],
-      campaigns: ['campaignsTitle', 'campaignsDescription'],
-      'campaign-detail': ['campaignsTitle', 'campaignsDescription'],
-      imprint: ['imprintTitle', 'imprintDescription'],
-      'privacy-policy': ['privacyTitle', 'privacyDescription'],
-      'cookie-policy': ['cookiesTitle', 'cookiesDescription'],
-    }
-    const [titleKey, descriptionKey] = pageKeys[routeName] || ['notFoundTitle', 'notFoundDescription']
-    const noindex = ['support-create', 'support-track', 'account', 'messages', 'verify-email', 'reset-password', 'moderation', 'admin', 'admin-tools'].includes(routeName)
-      || Boolean(route.meta.accountSection || route.meta.adminSection)
-      || !pageKeys[routeName]
-
     updateSeo({
       route,
       locale: locale.value,
-      title: t(`seo.${titleKey}`),
-      description: t(`seo.${descriptionKey}`),
-      noindex,
+      ...routeMetadata(route, locale.value, t, Boolean(currentUser.value)),
     })
   },
   { immediate: true },
@@ -323,6 +305,13 @@ function refreshAppBadge() {
   }
 }
 
+function accountResponseMismatch(recipientId, userId) {
+  if (recipientId === undefined || recipientId === userId) return false
+  setCurrentUser(null)
+  void loadCurrentUser().catch(cause => console.error('Unable to refresh the Wave session.', cause))
+  return true
+}
+
 async function loadNotifications() {
   const userId = currentUser.value?.id
   if (!userId) return
@@ -337,6 +326,7 @@ async function loadNotifications() {
     ) {
       return
     }
+    if (accountResponseMismatch(response.userId, userId)) return
     const refreshed = new Map(response.data.map(item => [item.id, item]))
     // Retain older pages only while the refreshed head overlaps the loaded range.
     // Otherwise five or more arrivals could leave an unseen gap above the old cursor.
@@ -372,6 +362,7 @@ async function loadMoreNotifications() {
   try {
     const response = await apiGet(`/me/notifications?limit=5&before=${cursor}`)
     if (currentUser.value?.id !== userId || version !== notificationsRequestVersion) return
+    if (accountResponseMismatch(response.userId, userId)) return
     const items = new Map(notifications.value.map(item => [item.id, item]))
     for (const item of response.data) items.set(item.id, item)
     notifications.value = [...items.values()].sort((a, b) => b.id - a.id)
@@ -423,6 +414,7 @@ async function loadUnreadMessages() {
     ) {
       return
     }
+    if (accountResponseMismatch(response.userId, userId)) return
     unreadMessageCount.value = response.unreadCount || 0
     unreadMessagesLoaded.value = true
   } catch (cause) {
@@ -500,6 +492,7 @@ async function connectRealtime() {
   try {
     const response = await apiGet('/me/realtime')
     if (currentUser.value?.id !== userId || connectionVersion !== realtimeConnectionVersion) return
+    if (accountResponseMismatch(response.data.userId, userId)) return
     const { hubUrl, topic } = response.data
     const url = new URL(hubUrl)
     url.searchParams.append('match', topic)
@@ -514,6 +507,7 @@ async function connectRealtime() {
       if (event.lastEventId) realtimeLastEventId = event.lastEventId
       try {
         const update = JSON.parse(event.data)
+        if (accountResponseMismatch(update.recipientId, userId)) return
         if (update.type === 'chat_read') {
           window.dispatchEvent(new CustomEvent('wave:realtime', { detail: update }))
           return
@@ -618,30 +612,50 @@ function scheduleRealtimeRetry() {
 }
 
 async function loadPushSettings() {
+  const userId = currentUser.value?.id
+  const version = ++pushSettingsVersion
+  const isCurrent = () => version === pushSettingsVersion && currentUser.value?.id === userId
   pushSupported.value = 'Notification' in window && 'serviceWorker' in navigator && 'PushManager' in window
-  if (!pushSupported.value) {
+  if (!userId || !pushSupported.value) {
     pushStatus.value = 'pushUnsupported'
     return
   }
 
   try {
     const response = await apiGet('/me/push/config')
+    if (!isCurrent()) return
     pushConfig.value = response.data
     if (!pushConfig.value.enabled) {
       pushStatus.value = 'pushNotConfigured'
       return
     }
     const registration = await navigator.serviceWorker.ready
+    if (!isCurrent()) return
     const subscription = await registration.pushManager.getSubscription()
+    if (!isCurrent()) return
+    if (subscription) {
+      // A browser subscription is per device, not per Wave account. Rebind it
+      // after login; its mere existence does not mean this account owns it.
+      await apiRequest('/me/push-subscriptions', {
+        method: 'POST',
+        body: { userId, endpoint: subscription.endpoint, keys: subscription.toJSON().keys },
+      })
+      if (!isCurrent()) return
+    }
     pushSubscribed.value = subscription !== null
     pushStatus.value = subscription ? 'pushEnabled' : ''
   } catch (cause) {
+    if (!isCurrent()) return
+    pushSubscribed.value = false
     pushStatus.value = cause.status === 401 ? '' : 'pushError'
   }
 }
 
 async function togglePushNotifications() {
-  if (pushBusy.value) return
+  const userId = currentUser.value?.id
+  if (pushBusy.value || !userId) return
+  const version = ++pushSettingsVersion
+  const isCurrent = () => version === pushSettingsVersion && currentUser.value?.id === userId
   pushBusy.value = true
   pushStatus.value = ''
   if (!pushSupported.value || !pushConfig.value.enabled) {
@@ -652,18 +666,22 @@ async function togglePushNotifications() {
   try {
     const registration = await navigator.serviceWorker.ready
     const existing = await registration.pushManager.getSubscription()
+    if (!isCurrent()) return
     if (existing) {
       await apiRequest('/me/push-subscriptions', {
         method: 'DELETE',
         body: { endpoint: existing.endpoint },
       })
+      if (!isCurrent()) return
       await existing.unsubscribe()
+      if (!isCurrent()) return
       pushSubscribed.value = false
       pushStatus.value = 'pushDisabled'
       return
     }
 
     const permission = await Notification.requestPermission()
+    if (!isCurrent()) return
     if (permission !== 'granted') {
       pushStatus.value = permission === 'denied' ? 'pushDenied' : 'pushPermissionNeeded'
       return
@@ -672,22 +690,27 @@ async function togglePushNotifications() {
       userVisibleOnly: true,
       applicationServerKey: decodeApplicationServerKey(pushConfig.value.publicKey),
     })
+    if (!isCurrent()) return
     try {
       await apiRequest('/me/push-subscriptions', {
         method: 'POST',
         body: {
+          userId,
           endpoint: subscription.endpoint,
           keys: subscription.toJSON().keys,
         },
       })
     } catch (cause) {
+      if (!isCurrent()) return
       await subscription.unsubscribe()
       throw cause
     }
+    if (!isCurrent()) return
     pushSubscribed.value = true
     pushStatus.value = 'pushEnabled'
     refreshAppBadge()
   } catch (cause) {
+    if (!isCurrent()) return
     pushStatus.value = 'pushError'
     notificationsError.value = cause.message
   } finally {
@@ -924,7 +947,7 @@ async function signOut() {
   signingOut.value = true
   authMenuError.value = ''
   try {
-    await apiRequest('/auth/logout', { method: 'POST', body: {} })
+    await logoutAccount()
     setCurrentUser(null)
     authMenuOpen.value = false
     await router.replace({

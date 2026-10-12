@@ -135,6 +135,14 @@ final class LocalizedRouteMap
     {
         $legacyRoutes = [
             '/account' => 'account',
+            '/account/applications' => 'account-applications',
+            '/account/offers' => 'account-offers',
+            '/account/inquiries' => 'account-inquiries',
+            '/account/bookmarks' => 'account-bookmarks',
+            '/account/invitations' => 'account-invitations',
+            '/account/credits' => 'account-credits',
+            '/account/campaigns' => 'account-campaigns',
+            '/account/campaigns/new' => 'account-campaign-create',
             '/messages' => 'messages',
             '/verify-email' => 'verify-email',
             '/reset-password' => 'reset-password',
@@ -143,10 +151,16 @@ final class LocalizedRouteMap
             '/campaigns' => 'campaigns',
             '/moderation' => 'moderation',
             '/admin' => 'admin',
+            '/admin/registrations' => 'admin-registrations',
             '/admin/homepage' => 'admin-homepage',
             '/admin/creators' => 'admin-creators',
             '/admin/companies' => 'admin-companies',
             '/admin/campaigns' => 'admin-campaigns',
+            '/admin/email-templates' => 'admin-email-templates',
+            '/admin/subscribers' => 'admin-subscribers',
+            '/admin/tools' => 'admin-tools',
+            '/admin/credit-settings' => 'admin-credit-settings',
+            '/admin/redirects' => 'admin-redirects',
             '/imprint' => 'imprint',
             '/impressum' => 'imprint',
             '/privacy-policy' => 'privacy-policy',
@@ -160,6 +174,9 @@ final class LocalizedRouteMap
                     'params' => ['slug' => rawurldecode($matches[1])],
                 ];
             }
+        }
+        if (!isset($legacyRoutes[$path]) && preg_match('~^/account/campaigns/([^/]+)$~', $path, $matches) === 1) {
+            return ['locale' => 'bs', 'name' => 'account-campaign-detail', 'params' => ['slug' => rawurldecode($matches[1])]];
         }
         if (!isset($legacyRoutes[$path])) {
             return null;

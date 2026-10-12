@@ -1,5 +1,6 @@
 import { localizedPath, routeSegments } from '../routePaths'
 import { regionalLanguageTags } from './regionalSeo'
+import { pageTitle } from './pageTitle'
 
 const languageTags = {
   bs: 'bs',
@@ -59,6 +60,7 @@ export function updateSeo({
   image = null,
   mainEntity = null,
 }) {
+  title = pageTitle(title)
   document.title = title
   document.documentElement.lang = languageTags[locale] || locale
   const origin = getSeoOrigin()

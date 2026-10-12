@@ -5,17 +5,25 @@ import vm from 'node:vm'
 import { updateAppBadge } from '../src/lib/appBadge.js'
 import { MessageChannel } from 'node:worker_threads'
 
-async function worker({ windows = [], navigator = {} } = {}) {
+async function worker({ windows = [], navigator = {}, session = { id: 1 }, sessionError = false, sessionResponse = null } = {}) {
   const handlers = new Map()
   const opened = []
+  const navigated = []
   const displayed = []
   const self = {
     __WB_MANIFEST: [], navigator, location: { origin: 'https://wave.example.test' },
     addEventListener: (type, callback) => handlers.set(type, callback),
     registration: { showNotification: async (...args) => { displayed.push(args) } },
-    clients: { matchAll: async () => windows, openWindow: async (url) => { opened.push(url); return { url } } },
+    clients: { matchAll: async () => windows, openWindow: async (url) => { opened.push(url); return { url, navigate: async target => { navigated.push(target); return {} } } } },
   }
-  const context = vm.createContext({ self, URL, MessageChannel, setTimeout, clearTimeout })
+  const sessionReads = []
+  const fetch = async (url, options) => {
+    sessionReads.push({ url, options })
+    if (sessionError) throw new Error('Offline')
+    if (sessionResponse) await sessionResponse
+    return { ok: true, json: async () => ({ data: session }) }
+  }
+  const context = vm.createContext({ self, URL, MessageChannel, setTimeout, clearTimeout, fetch, AbortSignal })
   const module = new vm.SourceTextModule(await readFile(new URL('../src/sw.js', import.meta.url), 'utf8'), { context })
   await module.link(async (specifier) => {
     if (specifier === './lib/appBadge') {
@@ -28,22 +36,22 @@ async function worker({ windows = [], navigator = {} } = {}) {
     return new vm.SyntheticModule([name], function () { this.setExport(name, () => {}) }, { context })
   })
   await module.evaluate()
-  const click = async (url) => {
+  const click = async (url, userId = 1) => {
     let completion
     let closed = false
     handlers.get('notificationclick')({
-      notification: { data: { url }, close: () => { closed = true } },
+      notification: { data: { url, userId }, close: () => { closed = true } },
       waitUntil: (promise) => { completion = promise },
     })
     await completion
     assert.equal(closed, true)
   }
-  const push = async (payload) => {
+  const push = async (payload, legacy = false) => {
     let completion
-    handlers.get('push')({ data: { json: () => payload }, waitUntil: (promise) => { completion = promise } })
+    handlers.get('push')({ data: { json: () => legacy ? payload : { userId: 1, ...payload } }, waitUntil: (promise) => { completion = promise } })
     await completion
   }
-  return { opened, displayed, click, push }
+  return { opened, navigated, displayed, click, push, sessionReads }
 }
 
 test('push click focuses before navigating and preserves the intended conversation', async () => {
@@ -64,7 +72,7 @@ test('a dead tab or null navigation cannot swallow a notification click', async 
   const other = { focus: async () => other, navigate: async () => null }
   const { click, opened } = await worker({ windows: [dead, other] })
   await click('/messages?conversation=42')
-  assert.deepEqual(opened, ['https://wave.example.test/messages?conversation=42'])
+  assert.deepEqual(opened, ['https://wave.example.test/'])
 })
 
 test('a resumed installed app routes the clicked chat directly without a document reload', async () => {
@@ -100,14 +108,12 @@ test('an installed app can route the chat even when iOS rejects focus during res
 })
 
 test('a cold app opens the push target and unsafe or malformed targets stay on Wave', async () => {
-  const { click, opened } = await worker()
+  const { click, opened, navigated } = await worker()
   await click('/messages?conversation=42')
   await click('https://other.example.test/messages?conversation=42')
   await click('http://[')
-  assert.deepEqual(opened, [
-    'https://wave.example.test/messages?conversation=42',
-    'https://wave.example.test/', 'https://wave.example.test/',
-  ])
+  assert.deepEqual(opened, Array(3).fill('https://wave.example.test/'))
+  assert.deepEqual(navigated, ['https://wave.example.test/messages?conversation=42', 'https://wave.example.test/', 'https://wave.example.test/'])
 })
 
 test('background push sets the authoritative app badge and zero clears it', async () => {
@@ -136,4 +142,53 @@ test('invalid badge counts are ignored and zero works without clearAppBadge', as
   for (const count of [-1, NaN, 1.5, '4', undefined, Infinity]) await updateAppBadge(count, navigator)
   await updateAppBadge(0, navigator)
   assert.deepEqual(badges, [0])
+})
+
+
+test('a push for the previous account never displays content, updates badges, or signals other windows', async () => {
+  const signals = []
+  const badges = []
+  const { push, displayed, sessionReads } = await worker({
+    session: { id: 2 }, windows: [{ postMessage: message => signals.push(message) }],
+    navigator: { setAppBadge: async count => badges.push(count) },
+  })
+  await push({ userId: 1, title: 'Private sender', body: 'Private message', badgeCount: 3 })
+  assert.equal(displayed.length, 0)
+  assert.equal(signals.length, 0)
+  assert.equal(badges.length, 0)
+  assert.equal(sessionReads[0].options.cache, 'no-store')
+  assert.equal(sessionReads[0].options.credentials, 'same-origin')
+})
+
+test('logged-out, disabled, legacy and unverifiable pushes fail closed', async () => {
+  for (const options of [{ session: null }, { session: { id: 1, notificationsEnabled: false } }, { sessionError: true }]) {
+    const { push, displayed } = await worker(options)
+    await push({ title: 'Private' })
+    assert.equal(displayed.length, 0)
+  }
+  const { push, displayed } = await worker()
+  await push({ title: 'Legacy without recipient' }, true)
+  assert.equal(displayed.length, 0)
+})
+
+test('a previously displayed notification cannot route a different account into its private chat', async () => {
+  const { click, opened } = await worker({ session: { id: 2 } })
+  await click('/messages?conversation=42', 1)
+  assert.deepEqual(opened, ['https://wave.example.test/'])
+})
+
+
+test('session verification cannot delay the user-activation focus or safe cold app opening', async () => {
+  for (const cold of [false, true]) {
+    let finish
+    const actions = []
+    const client = { focus: async () => { actions.push('focus'); return client }, navigate: async url => { actions.push(url); return {} } }
+    const { click, opened } = await worker({ windows: cold ? [] : [client], sessionResponse: new Promise(resolve => { finish = resolve }) })
+    const pending = click('/messages?conversation=42')
+    await new Promise(resolve => setImmediate(resolve))
+    if (cold) assert.deepEqual(opened, ['https://wave.example.test/'])
+    else assert.deepEqual(actions, ['focus'])
+    finish()
+    await pending
+  }
 })

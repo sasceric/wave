@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { localeNames, setLocale } from './i18n'
 import { defaultLocale, localizedPath, localizedRouteName, routeSegments, localePrefixes } from './routePaths'
+import { resolvePublicRedirect } from './lib/publicRedirects'
 
 const accountView = () => import('./views/AccountView.vue')
 const adminDashboardView = () => import('./views/AdminDashboardView.vue')
@@ -50,6 +51,7 @@ const routeViews = {
   'admin-email-templates': adminDashboardView,
   'admin-subscribers': () => import('./views/AdminSubscribersView.vue'),
   'admin-qr': () => import('./views/AdminQrView.vue'),
+  'admin-redirects': () => import('./views/AdminRedirectsView.vue'),
   'admin-tools': () => import('./views/AdminToolsView.vue'),
   imprint: legalView,
   'privacy-policy': legalView,
@@ -69,6 +71,7 @@ const adminSections = {
   'admin-subscribers': 'subscribers',
   'admin-tools': 'tools',
   'admin-qr': 'qr',
+  'admin-redirects': 'redirects',
 }
 
 const accountSections = {
@@ -142,6 +145,7 @@ const legacyPaths = [
   ['/admin/email-templates', 'admin-email-templates'],
   ['/admin/subscribers', 'admin-subscribers'],
   ['/admin/tools', 'admin-tools'],
+  ['/admin/redirects', 'admin-redirects'],
   ['/imprint', 'imprint'],
   ['/impressum', 'imprint'],
   ['/privacy-policy', 'privacy-policy'],
@@ -193,10 +197,13 @@ const router = createRouter({
   ],
 })
 
-router.beforeEach(async (to) => {
+router.beforeEach(async (to, from) => {
   if (to.meta.locale) {
     await setLocale(to.meta.locale)
   }
+  // Symfony already applies 301s to the initial production document request.
+  // Vite and subsequent SPA links need the public resolver.
+  if (from.name || import.meta.env.DEV) return resolvePublicRedirect(to)
 })
 
 export default router

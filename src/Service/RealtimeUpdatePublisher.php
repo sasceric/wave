@@ -55,6 +55,7 @@ final class RealtimeUpdatePublisher
 
     private function publishPayload(User $recipient, array $payload, array $context = []): void
     {
+        $payload['recipientId'] = $recipient->getId();
         if ($this->queued && $this->jobs !== null) {
             $this->jobs->enqueue('PublishRealtimeMessage', ['userId' => $recipient->getId(), 'payload' => $payload, 'eventId' => bin2hex(random_bytes(16))]);
 

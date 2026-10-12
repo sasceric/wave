@@ -58,7 +58,7 @@ final class RealtimeUpdatePublisherTest extends TestCase
         $hub->expects(self::once())->method('publish')->with(self::callback(
             static fn (Update $update): bool => $update->isPrivate()
                 && $update->getTopics() === ['https://wave.local/users/7']
-                && json_decode($update->getData(), true) === $receipt,
+                && json_decode($update->getData(), true) === [...$receipt, 'recipientId' => 7],
         ))->willReturn('urn:uuid:read-receipt');
         (new RealtimeUpdatePublisher($hub, new NullLogger()))->publishEvent($recipient, $receipt);
     }

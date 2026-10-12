@@ -155,7 +155,7 @@ test('the service worker displays a push and tells open windows to reload author
     registration: { showNotification: async (...args) => displayed.push(args) },
     clients: { matchAll: async () => [{ postMessage: (message) => posted.push(message) }] },
   }
-  const context = vm.createContext({ self })
+  const context = vm.createContext({ self, AbortSignal, fetch: async () => ({ ok: true, json: async () => ({ data: { id: 1 } }) }) })
   const source = await readFile(new URL('../src/sw.js', import.meta.url), 'utf8')
   const module = new vm.SourceTextModule(source, { context })
   await module.link(async (specifier) => {
@@ -170,7 +170,7 @@ test('the service worker displays a push and tells open windows to reload author
   })
   await module.evaluate()
   let completion
-  handlers.get('push')({ data: { json: () => ({ title: 'Company', body: 'Hello', url: '/messages?conversation=1' }) }, waitUntil: (promise) => { completion = promise } })
+  handlers.get('push')({ data: { json: () => ({ userId: 1, title: 'Company', body: 'Hello', url: '/messages?conversation=1' }) }, waitUntil: (promise) => { completion = promise } })
   await completion
   assert.equal(displayed[0][0], 'Company')
   assert.equal(displayed[0][1].body, 'Hello')

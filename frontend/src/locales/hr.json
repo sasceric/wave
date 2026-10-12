@@ -1,10 +1,10 @@
 {
   "meta": {
-    "title": "Wave — suradnje kreatora i brendova",
+    "title": "Wave | suradnje kreatora i brendova",
     "description": "Mjesto gdje kreatori i brendovi pronalaze prave partnere."
   },
   "seo": {
-    "homeTitle": "Wave — suradnje kreatora i brendova",
+    "homeTitle": "Wave | suradnje kreatora i brendova",
     "homeDescription": "Mjesto gdje kreatori i brendovi pronalaze prave partnere.",
     "creatorsTitle": "Popis influencera i UGC kreatora | Wave",
     "creatorsDescription": "Pronađi influencere i UGC kreatore za suradnju. Filtriraj po zemlji, području i platformi te usporedi portfolio i pakete za Instagram, TikTok i YouTube.",
@@ -12,9 +12,9 @@
     "companiesDescription": "Upoznajte tvrtke na Waveu i istražite brendove koji traže kreativne partnere.",
     "campaignsTitle": "Kampanje za kreatore | Wave",
     "campaignsDescription": "Pregledajte otvorene kampanje i pronađite prilike za suradnju s brendovima.",
-    "creatorProfileTitle": "{name} — kreator/ica na Waveu",
-    "companyProfileTitle": "{name} — tvrtka na Waveu",
-    "campaignProfileTitle": "{name} — kampanja na Waveu",
+    "creatorProfileTitle": "{name} — kreator/ica | Wave",
+    "companyProfileTitle": "{name} — tvrtka | Wave",
+    "campaignProfileTitle": "{name} — kampanja | Wave",
     "privateTitle": "Moj račun | Wave",
     "privateDescription": "Upravljajte svojim Wave računom.",
     "imprintTitle": "Impresum | Wave",
@@ -26,7 +26,13 @@
     "notFoundTitle": "Stranica nije pronađena | Wave",
     "notFoundDescription": "Tražena stranica nije pronađena.",
     "supportTitle": "Podrška | Wave",
-    "supportDescription": "Imaš problem, pitanje ili prijedlog? Naš tim je tu da ti pomogne."
+    "supportDescription": "Imaš problem, pitanje ili prijedlog? Naš tim je tu da ti pomogne.",
+    "loginTitle": "Prijava | Wave",
+    "registerTitle": "Registracija | Wave",
+    "forgotPasswordTitle": "Zaboravljena lozinka | Wave",
+    "verifyEmailTitle": "Potvrda adrese e-pošte | Wave",
+    "resetPasswordTitle": "Nova lozinka | Wave",
+    "messagesTitle": "Poruke | Wave"
   },
   "legal": {
     "eyebrow": "PRAVNE INFORMACIJE",
@@ -2018,5 +2024,38 @@
     "session": "Bit ćeš odjavljen/a. Novi račun neće vratiti ovu povijest.",
     "success": "Tvoj račun je izbrisan.",
     "admin": "Profil, osobni podaci i datoteke bit će izbrisani. Kampanje će biti zatvorene, a prijave i razgovori sačuvani kao anonimna povijest za druge sudionike."
+  },
+  "adminRedirects": {
+    "title": "Preusmjeravanja",
+    "description": "Upravljaj trajnim preusmjeravanjima javnih URL-ova. Pri brisanju se stari linkovi automatski dodaju za sve jezike.",
+    "create": "Dodaj preusmjeravanje",
+    "edit": "Uredi preusmjeravanje",
+    "sourcePath": "Izvorni URL",
+    "targetPath": "Odredišni URL",
+    "status": "Status",
+    "origin": "Nastanak",
+    "updatedAt": "Ažurirano",
+    "actions": "Radnje",
+    "empty": "Nema preusmjeravanja.",
+    "search": "Pretraži URL-ove…",
+    "enabled": "Aktivno",
+    "disabled": "Isključeno",
+    "manual": "Ručno",
+    "deleted-creator": "Obrisani kreator",
+    "deleted-company": "Obrisana tvrtka",
+    "deleted-campaign": "Obrisana kampanja",
+    "preserveQuery": "Zadrži parametre upita",
+    "hint": "Samo javne putanje na Waveu, npr. /stari-link → /hr/kreatori.",
+    "invalid": "Koristi jedinstvenu izvornu putanju i valjano odredište. Petlje, privatne i sistemske putanje nisu dopuštene.",
+    "save": "Spremi",
+    "cancel": "Odustani",
+    "delete": "Obriši",
+    "enable": "Uključi",
+    "disable": "Isključi",
+    "deleteTitle": "Obrisati preusmjeravanje?",
+    "deleteBulkTitle": "Obrisati odabrana preusmjerenja?",
+    "deleteMessage": "Stari URL više neće voditi na odredište. Umjesto brisanja možeš isključiti preusmjeravanje.",
+    "loadError": "Preusmjeravanja se nisu uspjela učitati.",
+    "statusCode": "HTTP kod"
   }
 }

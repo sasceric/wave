@@ -16,11 +16,12 @@ import {
   Wrench,
   QrCode,
   LifeBuoy,
+  CornerUpRight,
 } from '@lucide/vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { ref } from 'vue'
-import { apiRequest } from '../../lib/api'
+import { logoutAccount } from '../../lib/pushSession'
 import { setCurrentUser } from '../../composables/useCurrentUser'
 import { localizedPath } from '../../routePaths'
 import CreditBalanceLink from './CreditBalanceLink.vue'
@@ -80,7 +81,7 @@ async function signOut() {
   signingOut.value = true
   signOutError.value = ''
   try {
-    await apiRequest('/auth/logout', { method: 'POST', body: {} })
+    await logoutAccount()
     setCurrentUser(null)
     closeMobileSidebar()
     await router.replace({ path: localizedPath('account', locale.value), query: { mode: 'login' } })
@@ -149,6 +150,7 @@ const navigationItems = computed(() => {
       { route: 'admin-tools', labelKey: 'adminTools.title', icon: Wrench },
       { route: 'admin-support', labelKey: 'support.adminTitle', icon: LifeBuoy, group: 'settings' },
       { route: 'admin-qr', labelKey: 'adminQr.title', icon: QrCode },
+      { route: 'admin-redirects', labelKey: 'adminRedirects.title', icon: CornerUpRight, group: 'marketing' },
       {
         route: 'admin-subscribers',
         labelKey: 'adminDashboard.navSubscribers',

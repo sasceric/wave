@@ -32,7 +32,7 @@ const route = useRoute()
 const router = useRouter()
 const { t, locale } = useI18n()
 const { categories, industries, error: catalogError } = useMarketplaceCatalog(locale, { includeIndustries: true })
-const mode = ref(route.query.mode === 'register' ? 'register' : 'login')
+const mode = ref(['register', 'reset'].includes(route.query.mode) ? route.query.mode : 'login')
 const busy = ref(false)
 const error = ref('')
 const notice = ref(route.query.deleted === '1' ? t('accountDeletion.success') : '')
@@ -93,9 +93,7 @@ function updateRegistrationCountry(countryCode) {
 }
 
 watch(() => route.query.mode, (queryMode) => {
-  if (queryMode === 'register' || queryMode === 'login') {
-    mode.value = queryMode
-  }
+  mode.value = ['register', 'reset'].includes(queryMode) ? queryMode : 'login'
 })
 watch(() => form.country, (country, previousCountry) => {
   if (previousCountry && country !== previousCountry) {

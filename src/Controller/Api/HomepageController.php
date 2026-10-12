@@ -384,6 +384,7 @@ final class HomepageController
         Security $security,
         CsrfTokenManagerInterface $tokenManager,
         \App\Account\AccountDeletion $deletion,
+        \App\Service\UrlRedirects $redirects,
     ): JsonResponse {
         $locale = LocaleContext::fromRequest($request);
         if ($locale === null) {
@@ -434,10 +435,12 @@ final class HomepageController
             }
         }
         if ($resource === 'campaigns') {
-            foreach ($entities as $entity) {
-                $entityManager->remove($entity);
-            }
-            $entityManager->flush();
+            $entityManager->wrapInTransaction(function () use ($entities, $entityManager, $redirects): void {
+                foreach ($entities as $entity) {
+                    $redirects->deleted($entity);
+                    $entityManager->remove($entity);
+                }
+            });
         } else {
             $deletion->delete($entities);
         }

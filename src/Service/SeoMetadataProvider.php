@@ -14,6 +14,8 @@ use Symfony\Component\DependencyInjection\Attribute\Autowire;
 final class SeoMetadataProvider
 {
     private array $translations = [];
+    private array $catalogs = [];
+    private array $routeTitles;
 
     public function __construct(
         private readonly EntityManagerInterface $entityManager,
@@ -22,6 +24,11 @@ final class SeoMetadataProvider
         private readonly RegionalSeoContent $regionalContent,
         #[Autowire('%kernel.project_dir%')] string $projectDir,
     ) {
+        $titles = file_get_contents($projectDir.'/config/seo_route_titles.json');
+        if ($titles === false) {
+            throw new RuntimeException('Unable to read route title configuration.');
+        }
+        $this->routeTitles = json_decode($titles, true, flags: JSON_THROW_ON_ERROR);
         foreach ($this->routeMap->locales() as $locale) {
             $contents = file_get_contents($projectDir.'/frontend/src/locales/'.$locale.'.json');
             if ($contents === false) {
@@ -32,13 +39,19 @@ final class SeoMetadataProvider
                 throw new RuntimeException(sprintf('SEO translations are missing for locale "%s".', $locale));
             }
             $this->translations[$locale] = $catalog['seo'];
+            $this->catalogs[$locale] = $catalog;
         }
     }
 
-    public function forPath(string $path): array
+    public function forPath(string $path, array $query = [], bool $authenticated = false): array
     {
         $route = $this->routeMap->resolve($path);
         if ($route === null) {
+            foreach ($this->routeMap->locales() as $locale) {
+                if ($locale !== 'bs' && (str_starts_with($path, $this->routeMap->localizedPath('home', $locale)) || $path === '/'.$locale || str_starts_with($path, '/'.$locale.'/'))) {
+                    return $this->notFoundMetadata($locale);
+                }
+            }
             return $this->notFoundMetadata();
         }
 
@@ -50,7 +63,7 @@ final class SeoMetadataProvider
         if (($name === 'country-creators' && $countryCode === null)
             || ($name === 'seo-guide' && !isset($regionalCopy['guides'][$params['guide']]))
             || ($name === 'creator-guide' && !isset($regionalCopy['creatorGuides']['guides'][$params['guide']]))) {
-            return $this->notFoundMetadata();
+            return $this->notFoundMetadata($locale);
         }
         $private = $name === 'account'
             || str_starts_with($name, 'account-')
@@ -80,6 +93,23 @@ final class SeoMetadataProvider
             default => 'privateDescription',
         };
         $title = $this->translation($locale, $titleKey);
+        $catalogKey = $this->routeTitles[$name] ?? null;
+        if (!$authenticated && ($name === 'account' || str_starts_with($name, 'account-'))) {
+            $catalogKey = match ($query['mode'] ?? null) {
+                'register' => 'seo.registerTitle',
+                'reset' => 'seo.forgotPasswordTitle',
+                default => 'seo.loginTitle',
+            };
+        }
+        if (is_string($catalogKey)) {
+            $value = $this->catalogs[$locale];
+            foreach (explode('.', $catalogKey) as $part) {
+                $value = is_array($value) ? ($value[$part] ?? null) : null;
+            }
+            if (is_string($value)) {
+                $title = $value;
+            }
+        }
         $description = $this->translation($locale, $descriptionKey);
         $image = $name === 'home' ? $this->absoluteUrl('/images/share.webp') : null;
         $entitySchema = null;
@@ -129,7 +159,7 @@ final class SeoMetadataProvider
                 ->getQuery()
                 ->getOneOrNullResult();
             if (!$creator instanceof Creator) {
-                $indexable = false;
+                return $this->notFoundMetadata($locale);
             } else {
                 $translation = $creator->getTranslations()[$locale] ?? [];
                 $title = $this->formatTranslation(
@@ -154,7 +184,7 @@ final class SeoMetadataProvider
                 ->getQuery()
                 ->getOneOrNullResult();
             if (!$company instanceof Company) {
-                $indexable = false;
+                return $this->notFoundMetadata($locale);
             } else {
                 $translation = $company->getTranslations()[$locale] ?? [];
                 $title = $this->formatTranslation(
@@ -182,7 +212,7 @@ final class SeoMetadataProvider
                 ->getQuery()
                 ->getOneOrNullResult();
             if (!$campaign instanceof Campaign || $campaign->getClosesAt() < new DateTimeImmutable('today')) {
-                $indexable = false;
+                return $this->notFoundMetadata($locale);
             } else {
                 $translation = $campaign->getTranslations()[$locale] ?? [];
                 $title = $this->formatTranslation(
@@ -207,7 +237,7 @@ final class SeoMetadataProvider
         }
 
         return [
-            'title' => $title,
+            'title' => self::pageTitle($title),
             'description' => $description,
             'locale' => $locale,
             'canonical' => $canonicalUrl,
@@ -216,7 +246,7 @@ final class SeoMetadataProvider
             'preloadImage' => $name === 'home' ? '/images/banner-girl.webp' : null,
             'noindex' => !$indexable,
             'contentHtml' => $contentHtml,
-            'structuredData' => $indexable ? $this->structuredData($title, $description, $canonicalUrl, $locale, $name, $entitySchema) : [],
+            'structuredData' => $indexable ? $this->structuredData(self::pageTitle($title), $description, $canonicalUrl, $locale, $name, $entitySchema) : [],
         ];
     }
 
@@ -382,12 +412,12 @@ final class SeoMetadataProvider
         ];
     }
 
-    private function notFoundMetadata(): array
+    private function notFoundMetadata(string $locale = 'bs'): array
     {
         return [
-            'title' => $this->translation('bs', 'notFoundTitle', 'Page not found — Wave'),
-            'description' => $this->translation('bs', 'notFoundDescription', 'The requested page could not be found.'),
-            'locale' => 'bs',
+            'title' => self::pageTitle($this->translation($locale, 'notFoundTitle', 'Page not found — Wave')),
+            'description' => $this->translation($locale, 'notFoundDescription', 'The requested page could not be found.'),
+            'locale' => $locale,
             'canonical' => null,
             'alternates' => [],
             'image' => null,
@@ -402,6 +432,19 @@ final class SeoMetadataProvider
         $value = $this->translations[$locale][$key] ?? $fallback;
 
         return is_string($value) ? $value : $fallback;
+    }
+
+    private static function pageTitle(string $title): string
+    {
+        $title = trim($title);
+        if ($title === '' || $title === 'Wave') {
+            return 'Wave';
+        }
+        if (preg_match('/^Wave\s*[|—–-]\s*/iu', $title)) {
+            return preg_replace('/^Wave\s*[|—–-]\s*/iu', 'Wave | ', $title) ?? $title;
+        }
+
+        return trim(preg_replace('/\s*[|—–-]\s*Wave$/iu', '', $title) ?? $title).' | Wave';
     }
 
     private function formatTranslation(string $locale, string $key, string $fallback, array $replacements): string

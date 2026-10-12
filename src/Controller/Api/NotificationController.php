@@ -80,6 +80,7 @@ final class NotificationController
             ->getResult();
 
         return new JsonResponse([
+            'userId' => $user->getId(),
             'unreadCount' => $unreadInboxCounter->notifications($user),
             'meta' => [
                 'remaining' => max(0, $remaining - count($notifications)),

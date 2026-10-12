@@ -27,6 +27,52 @@ final class SeoControllerTest extends WebTestCase
         $schemaTool->createSchema($metadata);
     }
 
+    public function testAuthAndKnownPrivateRoutesHaveAccurateBrandedTitlesInEveryLocale(): void
+    {
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $company = new Company('example', 'Example brand', 'Beauty');
+        $creator = new Creator('example', 'Example creator', 'Beauty', 'Sarajevo', 'Portfolio', []);
+        $campaign = new Campaign('example', 'Example campaign', 'Summary', 'Description', 'Beauty', [], [], 100, 200, 'Sarajevo', 1, new DateTimeImmutable('+20 days'), new DateTimeImmutable(), $company);
+        foreach ([$company, $creator, $campaign] as $entity) $em->persist($entity);
+        $em->flush();
+        $routes = static::getContainer()->get(LocalizedRouteMap::class);
+        $titles = json_decode(file_get_contents(dirname(__DIR__, 2).'/config/seo_route_titles.json'), true);
+        foreach ($routes->locales() as $locale) {
+            $catalog = json_decode(file_get_contents(dirname(__DIR__, 2).'/frontend/src/locales/'.$locale.'.json'), true);
+            foreach (['login' => 'loginTitle', 'register' => 'registerTitle', 'reset' => 'forgotPasswordTitle'] as $mode => $key) {
+                $crawler = $this->client->request('GET', $routes->localizedPath('account', $locale).'?mode='.$mode);
+                self::assertResponseIsSuccessful();
+                self::assertSame($catalog['seo'][$key], $crawler->filter('title')->text());
+                self::assertSame('noindex, nofollow', $crawler->filter('meta[name="robots"]')->attr('content'));
+            }
+            foreach (array_keys($titles) as $name) {
+                $crawler = $this->client->request('GET', $routes->localizedPath($name, $locale, ['slug' => 'example']));
+                self::assertResponseIsSuccessful();
+                self::assertStringNotContainsString($catalog['seo']['notFoundTitle'], $crawler->filter('title')->text());
+                self::assertTrue(str_ends_with($crawler->filter('title')->text(), ' | Wave') || str_starts_with($crawler->filter('title')->text(), 'Wave | '));
+            }
+        }
+    }
+
+    public function testExistingEnglishAccountAndAdminAliasesHaveCanonicalRedirects(): void
+    {
+        foreach (['/account/applications' => '/racun/prijave', '/admin/tools' => '/admin/alati', '/admin/redirects' => '/admin/preusmjerenja', '/account/campaigns/new' => '/racun/kampanje/nova', '/account/campaigns/example' => '/racun/kampanje/example'] as $source => $target) {
+            $this->client->request('GET', $source);
+            self::assertResponseRedirects('http://127.0.0.1:8000'.$target, 301);
+        }
+    }
+
+    public function testMissingPublicRecordsReturnLocalized404sWithoutIndexableMetadata(): void
+    {
+        foreach (['/en/creators/missing', '/en/companies/missing', '/en/campaigns/missing', '/en/unknown'] as $path) {
+            $crawler = $this->client->request('GET', $path);
+            self::assertResponseStatusCodeSame(404);
+            self::assertSame('Page not found | Wave', $crawler->filter('title')->text());
+            self::assertSame('noindex, nofollow', $crawler->filter('meta[name="robots"]')->attr('content'));
+            self::assertCount(0, $crawler->filter('link[rel="canonical"], link[hreflang], #wave-schema'));
+        }
+    }
+
     public function testCreatorGuidesAndHowItWorksHaveReadableContentCanonicalAlternatesAndSitemapEntries(): void
     {
         $routes = static::getContainer()->get(LocalizedRouteMap::class);
@@ -288,7 +334,7 @@ final class SeoControllerTest extends WebTestCase
         self::assertStringContainsString('<html lang="sr-Latn">', $html);
         self::assertStringContainsString('name="wave:origin" content="http://127.0.0.1:8000"', $html);
         self::assertStringNotContainsString('rel="preload" as="image"', $html);
-        self::assertStringContainsString('<title>Maya Chen — kreator/ka na Waveu</title>', $html);
+        self::assertStringContainsString('<title>Maya Chen — kreator/ka | Wave</title>', $html);
         self::assertStringContainsString('rel="canonical" href="http://127.0.0.1:8000/rs/kreatori/maya-chen"', $html);
         self::assertStringContainsString('property="og:image" content="http://127.0.0.1:8000/images/logo-icon.svg"', $html);
         self::assertStringContainsString('hreflang="x-default" href="http://127.0.0.1:8000/kreatori/maya-chen"', $html);

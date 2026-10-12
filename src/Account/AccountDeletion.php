@@ -10,6 +10,7 @@ use App\Entity\Media;
 use App\Entity\SupportTicket;
 use App\Entity\User;
 use App\Service\StoredFileCleanup;
+use App\Service\UrlRedirects;
 use Doctrine\DBAL\LockMode;
 use Doctrine\ORM\EntityManagerInterface;
 
@@ -20,6 +21,7 @@ final class AccountDeletion
         private readonly EntityManagerInterface $entityManager,
         private readonly StoredFileCleanup $files,
         private readonly PayloadCipher $cipher,
+        private readonly UrlRedirects $redirects,
     ) {
     }
 
@@ -82,12 +84,15 @@ final class AccountDeletion
                 }
                 $creator = $user->getCreator();
                 if ($creator !== null) {
+                    $this->redirects->deleted($creator);
                     $db->delete('directory_index', ['id' => 'creator:'.$creator->getId()]);
                     $creator->anonymize();
                 }
                 $company = $user->getCompany();
                 if ($company !== null) {
+                    $this->redirects->deleted($company);
                     foreach ($this->entityManager->getRepository(Campaign::class)->findBy(['company' => $company]) as $campaign) {
+                        $this->redirects->deleted($campaign);
                         if ($campaign->getStatus() !== 'finished') {
                             $campaign->setStatus('closed');
                         }

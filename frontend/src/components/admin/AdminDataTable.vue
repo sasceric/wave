@@ -141,7 +141,7 @@ function sortBy(column) {
               <input
                 type="checkbox"
                 :checked="selectedIds.includes(row.id)"
-                :aria-label="labels.selectRow(row.name ?? row.displayName ?? row.title ?? row.email ?? String(row.id))"
+                :aria-label="labels.selectRow(row.name ?? row.displayName ?? row.title ?? row.email ?? row.sourcePath ?? String(row.id))"
                 @change="toggleRow(row.id, $event.target.checked)"
               />
             </td>

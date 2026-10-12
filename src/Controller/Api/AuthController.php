@@ -13,6 +13,7 @@ use App\Api\MarketplaceCategoryLabels;
 use App\Entity\Company;
 use App\Entity\Creator;
 use App\Entity\User;
+use App\Entity\UserPushSubscription;
 use App\Localization\ApiMessages;
 use App\Localization\LocaleContext;
 use App\Security\SessionAuthenticator;
@@ -370,6 +371,7 @@ final class AuthController extends AbstractController
         Security $security,
         TokenStorageInterface $tokenStorage,
         CsrfTokenManagerInterface $tokenManager,
+        EntityManagerInterface $entityManager,
     ): JsonResponse {
         $locale = LocaleContext::fromRequest($request);
         if ($locale === null) {
@@ -383,6 +385,18 @@ final class AuthController extends AbstractController
             return new JsonResponse(['error' => ApiMessages::get('authentication_required', $locale)], 401);
         }
 
+        $data = JsonPayload::fromRequest($request);
+        $endpoint = is_string($data['pushEndpoint'] ?? null) ? $data['pushEndpoint'] : '';
+        $hashes = array_filter([
+            $request->getSession()->get('wave_push_endpoint_hash'),
+            $endpoint !== '' && strlen($endpoint) <= 4096 ? hash('sha256', $endpoint) : null,
+        ], 'is_string');
+        if ($hashes !== []) {
+            foreach ($entityManager->getRepository(UserPushSubscription::class)->findBy(['user' => $user, 'endpointHash' => $hashes]) as $subscription) {
+                $entityManager->remove($subscription);
+            }
+            $entityManager->flush();
+        }
         $request->getSession()->invalidate();
         $tokenStorage->setToken(null);
 

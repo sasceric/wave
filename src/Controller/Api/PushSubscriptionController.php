@@ -51,6 +51,9 @@ final class PushSubscriptionController
         }
 
         $data = JsonPayload::fromRequest($request);
+        if (isset($data['userId']) && $data['userId'] !== $user->getId()) {
+            return new JsonResponse(['error' => ApiMessages::get('forbidden', $locale)], 409);
+        }
         $endpoint = is_array($data) && is_string($data['endpoint'] ?? null) ? trim($data['endpoint']) : '';
         $keys = is_array($data) && is_array($data['keys'] ?? null) ? $data['keys'] : [];
         $publicKey = is_string($keys['p256dh'] ?? null) ? $keys['p256dh'] : '';
@@ -72,6 +75,7 @@ final class PushSubscriptionController
             $entityManager->persist(new UserPushSubscription($user, $endpoint, $publicKey, $authToken, $locale));
         }
         $entityManager->flush();
+        $request->getSession()->set('wave_push_endpoint_hash', hash('sha256', $endpoint));
 
         return new JsonResponse(['data' => ['subscribed' => true]], 201);
     }

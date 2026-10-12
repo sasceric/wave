@@ -22,21 +22,41 @@ self.addEventListener('push', (event) => {
     payload = { title: 'Wave', body: 'You have a new notification.' }
   }
 
-  event.waitUntil(Promise.all([
-    updateAppBadge(payload.badgeCount, self.navigator),
-    self.registration.showNotification(payload.title || 'Wave', {
-      body: payload.body || 'You have a new notification.',
-      icon: '/pwa-192.png',
-      badge: '/pwa-192.png',
-      data: { url: payload.url || '/' },
-    }),
-    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((windows) => {
-      for (const client of windows) {
-        client.postMessage({ type: 'WAVE_PUSH_RECEIVED' })
-      }
-    }),
-  ]))
+  event.waitUntil((async () => {
+    if (!await belongsToCurrentAccount(payload.userId)) return
+    await Promise.all([
+      updateAppBadge(payload.badgeCount, self.navigator),
+      self.registration.showNotification(payload.title || 'Wave', {
+        body: payload.body || 'You have a new notification.',
+        icon: '/pwa-192.png',
+        badge: '/pwa-192.png',
+        data: { url: payload.url || '/', userId: payload.userId },
+      }),
+      self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((windows) => {
+        for (const client of windows) {
+          client.postMessage({ type: 'WAVE_PUSH_RECEIVED' })
+        }
+      }),
+    ])
+  })())
 })
+
+async function belongsToCurrentAccount(userId) {
+  if (!Number.isSafeInteger(userId) || userId < 1) return false
+  try {
+    // Verify cookies at delivery time, including pushes already queued at the
+    // provider before logout. Never display another account's private preview.
+    const response = await fetch('/api/auth/session?locale=en', {
+      credentials: 'same-origin', cache: 'no-store',
+      headers: { Accept: 'application/json' }, signal: AbortSignal.timeout(5000),
+    })
+    if (!response.ok) return false
+    const { data } = await response.json()
+    return data?.id === userId && data.notificationsEnabled !== false
+  } catch {
+    return false
+  }
+}
 
 self.addEventListener('notificationclick', (event) => {
   event.notification.close()
@@ -49,6 +69,7 @@ self.addEventListener('notificationclick', (event) => {
   }
 
   event.waitUntil((async () => {
+    const verified = belongsToCurrentAccount(event.notification.data?.userId)
     const windows = await self.clients.matchAll({ type: 'window', includeUncontrolled: true })
     windows.sort((left, right) => Number(right.focused) - Number(left.focused))
     for (const client of windows) {
@@ -62,6 +83,7 @@ self.addEventListener('notificationclick', (event) => {
         // Some installed iOS clients reject focus while their scene is resuming.
         // The app may still receive the routing message once restored by the OS.
       }
+      if (!await verified) targetUrl = new URL('/', self.location.origin)
       if (await requestClientNavigation(focusedClient, targetUrl.href)) return focusedClient
       try {
         const navigatedClient = await focusedClient.navigate(targetUrl.href)
@@ -71,9 +93,18 @@ self.addEventListener('notificationclick', (event) => {
       }
     }
 
-    const openedClient = await self.clients.openWindow(targetUrl.href)
+    // Open a safe landing page while click activation is still available.
+    // Route to the private destination only after verifying the current session.
+    const openedClient = await self.clients.openWindow(new URL('/', self.location.origin).href)
     // A browser may restore an installed app instead of creating a new tab.
-    if (openedClient) await requestClientNavigation(openedClient, targetUrl.href)
+    if (!await verified) targetUrl = new URL('/', self.location.origin)
+    if (openedClient && !await requestClientNavigation(openedClient, targetUrl.href)) {
+      try {
+        if ('navigate' in openedClient) await openedClient.navigate(targetUrl.href)
+      } catch {
+        // The safe landing page remains usable if the new client closes.
+      }
+    }
     return openedClient
   })())
 })

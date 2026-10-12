@@ -35,7 +35,7 @@ final class InboxController
             return $user;
         }
         if ($request->attributes->get('_route') === 'api_my_inbox_unread') {
-            return new JsonResponse(['unreadCount' => $counter->messages($user)]);
+            return new JsonResponse(['userId' => $user->getId(), 'unreadCount' => $counter->messages($user)]);
         }
         if ($type !== null && $id !== null) {
             $thread = $entityManager->find($type === 'campaign' ? CampaignConversation::class : CreatorInquiry::class, $id);

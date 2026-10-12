@@ -191,6 +191,15 @@ async function loadCreator() {
     }
   } catch (cause) {
     error.value = cause.message
+    if (cause.status === 404 && !creator.value) {
+      updateSeo({
+        route: { ...route, meta: { ...route.meta, routeName: 'not-found' } },
+        locale: locale.value,
+        title: t('seo.notFoundTitle'),
+        description: t('seo.notFoundDescription'),
+        noindex: true,
+      })
+    }
   }
 }
 

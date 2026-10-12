@@ -42,6 +42,7 @@ final class RealtimeController
 
         return new JsonResponse([
             'data' => [
+                'userId' => $user->getId(),
                 'hubUrl' => $this->mercurePublicUrl,
                 'topic' => $topic,
             ],

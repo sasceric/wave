@@ -1,0 +1,25 @@
+.admin-redirects {
+  &__toolbar { display: flex; justify-content: space-between; gap: 16px; width: 100%; flex-wrap: wrap; }
+  &__toolbar input { max-width: 380px; flex: 1; min-width: 180px; }
+  &__toolbar .button { min-height: 40px; width: auto; }
+  input:not([type="checkbox"]) { border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; background: #fffefa; color: var(--forest); font: inherit; }
+  code, td a { overflow-wrap: anywhere; }
+  code { font-size: 12px; }
+  &__status { display: inline-block; border-radius: 20px; padding: 4px 9px; font-size: 12px; background: #e5f0e9; color: var(--forest); }
+  &__status.is-disabled { background: var(--paper); color: var(--muted); }
+  &__editor {
+    width: min(520px, calc(100vw - 32px)); padding: 24px; max-height: calc(100dvh - 32px); overflow-y: auto;
+    border: 1px solid var(--line); border-radius: 12px; background: #fffefa; color: var(--forest); box-shadow: 0 22px 60px rgba(15, 23, 20, .25);
+    &::backdrop { background: rgba(15, 23, 20, .54); }
+    header { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    h2 { margin: 0; font-size: 24px; }
+    header button { display: grid; place-items: center; padding: 6px; border: 0; background: transparent; color: var(--muted); cursor: pointer; }
+    p { font-size: 13px; line-height: 1.6; color: var(--muted); margin: 10px 0 20px; }
+    form { display: grid; gap: 16px; }
+    label { display: grid; gap: 7px; font-size: 13px; }
+    footer { display: flex; justify-content: flex-end; gap: 12px; margin-top: 8px; }
+    footer .button { width: auto; min-height: 40px; }
+  }
+  &__editor &__check { display: flex; align-items: center; gap: 9px; }
+  &__check input { accent-color: var(--forest); }
+}

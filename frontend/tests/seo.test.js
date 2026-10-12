@@ -34,7 +34,9 @@ async function seoFixture() {
   const regional = new vm.SourceTextModule(await readFile(new URL('../src/lib/regionalSeo.js', import.meta.url), 'utf8'), { context })
   await regional.link(() => new vm.SyntheticModule(['default'], function () { this.setExport('default', countries) }, { context }))
   const seo = new vm.SourceTextModule(await readFile(new URL('../src/lib/seo.js', import.meta.url), 'utf8'), { context, initializeImportMeta: meta => { meta.env = {} } })
-  await seo.link(path => path.includes('regionalSeo') ? regional : paths)
+  const title = new vm.SourceTextModule(await readFile(new URL('../src/lib/pageTitle.js', import.meta.url), 'utf8'), { context })
+  await title.link(() => {})
+  await seo.link(path => path.includes('regionalSeo') ? regional : path.includes('pageTitle') ? title : paths)
   await seo.evaluate()
   return { updateSeo: seo.namespace.updateSeo, regionalMetadata: regional.namespace.regionalMetadata, document, nodes }
 }

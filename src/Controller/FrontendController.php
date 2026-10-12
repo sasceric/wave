@@ -7,6 +7,8 @@ use App\Localization\LocaleContext;
 use App\Service\FrontendAssets;
 use App\Service\SeoMetadataProvider;
 use App\Service\SiteOrigin;
+use App\Service\UrlRedirects;
+use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\RedirectResponse;
@@ -25,7 +27,7 @@ final class FrontendController
 
     #[Route('/', name: 'frontend_home', methods: ['GET'])]
     #[Route('/{path}', name: 'frontend_route', requirements: ['path' => '.*'], methods: ['GET'], priority: -100)]
-    public function __invoke(Request $request, SeoMetadataProvider $seoMetadataProvider, SiteOrigin $siteOrigin, FrontendAssets $frontendAssets): Response
+    public function __invoke(Request $request, SeoMetadataProvider $seoMetadataProvider, SiteOrigin $siteOrigin, FrontendAssets $frontendAssets, UrlRedirects $redirects, Security $security): Response
     {
         if (str_starts_with($request->getPathInfo(), '/api')) {
             $locale = LocaleContext::fromRequest($request) ?? 'bs';
@@ -33,12 +35,16 @@ final class FrontendController
             return new JsonResponse(['error' => ApiMessages::get('unknown_endpoint', $locale)], 404);
         }
 
+        if ($target = $redirects->resolve($request->getPathInfo(), $request->server->getString('QUERY_STRING'))) {
+            return new RedirectResponse($target, Response::HTTP_MOVED_PERMANENTLY, ['Cache-Control' => 'no-store']);
+        }
+
         $indexPath = dirname(__DIR__, 2).'/public/index.html';
         if (!is_file($indexPath)) {
             throw new ServiceUnavailableHttpException(null, 'Build the Vue app with `npm run build` in frontend before serving the site.');
         }
 
-        $seo = $seoMetadataProvider->forPath($request->getPathInfo());
+        $seo = $seoMetadataProvider->forPath($request->getPathInfo(), $request->query->all(), $security->getUser() !== null);
         if ($seo['canonical'] !== null) {
             $canonicalPath = parse_url($seo['canonical'], PHP_URL_PATH);
             if (is_string($canonicalPath) && $canonicalPath !== $request->getPathInfo()) {

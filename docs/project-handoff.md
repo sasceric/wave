@@ -87,6 +87,17 @@ Controller filenames in this table are under `src/Controller/Api/` unless a full
 
 ## Behavior to preserve
 
+- Public deletion redirects live in `UrlRedirects`, `UrlRedirect`,
+  `AdminRedirectController` and `AdminRedirectsView.vue`. They capture original
+  slugs before anonymization, add six locale rules in the deletion transaction,
+  and preserve administrator overrides. Symfony serves 301s; the Vue route guard
+  resolves SPA links. Keep APIs, account/admin routes and private history exempt.
+  See `docs/url-redirects.md` and migration `Version20261012100000`.
+- Route titles share `config/seo_route_titles.json` between Symfony and Vue.
+  Login/register/recovery modes have explicit localized titles; known private
+  routes must not fall through to the not-found title. Titles use `Page | Wave`,
+  with the brand first on home. Private routes remain noindex.
+
 - Authentication uses session cookies. Mutating API calls require `X-CSRF-Token`; use the existing API client and backend access helpers. Enforce ownership and participant checks on the server.
 - Marketplace actions generally require admin approval and verified email. `ApiAccess` centralizes role/approval checks, with verification requested by the relevant endpoint.
 - Shortlisting an application opens a campaign/creator conversation. An invitation opens its conversation after the creator accepts. Offers have their own acceptance/rejection flow.
@@ -573,3 +584,11 @@ versioned thumbnails and complete private support directories are removed. See
 `docs/deployment.md` for migration `Version20261010100000` and the manual retry
 command. Do not replace this flow with `EntityManager::remove(User)` or cascades,
 which would destroy other participants' history.
+
+### Push account isolation
+
+See `docs/push-account-isolation.md`. Logout detaches this device's push endpoint
+before session invalidation; login rebinds existing endpoints. The worker checks
+recipient ID against the uncached live session before displaying/clicking pushes.
+Mismatched inbox/realtime responses refresh the app session. Ship backend and
+frontend together and activate the updated service worker; no migration is needed.

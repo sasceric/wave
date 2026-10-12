@@ -1,10 +1,10 @@
 {
   "meta": {
-    "title": "Wave — creator and brand partnerships",
+    "title": "Wave | creator and brand partnerships",
     "description": "A place for creators and brands to find the right partners."
   },
   "seo": {
-    "homeTitle": "Wave — creator and brand partnerships",
+    "homeTitle": "Wave | creator and brand partnerships",
     "homeDescription": "A place for creators and brands to find the right partners.",
     "creatorsTitle": "Influencer and UGC creator directory | Wave",
     "creatorsDescription": "Find influencers and UGC creators for brand collaborations. Filter by country, topic and platform, then compare portfolios and Instagram, TikTok and YouTube packages.",
@@ -12,9 +12,9 @@
     "companiesDescription": "Meet companies on Wave and explore brands looking for creative partners.",
     "campaignsTitle": "Creator campaigns | Wave",
     "campaignsDescription": "Browse open campaigns and find opportunities to collaborate with brands.",
-    "creatorProfileTitle": "{name} — creator on Wave",
-    "companyProfileTitle": "{name} — company on Wave",
-    "campaignProfileTitle": "{name} — campaign on Wave",
+    "creatorProfileTitle": "{name} — creator | Wave",
+    "companyProfileTitle": "{name} — company | Wave",
+    "campaignProfileTitle": "{name} — campaign | Wave",
     "privateTitle": "My account | Wave",
     "privateDescription": "Manage your Wave account.",
     "imprintTitle": "Legal notice | Wave",
@@ -26,7 +26,13 @@
     "notFoundTitle": "Page not found | Wave",
     "notFoundDescription": "The requested page could not be found.",
     "supportTitle": "Support | Wave",
-    "supportDescription": "Have a problem, question or suggestion? Our team is here to help."
+    "supportDescription": "Have a problem, question or suggestion? Our team is here to help.",
+    "loginTitle": "Sign in | Wave",
+    "registerTitle": "Create an account | Wave",
+    "forgotPasswordTitle": "Password recovery | Wave",
+    "verifyEmailTitle": "Verify your email | Wave",
+    "resetPasswordTitle": "Reset password | Wave",
+    "messagesTitle": "Messages | Wave"
   },
   "legal": {
     "eyebrow": "LEGAL",
@@ -2017,5 +2023,38 @@
     "session": "You will be signed out. A new account will not restore this history.",
     "success": "Your account has been deleted.",
     "admin": "The profile, personal details and files will be removed. Campaigns will be closed, while applications and conversations remain as anonymous history for other participants."
+  },
+  "adminRedirects": {
+    "title": "Redirects",
+    "description": "Manage permanent redirects for public URLs. Deletion automatically adds old links for every language.",
+    "create": "Add redirect",
+    "edit": "Edit redirect",
+    "sourcePath": "Source URL",
+    "targetPath": "Destination URL",
+    "status": "Status",
+    "origin": "Origin",
+    "updatedAt": "Updated",
+    "actions": "Actions",
+    "empty": "No redirects yet.",
+    "search": "Search URLs…",
+    "enabled": "Enabled",
+    "disabled": "Disabled",
+    "manual": "Manual",
+    "deleted-creator": "Deleted creator",
+    "deleted-company": "Deleted company",
+    "deleted-campaign": "Deleted campaign",
+    "preserveQuery": "Keep query parameters",
+    "hint": "Public Wave paths only, e.g. /old-link → /en/creators.",
+    "invalid": "Use a unique source path and a valid destination. Loops, private and system paths are not allowed.",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "enable": "Enable",
+    "disable": "Disable",
+    "deleteTitle": "Delete this redirect?",
+    "deleteBulkTitle": "Delete selected redirects?",
+    "deleteMessage": "The old URL will stop leading to its destination. You can disable the redirect instead of deleting it.",
+    "loadError": "Redirects could not be loaded.",
+    "statusCode": "HTTP status"
   }
 }
