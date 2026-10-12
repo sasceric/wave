@@ -1,4 +1,5 @@
 <script setup>
+import RatingSummary from '../reviews/RatingSummary.vue'
 import '../../scss/components/companies/CompanyCard.scss'
 import { ArrowRight, BadgeCheck, MapPin, Megaphone } from '@lucide/vue'
 import RouterLink from '../shared/LocalizedLink.vue'
@@ -24,6 +25,7 @@ const { t } = useI18n()
         <span v-if="company.verified" class="company-directory-card__verified" :aria-label="t('companyDirectory.verified')"><BadgeCheck :size="15" aria-hidden="true" /></span>
         <div class="company-directory-card__heading"><h2>{{ company.name }}</h2><p>{{ company.industryLabels?.join(', ') || company.industry }}</p></div>
       </div>
+      <RatingSummary :rating="company.rating" compact />
       <p v-if="company.summary || company.about" class="company-directory-card__description">{{ company.summary || company.about || '' }}</p>
       <div class="company-directory-card__footer">
         <span v-if="company.city" class="company-directory-card__meta"><MapPin :size="14" aria-hidden="true" />{{ company.city }}</span>

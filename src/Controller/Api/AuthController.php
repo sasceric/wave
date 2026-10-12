@@ -323,6 +323,51 @@ final class AuthController extends AbstractController
         return new JsonResponse(['message' => ApiMessages::get('password_reset_completed', $locale)]);
     }
 
+    #[Route('/api/me/password', name: 'api_account_password_change', methods: ['PUT'])]
+    public function changePassword(
+        Request $request,
+        Security $security,
+        EntityManagerInterface $entityManager,
+        UserPasswordHasherInterface $passwordHasher,
+        CsrfTokenManagerInterface $tokenManager,
+        #[Target('wave_password_change')] RateLimiterFactoryInterface $limiter,
+    ): JsonResponse {
+        $locale = LocaleContext::fromRequest($request);
+        if ($locale === null) {
+            return new JsonResponse(['error' => ApiMessages::get('unsupported_language', 'bs')], 400);
+        }
+        if ($error = ApiAccess::requireCsrf($request, $tokenManager, $locale)) {
+            return $error;
+        }
+        $user = $security->getUser();
+        if (!$user instanceof User || $user->isDeleted()) {
+            return new JsonResponse(['error' => ApiMessages::get('authentication_required', $locale)], 401);
+        }
+        if ($error = $this->rateLimitError($limiter->create((string) $user->getId()), $locale)) {
+            return $error;
+        }
+        $data = JsonPayload::fromRequest($request);
+        $current = $data['currentPassword'] ?? null;
+        $password = $data['newPassword'] ?? null;
+        if (!is_string($current) || strlen($current) > 4096 || !$passwordHasher->isPasswordValid($user, $current)) {
+            return new JsonResponse(['error' => ApiMessages::get('current_password_invalid', $locale)], 400);
+        }
+        if (!is_string($password) || mb_strlen($password) < 12 || strlen($password) > 4096
+            || $password !== ($data['confirmPassword'] ?? null) || $password === $current) {
+            return new JsonResponse(['error' => ApiMessages::get('password_change_invalid', $locale)], 400);
+        }
+        $entityManager->wrapInTransaction(function () use ($user, $password, $passwordHasher, $entityManager): void {
+            $user->setPassword($passwordHasher->hashPassword($user, $password));
+            $entityManager->getConnection()->delete('user_action_token', ['user_id' => $user->getId(), 'purpose' => 'reset_password']);
+        });
+        // Re-authenticate this session with the new hash; other sessions fail refresh.
+        $security->login($user, SessionAuthenticator::class, 'main');
+        return new JsonResponse([
+            'message' => ApiMessages::get('password_reset_completed', $locale),
+            'csrfToken' => $tokenManager->refreshToken('wave')->getValue(),
+        ], headers: ['Cache-Control' => 'private, no-store']);
+    }
+
     #[Route('/api/auth/login', name: 'api_auth_login', methods: ['POST'])]
     public function login(
         Request $request,

@@ -1,6 +1,9 @@
 <script setup>
 import CreditActionNotice from '../components/account/CreditActionNotice.vue'
 import { refreshCredits } from '../composables/useCredits'
+import ConfirmationModal from '../components/shared/ConfirmationModal.vue'
+import ReviewAction from '../components/reviews/ReviewAction.vue'
+import RichTextContent from '../components/shared/RichTextContent.vue'
 import AccountPage from '../components/account/AccountPage.vue'
 import CardGrid from '../components/shared/CardGrid.vue'
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
@@ -91,6 +94,27 @@ const companyCoverField = ref(null)
 const profilePhoneCountry = ref('BA')
 const tags = ref([])
 const campaigns = ref([])
+const statusChange = ref(null)
+const reviewId = computed(() => {
+  const value = Number(route.query.review)
+  return Number.isSafeInteger(value) && value > 0 ? value : null
+})
+async function closeReviewLink() {
+  const query = { ...route.query }
+  delete query.review
+  await router.replace({ query })
+}
+async function changeCampaignStatus() {
+  if (busy.value || !statusChange.value) return
+  busy.value = true
+  error.value = ''
+  try {
+    await apiRequest(`/company/campaigns/${statusChange.value.campaign.id}/status`, { method: 'PUT', body: { status: statusChange.value.status } })
+    statusChange.value = null
+    await loadDashboard()
+  } catch (cause) { error.value = cause.message; statusChange.value = null }
+  finally { busy.value = false }
+}
 const applications = ref([])
 const offers = ref([])
 const offersWithConversations = computed(() => offers.value.map((offer) => ({
@@ -101,6 +125,7 @@ const invitations = ref([])
 const companyApplications = ref([])
 const inquiries = ref([])
 const editingCampaignId = ref(null)
+const editingCampaign = computed(() => campaigns.value.find(campaign => campaign.id === editingCampaignId.value))
 const campaignForm = ref(emptyCampaign())
 const offerForms = ref({})
 const applicantDialog = ref(null)
@@ -1548,6 +1573,7 @@ onMounted(loadDashboard)
         v-if="user.accountType !== 'creator' && accountSection === 'campaigns' && campaignPage === 'list'"
         :campaigns="campaigns"
         @edit="editListedCampaign"
+        @status="(campaign, status) => { statusChange = { campaign, status } }"
       />
 
       <template v-if="user.accountType !== 'creator' && accountSection === 'campaigns'">
@@ -1640,11 +1666,12 @@ onMounted(loadDashboard)
             <div class="form-grid">
               <label class="form-field"><span>{{ t('account.budgetMin') }}</span><input v-model.number="campaignForm.budgetMin" type="number" min="1" max="10000000" required /></label>
               <label class="form-field"><span>{{ t('account.budgetMax') }}</span><input v-model.number="campaignForm.budgetMax" type="number" min="1" max="10000000" required /></label>
-              <SingleSelect v-model="campaignForm.currency" :label="t('account.currency')" :options="CURRENCIES.map(value => ({ value, label: value }))" />
+              <SingleSelect :disabled="Boolean(editingCampaign?.hiredCount)" v-model="campaignForm.currency" :label="t('account.currency')" :options="CURRENCIES.map(value => ({ value, label: value }))" />
               <label class="form-field"><span>{{ t('account.creatorCount') }}</span><input v-model.number="campaignForm.creatorCount" type="number" min="1" max="100" required /></label>
               <DatePicker v-model="campaignForm.closesAt" :label="t('account.closesAt')" required />
             </div>
-            <SingleSelect v-if="editingCampaignId" v-model="campaignForm.status" :label="t('account.status')" :options="[{ value: 'open', label: t('account.open') }, { value: 'closed', label: t('account.closed') }, { value: 'finished', label: t('account.finished') }]" />
+            <SingleSelect v-if="editingCampaignId" :disabled="editingCampaign?.status === 'finished'" v-model="campaignForm.status" :label="t('account.status')" :options="[{ value: 'open', label: t('account.open') }, { value: 'closed', label: t('account.closed') }, { value: 'finished', label: t('account.finished') }]" />
+            <StatusMessage v-if="editingCampaignId && campaignForm.status === 'finished'" variant="info">{{ t('reviews.finishHint') }}</StatusMessage>
             <CreditActionNotice v-if="!editingCampaignId" action="campaign" />
             <div class="button-row">
               <button class="button button--dark" type="submit" :disabled="busy || !user.emailVerified || !user.approved">
@@ -1694,9 +1721,7 @@ onMounted(loadDashboard)
               <span v-if="selectedApplication.creator.city">{{ selectedApplication.creator.city }}</span>
             </div>
           </div>
-          <p v-if="selectedApplication.creator.bio" class="company-applicant-dialog__bio">
-            {{ selectedApplication.creator.bio }}
-          </p>
+          <RichTextContent v-if="selectedApplication.creator.bio" class="company-applicant-dialog__bio" :html="selectedApplication.creator.bio" />
           <div class="company-applicant-dialog__message">
             <strong>{{ t('account.yourMessage') }}</strong>
             <p>{{ selectedApplication.message }}</p>
@@ -1776,6 +1801,8 @@ onMounted(loadDashboard)
       </div>
       </main>
     </div>
+    <ReviewAction v-if="reviewId && user.approved && user.emailVerified" :key="reviewId" :application-id="reviewId" auto-open hide-trigger @closed="closeReviewLink" />
+    <ConfirmationModal :open="Boolean(statusChange)" :title="t(statusChange?.status === 'finished' ? 'reviews.finishCampaign' : 'reviews.closeCampaign')" :message="t(statusChange?.status === 'finished' ? 'reviews.finishHint' : 'reviews.closeCampaignHint')" :confirm-label="t(statusChange?.status === 'finished' ? 'reviews.finishCampaign' : 'reviews.closeCampaign')" :cancel-label="t('credits.cancel')" :loading="busy" @update:open="!$event && (statusChange = null)" @confirm="changeCampaignStatus" />
     <RequiredProfileModal
       v-if="profile && !user.profileComplete"
       :user="user"

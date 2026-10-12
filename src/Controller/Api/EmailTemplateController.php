@@ -33,6 +33,7 @@ final class EmailTemplateController
         'creator_hired',
         'unread_message_reminder',
         'credits_activated',
+        'credit_code_assigned',
     ];
     #[Route('/api/admin/email-templates', name: 'api_admin_email_templates', methods: ['GET'])]
     public function list(

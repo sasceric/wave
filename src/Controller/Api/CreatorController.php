@@ -9,6 +9,7 @@ use App\Api\MarketplaceCategoryLabels;
 use App\Entity\Creator;
 use App\Localization\ApiMessages;
 use App\Localization\LocaleContext;
+use App\Reviews\CollaborationFeedback;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -17,6 +18,10 @@ use Symfony\Component\Routing\Attribute\Route;
 
 final class CreatorController
 {
+    public function __construct(private readonly CollaborationFeedback $feedback)
+    {
+    }
+
     #[Route('/api/creators', name: 'api_creators_index', methods: ['GET'])]
     public function index(Request $request, EntityManagerInterface $entityManager, DirectoryCursor $cursor): JsonResponse
     {
@@ -180,13 +185,14 @@ final class CreatorController
             $meta['offset'] = $offset;
         }
         $card = $request->query->getString('view') === 'card';
+        $ratings = $this->feedback->summaries(array_values(array_filter(array_map(static fn (Creator $profile): ?int => $profile->getOwner()?->getId(), $creators))));
         $categoryLabels = MarketplaceCategoryLabels::forLocale($entityManager, $locale);
         if (!$card && $creators !== []) {
             $entityManager->createQueryBuilder()->select('creator', 'portfolioMedia', 'media')->from(Creator::class, 'creator')
                 ->leftJoin('creator.portfolioMedia', 'portfolioMedia')->leftJoin('portfolioMedia.media', 'media')
                 ->where('creator IN (:creators)')->setParameter('creators', $creators)->getQuery()->getResult();
         }
-        return new JsonResponse(['data' => array_map(static fn (Creator $creator): array => CreatorResource::fromEntity($creator, $locale, $categoryLabels[$creator->getCategory()] ?? null, $categoryLabels, $card), $creators), 'meta' => $meta]);
+        return new JsonResponse(['data' => array_map(static fn (Creator $creator): array => CreatorResource::fromEntity($creator, $locale, $categoryLabels[$creator->getCategory()] ?? null, $categoryLabels, $card) + ['rating' => $ratings[$creator->getOwner()?->getId()] ?? ['average' => null, 'reviewCount' => 0, 'completedCampaigns' => 0]], $creators), 'meta' => $meta]);
     }
 
     private function selectedValues(Request $request, string $key, int $maxLength): array
@@ -214,6 +220,7 @@ final class CreatorController
         return new JsonResponse(['data' => ['countries' => array_map(static fn (array $row): array => ['value' => $row['value'], 'count' => (int) $row['count']], $rows)]]);
     }
 
+    #[Route('/api/creators/{slug}/reviews', name: 'api_creator_reviews', methods: ['GET'])]
     #[Route('/api/creators/{slug}', name: 'api_creators_show', methods: ['GET'])]
     public function show(
         string $slug,
@@ -234,6 +241,7 @@ final class CreatorController
             ->getOneOrNullResult();
         $owner = $creator instanceof Creator ? $creator->getOwner() : null;
         if (!$creator instanceof Creator
+            || $owner?->isDeleted() === true
             || ($owner !== null && !$owner->isApproved() && !$security->isGranted('ROLE_ADMIN'))
             || ($owner !== null
                 && $owner->isHideMyAccount()
@@ -243,6 +251,9 @@ final class CreatorController
             return new JsonResponse(['error' => ApiMessages::get('creator_not_found', $locale)], 404);
         }
 
+        if (str_ends_with($request->getPathInfo(), '/reviews')) {
+            return new JsonResponse($owner === null ? ['data' => [], 'summary' => $this->feedback->summary(null), 'meta' => ['hasMore' => false, 'nextCursor' => null]] : $this->feedback->publicReviews($owner, $locale, max(0, $request->query->getInt('before'))));
+        }
         $categoryLabels = MarketplaceCategoryLabels::forLocale($entityManager, $locale);
 
         return new JsonResponse([
@@ -251,7 +262,7 @@ final class CreatorController
                 $locale,
                 $categoryLabels[$creator->getCategory()] ?? null,
                 $categoryLabels,
-            ),
+            ) + ['rating' => $this->feedback->summary($owner)],
         ]);
     }
 }

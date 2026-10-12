@@ -10,6 +10,7 @@ use App\Entity\Campaign;
 use App\Entity\Company;
 use App\Localization\ApiMessages;
 use App\Localization\LocaleContext;
+use App\Reviews\CollaborationFeedback;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -18,6 +19,10 @@ use Symfony\Component\Routing\Attribute\Route;
 
 final class CompanyController
 {
+    public function __construct(private readonly CollaborationFeedback $feedback)
+    {
+    }
+
     #[Route('/api/companies', name: 'api_companies_index', methods: ['GET'])]
     public function index(Request $request, EntityManagerInterface $entityManager, DirectoryCursor $cursor): JsonResponse
     {
@@ -227,6 +232,7 @@ final class CompanyController
             $meta['offset'] = $offset;
         }
 
+        $ratings = $this->feedback->summaries(array_values(array_filter(array_map(static fn (Company $profile): ?int => $profile->getOwner()?->getId(), $companies))));
         $categoryLabels = MarketplaceCategoryLabels::forLocale($entityManager, $locale);
 
         return new JsonResponse([
@@ -237,7 +243,7 @@ final class CompanyController
                     $campaignCounts[$company->getId() ?? 0] ?? 0,
                     $card,
                     $categoryLabels,
-                ),
+                ) + ['rating' => $ratings[$company->getOwner()?->getId()] ?? ['average' => null, 'reviewCount' => 0, 'completedCampaigns' => 0]],
                 $companies,
             ),
             'meta' => $meta,
@@ -281,6 +287,7 @@ final class CompanyController
         ]]);
     }
 
+    #[Route('/api/companies/{slug}/reviews', name: 'api_company_reviews', methods: ['GET'])]
     #[Route('/api/companies/{slug}', name: 'api_companies_show', methods: ['GET'])]
     public function show(
         string $slug,
@@ -301,6 +308,7 @@ final class CompanyController
             ->getOneOrNullResult();
         $owner = $company instanceof Company ? $company->getOwner() : null;
         if (!$company instanceof Company
+            || $owner?->isDeleted() === true
             || ($owner !== null && !$owner->isApproved() && !$security->isGranted('ROLE_ADMIN'))
             || ($owner !== null
                 && $owner->isHideMyAccount()
@@ -310,6 +318,9 @@ final class CompanyController
             return new JsonResponse(['error' => ApiMessages::get('company_not_found', $locale)], 404);
         }
 
-        return new JsonResponse(['data' => CompanyResource::fromEntity($company, $locale, categoryLabels: MarketplaceCategoryLabels::forLocale($entityManager, $locale))]);
+        if (str_ends_with($request->getPathInfo(), '/reviews')) {
+            return new JsonResponse($owner === null ? ['data' => [], 'summary' => $this->feedback->summary(null), 'meta' => ['hasMore' => false, 'nextCursor' => null]] : $this->feedback->publicReviews($owner, $locale, max(0, $request->query->getInt('before'))));
+        }
+        return new JsonResponse(['data' => CompanyResource::fromEntity($company, $locale, categoryLabels: MarketplaceCategoryLabels::forLocale($entityManager, $locale)) + ['rating' => $this->feedback->summary($owner)]]);
     }
 }

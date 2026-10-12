@@ -68,6 +68,9 @@ class Campaign
     #[ORM\Column(length: 20)]
     private string $status;
 
+    #[ORM\Column(nullable: true)]
+    private ?DateTimeImmutable $finishedAt = null;
+
     #[ORM\Column]
     private bool $featured;
 
@@ -124,6 +127,9 @@ class Campaign
         $this->company = $company;
         $this->featured = $featured;
         $this->status = $status;
+        if ($status === 'finished') {
+            $this->finishedAt = new DateTimeImmutable();
+        }
         $this->translations = $translations;
         $this->coverMedia = $coverMedia;
     }
@@ -220,7 +226,18 @@ class Campaign
 
     public function setStatus(string $status): void
     {
+        if ($this->finishedAt !== null && $status !== 'finished') {
+            throw new \InvalidArgumentException('Finished campaigns cannot be reopened.');
+        }
+        if ($status === 'finished') {
+            $this->finishedAt ??= new DateTimeImmutable();
+        }
         $this->status = $status;
+    }
+
+    public function getFinishedAt(): ?DateTimeImmutable
+    {
+        return $this->finishedAt;
     }
 
     public function isFeatured(): bool
@@ -288,7 +305,7 @@ class Campaign
         $this->city = $city;
         $this->creatorCount = $creatorCount;
         $this->closesAt = $closesAt;
-        $this->status = $status;
+        $this->setStatus($status);
         if ($currency !== null) {
             $this->currency = $currency;
         }

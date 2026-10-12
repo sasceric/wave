@@ -198,6 +198,10 @@ final class CampaignManagementController
                 'fields' => array_values(array_unique($invalidFields)),
             ], 400);
         }
+        if (($campaign->getStatus() === 'finished' && $fields['status'] !== 'finished')
+            || ($fields['currency'] !== $campaign->getCurrency() && CampaignHiredCounts::forCampaign($entityManager, $campaign) > 0)) {
+            return new JsonResponse(['error' => ApiMessages::get('campaign_financial_history_locked', $locale)], 409);
+        }
         $campaign->update(
             $fields['title'],
             $fields['summary'],
@@ -216,6 +220,46 @@ final class CampaignManagementController
             $fields['categories'],
         );
         $campaign->setCoverMedia($coverMedia);
+        $this->finishApplications($campaign, $entityManager);
+        $entityManager->flush();
+
+        return new JsonResponse(['data' => CampaignResource::fromEntity($campaign, $locale, categoryLabels: MarketplaceCategoryLabels::forLocale($entityManager, $locale), hiredCount: CampaignHiredCounts::forCampaign($entityManager, $campaign))]);
+    }
+
+    #[Route('/api/company/campaigns/{id}/status', name: 'api_company_campaign_status', methods: ['PUT'], requirements: ['id' => '\\d+'])]
+    public function changeStatus(int $id, Request $request, EntityManagerInterface $entityManager, Security $security, CsrfTokenManagerInterface $tokenManager): JsonResponse
+    {
+        $locale = LocaleContext::fromRequest($request);
+        if ($locale === null) {
+            return new JsonResponse(['error' => ApiMessages::get('unsupported_language', 'bs')], 400);
+        }
+        if ($error = ApiAccess::requireCsrf($request, $tokenManager, $locale)) {
+            return $error;
+        }
+        $user = ApiAccess::requireRole($security, 'ROLE_COMPANY', $locale, requireVerified: true);
+        if ($user instanceof JsonResponse) {
+            return $user;
+        }
+        $campaign = $entityManager->find(Campaign::class, $id);
+        if (!$campaign instanceof Campaign || $campaign->getCompany()->getOwner()?->getId() !== $user->getId()) {
+            return new JsonResponse(['error' => ApiMessages::get('campaign_not_found', $locale)], 404);
+        }
+        $data = JsonPayload::fromRequest($request);
+        $status = $data['status'] ?? null;
+        if (!in_array($status, ['closed', 'finished'], true)) {
+            return new JsonResponse(['error' => ApiMessages::get('invalid_request', $locale)], 400);
+        }
+        if ($campaign->getStatus() === 'finished' && $status !== 'finished') {
+            return new JsonResponse(['error' => ApiMessages::get('campaign_financial_history_locked', $locale)], 409);
+        }
+        $campaign->setStatus($status);
+        $this->finishApplications($campaign, $entityManager);
+        $entityManager->flush();
+        return new JsonResponse(['data' => CampaignResource::fromEntity($campaign, $locale, hiredCount: CampaignHiredCounts::forCampaign($entityManager, $campaign))]);
+    }
+
+    private function finishApplications(Campaign $campaign, EntityManagerInterface $entityManager): void
+    {
         if ($campaign->getStatus() === 'finished') {
             $applications = $entityManager->createQueryBuilder()
                 ->select('application', 'offer')
@@ -238,9 +282,6 @@ final class CampaignManagementController
                 $application->setStatus('rejected');
             }
         }
-        $entityManager->flush();
-
-        return new JsonResponse(['data' => CampaignResource::fromEntity($campaign, $locale, categoryLabels: MarketplaceCategoryLabels::forLocale($entityManager, $locale), hiredCount: CampaignHiredCounts::forCampaign($entityManager, $campaign))]);
     }
 
     private function campaignFields(array $data, bool $allowStatus, array &$invalidFields): ?array

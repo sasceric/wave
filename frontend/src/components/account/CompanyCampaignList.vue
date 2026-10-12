@@ -1,6 +1,6 @@
 <script setup>
 import { computed, nextTick, ref, watch } from 'vue'
-import { CalendarDays, Camera, CirclePlay, FileText, MapPin, Megaphone, Music2, Pencil, Plus } from '@lucide/vue'
+import { CalendarDays, Camera, CheckCheck, CirclePlay, Eye, LockKeyhole, FileText, MapPin, Megaphone, Music2, Pencil, Plus } from '@lucide/vue'
 import { useI18n } from 'vue-i18n'
 import AdminRowActions from '../admin/AdminRowActions.vue'
 import CampaignHiringProgress from '../campaigns/CampaignHiringProgress.vue'
@@ -13,7 +13,7 @@ import { formatDate, formatMoney } from '../../lib/api'
 import { campaignPlace, CAMPAIGN_PLACEHOLDER } from '../../lib/marketplace'
 
 const props = defineProps({ campaigns: { type: Array, default: () => [] } })
-const emit = defineEmits(['edit'])
+const emit = defineEmits(['edit', 'status'])
 const { t, locale } = useI18n()
 const query = ref('')
 const statusFilter = ref('all')
@@ -102,8 +102,10 @@ function deadlineLabel(campaign) {
             <td class="company-campaign-list__hired"><span class="creator-offers__mobile-label">{{ t('account.hiredCreators') }}</span><CampaignHiringProgress :campaign="campaign" /></td>
             <td><span class="creator-offer__status" :class="`company-campaign-list__status--${campaign.status}`">{{ t(`account.${campaign.status}`) }}</span></td>
             <td class="creator-offers__action-cell"><div class="creator-offers__actions">
-              <LocalizedLink class="button button--outline" :to="detailRoute(campaign)">{{ t('account.viewCampaign') }}</LocalizedLink>
               <AdminRowActions :label="`${t('account.activityActions')}: ${campaign.title}`">
+                <LocalizedLink class="admin-row-actions__item" role="menuitem" :to="detailRoute(campaign)"><Eye :size="16" aria-hidden="true" />{{ t('account.viewCampaign') }}</LocalizedLink>
+                <button v-if="campaign.status === 'open'" class="admin-row-actions__item" role="menuitem" type="button" @click="emit('status', campaign, 'closed')"><LockKeyhole :size="16" aria-hidden="true" />{{ t('reviews.closeCampaign') }}</button>
+                <button v-if="campaign.status !== 'finished'" class="admin-row-actions__item" role="menuitem" type="button" @click="emit('status', campaign, 'finished')"><CheckCheck :size="16" aria-hidden="true" />{{ t('reviews.finishCampaign') }}</button>
                 <button class="admin-row-actions__item" role="menuitem" type="button" @click="emit('edit', campaign)"><Pencil :size="16" aria-hidden="true" />{{ t('account.editCampaign') }}</button>
                 <LocalizedLink class="admin-row-actions__item" role="menuitem" :to="{ name: 'campaign-detail', params: { slug: campaign.slug } }">{{ t('campaignCard.viewBrief') }}</LocalizedLink>
               </AdminRowActions>

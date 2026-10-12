@@ -416,3 +416,21 @@ php8.4 bin/console app:media:cleanup-deleted --env=prod --no-debug
 
 This policy applies to new account deletions. It does not sweep previously orphaned
 uploads or remove another participant's media or message history.
+
+### Campaign reviews (2026-10-13)
+
+Apply `Version20261013100000` before activating the new build. It adds
+`campaign.finished_at` and `campaign_review`. Existing finished campaigns receive
+a fresh 14-day review window from migration time. No new environment variable,
+queue consumer, scheduled task or Mercure topic is required. See
+[campaign reviews](campaign-reviews.md) for public feedback and private total semantics.
+
+### Credit assignment and review notification links (2026-10-13)
+
+Apply `Version20261013110000` and `Version20261013120000` before using the new
+frontend. These add encrypted retrievable voucher codes, recipient reservations,
+and collaboration links on review notifications. Both are already applied locally.
+Assignment queues an email and reserves a code; it does not grant credits. Keep
+`APP_SECRET` stable and the existing email/push workers running. No new environment
+variable or Mercure topic is required. Legacy hashed-only codes stay valid but cannot
+be recovered for display or assignment emails.

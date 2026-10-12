@@ -78,6 +78,7 @@ final class AccountDeletion
                     ] as $table => $column) {
                         $db->delete($table, [$column => $user->getId()]);
                     }
+                    $db->update('campaign_review', ['comment' => ''], ['author_id' => $user->getId()]);
                     $db->update('credit_voucher', ['redeemed_by_id' => null], ['redeemed_by_id' => $user->getId()]);
                     $db->delete('newsletter_subscriber', ['email' => $user->getEmail()]);
                     $this->discardDeliveries($user);

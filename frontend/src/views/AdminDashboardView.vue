@@ -24,7 +24,8 @@ import LocalizedLink from '../components/shared/LocalizedLink.vue'
 import LoadingSkeleton from '../components/shared/LoadingSkeleton.vue'
 import StatusMessage from '../components/shared/StatusMessage.vue'
 import { currentUser } from '../composables/useCurrentUser'
-import { apiGet, apiRequest } from '../lib/api'
+import RatingSummary from '../components/reviews/RatingSummary.vue'
+import { apiGet, apiRequest, formatMoney } from '../lib/api'
 
 const route = useRoute()
 const { locale, t } = useI18n()
@@ -195,11 +196,15 @@ const tableColumns = computed(() => {
       { key: 'displayName', label: t('adminDashboard.creator'), sortable: true },
       { key: 'category', label: t('adminDashboard.category'), sortable: true },
       { key: 'city', label: t('auth.city'), sortable: true },
+      { key: 'rating', label: t('reviews.rating') },
+      { key: 'financialTotals', label: t('reviews.earnings') },
     ],
     companies: [
       { key: 'name', label: t('adminDashboard.company'), sortable: true },
       { key: 'industry', label: t('adminDashboard.industry'), sortable: true },
       { key: 'verified', label: t('adminDashboard.verification'), sortable: true },
+      { key: 'rating', label: t('reviews.rating') },
+      { key: 'financialTotals', label: t('reviews.spending') },
     ],
     campaigns: [
       { key: 'title', label: t('adminDashboard.campaign'), sortable: true },
@@ -683,6 +688,8 @@ onMounted(loadDashboard)
                 </select>
               </label>
             </template>
+            <template #cell-rating="{ value }"><RatingSummary :rating="value" /></template>
+            <template #cell-financialTotals="{ value }"><span v-for="total in value" :key="total.currency" class="admin-financial-total">{{ formatMoney(total.amount, total.currency) }}</span><span v-if="!value?.length">0</span></template>
             <template #cell-emailVerified="{ value }">
               {{ value ? t('adminDashboard.verified') : t('adminDashboard.unverified') }}
             </template>

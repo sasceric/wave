@@ -1,4 +1,6 @@
 <script setup>
+import ProfileReviews from '../components/reviews/ProfileReviews.vue'
+import RatingSummary from '../components/reviews/RatingSummary.vue'
 import { computed, onMounted, ref, watch } from 'vue'
 import { ExternalLink, Globe, Link2, MapPin, Megaphone, Music2 } from '@lucide/vue'
 import CardGrid from '../components/shared/CardGrid.vue'
@@ -112,6 +114,7 @@ onMounted(loadCompany)
             <div>
               <p class="eyebrow">{{ industries.join(' · ') }}</p>
               <h1>{{ company.name }}<span v-if="company.verified" class="verified-mark" :aria-label="t('campaignCard.verified')">✓</span></h1>
+              <RatingSummary :rating="company.rating" />
               <p class="company-profile__tagline">{{ company.about ? t('companyProfile.profileIntro') : t('companyProfile.profileLabel') }}</p>
             </div>
           </div>
@@ -154,6 +157,7 @@ onMounted(loadCompany)
         </article>
       </div>
 
+      <ProfileReviews kind="companies" :slug="company.slug" />
       <section class="company-profile__campaigns">
         <div class="section-heading">
           <div><p class="eyebrow">{{ t('companyProfile.openCalls') }}</p><h2>{{ t('companyProfile.campaignsFrom', { company: company.name }) }}</h2></div>

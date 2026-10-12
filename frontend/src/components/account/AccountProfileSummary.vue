@@ -1,5 +1,9 @@
 <script setup>
-import { computed } from 'vue'
+import { computed, ref, watch } from 'vue'
+import PasswordChangeAction from './PasswordChangeAction.vue'
+import RatingSummary from '../reviews/RatingSummary.vue'
+import { loadCurrentUser } from '../../composables/useCurrentUser'
+import { apiGet, formatMoney } from '../../lib/api'
 import { Camera, ExternalLink, Handshake, MapPin, MessageCircleQuestion, Pencil, Images, UsersRound } from '@lucide/vue'
 import { useI18n } from 'vue-i18n'
 import LocalizedLink from '../shared/LocalizedLink.vue'
@@ -17,6 +21,25 @@ const props = defineProps({
 })
 defineEmits(['edit', 'select-tab', 'visibility', 'notifications'])
 const { t } = useI18n()
+const financial = ref(null)
+const financialError = ref('')
+let financialGeneration = 0
+async function loadFinancial() {
+  const generation = ++financialGeneration
+  financial.value = null
+  financialError.value = ''
+  if (!props.user.approved) return
+  try {
+    const response = await apiGet('/me/collaboration-summary')
+    if (generation !== financialGeneration) return
+    if (response.userId !== props.user.id) {
+      await loadCurrentUser()
+      return
+    }
+    financial.value = response.data
+  } catch (cause) { if (generation === financialGeneration) financialError.value = cause.message }
+}
+watch(() => [props.user.id, props.user.approved], loadFinancial, { immediate: true })
 const creator = computed(() => props.user.accountType === 'creator')
 const name = computed(() => creator.value ? props.profile.displayName : props.profile.name)
 const image = computed(() => creator.value ? props.profile.avatarUrl || CREATOR_PLACEHOLDER : props.profile.logoUrl)
@@ -42,6 +65,15 @@ const metrics = computed(() => [
         <p class="eyebrow">{{ creator ? t('account.creatorProfile') : t('account.companyProfile') }}</p>
         <h2>{{ name || t('account.title') }}</h2>
         <p class="account-profile-summary__email">{{ user.email }}</p>
+        <RatingSummary v-if="financial" :rating="financial.rating" />
+        <div v-if="financial" class="account-profile-summary__financial">
+          <span>{{ t(creator ? 'reviews.earnings' : 'reviews.spending') }}</span>
+          <strong v-for="total in financial.totals" :key="total.currency">{{ formatMoney(total.amount, total.currency) }}</strong>
+          <strong v-if="!financial.totals.length">0</strong>
+          <small>{{ t('reviews.financialHint') }}</small>
+        </div>
+        <p v-if="financialError" class="account-profile-summary__financial-error" role="status">{{ financialError }} <button type="button" @click="loadFinancial">{{ t('reviews.retry') }}</button></p>
+        <PasswordChangeAction :email="user.email" />
         <p v-if="location" class="account-profile-summary__location"><MapPin :size="18" aria-hidden="true" />{{ location }}</p>
         <CreditBalanceLink v-if="user.approved || user.isAdmin" class="account-profile-summary__credits" />
         <LocalizedLink v-if="profile.slug" class="account-profile-summary__public" :to="{ name: creator ? 'creator-profile' : 'company-profile', params: { slug: profile.slug } }">

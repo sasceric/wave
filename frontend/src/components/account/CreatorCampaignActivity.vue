@@ -1,4 +1,5 @@
 <script setup>
+import ReviewAction from '../reviews/ReviewAction.vue'
 import CampaignHiringProgress from '../campaigns/CampaignHiringProgress.vue'
 import AdminRowActions from '../admin/AdminRowActions.vue'
 import { computed, nextTick, onBeforeUnmount, ref, useId, watch } from 'vue'
@@ -244,6 +245,7 @@ onBeforeUnmount(() => {
                 </AdminRowActions>
               </div></td>
               <td v-else class="creator-offers__action-cell"><div class="creator-offers__actions">
+                <ReviewAction v-if="!isInquiries && offer.campaign?.status === 'finished' && (isOffers ? offer.status === 'accepted' : offer.offer?.status === 'accepted') && !offer.readOnly" :application-id="isOffers ? offer.applicationId : offer.id" />
                 <LocalizedLink v-if="hasChat(offer)" class="button button--outline" :to="chatRoute(offer)"><MessageCircle :size="16" aria-hidden="true" />{{ t('account.activityChat') }}</LocalizedLink>
                 <button class="button button--dark" type="button" :aria-label="`${t(isInquiries ? 'account.activityView' : 'campaignCard.viewBrief')}: ${itemTitle(offer)}`" @click="openCampaign(offer)">{{ t('account.activityView') }}<ArrowRight :size="16" aria-hidden="true" /></button>
               </div></td>

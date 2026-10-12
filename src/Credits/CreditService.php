@@ -6,6 +6,7 @@ namespace App\Credits;
 
 use App\Account\AccountEmailSender;
 use App\Background\JobDispatcher;
+use App\Background\PayloadCipher;
 use App\Entity\User;
 use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
@@ -16,6 +17,7 @@ final class CreditService
         private readonly EntityManagerInterface $entityManager,
         private readonly JobDispatcher $jobs,
         private readonly AccountEmailSender $emails,
+        private readonly PayloadCipher $cipher,
     ) {
     }
 
@@ -161,6 +163,7 @@ final class CreditService
             $price = $amount * $settings['unitPriceMinor'];
             $this->db()->insert('credit_voucher', [
                 'id' => $id, 'code_hash' => hash('sha256', $code), 'suffix' => substr($code, -4),
+                'encrypted_code' => $this->cipher->encrypt(['code' => $code]),
                 'amount' => $amount, 'price_minor' => $price, 'issued_by_id' => $admin->getId(), 'created_at' => gmdate('Y-m-d H:i:s'),
             ]);
 
@@ -168,13 +171,101 @@ final class CreditService
         });
     }
 
-    public function vouchers(int $page): array
+    public function vouchers(int $page, int $limit = 25, string $sort = 'created_at', string $direction = 'desc'): array
     {
+        $status = "CASE WHEN v.revoked_at IS NOT NULL THEN 'revoked' WHEN v.redeemed_at IS NOT NULL THEN 'used' WHEN v.assigned_at IS NOT NULL THEN 'assigned' ELSE 'created' END";
+        $columns = ['amount' => 'v.amount', 'price_minor' => 'v.price_minor', 'created_at' => 'v.created_at', 'status' => $status,
+            'recipient' => "LOWER(COALESCE(c.display_name, p.name, u.email, ''))", 'email' => "LOWER(COALESCE(u.email, ''))"];
+        if (!in_array($limit, [25, 50, 100], true) || $page < 1 || $page > 1000000 || !isset($columns[$sort]) || !in_array($direction, ['asc', 'desc'], true)) {
+            throw new CreditException('invalid_request');
+        }
         $total = (int) $this->db()->fetchOne('SELECT COUNT(*) FROM credit_voucher');
-        $page = min(max(1, $page), max(1, (int) ceil($total / 10)));
-        $rows = $this->db()->fetchAllAssociative('SELECT v.id, v.suffix, v.amount, v.price_minor, v.created_at, v.redeemed_at, v.revoked_at, u.email FROM credit_voucher v LEFT JOIN wave_user u ON u.id = v.redeemed_by_id ORDER BY v.created_at DESC, v.id DESC LIMIT 10 OFFSET ' . (($page - 1) * 10));
+        $page = min($page, max(1, (int) ceil($total / $limit)));
+        $order = strtoupper($direction);
+        $rows = $this->db()->fetchAllAssociative("SELECT v.id, v.suffix, v.encrypted_code, v.amount, v.price_minor, v.created_at, v.redeemed_at, v.revoked_at, v.assigned_at, v.assigned_to_id,
+            u.email, COALESCE(c.display_name, p.name) AS recipient, $status AS status
+            FROM credit_voucher v LEFT JOIN wave_user u ON u.id = COALESCE(v.assigned_to_id, v.redeemed_by_id)
+            LEFT JOIN creator c ON c.owner_id = u.id LEFT JOIN company p ON p.owner_id = u.id
+            ORDER BY {$columns[$sort]} $order, v.id $order LIMIT $limit OFFSET " . (($page - 1) * $limit));
+        foreach ($rows as &$row) {
+            $row['code'] = $this->fullCode($row['encrypted_code']);
+            unset($row['encrypted_code']);
+            $row['amount'] = (int) $row['amount'];
+            $row['price_minor'] = (int) $row['price_minor'];
+            $row['assigned_to_id'] = $row['assigned_to_id'] === null ? null : (int) $row['assigned_to_id'];
+        }
+        unset($row);
+        return ['rows' => $rows, 'total' => $total, 'page' => $page, 'limit' => $limit];
+    }
 
-        return ['rows' => $rows, 'total' => $total, 'page' => $page];
+    private function fullCode(?string $encrypted): ?string
+    {
+        if ($encrypted === null) {
+            return null;
+        }
+        $payload = $this->cipher->decrypt($encrypted);
+        return is_string($payload['code'] ?? null) ? $payload['code'] : null;
+    }
+
+    public function assign(string $id, int $userId, string $accountType): array
+    {
+        if (!preg_match('/^[a-f0-9]{32}$/D', $id) || $userId < 1 || !in_array($accountType, ['creator', 'company'], true)) {
+            throw new CreditException('invalid_request');
+        }
+        return $this->db()->transactional(function () use ($id, $userId, $accountType): array {
+            $this->lockSettings();
+            // Share the account deletion lock so a code cannot be mailed after erasure.
+            $this->db()->executeStatement('UPDATE wave_user SET id = id WHERE id = ?', [$userId]);
+            $user = $this->entityManager->find(User::class, $userId);
+            if (!$user instanceof User) {
+                throw new CreditException('credit_recipient_invalid', 404);
+            }
+            $this->entityManager->refresh($user);
+            if ($user->isDeleted() || !$user->hasRole($accountType === 'creator' ? 'ROLE_CREATOR' : 'ROLE_COMPANY')
+                || ($accountType === 'creator' ? $user->getCreator() === null : $user->getCompany() === null)) {
+                throw new CreditException('credit_recipient_invalid', 404);
+            }
+            $voucher = $this->db()->fetchAssociative('SELECT * FROM credit_voucher WHERE id = ?', [$id]);
+            if (!$voucher || $voucher['redeemed_at'] !== null || $voucher['revoked_at'] !== null) {
+                throw new CreditException('credit_invalid_code', 409);
+            }
+            if ($voucher['assigned_at'] !== null) {
+                if ((int) $voucher['assigned_to_id'] === $userId) {
+                    return ['id' => $id, 'status' => 'assigned', 'assignedToId' => $userId];
+                }
+                throw new CreditException('credit_already_assigned', 409);
+            }
+            $code = $this->fullCode($voucher['encrypted_code']);
+            if ($code === null) {
+                throw new CreditException('credit_code_unavailable', 409);
+            }
+            $this->db()->update('credit_voucher', ['assigned_to_id' => $userId, 'assigned_at' => gmdate('Y-m-d H:i:s')], ['id' => $id]);
+            $this->emails->sendCreditCodeAssigned($user, $code, (int) $voucher['amount']);
+            // Reservation only: wallets and credit entries change on redemption.
+            return ['id' => $id, 'status' => 'assigned', 'assignedToId' => $userId];
+        });
+    }
+
+    /** @param list<string> $ids */
+    public function deleteVouchers(array $ids): int
+    {
+        if ($ids === [] || count($ids) > 100 || count(array_unique($ids)) !== count($ids)) {
+            throw new CreditException('invalid_request');
+        }
+        foreach ($ids as $id) {
+            if (!is_string($id) || !preg_match('/^[a-f0-9]{32}$/D', $id)) {
+                throw new CreditException('invalid_request');
+            }
+        }
+        return $this->db()->transactional(function () use ($ids): int {
+            $this->lockSettings();
+            $existing = (int) $this->db()->fetchOne('SELECT COUNT(*) FROM credit_voucher WHERE id IN (?)', [$ids], [\Doctrine\DBAL\ArrayParameterType::STRING]);
+            if ($existing !== count($ids)) {
+                throw new CreditException('credit_invalid_code', 404);
+            }
+            // Immutable redemption entries and balances survive removal of code history.
+            return $this->db()->executeStatement('DELETE FROM credit_voucher WHERE id IN (?)', [$ids], [\Doctrine\DBAL\ArrayParameterType::STRING]);
+        });
     }
 
     public function revoke(string $id): void
@@ -201,6 +292,9 @@ final class CreditService
                 throw new CreditException('credit_invalid_code');
             }
             $id = (int) $user->getId();
+            if ($voucher['assigned_at'] !== null && (int) $voucher['assigned_to_id'] !== $id) {
+                throw new CreditException('credit_invalid_code');
+            }
             $this->db()->update('credit_voucher', ['redeemed_by_id' => $id, 'redeemed_at' => gmdate('Y-m-d H:i:s')], ['id' => $voucher['id']]);
             $this->add($id, (int) $voucher['amount'], 'voucher', '••••' . $voucher['suffix'], 'voucher:' . $voucher['id']);
 

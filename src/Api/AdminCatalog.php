@@ -6,6 +6,7 @@ use App\Entity\Campaign;
 use App\Entity\Company;
 use App\Entity\Creator;
 use App\Entity\User;
+use App\Reviews\CollaborationFeedback;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\QueryBuilder;
 use Symfony\Component\HttpFoundation\Request;
@@ -20,7 +21,7 @@ final class AdminCatalog
         'registrations' => User::class,
     ];
 
-    public function __construct(private readonly EntityManagerInterface $entityManager)
+    public function __construct(private readonly EntityManagerInterface $entityManager, private readonly CollaborationFeedback $feedback)
     {
     }
 
@@ -68,8 +69,20 @@ final class AdminCatalog
 
         $categoryLabels = $kind === 'companies' ? MarketplaceCategoryLabels::forLocale($this->entityManager, $locale) : [];
 
+        $ids = in_array($kind, ['creators', 'companies'], true) ? array_values(array_filter(array_map(static fn ($profile) => $profile->getOwner()?->getId(), $items))) : [];
+        $ratings = $this->feedback->summaries($ids);
+        $totals = $this->feedback->financialTotals($ids, $kind === 'creators');
+        $rows = array_map(fn (object $item): array => $this->resource($item, $locale, $categoryLabels), $items);
+        foreach ($items as $index => $item) {
+            if ($item instanceof Creator || $item instanceof Company) {
+                $ownerId = $item->getOwner()?->getId();
+                $rows[$index]['rating'] = $ratings[$ownerId] ?? $this->feedback->summary(null);
+                $rows[$index]['financialTotals'] = $totals[$ownerId] ?? [];
+            }
+        }
+
         return [
-            'data' => array_map(fn (object $item): array => $this->resource($item, $locale, $categoryLabels), $items),
+            'data' => $rows,
             'meta' => ['page' => $page, 'limit' => $limit, 'total' => $total, 'count' => count($items)],
         ];
     }

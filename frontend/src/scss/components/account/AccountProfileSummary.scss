@@ -305,3 +305,15 @@
   font-size: 12px;
   .account-sidebar__badge { border-radius: 12px; min-width: 28px; }
 }
+
+.account-profile-summary__financial {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 4px 8px;
+  margin-top: 10px;
+  font-size: 12px;
+  color: var(--forest);
+  small { width: 100%; color: var(--muted); font-size: 10px; line-height: 1.6; }
+}
+.account-profile-summary__financial-error { font-size: 12px; color: var(--muted); }

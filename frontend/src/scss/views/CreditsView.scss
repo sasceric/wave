@@ -151,3 +151,17 @@
   .credits-overview__balance { grid-column: 1 / -1; }
   .credits-overview__cost { border-left: 0; padding: 16px 0 0; border-top: 1px solid #e2e6df; }
 }
+
+.credits-voucher-history {
+  h2 { margin: 0 0 18px; color: var(--forest); font-size: 24px; }
+  code { font-size: 13px; white-space: nowrap; }
+  &__hint { display: block; margin-top: 4px; font-size: 11px; color: var(--muted); }
+}
+.credits-voucher-status {
+  display: inline-flex; border-radius: 20px; padding: 5px 10px; font-size: 12px;
+  background: #eef1eb; color: var(--forest);
+  &--assigned { background: #f5e7df; }
+  &--used { background: #e4eee7; }
+  &--revoked { background: #f3e2df; color: #a3473d; }
+}
+.credits-assignment-code { margin: 0; font-size: 13px; color: var(--forest); }

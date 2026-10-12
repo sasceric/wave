@@ -1,4 +1,9 @@
 export function notificationDestination(notification) {
+  if (notification.reviewApplicationId && notification.campaign?.slug) {
+    return notification.reviewAccountType === 'company'
+      ? { name: 'account-campaign-detail', params: { slug: notification.campaign.slug }, query: { review: notification.reviewApplicationId } }
+      : { name: 'account-applications', query: { review: notification.reviewApplicationId } }
+  }
   if (notification.supportTicketId) {
     return { name: notification.supportAdmin ? 'admin-support' : 'account-support', query: { ticket: notification.supportTicketId } }
   }

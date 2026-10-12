@@ -55,7 +55,7 @@ test('admin page responses cannot overwrite a more recent sort or page request',
   const requests = []
   const { state } = await setupView('../src/views/AdminDashboardView.vue', {
     'vue-router': { useRoute: () => ({ meta: { adminSection: 'creators' } }) },
-    '../lib/api': { apiGet: (path) => new Promise((resolve) => requests.push({ path, resolve })), apiRequest: async () => {} },
+    '../lib/api': { formatMoney: (value) => String(value), apiGet: (path) => new Promise((resolve) => requests.push({ path, resolve })), apiRequest: async () => {} },
   }, {}, { setTimeout, clearTimeout })
   const first = state.loadList({ page: 2, limit: 25, sort: 'displayName', direction: 'asc' })
   const second = state.loadList({ page: 3, limit: 25, sort: 'displayName', direction: 'desc' })
@@ -74,6 +74,7 @@ test('homepage search and candidate paging preserve existing featured IDs when s
   const { state } = await setupView('../src/views/AdminDashboardView.vue', {
     'vue-router': { useRoute: () => ({ meta: { adminSection: 'homepage' } }) },
     '../lib/api': {
+      formatMoney: (value) => String(value),
       apiGet: async (path) => {
         if (path.startsWith('/admin/dashboard')) return { data: { metrics: {}, creatorMode: 'featured', creators: [{ id: 100, displayName: 'Featured earlier', featured: true }], companies: [], campaigns: [] } }
         const params = new URLSearchParams(path.split('?')[1])

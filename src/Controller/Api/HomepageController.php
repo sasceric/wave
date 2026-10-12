@@ -18,6 +18,7 @@ use App\Entity\HomepageSettings;
 use App\Entity\User;
 use App\Localization\ApiMessages;
 use App\Localization\LocaleContext;
+use App\Reviews\CollaborationFeedback;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Bundle\SecurityBundle\Security;
@@ -30,7 +31,7 @@ use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
 final class HomepageController
 {
     #[Route('/api/homepage', name: 'api_homepage', methods: ['GET'])]
-    public function homepage(Request $request, EntityManagerInterface $entityManager): JsonResponse
+    public function homepage(Request $request, EntityManagerInterface $entityManager, CollaborationFeedback $feedback): JsonResponse
     {
         $locale = LocaleContext::fromRequest($request);
         if ($locale === null) {
@@ -71,6 +72,7 @@ final class HomepageController
             ->getQuery()
             ->getResult();
 
+        $ratings = $feedback->summaries(array_values(array_filter(array_map(static fn (Creator $creator): ?int => $creator->getOwner()?->getId(), $creators))));
         $hiredCounts = CampaignHiredCounts::forCampaigns($entityManager, $campaigns);
 
         return new JsonResponse([
@@ -82,7 +84,7 @@ final class HomepageController
                         $locale,
                         $categoryLabels[$creator->getCategory()] ?? null,
                         $categoryLabels,
-                    ),
+                    ) + ['rating' => $ratings[$creator->getOwner()?->getId()] ?? ['average' => null, 'reviewCount' => 0, 'completedCampaigns' => 0]],
                     $creators,
                 ),
                 'campaigns' => array_map(static fn (Campaign $campaign): array => CampaignResource::fromEntity($campaign, $locale, categoryLabels: $categoryLabels, hiredCount: $hiredCounts[$campaign->getId()] ?? 0), $campaigns),

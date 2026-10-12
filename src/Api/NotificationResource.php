@@ -33,6 +33,9 @@ final class NotificationResource
             'supportTicketId' => $notification->getSupportTicket()?->getId(),
             'supportAdmin' => $notification->getRecipient()->hasRole('ROLE_ADMIN'),
             'conversationId' => $notification->getConversation()?->getId(),
+            'reviewApplicationId' => $notification->getReviewApplication()?->getId(),
+            'reviewAccountType' => $notification->getReviewApplication() === null ? null
+                : ($notification->getRecipient()->getCreator() !== null ? 'creator' : 'company'),
         ];
     }
 }

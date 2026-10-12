@@ -1,4 +1,6 @@
 <script setup>
+import ProfileReviews from '../components/reviews/ProfileReviews.vue'
+import RatingSummary from '../components/reviews/RatingSummary.vue'
 import SingleSelect from '../components/shared/SingleSelect.vue'
 import RichTextContent from '../components/shared/RichTextContent.vue'
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
@@ -593,6 +595,7 @@ onBeforeUnmount(() => packageDescriptionObserver?.disconnect())
                 <div>
                   <p class="eyebrow">{{ categoryLabel }}<template v-if="creator.city"> · {{ creator.city }}</template></p>
                   <h1>{{ creator.displayName }}</h1>
+                  <RatingSummary :rating="creator.rating" />
                   <p v-if="creator.tagline" class="profile-tagline">{{ creator.tagline }}</p>
                   <div v-if="creator.creatorTypes?.length" class="profile-stat-pills" :aria-label="t('creatorTypes.label')" role="group">
                     <span v-for="type in creator.creatorTypes" :key="type">{{ t(`creatorTypes.options.${type}`) }}</span>
@@ -698,6 +701,7 @@ onBeforeUnmount(() => packageDescriptionObserver?.disconnect())
             </div>
           </section>
 
+          <ProfileReviews kind="creators" :slug="creator.slug" />
         </div>
         <div class="profile-sidebar">
           <aside class="profile-aside">

@@ -592,3 +592,35 @@ before session invalidation; login rebinds existing endpoints. The worker checks
 recipient ID against the uncached live session before displaying/clicking pushes.
 Mismatched inbox/realtime responses refresh the app session. Ship backend and
 frontend together and activate the updated service worker; no migration is needed.
+
+### Campaign feedback and private totals (2026-10-13)
+
+See [campaign reviews](campaign-reviews.md). `CampaignReviewController` and
+`Reviews/CollaborationFeedback` implement two-way, 14-day double-blind reviews for
+finished campaigns with accepted offers. Public averages and lists exclude hidden
+feedback. Creator/company public profiles and cards show ratings; private account
+summaries and admin catalogs show agreed totals grouped by currency. Completed
+campaigns cannot reopen, and accepted offer currencies cannot change. Migration
+`Version20261013100000` adds the completion timestamp and review table; it is applied
+locally. Password changes use PUT `/api/me/password`, the existing CSRF/API client,
+current-password verification and a dedicated rate limiter. No new server service
+or worker configuration is required.
+
+### Credit code assignment and review notifications (2026-10-13)
+
+Admin voucher history now uses `AdminDataTable` with server pagination/sorting,
+full encrypted codes, deletion and recipient assignment. `CreditRecipients` returns
+signed cursor batches of 20 user IDs with name/email; `CreditRecipientSelect` provides
+search and scroll loading. Assignment reserves a code for one account, sends the
+editable `credit_code_assigned` email, and leaves balances untouched until redemption.
+See [credits module](credits-module.md). Migration `Version20261013110000` is applied
+locally; historic hashed-only codes remain valid, with full-code assignment unavailable.
+
+Reviews notify only the other collaboration participant and open the exact review
+form through `?review=<applicationId>`. Score/comment are absent from notifications.
+`Version20261013120000` adds the notification application link and is applied locally.
+Company campaign actions have confirmed Close and Finish operations using the
+ownership-protected status endpoint. Applicant biographies use `RichTextContent`.
+Validation: 278 backend tests (274,565 assertions), 283 frontend tests, PHPStan,
+ESLint and production build passed. SQLite/PostgreSQL migration tests passed; local
+UI fixtures verified assignment on mobile, status actions and formatted biography.

@@ -1,4 +1,5 @@
 <script setup>
+import RatingSummary from '../reviews/RatingSummary.vue'
 import '../../scss/components/creators/CreatorCard.scss'
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
@@ -71,6 +72,7 @@ const startingPrice = computed(() => {
           <h3>{{ creator.displayName }}</h3>
           <strong v-if="startingPrice" class="creator-card__price">{{ startingPrice }}</strong>
         </div>
+        <RatingSummary :rating="creator.rating" compact />
         <p class="creator-card__categories">{{ categories.join(', ') }}</p>
       </div>
     </div>

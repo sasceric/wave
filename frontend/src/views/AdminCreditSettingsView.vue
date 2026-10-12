@@ -1,12 +1,14 @@
 <script setup>
-import { computed, onMounted, ref, watch } from 'vue'
-import { Coins, Copy, KeyRound, Settings2, Trash2 } from '@lucide/vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { Coins, Copy, KeyRound, Settings2, Trash2, UserRoundPlus } from '@lucide/vue'
 import { useI18n } from 'vue-i18n'
 import AccountSidebar from '../components/account/AccountSidebar.vue'
 import AdminPage from '../components/admin/AdminPage.vue'
 import AdminRowActions from '../components/admin/AdminRowActions.vue'
 import ConfirmationModal from '../components/shared/ConfirmationModal.vue'
-import DirectoryPagination from '../components/shared/DirectoryPagination.vue'
+import AdminDataTable from '../components/admin/AdminDataTable.vue'
+import CreditRecipientSelect from '../components/admin/CreditRecipientSelect.vue'
+import FormModal from '../components/shared/FormModal.vue'
 import LocalizedLink from '../components/shared/LocalizedLink.vue'
 import LoadingSkeleton from '../components/shared/LoadingSkeleton.vue'
 import SingleSelect from '../components/shared/SingleSelect.vue'
@@ -25,7 +27,14 @@ const busy = ref(false)
 const error = ref('')
 const notice = ref('')
 const confirming = ref(false)
-const revokeId = ref('')
+const deleteIds = ref([])
+const assigning = ref(null)
+const recipientType = ref('')
+const recipientId = ref(null)
+const assignmentError = ref('')
+const vouchersLoading = ref(false)
+const listOptions = ref({ limit: 25, sort: 'created_at', direction: 'desc' })
+let vouchersRevision = 0
 const pack = ref(50)
 const issued = ref(null)
 const vouchers = ref({ rows: [], page: 1, total: 0 })
@@ -36,10 +45,38 @@ const activation = computed(() => form.value?.paid && !saved.value?.paid)
 function money(minor) {
   return `${new Intl.NumberFormat(locale.value, { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(minor / 100)} KM`
 }
-async function loadVouchers() {
-  const { data } = await apiGet(`/admin/credits/vouchers?page=${page.value}`)
-  vouchers.value = data
-  page.value = data.page
+const columns = computed(() => [
+  { key: 'code', label: t('credits.code') },
+  { key: 'amount', label: t('credits.pack'), sortable: true },
+  { key: 'created_at', label: t('credits.date'), sortable: true, defaultSort: true },
+  { key: 'status', label: t('credits.status'), sortable: true },
+  { key: 'recipient', label: t('credits.assignedTo'), sortable: true },
+])
+const tableLabels = computed(() => ({
+  caption: t('credits.voucherHistory'), loading: t('adminDashboard.loading'), actions: t('credits.actions'),
+  empty: t('credits.emptyVouchers'), deleteSelected: t('adminDashboard.deleteSelected'),
+  pageSize: t('adminDashboard.pageSize'), pagination: t('adminDashboard.pagination'),
+  previous: t('adminDashboard.previous'), next: t('adminDashboard.next'),
+  goToPage: value => t('adminDashboard.goToPage', { page: value }),
+  selectPage: t('adminDashboard.selectPage'), selectRow: name => t('adminDashboard.selectRow', { name }),
+  selected: count => t('adminDashboard.selected', { count }),
+}))
+async function loadVouchers(options) {
+  if (options) { page.value = options.page; listOptions.value = { limit: options.limit, sort: options.sort, direction: options.direction } }
+  const revision = ++vouchersRevision
+  vouchersLoading.value = true
+  try {
+    const { data } = await apiGet(`/admin/credits/vouchers?${new URLSearchParams({ page: page.value, ...listOptions.value })}`)
+    if (revision !== vouchersRevision) return
+    vouchers.value = data
+    page.value = data.page
+  } catch (cause) {
+    if (revision !== vouchersRevision) return
+    if ([401, 403].includes(cause.status)) vouchers.value = { rows: [], page: 1, total: 0 }
+    error.value = cause.message
+  } finally {
+    if (revision === vouchersRevision) vouchersLoading.value = false
+  }
 }
 async function load() {
   loading.value = true
@@ -106,25 +143,43 @@ async function copyCode() {
     notice.value = t('credits.copyManually')
   }
 }
-async function revoke() {
-  if (busy.value) return
+async function deleteVouchers() {
+  if (busy.value || !deleteIds.value.length) return
   busy.value = true
   error.value = ''
   try {
-    await apiRequest(`/admin/credits/vouchers/${revokeId.value}/revoke`, { method: 'POST', body: {} })
-    revokeId.value = ''
+    await apiRequest('/admin/credits/vouchers', { method: 'DELETE', body: { ids: [...deleteIds.value] } })
+    deleteIds.value = []
     await loadVouchers()
-  } catch (cause) {
-    error.value = cause.message
-    revokeId.value = ''
-  } finally {
-    busy.value = false
-  }
+  } catch (cause) { error.value = cause.message }
+  finally { busy.value = false }
 }
-function navigatePage(value) {
-  page.value = value
-  loadVouchers().catch((cause) => { error.value = cause.message })
+function openAssignment(voucher) {
+  assigning.value = voucher
+  recipientType.value = ''
+  recipientId.value = null
+  assignmentError.value = ''
 }
+function closeAssignment() {
+  assigning.value = null
+  recipientId.value = null
+  recipientType.value = ''
+  assignmentError.value = ''
+}
+async function assign() {
+  if (busy.value || !assigning.value || !recipientType.value || !Number.isInteger(recipientId.value)) return
+  busy.value = true
+  assignmentError.value = ''
+  try {
+    await apiRequest(`/admin/credits/vouchers/${assigning.value.id}/assign`, { method: 'POST', body: { accountType: recipientType.value, userId: recipientId.value } })
+    closeAssignment()
+    notice.value = t('credits.assignmentSuccess')
+    await loadVouchers()
+  } catch (cause) { assignmentError.value = cause.message }
+  finally { busy.value = false }
+}
+watch(recipientType, () => { recipientId.value = null })
+onBeforeUnmount(() => { ++vouchersRevision })
 watch(locale, load)
 onMounted(load)
 </script>
@@ -157,16 +212,32 @@ onMounted(load)
             <form class="credits-redeem" @submit.prevent="issue"><SingleSelect v-model="pack" :label="t('credits.pack')" :options="saved.packs.map(item => ({ value: item.amount, label: `${item.amount} ${t('credits.unit')} · ${money(item.priceMinor)}` }))" /><button class="button button--dark" type="submit" :disabled="busy"><Coins :size="17" aria-hidden="true" />{{ t('credits.generate') }}</button></form>
             <div v-if="issued" class="credits-issued" role="status"><p>{{ t('credits.codeReady', { count: issued.amount, price: money(issued.priceMinor) }) }}</p><div><strong>{{ issued.code }}</strong><button type="button" class="button button--outline" @click="copyCode"><Copy :size="16" aria-hidden="true" />{{ t('credits.copy') }}</button></div><small>{{ t('credits.codeOnce') }}</small></div>
           </section>
-          <section class="credit-card credits-history"><header><h2>{{ t('credits.voucherHistory') }}</h2></header>
-            <div v-if="vouchers.rows.length" class="credits-table-wrap"><table class="credits-table"><thead><tr><th>{{ t('credits.code') }}</th><th>{{ t('credits.pack') }}</th><th>{{ t('credits.date') }}</th><th>{{ t('credits.status') }}</th><th>{{ t('credits.redeemedBy') }}</th><th scope="col" class="credits-table__actions">{{ t('credits.actions') }}</th></tr></thead><tbody><tr v-for="voucher in vouchers.rows" :key="voucher.id"><td>••••{{ voucher.suffix }}</td><td>{{ voucher.amount }}<small>{{ money(voucher.price_minor) }}</small></td><td>{{ formatDate(voucher.created_at.replace(' ', 'T') + 'Z') }}</td><td>{{ voucher.revoked_at ? t('credits.revoked') : voucher.redeemed_at ? t('credits.redeemed') : t('credits.available') }}</td><td>{{ voucher.email || '—' }}</td><td class="credits-table__actions"><AdminRowActions v-if="!voucher.revoked_at && !voucher.redeemed_at" :label="t('adminDashboard.rowActions', { name: '••••' + voucher.suffix })"><button class="admin-row-actions__item admin-row-actions__item--danger" role="menuitem" type="button" :disabled="busy" @click="revokeId = voucher.id"><Trash2 :size="15" aria-hidden="true" />{{ t('credits.revoke') }}</button></AdminRowActions></td></tr></tbody></table></div>
-            <StatusMessage v-else variant="empty">{{ t('credits.emptyVouchers') }}</StatusMessage>
-            <DirectoryPagination :page="page" :page-size="10" :total="vouchers.total" :show-page-size="false" show-single-page @update:page="navigatePage" />
+          <section class="credits-voucher-history">
+            <h2>{{ t('credits.voucherHistory') }}</h2>
+            <AdminDataTable :columns="columns" :rows="vouchers.rows" :total="vouchers.total" :current-page="page" :page-size="listOptions.limit" initial-sort-direction="desc" :loading="vouchersLoading" :labels="tableLabels" @change="loadVouchers" @delete-selected="deleteIds = $event">
+              <template #cell-code="{ row }"><code>{{ row.code || '••••' + row.suffix }}</code><small v-if="!row.code" class="credits-voucher-history__hint">{{ t('credits.legacyCode') }}</small></template>
+              <template #cell-amount="{ row }">{{ row.amount }}<small class="credits-voucher-history__hint">{{ money(row.price_minor) }}</small></template>
+              <template #cell-created_at="{ value }">{{ formatDate(value.replace(' ', 'T') + 'Z') }}</template>
+              <template #cell-status="{ value }"><span class="credits-voucher-status" :class="`credits-voucher-status--${value}`">{{ t(`credits.voucherStatuses.${value}`) }}</span></template>
+              <template #cell-recipient="{ row }">{{ row.recipient || '—' }}<small v-if="row.email" class="credits-voucher-history__hint">{{ row.email }}</small></template>
+              <template #actions="{ row }"><AdminRowActions :label="t('adminDashboard.rowActions', { name: row.code || '••••' + row.suffix })">
+                <button v-if="row.status === 'created'" class="admin-row-actions__item" role="menuitem" type="button" :disabled="busy || !row.code" :title="!row.code ? t('credits.legacyCode') : undefined" @click="openAssignment(row)"><UserRoundPlus :size="15" aria-hidden="true" />{{ t('credits.assign') }}</button>
+                <button class="admin-row-actions__item admin-row-actions__item--danger" role="menuitem" type="button" :disabled="busy" @click="deleteIds = [row.id]"><Trash2 :size="15" aria-hidden="true" />{{ t('credits.deleteCode') }}</button>
+              </AdminRowActions></template>
+            </AdminDataTable>
           </section>
         </template>
       </main>
     </div>
     <ConfirmationModal v-model:open="confirming" :title="t('credits.enableTitle')" :message="t('credits.enableConfirm', { grant: form?.welcomeGrant ?? 0, apply: form?.applicationCost ?? 10, post: form?.campaignCost ?? 30 })" :confirm-label="t('credits.enable')" :cancel-label="t('credits.cancel')" :loading="busy" @confirm="save" />
-    <ConfirmationModal :open="Boolean(revokeId)" :title="t('credits.revoke')" :message="t('credits.revokeConfirm')" :confirm-label="t('credits.revoke')" :cancel-label="t('credits.cancel')" :loading="busy" @update:open="!$event && (revokeId = '')" @confirm="revoke" />
+    <ConfirmationModal :open="deleteIds.length > 0" :title="t('credits.deleteCode')" :message="t('credits.deleteConfirm', { count: deleteIds.length })" :confirm-label="t('credits.deleteCode')" :cancel-label="t('credits.cancel')" :loading="busy" @update:open="!$event && (deleteIds = [])" @confirm="deleteVouchers" />
+    <FormModal :open="Boolean(assigning)" :title="t('credits.assign')" :description="t('credits.assignHint')" :busy="busy" @update:open="!$event && closeAssignment()" @submit="assign">
+      <p v-if="assigning" class="credits-assignment-code"><code>{{ assigning.code }}</code> · {{ assigning.amount }} {{ t('credits.unit') }}</p>
+      <SingleSelect v-model="recipientType" :label="t('credits.recipientType')" :options="[{ value: 'creator', label: t('adminDashboard.creators') }, { value: 'company', label: t('adminDashboard.companies') }]" :disabled="busy" required />
+      <CreditRecipientSelect v-if="recipientType" :key="recipientType" v-model="recipientId" :account-type="recipientType" :disabled="busy" />
+      <StatusMessage v-if="assignmentError" variant="error">{{ assignmentError }}</StatusMessage>
+      <template #actions="{ close }"><button class="button button--outline" type="button" :disabled="busy" @click="close">{{ t('credits.cancel') }}</button><button class="button button--dark" type="submit" :disabled="busy || !recipientId">{{ t('credits.assignAndEmail') }}</button></template>
+    </FormModal>
   </AdminPage>
 </template>
 

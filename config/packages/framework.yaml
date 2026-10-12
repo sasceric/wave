@@ -11,6 +11,10 @@ framework:
         gc_maxlifetime: 7776000
 
     rate_limiter:
+        wave_password_change:
+            policy: sliding_window
+            limit: 5
+            interval: '15 minutes'
         wave_search_history:
             policy: sliding_window
             limit: 30

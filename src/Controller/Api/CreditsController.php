@@ -73,20 +73,55 @@ final class CreditsController
             : $this->credits->saveSettings(JsonPayload::fromRequest($request) ?? []));
     }
 
-    #[Route('/api/admin/credits/vouchers', methods: ['GET', 'POST'])]
+    #[Route('/api/admin/credits/vouchers', methods: ['GET', 'POST', 'DELETE'])]
     public function vouchers(Request $request): JsonResponse
     {
         return $this->run($request, true, function (User $user) use ($request): array {
             if ($request->isMethod('GET')) {
-                return $this->credits->vouchers(max(1, $request->query->getInt('page', 1)));
+                return $this->credits->vouchers(
+                    $request->query->getInt('page', 1),
+                    $request->query->getInt('limit', 25),
+                    $request->query->getString('sort', 'created_at'),
+                    $request->query->getString('direction', 'desc'),
+                );
             }
             $data = JsonPayload::fromRequest($request);
+            if ($request->isMethod('DELETE')) {
+                if (!is_array($data['ids'] ?? null) || !array_is_list($data['ids'])) {
+                    throw new CreditException('invalid_request');
+                }
+                return ['deleted' => $this->credits->deleteVouchers($data['ids'])];
+            }
             if (!is_int($data['amount'] ?? null)) {
                 throw new CreditException('credit_invalid_pack');
             }
 
             return $this->credits->issue($user, $data['amount']);
         });
+    }
+
+    #[Route('/api/admin/credits/vouchers/{id}/assign', methods: ['POST'])]
+    public function assign(string $id, Request $request): JsonResponse
+    {
+        return $this->run($request, true, function () use ($id, $request): array {
+            $data = JsonPayload::fromRequest($request);
+            if (!is_int($data['userId'] ?? null) || !is_string($data['accountType'] ?? null)) {
+                throw new CreditException('invalid_request');
+            }
+            return $this->credits->assign($id, $data['userId'], $data['accountType']);
+        });
+    }
+
+    #[Route('/api/admin/credits/vouchers/{id}', methods: ['DELETE'])]
+    public function delete(string $id, Request $request): JsonResponse
+    {
+        return $this->run($request, true, fn (): array => ['deleted' => $this->credits->deleteVouchers([$id])]);
+    }
+
+    #[Route('/api/admin/credits/recipients', methods: ['GET'])]
+    public function recipients(Request $request, \App\Credits\CreditRecipients $recipients): JsonResponse
+    {
+        return $this->run($request, true, fn (): array => $recipients->page($request));
     }
 
     #[Route('/api/admin/credits/vouchers/{id}/revoke', methods: ['POST'])]
@@ -115,6 +150,8 @@ final class CreditsController
         }
         try {
             return new JsonResponse(['data' => $action($user)], headers: ['Cache-Control' => 'no-store']);
+        } catch (\Symfony\Component\Mailer\Exception\TransportExceptionInterface) {
+            return new JsonResponse(['error' => ApiMessages::get('credit_email_failed', $locale)], 503);
         } catch (CreditException $error) {
             return new JsonResponse(['error' => ApiMessages::get($error->key, $locale), 'code' => $error->key], $error->status);
         }

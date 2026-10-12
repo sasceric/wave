@@ -13,6 +13,7 @@ const props = defineProps({
   total: { type: Number, default: null },
   currentPage: { type: Number, default: 1 },
   loading: { type: Boolean, default: false },
+  initialSortDirection: { type: String, default: 'asc', validator: value => ['asc', 'desc'].includes(value) },
 })
 
 const emit = defineEmits(['delete-selected', 'change'])
@@ -21,7 +22,7 @@ const page = ref(props.currentPage)
 const remote = computed(() => props.total !== null)
 const pageSize = ref(props.pageSize)
 const sortKey = ref(props.columns.find(({ defaultSort }) => defaultSort)?.key ?? props.columns.find(({ sortable }) => sortable)?.key ?? '')
-const sortDirection = ref('asc')
+const sortDirection = ref(props.initialSortDirection || 'asc')
 
 const sortedRows = computed(() => {
   if (remote.value || !sortKey.value) return props.rows

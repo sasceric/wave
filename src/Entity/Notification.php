@@ -8,6 +8,7 @@ use Doctrine\ORM\Mapping as ORM;
 #[ORM\Entity]
 #[ORM\Table(name: 'wave_notification')]
 #[ORM\Index(name: 'idx_notification_support', columns: ['recipient_id', 'support_ticket_id', 'read_at'])]
+#[ORM\Index(name: 'idx_notification_review_application', columns: ['review_application_id'])]
 class Notification
 {
     #[ORM\Id]
@@ -35,6 +36,10 @@ class Notification
     #[ORM\JoinColumn(nullable: true, onDelete: 'CASCADE')]
     private ?SupportTicket $supportTicket;
 
+    #[ORM\ManyToOne(targetEntity: Application::class)]
+    #[ORM\JoinColumn(nullable: true, onDelete: 'CASCADE')]
+    private ?Application $reviewApplication = null;
+
     #[ORM\Column(length: 40)]
     private string $type;
 
@@ -51,6 +56,7 @@ class Notification
         ?Campaign $campaign = null,
         ?CampaignConversation $conversation = null,
         ?SupportTicket $supportTicket = null,
+        ?Application $reviewApplication = null,
     ) {
         $this->recipient = $recipient;
         $this->type = $type;
@@ -58,6 +64,7 @@ class Notification
         $this->campaign = $campaign;
         $this->conversation = $conversation;
         $this->supportTicket = $supportTicket;
+        $this->reviewApplication = $reviewApplication;
         $this->createdAt = new DateTimeImmutable();
     }
 
@@ -94,6 +101,11 @@ class Notification
     public function getType(): string
     {
         return $this->type;
+    }
+
+    public function getReviewApplication(): ?Application
+    {
+        return $this->reviewApplication;
     }
 
     public function getCreatedAt(): DateTimeImmutable

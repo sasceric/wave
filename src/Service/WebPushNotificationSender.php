@@ -185,6 +185,9 @@ final class WebPushNotificationSender
 
     private function bodyFor(Notification $notification, string $locale): string
     {
+        if (in_array($notification->getType(), ['review_received', 'review_published'], true)) {
+            return \App\Localization\ApiMessages::get($notification->getType(), $locale);
+        }
         $conversation = $notification->getConversation();
         $sender = $notification->getActor();
         if ($conversation !== null && $sender !== null) {
@@ -230,6 +233,15 @@ final class WebPushNotificationSender
 
     private function targetFor(Notification $notification): string
     {
+        if ($application = $notification->getReviewApplication()) {
+            $recipient = $notification->getRecipient();
+            $creator = $recipient->getCreator() !== null;
+            $route = $creator ? 'account-applications' : 'account-campaign-detail';
+            $params = $creator ? [] : ['slug' => $application->getCampaign()->getSlug()];
+            $path = $this->routes?->localizedPath($route, $recipient->getPreferredLocale(), $params)
+                ?? ($creator ? '/racun/prijave' : '/racun/kampanje/'.rawurlencode($application->getCampaign()->getSlug()));
+            return $path.'?review='.$application->getId();
+        }
         if ($ticket = $notification->getSupportTicket()) {
             $recipient = $notification->getRecipient();
             $route = $recipient->hasRole('ROLE_ADMIN') ? 'admin-support' : 'account-support';

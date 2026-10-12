@@ -511,6 +511,18 @@ final class AccountEmailSender
         ]);
     }
 
+    public function sendCreditCodeAssigned(User $user, string $code, int $amount): void
+    {
+        $copy = CreditCodeEmailCopy::forLocale($user->getPreferredLocale());
+        $name = $user->getCreator()?->getDisplayName() ?? $user->getCompany()?->getName() ?? '';
+        $this->sendMarketplaceEmail($user, 'credit_code_assigned', 'account-credits', [
+            'name' => $name, 'amount' => (string) $amount, 'code' => $code,
+            'greeting' => $copy['greeting'].', '.$name.'!',
+            'message' => sprintf($copy['message'], $amount),
+            'firstValue' => $code, 'secondValue' => (string) $amount,
+        ]);
+    }
+
     public function defaultSubject(string $template, string $locale): string
     {
         return $this->copyFor($template, $locale)['subject'];
@@ -530,7 +542,11 @@ final class AccountEmailSender
             default => $locale,
         };
         $variables['actionUrl'] = 'https://wave.ba/example-action';
-        if ($template === 'credits_activated') {
+        if ($template === 'credit_code_assigned') {
+            $variables += ['name' => 'Amina Kovač', 'amount' => '100', 'code' => 'WAVE2345', 'firstValue' => 'WAVE2345', 'secondValue' => '100'];
+            $variables['greeting'] .= ', Amina Kovač!';
+            $variables['message'] = sprintf($variables['message'], 100);
+        } elseif ($template === 'credits_activated') {
             $variables += ['firstValue' => '2026-10-07', 'secondValue' => '50', 'details' => $variables['applicationLabel'] . ': 10' . "\n" . $variables['campaignLabel'] . ': 30'];
         } elseif ($template === 'application_received') {
             $variables += [
@@ -677,6 +693,9 @@ final class AccountEmailSender
     private function copyFor(string $template, string $locale): array
     {
         $locale = $this->normalizedLocale($locale);
+        if ($template === 'credit_code_assigned') {
+            return CreditCodeEmailCopy::forLocale($locale);
+        }
         if ($template === 'credits_activated') {
             return CreditsEmailCopy::forLocale($locale);
         }

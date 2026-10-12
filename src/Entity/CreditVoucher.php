@@ -9,6 +9,8 @@ use Doctrine\ORM\Mapping as ORM;
 /** Schema mapping; mutations are performed atomically by CreditService. */
 #[ORM\Entity]
 #[ORM\Table(name: 'credit_voucher')]
+#[ORM\Index(name: 'idx_voucher_assigned_to', columns: ['assigned_to_id'])]
+#[ORM\Index(name: 'idx_voucher_created_id', columns: ['created_at', 'id'])]
 class CreditVoucher
 {
     #[ORM\Id]
@@ -17,6 +19,9 @@ class CreditVoucher
 
     #[ORM\Column(length: 64, unique: true)]
     private string $codeHash;
+
+    #[ORM\Column(type: 'text', nullable: true)]
+    private ?string $encryptedCode = null;
 
     #[ORM\Column(length: 4)]
     private string $suffix;
@@ -34,6 +39,13 @@ class CreditVoucher
     #[ORM\ManyToOne(targetEntity: User::class)]
     #[ORM\JoinColumn(nullable: true, onDelete: 'SET NULL')]
     private ?User $redeemedBy = null;
+
+    #[ORM\ManyToOne(targetEntity: User::class)]
+    #[ORM\JoinColumn(nullable: true, onDelete: 'SET NULL')]
+    private ?User $assignedTo = null;
+
+    #[ORM\Column(nullable: true)]
+    private ?\DateTimeImmutable $assignedAt = null;
 
     #[ORM\Column]
     private \DateTimeImmutable $createdAt;
