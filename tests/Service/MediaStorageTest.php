@@ -8,6 +8,7 @@ use App\Service\ImageUploadProcessor;
 use App\Service\MediaStorage;
 use App\Service\MediaThumbnails;
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\RunInSeparateProcess;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
@@ -160,6 +161,7 @@ final class MediaStorageTest extends TestCase
         $this->store($path);
     }
 
+    #[RunInSeparateProcess]
     public function testExcessiveDecodedMemoryIsRejectedBeforeAllocation(): void
     {
         $path = $this->directory.'/huge.png';
@@ -174,6 +176,36 @@ final class MediaStorageTest extends TestCase
         } finally {
             ini_set('memory_limit', $previousLimit);
         }
+    }
+
+    public function testFormatDetectionUsesImageContentWithoutFileinfo(): void
+    {
+        // Client MIME and extension are untrusted. Never invoke the Fileinfo
+        // parser before the decoded-memory guard, even for a supported image.
+        $path = $this->directory.'/upload.txt';
+        file_put_contents($path, '');
+        $file = new class($path, 'upload.txt', 'text/plain', null, true) extends UploadedFile {
+            public function getMimeType(): ?string
+            {
+                throw new \LogicException('Fileinfo must not be used for image uploads.');
+            }
+        };
+        foreach (['jpeg', 'png', 'webp'] as $format) {
+            $image = $this->quadrants(80, 40);
+            match ($format) {
+                'jpeg' => imagejpeg($image, $path),
+                'png' => imagepng($image, $path),
+                'webp' => imagewebp($image, $path, IMG_WEBP_LOSSLESS),
+            };
+            self::assertTrue($this->storage->supports($file), $format);
+            self::assertSame('image/webp', $this->storage->store(
+                $file, new MediaFolder('creator-portfolio', 'Portfolio'), new User('format-test@example.test', 'ROLE_CREATOR'),
+            )['mimeType']);
+        }
+        file_put_contents($path, '<svg xmlns="http://www.w3.org/2000/svg"></svg>');
+        self::assertFalse($this->storage->supports($file));
+        file_put_contents($path, 'This is not an image.');
+        self::assertFalse($this->storage->supports($file));
     }
 
     private function store(string $path): array

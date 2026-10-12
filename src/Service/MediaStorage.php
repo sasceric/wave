@@ -11,7 +11,7 @@ use Symfony\Component\HttpFoundation\File\UploadedFile;
 
 final class MediaStorage
 {
-    private const MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+    private const IMAGE_TYPES = [IMAGETYPE_JPEG, IMAGETYPE_PNG, IMAGETYPE_WEBP];
 
     public function __construct(
         private readonly string $storagePath,
@@ -24,7 +24,11 @@ final class MediaStorage
 
     public function supports(UploadedFile $file): bool
     {
-        return in_array($file->getMimeType(), self::MIME_TYPES, true);
+        // Read image headers without decoding pixels or invoking Fileinfo, whose
+        // format detection can exhaust memory before our processing guard runs.
+        $info = @getimagesize($file->getPathname());
+
+        return $info !== false && in_array($info[2], self::IMAGE_TYPES, true);
     }
 
     public function store(UploadedFile $file, MediaFolder $folder, User $owner): array
