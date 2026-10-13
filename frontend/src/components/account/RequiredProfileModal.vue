@@ -1,6 +1,8 @@
 <script setup>
+import { companyTypeOptions } from '../../lib/companyTypes'
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
+import SingleSelect from '../shared/SingleSelect.vue'
 import MultiSelect from '../shared/MultiSelect.vue'
 import PhoneNumberField from '../shared/PhoneNumberField.vue'
 import SearchableSelect from '../shared/SearchableSelect.vue'
@@ -19,6 +21,7 @@ const props = defineProps({
 
 const emit = defineEmits(['save', 'update:phoneCountry', 'update:profile'])
 const { t } = useI18n()
+const companyTypes = computed(() => companyTypeOptions(t))
 const dialog = ref(null)
 const profile = computed(() => new Proxy(props.profile, {
   set(target, key, value) {
@@ -77,6 +80,7 @@ onBeforeUnmount(() => {
             <span>{{ t('account.companyName') }}</span>
             <input v-model.trim="profile.name" required minlength="2" maxlength="120" autocomplete="organization" autofocus />
           </label>
+          <SingleSelect v-model="profile.companyType" :label="t('companyTypes.label')" :options="companyTypes" required />
           <MultiSelect required
               v-model="profile.industries"
               :options="industryOptions"

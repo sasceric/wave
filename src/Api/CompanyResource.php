@@ -16,6 +16,7 @@ final class CompanyResource
             'slug' => $company->getSlug(),
             'name' => $company->getOwner()?->isDeleted() ? ApiMessages::get('deleted_account', $locale) : $company->getName(),
             'deleted' => $company->getOwner()?->isDeleted() ?? false,
+            'companyType' => $company->getCompanyType(),
             'industries' => $company->getIndustries(),
             'industryLabels' => array_map(
                 static fn (string $value): string => $categoryLabels[$value] ?? ($value === $company->getIndustry() ? ($translation['industry'] ?? $value) : $value),

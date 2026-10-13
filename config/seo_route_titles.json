@@ -39,5 +39,9 @@
   "admin-credit-settings": "credits.adminTitle",
   "admin-qr": "adminQr.title",
   "admin-support": "support.adminTitle",
-  "admin-redirects": "adminRedirects.title"
+  "admin-redirects": "adminRedirects.title",
+  "admin-reports": "safety.reports",
+  "account-blocks": "safety.myBlocks",
+  "account-reviews": "safety.myReviews",
+  "account-dashboard": "personalDashboard.title"
 }

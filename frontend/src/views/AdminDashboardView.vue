@@ -1,12 +1,10 @@
 <script setup>
-import AdminMetrics from '../components/admin/AdminMetrics.vue'
+import AdminOverviewAnalytics from '../components/admin/AdminOverviewAnalytics.vue'
 import AdminPage from '../components/admin/AdminPage.vue'
 import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import {
-  ArrowUpRight,
   Check,
   Building2,
-  ClipboardCheck,
   Eye,
   Megaphone,
   Trash2,
@@ -39,7 +37,8 @@ const error = ref('')
 const notice = ref('')
 const deleteRequest = ref(null)
 const bulkApprovalRequest = ref(null)
-const query = ref('')
+const query = ref(typeof route.query?.q === 'string' ? route.query.q : '')
+watch(() => route.query?.q, value => { query.value = typeof value === 'string' ? value : '' })
 const statusFilter = ref('all')
 const creatorMode = ref('latest')
 const featuredCreatorIds = ref([])
@@ -106,68 +105,6 @@ const multiSelectLabels = computed(() => ({
   remove: (name) => t('adminDashboard.removeOption', { name }),
 }))
 
-const metrics = computed(() => {
-  if (!dashboard.value) return []
-
-  return [
-    {
-      key: 'users',
-      label: t('adminDashboard.users'),
-      detail: t('adminDashboard.metricAllAccounts'),
-      icon: Users,
-      tone: 'sage',
-      group: 'stats',
-    },
-    {
-      key: 'creators',
-      label: t('adminDashboard.creators'),
-      detail: t('adminDashboard.metricCreatorProfiles'),
-      icon: Users,
-      tone: 'blue',
-      group: 'stats',
-      routeName: 'admin-creators',
-    },
-    {
-      key: 'companies',
-      label: t('adminDashboard.companies'),
-      detail: t('adminDashboard.metricCompanyProfiles'),
-      icon: Building2,
-      tone: 'coral',
-      group: 'stats',
-      routeName: 'admin-companies',
-    },
-    {
-      key: 'campaigns',
-      label: t('adminDashboard.campaigns'),
-      detail: t('adminDashboard.metricCampaignListings'),
-      icon: Megaphone,
-      tone: 'violet',
-      group: 'stats',
-      routeName: 'admin-campaigns',
-    },
-    {
-      key: 'pendingRegistrations',
-      label: t('adminDashboard.pendingRegistrations'),
-      detail: t('adminDashboard.metricRegistrationReview'),
-      icon: ClipboardCheck,
-      tone: 'amber',
-      group: 'attention',
-      routeName: 'admin-registrations',
-    },
-    {
-      key: 'pendingApplications',
-      label: t('adminDashboard.pendingApplications'),
-      detail: t('adminDashboard.metricApplicationReview'),
-      icon: ClipboardCheck,
-      tone: 'blue',
-      group: 'attention',
-    },
-  ].map((metric) => ({
-    ...metric,
-    value: dashboard.value.metrics[metric.key],
-  }))
-})
-
 const bulkApprovalConfirmationMessage = computed(() => {
   if (!bulkApprovalRequest.value) return ''
 
@@ -177,9 +114,6 @@ const bulkApprovalConfirmationMessage = computed(() => {
   })
 })
 
-const overviewStats = computed(() => metrics.value.filter(({ group }) => group === 'stats'))
-const pendingMetrics = computed(() => metrics.value.filter(({ group }) => group === 'attention'))
-const pendingTotal = computed(() => pendingMetrics.value.reduce((total, metric) => total + metric.value, 0))
 
 const currentRows = computed(() => listRows.value)
 
@@ -447,7 +381,7 @@ async function confirmBulkApproval() {
 }
 
 watch([locale, section], () => {
-  query.value = ''
+  query.value = typeof route.query?.q === 'string' ? route.query.q : ''
   statusFilter.value = 'all'
   listVersion++
   listRows.value = []
@@ -499,70 +433,7 @@ onMounted(loadDashboard)
         <StatusMessage v-if="error" variant="error">{{ error }}</StatusMessage>
         <StatusMessage v-if="notice">{{ notice }}</StatusMessage>
 
-        <section v-if="section === 'overview'" class="admin-overview">
-          <section class="admin-overview__section">
-            <header class="admin-overview__section-heading">
-              <div>
-                <h2>{{ t('adminDashboard.overviewSnapshot') }}</h2>
-                <p>{{ t('adminDashboard.overviewSnapshotHint') }}</p>
-              </div>
-              <span>{{ t('adminDashboard.overviewEyebrow') }}</span>
-            </header>
-            <AdminMetrics class="admin-dashboard__metrics">
-              <component
-                :is="metric.routeName ? LocalizedLink : 'article'"
-                v-for="metric in overviewStats"
-                :key="metric.key"
-                class="admin-dashboard__metric"
-                :class="`admin-dashboard__metric--${metric.tone}`"
-                :to="metric.routeName ? { name: metric.routeName } : undefined"
-              >
-                <span class="admin-dashboard__metric-icon">
-                  <component :is="metric.icon" :size="19" aria-hidden="true" />
-                </span>
-                <span class="admin-dashboard__metric-copy">
-                  <span>{{ metric.label }}</span>
-                  <strong>{{ metric.value }}</strong>
-                  <small>{{ metric.detail }}</small>
-                </span>
-                <ArrowUpRight v-if="metric.routeName" class="admin-dashboard__metric-arrow" :size="16" aria-hidden="true" />
-              </component>
-            </AdminMetrics>
-          </section>
-
-          <section class="admin-overview__section">
-            <header class="admin-overview__section-heading">
-              <div>
-                <h2>{{ t('adminDashboard.needsAttention') }}</h2>
-                <p>{{ t('adminDashboard.needsAttentionHint') }}</p>
-              </div>
-              <span class="admin-overview__attention-total">
-                {{ pendingTotal }}
-                {{ t('adminDashboard.pendingItems') }}
-              </span>
-            </header>
-            <div class="admin-dashboard__attention">
-              <component
-                :is="metric.routeName ? LocalizedLink : 'article'"
-                v-for="metric in pendingMetrics"
-                :key="metric.key"
-                class="admin-dashboard__attention-card"
-                :class="`admin-dashboard__attention-card--${metric.tone}`"
-                :to="metric.routeName ? { name: metric.routeName } : undefined"
-              >
-                <span class="admin-dashboard__attention-icon">
-                  <component :is="metric.icon" :size="18" aria-hidden="true" />
-                </span>
-                <span class="admin-dashboard__attention-copy">
-                  <strong>{{ metric.label }}</strong>
-                  <small>{{ metric.detail }}</small>
-                </span>
-                <span class="admin-dashboard__attention-value">{{ metric.value }}</span>
-                <ArrowUpRight v-if="metric.routeName" class="admin-dashboard__metric-arrow" :size="16" aria-hidden="true" />
-              </component>
-            </div>
-          </section>
-        </section>
+        <AdminOverviewAnalytics v-if="section === 'overview'" :metrics="dashboard.metrics" />
 
         <section v-else-if="section === 'homepage'" class="admin-dashboard__panel">
           <form v-form-validation class="admin-dashboard__form" @submit.prevent="saveCuration">

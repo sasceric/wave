@@ -1,4 +1,5 @@
 <script setup>
+import { companyTypeOptions } from '../../lib/companyTypes'
 import AccountPage from './AccountPage.vue'
 import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
@@ -16,6 +17,7 @@ import {
 } from '@lucide/vue'
 import LanguageSwitcher from '../shared/LanguageSwitcher.vue'
 import StatusMessage from '../shared/StatusMessage.vue'
+import SingleSelect from '../shared/SingleSelect.vue'
 import MultiSelect from '../shared/MultiSelect.vue'
 import DatePicker from '../shared/DatePicker.vue'
 import { dateOnly } from '../../lib/datePicker'
@@ -31,6 +33,7 @@ const emit = defineEmits(['authenticated'])
 const route = useRoute()
 const router = useRouter()
 const { t, locale } = useI18n()
+const companyTypes = computed(() => companyTypeOptions(t))
 const { categories, industries, error: catalogError } = useMarketplaceCatalog(locale, { includeIndustries: true })
 const mode = ref(['register', 'reset'].includes(route.query.mode) ? route.query.mode : 'login')
 const busy = ref(false)
@@ -52,6 +55,7 @@ const form = reactive({
   country: '',
   city: '',
   industries: [],
+  companyType: 'brand',
 })
 const phoneCountry = computed({
   get: () => form.phoneCountry,
@@ -193,7 +197,7 @@ async function submit() {
             categories: form.categories,
             birthday: form.birthday || null,
           }
-        : { industries: form.industries }),
+        : { industries: form.industries, companyType: form.companyType }),
     })
   }
 
@@ -416,6 +420,7 @@ function changeMode(nextMode) {
           />
         </template>
         <template v-else>
+          <SingleSelect v-model="form.companyType" :label="t('companyTypes.label')" :options="companyTypes" required />
           <MultiSelect required
               v-model="form.industries"
               :options="industries || []"

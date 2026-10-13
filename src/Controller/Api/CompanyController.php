@@ -19,7 +19,7 @@ use Symfony\Component\Routing\Attribute\Route;
 
 final class CompanyController
 {
-    public function __construct(private readonly CollaborationFeedback $feedback)
+    public function __construct(private readonly CollaborationFeedback $feedback, private readonly \App\Safety\BlockPolicy $blocks)
     {
     }
 
@@ -32,6 +32,8 @@ final class CompanyController
         }
 
         $query = trim($request->query->getString('q'));
+        $companyTypes = \App\Account\CompanyTypes::parse(json_decode($request->query->getString('companyTypes', '[]'), true));
+        if ($companyTypes === null) return new JsonResponse(['error' => ApiMessages::get('invalid_request', $locale)], 400);
         $industry = trim($request->query->getString('industry'));
         $industries = json_decode($request->query->getString('industries', '[]'), true);
         if (!is_array($industries) || !array_is_list($industries) || count($industries) > 100 || array_filter($industries, static fn ($value): bool => !is_string($value) || mb_strlen($value) > 255) !== []) {
@@ -74,7 +76,7 @@ final class CompanyController
         $today = (new \DateTimeImmutable('today'))->format('Y-m-d H:i:s');
         $baseSql = <<<'SQL'
             SELECT * FROM (
-                SELECT c.id, c.featured, c.verified, c.name, c.industry, c.about,
+                SELECT c.id, c.featured, c.verified, c.name, c.company_type, c.industry, c.about,
                     u.city, u.country_code,
                     COALESCE(i.available_campaign_count, (
                         SELECT COUNT(*) FROM campaign a
@@ -87,12 +89,14 @@ final class CompanyController
             ) ranked WHERE 1 = 1
             SQL;
         $countBaseSql = <<<'SQL'
-            SELECT c.id, c.featured, c.verified, c.name, c.industry, c.about,
+            SELECT c.id, c.featured, c.verified, c.name, c.company_type, c.industry, c.about,
                 u.city, u.country_code
             FROM company c
             LEFT JOIN wave_user u ON u.id = c.owner_id
             WHERE u.id IS NULL OR (u.approved = TRUE AND u.hide_my_account = FALSE)
             SQL;
+        $baseSql = str_replace('WHERE u.id IS NULL OR (u.approved = TRUE AND u.hide_my_account = FALSE)', 'WHERE (u.id IS NULL OR (u.approved = TRUE AND u.hide_my_account = FALSE)) AND '.$this->blocks->visible('u.id'), $baseSql);
+        $countBaseSql .= ' AND '.$this->blocks->visible('u.id');
         $params = ['today' => $today];
         $parameterTypes = ['today' => \Doctrine\DBAL\ParameterType::STRING];
 
@@ -101,6 +105,11 @@ final class CompanyController
             $conditions[] = "(LOWER(name) LIKE :query OR LOWER(industry) LIKE :query OR EXISTS (SELECT 1 FROM company_industry ci WHERE ci.company_id = ranked.id AND LOWER(ci.value) LIKE :query) OR LOWER(COALESCE(about, '')) LIKE :query OR LOWER(COALESCE(city, '')) LIKE :query)";
             $params['query'] = '%' . mb_strtolower($query) . '%';
             $parameterTypes['query'] = \Doctrine\DBAL\ParameterType::STRING;
+        }
+        if ($companyTypes !== []) {
+            $conditions[] = 'company_type IN (:companyTypes)';
+            $params['companyTypes'] = $companyTypes;
+            $parameterTypes['companyTypes'] = \Doctrine\DBAL\ArrayParameterType::STRING;
         }
         if ($industry !== '') {
             $conditions[] = '(LOWER(industry) LIKE :industry OR EXISTS (SELECT 1 FROM company_industry ci WHERE ci.company_id = ranked.id AND LOWER(ci.value) LIKE :industry))';
@@ -258,6 +267,8 @@ final class CompanyController
             return new JsonResponse(['error' => ApiMessages::get('unsupported_language', 'bs')], 400);
         }
         $visible = " FROM company c LEFT JOIN wave_user u ON u.id = c.owner_id WHERE (u.id IS NULL OR (u.approved = TRUE AND u.hide_my_account = FALSE))";
+        $visible .= ' AND '.$this->blocks->visible('u.id');
+        $typeCounts = array_column($entityManager->getConnection()->fetchAllAssociative('SELECT c.company_type AS value, COUNT(*) AS count'.$visible.' GROUP BY c.company_type'), 'count', 'value');
         $rows = $entityManager->getConnection()->fetchAllAssociative(
             "SELECT selections.value, COUNT(DISTINCT c.id) AS count, MIN(c.id) AS id FROM company c
                 LEFT JOIN wave_user u ON u.id = c.owner_id
@@ -282,6 +293,7 @@ final class CompanyController
             'SELECT u.country_code AS value, COUNT(*) AS count' . $visible . " AND u.country_code IS NOT NULL AND u.country_code <> '' GROUP BY u.country_code ORDER BY u.country_code",
         );
         return new JsonResponse(['data' => [
+            'companyTypes' => array_map(static fn (string $value): array => ['value' => $value, 'count' => (int) ($typeCounts[$value] ?? 0)], \App\Account\CompanyTypes::values()),
             'industries' => array_map(static fn (array $option): array => $option + ['count' => (int) ($counts[$option['value']] ?? 0)], $options),
             'countries' => array_map(static fn (array $row): array => ['value' => $row['value'], 'count' => (int) $row['count']], $countries),
         ]]);
@@ -319,7 +331,7 @@ final class CompanyController
         }
 
         if (str_ends_with($request->getPathInfo(), '/reviews')) {
-            return new JsonResponse($owner === null ? ['data' => [], 'summary' => $this->feedback->summary(null), 'meta' => ['hasMore' => false, 'nextCursor' => null]] : $this->feedback->publicReviews($owner, $locale, max(0, $request->query->getInt('before'))));
+            return new JsonResponse($owner === null ? ['data' => [], 'summary' => $this->feedback->summary(null), 'meta' => ['hasMore' => false, 'nextCursor' => null]] : $this->feedback->publicReviews($owner, $locale, max(0, $request->query->getInt('before')), max(1, $request->query->getInt('page', 1))));
         }
         return new JsonResponse(['data' => CompanyResource::fromEntity($company, $locale, categoryLabels: MarketplaceCategoryLabels::forLocale($entityManager, $locale)) + ['rating' => $this->feedback->summary($owner)]]);
     }

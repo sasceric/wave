@@ -92,3 +92,34 @@ test('homepage search and candidate paging preserve existing featured IDs when s
   await state.saveCuration()
   assert.deepEqual(Array.from(saved.featuredCreatorIds), [100])
 })
+
+
+test('table totals count the full matching dataset, including empty results, rather than the current page', async () => {
+  const props = vue.reactive({ columns: [], rows: [{ id: 26 }], labels: {}, pageSize: 25, total: 61, currentPage: 2 })
+  const { state } = await setupView('../src/components/admin/AdminDataTable.vue', {}, props)
+  assert.equal(state.totalResults.value, 61)
+  props.total = 0
+  props.rows = []
+  await vue.nextTick()
+  assert.equal(state.totalResults.value, 0)
+  props.total = null
+  props.rows = Array.from({ length: 30 }, (_, id) => ({ id }))
+  await vue.nextTick()
+  assert.equal(state.totalResults.value, 30)
+  assert.equal(state.visibleRows.value.length, 25)
+})
+
+test('read-only tables distinguish known totals from loaded pages when the API has no total', async () => {
+  const props = vue.reactive({ total: 61, rows: 25, page: 2, hasMore: true })
+  const { state } = await setupView('../src/components/admin/AdminTableResults.vue', {}, props)
+  assert.equal(state.count.value, 61)
+  assert.equal(state.knownTotal.value, true)
+  props.total = null
+  await vue.nextTick()
+  assert.equal(state.count.value, 25)
+  assert.equal(state.knownTotal.value, false)
+  props.page = 1
+  props.hasMore = false
+  await vue.nextTick()
+  assert.equal(state.knownTotal.value, true)
+})

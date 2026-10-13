@@ -31,7 +31,7 @@ use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
 final class HomepageController
 {
     #[Route('/api/homepage', name: 'api_homepage', methods: ['GET'])]
-    public function homepage(Request $request, EntityManagerInterface $entityManager, CollaborationFeedback $feedback): JsonResponse
+    public function homepage(Request $request, EntityManagerInterface $entityManager, CollaborationFeedback $feedback, \App\Safety\BlockPolicy $blocks): JsonResponse
     {
         $locale = LocaleContext::fromRequest($request);
         if ($locale === null) {
@@ -41,6 +41,7 @@ final class HomepageController
         $mode = $entityManager->find(HomepageSettings::class, 1)?->getCreatorMode() ?? HomepageSettings::MODE_LATEST;
         $creatorQuery = $entityManager->getRepository(Creator::class)->createQueryBuilder('creator')
             ->leftJoin('creator.owner', 'creatorOwner')
+            ->andWhere($blocks->visible('creatorOwner.id'))
             ->andWhere('creatorOwner.id IS NULL OR (creatorOwner.approved = :approved AND creatorOwner.hideMyAccount = :visible)')
             ->setParameter('approved', true)
             ->setParameter('visible', false);
@@ -60,6 +61,7 @@ final class HomepageController
             ->leftJoin('company.owner', 'companyOwner')
             ->andWhere('campaign.status = :status')
             ->andWhere('campaign.closesAt >= :today')
+            ->andWhere($blocks->visible('companyOwner.id'))
             ->andWhere('companyOwner.id IS NULL OR (companyOwner.approved = :approved AND companyOwner.hideMyAccount = :visible)')
             ->setParameter('status', 'open')
             ->setParameter('today', new \DateTimeImmutable('today'))

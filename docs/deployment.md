@@ -434,3 +434,28 @@ Assignment queues an email and reserves a code; it does not grant credits. Keep
 `APP_SECRET` stable and the existing email/push workers running. No new environment
 variable or Mercure topic is required. Legacy hashed-only codes stay valid but cannot
 be recovered for display or assignment emails.
+
+### Marketplace reports and personal blocks (2026-10-13)
+
+Apply `Version20261013130000` before serving this build. It creates the report,
+private evidence, modal-notice and block tables. It is already applied locally and
+its SQLite/PostgreSQL migration tests pass. See [marketplace safety](marketplace-safety.md).
+Existing realtime/push/email workers continue to work; there is no new Mercure
+configuration, queue type or environment variable. Keep the existing media storage
+writable for compressed private screenshot uploads. Deploy only through the normal
+approved workflow; this implementation has not been pushed or deployed.
+
+
+### Confirmed campaign hiring (2026-10-13)
+
+Apply `Version20261013150000` before serving this build. It adds nullable chat-event
+metadata while retaining existing message history. The migration is applied locally
+and tested on PostgreSQL and SQLite. See [campaign hiring](campaign-hiring.md) for
+invitation rows, negotiated offers and creator confirmation. Existing email and
+Mercure workers suffice. This change has not been pushed or deployed.
+
+Company Brand/Agency classification uses migration `Version20261013170000`
+(`company.company_type`, default `brand`, plus an index). It is applied locally;
+run the normal migration step with the backend/frontend release. The personal
+Pregled dashboard and its login redirects require no additional worker or server
+configuration. See [personal overview](personal-overview.md).

@@ -17,7 +17,7 @@ const props = defineProps({
 const emit = defineEmits(['update:page', 'update:pageSize'])
 const { t } = useI18n()
 
-const pageCount = computed(() => Math.ceil(props.total / props.pageSize))
+const pageCount = computed(() => Math.max(1, Math.ceil(props.total / props.pageSize)))
 const pageItems = computed(() => paginationItems(props.page, pageCount.value))
 
 watch(pageCount, (count) => {
@@ -33,7 +33,7 @@ function changePageSize(event) {
 </script>
 
 <template>
-  <div v-if="total > 0" class="directory-pagination">
+  <div v-if="total > 0 || showSinglePage" class="directory-pagination">
     <label v-if="showPageSize" class="directory-pagination__page-size">
       <span>{{ t('directoryPagination.itemsPerPage') }}</span>
       <select :value="pageSize" :aria-label="t('directoryPagination.itemsPerPage')" @change="changePageSize">

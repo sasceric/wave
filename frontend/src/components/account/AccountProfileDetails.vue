@@ -22,6 +22,7 @@ const countryName = computed(() => props.countryOptions.find(
 )?.label || props.profile.countryCode)
 const basics = computed(() => [
   [UserRound, isCreator.value ? t('auth.name') : t('account.companyName'), isCreator.value ? props.profile.displayName : props.profile.name],
+  ...(!isCreator.value ? [[Building2, t('companyTypes.label'), t(`companyTypes.options.${props.profile.companyType || 'brand'}`)]] : []),
   ...(isCreator.value ? [[UsersRound, t('creatorTypes.label'), (props.profile.creatorTypes || []).map((type) => t(`creatorTypes.options.${type}`))]] : []),
   [BadgeCheck, isCreator.value ? t('auth.category') : t('auth.industry'), isCreator.value
     ? (props.profile.categories || [props.profile.category]).filter(Boolean).map((value) => (

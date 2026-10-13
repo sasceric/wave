@@ -22,6 +22,7 @@ use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
 
 final class CampaignBookmarkController
 {
+    public function __construct(private readonly \App\Safety\BlockPolicy $blocks) {}
     #[Route('/api/me/bookmarks', name: 'api_my_campaign_bookmarks', methods: ['GET'])]
     public function index(
         Request $request,
@@ -44,6 +45,7 @@ final class CampaignBookmarkController
             ->andWhere('bookmark.user = :user')
             ->andWhere('campaign.status = :status')
             ->andWhere('campaign.closesAt >= :today')
+            ->andWhere($this->blocks->visible('companyOwner.id'))
             ->andWhere('companyOwner.id IS NULL OR (companyOwner.approved = :approved AND companyOwner.hideMyAccount = :visible)')
             ->setParameter('user', $user)
             ->setParameter('status', 'open')

@@ -48,7 +48,8 @@ participants cannot submit reviews. Review bodies are rendered as escaped text.
   feedback; POST validates and submits. Another participant's hidden feedback is
   never returned.
 - GET `/api/creators/{slug}/reviews`, `/api/companies/{slug}/reviews`: ten records
-  with an ID `before` cursor and public summary. Existing profile visibility rules
+  per numbered `page`, with total/page metadata and a public summary. The ID `before`
+  cursor remains supported for older clients. Existing profile visibility rules
   apply to both endpoints.
 - GET `/api/me/collaboration-summary`: authenticated owner's financial totals and
   rating summary, with `private, no-store` and an owner ID to discard responses

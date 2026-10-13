@@ -1,4 +1,5 @@
 <script setup>
+import MarketplaceSafetyActions from '../components/shared/MarketplaceSafetyActions.vue'
 import CreditActionNotice from '../components/account/CreditActionNotice.vue'
 import { refreshCredits } from '../composables/useCredits'
 import CampaignHiringProgress from '../components/campaigns/CampaignHiringProgress.vue'
@@ -25,6 +26,9 @@ const applicationMessage = ref('')
 const applicationSent = ref(false)
 const applicationFormOpen = ref(false)
 const alreadyApplied = ref(false)
+const invitation = ref(null)
+const engaged = ref(false)
+const collaborationCancelled = ref(false)
 const user = ref(null)
 const { t, locale } = useI18n()
 
@@ -36,19 +40,24 @@ async function loadCampaign() {
   applicationSent.value = false
   applicationFormOpen.value = false
   alreadyApplied.value = false
+  invitation.value = null
+  engaged.value = false
+  collaborationCancelled.value = false
   try {
     const [response] = await Promise.all([
       apiGet(`/campaigns/${encodeURIComponent(slug)}`),
-      apiGet('/auth/me').then(({ data }) => (user.value = data)).catch(() => (user.value = null)),
+      apiGet('/auth/session').then(({ data }) => (user.value = data)).catch(() => (user.value = null)),
     ])
     campaign.value = response.data
 
     if (user.value?.accountType === 'creator') {
       try {
-        const applicationsResponse = await apiGet('/me/applications')
-        alreadyApplied.value = applicationsResponse.data.some(
-          (application) => application.campaign.slug === slug,
-        )
+        const [applicationsResponse, invitationsResponse] = await Promise.all([apiGet('/me/applications'), apiGet('/me/invitations')])
+        const application = applicationsResponse.data.find(item => item.campaign.slug === slug)
+        alreadyApplied.value = Boolean(application)
+        engaged.value = application?.offer?.status === 'accepted'
+        collaborationCancelled.value = application?.status === 'cancelled' || application?.offer?.status === 'cancelled'
+        invitation.value = invitationsResponse.data.find(item => item.campaign.slug === slug && item.status !== 'declined') || null
       } catch (cause) {
         applyError.value = cause.message
       }
@@ -68,7 +77,7 @@ async function loadCampaign() {
 }
 
 async function applyToCampaign() {
-  if (applying.value) return
+  if (applying.value || invitation.value || alreadyApplied.value || engaged.value) return
   applying.value = true
   applyError.value = ''
   try {
@@ -141,6 +150,7 @@ onMounted(loadCampaign)
               {{ campaign.status === 'open' ? t('campaignDetail.openCampaign') : t(`account.${campaign.status}`) }}
             </p>
             <h1>{{ campaign.title }}</h1>
+            <MarketplaceSafetyActions kind="campaign" :slug="campaign.slug" :owner-slug="campaign.company.slug" />
             <p class="brief-hero__summary">{{ campaign.summary }}</p>
             <RouterLink
               class="brief-hero__brand brief-hero__brand-link"
@@ -185,7 +195,8 @@ onMounted(loadCampaign)
               <strong>{{ formatDate(campaign.closesAt) }}</strong>
             </div>
 
-            <div v-if="campaign.readOnly" class="brief-notice" role="status">{{ t('campaignChat.deletedAccountNotice') }}</div>
+            <div v-if="campaign.status === 'cancelled'" class="brief-notice" role="status">{{ t('account.cancelled') }}</div>
+            <div v-else-if="campaign.readOnly" class="brief-notice" role="status">{{ t('campaignChat.deletedAccountNotice') }}</div>
             <div
               v-else-if="!campaign.readOnly && user?.accountType === 'creator' && user.emailVerified === false"
               class="brief-notice"
@@ -203,6 +214,12 @@ onMounted(loadCampaign)
               {{ t('account.approvalPendingNotice') }}
             </div>
             <div v-else-if="campaign.status !== 'open'" class="brief-notice" role="status">{{ t(`account.${campaign.status}`) }}</div>
+            <div v-else-if="collaborationCancelled" class="brief-notice" role="status">{{ t('hiring.cancelledNotice') }}</div>
+            <div v-else-if="engaged" class="brief-notice" role="status">{{ t('hiring.hired') }}</div>
+            <div v-else-if="invitation" class="brief-notice" role="status">
+              <p>{{ t('hiring.invitedHint') }}</p>
+              <RouterLink class="button button--dark button--full" :to="invitation.conversationId ? { name: 'messages', query: { conversation: invitation.conversationId } } : { name: 'account-applications' }">{{ t(invitation.conversationId ? 'account.activityChat' : 'hiring.viewInvitation') }} <ArrowRight :size="17" aria-hidden="true" /></RouterLink>
+            </div>
             <div v-else-if="user?.accountType === 'creator' && alreadyApplied" class="brief-notice" role="status">
               {{ t('campaignDetail.alreadyApplied') }}
             </div>

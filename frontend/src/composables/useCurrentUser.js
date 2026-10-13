@@ -3,8 +3,10 @@ import { apiGet } from '../lib/api'
 
 export const currentUser = ref(null)
 let sessionRevision = 0
+let sessionLoaded = false
 
 export function setCurrentUser(user) {
+  sessionLoaded = true
   sessionRevision += 1
   currentUser.value = user
 }
@@ -23,4 +25,8 @@ export async function loadCurrentUser() {
   }
 
   return currentUser.value
+}
+
+export async function ensureCurrentUser() {
+  return sessionLoaded ? currentUser.value : loadCurrentUser()
 }

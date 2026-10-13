@@ -31,12 +31,13 @@ final class WebPushNotificationSender
         #[Autowire('%env(bool:WAVE_NOTIFICATIONS_ENABLED)%')] private readonly bool $notificationsEnabled = true,
         private readonly ?HttpClientInterface $httpClient = null,
         private readonly ?LocalizedRouteMap $routes = null,
+        private readonly ?\App\Safety\BlockPolicy $blocks = null,
     ) {
     }
 
     public function send(Notification $notification, ?CampaignMessage $message = null): void
     {
-        if (!$notification->getRecipient()->isNotificationsEnabled()) {
+        if (!$notification->getRecipient()->isNotificationsEnabled() || $this->blocks?->pair($notification->getRecipient()->getId(), $notification->getActor()?->getId())) {
             return;
         }
         if ('' === $this->publicKey || '' === $this->privateKey) {
@@ -51,7 +52,7 @@ final class WebPushNotificationSender
 
         if ($this->queued && $this->jobs !== null) {
             foreach ($subscriptions as $subscription) {
-                $this->jobs->enqueue('SendWebPushMessage', ['subscriptionId' => $subscription->getId(), 'userId' => $notification->getRecipient()->getId(), 'title' => $this->titleFor($notification), 'body' => $message === null ? $this->bodyFor($notification, $subscription->getLocale()) : $this->trimPreview($message->getBody()), 'url' => $this->targetFor($notification)], 'push:' . $notification->getId() . ':' . $subscription->getId());
+                $this->jobs->enqueue('SendWebPushMessage', ['subscriptionId' => $subscription->getId(), 'notificationId' => $notification->getId(), 'senderId' => $notification->getActor()?->getId(), 'userId' => $notification->getRecipient()->getId(), 'title' => $this->titleFor($notification), 'body' => $message === null ? $this->bodyFor($notification, $subscription->getLocale()) : $this->trimPreview($message->getBody()), 'url' => $this->targetFor($notification)], 'push:' . $notification->getId() . ':' . $subscription->getId());
             }
 
             return;
@@ -121,16 +122,18 @@ final class WebPushNotificationSender
 
     public function sendInquiry(User $recipient, User $sender, int $inquiryId, string $body, int $messageId): void
     {
+        if ($this->blocks?->pair($recipient->getId(), $sender->getId())) { return; }
         if (!$recipient->isNotificationsEnabled() || !$this->notificationsEnabled || !$this->queued || $this->jobs === null || $this->publicKey === '' || $this->privateKey === '') {
             return;
         }
         foreach ($this->entityManager->getRepository(UserPushSubscription::class)->findBy(['user' => $recipient]) as $subscription) {
-            $this->jobs->enqueue('SendWebPushMessage', ['subscriptionId' => $subscription->getId(), 'userId' => $recipient->getId(), 'title' => $sender->getCreator()?->getDisplayName() ?? $sender->getCompany()?->getName() ?? 'Wave', 'body' => $this->trimPreview($body), 'url' => '/messages?inquiry=' . $inquiryId], 'inquiry-push:' . $messageId . ':' . $subscription->getId());
+            $this->jobs->enqueue('SendWebPushMessage', ['subscriptionId' => $subscription->getId(), 'senderId' => $sender->getId(), 'userId' => $recipient->getId(), 'title' => $sender->getCreator()?->getDisplayName() ?? $sender->getCompany()?->getName() ?? 'Wave', 'body' => $this->trimPreview($body), 'url' => '/messages?inquiry=' . $inquiryId], 'inquiry-push:' . $messageId . ':' . $subscription->getId());
         }
     }
 
     public function deliver(array $payload): void
     {
+        if ($this->blocks !== null && !$this->blocks->eventAllowed((int) $payload['userId'], $payload)) { return; }
         $subscription = $this->entityManager->find(UserPushSubscription::class, (int) $payload['subscriptionId']);
         if (!$subscription instanceof UserPushSubscription || $subscription->getUser()->getId() !== (int) $payload['userId']) {
             return;
@@ -254,11 +257,11 @@ final class WebPushNotificationSender
         }
 
         return match ($notification->getType()) {
-            'campaign_invitation' => '/account/invitations',
+            'campaign_invitation', 'campaign_cancelled' => '/account/applications',
             'application_received', 'invitation_accepted', 'invitation_declined', 'offer_accepted', 'offer_declined' => '/account/campaigns',
             'application_shortlisted', 'application_rejected' => '/account/applications',
             'creator_inquiry_received', 'creator_inquiry_accepted', 'creator_inquiry_rejected' => '/account/inquiries',
-            'offer_received' => '/account/offers',
+            'offer_received' => '/account/applications',
             default => '/account',
         };
     }

@@ -14,7 +14,7 @@ final class CampaignInvitationResource
 
         return [
             'id' => $invitation->getId(),
-            'readOnly' => AccountDeletion::sharedHistoryDeleted($invitation->getCreator(), $campaign->getCompany()),
+            'readOnly' => $campaign->getStatus() === 'cancelled' || AccountDeletion::sharedHistoryDeleted($invitation->getCreator(), $campaign->getCompany()),
             'status' => $invitation->getStatus(),
             'conversationId' => $conversationId,
             'message' => $invitation->getMessage(),

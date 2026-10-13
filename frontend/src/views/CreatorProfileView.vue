@@ -1,4 +1,5 @@
 <script setup>
+import MarketplaceSafetyActions from '../components/shared/MarketplaceSafetyActions.vue'
 import ProfileReviews from '../components/reviews/ProfileReviews.vue'
 import RatingSummary from '../components/reviews/RatingSummary.vue'
 import SingleSelect from '../components/shared/SingleSelect.vue'
@@ -701,6 +702,7 @@ onBeforeUnmount(() => packageDescriptionObserver?.disconnect())
             </div>
           </section>
 
+          <MarketplaceSafetyActions kind="creator" :slug="creator.slug" />
           <ProfileReviews kind="creators" :slug="creator.slug" />
         </div>
         <div class="profile-sidebar">

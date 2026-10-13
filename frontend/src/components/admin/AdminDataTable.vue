@@ -1,11 +1,13 @@
 <script setup>
 import AdminTableFrame from './AdminTableFrame.vue'
 import AdminPagination from './AdminPagination.vue'
+import AdminTableResults from './AdminTableResults.vue'
 import { computed, ref, watch } from 'vue'
 import LoadingSkeleton from '../shared/LoadingSkeleton.vue'
 import { SearchX } from '@lucide/vue'
 
 const props = defineProps({
+  selectable: { type: Boolean, default: true },
   columns: { type: Array, required: true },
   rows: { type: Array, required: true },
   labels: { type: Object, required: true },
@@ -34,7 +36,8 @@ const sortedRows = computed(() => {
   })
 })
 
-const pageCount = computed(() => Math.max(1, Math.ceil((props.total ?? sortedRows.value.length) / pageSize.value)))
+const totalResults = computed(() => props.total ?? sortedRows.value.length)
+const pageCount = computed(() => Math.max(1, Math.ceil(totalResults.value / pageSize.value)))
 const visibleRows = computed(() => remote.value ? props.rows : sortedRows.value.slice((page.value - 1) * pageSize.value, page.value * pageSize.value))
 const visibleIds = computed(() => visibleRows.value.map(({ id }) => id))
 const allVisibleSelected = computed(() => visibleIds.value.length > 0 && visibleIds.value.every((id) => selectedIds.value.includes(id)))
@@ -98,7 +101,7 @@ function sortBy(column) {
       <div class="admin-table__filters">
         <slot name="toolbar" />
       </div>
-      <div class="admin-table__selection">
+      <div v-if="selectable" class="admin-table__selection">
         <span>{{ labels.selected(selectedIds.length) }}</span>
         <slot name="bulk-actions" :ids="selectedIds" />
         <button
@@ -115,7 +118,7 @@ function sortBy(column) {
       <table class="admin-table__table">
         <thead>
           <tr>
-            <th class="admin-table__check">
+            <th v-if="selectable" class="admin-table__check">
               <input type="checkbox" :checked="allVisibleSelected" :aria-label="labels.selectPage" @change="toggleAll" />
             </th>
             <th
@@ -133,12 +136,12 @@ function sortBy(column) {
         </thead>
         <tbody>
           <tr v-if="loading">
-            <td :colspan="columns.length + 2">
-              <LoadingSkeleton variant="table" :columns="columns.length + 2" :count="Math.max(rows.length, 5)" :label="labels.loading" />
+            <td :colspan="columns.length + (selectable ? 2 : 1)">
+              <LoadingSkeleton variant="table" :columns="columns.length + (selectable ? 2 : 1)" :count="Math.max(rows.length, 5)" :label="labels.loading" />
             </td>
           </tr>
           <tr v-for="row in (loading ? [] : visibleRows)" :key="row.id">
-            <td class="admin-table__check">
+            <td v-if="selectable" class="admin-table__check">
               <input
                 type="checkbox"
                 :checked="selectedIds.includes(row.id)"
@@ -154,7 +157,7 @@ function sortBy(column) {
             <td class="admin-table__actions"><slot name="actions" :row="row" /></td>
           </tr>
           <tr v-if="!loading && visibleRows.length === 0">
-            <td class="admin-table__empty" :colspan="columns.length + 2">
+            <td class="admin-table__empty" :colspan="columns.length + (selectable ? 2 : 1)">
               <div class="admin-table__empty-state">
                 <span class="admin-table__empty-icon">
                   <SearchX :size="19" aria-hidden="true" />
@@ -175,6 +178,7 @@ function sortBy(column) {
           <option :value="100">100</option>
         </select>
       </label>
+      <AdminTableResults :total="totalResults" />
       <AdminPagination :page="page" :count="pageCount" :busy="loading" :labels="labels" @change="changePage" />
     </footer>
   </AdminTableFrame>

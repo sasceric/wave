@@ -18,7 +18,7 @@ use Symfony\Component\Routing\Attribute\Route;
 
 final class CreatorController
 {
-    public function __construct(private readonly CollaborationFeedback $feedback)
+    public function __construct(private readonly CollaborationFeedback $feedback, private readonly \App\Safety\BlockPolicy $blocks)
     {
     }
 
@@ -135,6 +135,7 @@ final class CreatorController
             FROM creator c LEFT JOIN wave_user u ON u.id = c.owner_id
             LEFT JOIN directory_index i ON i.kind = 'creator' AND i.entity_id = c.id
             WHERE u.id IS NULL OR (u.approved = TRUE AND u.hide_my_account = FALSE)";
+        $base .= ' AND '.$this->blocks->visible('u.id');
         $filtered = ' FROM (' . $base . ') ranked WHERE 1 = 1' . ($conditions === [] ? '' : ' AND ' . implode(' AND ', $conditions));
         $connection = $entityManager->getConnection();
         $total = $position !== null ? null : (int) $connection->fetchOne('SELECT COUNT(*)' . $filtered, $params, $types);
@@ -252,7 +253,7 @@ final class CreatorController
         }
 
         if (str_ends_with($request->getPathInfo(), '/reviews')) {
-            return new JsonResponse($owner === null ? ['data' => [], 'summary' => $this->feedback->summary(null), 'meta' => ['hasMore' => false, 'nextCursor' => null]] : $this->feedback->publicReviews($owner, $locale, max(0, $request->query->getInt('before'))));
+            return new JsonResponse($owner === null ? ['data' => [], 'summary' => $this->feedback->summary(null), 'meta' => ['hasMore' => false, 'nextCursor' => null]] : $this->feedback->publicReviews($owner, $locale, max(0, $request->query->getInt('before')), max(1, $request->query->getInt('page', 1))));
         }
         $categoryLabels = MarketplaceCategoryLabels::forLocale($entityManager, $locale);
 

@@ -57,6 +57,8 @@ final class CreatorTypesTest extends WebTestCase
         }
         $this->client->request('GET', '/api/creators/types-creator?locale=en');
         self::assertSame(['photographer', 'videographer'], $this->response()['data']['creatorTypes']);
+        $update(['creatorTypes' => ['streaming', 'podcasts']]);
+        self::assertSame(['streaming', 'podcasts'], $this->response()['data']['creatorTypes']);
         $update(['creatorTypes' => []]);
         self::assertSame([], $this->response()['data']['creatorTypes']);
     }

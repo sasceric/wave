@@ -193,8 +193,15 @@
     background: #f7f9f5;
   }
 
+  &__results {
+    color: #748178;
+    font-size: 11px;
+    text-align: center;
+  }
+
   &__pagination {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
     justify-content: space-between;
     gap: 12px;
@@ -286,6 +293,8 @@
       align-items: center;
       flex-wrap: wrap;
     }
+
+    &__results { order: 3; flex-basis: 100%; }
 
     &__pagination-controls {
       max-width: 100%;

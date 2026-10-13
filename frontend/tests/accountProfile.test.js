@@ -1,11 +1,14 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import { ref } from 'vue'
+import { mergeCampaignActivity } from '../src/lib/campaignActivity.js'
+import { accountLanding } from '../src/lib/accountAccess.js'
 import { setupView } from './setupView.js'
 
 async function setupAccount({ saveError = null, accountType = 'company' } = {}) {
   const requests = []
   const scrolls = []
+  const navigations = []
   let blurred = false
   const account = {
     id: 1, accountType, approved: false, isAdmin: false,
@@ -24,6 +27,10 @@ async function setupAccount({ saveError = null, accountType = 'company' } = {}) 
   const view = await setupView('../src/views/AccountView.vue', {
     '../composables/useMarketplaceCatalog': { useMarketplaceCatalog: () => ({ categories: ref([]), error: ref('') }) },
     '../composables/useCampaignBookmarks': { useCampaignBookmarks: () => ({ bookmarks: ref([]), loadCampaignBookmarks: async () => {} }) },
+    '../lib/campaignActivity': { mergeCampaignActivity },
+    '../lib/accountAccess': { accountLanding },
+    '../routePaths': { localizedRouteName: (name, locale) => `${name}-${locale}`, localizedPath: name => `/racun/${name}` },
+    'vue-router': { useRoute: () => ({ query: {}, params: {}, meta: {} }), useRouter: () => ({ replace: async target => navigations.push(target) }) },
     '../lib/phoneNumbers': { formatInternationalPhoneNumber: (phone) => phone },
     '../lib/api': {
       apiGet: async () => ({ data: account }),
@@ -39,7 +46,7 @@ async function setupAccount({ saveError = null, accountType = 'company' } = {}) 
   view.windowTarget.scrollTo = (options) => scrolls.push(options)
   view.documentTarget.activeElement = { blur: () => { blurred = true } }
   await view.state.loadDashboard()
-  return { ...view, requests, scrolls, wasBlurred: () => blurred }
+  return { ...view, requests, scrolls, account, navigations, wasBlurred: () => blurred }
 }
 
 test('Cancel restores nested profile details, tags and phone country without saving', async () => {
@@ -155,15 +162,18 @@ test('a failed Save leaves the form and draft available for correction', async (
 test('offers resolve chats by their application, preserving unrelated conversations and missing chats', async () => {
   const { state } = await setupAccount({ accountType: 'creator' })
   state.applications.value = [
-    { id: 12, conversationId: 78 },
-    { id: 13, conversationId: 79 },
+    { id: 12, conversationId: 78, campaign: { id: 1 } },
+    { id: 13, conversationId: 79, campaign: { id: 2 } },
   ]
   state.offers.value = [
-    { id: 1, applicationId: 13 },
-    { id: 2, applicationId: 12 },
-    { id: 3, applicationId: 99 },
+    { id: 1, applicationId: 13, campaign: { id: 2 } },
+    { id: 2, applicationId: 12, campaign: { id: 1 } },
+    { id: 3, applicationId: 99, campaign: { id: 3 } },
   ]
-  assert.deepEqual(Array.from(state.offersWithConversations.value, (offer) => offer.conversationId), [79, 78, null])
+  const rows = state.campaignActivity.value
+  assert.equal(rows.find(row => row.id === 13).conversationId, 79)
+  assert.equal(rows.find(row => row.id === 12).conversationId, 78)
+  assert.equal(rows.find(row => row.id === 99).conversationId, undefined)
 })
 
 test('login clears form focus and resets the page without a smooth scroll', async () => {
@@ -214,4 +224,12 @@ test('campaign Save sends separate city, country, areas and deliverables', async
   assert.deepEqual(Array.from(requests[0].body.categories), ['Food', 'Travel'])
   assert.deepEqual(Array.from(requests[0].body.deliverables), ['1 video', '3 photos'])
   assert.ok(!('location' in requests[0].body))
+})
+
+test('successful password or social authentication navigates to overview while incomplete profiles remain in settings', async () => {
+  const { state, account, navigations } = await setupAccount()
+  await state.handleAuthenticated(account)
+  assert.equal(navigations.at(-1).name, 'account-dashboard-bs')
+  await state.handleAuthenticated({ ...account, profileComplete: false })
+  assert.equal(navigations.at(-1).name, 'account-bs')
 })

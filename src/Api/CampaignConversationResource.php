@@ -16,7 +16,7 @@ final class CampaignConversationResource
 
         return [
             'id' => $conversation->getId(),
-            'readOnly' => AccountDeletion::sharedHistoryDeleted($creator, $company),
+            'readOnly' => $campaign->getStatus() === 'cancelled' || AccountDeletion::sharedHistoryDeleted($creator, $company),
             'campaign' => CampaignResource::fromEntity($campaign, $locale, hiredCount: $hiredCount),
             'creator' => [
                 'id' => $creator->getId(),

@@ -78,6 +78,10 @@ final class AccountDeletion
                     ] as $table => $column) {
                         $db->delete($table, [$column => $user->getId()]);
                     }
+                    $db->delete('report_notice', ['recipient_id' => $user->getId()]);
+                    $db->delete('marketplace_report', ['reporter_id' => $user->getId()]);
+                    $db->update('marketplace_report', ['target_name' => 'Deleted account', 'target_slug' => ''], ['target_user_id' => $user->getId()]);
+                    $db->update('credit_voucher', ['assigned_to_id' => null], ['assigned_to_id' => $user->getId()]);
                     $db->update('campaign_review', ['comment' => ''], ['author_id' => $user->getId()]);
                     $db->update('credit_voucher', ['redeemed_by_id' => null], ['redeemed_by_id' => $user->getId()]);
                     $db->delete('newsletter_subscriber', ['email' => $user->getEmail()]);

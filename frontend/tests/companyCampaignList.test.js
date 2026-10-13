@@ -28,7 +28,7 @@ test('campaign listing uses ten-item pages and keeps the final partial page', as
 
 test('status counts cover all campaigns and searching is combined with the selected status', async () => {
   const { state } = await listing()
-  assert.deepEqual(Array.from(state.filters.value, filter => filter.count), [23, 8, 8, 7])
+  assert.deepEqual(Array.from(state.filters.value, filter => filter.count), [23, 8, 8, 7, 0])
   state.page.value = 3
   state.query.value = '  SPECIAL BRIEF  '
   await nextTick()

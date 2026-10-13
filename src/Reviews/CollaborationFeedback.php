@@ -12,7 +12,7 @@ use Doctrine\ORM\EntityManagerInterface;
 
 final class CollaborationFeedback
 {
-    public function __construct(private readonly EntityManagerInterface $entityManager)
+    public function __construct(private readonly EntityManagerInterface $entityManager, private readonly ?\App\Safety\BlockPolicy $blocks = null)
     {
     }
 
@@ -29,7 +29,8 @@ final class CollaborationFeedback
             && $application->getCampaign()->getCompany()->getOwner() !== null
             && $application->getCreator()->getOwner()->getId() !== $application->getCampaign()->getCompany()->getOwner()->getId()
             && !$application->getCreator()->getOwner()->isDeleted()
-            && !$application->getCampaign()->getCompany()->getOwner()->isDeleted();
+            && !$application->getCampaign()->getCompany()->getOwner()->isDeleted()
+            && !($this->blocks?->pair($application->getCreator()->getOwner()->getId(), $application->getCampaign()->getCompany()->getOwner()->getId()) ?? false);
     }
 
     /** SQL shared by list and average queries so hidden feedback never leaks through totals. */
@@ -105,24 +106,27 @@ final class CollaborationFeedback
     public function resource(CampaignReview $review, string $locale): array
     {
         $author = $review->getAuthor();
+        $blocked = $this->blocks?->blocked($author->getId()) ?? false;
         return [
             'id' => $review->getId(),
             'rating' => $review->getRating(),
-            'comment' => $review->getComment(),
+            'comment' => $blocked ? '' : $review->getComment(),
             'createdAt' => $review->getCreatedAt()->format(DATE_ATOM),
-            'campaignTitle' => $review->getApplication()->getCampaign()->getTitle(),
-            'authorName' => $author->isDeleted() ? ApiMessages::get('deleted_account', $locale)
-                : ($author->getCreator()?->getDisplayName() ?? $author->getCompany()?->getName()),
+            'campaignTitle' => $blocked ? ApiMessages::get('blocked_account', $locale) : $review->getApplication()->getCampaign()->getTitle(),
+            'authorName' => $blocked ? ApiMessages::get('blocked_account', $locale) : ($author->isDeleted() ? ApiMessages::get('deleted_account', $locale)
+                : ($author->getCreator()?->getDisplayName() ?? $author->getCompany()?->getName())),
         ];
     }
 
-    public function publicReviews(User $user, string $locale, int $before = 0): array
+    public function publicReviews(User $user, string $locale, int $before = 0, int $page = 1): array
     {
         $db = $this->entityManager->getConnection();
+        $summary = $this->summary($user);
+        $page = min(max(1, $page), max(1, (int) ceil($summary['reviewCount'] / 10)));
         $ids = $db->fetchFirstColumn('SELECT r.id FROM campaign_review r
             JOIN campaign_application a ON a.id = r.application_id JOIN campaign c ON c.id = a.campaign_id
             JOIN campaign_offer o ON o.application_id = a.id WHERE r.recipient_id = :user AND '.$this->publicCondition()
-            .($before > 0 ? ' AND r.id < :before' : '').' ORDER BY r.id DESC LIMIT 11',
+            .($before > 0 ? ' AND r.id < :before' : '').' ORDER BY r.id DESC LIMIT 11 OFFSET '.($before > 0 ? 0 : ($page - 1) * 10),
             ['user' => $user->getId(), 'cutoff' => (new DateTimeImmutable('-14 days'))->format('Y-m-d H:i:s')] + ($before > 0 ? ['before' => $before] : []));
         $hasMore = count($ids) > 10;
         $ids = array_slice($ids, 0, 10);
@@ -133,7 +137,7 @@ final class CollaborationFeedback
             ->where('r.id IN (:ids)')->setParameter('ids', $ids)->orderBy('r.id', 'DESC')->getQuery()->getResult();
 
         return ['data' => array_map(fn (CampaignReview $review): array => $this->resource($review, $locale), $reviews),
-            'summary' => $this->summary($user), 'meta' => ['hasMore' => $hasMore, 'nextCursor' => $hasMore ? (int) end($ids) : null]];
+            'summary' => $summary, 'meta' => ['page' => $page, 'limit' => 10, 'total' => $summary['reviewCount'], 'hasMore' => $hasMore, 'nextCursor' => $hasMore ? (int) end($ids) : null]];
     }
 
     /** @param list<int> $ids

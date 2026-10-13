@@ -77,8 +77,8 @@ test('creator decisions open company pages and incoming events open creator page
     assert.equal(notificationDestination({ type }).name, 'account-campaigns')
   }
   assert.equal(notificationDestination({ type: 'creator_inquiry_rejected' }).name, 'account-inquiries')
-  assert.equal(notificationDestination({ type: 'campaign_invitation' }).name, 'account-invitations')
-  assert.equal(notificationDestination({ type: 'offer_received' }).name, 'account-offers')
+  assert.equal(notificationDestination({ type: 'campaign_invitation' }).name, 'account-applications')
+  assert.equal(notificationDestination({ type: 'offer_received' }).name, 'account-applications')
   assert.equal(notificationDestination({ type: 'application_rejected' }).name, 'account-applications')
   assert.deepEqual(notificationDestination({ type: 'invitation_accepted', conversationId: 42 }), { name: 'messages', query: { conversation: 42 } })
 })

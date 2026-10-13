@@ -3,6 +3,7 @@ import AdminTableFrame from './AdminTableFrame.vue'
 import SkeletonBlock from '../shared/SkeletonBlock.vue'
 import { computed } from 'vue'
 import AdminPagination from './AdminPagination.vue'
+import AdminTableResults from './AdminTableResults.vue'
 
 const props = defineProps({
   columns: { type: Array, required: true },
@@ -50,6 +51,7 @@ const pageCount = computed(() => props.total === null
           <option v-for="size in pageSizes" :key="size" :value="size">{{ size }}</option>
         </select>
       </label>
+      <AdminTableResults :total="total" :rows="rows.length" :page="page" :has-more="hasMore" />
       <AdminPagination :page="page" :count="pageCount" :busy="busy" :labels="labels" @change="$emit('page', $event)" />
     </footer>
   </AdminTableFrame>

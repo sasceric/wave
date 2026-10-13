@@ -23,7 +23,7 @@ const { t } = useI18n()
           <WaveLogo v-else mark />
         </div>
         <span v-if="company.verified" class="company-directory-card__verified" :aria-label="t('companyDirectory.verified')"><BadgeCheck :size="15" aria-hidden="true" /></span>
-        <div class="company-directory-card__heading"><h2>{{ company.name }}</h2><p>{{ company.industryLabels?.join(', ') || company.industry }}</p></div>
+        <div class="company-directory-card__heading"><h2>{{ company.name }}</h2><p>{{ t(`companyTypes.options.${company.companyType || 'brand'}`) }} · {{ company.industryLabels?.join(', ') || company.industry }}</p></div>
       </div>
       <RatingSummary :rating="company.rating" compact />
       <p v-if="company.summary || company.about" class="company-directory-card__description">{{ company.summary || company.about || '' }}</p>

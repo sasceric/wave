@@ -1,0 +1,60 @@
+import assert from 'node:assert/strict'
+import { test } from 'node:test'
+import { nextTick, ref } from 'vue'
+import { setupView } from './setupView.js'
+
+const campaign = { slug: 'spring', title: 'Spring campaign', budgetMin: 300, budgetMax: 800, currency: 'BAM', company: { slug: 'brand', name: 'Brand' } }
+
+test('hiring confirms a negotiated amount outside the advertised budget and retains failed drafts', async () => {
+  const currentUser = ref({ id: 10, accountType: 'company' })
+  const calls = []
+  let fail = true
+  const { state, emitted } = await setupView('../src/components/account/CampaignHireAction.vue', {
+    '../../composables/useCurrentUser': { currentUser },
+    '../../lib/api': { apiRequest: async (path, options) => { calls.push({ path, body: options.body }); if (fail) throw new Error('Try again'); return { data: { id: 17, amount: options.body.amount, status: 'pending' } } } },
+  }, { conversationId: 9, campaign, creatorName: 'Amina', disabled: false })
+  state.start()
+  state.amount.value = 50
+  state.message.value = 'Our negotiated campaign terms.'
+  await state.submit()
+  assert.equal(state.open.value, true)
+  assert.equal(state.error.value, 'Try again')
+  assert.equal(state.amount.value, 50)
+  fail = false
+  await state.submit()
+  assert.equal(calls[1].path, '/company/conversations/9/hire')
+  assert.equal(calls[1].body.amount, 50)
+  assert.equal(emitted[0][0], 'offered')
+  assert.equal(emitted[0][1].status, 'pending')
+  assert.equal(state.open.value, false)
+})
+
+test('an invited creator sees their invitation and cannot submit another application', async () => {
+  const calls = []
+  const { state } = await setupView('../src/views/CampaignDetailView.vue', {
+    'vue-router': { useRoute: () => ({ params: { slug: 'spring' }, query: {}, meta: {} }) },
+    '../lib/seo': { getSeoOrigin: () => 'https://wave.ba', updateSeo: () => {} },
+    '../routePaths': { localizedPath: () => '/kompanije/brand' },
+    '../lib/api': { apiGet: async path => {
+      if (path === '/auth/session') return { data: { id: 1, accountType: 'creator', approved: true, emailVerified: true } }
+      if (path === '/me/applications') return { data: [] }
+      if (path === '/me/invitations') return { data: [{ id: 2, status: 'accepted', conversationId: 9, campaign }] }
+      return { data: campaign }
+    }, apiRequest: async path => { calls.push(path) }, formatDate: () => '', formatMoney: () => '' },
+  })
+  await state.loadCampaign()
+  await nextTick()
+  assert.equal(state.invitation.value.conversationId, 9)
+  assert.equal(state.alreadyApplied.value, false)
+  await state.applyToCampaign()
+  assert.equal(calls.length, 0)
+})
+
+test('campaign creator rows distinguish invitations and confirmed hires', async () => {
+  const { state } = await setupView('../src/components/account/CompanyCampaignDetail.vue', {
+    '../../lib/api': { formatDate: () => '', formatMoney: () => '' },
+    '../../lib/chatTime': { createChatTimeFormatter: () => ({ ago: () => '' }) },
+  }, { campaign, applications: [] })
+  assert.equal(state.statusLabel({ status: 'invited' }), 'hiring.invited')
+  assert.equal(state.statusLabel({ status: 'accepted' }), 'hiring.hired')
+})

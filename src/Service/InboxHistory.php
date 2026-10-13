@@ -43,8 +43,9 @@ final class InboxHistory
                     company.id AS company_id, company.slug AS company_slug, company.name AS company_name,
                     company.logo_url, company.logo_media_id,
                     (creator_owner.deleted_at IS NOT NULL) AS creator_deleted, (company_owner.deleted_at IS NOT NULL) AS company_deleted,
+                    (campaign.status = 'cancelled' OR EXISTS (SELECT 1 FROM campaign_offer co JOIN campaign_application ca ON ca.id = co.application_id WHERE ca.campaign_id = campaign.id AND ca.creator_id = creator.id AND co.status = 'cancelled')) AS cancelled,
                     (SELECT COUNT(*) FROM campaign_message message WHERE message.conversation_id = thread.id
-                        AND message.sender_id <> :viewer AND message.read_at IS NULL) AS unread_count
+                        AND message.sender_id <> :viewer AND message.read_at IS NULL AND NOT EXISTS (SELECT 1 FROM user_block b WHERE b.cleared_at IS NULL AND ((b.blocker_id = :viewer AND b.blocked_id = message.sender_id) OR (b.blocked_id = :viewer AND b.blocker_id = message.sender_id)))) AS unread_count
                 FROM campaign_conversation thread
                 JOIN campaign ON campaign.id = thread.campaign_id
                 JOIN creator ON creator.id = thread.creator_id
@@ -60,9 +61,9 @@ final class InboxHistory
                     creator.avatar_url, creator.avatar_media_id,
                     company.id AS company_id, company.slug AS company_slug, company.name AS company_name,
                     company.logo_url, company.logo_media_id,
-                    (creator_owner.deleted_at IS NOT NULL) AS creator_deleted, (company_owner.deleted_at IS NOT NULL) AS company_deleted,
+                    (creator_owner.deleted_at IS NOT NULL) AS creator_deleted, (company_owner.deleted_at IS NOT NULL) AS company_deleted, FALSE AS cancelled,
                     (SELECT COUNT(*) FROM inquiry_message message WHERE message.inquiry_id = thread.id
-                        AND message.sender_id <> :viewer AND message.read_at IS NULL) AS unread_count
+                        AND message.sender_id <> :viewer AND message.read_at IS NULL AND NOT EXISTS (SELECT 1 FROM user_block b WHERE b.cleared_at IS NULL AND ((b.blocker_id = :viewer AND b.blocked_id = message.sender_id) OR (b.blocked_id = :viewer AND b.blocker_id = message.sender_id)))) AS unread_count
                 FROM creator_inquiry thread
                 JOIN creator ON creator.id = thread.creator_id
                 JOIN company ON company.id = thread.company_id
@@ -112,7 +113,8 @@ final class InboxHistory
             'id' => $id,
             'threadType' => $type,
             'threadKey' => $type . '-' . $id,
-            'readOnly' => (bool) $row['creator_deleted'] || (bool) $row['company_deleted'],
+            'readOnly' => (bool) $row['creator_deleted'] || (bool) $row['company_deleted'] || (bool) $row['cancelled'],
+            'cancelled' => (bool) $row['cancelled'],
             'campaign' => ['slug' => $row['campaign_slug'], 'title' => $row['title']],
             'creator' => [
                 'id' => (int) $row['creator_id'], 'slug' => $row['creator_slug'], 'displayName' => $row['creator_deleted'] ? ApiMessages::get('deleted_account', $locale) : $row['display_name'],

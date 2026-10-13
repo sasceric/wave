@@ -619,11 +619,13 @@ final class MarketplaceWorkflowTest extends WebTestCase
         $entityManager = static::getContainer()->get(EntityManagerInterface::class);
         $creatorUser = new User('hidden-creator@example.test', 'ROLE_CREATOR');
         $creatorUser->setPassword('unused-test-hash');
+        $creatorUser->setPhone('+38761123456'); $creatorUser->setCity('Sarajevo'); $creatorUser->setCountryCode('BA');
         $creator = new Creator('hidden-creator', 'Hidden Creator', 'Travel', 'Sarajevo', 'A creator profile.', [], []);
         $creatorUser->setCreator($creator);
 
         $companyUser = new User('hidden-company@example.test', 'ROLE_COMPANY');
         $companyUser->setPassword('unused-test-hash');
+        $companyUser->setPhone('+38761123456'); $companyUser->setCity('Sarajevo'); $companyUser->setCountryCode('BA');
         $company = new Company('hidden-company', 'Hidden Company', 'Travel');
         $companyUser->setCompany($company);
         $campaign = new Campaign(

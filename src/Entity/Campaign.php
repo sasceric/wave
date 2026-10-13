@@ -226,6 +226,7 @@ class Campaign
 
     public function setStatus(string $status): void
     {
+        if ($this->status === 'cancelled' && $status !== 'cancelled') { throw new \InvalidArgumentException('Cancelled campaigns cannot be reopened.'); }
         if ($this->finishedAt !== null && $status !== 'finished') {
             throw new \InvalidArgumentException('Finished campaigns cannot be reopened.');
         }

@@ -12,6 +12,12 @@ use App\Api\OfferResource;
 use App\Entity\Application;
 use App\Entity\Campaign;
 use App\Entity\CampaignConversation;
+use App\Entity\CampaignInvitation;
+use App\Api\CampaignResource;
+use App\Api\CreatorResource;
+use App\Marketplace\CampaignOfferTimeline;
+use App\Safety\BlockPolicy;
+use Doctrine\DBAL\LockMode;
 use App\Entity\Company;
 use App\Entity\Creator;
 use App\Entity\Notification;
@@ -74,6 +80,10 @@ final class MarketplaceWorkflowController
         }
         if ($campaign->getClosesAt() < new DateTimeImmutable('today')) {
             return new JsonResponse(['error' => ApiMessages::get('campaign_closed', $locale)], 409);
+        }
+        $invitation = $entityManager->getRepository(CampaignInvitation::class)->findOneBy(['campaign' => $campaign, 'creator' => $creator]);
+        if ($invitation instanceof CampaignInvitation && $invitation->getStatus() !== 'declined') {
+            return new JsonResponse(['error' => ApiMessages::get('invitation_exists', $locale)], 409);
         }
         if ($entityManager->getRepository(Application::class)->findOneBy(['campaign' => $campaign, 'creator' => $creator]) instanceof Application) {
             return new JsonResponse(['error' => ApiMessages::get('already_applied', $locale)], 409);
@@ -182,7 +192,30 @@ final class MarketplaceWorkflowController
         $applications = $entityManager->getRepository(Application::class)->findBy(['campaign' => $campaign], ['createdAt' => 'ASC']);
 
         $hiredCount = CampaignHiredCounts::forCampaign($entityManager, $campaign);
-        return new JsonResponse(['data' => array_map(static fn (Application $application): array => ApplicationResource::fromEntity($application, $locale, hiredCount: $hiredCount), $applications)]);
+        $conversations = [];
+        foreach ($entityManager->getRepository(CampaignConversation::class)->findBy(['campaign' => $campaign]) as $conversation) {
+            $conversations[$conversation->getCreator()->getId()] = $conversation->getId();
+        }
+        $known = [];
+        $rows = [];
+        foreach ($applications as $application) {
+            $creatorId = $application->getCreator()->getId();
+            $known[$creatorId] = true;
+            $rows[] = ApplicationResource::fromEntity($application, $locale, $conversations[$creatorId] ?? null, $hiredCount);
+        }
+        foreach ($entityManager->getRepository(CampaignInvitation::class)->findBy(['campaign' => $campaign], ['createdAt' => 'ASC']) as $invitation) {
+            $creatorId = $invitation->getCreator()->getId();
+            if (isset($known[$creatorId])) continue;
+            $rows[] = [
+                'id' => 'invitation-'.$invitation->getId(), 'source' => 'invitation', 'invitationStatus' => $invitation->getStatus(),
+                'status' => $invitation->getStatus() === 'cancelled' ? 'cancelled' : ($invitation->getStatus() === 'declined' ? 'invitation_declined' : 'invited'), 'offer' => null,
+                'message' => $invitation->getMessage(), 'createdAt' => $invitation->getCreatedAt()->format(DATE_ATOM),
+                'conversationId' => in_array($invitation->getStatus(), ['accepted', 'cancelled'], true) ? ($conversations[$creatorId] ?? null) : null,
+                'readOnly' => $campaign->getStatus() === 'cancelled' || AccountDeletion::sharedHistoryDeleted($invitation->getCreator(), $campaign->getCompany()),
+                'creator' => CreatorResource::fromEntity($invitation->getCreator(), $locale), 'campaign' => CampaignResource::fromEntity($campaign, $locale, hiredCount: $hiredCount),
+            ];
+        }
+        return new JsonResponse(['data' => $rows]);
     }
 
     #[Route('/api/company/applications/{id}/shortlist', name: 'api_company_application_shortlist', methods: ['POST'])]
@@ -299,70 +332,69 @@ final class MarketplaceWorkflowController
     }
 
     #[Route('/api/company/applications/{id}/offer', name: 'api_company_application_offer', methods: ['POST'])]
+    #[Route('/api/company/conversations/{id}/hire', name: 'api_company_conversation_hire', methods: ['POST'])]
     public function makeOffer(
-        int $id,
-        Request $request,
-        EntityManagerInterface $entityManager,
-        Security $security,
-        CsrfTokenManagerInterface $tokenManager,
-        NotificationDelivery $notificationDelivery,
+        int $id, Request $request, EntityManagerInterface $entityManager, Security $security,
+        CsrfTokenManagerInterface $tokenManager, NotificationDelivery $notificationDelivery,
+        CampaignOfferTimeline $timeline, BlockPolicy $blocks,
     ): JsonResponse {
         $locale = LocaleContext::fromRequest($request);
-        if ($locale === null) {
-            return new JsonResponse(['error' => ApiMessages::get('unsupported_language', 'bs')], 400);
-        }
-        if ($csrfError = ApiAccess::requireCsrf($request, $tokenManager, $locale)) {
-            return $csrfError;
-        }
+        if ($locale === null) return new JsonResponse(['error' => ApiMessages::get('unsupported_language', 'bs')], 400);
+        if ($csrfError = ApiAccess::requireCsrf($request, $tokenManager, $locale)) return $csrfError;
         $user = ApiAccess::requireRole($security, 'ROLE_COMPANY', $locale, requireVerified: true);
-        if ($user instanceof JsonResponse) {
-            return $user;
-        }
-        $application = $entityManager->getRepository(Application::class)->find($id);
-        $company = $user->getCompany();
-        if (!$application instanceof Application || !$company instanceof Company || $application->getCampaign()->getCompany()->getId() !== $company->getId()) {
-            return new JsonResponse(['error' => ApiMessages::get('application_not_found', $locale)], 404);
-        }
-        if (AccountDeletion::sharedHistoryDeleted($application->getCreator(), $application->getCampaign()->getCompany())) {
-            return new JsonResponse(['error' => ApiMessages::get('account_deleted_history', $locale)], 409);
-        }
-        if ($application->getCampaign()->getStatus() === 'finished') {
-            return new JsonResponse(['error' => ApiMessages::get('campaign_finished', $locale)], 409);
-        }
-        if ($application->getStatus() !== 'shortlisted') {
-            return new JsonResponse(['error' => ApiMessages::get('application_not_pending', $locale)], 409);
-        }
-        if ($application->getOffer() instanceof Offer) {
-            return new JsonResponse(['error' => ApiMessages::get('offer_exists', $locale)], 409);
-        }
+        if ($user instanceof JsonResponse) return $user;
         $data = JsonPayload::fromRequest($request);
         $amount = $data['amount'] ?? null;
         $message = is_string($data['message'] ?? null) ? trim($data['message']) : '';
-        $campaign = $application->getCampaign();
-        if ($data === null || !is_int($amount) || $amount < $campaign->getBudgetMin() || $amount > $campaign->getBudgetMax() || mb_strlen($message) < 10 || mb_strlen($message) > 1500) {
+        if (!is_int($amount) || $amount < 1 || $amount > 10000000 || mb_strlen($message) < 10 || mb_strlen($message) > 1500) {
             return new JsonResponse(['error' => ApiMessages::get('invalid_offer', $locale)], 400);
         }
-
-        $offer = new Offer($application, $amount, $message);
-        $application->setStatus('offered');
-        $entityManager->persist($offer);
-        $creatorOwner = $application->getCreator()->getOwner();
-        $notification = null;
-        if ($creatorOwner instanceof User) {
-            $notification = new Notification(
-                $creatorOwner,
-                'offer_received',
-                $user,
-                $campaign,
-            );
-            $entityManager->persist($notification);
-        }
-        $entityManager->flush();
-        if ($notification instanceof Notification) {
-            $notificationDelivery->deliver($notification);
-        }
-
-        return new JsonResponse(['data' => OfferResource::fromEntity($offer, $locale, CampaignHiredCounts::forCampaign($entityManager, $offer->getApplication()->getCampaign()))], 201);
+        $result = $entityManager->wrapInTransaction(function () use ($id, $request, $entityManager, $user, $locale, $amount, $message, $timeline, $blocks): array|JsonResponse {
+            $company = $user->getCompany();
+            $fromChat = str_starts_with($request->getPathInfo(), '/api/company/conversations/');
+            $conversation = $fromChat ? $entityManager->find(CampaignConversation::class, $id) : null;
+            $application = $fromChat ? null : $entityManager->find(Application::class, $id);
+            $campaign = $conversation?->getCampaign() ?? $application?->getCampaign();
+            if (!$company instanceof Company || !$campaign instanceof Campaign || $campaign->getCompany()->getId() !== $company->getId()) {
+                return new JsonResponse(['error' => ApiMessages::get('application_not_found', $locale)], 404);
+            }
+            // Serialize offers and acceptance for this campaign, including invited creators without an application yet.
+            $entityManager->lock($campaign, LockMode::PESSIMISTIC_WRITE);
+            $entityManager->refresh($campaign);
+            if ($fromChat) {
+                $application = $entityManager->getRepository(Application::class)->findOneBy(['campaign' => $campaign, 'creator' => $conversation->getCreator()]);
+                if (!$application instanceof Application) {
+                    $invitation = $entityManager->getRepository(CampaignInvitation::class)->findOneBy(['campaign' => $campaign, 'creator' => $conversation->getCreator(), 'status' => 'accepted']);
+                    if (!$invitation instanceof CampaignInvitation) return new JsonResponse(['error' => ApiMessages::get('forbidden', $locale)], 404);
+                    $application = new Application($campaign, $conversation->getCreator(), $invitation->getMessage());
+                    $application->setStatus('shortlisted');
+                }
+            } else {
+                $entityManager->refresh($application);
+            }
+            if (!$application instanceof Application) return new JsonResponse(['error' => ApiMessages::get('application_not_found', $locale)], 404);
+            if (AccountDeletion::sharedHistoryDeleted($application->getCreator(), $campaign->getCompany())) return new JsonResponse(['error' => ApiMessages::get('account_deleted_history', $locale)], 409);
+            if ($blocks->pair($user->getId(), $application->getCreator()->getOwner()?->getId())) return new JsonResponse(['error' => ApiMessages::get('blocked_history', $locale)], 409);
+            if ($campaign->getStatus() === 'cancelled') return new JsonResponse(['error' => ApiMessages::get('campaign_cancelled', $locale)], 409);
+            if ($campaign->getStatus() === 'finished') return new JsonResponse(['error' => ApiMessages::get('campaign_finished', $locale)], 409);
+            if ($fromChat && $campaign->getStatus() === 'closed') return new JsonResponse(['error' => ApiMessages::get('campaign_chat_closed', $locale)], 409);
+            if (CampaignHiredCounts::forCampaign($entityManager, $campaign) >= $campaign->getCreatorCount()) return new JsonResponse(['error' => ApiMessages::get('campaign_full', $locale)], 409);
+            if ($application->getStatus() !== 'shortlisted') return new JsonResponse(['error' => ApiMessages::get('application_not_pending', $locale)], 409);
+            if ($application->getOffer() instanceof Offer) return new JsonResponse(['error' => ApiMessages::get('offer_exists', $locale)], 409);
+            $offer = new Offer($application, $amount, $message);
+            $application->setStatus('offered');
+            $entityManager->persist($application);
+            $entityManager->persist($offer);
+            $entityManager->flush();
+            $chatMessage = $timeline->record($offer, $user, 'offer_sent', $application->getCreator()->getOwner()?->getPreferredLocale() ?? $locale);
+            $creatorOwner = $application->getCreator()->getOwner();
+            $notification = $creatorOwner instanceof User ? new Notification($creatorOwner, 'offer_received', $user, $campaign, $chatMessage->getConversation()) : null;
+            if ($notification) $entityManager->persist($notification);
+            return ['offer' => $offer, 'notification' => $notification, 'message' => $chatMessage];
+        });
+        if ($result instanceof JsonResponse) return $result;
+        if ($result['notification']) $notificationDelivery->deliver($result['notification'], $result['message']);
+        return new JsonResponse(['data' => OfferResource::fromEntity($result['offer'], $locale, CampaignHiredCounts::forCampaign($entityManager, $result['offer']->getApplication()->getCampaign()))], 201);
     }
 
     #[Route('/api/me/offers', name: 'api_my_offers', methods: ['GET'])]
@@ -403,6 +435,7 @@ final class MarketplaceWorkflowController
         CsrfTokenManagerInterface $tokenManager,
         NotificationDelivery $notificationDelivery,
         AccountEmailSender $accountEmailSender,
+        CampaignOfferTimeline $timeline,
     ): JsonResponse {
         $locale = LocaleContext::fromRequest($request);
         if ($locale === null) {
@@ -434,37 +467,29 @@ final class MarketplaceWorkflowController
         if ($data === null || !in_array($decision, ['accept', 'reject'], true)) {
             return new JsonResponse(['error' => ApiMessages::get('invalid_offer_response', $locale)], 400);
         }
-        if ($decision === 'accept') {
-            $acceptedCount = (int) $entityManager->createQueryBuilder()
-                ->select('COUNT(offer.id)')
-                ->from(Offer::class, 'offer')
-                ->join('offer.application', 'application')
-                ->where('application.campaign = :campaign')
-                ->andWhere('offer.status = :status')
-                ->setParameter('campaign', $offer->getApplication()->getCampaign())
-                ->setParameter('status', 'accepted')
-                ->getQuery()
-                ->getSingleScalarResult();
-            if ($acceptedCount >= $offer->getApplication()->getCampaign()->getCreatorCount()) {
-                return new JsonResponse(['error' => ApiMessages::get('campaign_full', $locale)], 409);
+        $result = $entityManager->wrapInTransaction(function () use ($entityManager, $offer, $decision, $user, $locale, $timeline): array|JsonResponse {
+            $campaign = $offer->getApplication()->getCampaign();
+            $entityManager->lock($campaign, LockMode::PESSIMISTIC_WRITE);
+            $entityManager->refresh($campaign);
+            $entityManager->refresh($offer);
+            if ($campaign->getStatus() === 'cancelled') return new JsonResponse(['error' => ApiMessages::get('campaign_cancelled', $locale)], 409);
+            if ($campaign->getStatus() === 'finished') return new JsonResponse(['error' => ApiMessages::get('campaign_finished', $locale)], 409);
+            if ($offer->getStatus() !== 'pending') return new JsonResponse(['error' => ApiMessages::get('offer_not_pending', $locale)], 409);
+            if ($decision === 'accept') {
+                $acceptedCount = (int) $entityManager->createQueryBuilder()->select('COUNT(existing.id)')->from(Offer::class, 'existing')
+                    ->join('existing.application', 'application')->where('application.campaign = :campaign')->andWhere('existing.status = :status')
+                    ->setParameter('campaign', $campaign)->setParameter('status', 'accepted')->getQuery()->getSingleScalarResult();
+                if ($acceptedCount >= $campaign->getCreatorCount()) return new JsonResponse(['error' => ApiMessages::get('campaign_full', $locale)], 409);
             }
-        }
-        $offer->respond($decision === 'accept' ? 'accepted' : 'rejected');
-        $companyOwner = $offer->getApplication()->getCampaign()->getCompany()->getOwner();
-        $notification = null;
-        if ($companyOwner instanceof User) {
-            $notification = new Notification(
-                $companyOwner,
-                $decision === 'accept' ? 'offer_accepted' : 'offer_declined',
-                $user,
-                $offer->getApplication()->getCampaign(),
-            );
-            $entityManager->persist($notification);
-        }
-        $entityManager->flush();
-        if ($notification instanceof Notification) {
-            $notificationDelivery->deliver($notification);
-        }
+            $offer->respond($decision === 'accept' ? 'accepted' : 'rejected');
+            $companyOwner = $campaign->getCompany()->getOwner();
+            $chatMessage = $timeline->record($offer, $user, $decision === 'accept' ? 'hired' : 'offer_declined', $companyOwner?->getPreferredLocale() ?? $locale);
+            $notification = $companyOwner instanceof User ? new Notification($companyOwner, $decision === 'accept' ? 'offer_accepted' : 'offer_declined', $user, $campaign, $chatMessage->getConversation()) : null;
+            if ($notification) $entityManager->persist($notification);
+            return ['notification' => $notification, 'message' => $chatMessage];
+        });
+        if ($result instanceof JsonResponse) return $result;
+        if ($result['notification']) $notificationDelivery->deliver($result['notification'], $result['message']);
         if ($decision === 'accept') {
             $creatorOwner = $offer->getApplication()->getCreator()->getOwner();
             if ($creatorOwner instanceof User) {

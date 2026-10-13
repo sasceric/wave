@@ -49,7 +49,7 @@ final class MediaStorage
         $absoluteDirectory = $this->storagePath . '/' . dirname($relativePath);
         $this->filesystem->mkdir($absoluteDirectory);
         try {
-            $fileSize = $this->imageProcessor->writeWebp($file->getPathname(), $this->absolutePath($relativePath));
+            $fileSize = $this->imageProcessor->writeWebp($file->getPathname(), $this->absolutePath($relativePath), $folder->getSlug() === 'report-evidence' ? 1600 : 600);
             $dimensions = $this->queued ? $this->imageProcessor->dimensions($this->absolutePath($relativePath)) : $this->thumbnails->warm($relativePath);
         } catch (\Throwable $exception) {
             $this->filesystem->remove($this->absolutePath($relativePath));

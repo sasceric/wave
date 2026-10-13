@@ -1,4 +1,8 @@
 <script setup>
+import CampaignCancellationAction from '../components/account/CampaignCancellationAction.vue'
+import CampaignHireAction from '../components/account/CampaignHireAction.vue'
+import RichTextContent from '../components/shared/RichTextContent.vue'
+import FormModal from '../components/shared/FormModal.vue'
 import CampaignHiringProgress from '../components/campaigns/CampaignHiringProgress.vue'
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
@@ -19,6 +23,7 @@ import {
   Search,
   Send,
   Wallet,
+  X,
 } from '@lucide/vue'
 import LocalizedLink from '../components/shared/LocalizedLink.vue'
 import DirectoryLoadMore from '../components/shared/DirectoryLoadMore.vue'
@@ -34,6 +39,35 @@ import { campaignPlace } from '../lib/marketplace'
 const route = useRoute()
 const router = useRouter()
 const { t, locale } = useI18n()
+const offerDecision = ref(null)
+const offerBusy = ref(false)
+const offerError = ref('')
+async function refreshEngagement() {
+  const thread = selectedThread.value
+  if (thread) await loadMessages({ ...thread, threadType: 'campaign' }, true)
+  window.dispatchEvent(new Event('wave:conversations-updated'))
+}
+function confirmOffer(decision) {
+  const offer = selectedConversation.value?.engagement?.offer
+  if (offer?.status !== 'pending' || currentUser.value?.accountType !== 'creator') return
+  offerError.value = ''
+  offerDecision.value = { ...offer, decision, conversationId: selectedConversation.value.id }
+}
+async function respondInChat() {
+  const choice = offerDecision.value
+  if (!choice || offerBusy.value) return
+  const userId = currentUser.value?.id
+  offerBusy.value = true
+  offerError.value = ''
+  try {
+    await apiRequest(`/me/offers/${choice.id}/respond`, { method: 'POST', body: { decision: choice.decision } })
+    if (currentUser.value?.id !== userId || selectedConversation.value?.id !== choice.conversationId) return
+    offerDecision.value = null
+    await refreshEngagement()
+  } catch (cause) {
+    if (currentUser.value?.id === userId) offerError.value = cause.message
+  } finally { offerBusy.value = false }
+}
 const conversations = ref([])
 const inquiries = ref([])
 const selectedDetails = ref(null)
@@ -124,6 +158,7 @@ const selectedInquiry = computed(() => (selectedDetails.value?.threadType === 'i
   && selectedDetails.value.id === selectedInquiryId.value ? selectedDetails.value : null) || inquiries.value.find(
   (inquiry) => inquiry.id === selectedInquiryId.value,
 ) || null)
+watch(() => [currentUser.value?.id, selectedConversationId.value], () => { offerDecision.value = null; offerError.value = '' })
 const selectedThread = computed(() => selectedConversation.value || selectedInquiry.value)
 const selectedThreadKey = computed(() => (
   selectedConversation.value
@@ -174,7 +209,7 @@ const filteredConversations = computed(() => {
 })
 
 const newConversationRoute = computed(() => (
-  currentUser.value?.accountType === 'company' ? 'account-applications' : 'campaigns'
+  currentUser.value?.accountType === 'company' ? 'account-campaigns' : 'campaigns'
 ))
 const newConversationLabel = computed(() => t(
   currentUser.value?.accountType === 'company'
@@ -223,8 +258,9 @@ const currentDisplayName = computed(() => (
   || currentUser.value?.email
   || ''
 ))
-const campaignChatClosed = computed(() => selectedThread.value?.readOnly || ['closed', 'finished'].includes(selectedCampaign.value?.status))
-const campaignChatNotice = computed(() => selectedThread.value?.readOnly ? 'campaignChat.deletedAccountNotice' : selectedCampaign.value?.status === 'finished' ? 'campaignChat.finishedNotice' : 'campaignChat.closedNotice')
+const collaborationCancelled = computed(() => selectedCampaign.value?.status === 'cancelled' || selectedConversation.value?.cancelled || selectedConversation.value?.engagement?.offer?.status === 'cancelled')
+const campaignChatClosed = computed(() => collaborationCancelled.value || selectedThread.value?.readOnly || ['closed', 'finished'].includes(selectedCampaign.value?.status))
+const campaignChatNotice = computed(() => collaborationCancelled.value ? 'hiring.cancelledNotice' : selectedThread.value?.blocked ? 'safety.blockedHistory' : selectedThread.value?.readOnly ? 'campaignChat.deletedAccountNotice' : selectedCampaign.value?.status === 'finished' ? 'campaignChat.finishedNotice' : 'campaignChat.closedNotice')
 const canSend = computed(() => Boolean(
   !sending.value
   && !campaignChatClosed.value
@@ -439,6 +475,7 @@ function handleRealtimeUpdate(event) {
     lastMessageSenderId: message.senderId,
     unreadCount: (thread.unreadCount || 0) + (isIncoming ? 1 : 0),
   })
+  if (!isInquiry && message.event?.type === 'cancelled') Object.assign(thread, { cancelled: true, readOnly: true })
   if (isSelected) {
     if (selectedDetails.value) Object.assign(selectedDetails.value, thread)
     if (isIncoming && !atLatestMessage.value) rememberUnreadBoundary([message])
@@ -451,6 +488,7 @@ function handleRealtimeUpdate(event) {
   } else if (isIncoming && !isInquiry) {
     window.dispatchEvent(new Event('wave:conversations-updated'))
   }
+  if (!isInquiry && message.event) void refreshInbox()
 }
 
 function refreshInboxWhenVisible() {
@@ -1167,12 +1205,12 @@ function messageTimeDescription(value) {
             <div class="campaign-messages__thread-person">
               <h2>{{ counterpartName }}</h2>
               <LocalizedLink
-                v-if="selectedConversation"
-                :to="{ name: 'campaign-detail', params: { slug: selectedConversation.campaign.slug } }"
+                v-if="selectedConversation?.campaign?.slug"
+                :to="{ name: currentUser?.accountType === 'company' ? 'account-campaign-detail' : 'campaign-detail', params: { slug: selectedConversation.campaign.slug } }"
               >
                 {{ selectedConversation.campaign.title }}
               </LocalizedLink>
-              <p v-else>{{ selectedInquiry.packageTitle || t('campaignChat.directInquiry') }}</p>
+              <p v-else-if="selectedInquiry">{{ selectedInquiry.packageTitle || t('campaignChat.directInquiry') }}</p>
             </div>
             <span class="campaign-messages__thread-kind">
               {{ t(selectedInquiry ? 'campaignChat.directInquiry' : 'campaignChat.campaign') }}
@@ -1236,7 +1274,8 @@ function messageTimeDescription(value) {
                     class="campaign-messages__message"
                     :class="{ 'campaign-messages__message--mine': isMessageMine(message) }"
                   >
-                    <p>{{ message.body }}</p>
+                    <template v-if="message.event"><p>{{ t(`hiring.timeline.${message.event.type}`, { campaign: message.event.campaignTitle, amount: formatMoney(message.event.amount, message.event.currency) }) }}</p><LocalizedLink v-if="message.event.campaignSlug && !selectedThread?.readOnly" class="campaign-messages__event-link" :to="{ name: currentUser?.accountType === 'company' ? 'account-campaign-detail' : 'campaign-detail', params: { slug: message.event.campaignSlug } }">{{ t('campaignChat.viewCampaign') }} →</LocalizedLink></template>
+                    <p v-else>{{ message.body }}</p>
                     <div class="campaign-messages__message-meta">
                       <time
                         :datetime="message.createdAt"
@@ -1312,6 +1351,11 @@ function messageTimeDescription(value) {
 
         <button v-if="selectedThread && unseenNewMessages" type="button" class="campaign-messages__new-messages" @click="scrollToLatestMessage">{{ t('campaignChat.newMessages', { count: unseenNewMessages }) }}</button>
         <form v-form-validation v-if="selectedThread || (pendingStart && pendingDetails && currentUser?.accountType === 'company')" class="campaign-messages__composer" @submit.prevent="sendMessage">
+          <div v-if="selectedConversation?.engagement?.offer?.status === 'pending' && currentUser?.accountType === 'creator' && !campaignChatClosed" class="campaign-messages__offer-confirmation">
+            <p>{{ t('hiring.pendingOffer', { amount: formatMoney(selectedConversation.engagement.offer.amount, selectedCampaign.currency) }) }}</p>
+            <button type="button" class="campaign-messages__offer-action campaign-messages__offer-action--accept" @click="confirmOffer('accept')"><Check :size="14" aria-hidden="true" />{{ t('hiring.acceptOffer') }}</button>
+            <button type="button" class="campaign-messages__offer-action" @click="confirmOffer('reject')"><X :size="14" aria-hidden="true" />{{ t('hiring.declineOffer') }}</button>
+          </div>
           <p v-if="campaignChatClosed" id="campaign-chat-closed-notice" class="campaign-messages__closed-notice" role="status">{{ t(campaignChatNotice) }}</p>
           <label class="campaign-messages__composer-field">
             <span class="sr-only">{{ t(selectedThread ? 'campaignChat.replyPlaceholder' : 'campaignChat.firstMessage') }}</span>
@@ -1444,15 +1488,18 @@ function messageTimeDescription(value) {
               </p>
               <details v-if="selectedCampaign.description" class="campaign-messages__brief">
                 <summary>{{ t('campaignChat.fullBrief') }}</summary>
-                <p>{{ selectedCampaign.description }}</p>
+                <RichTextContent :html="selectedCampaign.description" />
               </details>
               <LocalizedLink
+                v-if="selectedCampaign.slug"
                 class="campaign-messages__campaign-link"
-                :to="{ name: 'campaign-detail', params: { slug: selectedCampaign.slug } }"
+                :to="{ name: currentUser?.accountType === 'company' ? 'account-campaign-detail' : 'campaign-detail', params: { slug: selectedCampaign.slug } }"
               >
                 {{ t('campaignChat.viewCampaign') }}
                 <ArrowRight :size="16" aria-hidden="true" />
               </LocalizedLink>
+              <CampaignHireAction button-class="campaign-messages__campaign-link" show-arrow v-if="selectedConversation?.engagement?.canHire && !selectedThread?.readOnly" :conversation-id="selectedConversation.id" :campaign="selectedCampaign" :creator-name="selectedConversation.creator.displayName" @offered="refreshEngagement" />
+              <CampaignCancellationAction v-if="selectedConversation?.engagement?.offer?.status === 'accepted' && !selectedThread?.readOnly && selectedCampaign.status !== 'finished'" :offer-id="selectedConversation.engagement.offer.id" @cancelled="refreshEngagement" />
             </div>
           </article>
         </div>
@@ -1495,6 +1542,19 @@ function messageTimeDescription(value) {
       </aside>
     </div>
   </section>
+  <FormModal :open="Boolean(offerDecision)" :title="t(offerDecision?.decision === 'accept' ? 'hiring.acceptOffer' : 'hiring.declineOffer')" :busy="offerBusy" @update:open="!$event && (offerDecision = null)" @submit="respondInChat">
+    <p v-if="offerDecision">{{ t('hiring.reviewAmount', { campaign: offerDecision.campaign.title, amount: formatMoney(offerDecision.amount, offerDecision.campaign.currency) }) }}</p>
+    <StatusMessage v-if="offerError" variant="error">{{ offerError }}</StatusMessage>
+    <template #actions="{ close }"><button type="button" class="button button--outline" :disabled="offerBusy" @click="close">{{ t('safety.cancel') }}</button><button type="submit" class="button button--dark" :disabled="offerBusy">{{ t('hiring.confirm') }}</button></template>
+  </FormModal>
+
 </template>
 
 <style lang="scss" src="../scss/views/MessagesView.scss"></style>
+
+<style scoped lang="scss">
+.campaign-messages__event-link { color: inherit; text-decoration: underline; font-size: 12px; }
+.campaign-messages__offer-confirmation { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 6px; width: 100%; margin-bottom: 8px; p { flex-basis: 100%; margin: 0; color: var(--forest); font-size: 12px; line-height: 1.5; } }
+.campaign-messages__offer-action { display: inline-flex; align-items: center; gap: 5px; min-height: 32px; padding: 0 10px; border: 1px solid #dfe4dc; border-radius: 6px; color: #6f7d74; background: transparent; font: inherit; font-size: 11px; cursor: pointer; &:hover { color: var(--forest); background: #f1f3ef; } &:focus-visible { outline: 2px solid var(--forest); outline-offset: 2px; } &--accept { color: var(--forest); background: #edf1eb; } }
+.campaign-messages__brief :deep(.profile-bio) { font-size: inherit; margin: 12px 0; }
+</style>

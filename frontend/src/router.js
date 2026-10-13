@@ -1,6 +1,8 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { localeNames, setLocale } from './i18n'
 import { defaultLocale, localizedPath, localizedRouteName, routeSegments, localePrefixes } from './routePaths'
+import { ensureCurrentUser } from './composables/useCurrentUser'
+import { accountAccessRedirect, accountLanding } from './lib/accountAccess'
 import { resolvePublicRedirect } from './lib/publicRedirects'
 
 const accountView = () => import('./views/AccountView.vue')
@@ -9,6 +11,10 @@ const legalView = () => import('./views/LegalView.vue')
 const notFoundView = () => import('./views/NotFoundView.vue')
 
 const routeViews = {
+  'account-dashboard': () => import('./views/AccountDashboardView.vue'),
+  'account-reviews': () => import('./views/AdminSafetyView.vue'),
+  'admin-reports': () => import('./views/AdminSafetyView.vue'),
+  'account-blocks': () => import('./views/AdminSafetyView.vue'),
   support: () => import('./views/SupportView.vue'),
   'support-create': () => import('./views/SupportView.vue'),
   'support-track': () => import('./views/SupportView.vue'),
@@ -59,6 +65,7 @@ const routeViews = {
 }
 
 const adminSections = {
+  'admin-reports': 'reports',
   'admin-support': 'support',
   'admin-credit-settings': 'credits',
   admin: 'overview',
@@ -75,6 +82,9 @@ const adminSections = {
 }
 
 const accountSections = {
+  'account-dashboard': 'dashboard',
+  'account-reviews': 'reviews',
+  'account-blocks': 'blocks',
   'account-support': 'support',
   'account-credits': 'credits',
   account: 'profile',
@@ -103,12 +113,14 @@ const localizedRoutes = Object.entries(routeSegments).flatMap(([locale, routes])
     path: localizedPath(name, locale),
     name: localizedRouteName(name, locale),
     component: routeViews[name],
+    ...(['account-offers', 'account-invitations'].includes(name) ? { redirect: to => ({ name: localizedRouteName('account-applications', locale), query: to.query, hash: to.hash }) } : {}),
     meta: {
       locale,
       routeName: name,
       accountAccessPage: routeViews[name] === accountView,
       adminSection: adminSections[name],
       accountSection: accountSections[name],
+      safetySection: { 'account-reviews': 'reviews', 'admin-reports': 'reports', 'account-blocks': 'blocks' }[name],
       accountCampaignPage: accountCampaignPages[name],
     },
   }))
@@ -200,6 +212,13 @@ const router = createRouter({
 router.beforeEach(async (to, from) => {
   if (to.meta.locale) {
     await setLocale(to.meta.locale)
+  }
+  let user
+  try { user = await ensureCurrentUser() } catch { /* The page API retains its access/error checks. */ }
+  const gate = accountAccessRedirect(to, user)
+  if (gate) return { name: localizedRouteName(gate.name, to.meta.locale || defaultLocale) }
+  if (user && to.meta.routeName === 'account' && !to.query.bookmark && !to.query.returnTo && (['login', 'register'].includes(to.query.mode) || to.query.oauth === 'success') && accountLanding(user) !== 'account') {
+    return { name: localizedRouteName(accountLanding(user), to.meta.locale || defaultLocale) }
   }
   // Symfony already applies 301s to the initial production document request.
   // Vite and subsequent SPA links need the public resolver.

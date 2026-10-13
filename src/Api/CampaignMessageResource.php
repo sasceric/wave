@@ -11,6 +11,7 @@ final class CampaignMessageResource
         return [
             'id' => $message->getId(),
             'body' => $message->getBody(),
+            'event' => $message->getEvent(),
             'createdAt' => $message->getCreatedAt()->format(DATE_ATOM),
             'readAt' => $message->getReadAt()?->format(DATE_ATOM),
             'senderId' => $message->getSender()->getId(),

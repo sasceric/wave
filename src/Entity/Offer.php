@@ -77,6 +77,13 @@ class Offer
         return $this->respondedAt;
     }
 
+    public function cancel(): void
+    {
+        $this->status = 'cancelled';
+        $this->respondedAt = new DateTimeImmutable();
+        $this->application->setStatus('cancelled');
+    }
+
     public function respond(string $status): void
     {
         $this->status = $status;

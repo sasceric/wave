@@ -1,6 +1,6 @@
 <script setup>
 import { computed, nextTick, ref, watch } from 'vue'
-import { CalendarDays, Camera, CheckCheck, CirclePlay, Eye, LockKeyhole, FileText, MapPin, Megaphone, Music2, Pencil, Plus } from '@lucide/vue'
+import { CalendarDays, Camera, CheckCheck, CirclePlay, Eye, LockKeyhole, FileText, MapPin, Megaphone, Music2, Pencil, Plus, Ban } from '@lucide/vue'
 import { useI18n } from 'vue-i18n'
 import AdminRowActions from '../admin/AdminRowActions.vue'
 import CampaignHiringProgress from '../campaigns/CampaignHiringProgress.vue'
@@ -12,15 +12,16 @@ import StatusMessage from '../shared/StatusMessage.vue'
 import { formatDate, formatMoney } from '../../lib/api'
 import { campaignPlace, CAMPAIGN_PLACEHOLDER } from '../../lib/marketplace'
 
-const props = defineProps({ campaigns: { type: Array, default: () => [] } })
+const props = defineProps({ campaigns: { type: Array, default: () => [] }, initialStatus: { type: String, default: 'all' } })
 const emit = defineEmits(['edit', 'status'])
 const { t, locale } = useI18n()
 const query = ref('')
 const statusFilter = ref('all')
+watch(() => props.initialStatus, value => { statusFilter.value = ['all', 'open', 'closed', 'finished', 'cancelled'].includes(value) ? value : 'all' }, { immediate: true })
 const page = ref(1)
 const heading = ref(null)
 const pageSize = 10
-const filters = computed(() => ['all', 'open', 'closed', 'finished'].map(value => ({
+const filters = computed(() => ['all', 'open', 'closed', 'finished', 'cancelled'].map(value => ({
   value, label: t(value === 'all' ? 'account.activityAll' : `account.${value}`),
   count: value === 'all' ? props.campaigns.length : props.campaigns.filter(campaign => campaign.status === value).length,
 })))
@@ -103,18 +104,19 @@ function deadlineLabel(campaign) {
             <td><span class="creator-offer__status" :class="`company-campaign-list__status--${campaign.status}`">{{ t(`account.${campaign.status}`) }}</span></td>
             <td class="creator-offers__action-cell"><div class="creator-offers__actions">
               <AdminRowActions :label="`${t('account.activityActions')}: ${campaign.title}`">
+                <button v-if="!['finished', 'cancelled'].includes(campaign.status)" class="admin-row-actions__item" role="menuitem" type="button" @click="emit('status', campaign, 'cancelled')"><Ban :size="16" aria-hidden="true" />{{ t('hiring.cancelCampaign') }}</button>
                 <LocalizedLink class="admin-row-actions__item" role="menuitem" :to="detailRoute(campaign)"><Eye :size="16" aria-hidden="true" />{{ t('account.viewCampaign') }}</LocalizedLink>
                 <button v-if="campaign.status === 'open'" class="admin-row-actions__item" role="menuitem" type="button" @click="emit('status', campaign, 'closed')"><LockKeyhole :size="16" aria-hidden="true" />{{ t('reviews.closeCampaign') }}</button>
-                <button v-if="campaign.status !== 'finished'" class="admin-row-actions__item" role="menuitem" type="button" @click="emit('status', campaign, 'finished')"><CheckCheck :size="16" aria-hidden="true" />{{ t('reviews.finishCampaign') }}</button>
+                <button v-if="!['finished', 'cancelled'].includes(campaign.status)" class="admin-row-actions__item" role="menuitem" type="button" @click="emit('status', campaign, 'finished')"><CheckCheck :size="16" aria-hidden="true" />{{ t('reviews.finishCampaign') }}</button>
                 <button class="admin-row-actions__item" role="menuitem" type="button" @click="emit('edit', campaign)"><Pencil :size="16" aria-hidden="true" />{{ t('account.editCampaign') }}</button>
-                <LocalizedLink class="admin-row-actions__item" role="menuitem" :to="{ name: 'campaign-detail', params: { slug: campaign.slug } }">{{ t('campaignCard.viewBrief') }}</LocalizedLink>
+                <LocalizedLink class="admin-row-actions__item" role="menuitem" :to="{ name: 'campaign-detail', params: { slug: campaign.slug } }"><FileText :size="16" aria-hidden="true" />{{ t('campaignCard.viewBrief') }}</LocalizedLink>
               </AdminRowActions>
             </div></td>
           </tr>
         </tbody>
       </table>
     </div>
-    <DirectoryPagination v-if="filteredCampaigns.length" v-model:page="page" :page-size="pageSize" :show-page-size="false" :show-single-page="true" :total="filteredCampaigns.length" :status-label="t('account.activityShown', { shown: pageCampaigns.length, total: filteredCampaigns.length })" />
+    <DirectoryPagination v-model:page="page" :page-size="pageSize" :show-page-size="false" :show-single-page="true" :total="filteredCampaigns.length" :status-label="t('account.activityShown', { shown: pageCampaigns.length, total: filteredCampaigns.length })" />
   </section>
 </template>
 

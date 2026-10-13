@@ -14,6 +14,7 @@ async function setupOffers({ bookmarkError = null } = {}) {
   const view = await setupView('../src/components/account/CreatorCampaignActivity.vue', {
     '../../composables/useCampaignBookmarks': { useCampaignBookmarks: () => ({
       isCampaignBookmarked: () => false,
+      loadCampaignBookmarks: async () => {},
       toggleCampaignBookmark: async (campaign) => {
         toggled.push(campaign.slug)
         if (bookmarkError) throw new Error(bookmarkError)
@@ -131,9 +132,9 @@ test('finished campaigns preserve hired and rejected application outcomes in act
     { id: 1, status: 'accepted', campaign: { status: 'finished', company: { name: 'Brand' } } },
     { id: 2, status: 'rejected', campaign: { status: 'finished', company: { name: 'Brand' } } },
   ]
-  assert.equal(state.statusLabel(props.items[0]), 'account.accepted')
+  assert.equal(state.statusLabel(props.items[0]), 'account.finished')
   assert.equal(state.statusLabel(props.items[1]), 'account.rejected')
-  state.statusFilter.value = 'accepted'
+  state.statusFilter.value = 'finished'
   assert.equal(state.filteredItems.value.length, 1)
   assert.equal(state.filteredItems.value[0].id, 1)
   state.statusFilter.value = 'rejected'
@@ -158,7 +159,7 @@ test('invitations separate declined and expired invitations while preserving acc
   assert.equal(state.chatRoute(props.items[1]).query.conversation, 56)
   assert.equal(state.hasChat(props.items[0]), false)
   assert.equal(state.titleKey.value, 'account.campaignInvitations')
-  assert.deepEqual(Array.from(state.statusFilters.value, filter => filter.count), [5, 1, 1, 1, 2])
+  assert.deepEqual(Array.from(state.statusFilters.value, filter => filter.count), [5, 1, 1, 0, 1, 2, 0])
 })
 
 test('invitation search and filters apply across ten-item pages', async () => {

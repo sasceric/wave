@@ -48,6 +48,12 @@ final class ProfileController
         if (!$user->isApproved()) {
             return new JsonResponse(['error' => ApiMessages::get('account_pending_approval', $locale)], 403);
         }
+        if (!$user->isEmailVerified()) {
+            return new JsonResponse(['error' => ApiMessages::get('email_not_verified', $locale)], 403);
+        }
+        if (!$user->hasCompleteProfile()) {
+            return new JsonResponse(['error' => ApiMessages::get('profile_incomplete', $locale)], 403);
+        }
         $data = JsonPayload::fromRequest($request);
         $hideMyAccount = is_array($data) ? ($data['hide_my_account'] ?? null) : null;
         if (!is_int($hideMyAccount) || !in_array($hideMyAccount, [0, 1], true)) {
@@ -166,6 +172,8 @@ final class ProfileController
             ? (is_array($data['industries']) && array_is_list($data['industries']) ? $this->stringList($data['industries'], 20, 100) : null)
             : (isset($data['industry']) ? [$this->text($data, 'industry', 2, 100)] : $company->getIndustries());
         $industry = $industries[0] ?? null;
+        $companyType = $data['companyType'] ?? $company->getCompanyType();
+        if (array_key_exists('companyType', $data)) $companyType = $data['companyType'];
         $coverMedia = array_key_exists('coverMediaId', $data)
             ? $this->ownedMedia($data['coverMediaId'], $user, 'company-cover', $entityManager)
             : $company->getCoverMedia();
@@ -191,6 +199,7 @@ final class ProfileController
             ? $this->socialLinks($data['socialLinks'])
             : $company->getSocialLinks();
         if ($name === null
+            || !is_string($companyType) || !\App\Account\CompanyTypes::valid($companyType)
             || $industry === null
             || $industries === null
             || $industries === []
@@ -207,6 +216,7 @@ final class ProfileController
             return new JsonResponse(['error' => ApiMessages::get('invalid_profile', $locale)], 400);
         }
         $company->updateProfile($name, $industry, $logoUrl, $about);
+        $company->setCompanyType($companyType);
         $company->setIndustries($industries);
         $company->setCoverMedia($coverMedia);
         $company->setLogoMedia($logoMedia);

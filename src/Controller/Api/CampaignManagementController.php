@@ -11,6 +11,8 @@ use App\Api\JsonPayload;
 use App\Entity\Application;
 use App\Entity\Campaign;
 use App\Entity\CampaignInvitation;
+use App\Marketplace\CampaignCancellation;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 use App\Entity\Company;
 use App\Entity\Media;
 use App\Entity\User;
@@ -46,28 +48,9 @@ final class CampaignManagementController
             return new JsonResponse(['error' => ApiMessages::get('profile_unavailable', $locale)], 409);
         }
         $campaigns = $entityManager->getRepository(Campaign::class)->findBy(['company' => $company], ['publishedAt' => 'DESC']);
-        $invitations = $campaigns === []
-            ? []
-            : $entityManager->getRepository(CampaignInvitation::class)->findBy(['campaign' => $campaigns]);
-        $applications = $campaigns === []
-            ? []
-            : $entityManager->getRepository(Application::class)->findBy(['campaign' => $campaigns]);
-        $invitedCreatorIdsByCampaign = [];
-        foreach ($invitations as $invitation) {
-            $campaignId = $invitation->getCampaign()->getId();
-            $creatorId = $invitation->getCreator()->getId();
-            if ($campaignId !== null && $creatorId !== null) {
-                $invitedCreatorIdsByCampaign[$campaignId][] = $creatorId;
-            }
-        }
-        $appliedCreatorIdsByCampaign = [];
-        foreach ($applications as $application) {
-            $campaignId = $application->getCampaign()->getId();
-            $creatorId = $application->getCreator()->getId();
-            if ($campaignId !== null && $creatorId !== null) {
-                $appliedCreatorIdsByCampaign[$campaignId][] = $creatorId;
-            }
-        }
+        // The list needs identity pairs, not full applications and invitation messages.
+        $invitedCreatorIdsByCampaign = $this->participantIds($entityManager, CampaignInvitation::class, $campaigns);
+        $appliedCreatorIdsByCampaign = $this->participantIds($entityManager, Application::class, $campaigns);
         $categoryLabels = MarketplaceCategoryLabels::forLocale($entityManager, $locale);
         $hiredCounts = CampaignHiredCounts::forCampaigns($entityManager, $campaigns);
         $campaignResources = [];
@@ -198,9 +181,12 @@ final class CampaignManagementController
                 'fields' => array_values(array_unique($invalidFields)),
             ], 400);
         }
-        if (($campaign->getStatus() === 'finished' && $fields['status'] !== 'finished')
+        if ((in_array($campaign->getStatus(), ['finished', 'cancelled'], true) && $fields['status'] !== $campaign->getStatus())
             || ($fields['currency'] !== $campaign->getCurrency() && CampaignHiredCounts::forCampaign($entityManager, $campaign) > 0)) {
             return new JsonResponse(['error' => ApiMessages::get('campaign_financial_history_locked', $locale)], 409);
+        }
+        if ($fields['status'] === 'cancelled' && $campaign->getStatus() !== 'cancelled') {
+            return new JsonResponse(['error' => ApiMessages::get('invalid_request', $locale)], 400);
         }
         $campaign->update(
             $fields['title'],
@@ -227,7 +213,7 @@ final class CampaignManagementController
     }
 
     #[Route('/api/company/campaigns/{id}/status', name: 'api_company_campaign_status', methods: ['PUT'], requirements: ['id' => '\\d+'])]
-    public function changeStatus(int $id, Request $request, EntityManagerInterface $entityManager, Security $security, CsrfTokenManagerInterface $tokenManager): JsonResponse
+    public function changeStatus(int $id, Request $request, EntityManagerInterface $entityManager, Security $security, CsrfTokenManagerInterface $tokenManager, CampaignCancellation $cancellation): JsonResponse
     {
         $locale = LocaleContext::fromRequest($request);
         if ($locale === null) {
@@ -246,16 +232,36 @@ final class CampaignManagementController
         }
         $data = JsonPayload::fromRequest($request);
         $status = $data['status'] ?? null;
-        if (!in_array($status, ['closed', 'finished'], true)) {
+        if (!in_array($status, ['closed', 'finished', 'cancelled'], true)) {
             return new JsonResponse(['error' => ApiMessages::get('invalid_request', $locale)], 400);
         }
-        if ($campaign->getStatus() === 'finished' && $status !== 'finished') {
+        if (in_array($campaign->getStatus(), ['finished', 'cancelled'], true) && $status !== $campaign->getStatus()) {
             return new JsonResponse(['error' => ApiMessages::get('campaign_financial_history_locked', $locale)], 409);
+        }
+        if ($status === 'cancelled') {
+            try { $cancellation->campaign($campaign, $user); }
+            catch (HttpException $error) { return new JsonResponse(['error' => ApiMessages::get($error->getMessage(), $locale)], $error->getStatusCode()); }
+            return new JsonResponse(['data' => CampaignResource::fromEntity($campaign, $locale, hiredCount: CampaignHiredCounts::forCampaign($entityManager, $campaign))]);
         }
         $campaign->setStatus($status);
         $this->finishApplications($campaign, $entityManager);
         $entityManager->flush();
         return new JsonResponse(['data' => CampaignResource::fromEntity($campaign, $locale, hiredCount: CampaignHiredCounts::forCampaign($entityManager, $campaign))]);
+    }
+
+    /** @param class-string<Application>|class-string<CampaignInvitation> $entityClass */
+    private function participantIds(EntityManagerInterface $entityManager, string $entityClass, array $campaigns): array
+    {
+        if ($campaigns === []) return [];
+        $rows = $entityManager->createQueryBuilder()
+            ->select('IDENTITY(p.campaign) AS campaignId', 'IDENTITY(p.creator) AS creatorId')
+            ->from($entityClass, 'p')
+            ->where('p.campaign IN (:campaigns)')
+            ->setParameter('campaigns', $campaigns)
+            ->getQuery()->getArrayResult();
+        $ids = [];
+        foreach ($rows as $row) $ids[(int) $row['campaignId']][] = (int) $row['creatorId'];
+        return $ids;
     }
 
     private function finishApplications(Campaign $campaign, EntityManagerInterface $entityManager): void
@@ -279,7 +285,7 @@ final class CampaignManagementController
                 if ($offer?->getStatus() === 'pending') {
                     $offer->respond('rejected');
                 }
-                $application->setStatus('rejected');
+                if ($application->getStatus() !== 'cancelled') $application->setStatus('rejected');
             }
         }
     }
@@ -350,7 +356,7 @@ final class CampaignManagementController
         if (!is_string($closesAtInput)) {
             $invalidFields[] = 'closesAt';
         }
-        if (!in_array($status, $allowStatus ? ['open', 'closed', 'finished'] : ['open'], true)) {
+        if (!in_array($status, $allowStatus ? ['open', 'closed', 'finished', 'cancelled'] : ['open'], true)) {
             $invalidFields[] = 'status';
         }
         $closesAt = null;

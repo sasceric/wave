@@ -1,4 +1,9 @@
 <script setup>
+import { accountLanding } from '../lib/accountAccess'
+import { companyTypeOptions } from '../lib/companyTypes'
+import { mergeCampaignActivity } from '../lib/campaignActivity'
+import CampaignCancellationAction from '../components/account/CampaignCancellationAction.vue'
+import CampaignHireAction from '../components/account/CampaignHireAction.vue'
 import CreditActionNotice from '../components/account/CreditActionNotice.vue'
 import { refreshCredits } from '../composables/useCredits'
 import ConfirmationModal from '../components/shared/ConfirmationModal.vue'
@@ -45,6 +50,7 @@ import { localizedPath, localizedRouteName } from '../routePaths'
 import countries from '../data/countries.json'
 
 const { t, locale } = useI18n()
+const companyTypes = computed(() => companyTypeOptions(t))
 const typeOptions = computed(() => creatorTypeOptions(t))
 const route = useRoute()
 const router = useRouter()
@@ -70,10 +76,10 @@ const countryOptions = computed(() => {
 const PROFILE_TABS = ['about', 'social', 'portfolio', 'packages', 'faqs']
 const LEGACY_ACCOUNT_TABS = {
   applications: 'account-applications',
-  offers: 'account-offers',
+  offers: 'account-applications',
   inquiries: 'account-inquiries',
   bookmarks: 'account-bookmarks',
-  invitations: 'account-invitations',
+  invitations: 'account-applications',
 }
 const user = ref(null)
 const dashboardLoading = ref(true)
@@ -117,11 +123,8 @@ async function changeCampaignStatus() {
 }
 const applications = ref([])
 const offers = ref([])
-const offersWithConversations = computed(() => offers.value.map((offer) => ({
-  ...offer,
-  conversationId: applications.value.find((application) => application.id === offer.applicationId)?.conversationId ?? null,
-})))
 const invitations = ref([])
+const campaignActivity = computed(() => mergeCampaignActivity(applications.value, invitations.value, offers.value))
 const companyApplications = ref([])
 const inquiries = ref([])
 const editingCampaignId = ref(null)
@@ -165,8 +168,14 @@ watch(catalogError, (value) => {
 })
 
 watch(currentUser, (authenticatedUser) => {
-  if (!authenticatedUser) {
+  if (!authenticatedUser || authenticatedUser.id !== user.value?.id) {
     dashboardRequestId += 1
+    applications.value = []
+    offers.value = []
+    invitations.value = []
+    campaigns.value = []
+    companyApplications.value = []
+    inquiries.value = []
     user.value = null
     profile.value = null
     editingProfile.value = false
@@ -249,6 +258,7 @@ async function handleAuthenticated(authenticatedUser) {
   await nextTick()
   // Login replaces this view in place, so the login form's scroll position survives.
   window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
+  if (authenticatedUser && !route.query.bookmark && !route.query.returnTo) await router.replace({ name: localizedRouteName(accountLanding(authenticatedUser), locale.value) })
 }
 
 function incompleteProfileTab() {
@@ -309,38 +319,48 @@ function incompleteProfileTab() {
   return ''
 }
 
-async function loadDashboard(authenticatedUser = null) {
+async function loadDashboard(authenticatedUser = null, { sectionOnly = false } = {}) {
   const requestId = ++dashboardRequestId
   dashboardLoading.value = true
-  if (!user.value) dashboardReady.value = false
+  if (!user.value || sectionOnly) dashboardReady.value = false
+  if (sectionOnly) error.value = ''
   let pendingBookmarkRedirect = null
   try {
-    const response = authenticatedUser ? { data: authenticatedUser } : await apiGet('/auth/me')
+    const response = sectionOnly ? { data: user.value } : authenticatedUser ? { data: authenticatedUser } : await apiGet('/auth/session')
     if (requestId !== dashboardRequestId) return
-    user.value = response.data
-    setCurrentUser(response.data)
-    const supportReturn = getSafeBookmarkReturnTo()
-    const supportPaths = [localizedPath('account-support', locale.value)]
-    if (response.data.isAdmin) supportPaths.push(localizedPath('admin-support', locale.value))
-    if (!route.query.bookmark && supportReturn && supportPaths.includes(new URL(supportReturn, window.location.origin).pathname)) {
-      // Reporting account problems must remain possible before profile completion.
-      await router.replace(supportReturn)
+    if (!response.data) {
+      user.value = null
+      profile.value = null
+      inquiries.value = []
+      setCurrentUser(null)
       return
     }
-    profile.value = structuredClone(response.data.profile)
-    if (response.data.profile) {
-      profile.value = {
-        ...profile.value,
-        ...(response.data.accountType === 'company' ? { industries: profile.value.industries || [profile.value.industry].filter(Boolean) } : {}),
-        ...(response.data.accountType === 'company' ? { socialLinks: profile.value.socialLinks || [] } : {}),
-        ...(response.data.accountType === 'creator' ? { birthday: profile.value.birthday || '', creatorTypes: profile.value.creatorTypes || [] } : {}),
-        phone: response.data.phone || '',
-        city: response.data.city || '',
-        countryCode: response.data.countryCode || '',
+    if (!sectionOnly) {
+      user.value = response.data
+      setCurrentUser(response.data)
+      const supportReturn = getSafeBookmarkReturnTo()
+      const supportPaths = [localizedPath('account-support', locale.value)]
+      if (response.data.isAdmin) supportPaths.push(localizedPath('admin-support', locale.value))
+      if (!route.query.bookmark && supportReturn && supportPaths.includes(new URL(supportReturn, window.location.origin).pathname)) {
+        // Reporting account problems must remain possible before profile completion.
+        await router.replace(supportReturn)
+        return
       }
-      profilePhoneCountry.value = parsePhoneNumberFromString(profile.value.phone)?.country
-        || profile.value.countryCode
-        || 'BA'
+      profile.value = structuredClone(response.data.profile)
+      if (response.data.profile) {
+        profile.value = {
+          ...profile.value,
+          ...(response.data.accountType === 'company' ? { companyType: profile.value.companyType || 'brand', industries: profile.value.industries || [profile.value.industry].filter(Boolean) } : {}),
+          ...(response.data.accountType === 'company' ? { socialLinks: profile.value.socialLinks || [] } : {}),
+          ...(response.data.accountType === 'creator' ? { birthday: profile.value.birthday || '', creatorTypes: profile.value.creatorTypes || [] } : {}),
+          phone: response.data.phone || '',
+          city: response.data.city || '',
+          countryCode: response.data.countryCode || '',
+        }
+        profilePhoneCountry.value = parsePhoneNumberFromString(profile.value.phone)?.country
+          || profile.value.countryCode
+          || 'BA'
+      }
     }
     const canAccessMarketplace = response.data.approved || response.data.isAdmin
     if (route.query.bookmark && canAccessMarketplace) {
@@ -362,35 +382,35 @@ async function loadDashboard(authenticatedUser = null) {
           void router.replace({ query })
         }
       }
-      tags.value = [...(profile.value.tags || [])]
-      if (canAccessMarketplace) {
+      if (!sectionOnly) tags.value = [...(profile.value.tags || [])]
+      if (canAccessMarketplace && accountSection.value === 'applications') {
         const [applicationResponse, offerResponse, invitationResponse] = await Promise.all([
           apiGet('/me/applications'),
           apiGet('/me/offers'),
           apiGet('/me/invitations'),
-          loadCampaignBookmarks(),
         ])
         if (requestId !== dashboardRequestId) return
         applications.value = applicationResponse.data
         offers.value = offerResponse.data
         invitations.value = invitationResponse.data
-      } else {
+      } else if (!canAccessMarketplace) {
         applications.value = []
         offers.value = []
         invitations.value = []
       }
+      if (canAccessMarketplace && accountSection.value === 'bookmarks') await loadCampaignBookmarks()
     } else {
       if (route.query.tab !== undefined) {
         const query = { ...route.query }
         delete query.tab
         void router.replace({ query })
       }
-      if (canAccessMarketplace) {
+      if (canAccessMarketplace && accountSection.value === 'campaigns' && campaignPage.value !== 'create') {
         const campaignResponse = await apiGet('/me/campaigns')
         if (requestId !== dashboardRequestId) return
         campaigns.value = campaignResponse.data
         const applicationResponses = await Promise.all(
-          campaigns.value.map((campaign) => apiGet(`/company/campaigns/${encodeURIComponent(campaign.slug)}/applications`)),
+          (campaignPage.value === 'detail' ? campaigns.value.filter(campaign => campaign.slug === route.params.slug) : []).map((campaign) => apiGet(`/company/campaigns/${encodeURIComponent(campaign.slug)}/applications`)),
         )
         if (requestId !== dashboardRequestId) return
         companyApplications.value = applicationResponses.flatMap((response) => response.data)
@@ -403,16 +423,16 @@ async function loadDashboard(authenticatedUser = null) {
           application.id,
           { amount: application.campaign.budgetMin, message: '' },
         ]))
-      } else {
+      } else if (!canAccessMarketplace) {
         campaigns.value = []
         companyApplications.value = []
       }
     }
-    if (canAccessMarketplace) {
+    if (canAccessMarketplace && accountSection.value === 'inquiries') {
       const inquiryResponse = await apiGet('/me/inquiries')
       if (requestId !== dashboardRequestId) return
       inquiries.value = inquiryResponse.data
-    } else {
+    } else if (!canAccessMarketplace) {
       inquiries.value = []
     }
   } catch (cause) {
@@ -502,7 +522,7 @@ async function resendVerification() {
 }
 
 async function updateAccountVisibility(value) {
-  if (!user.value || !user.value.approved || visibilitySaving.value) {
+  if (!user.value || !user.value.approved || !user.value.emailVerified || user.value.profileComplete === false || visibilitySaving.value) {
     return
   }
 
@@ -607,6 +627,7 @@ async function saveProfile() {
       }
     : {
         name: profile.value.name,
+        companyType: profile.value.companyType,
         industries: profile.value.industries,
         coverMediaId: profile.value.coverMediaId || null,
         about: profile.value.about || '',
@@ -838,6 +859,11 @@ async function sendOffer(application) {
   })
 }
 
+async function respondToCampaignActivity(item, decision) {
+  if (item.offer?.status === 'pending') await respondToOffer(item.offer, decision)
+  else if (item.source === 'invitation') await respondToInvitation(item.invitation, decision)
+}
+
 async function respondToOffer(offer, decision) {
   if (busy.value) return
   busy.value = true
@@ -965,6 +991,9 @@ watch([campaigns, () => route.params.slug], ([campaignList, slug]) => {
   }
 })
 
+watch(() => [accountSection.value, campaignPage.value, route.params.slug], () => {
+  if (user.value) void loadDashboard(null, { sectionOnly: true })
+})
 watch(locale, () => {
   if (user.value) loadDashboard()
 })
@@ -1444,6 +1473,7 @@ onMounted(loadDashboard)
                 :placeholder="t('auth.companyNamePlaceholder')"
               />
             </label>
+            <SingleSelect v-model="profile.companyType" :label="t('companyTypes.label')" :options="companyTypes" required />
             <MultiSelect required
               v-model="profile.industries"
               :options="companyIndustryOptions"
@@ -1538,24 +1568,14 @@ onMounted(loadDashboard)
 
       <CreatorCampaignActivity
         v-if="accountSection === 'applications' && user.accountType === 'creator'"
-        kind="applications"
-        :items="applications"
-        :can-respond="user.emailVerified && user.approved"
-      />
-      <CreatorCampaignActivity
-        v-if="accountSection === 'invitations' && user.accountType === 'creator'"
-        kind="invitations"
-        :items="invitations"
+        kind="activity"
+        :initial-status="typeof route.query.status === 'string' ? route.query.status : 'all'"
+        :initial-query="typeof route.query.q === 'string' ? route.query.q : ''"
+        :items="campaignActivity"
         :can-respond="user.emailVerified && user.approved"
         :responding="busy || dashboardLoading"
-        @respond="respondToInvitation"
-      />
-      <CreatorCampaignActivity
-        v-if="accountSection === 'offers' && user.accountType === 'creator'"
-        :items="offersWithConversations"
-        :can-respond="user.emailVerified && user.approved"
-        :responding="busy || dashboardLoading"
-        @respond="respondToOffer"
+        @cancelled="loadDashboard()"
+        @respond="respondToCampaignActivity"
       />
 
       <section
@@ -1570,6 +1590,7 @@ onMounted(loadDashboard)
       </section>
 
       <CompanyCampaignList
+        :initial-status="typeof route.query.status === 'string' ? route.query.status : 'all'"
         v-if="user.accountType !== 'creator' && accountSection === 'campaigns' && campaignPage === 'list'"
         :campaigns="campaigns"
         @edit="editListedCampaign"
@@ -1670,7 +1691,7 @@ onMounted(loadDashboard)
               <label class="form-field"><span>{{ t('account.creatorCount') }}</span><input v-model.number="campaignForm.creatorCount" type="number" min="1" max="100" required /></label>
               <DatePicker v-model="campaignForm.closesAt" :label="t('account.closesAt')" required />
             </div>
-            <SingleSelect v-if="editingCampaignId" :disabled="editingCampaign?.status === 'finished'" v-model="campaignForm.status" :label="t('account.status')" :options="[{ value: 'open', label: t('account.open') }, { value: 'closed', label: t('account.closed') }, { value: 'finished', label: t('account.finished') }]" />
+            <SingleSelect v-if="editingCampaignId" :disabled="['finished', 'cancelled'].includes(editingCampaign?.status)" v-model="campaignForm.status" :label="t('account.status')" :options="[{ value: 'open', label: t('account.open') }, { value: 'closed', label: t('account.closed') }, { value: 'finished', label: t('account.finished') }, ...(editingCampaign?.status === 'cancelled' ? [{ value: 'cancelled', label: t('account.cancelled') }] : [])]" />
             <StatusMessage v-if="editingCampaignId && campaignForm.status === 'finished'" variant="info">{{ t('reviews.finishHint') }}</StatusMessage>
             <CreditActionNotice v-if="!editingCampaignId" action="campaign" />
             <div class="button-row">
@@ -1703,7 +1724,7 @@ onMounted(loadDashboard)
         <div v-if="selectedApplication" class="company-applicant-dialog__content">
           <header class="company-applicant-dialog__header">
             <div>
-              <p class="eyebrow">{{ t('account.applicantDetails') }}</p>
+              <p class="eyebrow">{{ t(selectedApplication.source === 'invitation' ? 'hiring.invitationDetails' : 'account.applicantDetails') }}</p>
               <h2>{{ selectedApplication.creator.displayName }}</h2>
             </div>
             <button class="company-applicant-dialog__close" type="button" :aria-label="t('account.closeApplicantDetails')" @click="closeApplicant">
@@ -1723,11 +1744,13 @@ onMounted(loadDashboard)
           </div>
           <RichTextContent v-if="selectedApplication.creator.bio" class="company-applicant-dialog__bio" :html="selectedApplication.creator.bio" />
           <div class="company-applicant-dialog__message">
-            <strong>{{ t('account.yourMessage') }}</strong>
+            <strong>{{ t(selectedApplication.source === 'invitation' ? 'hiring.invitationMessage' : 'account.yourMessage') }}</strong>
             <p>{{ selectedApplication.message }}</p>
           </div>
-          <StatusMessage v-if="selectedApplication.readOnly" variant="info">{{ t('campaignChat.deletedAccountNotice') }}</StatusMessage>
+          <StatusMessage v-if="selectedApplication.readOnly" variant="info">{{ t(selectedApplication.blocked ? 'safety.blockedHistory' : 'campaignChat.deletedAccountNotice') }}</StatusMessage>
           <div class="company-applicant-dialog__actions">
+            <CampaignCancellationAction v-if="selectedApplication.offer?.status === 'accepted' && selectedApplication.campaign.status !== 'finished' && !selectedApplication.readOnly" :offer-id="selectedApplication.offer.id" @cancelled="closeApplicant(); loadDashboard()" />
+            <CampaignHireAction v-if="selectedApplication.status === 'invited' && selectedApplication.conversationId && !selectedApplication.readOnly && selectedApplication.campaign.status === 'open'" :conversation-id="selectedApplication.conversationId" :campaign="selectedApplication.campaign" :creator-name="selectedApplication.creator.displayName" @offered="closeApplicant(); loadDashboard()" />
             <button
               v-if="selectedApplication.status === 'pending' && !selectedApplication.readOnly"
               class="button button--dark"
@@ -1738,7 +1761,7 @@ onMounted(loadDashboard)
               {{ t('account.accept') }}
             </button>
             <RouterLink
-              v-if="['shortlisted', 'offered', 'accepted'].includes(selectedApplication.status)"
+              v-if="!selectedApplication.readOnly && (['shortlisted', 'offered', 'accepted'].includes(selectedApplication.status) || selectedApplication.status === 'invited' && selectedApplication.conversationId)"
               class="button button--outline"
               :to="{
                 name: localizedRouteName('messages', locale),
@@ -1767,8 +1790,8 @@ onMounted(loadDashboard)
               <input
                 v-model.number="offerForms[selectedApplication.id].amount"
                 type="number"
-                :min="selectedApplication.campaign.budgetMin"
-                :max="selectedApplication.campaign.budgetMax"
+                :min="1"
+                :max="10000000"
                 required
               />
             </label>
@@ -1791,6 +1814,7 @@ onMounted(loadDashboard)
         </div>
       </dialog>
       <CreatorCampaignActivity
+        @cancelled="loadDashboard()"
         v-if="accountSection === 'inquiries'"
         kind="inquiries"
         :items="inquiries"
@@ -1802,7 +1826,7 @@ onMounted(loadDashboard)
       </main>
     </div>
     <ReviewAction v-if="reviewId && user.approved && user.emailVerified" :key="reviewId" :application-id="reviewId" auto-open hide-trigger @closed="closeReviewLink" />
-    <ConfirmationModal :open="Boolean(statusChange)" :title="t(statusChange?.status === 'finished' ? 'reviews.finishCampaign' : 'reviews.closeCampaign')" :message="t(statusChange?.status === 'finished' ? 'reviews.finishHint' : 'reviews.closeCampaignHint')" :confirm-label="t(statusChange?.status === 'finished' ? 'reviews.finishCampaign' : 'reviews.closeCampaign')" :cancel-label="t('credits.cancel')" :loading="busy" @update:open="!$event && (statusChange = null)" @confirm="changeCampaignStatus" />
+    <ConfirmationModal :open="Boolean(statusChange)" :title="t(statusChange?.status === 'cancelled' ? 'hiring.cancelCampaign' : statusChange?.status === 'finished' ? 'reviews.finishCampaign' : 'reviews.closeCampaign')" :message="t(statusChange?.status === 'cancelled' ? 'hiring.cancelCampaignHint' : statusChange?.status === 'finished' ? 'reviews.finishHint' : 'reviews.closeCampaignHint')" :confirm-label="t(statusChange?.status === 'cancelled' ? 'hiring.cancelCampaign' : statusChange?.status === 'finished' ? 'reviews.finishCampaign' : 'reviews.closeCampaign')" :cancel-label="t('credits.cancel')" :loading="busy" @update:open="!$event && (statusChange = null)" @confirm="changeCampaignStatus" />
     <RequiredProfileModal
       v-if="profile && !user.profileComplete"
       :user="user"

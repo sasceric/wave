@@ -22,6 +22,7 @@ use Symfony\Component\Routing\Attribute\Route;
 
 final class CampaignController
 {
+    public function __construct(private readonly \App\Safety\BlockPolicy $blocks) {}
     #[Route('/api/campaigns', name: 'api_campaigns_index', methods: ['GET'])]
     public function index(Request $request, EntityManagerInterface $entityManager, DirectoryCursor $cursor): JsonResponse
     {
@@ -66,7 +67,7 @@ final class CampaignController
         $card = $request->query->getString('view') === 'card';
         $params = ['status' => 'open', 'today' => (new \DateTimeImmutable('today'))->format('Y-m-d H:i:s')];
         $types = [];
-        $conditions = ['c.status = :status', 'c.closes_at >= :today', '(owner.id IS NULL OR (owner.approved = TRUE AND owner.hide_my_account = FALSE))'];
+        $conditions = [$this->blocks->visible('owner.id'), 'c.status = :status', 'c.closes_at >= :today', '(owner.id IS NULL OR (owner.approved = TRUE AND owner.hide_my_account = FALSE))'];
         $query = trim($request->query->getString('q'));
         if ($query !== '') {
             $conditions[] = "(i.search_text LIKE :query OR (i.id IS NULL AND (LOWER(c.title) LIKE :query OR LOWER(c.summary) LIKE :query OR LOWER(c.description) LIKE :query OR LOWER(c.category) LIKE :query OR LOWER(c.city) LIKE :query OR LOWER(c.country_code) LIKE :query OR LOWER(CAST(c.categories AS TEXT)) LIKE :query)) OR LOWER(company.name) LIKE :query OR LOWER(company.industry) LIKE :query)";

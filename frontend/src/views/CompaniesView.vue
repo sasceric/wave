@@ -1,4 +1,5 @@
 <script setup>
+import { companyTypeOptions } from '../lib/companyTypes'
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { LayoutGrid, List, Sparkles } from '@lucide/vue'
 import { useRoute } from 'vue-router'
@@ -20,6 +21,9 @@ import { apiGet } from '../lib/api'
 const route = useRoute()
 const { locale, t } = useI18n()
 const search = ref(queryString(route.query.q))
+const selectedTypes = ref([])
+const companyTypes = computed(() => selectedTypes.value.length ? JSON.stringify(selectedTypes.value) : '')
+const typeOptions = computed(() => companyTypeOptions(t).map(option => ({ ...option, count: facets.value.companyTypes?.find(type => type.value === option.value)?.count ?? 0 })))
 const selectedIndustries = ref([])
 const industries = computed(() => selectedIndustries.value.length ? JSON.stringify(selectedIndustries.value) : '')
 const city = ref('')
@@ -39,7 +43,7 @@ const facetError = ref('')
 let facetVersion = 0
 let disposed = false
 const { items: companies, total, loading, error, hasMore, loadMore } = useInfiniteDirectory(
-  '/companies', locale, { q: search, industries, city, countries, verified, featured, sort },
+  '/companies', locale, { q: search, companyTypes, industries, city, countries, verified, featured, sort },
 )
 const countryOptions = computed(() => {
   const names = new Intl.DisplayNames([locale.value === 'cnr' ? 'bs' : locale.value === 'sr' ? 'sr-Latn' : locale.value], { type: 'region' })
@@ -48,7 +52,7 @@ const countryOptions = computed(() => {
     return { ...item, label: ['BA', 'HR', 'RS', 'SI', 'ME', 'MK'].includes(item.value) ? t(key) : names.of(item.value) || item.value }
   })
 })
-const activeFilterCount = computed(() => selectedIndustries.value.length + selectedCountries.value.length + [city.value, verified.value, featured.value].filter(Boolean).length)
+const activeFilterCount = computed(() => selectedTypes.value.length + selectedIndustries.value.length + selectedCountries.value.length + [city.value, verified.value, featured.value].filter(Boolean).length)
 const statusOptions = computed(() => [
   { value: '', label: t('companyDirectory.statusLabel') },
   { value: 'verified', label: t('companyDirectory.verifiedOnly') },
@@ -76,6 +80,7 @@ async function loadFacets() {
   }
 }
 function clearFilters() {
+  selectedTypes.value = []
   selectedIndustries.value = []
   city.value = ''
   selectedCountries.value = []
@@ -111,6 +116,9 @@ function clearFilters() {
     <div class="company-directory__content">
       <DirectoryFilterPanel id="company-filters" v-model="filtersOpen" :title="t('companyDirectory.filterTitle')" :clear-label="t('companyDirectory.clearFilters')" :apply-label="t('companyDirectory.applyFilters', { count: total })" @clear="clearFilters">
         <StatusMessage v-if="facetError" variant="error">{{ facetError }} <button type="button" @click="loadFacets">{{ t('companyDirectory.retryFilters') }}</button></StatusMessage>
+        <fieldset>
+          <MultiSelect v-model="selectedTypes" :options="typeOptions" :label="t('companyTypes.label')" :placeholder="t('companyTypes.all')" :search-placeholder="t('companyTypes.search')" :no-results-label="t('companyTypes.empty')" :remove-label="t('account.remove')" />
+        </fieldset>
         <fieldset>
           <MultiSelect
               v-model="selectedIndustries"

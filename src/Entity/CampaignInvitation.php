@@ -88,6 +88,12 @@ class CampaignInvitation
         return $this->respondedAt;
     }
 
+    public function cancel(): void
+    {
+        $this->status = 'cancelled';
+        $this->respondedAt = new DateTimeImmutable();
+    }
+
     public function respond(string $status): void
     {
         if (!in_array($status, ['accepted', 'declined'], true)) {

@@ -166,6 +166,8 @@ final class AuthController extends AbstractController
             ));
             $user->getCreator()?->setBirthday($birthday);
         } else {
+            $companyType = array_key_exists('companyType', $data) ? $data['companyType'] : 'brand';
+            if (!is_string($companyType) || !\App\Account\CompanyTypes::valid($companyType)) return new JsonResponse(['error' => ApiMessages::get('invalid_registration', $locale)], 400);
             $industries = $data['industries'] ?? [$data['industry'] ?? ''];
             if (!is_array($industries) || !array_is_list($industries) || count($industries) < 1 || count($industries) > 20
                 || array_filter($industries, static fn ($value): bool => !is_string($value) || mb_strlen(trim($value)) < 2 || mb_strlen($value) > 100) !== []
@@ -178,6 +180,7 @@ final class AuthController extends AbstractController
                 return new JsonResponse(['error' => ApiMessages::get('invalid_registration', $locale)], 400);
             }
             $company = new Company(ProfileSlug::fromName($name), $name, $industry);
+            $company->setCompanyType($companyType);
             $company->setIndustries($industries);
             $user->setCompany($company);
         }

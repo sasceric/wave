@@ -10,7 +10,7 @@ use Doctrine\ORM\EntityManagerInterface;
 
 final class UnreadInboxCounter
 {
-    public function __construct(private readonly EntityManagerInterface $entityManager)
+    public function __construct(private readonly EntityManagerInterface $entityManager, private readonly ?\App\Safety\BlockPolicy $blocks = null)
     {
     }
 
@@ -23,11 +23,24 @@ final class UnreadInboxCounter
             ->select('COUNT(notification.id)')
             ->from(Notification::class, 'notification')
             ->where('notification.recipient = :user')
+            ->andWhere($this->visibleActor($user))
             ->andWhere('notification.readAt IS NULL')
             ->andWhere('notification.type <> :chatMessage')
             ->setParameter('user', $user)
             ->setParameter('chatMessage', 'chat_message')
             ->getQuery()->getSingleScalarResult();
+    }
+
+    private function visibleActor(User $user): string
+    {
+        $ids = $this->blocks?->ids($user->getId()) ?? [];
+        return $ids === [] ? '1 = 1' : '(IDENTITY(notification.actor) IS NULL OR IDENTITY(notification.actor) NOT IN ('.implode(',', $ids).'))';
+    }
+
+    private function visibleSender(User $user): string
+    {
+        $ids = $this->blocks?->ids($user->getId()) ?? [];
+        return $ids === [] ? '1 = 1' : 'IDENTITY(message.sender) NOT IN ('.implode(',', $ids).')';
     }
 
     public function inquiryMessages(User $user, ?int $inquiryId = null): int
@@ -38,6 +51,7 @@ final class UnreadInboxCounter
             ->join('inquiry.company', 'company')
             ->where('(creator.owner = :user OR company.owner = :user)')
             ->andWhere('inquiry.status = :accepted')->setParameter('accepted', 'accepted')
+            ->andWhere($this->visibleSender($user))
             ->andWhere('message.sender <> :user')->andWhere('message.readAt IS NULL')
             ->setParameter('user', $user);
         if ($inquiryId !== null) {
@@ -58,6 +72,7 @@ final class UnreadInboxCounter
             ->join('conversation.campaign', 'campaign')
             ->join('campaign.company', 'company')
             ->where('(creator.owner = :user OR company.owner = :user)')
+            ->andWhere($this->visibleSender($user))
             ->andWhere('message.sender <> :user')
             ->andWhere('message.readAt IS NULL')
             ->setParameter('user', $user)
@@ -81,6 +96,7 @@ final class UnreadInboxCounter
             ->join('inquiry.company', 'company')
             ->where('(creator.owner = :user OR company.owner = :user)')
             ->andWhere('inquiry.status = :accepted')->setParameter('accepted', 'accepted')
+            ->andWhere($this->visibleSender($user))
             ->andWhere('message.sender <> :user')
             ->andWhere('message.readAt IS NULL')
             ->setParameter('user', $user)
@@ -100,6 +116,7 @@ final class UnreadInboxCounter
             ->join('conversation.campaign', 'campaign')
             ->join('campaign.company', 'company')
             ->where('(creator.owner = :user OR company.owner = :user)')
+            ->andWhere($this->visibleSender($user))
             ->andWhere('message.sender <> :user')
             ->andWhere('message.readAt IS NULL')
             ->setParameter('user', $user)

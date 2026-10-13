@@ -624,3 +624,72 @@ ownership-protected status endpoint. Applicant biographies use `RichTextContent`
 Validation: 278 backend tests (274,565 assertions), 283 frontend tests, PHPStan,
 ESLint and production build passed. SQLite/PostgreSQL migration tests passed; local
 UI fixtures verified assignment on mobile, status actions and formatted biography.
+
+### Marketplace safety and review pagination (2026-10-13)
+
+See [marketplace safety](marketplace-safety.md). `Safety/BlockPolicy`,
+`BlockSubscriber`, `MarketplaceSafety` and `MarketplaceSafetyController` implement
+two-level reports, private compressed screenshots, durable modal-only outcomes,
+and personal blocks in either direction. The shared `AdminSafetyView` provides
+personal review pairs (received and given feedback per collaboration), personal
+blocks under Settings and admin-only reports. Admins see their own reviews and
+initiated blocks, with no global review/block list. History remains anonymous/read-only.
+Current block checks
+also cover queued realtime, push and unread reminders. The SPA resets view content
+on account/block changes. Migration `Version20261013130000` is applied locally.
+Profile review cards use numbered pages of ten; the old review cursor remains valid.
+
+
+Admin table footers show the matching dataset total, using server pagination totals
+rather than page lengths. `AdminTableResults.vue` also distinguishes loaded rows
+when a cursor API has no total. `AdminNavigationController` provides admin-only,
+private counts for pending approvals, unresolved reports and non-resolved tickets.
+`useAdminNavigationCounts` shares requests between sidebar instances, clears state
+on account changes and refreshes after relevant successful mutations or window focus.
+Reports use a label-free 36px status filter matching the table search field.
+
+
+Campaign invitations appear alongside applications in company creator lists as
+virtual invitation rows until an offer creates the actual application. Accepted
+invitations permit chat hiring without another application. `CampaignOfferTimeline`
+and `CampaignMessage.event` persist negotiated offer and hiring snapshots. Company
+chat links open private campaign management; creators explicitly accept the amount
+before hired counts increase. See [campaign hiring](campaign-hiring.md) and migration
+`Version20261013150000`, which is applied locally.
+
+Creator campaign navigation now combines invitations, offers and applications in
+Moje prijave, one row per campaign. Legacy offer/invitation paths redirect there
+while service inquiries remain separate. Current collaboration labels distinguish
+Hired, Finished and Canceled. `CampaignCancellation` retains history, excludes
+canceled amounts from private totals and makes the chat read-only. Either
+participant may cancel accepted work before completion; only the owning company
+can cancel the entire campaign. No extra migration is needed for cancellation.
+
+### Account loading and admin overview
+
+Account marketplace data loads per section; campaign lists no longer fetch every
+campaign's applicants. Opening a brief loads bookmark state when needed. Simultaneous
+session checks share an in-flight request without response caching and are invalidated
+by authentication mutations. Company campaign participant ID lists use scalar queries.
+`AdminOverviewAnalytics.vue`, `AdminOverviewController` and `Admin/OverviewStatistics`
+provide 7/30/90-day aggregate charts and current admin work counts. Creator growth,
+new campaigns, applications, invitations, confirmed hires, completions and campaign
+status distributions are supported. Company signup dates are unavailable, so only
+company totals are shown. See [admin overview](admin-overview.md).
+
+### Personal overview and profile types (2026-10-13)
+
+See [personal overview](personal-overview.md). The localized account-dashboard route
+uses an owner-scoped aggregate endpoint, recent campaign activity, private completed
+collaboration totals and published rating. Sign-in lands there; incomplete profiles
+return to settings, and approval/verification gate marketplace account features.
+Personal Pregled is the first sidebar item, separate from the admin platform overview.
+
+Creator types include `streaming` and `podcasts`. Company types use the shared
+`config/company_types.json` catalog (`brand`, `agency`), exposed as `companyType`
+in profile/card responses. Password/social registration and the account editor
+support it; omitting the field preserves the existing type. GET `/api/companies`
+accepts a JSON `companyTypes` array, matching either selected type; the selection is
+part of its signed cursor scope. Type facets honor visibility and personal blocks.
+Migration `Version20261013170000` defaults existing companies to brand and is applied
+locally. All copy and route titles are present in six locales.

@@ -1,9 +1,13 @@
 <script setup>
+import { currentUser } from '../../composables/useCurrentUser'
+import { campaignActivityStage } from '../../lib/campaignActivity'
+import ConfirmationModal from '../shared/ConfirmationModal.vue'
+import CampaignCancellationAction from './CampaignCancellationAction.vue'
 import ReviewAction from '../reviews/ReviewAction.vue'
 import CampaignHiringProgress from '../campaigns/CampaignHiringProgress.vue'
 import AdminRowActions from '../admin/AdminRowActions.vue'
 import { computed, nextTick, onBeforeUnmount, ref, useId, watch } from 'vue'
-import { ArrowRight, Bookmark, CalendarDays, Camera, CirclePlay, ExternalLink, Eye, MapPin, Megaphone, MessageCircle, Music2, Wallet, X } from '@lucide/vue'
+import { ArrowRight, Ban, Check, Star, Bookmark, CalendarDays, Camera, CirclePlay, ExternalLink, Eye, MapPin, Megaphone, MessageCircle, Music2, Wallet, X } from '@lucide/vue'
 import { useI18n } from 'vue-i18n'
 import LocalizedLink from '../shared/LocalizedLink.vue'
 import CardImage from '../shared/CardImage.vue'
@@ -17,13 +21,15 @@ import { campaignPlace, CAMPAIGN_PLACEHOLDER, CREATOR_PLACEHOLDER } from '../../
 
 const props = defineProps({
   items: { type: Array, default: () => [] },
-  kind: { type: String, default: 'offers', validator: (value) => ['offers', 'applications', 'inquiries', 'invitations'].includes(value) },
+  kind: { type: String, default: 'offers', validator: (value) => ['activity', 'offers', 'applications', 'inquiries', 'invitations'].includes(value) },
   canRespond: { type: Boolean, default: false },
+  initialQuery: { type: String, default: '' },
+  initialStatus: { type: String, default: 'all' },
   responding: { type: Boolean, default: false },
 })
-const emit = defineEmits(['respond'])
+const emit = defineEmits(['respond', 'cancelled'])
 const { t, locale } = useI18n()
-const { isCampaignBookmarked, toggleCampaignBookmark } = useCampaignBookmarks()
+const { isCampaignBookmarked, loadCampaignBookmarks, toggleCampaignBookmark } = useCampaignBookmarks()
 const dialog = ref(null)
 const page = ref(1)
 const heading = ref(null)
@@ -32,11 +38,15 @@ watch(page, async () => {
   heading.value?.focus({ preventScroll: true })
   heading.value?.scrollIntoView({ block: 'start' })
 })
+const isActivity = computed(() => props.kind === 'activity')
+const cancelOfferId = ref(null)
+const reviewApplicationId = ref(null)
+const pendingResponse = ref(null)
 const isOffers = computed(() => props.kind === 'offers')
 const isInquiries = computed(() => props.kind === 'inquiries')
 const isInvitations = computed(() => props.kind === 'invitations')
 const titleKey = computed(() => isInvitations.value ? 'account.campaignInvitations' : isInquiries.value ? 'account.directRequests' : isOffers.value ? 'account.myOffers' : 'account.myApplications')
-const introKey = computed(() => isInvitations.value ? 'account.invitationsIntro' : isInquiries.value ? 'account.inquiriesIntro' : isOffers.value ? 'account.offersIntro' : 'account.applicationsIntro')
+const introKey = computed(() => isActivity.value ? 'hiring.activityIntro' : isInvitations.value ? 'account.invitationsIntro' : isInquiries.value ? 'account.inquiriesIntro' : isOffers.value ? 'account.offersIntro' : 'account.applicationsIntro')
 const searchKey = computed(() => isInvitations.value ? 'account.searchCompanyCampaigns' : isInquiries.value ? 'account.searchInquiries' : isOffers.value ? 'account.searchOffers' : 'account.searchApplications')
 function counterpart(item) {
   if (!isInquiries.value) return item.campaign.company
@@ -49,6 +59,7 @@ function itemSummary(item) {
   return isInquiries.value ? item.message : item.campaign.summary
 }
 function itemBudget(item) {
+  if (isActivity.value && item.offer) return formatMoney(item.offer.amount, item.campaign.currency)
   if (!isInquiries.value) return `${formatMoney(item.campaign.budgetMin, item.campaign.currency)} – ${formatMoney(item.campaign.budgetMax, item.campaign.currency)}`
   const amount = item.proposedAmount ?? item.listedPrice
   return amount === null || amount === undefined ? t('creatorProfile.priceByAgreement') : formatMoney(amount, item.proposedAmount !== null && item.proposedAmount !== undefined ? item.currency : item.listedPriceCurrency)
@@ -59,26 +70,34 @@ function hasChat(item) {
 function packageLabel(selection) {
   return selection.type === 'service' ? t('creatorProfile.servicePackage') : selection.type === 'other' ? t('creatorProfile.somethingElse') : selection.title
 }
-const query = ref('')
+const query = ref(props.initialQuery || '')
+watch(() => props.initialQuery, value => { query.value = value || '' })
 const statusFilter = ref('all')
+watch(() => props.initialStatus, value => { statusFilter.value = ['all', 'pending', 'offered', 'hired', 'finished', 'cancelled', 'rejected', 'closed'].includes(value) ? value : 'all' }, { immediate: true })
 function statusGroup(item) {
+  if (isActivity.value) {
+    const stage = campaignActivityStage(item)
+    return ['applied', 'invited', 'discussing'].includes(stage) ? 'pending' : stage
+  }
+  if (!isInquiries.value && (item.status === 'cancelled' || item.campaign?.status === 'cancelled')) return 'cancelled'
   if (isInvitations.value) {
     if (item.status === 'accepted') return 'accepted'
     if (item.status === 'declined') return 'rejected'
     return invitationExpired(item) ? 'expired' : 'pending'
   }
+  if (item.campaign?.status === 'finished' && (item.status === 'accepted' || item.offer?.status === 'accepted')) return 'finished'
   if (item.campaign?.status === 'closed') return 'closed'
   if (['rejected', 'offer_declined'].includes(item.status)) return 'rejected'
   if (item.status === 'accepted') return 'accepted'
   return 'pending'
 }
-const statusFilters = computed(() => [
-  { value: 'all', label: t('account.activityAll'), count: props.items.length },
-  { value: 'pending', label: t(isOffers.value ? 'account.offerAwaitingResponse' : 'account.pending'), count: props.items.filter(item => statusGroup(item) === 'pending').length },
-  { value: 'accepted', label: t('account.accepted'), count: props.items.filter(item => statusGroup(item) === 'accepted').length },
-  { value: 'rejected', label: t('account.rejected'), count: props.items.filter(item => statusGroup(item) === 'rejected').length },
-  { value: isInvitations.value ? 'expired' : 'closed', label: t(isInvitations.value ? 'account.invitationExpired' : 'campaignChat.closed'), count: props.items.filter(item => statusGroup(item) === (isInvitations.value ? 'expired' : 'closed')).length },
-].filter(filter => !isInquiries.value || filter.value !== 'closed'))
+const statusFilters = computed(() => {
+  const keys = isActivity.value
+    ? [['all', 'account.activityAll'], ['pending', 'account.pending'], ['offered', 'hiring.offerWaiting'], ['hired', 'hiring.hired'], ['finished', 'account.finished'], ['cancelled', 'account.cancelled'], ['rejected', 'account.rejected'], ['closed', 'campaignChat.closed']]
+    : [['all', 'account.activityAll'], ['pending', isOffers.value ? 'account.offerAwaitingResponse' : 'account.pending'], ['accepted', 'account.accepted'], ['finished', 'account.finished'], ['rejected', 'account.rejected'], [isInvitations.value ? 'expired' : 'closed', isInvitations.value ? 'account.invitationExpired' : 'campaignChat.closed'], ['cancelled', 'account.cancelled']]
+  return keys.map(([value, label]) => ({ value, label: t(label), count: value === 'all' ? props.items.length : props.items.filter(item => statusGroup(item) === value).length }))
+    .filter(filter => (!isInquiries.value || !['closed', 'cancelled', 'finished'].includes(filter.value)) && (!isActivity.value || filter.value === 'all' || filter.count > 0))
+})
 const filteredItems = computed(() => {
   const search = query.value.trim().toLocaleLowerCase(locale.value)
   return props.items.filter(item => (statusFilter.value === 'all' || statusGroup(item) === statusFilter.value)
@@ -107,11 +126,36 @@ function chatRoute(offer) {
 }
 
 function statusLabel(offer) {
+  if (isActivity.value) {
+    const stage = campaignActivityStage(offer)
+    return t(['finished', 'cancelled', 'rejected'].includes(stage) ? `account.${stage}` : stage === 'closed' ? 'campaignChat.closed' : `hiring.${stage === 'offered' ? 'offerWaiting' : stage}`)
+  }
+  if (statusGroup(offer) === 'finished') return t('account.finished')
+  if (!isInquiries.value && (offer.status === 'accepted' || offer.offer?.status === 'accepted') && !isInvitations.value) return t('hiring.hired')
+  if (statusGroup(offer) === 'cancelled') return t('account.cancelled')
   if (isInvitations.value) return t(statusGroup(offer) === 'expired' ? 'account.invitationExpired' : `account.${statusGroup(offer)}`)
   if (offer.campaign?.status === 'closed') return t('campaignChat.closed')
   const key = offer.status === 'offer_declined' ? 'offerDeclined' : offer.status
   return t(isOffers.value && key === 'pending' ? 'account.offerAwaitingResponse' : `account.${key}`)
 }
+
+function activeOffer(item) { return isOffers.value ? item : item?.offer }
+function canAnswer(item) {
+  if (!item || item.readOnly || item.campaign?.status !== 'open') return false
+  return activeOffer(item)?.status === 'pending' || (item.source === 'invitation' && item.status === 'pending' && !invitationExpired(item))
+}
+function requestResponse(item, decision) {
+  if (activeOffer(item)?.status === 'pending') { closeCampaign(); pendingResponse.value = { item, decision } }
+  else emit('respond', item, decision)
+}
+function confirmResponse() {
+  const response = pendingResponse.value
+  pendingResponse.value = null
+  if (response) emit('respond', response.item, response.decision)
+}
+function canCancel(item) { return activeOffer(item)?.status === 'accepted' && item.campaign?.status !== 'finished' && !item.readOnly }
+function canReview(item) { return item.campaign?.status === 'finished' && activeOffer(item)?.status === 'accepted' && !item.readOnly }
+function applicationId(item) { return isOffers.value ? item.applicationId : item.id }
 
 function invitationExpired(item) {
   const today = new Date()
@@ -152,6 +196,10 @@ async function openCampaign(offer) {
   previousOverflow = document.body.style.overflow
   document.body.style.overflow = 'hidden'
   dialog.value.showModal()
+  if (campaign.value && props.canRespond) {
+    try { await loadCampaignBookmarks() }
+    catch (cause) { if (!disposed && selectedItemId.value === offer.id) bookmarkError.value = cause.message }
+  }
 }
 
 async function toggleBookmark() {
@@ -169,6 +217,12 @@ async function toggleBookmark() {
 
 watch(selectedItem, (offer) => {
   if (!offer && dialog.value?.open) closeCampaign()
+})
+watch(() => currentUser.value?.id, () => {
+  cancelOfferId.value = null
+  reviewApplicationId.value = null
+  pendingResponse.value = null
+  closeCampaign()
 })
 onBeforeUnmount(() => {
   disposed = true
@@ -200,9 +254,9 @@ onBeforeUnmount(() => {
             <th scope="col">{{ t(isInvitations ? 'adminDashboard.campaign' : isInquiries ? 'account.activityInquiry' : 'account.activityCampaign') }}</th>
             <th v-if="isInvitations" scope="col">{{ t('campaignChat.company') }}</th>
             <th v-if="isInvitations" scope="col">{{ t('auth.category') }}</th>
-            <th scope="col">{{ t('campaignChat.budget') }}</th>
+            <th scope="col">{{ t(isActivity ? 'hiring.compensation' : 'campaignChat.budget') }}</th>
             <th v-if="!isInquiries" scope="col">{{ t(isInvitations ? 'account.closesAt' : 'account.offerDeadline') }}</th>
-            <th scope="col">{{ t(isInvitations ? 'account.hiredCreators' : isOffers || isInquiries ? 'account.activityReceived' : 'account.activitySubmitted') }}</th>
+            <th scope="col">{{ t(isActivity ? 'hiring.activityDate' : isInvitations ? 'account.hiredCreators' : isOffers || isInquiries ? 'account.activityReceived' : 'account.activitySubmitted') }}</th>
             <th scope="col">{{ t('account.activityStatus') }}</th>
             <th scope="col" class="creator-offers__action-cell">{{ t('account.activityActions') }}</th>
           </tr></thead>
@@ -225,10 +279,10 @@ onBeforeUnmount(() => {
               </td>
               <td v-if="isInvitations"><span class="creator-offers__mobile-label">{{ t('campaignChat.company') }}</span>{{ counterpart(offer).name }}</td>
               <td v-if="isInvitations"><span class="creator-offers__mobile-label">{{ t('auth.category') }}</span>{{ areas(offer.campaign) }}</td>
-              <td class="creator-offers__budget"><span class="creator-offers__mobile-label">{{ t('campaignDetail.budget') }}</span><strong>{{ itemBudget(offer) }}</strong></td>
+              <td class="creator-offers__budget"><span class="creator-offers__mobile-label">{{ t(isActivity ? 'hiring.compensation' : 'campaignDetail.budget') }}</span><strong>{{ itemBudget(offer) }}</strong></td>
               <td v-if="!isInquiries"><span class="creator-offers__mobile-label">{{ t(isInvitations ? 'account.closesAt' : 'account.offerDeadline') }}</span><span v-if="offer.campaign.closesAt" class="creator-offers__deadline"><CalendarDays :size="17" aria-hidden="true" /><time :datetime="offer.campaign.closesAt">{{ formatDate(offer.campaign.closesAt) }}</time></span><small v-if="isInvitations" class="campaign-invitations__deadline-hint">{{ deadlineLabel(offer.campaign) }}</small></td>
               <td v-if="isInvitations"><span class="creator-offers__mobile-label">{{ t('account.hiredCreators') }}</span><CampaignHiringProgress :campaign="offer.campaign" /></td>
-              <td v-else><span class="creator-offers__mobile-label">{{ t(isOffers || isInquiries ? 'account.activityReceived' : 'account.activitySubmitted') }}</span><time v-if="offer.createdAt" :datetime="offer.createdAt">{{ formatDate(offer.createdAt) }}</time></td>
+              <td v-else><span class="creator-offers__mobile-label">{{ t(isActivity ? 'hiring.activityDate' : isOffers || isInquiries ? 'account.activityReceived' : 'account.activitySubmitted') }}</span><time v-if="offer.createdAt" :datetime="offer.createdAt">{{ formatDate(offer.createdAt) }}</time></td>
               <td><span class="creator-offer__status" :class="`creator-offer__status--${statusGroup(offer)}`"><i :class="`activity-dot activity-dot--${statusGroup(offer)}`" aria-hidden="true"></i>{{ statusLabel(offer) }}</span></td>
               <td v-if="isInvitations" class="creator-offers__action-cell"><div class="creator-offers__actions campaign-invitations__actions">
                 <div class="campaign-invitations__primary-actions">
@@ -241,19 +295,29 @@ onBeforeUnmount(() => {
                 </div>
                 <AdminRowActions :label="`${t('account.activityActions')}: ${offer.campaign.title}`">
                   <button class="admin-row-actions__item" role="menuitem" type="button" @click="openCampaign(offer)"><Eye :size="16" aria-hidden="true" />{{ t('account.invitationViewDetails') }}</button>
-                  <LocalizedLink class="admin-row-actions__item" role="menuitem" :to="{ name: 'campaign-detail', params: { slug: offer.campaign.slug } }"><ExternalLink :size="16" aria-hidden="true" />{{ t('campaignCard.viewBrief') }}</LocalizedLink>
+                  <LocalizedLink v-if="offer.campaign.slug" class="admin-row-actions__item" role="menuitem" :to="{ name: 'campaign-detail', params: { slug: offer.campaign.slug } }"><ExternalLink :size="16" aria-hidden="true" />{{ t('campaignCard.viewBrief') }}</LocalizedLink>
                 </AdminRowActions>
               </div></td>
               <td v-else class="creator-offers__action-cell"><div class="creator-offers__actions">
-                <ReviewAction v-if="!isInquiries && offer.campaign?.status === 'finished' && (isOffers ? offer.status === 'accepted' : offer.offer?.status === 'accepted') && !offer.readOnly" :application-id="isOffers ? offer.applicationId : offer.id" />
-                <LocalizedLink v-if="hasChat(offer)" class="button button--outline" :to="chatRoute(offer)"><MessageCircle :size="16" aria-hidden="true" />{{ t('account.activityChat') }}</LocalizedLink>
-                <button class="button button--dark" type="button" :aria-label="`${t(isInquiries ? 'account.activityView' : 'campaignCard.viewBrief')}: ${itemTitle(offer)}`" @click="openCampaign(offer)">{{ t('account.activityView') }}<ArrowRight :size="16" aria-hidden="true" /></button>
+                <template v-if="isActivity && canAnswer(offer)">
+                  <button class="creator-offers__response creator-offers__response--accept" type="button" :disabled="!canRespond || responding" @click="requestResponse(offer, 'accept')"><Check :size="14" aria-hidden="true" />{{ t('account.accept') }}</button>
+                  <button class="creator-offers__response" type="button" :disabled="!canRespond || responding" @click="requestResponse(offer, activeOffer(offer) ? 'reject' : 'decline')"><X :size="14" aria-hidden="true" />{{ t('account.reject') }}</button>
+                </template>
+                <AdminRowActions v-if="isActivity" :label="`${t('account.activityActions')}: ${itemTitle(offer)}`">
+                  <button class="admin-row-actions__item" role="menuitem" type="button" @click="openCampaign(offer)"><Eye :size="16" aria-hidden="true" />{{ t('account.activityView') }}</button>
+                  <LocalizedLink v-if="hasChat(offer)" class="admin-row-actions__item" role="menuitem" :to="chatRoute(offer)"><MessageCircle :size="16" aria-hidden="true" />{{ t('account.activityChat') }}</LocalizedLink>
+                  <button v-if="canReview(offer)" class="admin-row-actions__item" role="menuitem" type="button" @click="reviewApplicationId = applicationId(offer)"><Star :size="16" aria-hidden="true" />{{ t('reviews.action') }}</button>
+                  <button v-if="canCancel(offer)" class="admin-row-actions__item" role="menuitem" type="button" @click="cancelOfferId = activeOffer(offer).id"><Ban :size="16" aria-hidden="true" />{{ t('hiring.cancelCollaboration') }}</button>
+                </AdminRowActions>
+                <ReviewAction v-if="!isActivity && !isInquiries && offer.campaign?.status === 'finished' && (isOffers ? offer.status === 'accepted' : offer.offer?.status === 'accepted') && !offer.readOnly" :application-id="isOffers ? offer.applicationId : offer.id" />
+                <LocalizedLink v-if="!isActivity && hasChat(offer)" class="button button--outline" :to="chatRoute(offer)"><MessageCircle :size="16" aria-hidden="true" />{{ t('account.activityChat') }}</LocalizedLink>
+                <button v-if="!isActivity" class="button button--dark" type="button" :aria-label="`${t(isInquiries ? 'account.activityView' : 'campaignCard.viewBrief')}: ${itemTitle(offer)}`" @click="openCampaign(offer)">{{ t('account.activityView') }}<ArrowRight :size="16" aria-hidden="true" /></button>
               </div></td>
             </tr>
           </tbody>
         </table>
       </div>
-      <DirectoryPagination v-if="filteredItems.length" v-model:page="page" :page-size="10" :show-page-size="false" :show-single-page="true" :total="filteredItems.length" :status-label="t(isInvitations ? 'account.invitationsShown' : 'account.activityShown', { shown: pageItems.length, total: filteredItems.length })" />
+      <DirectoryPagination v-model:page="page" :page-size="10" :show-page-size="false" :show-single-page="true" :total="filteredItems.length" :status-label="t(isInvitations ? 'account.invitationsShown' : 'account.activityShown', { shown: pageItems.length, total: filteredItems.length })" />
     </template>
     <dialog ref="dialog" class="offer-campaign-modal" aria-modal="true" :aria-labelledby="`${id}-title`" @cancel.prevent="closeCampaign" @close="closeCampaign" @click.self="closeCampaign">
       <div v-if="selectedItem" class="offer-campaign-modal__layout">
@@ -279,7 +343,7 @@ onBeforeUnmount(() => {
           <button class="offer-campaign-modal__close" type="button" :aria-label="t('creatorProfile.closeRequest')" @click="closeCampaign"><X :size="22" aria-hidden="true" /></button>
         </header>
         <div v-if="campaign" class="offer-campaign-modal__content">
-          <StatusMessage v-if="selectedItem.readOnly" variant="info">{{ t('campaignChat.deletedAccountNotice') }}</StatusMessage>
+          <StatusMessage v-if="selectedItem.readOnly" variant="info">{{ t(selectedItem.blocked ? 'safety.blockedHistory' : statusGroup(selectedItem) === 'cancelled' ? 'hiring.cancelledNotice' : 'campaignChat.deletedAccountNotice') }}</StatusMessage>
           <StatusMessage v-else-if="campaign.status === 'finished'" variant="info">{{ t('account.campaignFinishedNotice') }}</StatusMessage>
           <CampaignHiringProgress :campaign="campaign" />
           <section>
@@ -292,22 +356,22 @@ onBeforeUnmount(() => {
             <div v-if="campaignPlace(campaign, locale)"><MapPin :size="23" aria-hidden="true" /><dt>{{ t('campaignDetail.location') }}</dt><dd>{{ campaignPlace(campaign, locale) }}</dd></div>
             <div v-if="campaign.deliverables?.length"><Camera :size="23" aria-hidden="true" /><dt>{{ t('account.deliverables') }}</dt><dd><ul><li v-for="(deliverable, index) in campaign.deliverables" :key="index">{{ deliverable }}</li></ul></dd></div>
           </dl>
-          <section v-if="isOffers" class="offer-campaign-modal__offer">
+          <section v-if="isOffers || activeOffer(selectedItem)" class="offer-campaign-modal__offer">
             <h3>{{ t('account.offerDetails') }}</h3>
-            <strong>{{ formatMoney(selectedItem.amount, campaign.currency) }}</strong>
-            <p v-if="selectedItem.message">{{ selectedItem.message }}</p>
+            <strong>{{ formatMoney(activeOffer(selectedItem).amount, campaign.currency) }}</strong>
+            <p v-if="activeOffer(selectedItem).message">{{ activeOffer(selectedItem).message }}</p>
             <span class="creator-offer__status" :class="`creator-offer__status--${statusGroup(selectedItem)}`">{{ statusLabel(selectedItem) }}</span>
-            <div v-if="selectedItem.status === 'pending' && campaign.status !== 'finished' && !selectedItem.readOnly" class="button-row">
-              <button class="button button--dark" type="button" :disabled="!canRespond || responding" @click="emit('respond', selectedItem, 'accept')">{{ t('account.accept') }}</button>
-              <button class="button button--outline" type="button" :disabled="!canRespond || responding" @click="emit('respond', selectedItem, 'reject')">{{ t('account.reject') }}</button>
+            <div v-if="activeOffer(selectedItem)?.status === 'pending' && campaign.status === 'open' && !selectedItem.readOnly" class="button-row">
+              <button class="creator-offers__response creator-offers__response--accept" type="button" :disabled="!canRespond || responding" @click="requestResponse(selectedItem, 'accept')">{{ t('account.accept') }}</button>
+              <button class="creator-offers__response" type="button" :disabled="!canRespond || responding" @click="requestResponse(selectedItem, 'reject')">{{ t('account.reject') }}</button>
             </div>
           </section>
           <section v-else class="offer-campaign-modal__offer">
-            <h3>{{ t(isInvitations ? 'campaignChat.invitationMessage' : 'account.applicationMessage') }}</h3>
+            <h3>{{ t(isInvitations || selectedItem.source === 'invitation' ? 'campaignChat.invitationMessage' : 'account.applicationMessage') }}</h3>
             <p>{{ selectedItem.message }}</p>
             <span class="creator-offer__status">{{ statusLabel(selectedItem) }}</span>
-            <div v-if="isInvitations && statusGroup(selectedItem) === 'pending' && !selectedItem.readOnly" class="button-row">
-              <button class="button button--dark" type="button" :disabled="!canRespond || responding" @click="emit('respond', selectedItem, 'accept')">{{ t('account.acceptInvitation') }}</button>
+            <div v-if="(isInvitations || selectedItem.source === 'invitation') && canAnswer(selectedItem) && !selectedItem.readOnly" class="button-row">
+              <button class="creator-offers__response creator-offers__response--accept" type="button" :disabled="!canRespond || responding" @click="requestResponse(selectedItem, 'accept')">{{ t('account.acceptInvitation') }}</button>
               <button class="button button--outline" type="button" :disabled="!canRespond || responding" @click="emit('respond', selectedItem, 'decline')">{{ t('account.declineInvitation') }}</button>
             </div>
           </section>
@@ -315,7 +379,7 @@ onBeforeUnmount(() => {
         </div>
         <div v-else class="offer-campaign-modal__content">
           <h3>{{ t('account.directRequests') }}</h3>
-          <StatusMessage v-if="selectedItem.readOnly" variant="info">{{ t('campaignChat.deletedAccountNotice') }}</StatusMessage>
+          <StatusMessage v-if="selectedItem.readOnly" variant="info">{{ t(selectedItem.blocked ? 'safety.blockedHistory' : statusGroup(selectedItem) === 'cancelled' ? 'hiring.cancelledNotice' : 'campaignChat.deletedAccountNotice') }}</StatusMessage>
           <p class="offer-campaign-modal__inquiry-message">{{ selectedItem.message }}</p>
           <dl class="offer-campaign-modal__facts">
             <div><Wallet :size="23" aria-hidden="true" /><dt>{{ t('account.proposedPrice') }}</dt><dd>{{ itemBudget(selectedItem) }}</dd></div>
@@ -327,16 +391,19 @@ onBeforeUnmount(() => {
             <p v-else>{{ selectedItem.packageTitle }}</p>
           </section>
           <div v-if="selectedItem.role === 'creator' && selectedItem.status === 'pending' && !selectedItem.readOnly" class="button-row">
-            <button class="button button--dark" type="button" :disabled="!canRespond || responding" @click="emit('respond', selectedItem, 'accept')">{{ t('account.accept') }}</button>
-            <button class="button button--outline" type="button" :disabled="!canRespond || responding" @click="emit('respond', selectedItem, 'reject')">{{ t('account.reject') }}</button>
+            <button class="creator-offers__response creator-offers__response--accept" type="button" :disabled="!canRespond || responding" @click="requestResponse(selectedItem, 'accept')">{{ t('account.accept') }}</button>
+            <button class="creator-offers__response" type="button" :disabled="!canRespond || responding" @click="requestResponse(selectedItem, 'reject')">{{ t('account.reject') }}</button>
           </div>
         </div>
         <footer v-if="campaign || hasChat(selectedItem)" class="offer-campaign-modal__footer">
-          <button v-if="campaign" class="button button--outline" type="button" :disabled="bookmarkBusy || !canRespond" :aria-pressed="isCampaignBookmarked(campaign.slug)" @click="toggleBookmark"><Bookmark :size="18" aria-hidden="true" />{{ t(isCampaignBookmarked(campaign.slug) ? 'campaignCard.removeBookmark' : 'campaignCard.addBookmark') }}</button>
+          <button v-if="campaign?.slug && !selectedItem.readOnly" class="button button--outline" type="button" :disabled="bookmarkBusy || !canRespond" :aria-pressed="isCampaignBookmarked(campaign.slug)" @click="toggleBookmark"><Bookmark :size="18" aria-hidden="true" />{{ t(isCampaignBookmarked(campaign.slug) ? 'campaignCard.removeBookmark' : 'campaignCard.addBookmark') }}</button>
           <LocalizedLink v-if="hasChat(selectedItem)" class="button button--dark" :to="chatRoute(selectedItem)" @click="closeCampaign"><MessageCircle :size="18" aria-hidden="true" />{{ t('account.openChat') }}</LocalizedLink>
         </footer>
       </div>
     </dialog>
+    <CampaignCancellationAction v-if="cancelOfferId" :offer-id="cancelOfferId" auto-open hide-trigger @closed="cancelOfferId = null" @cancelled="emit('cancelled')" />
+    <ReviewAction v-if="reviewApplicationId" :application-id="reviewApplicationId" auto-open hide-trigger @closed="reviewApplicationId = null" />
+    <ConfirmationModal :open="Boolean(pendingResponse)" :title="t('hiring.confirmTitle')" :message="pendingResponse ? t('hiring.reviewAmount', { campaign: pendingResponse.item.campaign.title, amount: formatMoney(activeOffer(pendingResponse.item).amount, pendingResponse.item.campaign.currency) }) : ''" :confirm-label="t(pendingResponse?.decision === 'accept' ? 'hiring.acceptOffer' : 'hiring.declineOffer')" :cancel-label="t('safety.cancel')" @update:open="!$event && (pendingResponse = null)" @confirm="confirmResponse" />
   </section>
 </template>
 

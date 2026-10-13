@@ -557,3 +557,18 @@ test('opening a chat scrolls to its unread divider and does not mark later offsc
   assert.equal(state.atLatestMessage.value, false)
   assert.equal(writes, 0)
 })
+
+test('a trusted cancellation event immediately disables sending while refreshed engagement is loading', async () => {
+  const { state } = await setupView('../src/views/MessagesView.vue', {
+    '../lib/api': { apiGet: () => new Promise(() => {}), apiRequest: async () => {}, formatDate: () => '', formatMoney: () => '' },
+  })
+  state.selectedConversationId.value = 1
+  state.conversations.value = [{ id: 1, campaign: { status: 'open' }, unreadCount: 0 }]
+  state.draft.value = 'My unsent reply'
+  state.atLatestMessage.value = false
+  assert.equal(state.canSend.value, true)
+  state.handleRealtimeUpdate({ detail: { notificationType: 'chat_message', conversationId: 1, message: { id: 11, senderId: 2, body: 'Collaboration canceled', event: { type: 'cancelled' } } } })
+  assert.equal(state.canSend.value, false)
+  assert.equal(state.campaignChatNotice.value, 'hiring.cancelledNotice')
+  assert.equal(state.draft.value, 'My unsent reply')
+})

@@ -29,6 +29,10 @@ import { routeMetadata } from './lib/routeMetadata'
 import { trackPageView } from './lib/privacyMetrics'
 import { localizedPath } from './routePaths'
 
+const ReportNotices = defineAsyncComponent(() => import('./components/shared/ReportNotices.vue'))
+const safetyRevision = ref(0)
+function safetyChanged() { safetyRevision.value += 1; notifications.value = []; void loadNotifications(); void loadUnreadMessages() }
+
 const AccountSidebar = defineAsyncComponent(() => import('./components/account/AccountSidebar.vue'))
 const SuccessModal = defineAsyncComponent(() => import('./components/shared/SuccessModal.vue'))
 const NotificationsPanel = defineAsyncComponent(() => import('./components/shared/NotificationsPanel.vue'))
@@ -271,6 +275,7 @@ onMounted(() => {
   window.addEventListener('beforeinstallprompt', captureInstallPrompt)
   window.addEventListener('appinstalled', onAppInstalled)
   window.addEventListener('wave:conversations-updated', handleConversationsUpdated)
+  window.addEventListener('wave:safety-changed', safetyChanged)
   window.addEventListener('wave:support-read', loadNotifications)
   window.addEventListener('wave:open-notifications', openSidebarNotifications)
   document.addEventListener('pointerdown', closeMobileMenuOnOutsideClick)
@@ -289,6 +294,7 @@ onBeforeUnmount(() => {
   window.removeEventListener('beforeinstallprompt', captureInstallPrompt)
   window.removeEventListener('appinstalled', onAppInstalled)
   window.removeEventListener('wave:conversations-updated', handleConversationsUpdated)
+  window.removeEventListener('wave:safety-changed', safetyChanged)
   window.removeEventListener('wave:support-read', loadNotifications)
   window.removeEventListener('wave:open-notifications', openSidebarNotifications)
   document.removeEventListener('visibilitychange', checkForWaveUpdate)
@@ -508,6 +514,8 @@ async function connectRealtime() {
       try {
         const update = JSON.parse(event.data)
         if (accountResponseMismatch(update.recipientId, userId)) return
+        if (update.type === 'report_update') { window.dispatchEvent(new CustomEvent('wave:report-update')); return }
+        if (update.type === 'safety_changed') { window.dispatchEvent(new CustomEvent('wave:safety-changed')); return }
         if (update.type === 'chat_read') {
           window.dispatchEvent(new CustomEvent('wave:realtime', { detail: update }))
           return
@@ -1179,7 +1187,7 @@ async function signOut() {
 
     <main>
       <RouterView v-slot="{ Component }">
-        <component :is="Component" v-if="Component" />
+        <component :is="Component" v-if="Component" :key="`${currentUser?.id || 'guest'}-${safetyRevision}`" />
         <div v-else class="page-width site-shell__loading" role="status" aria-busy="true">
           <span class="sr-only">{{ t('app.loading') }}</span>
           <SkeletonBlock shape="title" width="50%" />
@@ -1368,6 +1376,7 @@ async function signOut() {
         </button>
       </div>
     </footer>
+    <ReportNotices v-if="currentUser?.approved && currentUser?.emailVerified" />
     <SuccessModal
       v-if="newsletterSuccessOpen"
       v-model:open="newsletterSuccessOpen"

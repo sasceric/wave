@@ -131,7 +131,7 @@ final class CampaignInvitationController
                     $invitation,
                     $locale,
                     $hiredCounts[$invitation->getCampaign()->getId()] ?? 0,
-                    $invitation->getStatus() === 'accepted' ? ($conversationIds[$invitation->getCampaign()->getId()] ?? null) : null,
+                    in_array($invitation->getStatus(), ['accepted', 'cancelled'], true) ? ($conversationIds[$invitation->getCampaign()->getId()] ?? null) : null,
                 ),
                 $invitations,
             ),

@@ -37,6 +37,7 @@ final class JobExecutor
         #[Autowire(service: 'cache.app')] private readonly PruneableInterface $cache,
         #[Autowire('%kernel.logs_dir%')] private readonly string $logsDirectory,
         #[Autowire('%env(int:LOG_RETENTION_DAYS)%')] private readonly int $logRetention,
+        private readonly \App\Safety\BlockPolicy $blocks,
     ) {
     }
 
@@ -92,6 +93,7 @@ final class JobExecutor
 
     private function isCurrentReminder(array $reminder): bool
     {
+        if (!$this->blocks->eventAllowed((int) $reminder['recipientId'], ['conversationId' => $reminder['conversationId']])) { return false; }
         $sql = <<<'SQL'
             SELECT t.id FROM campaign_conversation t
             JOIN campaign c ON c.id = t.campaign_id
@@ -114,6 +116,7 @@ final class JobExecutor
 
     private function realtime(array $payload): void
     {
+        if (!$this->blocks->eventAllowed((int) $payload['userId'], $payload['payload'])) { return; }
         if (!$this->connection->fetchOne('SELECT id FROM wave_user WHERE id = ? AND deleted_at IS NULL', [$payload['userId']])) {
             return;
         }

@@ -1,6 +1,8 @@
 import i18n from '../i18n'
 
 let csrfToken = ''
+let sessionRequest = null
+let authenticationGeneration = 0
 
 function intlLocale() {
   const locale = i18n.global.locale.value
@@ -11,6 +13,8 @@ function intlLocale() {
 }
 
 function localizedPath(path, locale = i18n.global.locale.value) {
+  if (locale === 'bs') return path
+
   const separator = path.includes('?') ? '&' : '?'
   return `${path}${separator}locale=${encodeURIComponent(locale)}`
 }
@@ -30,6 +34,10 @@ async function getCsrfToken(locale = i18n.global.locale.value) {
 
 export async function apiRequest(path, { method = 'GET', body, locale } = {}) {
   const unsafe = !['GET', 'HEAD', 'OPTIONS'].includes(method.toUpperCase())
+  if (unsafe && (path.startsWith('/auth/') || ['/me/account', '/me/password'].includes(path))) {
+    authenticationGeneration += 1
+    sessionRequest = null
+  }
   if (unsafe && !csrfToken) await getCsrfToken(locale)
 
   const multipart = typeof FormData !== 'undefined' && body instanceof FormData
@@ -62,6 +70,13 @@ export async function apiRequest(path, { method = 'GET', body, locale } = {}) {
 
   if (typeof payload.csrfToken === 'string') csrfToken = payload.csrfToken
   else if (path === '/auth/logout' || path === '/me/account' && method.toUpperCase() === 'DELETE') csrfToken = ''
+
+  if (unsafe && typeof window !== 'undefined' && (
+    /^\/admin\/registrations(?:\/|$)/.test(path)
+    || /^\/admin\/(creators|companies|registrations)\/bulk-delete/.test(path)
+    || /^\/admin\/safety\/reports\//.test(path)
+    || /^\/(admin|me)\/support-tickets\//.test(path)
+  )) window.dispatchEvent(new Event('wave:admin-counts-changed'))
 
   return payload
 }
@@ -101,8 +116,16 @@ export async function apiUpload(path, file) {
 }
 
 export async function apiGet(path, options) {
-  return apiRequest(path, options)
+  if (path !== '/auth/session') return apiRequest(path, options)
+  // Share simultaneous startup reads only. No private response is cached.
+  const scope = `${authenticationGeneration}:${options?.locale ?? i18n.global.locale.value}`
+  if (sessionRequest?.scope === scope) return sessionRequest.promise
+  const promise = apiRequest(path, options)
+  sessionRequest = { scope, promise }
+  try { return await promise }
+  finally { if (sessionRequest?.promise === promise) sessionRequest = null }
 }
+
 
 export function formatFollowers(value) {
   if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(value % 1_000_000 === 0 ? 0 : 1)}m`

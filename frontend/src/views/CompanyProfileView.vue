@@ -1,4 +1,5 @@
 <script setup>
+import MarketplaceSafetyActions from '../components/shared/MarketplaceSafetyActions.vue'
 import ProfileReviews from '../components/reviews/ProfileReviews.vue'
 import RatingSummary from '../components/reviews/RatingSummary.vue'
 import { computed, onMounted, ref, watch } from 'vue'
@@ -112,7 +113,7 @@ onMounted(loadCompany)
               <WaveLogo v-else mark />
             </div>
             <div>
-              <p class="eyebrow">{{ industries.join(' · ') }}</p>
+              <p class="eyebrow">{{ t(`companyTypes.options.${company.companyType || 'brand'}`) }} · {{ industries.join(' · ') }}</p>
               <h1>{{ company.name }}<span v-if="company.verified" class="verified-mark" :aria-label="t('campaignCard.verified')">✓</span></h1>
               <RatingSummary :rating="company.rating" />
               <p class="company-profile__tagline">{{ company.about ? t('companyProfile.profileIntro') : t('companyProfile.profileLabel') }}</p>
@@ -157,6 +158,7 @@ onMounted(loadCompany)
         </article>
       </div>
 
+      <MarketplaceSafetyActions kind="company" :slug="company.slug" />
       <ProfileReviews kind="companies" :slug="company.slug" />
       <section class="company-profile__campaigns">
         <div class="section-heading">

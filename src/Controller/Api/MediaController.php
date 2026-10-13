@@ -35,6 +35,7 @@ final class MediaController
     private const MAX_FILE_SIZE = 10_485_760;
 
     private const FOLDERS = [
+        'report-evidence' => ['name' => 'Private report evidence', 'role' => 'ROLE_CREATOR'],
         'creator-avatar' => ['name' => 'Creator avatars', 'role' => 'ROLE_CREATOR'],
         'creator-portfolio' => ['name' => 'Creator portfolio', 'role' => 'ROLE_CREATOR'],
         'company-cover' => ['name' => 'Company covers', 'role' => 'ROLE_COMPANY'],
@@ -100,7 +101,7 @@ final class MediaController
         }
         // Own profile images can be prepared while the account awaits approval.
         $profileImage = in_array($folderSlug, ['creator-avatar', 'company-logo', 'company-cover'], true);
-        $user = ApiAccess::requireRole($security, $folderSettings['role'], $locale, requireApproved: !$profileImage);
+        $user = $folderSlug === 'report-evidence' ? ApiAccess::requireParticipant($security, $locale, true) : ApiAccess::requireRole($security, $folderSettings['role'], $locale, requireApproved: !$profileImage);
         if ($user instanceof JsonResponse) {
             return $user;
         }
@@ -230,7 +231,8 @@ final class MediaController
         if (!$media instanceof Media || $media->getOwner() !== $user) {
             return new JsonResponse(['error' => ApiMessages::get('invalid_media', $locale)], 404);
         }
-        $isReferenced = $entityManager->getRepository(CreatorPortfolioMedia::class)->count(['media' => $media]) > 0
+        $isReferenced = (bool) $entityManager->getConnection()->fetchOne('SELECT 1 FROM marketplace_report_media WHERE media_id = ? LIMIT 1', [$id])
+            || $entityManager->getRepository(CreatorPortfolioMedia::class)->count(['media' => $media]) > 0
             || $entityManager->getRepository(Creator::class)->count(['avatarMedia' => $media]) > 0
             || $entityManager->getRepository(Company::class)->count(['logoMedia' => $media]) > 0
             || $entityManager->getRepository(Company::class)->count(['coverMedia' => $media]) > 0

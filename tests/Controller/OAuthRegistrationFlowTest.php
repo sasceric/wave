@@ -27,6 +27,22 @@ final class OAuthRegistrationFlowTest extends WebTestCase
         $schemaTool->createSchema($entityManager->getMetadataFactory()->getAllMetadata());
     }
 
+    public function testGoogleCompanyRegistrationStoresAgencyType(): void
+    {
+        $this->client->request('GET', '/api/auth/csrf?locale=en');
+        $csrf = $this->payload()['csrfToken'];
+        $session = $this->client->getRequest()->getSession();
+        $session->set('wave_oauth_registration', ['provider' => 'google', 'subject' => 'agency-owner', 'email' => 'agency@example.test', 'givenName' => 'Agency', 'familyName' => 'Owner', 'accountType' => 'company', 'createdAt' => time()]);
+        $session->save();
+        $this->client->jsonRequest('POST', '/api/auth/oauth/complete?locale=en', [
+            'accountType' => 'company', 'name' => 'Demo agency', 'companyType' => 'agency', 'industries' => ['Beauty'],
+            'country' => 'BA', 'city' => 'Sarajevo', 'phone' => '+38761123456',
+        ], ['HTTP_X_CSRF_TOKEN' => $csrf]);
+        self::assertResponseStatusCodeSame(201);
+        self::assertSame('agency', $this->payload()['data']['profile']['companyType']);
+        self::assertFalse($this->payload()['data']['approved']);
+    }
+
     public function testGoogleRegistrationCollectsProfileAndCreatesPendingVerifiedAccount(): void
     {
         $this->client->request('GET', '/api/auth/csrf?locale=en');

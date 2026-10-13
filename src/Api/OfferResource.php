@@ -12,7 +12,7 @@ final class OfferResource
     {
         return [
             'id' => $offer->getId(),
-            'readOnly' => AccountDeletion::sharedHistoryDeleted($offer->getApplication()->getCreator(), $offer->getApplication()->getCampaign()->getCompany()),
+            'readOnly' => $offer->getStatus() === 'cancelled' || $offer->getApplication()->getCampaign()->getStatus() === 'cancelled' || AccountDeletion::sharedHistoryDeleted($offer->getApplication()->getCreator(), $offer->getApplication()->getCampaign()->getCompany()),
             'amount' => $offer->getAmount(),
             'message' => $offer->getMessage(),
             'status' => $offer->getStatus(),

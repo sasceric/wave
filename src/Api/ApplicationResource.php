@@ -14,7 +14,7 @@ final class ApplicationResource
 
         return [
             'id' => $application->getId(),
-            'readOnly' => AccountDeletion::sharedHistoryDeleted($application->getCreator(), $application->getCampaign()->getCompany()),
+            'readOnly' => $application->getStatus() === 'cancelled' || $application->getCampaign()->getStatus() === 'cancelled' || AccountDeletion::sharedHistoryDeleted($application->getCreator(), $application->getCampaign()->getCompany()),
             'message' => $application->getMessage(),
             'status' => $application->getStatus(),
             'conversationId' => $conversationId,

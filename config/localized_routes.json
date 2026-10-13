@@ -46,7 +46,11 @@
     "support-track": "podrska/tiket",
     "admin-support": "admin/tiketi",
     "account-support": "racun/tiketi",
-    "admin-redirects": "admin/preusmjerenja"
+    "admin-redirects": "admin/preusmjerenja",
+    "admin-reports": "admin/prijave-sadrzaja",
+    "account-blocks": "racun/blokirani-racuni",
+    "account-reviews": "racun/recenzije",
+    "account-dashboard": "racun/pregled"
   },
   "hr": {
     "home": "",
@@ -95,7 +99,11 @@
     "support-track": "podrska/tiket",
     "admin-support": "admin/tiketi",
     "account-support": "racun/tiketi",
-    "admin-redirects": "admin/preusmjerenja"
+    "admin-redirects": "admin/preusmjerenja",
+    "admin-reports": "admin/prijave-sadrzaja",
+    "account-blocks": "racun/blokirani-racuni",
+    "account-reviews": "racun/recenzije",
+    "account-dashboard": "racun/pregled"
   },
   "sr": {
     "home": "",
@@ -144,7 +152,11 @@
     "support-track": "podrska/tiket",
     "admin-support": "admin/tiketi",
     "account-support": "racun/tiketi",
-    "admin-redirects": "admin/preusmerenja"
+    "admin-redirects": "admin/preusmerenja",
+    "admin-reports": "admin/prijave-sadrzaja",
+    "account-blocks": "nalog/blokirani-nalozi",
+    "account-reviews": "nalog/recenzije",
+    "account-dashboard": "nalog/pregled"
   },
   "cnr": {
     "home": "",
@@ -193,7 +205,11 @@
     "support-track": "podrska/tiket",
     "admin-support": "admin/tiketi",
     "account-support": "racun/tiketi",
-    "admin-redirects": "admin/preusmjerenja"
+    "admin-redirects": "admin/preusmjerenja",
+    "admin-reports": "admin/prijave-sadrzaja",
+    "account-blocks": "nalog/blokirani-nalozi",
+    "account-reviews": "nalog/recenzije",
+    "account-dashboard": "nalog/pregled"
   },
   "sl": {
     "home": "",
@@ -242,7 +258,11 @@
     "support-track": "podpora/zahtevek",
     "admin-support": "admin/zahtevki",
     "account-support": "racun/zahtevki",
-    "admin-redirects": "admin/preusmeritve"
+    "admin-redirects": "admin/preusmeritve",
+    "admin-reports": "admin/prijave-vsebine",
+    "account-blocks": "racun/blokirani-racuni",
+    "account-reviews": "racun/ocene",
+    "account-dashboard": "racun/pregled"
   },
   "en": {
     "home": "",
@@ -291,6 +311,10 @@
     "support-track": "support/ticket",
     "admin-support": "admin/support-tickets",
     "account-support": "account/tickets",
-    "admin-redirects": "admin/redirects"
+    "admin-redirects": "admin/redirects",
+    "admin-reports": "admin/reports",
+    "account-blocks": "account/blocked-accounts",
+    "account-reviews": "account/reviews",
+    "account-dashboard": "account/overview"
   }
 }

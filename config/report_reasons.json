@@ -1,0 +1,9 @@
+{
+  "misleading": ["identity", "profile", "terms"],
+  "security": ["phishing", "links", "sensitive_data"],
+  "behavior": ["harassment", "threats", "discrimination"],
+  "content": ["offensive", "copied_work", "privacy"],
+  "spam": ["messages", "duplicates", "advertising"],
+  "collaboration": ["not_delivered", "conditions", "unauthorized_use"],
+  "other": ["other"]
+}

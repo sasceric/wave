@@ -21,12 +21,13 @@ final class RealtimeUpdatePublisher
         private readonly bool $enabled = true,
         private readonly ?JobDispatcher $jobs = null,
         #[Autowire('%wave.queue.enabled%')] private readonly bool $queued = false,
+        private readonly ?\App\Safety\BlockPolicy $blocks = null,
     ) {
     }
 
     public function publish(Notification $notification, ?CampaignMessage $message = null): void
     {
-        if (!$this->enabled) {
+        if (!$this->enabled || $this->blocks?->pair($notification->getRecipient()->getId(), $notification->getActor()?->getId())) {
             return;
         }
 
@@ -55,6 +56,7 @@ final class RealtimeUpdatePublisher
 
     private function publishPayload(User $recipient, array $payload, array $context = []): void
     {
+        if ($this->blocks !== null && !$this->blocks->eventAllowed((int) $recipient->getId(), $payload)) { return; }
         $payload['recipientId'] = $recipient->getId();
         if ($this->queued && $this->jobs !== null) {
             $this->jobs->enqueue('PublishRealtimeMessage', ['userId' => $recipient->getId(), 'payload' => $payload, 'eventId' => bin2hex(random_bytes(16))]);

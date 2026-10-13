@@ -810,6 +810,9 @@
   }
 
   &__campaign-link {
+    width: 100%;
+    cursor: pointer;
+    font-family: inherit;
     min-height: 43px;
     display: flex;
     align-items: center;
@@ -827,7 +830,9 @@
     text-decoration: none;
   }
 
-  &__campaign-link:hover {
+  &__campaign-link:disabled { opacity: .55; cursor: not-allowed; }
+
+  &__campaign-link:hover:not(:disabled) {
     background: #28534a;
   }
 

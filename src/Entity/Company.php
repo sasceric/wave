@@ -8,6 +8,7 @@ use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity]
 #[ORM\Table(name: 'company')]
+#[ORM\Index(name: 'idx_company_type', columns: ['company_type'])]
 #[ORM\UniqueConstraint(name: 'uniq_company_slug', columns: ['slug'])]
 class Company
 {
@@ -24,6 +25,9 @@ class Company
 
     #[ORM\Column(length: 100)]
     private string $industry;
+
+    #[ORM\Column(length: 20, options: ['default' => 'brand'])]
+    private string $companyType = 'brand';
 
     #[ORM\Column(type: 'text', nullable: true)]
     private ?string $about = null;
@@ -92,6 +96,14 @@ class Company
     public function getName(): string
     {
         return $this->name;
+    }
+
+    public function getCompanyType(): string { return $this->companyType; }
+
+    public function setCompanyType(string $type): void
+    {
+        if (!in_array($type, \App\Account\CompanyTypes::values(), true)) throw new \InvalidArgumentException('Invalid company type.');
+        $this->companyType = $type;
     }
 
     public function getIndustry(): string

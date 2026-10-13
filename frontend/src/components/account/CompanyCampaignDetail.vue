@@ -50,11 +50,14 @@ watch(page, async () => {
 
 function statusGroup(application) {
   if (application.status === 'accepted') return 'accepted'
-  if (['rejected', 'offer_declined'].includes(application.status)) return 'rejected'
+  if (['rejected', 'offer_declined', 'invitation_declined', 'cancelled'].includes(application.status)) return 'rejected'
   return 'pending'
 }
 
 function statusLabel(application) {
+  if (application.status === 'invited') return t('hiring.invited')
+  if (application.status === 'invitation_declined') return t('hiring.invitationDeclined')
+  if (application.status === 'accepted') return t(props.campaign.status === 'finished' ? 'account.finished' : 'hiring.hired')
   return t(`account.${application.status === 'offer_declined' ? 'offerDeclined' : application.status}`)
 }
 
@@ -93,7 +96,7 @@ function chatRoute(application) {
         <p>{{ t('account.campaignApplicantsIntro') }}</p>
       </header>
       <div class="creator-offers__toolbar">
-        <DirectorySearch v-model="query" :label="t('account.searchApplications')" :placeholder="t('account.searchApplications')" />
+        <DirectorySearch v-model="query" :label="t('hiring.searchCreators')" :placeholder="t('hiring.searchCreators')" />
       </div>
       <StatusMessage v-if="!applications.length" variant="empty">{{ t('account.noCampaignApplications') }}</StatusMessage>
       <StatusMessage v-else-if="!filteredApplications.length" variant="empty">{{ t('account.activityNoResults') }}</StatusMessage>
@@ -102,7 +105,7 @@ function chatRoute(application) {
           <caption class="sr-only">{{ t('account.campaignApplicants') }}</caption>
           <thead><tr>
             <th scope="col">{{ t('auth.creator') }}</th>
-            <th scope="col">{{ t('account.applicationDate') }}</th>
+            <th scope="col">{{ t('safety.date') }}</th>
             <th scope="col">{{ t('account.activityStatus') }}</th>
             <th scope="col" class="creator-offers__action-cell">{{ t('account.activityActions') }}</th>
           </tr></thead>
@@ -114,18 +117,18 @@ function chatRoute(application) {
                   <div><button type="button" @click="emit('view-application', application)">{{ application.creator.displayName }}</button><p>{{ application.creator.categoryLabel || application.creator.category }}<template v-if="application.creator.city"> · {{ application.creator.city }}</template></p></div>
                 </div>
               </td>
-              <td><span class="creator-offers__mobile-label">{{ t('account.applicationDate') }}</span><span v-if="application.createdAt" class="creator-offers__deadline"><CalendarDays :size="17" aria-hidden="true" /><time :datetime="application.createdAt">{{ formatDate(application.createdAt) }}</time></span><small v-if="application.createdAt" class="company-campaign-applicants__time">{{ timeFormatter.ago(application.createdAt, Date.now()) }}</small></td>
+              <td><span class="creator-offers__mobile-label">{{ t('safety.date') }}</span><span v-if="application.createdAt" class="creator-offers__deadline"><CalendarDays :size="17" aria-hidden="true" /><time :datetime="application.createdAt">{{ formatDate(application.createdAt) }}</time></span><small v-if="application.createdAt" class="company-campaign-applicants__time">{{ timeFormatter.ago(application.createdAt, Date.now()) }}</small></td>
               <td><span class="creator-offer__status" :class="`creator-offer__status--${statusGroup(application)}`"><i :class="`activity-dot activity-dot--${statusGroup(application)}`" aria-hidden="true"></i>{{ statusLabel(application) }}</span></td>
               <td class="creator-offers__action-cell"><div class="creator-offers__actions">
                 <ReviewAction v-if="campaign.status === 'finished' && application.offer?.status === 'accepted' && !application.readOnly" :application-id="application.id" />
                 <LocalizedLink v-if="application.conversationId" class="button button--outline" :to="chatRoute(application)"><MessageCircle :size="16" aria-hidden="true" />{{ t('account.activityChat') }}</LocalizedLink>
-                <button class="button button--dark" type="button" :aria-label="`${t('account.viewApplication')}: ${application.creator.displayName}`" @click="emit('view-application', application)">{{ t('account.viewApplication') }}<ArrowRight :size="16" aria-hidden="true" /></button>
+                <button class="button button--dark" type="button" :aria-label="`${t('account.viewApplication')}: ${application.creator.displayName}`" @click="emit('view-application', application)">{{ t(application.source === 'invitation' ? 'hiring.viewCreator' : 'account.viewApplication') }}<ArrowRight :size="16" aria-hidden="true" /></button>
               </div></td>
             </tr>
           </tbody>
         </table>
       </div>
-      <DirectoryPagination v-if="filteredApplications.length" v-model:page="page" :page-size="pageSize" :show-page-size="false" :show-single-page="true" :total="filteredApplications.length" :status-label="t('account.activityShown', { shown: pageApplications.length, total: filteredApplications.length })" />
+      <DirectoryPagination v-model:page="page" :page-size="pageSize" :show-page-size="false" :show-single-page="true" :total="filteredApplications.length" :status-label="t('account.activityShown', { shown: pageApplications.length, total: filteredApplications.length })" />
     </section>
   </div>
 </template>

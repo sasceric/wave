@@ -34,14 +34,20 @@ class CampaignMessage
     #[ORM\Column(nullable: true)]
     private ?DateTimeImmutable $readAt = null;
 
-    public function __construct(CampaignConversation $conversation, User $sender, string $body)
+    #[ORM\Column(type: 'json', nullable: true)]
+    private ?array $event = null;
+
+    public function __construct(CampaignConversation $conversation, User $sender, string $body, ?array $event = null)
     {
         $this->conversation = $conversation;
         $this->sender = $sender;
         $this->body = $body;
+        $this->event = $event;
         $this->createdAt = new DateTimeImmutable();
         $conversation->recordMessage($body, $sender);
     }
+
+    public function getEvent(): ?array { return $this->event; }
 
     public function getId(): ?int
     {
