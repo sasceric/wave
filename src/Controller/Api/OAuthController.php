@@ -6,7 +6,6 @@ use App\Account\AccountEmailSender;
 use App\Account\CreatorBirthday;
 use App\Api\ApiAccess;
 use App\Api\JsonPayload;
-use App\Api\ProfileSlug;
 use App\Api\UserResource;
 use App\Api\MarketplaceCategoryLabels;
 use App\Entity\Company;
@@ -235,6 +234,7 @@ final class OAuthController extends AbstractController
         UserPasswordHasherInterface $passwordHasher,
         Security $security,
         CsrfTokenManagerInterface $tokenManager,
+        \App\Service\PublicUrlSlugs $publicSlugs,
         AccountEmailSender $emailSender,
         #[Target('wave_register_ip')] RateLimiterFactoryInterface $registrationLimiter,
     ): JsonResponse {
@@ -328,7 +328,7 @@ final class OAuthController extends AbstractController
                 return new JsonResponse(['error' => ApiMessages::get('invalid_registration', $locale)], 400);
             }
             $user->setCreator(new Creator(
-                ProfileSlug::fromName($name),
+                $publicSlugs->reserve('creator', $name),
                 $name,
                 $categories[0],
                 $city,
@@ -352,7 +352,7 @@ final class OAuthController extends AbstractController
             if ($industry === '' || mb_strlen($industry) > 100) {
                 return new JsonResponse(['error' => ApiMessages::get('invalid_registration', $locale)], 400);
             }
-            $company = new Company(ProfileSlug::fromName($name), $name, $industry);
+            $company = new Company($publicSlugs->reserve('company', $name), $name, $industry);
             $company->setCompanyType($companyType);
             $company->setIndustries($industries);
             $user->setCompany($company);

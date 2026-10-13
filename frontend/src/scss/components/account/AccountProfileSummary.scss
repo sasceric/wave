@@ -2,7 +2,7 @@
 
 .account-profile-summary {
   display: grid;
-  grid-template-columns: minmax(280px, 1.15fr) minmax(270px, 1fr) minmax(230px, .8fr);
+  grid-template-columns: minmax(280px, 1.15fr) minmax(240px, 1fr) minmax(260px, .9fr);
   align-items: center;
   gap: 22px;
   margin-bottom: 20px;
@@ -12,14 +12,21 @@
   background: rgba(255, 255, 255, .72);
 
   &--company {
-    grid-template-columns: 1fr minmax(230px, .65fr);
+    grid-template-columns: 1fr minmax(260px, .65fr);
   }
 
   &__identity {
     position: relative;
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     gap: 24px;
+    min-width: 0;
+  }
+
+  &__portrait {
+    display: grid;
+    gap: 12px;
+    flex: 0 0 124px;
     min-width: 0;
   }
 
@@ -84,7 +91,7 @@
     display: flex;
     align-items: center;
     gap: 8px;
-    margin: 12px 0 0;
+    margin: 7px 0 12px;
     color: var(--muted);
     font-size: 12px;
 
@@ -93,7 +100,7 @@
     }
   }
 
-  &__public, &__edit {
+  &__public {
     display: none;
   }
 
@@ -153,18 +160,62 @@
       line-height: 1.6;
     }
   }
+
+  &__actions {
+    display: grid;
+    gap: 8px;
+    min-width: 0;
+    .account-password-action.account-password-action--row,
+    .public-url-action.public-url-action--row {
+      margin-top: 0;
+      gap: 0;
+      border: 1px solid #e2e6df;
+      border-radius: 12px;
+      overflow: hidden;
+
+      > button {
+        justify-self: stretch;
+        min-height: 44px;
+        padding: 12px 14px;
+        gap: 10px;
+        font-size: 13px;
+        font-weight: 600;
+        text-align: left;
+
+        &:hover { background: #eef1eb; }
+        > svg { flex: 0 0 auto; }
+        > span { flex: 1; }
+      }
+
+      > a {
+        display: block;
+        padding: 0 14px 12px 40px;
+        line-height: 1.6;
+        text-decoration-color: #b9c7bf;
+        text-underline-offset: 3px;
+      }
+
+      > span[role='status'] { padding: 0 14px 12px; }
+      .account-setting-arrow { color: var(--muted); }
+    }
+  }
 }
 
 @include breakpoints.down(1250px) {
   .account-profile-summary {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: minmax(0, 1.4fr) minmax(260px, 1fr);
+    align-items: start;
+
+    &__identity { grid-column: 1; grid-row: 1; }
+    &__metrics { grid-column: 1; grid-row: 2; }
 
     &__visibility {
-      grid-column: 1 / -1;
+      grid-column: 2;
+      grid-row: 1 / 3;
     }
 
     &--company {
-      grid-template-columns: 1fr;
+      grid-template-columns: minmax(0, 1.4fr) minmax(260px, 1fr);
     }
   }
 }
@@ -190,9 +241,9 @@
       height: 108px;
     }
 
-    &__copy {
-      padding-top: 30px;
+    &__portrait { flex-basis: 108px; }
 
+    &__copy {
       h2 {
         font-size: 24px;
       }
@@ -207,7 +258,7 @@
       font-size: 12px;
     }
 
-    &__location, &__metrics {
+    &__metrics {
       display: none;
     }
 
@@ -220,24 +271,6 @@
       font-size: 12px;
       font-weight: 600;
       text-decoration: none;
-    }
-
-    &__edit {
-      position: absolute;
-      top: 18px;
-      right: 16px;
-      display: flex;
-      align-items: center;
-      gap: 7px;
-      min-height: 40px;
-      padding: 8px 10px;
-      border: 1px solid #d4dfd4;
-      border-radius: 10px;
-      color: var(--forest);
-      background: #fffefa;
-      font: inherit;
-      font-size: 11px;
-      cursor: pointer;
     }
 
     &__visibility {
@@ -259,6 +292,9 @@
       width: 80px;
       height: 80px;
     }
+
+    &__portrait { flex-basis: 80px; }
+    &__credits.account-sidebar__link > svg { display: none; }
 
     &__identity {
       gap: 12px;
@@ -297,13 +333,22 @@
 }
 
 .account-profile-summary__credits.account-sidebar__link {
-  min-height: 28px;
-  width: max-content;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 34px;
+  width: 100%;
   max-width: 100%;
-  padding: 4px 0;
-  gap: 8px;
+  padding: 6px;
+  gap: 6px;
+  border: 1px solid #e2e6df;
+  border-radius: 10px;
+  background: #eef1eb;
+  color: var(--forest);
   font-size: 12px;
-  .account-sidebar__badge { border-radius: 12px; min-width: 28px; }
+  text-decoration: none;
+  > svg { width: 16px; height: 16px; flex: 0 0 auto; }
+  .account-sidebar__badge { border-radius: 12px; min-width: 20px; margin-left: 0; }
 }
 
 .account-profile-summary__financial {

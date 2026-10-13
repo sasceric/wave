@@ -1,3 +1,4 @@
+import sharedPublicRoutes from '../../config/shared_public_routes.json'
 import routeSegments from '../../config/localized_routes.json'
 import localePrefixes from '../../config/localized_route_prefixes.json'
 
@@ -6,13 +7,16 @@ export { routeSegments, localePrefixes }
 export const defaultLocale = 'bs'
 export const localizedRouteNames = new Set(Object.keys(routeSegments[defaultLocale]))
 
+export function isSharedRoute(name) { return Object.hasOwn(sharedPublicRoutes, name) }
+
 export function localizedRouteName(name, locale) {
+  if (isSharedRoute(name)) return name
   return `${name}-${locale}`
 }
 
 export function localizedPath(name, locale, params = {}) {
-  const segment = routeSegments[locale]?.[name] ?? routeSegments[defaultLocale][name]
-  const prefix = localePrefixes[locale] ? `/${localePrefixes[locale]}` : ''
+  const segment = sharedPublicRoutes[name] ?? routeSegments[locale]?.[name] ?? routeSegments[defaultLocale][name]
+  const prefix = !isSharedRoute(name) && localePrefixes[locale] ? `/${localePrefixes[locale]}` : ''
   if (!segment) return prefix ? `${prefix}/` : '/'
 
   return `${prefix}/${segment.replace(/:([A-Za-z0-9_]+)/g, (match, key) => (
@@ -51,4 +55,9 @@ export function routeNameFromCanonicalPath(path) {
   }
 
   return staticRoutes[path]
+}
+
+export function legacyLocalizedDetailPath(name, locale) {
+  const prefix = localePrefixes[locale] ? `/${localePrefixes[locale]}` : ''
+  return `${prefix}/${routeSegments[locale][name]}`
 }

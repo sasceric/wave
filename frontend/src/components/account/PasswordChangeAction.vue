@@ -1,13 +1,13 @@
 <script setup>
 import { reactive, ref, watch } from 'vue'
-import { LockKeyhole } from '@lucide/vue'
+import { ChevronRight, LockKeyhole } from '@lucide/vue'
 import { useI18n } from 'vue-i18n'
 import FormModal from '../shared/FormModal.vue'
 import StatusMessage from '../shared/StatusMessage.vue'
 
 import { apiRequest } from '../../lib/api'
 
-const props = defineProps({ email: { type: String, required: true } })
+const props = defineProps({ email: { type: String, required: true }, row: { type: Boolean, default: false } })
 const { t } = useI18n()
 const recoverySent = ref(false)
 const open = ref(false)
@@ -57,8 +57,8 @@ async function save() {
 </script>
 
 <template>
-  <div class="account-password-action">
-    <button type="button" @click="show"><LockKeyhole :size="16" aria-hidden="true" />{{ t('passwordChange.title') }}</button>
+  <div class="account-password-action" :class="{ 'account-password-action--row': row }">
+    <button type="button" @click="show"><LockKeyhole :size="16" aria-hidden="true" /><span>{{ t('passwordChange.title') }}</span><ChevronRight v-if="row" class="account-setting-arrow" :size="16" aria-hidden="true" /></button>
     <span v-if="success" role="status">{{ t('passwordChange.success') }}</span>
   </div>
   <FormModal v-model:open="open" :title="t('passwordChange.title')" :description="t('passwordChange.hint')" :busy="busy" @submit="save">

@@ -1,0 +1,5 @@
+{
+  "creator-profile": "kreatori/:slug",
+  "company-profile": "kompanije/:slug",
+  "campaign-detail": "kampanje/:slug"
+}

@@ -20,6 +20,17 @@ class Company
     #[ORM\Column(length: 100)]
     private string $slug;
 
+    #[ORM\Column(nullable: true)]
+    private ?\DateTimeImmutable $publicUrlChangedAt = null;
+
+    public function getPublicUrlChangedAt(): ?\DateTimeImmutable { return $this->publicUrlChangedAt; }
+    public function changePublicSlug(string $slug, ?\DateTimeImmutable $at = null): void
+    {
+        $this->slug = $slug;
+        $this->publicUrlChangedAt = $at ?? new \DateTimeImmutable('now', new \DateTimeZone('UTC'));
+    }
+
+
     #[ORM\Column(length: 120)]
     private string $name;
 

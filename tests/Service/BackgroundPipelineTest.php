@@ -237,8 +237,8 @@ final class BackgroundPipelineTest extends KernelTestCase
             $parts = glob($directory . '/*-0.xml');
             self::assertCount(1, $parts);
             $part = file_get_contents($parts[0]);
-            self::assertStringContainsString('/en/creators/pipeline-creator', $part);
-            self::assertStringContainsString('/en/campaigns/pipeline-campaign', $part);
+            self::assertStringContainsString('/kreatori/pipeline-creator', $part);
+            self::assertStringContainsString('/kampanje/pipeline-campaign', $part);
             self::assertNull($sitemap->part('../.env.local'));
         } finally {
             $files->remove($directory);

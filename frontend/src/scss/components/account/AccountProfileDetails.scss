@@ -169,20 +169,5 @@
       }
     }
 
-    &__chips {
-      gap: 0;
-
-      span {
-        padding: 0;
-        background: none;
-        border-radius: 0;
-        font-size: 15px;
-
-        &:not(:last-child)::after {
-          content: ', ';
-          white-space: pre;
-        }
-      }
-    }
   }
 }

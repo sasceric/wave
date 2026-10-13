@@ -89,10 +89,16 @@ Controller filenames in this table are under `src/Controller/Api/` unless a full
 
 - Public deletion redirects live in `UrlRedirects`, `UrlRedirect`,
   `AdminRedirectController` and `AdminRedirectsView.vue`. They capture original
-  slugs before anonymization, add six locale rules in the deletion transaction,
+  slugs before anonymization, add canonical and historical alias rules in the deletion transaction,
   and preserve administrator overrides. Symfony serves 301s; the Vue route guard
   resolves SPA links. Keep APIs, account/admin routes and private history exempt.
-  See `docs/url-redirects.md` and migration `Version20261012100000`.
+  Public details share `/kreatori`, `/kompanije` and `/kampanje` paths through
+  `config/shared_public_routes.json`; directories remain localized. Owners edit
+  their slug with a first-change exemption and a 14-day cooldown. Permanent slug
+  reservations and direct 301 history use `PublicUrlSlugs`, `PublicUrlRedirectWriter`
+  and `PublicUrlController`. Both sitemap generators emit details once.
+  See `docs/url-redirects.md` and migrations `Version20261012100000` and
+  `Version20261013190000`.
 - Route titles share `config/seo_route_titles.json` between Symfony and Vue.
   Login/register/recovery modes have explicit localized titles; known private
   routes must not fall through to the not-found title. Titles use `Page | Wave`,

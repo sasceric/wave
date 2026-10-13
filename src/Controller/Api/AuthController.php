@@ -7,7 +7,6 @@ use App\Account\CreatorBirthday;
 use App\Account\UserActionTokenManager;
 use App\Api\ApiAccess;
 use App\Api\JsonPayload;
-use App\Api\ProfileSlug;
 use App\Api\UserResource;
 use App\Api\MarketplaceCategoryLabels;
 use App\Entity\Company;
@@ -87,6 +86,7 @@ final class AuthController extends AbstractController
         UserPasswordHasherInterface $passwordHasher,
         Security $security,
         CsrfTokenManagerInterface $tokenManager,
+        \App\Service\PublicUrlSlugs $publicSlugs,
         UserActionTokenManager $actionTokens,
         AccountEmailSender $emailSender,
         #[Target('wave_register_ip')] RateLimiterFactoryInterface $registrationLimiter,
@@ -155,7 +155,7 @@ final class AuthController extends AbstractController
             }
             $category = $categories[0];
             $user->setCreator(new Creator(
-                ProfileSlug::fromName($name),
+                $publicSlugs->reserve('creator', $name),
                 $name,
                 $category,
                 $city,
@@ -179,7 +179,7 @@ final class AuthController extends AbstractController
             if ($industry === '' || mb_strlen($industry) > 100) {
                 return new JsonResponse(['error' => ApiMessages::get('invalid_registration', $locale)], 400);
             }
-            $company = new Company(ProfileSlug::fromName($name), $name, $industry);
+            $company = new Company($publicSlugs->reserve('company', $name), $name, $industry);
             $company->setCompanyType($companyType);
             $company->setIndustries($industries);
             $user->setCompany($company);

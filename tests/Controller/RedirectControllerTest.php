@@ -142,7 +142,7 @@ final class RedirectControllerTest extends WebTestCase
         self::assertResponseRedirects('/kreatori', 301);
     }
 
-    public function testInvalidSourcesTargetsDuplicateAliasesAndCyclesAreRejected(): void
+    public function testInvalidSourcesTargetsDuplicatePathsAndCyclesAreRejected(): void
     {
         $user = new User('redirect-admin@example.test', 'ROLE_CREATOR');
         $user->setPassword('unused-test-hash');
@@ -163,8 +163,8 @@ final class RedirectControllerTest extends WebTestCase
         $this->write('POST', '', ['sourcePath' => '/creators/old', 'targetPath' => '/middle', 'enabled' => true, 'preserveQuery' => false], $csrf);
         self::assertResponseStatusCodeSame(201);
         $this->write('POST', '', ['sourcePath' => '/kreatori/old/', 'targetPath' => '/kampanje', 'enabled' => true, 'preserveQuery' => false], $csrf);
-        self::assertResponseStatusCodeSame(400);
-        $this->write('POST', '', ['sourcePath' => '/middle', 'targetPath' => '/kreatori/old', 'enabled' => true, 'preserveQuery' => false], $csrf);
+        self::assertResponseStatusCodeSame(201);
+        $this->write('POST', '', ['sourcePath' => '/middle', 'targetPath' => '/creators/old', 'enabled' => true, 'preserveQuery' => false], $csrf);
         self::assertResponseStatusCodeSame(400);
         $this->write('POST', '', ['sourcePath' => '/middle', 'targetPath' => '/kompanije', 'enabled' => true, 'preserveQuery' => false], $csrf);
         self::assertResponseStatusCodeSame(201);
@@ -188,14 +188,14 @@ final class RedirectControllerTest extends WebTestCase
         $this->em->flush();
         $campaignId = $campaign->getId();
         static::getContainer()->get(AccountDeletion::class)->delete([$owner, $creatorOwner]);
-        self::assertSame(18, $this->em->getRepository(UrlRedirect::class)->count([]));
+        self::assertSame(30, $this->em->getRepository(UrlRedirect::class)->count([]));
         self::assertNotNull($this->em->find(Campaign::class, $campaignId));
         self::assertSame(1, $this->em->getRepository(\App\Entity\Application::class)->count([]));
         $routes = static::getContainer()->get(LocalizedRouteMap::class);
         foreach ($routes->locales() as $locale) {
             foreach ([['creator-profile', 'creators', 'old-creator'], ['company-profile', 'companies', 'old-brand'], ['campaign-detail', 'campaigns', 'old-campaign']] as [$detail, $listing, $slug]) {
                 $this->client->request('GET', $routes->localizedPath($detail, $locale, ['slug' => $slug]).'?utm_source=old');
-                self::assertResponseRedirects($routes->localizedPath($listing, $locale), 301);
+                self::assertResponseRedirects($routes->localizedPath($listing, 'bs'), 301);
             }
         }
         $this->client->request('GET', '/sr/kreatori/old-creator');
@@ -221,7 +221,7 @@ final class RedirectControllerTest extends WebTestCase
         $this->client->request('GET', '/api/auth/csrf?locale=en');
         $this->client->jsonRequest('DELETE', '/api/admin/campaigns/bulk-delete?locale=en', ['ids' => [$campaign->getId()]], ['HTTP_X_CSRF_TOKEN' => $this->payload()['csrfToken']]);
         self::assertResponseIsSuccessful();
-        self::assertSame(6, $this->em->getRepository(UrlRedirect::class)->count([]));
+        self::assertSame(10, $this->em->getRepository(UrlRedirect::class)->count([]));
         $this->client->request('GET', '/kampanje/removed-campaign');
         self::assertResponseRedirects('/kampanje', 301);
     }

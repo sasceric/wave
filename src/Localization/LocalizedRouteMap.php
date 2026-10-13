@@ -10,6 +10,7 @@ final class LocalizedRouteMap
 {
     private array $routes;
     private array $prefixes;
+    private array $shared;
 
     public function __construct(#[Autowire('%kernel.project_dir%')] string $projectDir)
     {
@@ -24,6 +25,7 @@ final class LocalizedRouteMap
         }
 
         $this->routes = $routes;
+        $this->shared = json_decode(file_get_contents($projectDir.'/config/shared_public_routes.json'), true, flags: JSON_THROW_ON_ERROR);
         $prefixes = file_get_contents($projectDir.'/config/localized_route_prefixes.json');
         if ($prefixes === false) {
             throw new RuntimeException('Unable to read the localized route prefixes.');
@@ -42,8 +44,8 @@ final class LocalizedRouteMap
             throw new InvalidArgumentException(sprintf('Unknown localized route "%s" for locale "%s".', $routeName, $locale));
         }
 
-        $segment = $this->routes[$locale][$routeName];
-        $prefix = $this->prefixes[$locale] === '' ? '' : '/'.$this->prefixes[$locale];
+        $segment = $this->shared[$routeName] ?? $this->routes[$locale][$routeName];
+        $prefix = ($this->isShared($routeName) || $this->prefixes[$locale] === '') ? '' : '/'.$this->prefixes[$locale];
         if ($segment === '') {
             return $prefix !== '' ? $prefix.'/' : '/';
         }
@@ -63,8 +65,26 @@ final class LocalizedRouteMap
         return $prefix.'/'.$path;
     }
 
+    public function isShared(string $name): bool { return isset($this->shared[$name]); }
+
+    /** Previous locale paths remain valid redirect sources, never new canonical URLs. */
+    public function legacyDetailPaths(string $name, string $slug): array
+    {
+        if (!$this->isShared($name)) return [];
+        $paths = [];
+        foreach ($this->routes as $locale => $routes) {
+            foreach (array_unique([$this->prefixes[$locale], $locale === 'bs' ? '' : $locale]) as $prefix) {
+                $paths[] = ($prefix === '' ? '' : '/'.$prefix).'/'.str_replace(':slug', rawurlencode($slug), $routes[$name]);
+            }
+        }
+        $english = ['creator-profile' => 'creators', 'company-profile' => 'companies', 'campaign-detail' => 'campaigns'][$name];
+        $paths[] = '/'.$english.'/'.rawurlencode($slug);
+        return array_values(array_unique($paths));
+    }
+
     public function localizedAlternates(string $routeName, array $params = []): array
     {
+        if ($this->isShared($routeName)) return [];
         $alternates = [];
         foreach ($this->locales() as $locale) {
             $language = match ($locale) {

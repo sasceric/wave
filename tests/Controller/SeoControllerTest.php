@@ -64,10 +64,10 @@ final class SeoControllerTest extends WebTestCase
 
     public function testMissingPublicRecordsReturnLocalized404sWithoutIndexableMetadata(): void
     {
-        foreach (['/en/creators/missing', '/en/companies/missing', '/en/campaigns/missing', '/en/unknown'] as $path) {
+        foreach (['/kreatori/missing', '/kompanije/missing', '/kampanje/missing', '/en/unknown'] as $path) {
             $crawler = $this->client->request('GET', $path);
             self::assertResponseStatusCodeSame(404);
-            self::assertSame('Page not found | Wave', $crawler->filter('title')->text());
+            self::assertSame($path === '/en/unknown' ? 'Page not found | Wave' : 'Stranica nije pronađena | Wave', $crawler->filter('title')->text());
             self::assertSame('noindex, nofollow', $crawler->filter('meta[name="robots"]')->attr('content'));
             self::assertCount(0, $crawler->filter('link[rel="canonical"], link[hreflang], #wave-schema'));
         }
@@ -281,13 +281,14 @@ final class SeoControllerTest extends WebTestCase
         self::assertResponseIsSuccessful();
         self::assertResponseHeaderSame('Content-Type', 'application/xml; charset=UTF-8');
         $xml = $this->client->getResponse()->getContent();
-        self::assertStringContainsString('<loc>http://127.0.0.1:8000/rs/kreatori/maya-chen</loc>', $xml);
+        self::assertSame(1, substr_count($xml, '<loc>http://127.0.0.1:8000/kreatori/maya-chen</loc>'));
+        self::assertStringNotContainsString('/rs/kreatori/maya-chen', $xml);
         self::assertStringContainsString('hreflang="sr-RS"', $xml);
         self::assertStringContainsString('hreflang="sr-ME"', $xml);
         self::assertStringNotContainsString('hreflang="cnr', $xml);
-        self::assertStringContainsString('<loc>http://127.0.0.1:8000/en/companies/field-notes</loc>', $xml);
-        self::assertStringContainsString('<loc>http://127.0.0.1:8000/en/campaigns/scenic-route</loc>', $xml);
-        self::assertStringContainsString('<loc>http://127.0.0.1:8000/en/campaigns/second-open-brief</loc>', $xml);
+        self::assertStringContainsString('<loc>http://127.0.0.1:8000/kompanije/field-notes</loc>', $xml);
+        self::assertStringContainsString('<loc>http://127.0.0.1:8000/kampanje/scenic-route</loc>', $xml);
+        self::assertStringContainsString('<loc>http://127.0.0.1:8000/kampanje/second-open-brief</loc>', $xml);
         self::assertStringContainsString('<loc>http://127.0.0.1:8000/impresum</loc>', $xml);
         self::assertStringContainsString('<loc>http://127.0.0.1:8000/en/imprint</loc>', $xml);
         self::assertStringContainsString('<loc>http://127.0.0.1:8000/en/privacy-policy</loc>', $xml);
@@ -327,17 +328,16 @@ final class SeoControllerTest extends WebTestCase
         ));
         $entityManager->flush();
 
-        $this->client->request('GET', '/rs/kreatori/maya-chen');
+        $this->client->request('GET', '/kreatori/maya-chen');
 
         self::assertResponseIsSuccessful();
         $html = $this->client->getResponse()->getContent();
-        self::assertStringContainsString('<html lang="sr-Latn">', $html);
+        self::assertStringContainsString('<html lang="bs">', $html);
         self::assertStringContainsString('name="wave:origin" content="http://127.0.0.1:8000"', $html);
         self::assertStringNotContainsString('rel="preload" as="image"', $html);
-        self::assertStringContainsString('<title>Maya Chen — kreator/ka | Wave</title>', $html);
-        self::assertStringContainsString('rel="canonical" href="http://127.0.0.1:8000/rs/kreatori/maya-chen"', $html);
+        self::assertStringContainsString('<title>Maya Chen — kreator/ica | Wave</title>', $html);
+        self::assertStringContainsString('rel="canonical" href="http://127.0.0.1:8000/kreatori/maya-chen"', $html);
         self::assertStringContainsString('property="og:image" content="http://127.0.0.1:8000/images/logo-icon.svg"', $html);
-        self::assertStringContainsString('hreflang="x-default" href="http://127.0.0.1:8000/kreatori/maya-chen"', $html);
         self::assertStringContainsString('"@type":"Person"', $html);
         self::assertStringContainsString('Slow travel and local guides.', $html);
     }
@@ -437,7 +437,7 @@ final class SeoControllerTest extends WebTestCase
         $entityManager->persist(new Company('field-notes', 'Field Notes', 'Travel'));
         $entityManager->flush();
 
-        $this->client->request('GET', '/en/companies/field-notes');
+        $this->client->request('GET', '/kompanije/field-notes');
 
         self::assertResponseIsSuccessful();
         self::assertStringContainsString(

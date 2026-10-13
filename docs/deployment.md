@@ -459,3 +459,23 @@ Company Brand/Agency classification uses migration `Version20261013170000`
 run the normal migration step with the backend/frontend release. The personal
 Pregled dashboard and its login redirects require no additional worker or server
 configuration. See [personal overview](personal-overview.md).
+
+
+## Shared profile and campaign URLs
+
+Migration `Version20261013190000` adds `public_url_slug` reservations and nullable
+`public_url_changed_at` columns on creators, companies and campaigns. Run normal
+Doctrine migrations before serving the updated API and SPA. The data upgrade
+converts generated hash-suffix slugs to readable name/number slugs, preserves custom
+slugs, reserves old paths and adds 301 rules to the existing redirects table. It
+leaves the first owner-initiated URL change available immediately. See
+[public URL redirects](url-redirects.md) for the 14-day interval and alias behavior.
+
+Creator/company/campaign detail URLs now have one prefix-free canonical path in
+all locales. Directory and editorial routes remain localized. Existing sitemap
+indexes without the new format marker queue regeneration through the normal
+`SitemapGenerateTask`; keep the existing background worker running. Until a new
+index is ready, the endpoint uses its existing retry response. Old sitemap parts
+retain their existing 48-hour grace period. No new environment variables, Mercure
+configuration or worker services are required. This migration is applied locally;
+this update has not been pushed or deployed.

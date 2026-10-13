@@ -24,6 +24,7 @@ final class CreatorResource
             return [
                 'id' => $creator->getId(),
                 'slug' => $creator->getSlug(),
+            'publicUrlChangeAvailableAt' => $creator->getPublicUrlChangedAt()?->modify('+14 days')->format(DATE_ATOM),
                 'featured' => $creator->isFeatured(),
                 'displayName' => $owner?->isDeleted() ? ApiMessages::get('deleted_account', $locale) : $creator->getDisplayName(),
                 'deleted' => $owner?->isDeleted() ?? false,
@@ -71,6 +72,7 @@ final class CreatorResource
                 && $owner->isEmailVerified()
                 && !$owner->isHideMyAccount(),
             'slug' => $creator->getSlug(),
+            'publicUrlChangeAvailableAt' => $creator->getPublicUrlChangedAt()?->modify('+14 days')->format(DATE_ATOM),
             'featured' => $creator->isFeatured(),
             'displayName' => $owner?->isDeleted() ? ApiMessages::get('deleted_account', $locale) : $creator->getDisplayName(),
             'deleted' => $owner?->isDeleted() ?? false,

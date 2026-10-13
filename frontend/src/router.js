@@ -1,6 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { localeNames, setLocale } from './i18n'
-import { defaultLocale, localizedPath, localizedRouteName, routeSegments, localePrefixes } from './routePaths'
+import { defaultLocale, localizedPath, localizedRouteName, routeSegments, localePrefixes, isSharedRoute, legacyLocalizedDetailPath } from './routePaths'
 import { ensureCurrentUser } from './composables/useCurrentUser'
 import { accountAccessRedirect, accountLanding } from './lib/accountAccess'
 import { resolvePublicRedirect } from './lib/publicRedirects'
@@ -109,7 +109,7 @@ function preferredLocale() {
 }
 
 const localizedRoutes = Object.entries(routeSegments).flatMap(([locale, routes]) => (
-  Object.entries(routes).map(([name]) => ({
+  Object.entries(routes).filter(([name]) => !isSharedRoute(name)).map(([name]) => ({
     path: localizedPath(name, locale),
     name: localizedRouteName(name, locale),
     component: routeViews[name],
@@ -192,6 +192,8 @@ const router = createRouter({
     return { top: 0 }
   },
   routes: [
+    ...Object.keys(routeSegments.bs).filter(isSharedRoute).map(name => ({ path: localizedPath(name, 'bs'), name, component: routeViews[name], meta: { routeName: name, sharedPublic: true } })),
+    ...Object.entries(routeSegments).flatMap(([locale, routes]) => Object.keys(routes).filter(isSharedRoute).filter(name => legacyLocalizedDetailPath(name, locale) !== localizedPath(name, locale)).map(name => ({ path: legacyLocalizedDetailPath(name, locale), redirect: to => ({ name, params: to.params, query: to.query, hash: to.hash }) }))),
     ...localizedRoutes,
     ...legacyRoutes,
     ...Object.entries(localePrefixes).filter(([locale, prefix]) => locale !== 'bs' && locale !== prefix).map(([locale, prefix]) => ({
@@ -210,15 +212,17 @@ const router = createRouter({
 })
 
 router.beforeEach(async (to, from) => {
+  if (to.meta.sharedPublic) await setLocale(preferredLocale())
   if (to.meta.locale) {
     await setLocale(to.meta.locale)
   }
+  const navigationLocale = to.meta.locale || (to.meta.sharedPublic ? preferredLocale() : defaultLocale)
   let user
   try { user = await ensureCurrentUser() } catch { /* The page API retains its access/error checks. */ }
   const gate = accountAccessRedirect(to, user)
-  if (gate) return { name: localizedRouteName(gate.name, to.meta.locale || defaultLocale) }
+  if (gate) return { name: localizedRouteName(gate.name, navigationLocale) }
   if (user && to.meta.routeName === 'account' && !to.query.bookmark && !to.query.returnTo && (['login', 'register'].includes(to.query.mode) || to.query.oauth === 'success') && accountLanding(user) !== 'account') {
-    return { name: localizedRouteName(accountLanding(user), to.meta.locale || defaultLocale) }
+    return { name: localizedRouteName(accountLanding(user), navigationLocale) }
   }
   // Symfony already applies 301s to the initial production document request.
   // Vite and subsequent SPA links need the public resolver.

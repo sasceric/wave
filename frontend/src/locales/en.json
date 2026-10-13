@@ -2084,7 +2084,9 @@
     "deleteBulkTitle": "Delete selected redirects?",
     "deleteMessage": "The old URL will stop leading to its destination. You can disable the redirect instead of deleting it.",
     "loadError": "Redirects could not be loaded.",
-    "statusCode": "HTTP status"
+    "statusCode": "HTTP status",
+    "url-change": "URL change",
+    "url-unified": "Unified public URL"
   },
   "reviews": {
     "title": "Reviews",
@@ -2362,5 +2364,13 @@
       "active": "Active collaborations",
       "activeHint": "Confirmed hires"
     }
+  },
+  "publicUrl": {
+    "title": "Change URL",
+    "label": "URL slug",
+    "hint": "Edit the public URL of your profile or campaign.",
+    "redirectHint": "The old URL permanently redirects to the new one. If the name is taken, we add the next available number. Your first change is available immediately; subsequent changes require 14 days.",
+    "locked": "You can change this URL again from {date}.",
+    "save": "Save URL"
   }
 }

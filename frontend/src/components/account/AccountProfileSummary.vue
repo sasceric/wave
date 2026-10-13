@@ -1,10 +1,11 @@
 <script setup>
 import { computed, ref, watch } from 'vue'
+import PublicUrlAction from './PublicUrlAction.vue'
 import PasswordChangeAction from './PasswordChangeAction.vue'
 import RatingSummary from '../reviews/RatingSummary.vue'
 import { loadCurrentUser } from '../../composables/useCurrentUser'
 import { apiGet, formatMoney } from '../../lib/api'
-import { Camera, ExternalLink, Handshake, MapPin, MessageCircleQuestion, Pencil, Images, UsersRound } from '@lucide/vue'
+import { Camera, ExternalLink, Handshake, MapPin, MessageCircleQuestion, Images, UsersRound } from '@lucide/vue'
 import { useI18n } from 'vue-i18n'
 import LocalizedLink from '../shared/LocalizedLink.vue'
 import CreditBalanceLink from './CreditBalanceLink.vue'
@@ -19,7 +20,7 @@ const props = defineProps({
   visibilitySaving: { type: Boolean, default: false },
   notificationsSaving: { type: Boolean, default: false },
 })
-defineEmits(['edit', 'select-tab', 'visibility', 'notifications'])
+defineEmits(['edit', 'select-tab', 'visibility', 'notifications', 'url-changed'])
 const { t } = useI18n()
 const financial = ref(null)
 const financialError = ref('')
@@ -56,15 +57,19 @@ const metrics = computed(() => [
 <template>
   <section class="account-profile-summary" :class="{ 'account-profile-summary--company': !creator }">
     <div class="account-profile-summary__identity">
-      <div class="account-profile-summary__avatar">
-        <img v-if="image" :src="image" :alt="name" />
-        <WaveLogo v-else mark />
-        <button type="button" :aria-label="t('account.changeProfileImage')" @click="$emit('edit')"><Camera :size="19" aria-hidden="true" /></button>
+      <div class="account-profile-summary__portrait">
+        <div class="account-profile-summary__avatar">
+          <img v-if="image" :src="image" :alt="name" />
+          <WaveLogo v-else mark />
+          <button type="button" :aria-label="t('account.changeProfileImage')" @click="$emit('edit')"><Camera :size="19" aria-hidden="true" /></button>
+        </div>
+        <CreditBalanceLink v-if="user.approved || user.isAdmin" class="account-profile-summary__credits" />
       </div>
       <div class="account-profile-summary__copy">
         <p class="eyebrow">{{ creator ? t('account.creatorProfile') : t('account.companyProfile') }}</p>
         <h2>{{ name || t('account.title') }}</h2>
         <p class="account-profile-summary__email">{{ user.email }}</p>
+        <p v-if="location" class="account-profile-summary__location"><MapPin :size="18" aria-hidden="true" />{{ location }}</p>
         <RatingSummary v-if="financial" :rating="financial.rating" />
         <div v-if="financial" class="account-profile-summary__financial">
           <span>{{ t(creator ? 'reviews.earnings' : 'reviews.spending') }}</span>
@@ -73,14 +78,10 @@ const metrics = computed(() => [
           <small>{{ t('reviews.financialHint') }}</small>
         </div>
         <p v-if="financialError" class="account-profile-summary__financial-error" role="status">{{ financialError }} <button type="button" @click="loadFinancial">{{ t('reviews.retry') }}</button></p>
-        <PasswordChangeAction :email="user.email" />
-        <p v-if="location" class="account-profile-summary__location"><MapPin :size="18" aria-hidden="true" />{{ location }}</p>
-        <CreditBalanceLink v-if="user.approved || user.isAdmin" class="account-profile-summary__credits" />
         <LocalizedLink v-if="profile.slug" class="account-profile-summary__public" :to="{ name: creator ? 'creator-profile' : 'company-profile', params: { slug: profile.slug } }">
           {{ t('account.viewPublicProfile') }}<ExternalLink :size="15" aria-hidden="true" />
         </LocalizedLink>
       </div>
-      <button class="account-profile-summary__edit" type="button" @click="$emit('edit')"><Pencil :size="15" aria-hidden="true" />{{ t('account.editProfile') }}</button>
     </div>
     <div v-if="creator" class="account-profile-summary__metrics">
       <button v-for="metric in metrics" :key="metric.tab" type="button" @click="$emit('select-tab', metric.tab)">
@@ -91,6 +92,10 @@ const metrics = computed(() => [
     <div class="account-profile-summary__visibility">
       <SwitchField :model-value="user.hide_my_account" :label="t('account.hideAccount')" :description="t(user.approved ? 'account.hideAccountHint' : 'account.visibilityPendingHint')" :disabled="visibilitySaving || !user.approved || user.profileComplete === false || !user.emailVerified" @update:model-value="$emit('visibility', $event)" />
       <SwitchField :model-value="user.notificationsEnabled === false ? 0 : 1" :label="t('app.notifications')" :description="t('account.notificationsHint')" :disabled="notificationsSaving || !user.emailVerified" @update:model-value="$emit('notifications', $event === 1)" />
+      <div class="account-profile-summary__actions">
+        <PasswordChangeAction :email="user.email" row />
+        <PublicUrlAction :profile="profile" :kind="creator ? 'creator' : 'company'" row @changed="$emit('url-changed', $event)" />
+      </div>
     </div>
   </section>
 </template>

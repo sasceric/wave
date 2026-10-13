@@ -7,7 +7,7 @@
     min-height: 560px;
     margin-left: calc(260px + max(30px, (100vw - 1490px) / 2));
     margin-right: 24px;
-    padding-top: 42px;
+    padding-top: 28px;
     padding-bottom: 92px;
   }
 }
@@ -19,8 +19,8 @@
   align-items: center;
   justify-content: space-between;
   gap: 24px;
-  min-height: 110px;
-  margin-bottom: 28px;
+  min-height: 0;
+  margin-bottom: 20px;
 
   &::before, &::after {
     position: absolute;
@@ -55,7 +55,7 @@
   }
 
   p {
-    margin: 12px 0 0;
+    margin: 8px 0 0;
     color: var(--muted);
     font-size: 17px;
     line-height: 1.5;
@@ -972,7 +972,7 @@
     }
 
     &--dashboard.page-width {
-      padding-top: 20px;
+      padding-top: 12px;
     }
   }
 
@@ -1071,8 +1071,8 @@
   .account-welcome {
     align-items: flex-start;
     min-height: 0;
-    margin: 10px 0 28px;
-    padding: 6px 12px 4px;
+    margin: 0 0 16px;
+    padding: 0 12px;
 
     &__title {
       max-width: 360px;
@@ -1080,6 +1080,7 @@
     }
 
     p {
+      margin-top: 6px;
       font-size: 16px;
       max-width: 340px;
     }
@@ -1153,8 +1154,8 @@
   }
 
   .profile-tabs {
-    margin-bottom: 0;
-    border-radius: 16px 16px 0 0;
+    margin-bottom: 18px;
+    border-radius: 16px;
     padding: 14px 12px;
 
     button {
@@ -1203,7 +1204,12 @@
 
 @include breakpoints.down(760px) {
   .account-welcome:not(.account-welcome--editing) .account-welcome__title span {
-    display: block;
+    display: inline;
+
+    &::before {
+      display: block;
+      content: '';
+    }
   }
 }
 

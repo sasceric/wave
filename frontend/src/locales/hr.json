@@ -2085,7 +2085,9 @@
     "deleteBulkTitle": "Obrisati odabrana preusmjerenja?",
     "deleteMessage": "Stari URL više neće voditi na odredište. Umjesto brisanja možeš isključiti preusmjeravanje.",
     "loadError": "Preusmjeravanja se nisu uspjela učitati.",
-    "statusCode": "HTTP kod"
+    "statusCode": "HTTP kod",
+    "url-change": "Promjena URL-a",
+    "url-unified": "Ujednačen javni URL"
   },
   "reviews": {
     "title": "Recenzije",
@@ -2363,5 +2365,13 @@
       "active": "Aktivne suradnje",
       "activeHint": "Potvrđeni angažmani"
     }
+  },
+  "publicUrl": {
+    "title": "Promijeni URL",
+    "label": "Dio URL-a",
+    "hint": "Uredi javni URL svog profila ili kampanje.",
+    "redirectHint": "Stari URL trajno preusmjerava na novi. Ako je naziv zauzet, dodajemo prvi slobodan broj. Prva promjena je dostupna odmah, a svaka sljedeća nakon 14 dana.",
+    "locked": "Sljedeća promjena je dostupna od {date}.",
+    "save": "Spremi URL"
   }
 }

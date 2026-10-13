@@ -10,7 +10,7 @@ use Doctrine\DBAL\Connection;
 /** Small, owner-scoped queries; the overview never loads entire activity collections. */
 final class PersonalOverview
 {
-    public function __construct(private readonly Connection $db, private readonly BlockPolicy $blocks, private readonly CollaborationFeedback $feedback) {}
+    public function __construct(private readonly Connection $db, private readonly BlockPolicy $blocks, private readonly CollaborationFeedback $feedback, private readonly \App\Credits\CreditService $credits) {}
 
     public function snapshot(User $user): array
     {
@@ -18,7 +18,9 @@ final class PersonalOverview
         $company = $user->getCompany();
         $ready = $user->hasCompleteProfile() && $user->isApproved() && $user->isEmailVerified();
         $counts = $creator !== null ? ['invitations' => 0, 'offers' => 0, 'active' => 0, 'applications' => 0] : ['campaigns' => 0, 'applications' => 0, 'offers' => 0, 'active' => 0];
-        $result = ['ready' => $ready, 'counts' => $counts, 'recent' => [], 'financial' => null];
+        $settings = $this->credits->settings();
+        $creditSummary = ['unlimited' => !$settings['paid'], 'balance' => $settings['paid'] ? (int) $this->db->fetchOne('SELECT balance FROM credit_wallet WHERE user_id = ?', [$user->getId()]) : 0];
+        $result = ['credits' => $creditSummary, 'ready' => $ready, 'counts' => $counts, 'recent' => [], 'financial' => null];
         if (!$ready || ($creator === null && $company === null)) return $result;
         $params = ['owner' => $user->getId()];
         $today = (new \DateTimeImmutable('today'))->format('Y-m-d');

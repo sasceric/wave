@@ -14,6 +14,7 @@ final class CompanyResource
         $resource = [
             'id' => $company->getId(),
             'slug' => $company->getSlug(),
+            'publicUrlChangeAvailableAt' => $company->getPublicUrlChangedAt()?->modify('+14 days')->format(DATE_ATOM),
             'name' => $company->getOwner()?->isDeleted() ? ApiMessages::get('deleted_account', $locale) : $company->getName(),
             'deleted' => $company->getOwner()?->isDeleted() ?? false,
             'companyType' => $company->getCompanyType(),

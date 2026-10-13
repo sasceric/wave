@@ -72,6 +72,7 @@ final class CampaignManagementController
         Security $security,
         CsrfTokenManagerInterface $tokenManager,
         \App\Credits\CreditService $credits,
+        \App\Service\PublicUrlSlugs $publicSlugs,
     ): JsonResponse {
         $locale = LocaleContext::fromRequest($request);
         if ($locale === null) {
@@ -103,7 +104,7 @@ final class CampaignManagementController
             ], 400);
         }
 
-        $slug = $this->slug($fields['title']);
+        $slug = $publicSlugs->reserve('campaign', $fields['title']);
         $campaign = new Campaign(
             $slug,
             $fields['title'],
@@ -427,11 +428,4 @@ final class CampaignManagementController
         return $result;
     }
 
-    private function slug(string $title): string
-    {
-        $ascii = iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $title);
-        $slug = trim(preg_replace('/[^a-z0-9]+/', '-', strtolower((string) $ascii)) ?? '', '-');
-
-        return substr($slug !== '' ? $slug : 'campaign', 0, 90).'-'.bin2hex(random_bytes(3));
-    }
 }

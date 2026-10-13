@@ -1016,7 +1016,7 @@ onMounted(loadDashboard)
       </div>
       <RouterLink v-if="profile?.slug" class="account-welcome__public" :to="{ name: user.accountType === 'creator' ? 'creator-profile' : 'company-profile', params: { slug: profile.slug } }"><Eye :size="21" aria-hidden="true" />{{ t('account.viewPublicProfile') }}<ExternalLink :size="15" aria-hidden="true" /></RouterLink>
     </header>
-    <AccountProfileSummary v-if="profile && !editingProfile && accountSection === 'profile'" :user="user" :profile="profile" :country-options="countryOptions" :visibility-saving="visibilitySaving" :notifications-saving="notificationsSaving" @notifications="updateNotificationPreference" @edit="startProfileEdit('about')" @select-tab="selectAccountTab" @visibility="updateAccountVisibility" />
+    <AccountProfileSummary v-if="profile && !editingProfile && accountSection === 'profile'" :user="user" :profile="profile" :country-options="countryOptions" :visibility-saving="visibilitySaving" :notifications-saving="notificationsSaving" @url-changed="loadDashboard()" @notifications="updateNotificationPreference" @edit="startProfileEdit('about')" @select-tab="selectAccountTab" @visibility="updateAccountVisibility" />
     <StatusMessage v-if="error" variant="error">{{ error }}</StatusMessage>
     <StatusMessage v-else-if="notice">{{ notice }}</StatusMessage>
     <div v-if="!user.emailVerified" class="verification-banner">
@@ -1709,6 +1709,7 @@ onMounted(loadDashboard)
           :applications="selectedCampaignApplications"
           @edit="setCampaignForm"
           @view-application="openApplicant"
+          @url-changed="result => router.replace({ name: localizedRouteName('account-campaign-detail', locale), params: { slug: result.slug } })"
         />
         <StatusMessage v-else-if="campaignPage === 'detail'" variant="empty">
           {{ t('account.noCampaigns') }}

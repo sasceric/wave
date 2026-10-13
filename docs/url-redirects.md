@@ -8,24 +8,49 @@ the server across all pages; the fixed HTTP 301 and actions columns are not sort
 Source paths are unique. Redirect loops and private/system paths are rejected.
 Destinations must be local public paths, optionally with query parameters.
 
-Deleting a creator or company captures its original slug **before** anonymization
-and records the public detail-to-directory redirect for each of the six locales.
-Company deletion also records redirects for its retained campaigns. Admin campaign
-deletion records the same six rules before removing the campaign. Redirects commit
-in the deletion transaction. Existing rules that an administrator edited or disabled
-are preserved. Changing visibility/approval, expiring or merely closing a record
-does not create redirects; only deletion does. Shared account/campaign history and participant API access keep
-their existing deletion policy; API and account URLs are never redirected.
-If an existing custom rule would make a generated deletion redirect cyclic, that
-new row is saved disabled for administrator review, without blocking deletion.
+Creator, company and campaign details use one shared public path in every language:
+`/kreatori/{slug}`, `/kompanije/{slug}`, `/kampanje/{slug}`. Directory, country and
+editorial pages retain their localized URLs. `config/shared_public_routes.json`
+defines the shared detail paths; `config/localized_routes.json` retains historical
+language mappings for aliases. Selecting another UI language on a shared detail
+page keeps its URL. Detail metadata has one canonical URL and no duplicate
+hreflang entries; both sitemap generators list each detail once.
 
-Canonical locale paths are stored. Existing English and old `/sr`, `/cnr`, `/sl`
-aliases resolve to the same rules. Incoming query parameters are ignored by default;
-the optional transfer setting retains them. Chains resolve to their final destination
-in one response. Redirect responses and admin/lookup APIs are not cached so rule
-changes can take effect immediately. Production document requests use Symfony 301s;
-SPA links and the Vite preview use the public resolver. Initial production SPA
-navigation skips a redundant lookup because Symfony already checked the document.
+Readable slugs use the name/title, with the first available numeric suffix on a
+collision (`amina-kovac`, `amina-kovac-1`, …). `PublicUrlSlugs` permanently reserves
+current and historical slugs per entity kind, including deleted records, to avoid
+assigning another account a URL that still redirects. Creation and edits use the
+same allocation service. Database uniqueness handles concurrent allocation.
+
+Owners can edit only the slug in `PublicUrlAction`, below password settings in the
+profile's right-hand controls. Campaign owners have the same control on their
+campaign details. The modal shows the full public URL and immutable path prefix.
+The first manual change is immediate; later changes require 14 days, enforced on
+the server. Saving the same slug does not consume the interval. Writes require
+CSRF and ownership checks. Profile metadata can be edited before approval without
+making that account public.
+
+`PublicUrlRedirectWriter` saves the old canonical URL and historical language
+aliases as 301 rules. Subsequent changes retarget earlier rules directly to the
+latest URL, preserving administrator overrides and query-transfer settings.
+`UrlRedirects` also follows implicit language aliases when resolving a chain or
+checking for cycles. Exact alias sources remain editable independently in admin.
+
+Deleting a creator or company captures its original slug before anonymization
+and records canonical and historical detail-to-directory redirects. Company
+deletion also redirects retained campaigns; admin campaign deletion records the
+same aliases before removal. Redirects commit in the deletion transaction.
+Existing administrator-edited or disabled rules are preserved. Changing
+visibility/approval or closing a campaign creates no deletion redirect. Shared
+history and participant access retain their existing deletion policy; API and
+account URLs are never redirected. A generated deletion rule that would create a
+cycle is saved disabled for administrator review without blocking deletion.
+
+Incoming query parameters are ignored by default; the optional transfer setting
+retains them. Chains resolve to their final destination in one response. Redirect
+responses and admin/lookup APIs are not cached, so changes take effect immediately.
+Production documents use Symfony 301s; SPA navigation and Vite use the public
+resolver. Initial production SPA navigation skips the redundant resolver request.
 
 The feature records future deletions. Original creator/company slugs anonymized
 before this feature cannot be reconstructed automatically; known older URLs can
@@ -36,8 +61,15 @@ redirects as soft 404s: [Google’s guidance](https://support.google.com/webmast
 
 Migration `Version20261012100000` creates `url_redirect` and is compatible with
 PostgreSQL and SQLite. Run normal Doctrine migrations before serving the new code.
-The migration has been applied to the local database only; these changes were not
-pushed or deployed.
+Migration `Version20261013190000` adds permanent slug reservations and nullable
+last-change timestamps. Its data upgrade converts generated six-character hash
+suffixes to readable slugs and creates old-to-new redirects, while preserving
+custom slugs and leaving the first manual edit available. It preserves directory
+search projections because those contain no URLs. PostgreSQL and SQLite upgrade
+paths are tested. Cached sitemap indexes without the shared-URL format marker are
+regenerated through the existing sitemap task; normal workers must be running.
+Both migrations have been applied locally only; this update has not been pushed
+or deployed.
 
 `config/seo_route_titles.json` shares route-title keys between Symfony and Vue.
 Login, registration, recovery and private pages remain `noindex`; authentication

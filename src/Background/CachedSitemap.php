@@ -25,7 +25,7 @@ final class CachedSitemap
     public function index(): ?string
     {
         $path = $this->directory . '/sitemap.xml';
-        if (!is_file($path)) {
+        if (!is_file($path) || !str_contains((string) file_get_contents($path), 'wave-shared-public-urls-v1')) {
             $this->jobs->enqueue('SitemapGenerateTask', [], 'sitemap:' . intdiv(time(), 300));
 
             return null;
@@ -61,7 +61,7 @@ final class CachedSitemap
             $version = bin2hex(random_bytes(16));
             $count = $bytes = 0;
             foreach ($this->pages() as [$route, $params]) {
-                foreach ($this->routes->locales() as $locale) {
+                foreach (($this->routes->isShared($route) ? ['bs'] : $this->routes->locales()) as $locale) {
                     $xml = '<url><loc>' . $this->escape($this->origin->url($this->routes->localizedPath($route, $locale, $params))) . '</loc>';
                     foreach ($this->routes->localizedAlternates($route, $params) as $language => $path) {
                         $xml .= '<xhtml:link rel="alternate" hreflang="' . $this->escape($language) . '" href="' . $this->escape($this->origin->url($path)) . '"/>';
@@ -91,7 +91,7 @@ final class CachedSitemap
                 fclose($handle);
                 $handle = null;
             }
-            $xml = '<?xml version="1.0" encoding="UTF-8"?><sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">';
+            $xml = '<?xml version="1.0" encoding="UTF-8"?><!--wave-shared-public-urls-v1--><sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">';
             foreach ($parts as $part) {
                 $xml .= '<sitemap><loc>' . $this->escape($this->origin->url('/sitemaps/' . $part)) . '</loc></sitemap>';
             }

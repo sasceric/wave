@@ -1,7 +1,7 @@
 <script setup>
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { ArrowRight, Check, ClipboardCheck, Handshake, Mail, Megaphone, Pencil, ShieldCheck } from '@lucide/vue'
+import { ArrowRight, Check, ClipboardCheck, Coins, Handshake, Mail, Megaphone, Pencil, ShieldCheck } from '@lucide/vue'
 import AccountPage from '../components/account/AccountPage.vue'
 import AccountSidebar from '../components/account/AccountSidebar.vue'
 import LocalizedLink from '../components/shared/LocalizedLink.vue'
@@ -125,6 +125,11 @@ onBeforeUnmount(() => { ++revision })
               <strong v-else>—</strong>
               <small>{{ t('personalDashboard.financialHint') }}</small>
             </section>
+            <LocalizedLink class="personal-overview__credits" :to="{ name: 'account-credits' }">
+              <span><Coins :size="17" aria-hidden="true" />{{ t('credits.title') }}</span>
+              <strong>{{ snapshot.credits?.unlimited ? '∞' : snapshot.credits?.balance ?? 0 }}</strong>
+              <small>{{ t(snapshot.credits?.unlimited ? 'credits.unlimited' : 'credits.balance') }}<ArrowRight :size="15" aria-hidden="true" /></small>
+            </LocalizedLink>
             <section class="personal-overview__rating">
               <h2>{{ t('personalDashboard.rating') }}</h2>
               <RatingSummary :rating="snapshot.financial?.rating" />

@@ -64,6 +64,7 @@ export async function apiRequest(path, { method = 'GET', body, locale } = {}) {
     if (response.status === 403 && unsafe) csrfToken = ''
     const error = new Error(payload.error || i18n.global.t('api.requestFailed', { status: response.status }))
     error.status = response.status
+    error.availableAt = typeof payload.availableAt === 'string' ? payload.availableAt : null
     error.fields = Array.isArray(payload.fields) ? payload.fields : []
     throw error
   }

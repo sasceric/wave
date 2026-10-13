@@ -2,7 +2,6 @@
 
 namespace App\OAuth;
 
-use App\Api\ProfileSlug;
 use App\Entity\Company;
 use App\Entity\Creator;
 use App\Entity\User;
@@ -10,7 +9,7 @@ use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
 final class OAuthAccountFactory
 {
-    public function __construct(private readonly UserPasswordHasherInterface $passwordHasher)
+    public function __construct(private readonly UserPasswordHasherInterface $passwordHasher, private readonly \App\Service\PublicUrlSlugs $publicSlugs)
     {
     }
 
@@ -44,9 +43,9 @@ final class OAuthAccountFactory
         $user->setHideMyAccount(true);
 
         if ($accountType === 'creator') {
-            $user->setCreator(new Creator(ProfileSlug::fromName($name), $name, '', '', '', []));
+            $user->setCreator(new Creator($this->publicSlugs->reserve('creator', $name), $name, '', '', '', []));
         } else {
-            $user->setCompany(new Company(ProfileSlug::fromName($name), $name, ''));
+            $user->setCompany(new Company($this->publicSlugs->reserve('company', $name), $name, ''));
         }
 
         return $user;

@@ -4,8 +4,8 @@ import { ChevronDown, ChevronRight } from '@lucide/vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import LanguageFlag from './LanguageFlag.vue'
-import { localeNames } from '../../i18n'
-import { defaultLocale, localizedRouteName, localizedRouteNames, localePrefixes } from '../../routePaths'
+import { localeNames, setLocale } from '../../i18n'
+import { defaultLocale, isSharedRoute, localizedRouteName, localizedRouteNames, localePrefixes } from '../../routePaths'
 
 defineProps({
   expanded: { type: Boolean, default: false },
@@ -25,8 +25,9 @@ function closeOnOutsideClick(event) {
   }
 }
 
-function selectLocale(code) {
+async function selectLocale(code) {
   isOpen.value = false
+  if (isSharedRoute(route.meta.routeName)) { await setLocale(code); return }
 
   if (localizedRouteNames.has(route.meta.routeName)) {
     router.replace({

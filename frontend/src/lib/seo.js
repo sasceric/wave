@@ -1,4 +1,4 @@
-import { localizedPath, routeSegments } from '../routePaths'
+import { localizedPath, routeSegments, isSharedRoute } from '../routePaths'
 import { regionalLanguageTags } from './regionalSeo'
 import { pageTitle } from './pageTitle'
 
@@ -108,7 +108,7 @@ export function updateSeo({
   setMeta('name', 'twitter:image', ogImage)
   const alternates = document.head.querySelectorAll('link[rel="alternate"][hreflang]')
   alternates.forEach((element) => element.remove())
-  if (!noindex && knownRoute) {
+  if (!noindex && knownRoute && !isSharedRoute(routeName)) {
     for (const alternateLocale of Object.keys(routeSegments)) {
       const link = document.createElement('link')
       link.rel = 'alternate'

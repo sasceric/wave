@@ -2085,7 +2085,9 @@
     "deleteBulkTitle": "Izbrisati izbrane preusmeritve?",
     "deleteMessage": "Stari URL ne bo več vodil na cilj. Namesto brisanja lahko preusmeritev izključiš.",
     "loadError": "Preusmeritev ni bilo mogoče naložiti.",
-    "statusCode": "HTTP koda"
+    "statusCode": "HTTP koda",
+    "url-change": "Sprememba URL-ja",
+    "url-unified": "Enoten javni URL"
   },
   "reviews": {
     "title": "Ocene",
@@ -2363,5 +2365,13 @@
       "active": "Aktivna sodelovanja",
       "activeHint": "Potrjeni dogovori"
     }
+  },
+  "publicUrl": {
+    "title": "Spremeni URL",
+    "label": "Del URL-ja",
+    "hint": "Uredi javni URL svojega profila ali kampanje.",
+    "redirectHint": "Stari URL trajno preusmeri na novega. Če je ime zasedeno, dodamo prvo prosto številko. Prva sprememba je na voljo takoj, vsaka naslednja po 14 dneh.",
+    "locked": "Naslednja sprememba je na voljo od {date}.",
+    "save": "Shrani URL"
   }
 }

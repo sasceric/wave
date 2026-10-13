@@ -14,6 +14,7 @@ final class CampaignResource
         $resource = [
             'id' => $campaign->getId(),
             'slug' => $campaign->getSlug(),
+            'publicUrlChangeAvailableAt' => $campaign->getPublicUrlChangedAt()?->modify('+14 days')->format(DATE_ATOM),
             'title' => $translation['title'] ?? $campaign->getTitle(),
             'summary' => $translation['summary'] ?? $campaign->getSummary(),
             'description' => $translation['description'] ?? $campaign->getDescription(),

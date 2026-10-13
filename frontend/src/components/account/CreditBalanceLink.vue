@@ -14,6 +14,10 @@ watch([() => currentUser.value?.id, locale], () => { refreshCredits().catch(() =
   <LocalizedLink class="account-sidebar__link" :to="{ name: 'account-credits' }" :aria-label="creditAccount ? `${t('credits.title')}: ${creditAccount.unlimited ? t('credits.unlimited') : creditAccount.balance}` : t('credits.title')">
     <Coins :size="20" aria-hidden="true" />
     <span class="account-sidebar__text">{{ t('credits.title') }}</span>
-    <strong v-if="creditAccount" class="account-sidebar__badge">{{ creditAccount.unlimited ? '∞' : creditAccount.balance }}</strong>
+    <strong v-if="creditAccount" class="account-sidebar__badge" :class="{ 'account-sidebar__badge--unlimited': creditAccount.unlimited }">{{ creditAccount.unlimited ? '∞' : creditAccount.balance }}</strong>
   </LocalizedLink>
 </template>
+
+<style scoped>
+.account-sidebar__badge--unlimited { font-size: 22px; line-height: 1; }
+</style>

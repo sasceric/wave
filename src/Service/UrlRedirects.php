@@ -23,8 +23,9 @@ final class UrlRedirects
             $entity instanceof Company => ['company-profile', 'companies', 'deleted-company'],
             default => ['campaign-detail', 'campaigns', 'deleted-campaign'],
         };
-        foreach ($this->routes->locales() as $locale) {
-            $source = $this->routes->localizedPath($detail, $locale, ['slug' => $entity->getSlug()]);
+        $sources = array_unique([$this->routes->localizedPath($detail, 'bs', ['slug' => $entity->getSlug()]), ...$this->routes->legacyDetailPaths($detail, $entity->getSlug())]);
+        foreach ($sources as $source) {
+            $locale = $this->routes->resolve($source)['locale'] ?? 'bs';
             // Keep any destination/disabled state an administrator already chose.
             if ($this->find($source) === null) {
                 $target = $this->routes->localizedPath($listing, $locale);
@@ -57,7 +58,7 @@ final class UrlRedirects
         }
         $normalized = '/'.implode('/', $segments);
         $route = $this->routes->resolve($normalized);
-        if ($route !== null) {
+        if ($route !== null && !$this->routes->isShared($route['name'])) {
             $normalized = $this->routes->localizedPath($route['name'], $route['locale'], $route['params']);
         }
         if (!$this->publicPath($normalized, $route['name'] ?? null)) {
@@ -97,9 +98,15 @@ final class UrlRedirects
             }
             $seen[$path] = true;
             $next = $this->find($path, true);
-            if ($next === null || ($id !== null && $next->getId() === $id)) {
+            if ($next === null) {
+                $route = $this->routes->resolve($path);
+                if ($route !== null && $this->routes->isShared($route['name'])) {
+                    $canonical = $this->routes->localizedPath($route['name'], 'bs', $route['params']);
+                    if ($canonical !== $path) { $path = $canonical; continue; }
+                }
                 return;
             }
+            if ($id !== null && $next->getId() === $id) return;
             $path = explode('?', $next->getTargetPath(), 2)[0];
         }
         throw new \InvalidArgumentException('Redirect chain is too long.');
@@ -122,6 +129,11 @@ final class UrlRedirects
             $seen[$path] = true;
             $redirect = $this->find($path, true);
             if ($redirect === null) {
+                $route = $this->routes->resolve($path);
+                if ($route !== null && $this->routes->isShared($route['name'])) {
+                    $canonical = $this->routes->localizedPath($route['name'], 'bs', $route['params']);
+                    if ($canonical !== $path) { $path = $location = $canonical; continue; }
+                }
                 return $location;
             }
             try {

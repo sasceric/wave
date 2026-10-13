@@ -86,7 +86,7 @@ final class SitemapGenerator
                 $alternates[$locale] = $this->siteOrigin->url($path);
             }
 
-            foreach ($this->routeMap->locales() as $locale) {
+            foreach (($this->routeMap->isShared($routeName) ? ['bs'] : $this->routeMap->locales()) as $locale) {
                 $path = $this->routeMap->localizedPath($routeName, $locale, $params);
                 $xml .= '<url><loc>'.$this->escape($this->siteOrigin->url($path)).'</loc>';
                 foreach ($alternates as $hreflang => $url) {

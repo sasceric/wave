@@ -1,4 +1,5 @@
 <script setup>
+import PublicUrlAction from './PublicUrlAction.vue'
 import ReviewAction from '../reviews/ReviewAction.vue'
 import { computed, nextTick, ref, watch } from 'vue'
 import { ArrowRight, CalendarDays, MapPin, Megaphone, MessageCircle, Users } from '@lucide/vue'
@@ -19,7 +20,7 @@ const props = defineProps({
   campaign: { type: Object, required: true },
   applications: { type: Array, default: () => [] },
 })
-const emit = defineEmits(['edit', 'view-application'])
+const emit = defineEmits(['edit', 'view-application', 'url-changed'])
 const { t, locale } = useI18n()
 const query = ref('')
 const page = ref(1)
@@ -74,6 +75,7 @@ function chatRoute(application) {
         <div class="company-campaign-detail__content">
           <p class="company-campaign-detail__category">{{ campaignAreas.join(', ') }}</p>
           <h1>{{ campaign.title }}</h1>
+          <PublicUrlAction :profile="campaign" kind="campaign" @changed="emit('url-changed', $event)" />
           <p class="company-campaign-detail__summary">{{ campaign.summary }}</p>
           <RichTextContent :html="campaign.description" />
           <dl class="company-campaign-detail__meta">

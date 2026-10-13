@@ -9,6 +9,16 @@ use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 
 final class OAuthAccountFactoryTest extends KernelTestCase
 {
+    protected function setUp(): void
+    {
+        self::bootKernel();
+        $em = self::getContainer()->get(\Doctrine\ORM\EntityManagerInterface::class);
+        $schema = new \Doctrine\ORM\Tools\SchemaTool($em);
+        $metadata = $em->getMetadataFactory()->getAllMetadata();
+        $schema->dropSchema($metadata);
+        $schema->createSchema($metadata);
+    }
+
     public function testCreatesVerifiedIncompleteCreatorForProfileCompletion(): void
     {
         $user = static::getContainer()->get(OAuthAccountFactory::class)->create([
