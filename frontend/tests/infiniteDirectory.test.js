@@ -221,12 +221,14 @@ test('country creator pages retain their country when filters are cleared and us
     } },
     '../composables/useMarketplaceCatalog': { useMarketplaceCatalog: () => ({ categories: vue.ref([]), error: vue.ref('') }) },
     '../lib/api': { apiGet: async () => ({ data: { countries: available ? [{ value: 'BA', count: 1 }] : [] } }) },
-    '../lib/marketplace': { SOCIAL_PLATFORMS: ['Instagram', 'TikTok', 'YouTube'] },
+    '../lib/creatorPresentation': { PRESENTATION_PLATFORMS: ['Instagram', 'TikTok', 'YouTube', 'Twitch', 'Spotify'] },
     '../lib/seo': { updateSeo: value => metadata.push(value), getSeoOrigin: () => 'https://wave.ba' },
     '../lib/regionalSeo': { countryCodeForSlug: slug => slug === 'bosna-i-hercegovina' ? 'BA' : null },
     '../routePaths': { localizedPath: (name, locale, params) => `/kreatori/${params.slug}` },
   }, { countryCode: 'BA' })
   assert.equal(filters.countries.value, '["BA"]')
+  assert.equal(state.platformOptions.some(option => option.value === 'Twitch'), true)
+  assert.equal(state.platformOptions.some(option => option.value === 'Spotify'), true)
   state.selectedCountries.value = ['HR']
   state.selectedCategories.value = ['Lifestyle']
   state.selectedCreatorTypes.value = ['photographer', 'videographer']

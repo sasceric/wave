@@ -67,6 +67,8 @@ Cloudflare location headers are accepted only from allowlisted edge peers; see
 | Device app badges and push links | `src/Service/UnreadInboxCounter.php`, `frontend/src/lib/appBadge.js`, `notificationNavigation.js`, `frontend/src/sw.js`, `MessagesView.vue`; `docs/server-notifications.md` |
 | Page layouts and features | `frontend/src/views/` |
 | Reusable UI | `frontend/src/components/shared/`, domain component directories |
+| Fictional presentation accounts and repeatable showcase import | `SeedPresentationDemoCommand.php`, `Demo/PresentationDemoSeeder.php`, `docs/presentation-demo.md` |
+| Creator profile, audience, work and PDF presentation | `CreatorStudioPanel.vue`, `CreatorPresentation.php`, `docs/creator-profile-studio.md` |
 | Session and shared frontend state | `frontend/src/composables/useCurrentUser.js` and other composables |
 | API requests, CSRF, uploads, formatting | `frontend/src/lib/api.js` |
 | Images, thumbnails and indexing | `MediaController.php`, `src/Service/MediaStorage.php`, `ImageUploadProcessor.php`, `MediaThumbnails.php`, `GenerateMediaThumbnailsCommand.php`; `docs/media-thumbnails.md` |

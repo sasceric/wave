@@ -13,6 +13,7 @@ final class CampaignResource
 
         $resource = [
             'id' => $campaign->getId(),
+            'isPresentationDemo' => $campaign->getCompany()->getOwner()?->isPresentationDemo() ?? false,
             'slug' => $campaign->getSlug(),
             'publicUrlChangeAvailableAt' => $campaign->getPublicUrlChangedAt()?->modify('+14 days')->format(DATE_ATOM),
             'title' => $translation['title'] ?? $campaign->getTitle(),

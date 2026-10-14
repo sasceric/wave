@@ -15,6 +15,7 @@ final class CreatorResource
         ?string $categoryLabel = null,
         array $categoryLabels = [],
         bool $card = false,
+        bool $public = true,
     ): array {
         $translation = $creator->getTranslations()[$locale] ?? [];
         $owner = $creator->getOwner();
@@ -28,6 +29,7 @@ final class CreatorResource
                 'featured' => $creator->isFeatured(),
                 'displayName' => $owner?->isDeleted() ? ApiMessages::get('deleted_account', $locale) : $creator->getDisplayName(),
                 'deleted' => $owner?->isDeleted() ?? false,
+                'isPresentationDemo' => $owner?->isPresentationDemo() ?? false,
                 'creatorTypes' => $creator->getCreatorTypes(),
                 'category' => $translation['category'] ?? $creator->getCategory(),
                 'categoryLabel' => $categoryLabel ?? ($translation['category'] ?? $creator->getCategory()),
@@ -47,10 +49,15 @@ final class CreatorResource
                 if (isset($item['mediaId'])) {
                     $item['url'] = $portfolioMedia[$item['mediaId']] ?? null;
                 }
+                $item['coverUrl'] = $portfolioMedia[$item['coverMediaId'] ?? 0] ?? null;
+                $item['media'] = array_map(static function (array $media) use ($portfolioMedia): array {
+                    if (isset($media['mediaId'])) $media['url'] = $portfolioMedia[$media['mediaId']] ?? null;
+                    return $media;
+                }, $item['media'] ?? []);
 
                 return $item;
             },
-            $creator->getPortfolio(),
+            array_values(array_filter($creator->getPortfolio(), static fn (array $item): bool => !$public || ($item['publicPermission'] ?? true))),
         );
         $packages = array_map(
             static function (array $package) use ($locale): array {
@@ -76,7 +83,9 @@ final class CreatorResource
             'featured' => $creator->isFeatured(),
             'displayName' => $owner?->isDeleted() ? ApiMessages::get('deleted_account', $locale) : $creator->getDisplayName(),
             'deleted' => $owner?->isDeleted() ?? false,
+                'isPresentationDemo' => $owner?->isPresentationDemo() ?? false,
             'creatorTypes' => $creator->getCreatorTypes(),
+            'presentation' => $creator->getPresentation(),
             'category' => $translation['category'] ?? $creator->getCategory(),
             'categoryLabel' => $categoryLabel ?? ($translation['category'] ?? $creator->getCategory()),
             'categories' => $categories,

@@ -275,9 +275,8 @@ final class MediaController
             return true;
         }
 
-        $creatorPortfolioCount = $entityManager->getRepository(CreatorPortfolioMedia::class)->createQueryBuilder('portfolioMedia')
-            ->select('COUNT(portfolioMedia.id)')
-            ->join('portfolioMedia.creator', 'creator')
+        $portfolioCreators = $entityManager->getRepository(Creator::class)->createQueryBuilder('creator')
+            ->join('creator.portfolioMedia', 'portfolioMedia')
             ->leftJoin('creator.owner', 'owner')
             ->andWhere('portfolioMedia.media = :media')
             ->andWhere('(owner.id IS NULL OR (owner.approved = :approved AND owner.hideMyAccount = :visible))')
@@ -285,9 +284,20 @@ final class MediaController
             ->setParameter('approved', true)
             ->setParameter('visible', false)
             ->getQuery()
-            ->getSingleScalarResult();
-        if ((int) $creatorPortfolioCount > 0) {
-            return true;
+            ->getResult();
+        foreach ($portfolioCreators as $creator) {
+            foreach ($creator->getPortfolio() as $work) {
+                if (!($work['publicPermission'] ?? true)) {
+                    continue;
+                }
+                $ids = [$work['mediaId'] ?? null, $work['coverMediaId'] ?? null];
+                foreach ($work['media'] ?? [] as $extra) {
+                    $ids[] = $extra['mediaId'] ?? null;
+                }
+                if (in_array($media->getId(), $ids, true)) {
+                    return true;
+                }
+            }
         }
 
         $companyLogoCount = $entityManager->getRepository(Company::class)->createQueryBuilder('company')

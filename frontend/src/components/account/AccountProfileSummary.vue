@@ -1,4 +1,5 @@
 <script setup>
+import PresentationDemoBadge from '../shared/PresentationDemoBadge.vue'
 import { computed, ref, watch } from 'vue'
 import PublicUrlAction from './PublicUrlAction.vue'
 import PasswordChangeAction from './PasswordChangeAction.vue'
@@ -66,6 +67,7 @@ const metrics = computed(() => [
         <CreditBalanceLink v-if="user.approved || user.isAdmin" class="account-profile-summary__credits" />
       </div>
       <div class="account-profile-summary__copy">
+      <PresentationDemoBadge v-if="user.isPresentationDemo" compact />
         <p class="eyebrow">{{ creator ? t('account.creatorProfile') : t('account.companyProfile') }}</p>
         <h2>{{ name || t('account.title') }}</h2>
         <p class="account-profile-summary__email">{{ user.email }}</p>

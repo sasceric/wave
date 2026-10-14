@@ -12,6 +12,7 @@ const props = defineProps({
   showSinglePage: { type: Boolean, default: false },
   showPageSize: { type: Boolean, default: true },
   statusLabel: { type: String, default: '' },
+  showArrows: { type: Boolean, default: true },
 })
 
 const emit = defineEmits(['update:page', 'update:pageSize'])
@@ -45,6 +46,7 @@ function changePageSize(event) {
     </p>
     <nav v-if="pageCount > 1 || showSinglePage" class="directory-pagination__controls" :aria-label="t('directoryPagination.ariaLabel')">
       <button
+        v-if="showArrows"
         type="button"
         :aria-label="t('directoryPagination.previous')"
         :title="t('directoryPagination.previous')"
@@ -69,6 +71,7 @@ function changePageSize(event) {
         </template>
       </div>
       <button
+        v-if="showArrows"
         type="button"
         :aria-label="t('directoryPagination.next')"
         :title="t('directoryPagination.next')"

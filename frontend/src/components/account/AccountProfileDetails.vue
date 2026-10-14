@@ -1,6 +1,7 @@
 <script setup>
 import { BadgeCheck, Building2, CalendarDays, ExternalLink, FileText, Globe, Handshake, Images, MessageCircleQuestion, Pencil, Phone, Tags, UserRound, UsersRound } from '@lucide/vue'
 import AccountProfileCard from './AccountProfileCard.vue'
+import CreatorProfileExtras from './CreatorProfileExtras.vue'
 import RichTextContent from '../shared/RichTextContent.vue'
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
@@ -68,6 +69,7 @@ const aboutHtml = computed(() => sanitizeRichText(
           </dl>
         </AccountProfileCard>
       </div>
+      <CreatorProfileExtras v-if="isCreator" :profile="profile" @edit="emit('edit', $event)" />
     </template>
     <template v-else-if="tab === 'social'">
       <AccountProfileCard :title="t('account.socialProfiles')" :icon="UsersRound" editable @edit="emit('edit', 'social')">

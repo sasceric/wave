@@ -1,4 +1,5 @@
 <script setup>
+import PresentationDemoBadge from '../components/shared/PresentationDemoBadge.vue'
 import MarketplaceSafetyActions from '../components/shared/MarketplaceSafetyActions.vue'
 import CreditActionNotice from '../components/account/CreditActionNotice.vue'
 import { refreshCredits } from '../composables/useCredits'
@@ -149,6 +150,7 @@ onMounted(loadCampaign)
               <span aria-hidden="true">·</span>
               {{ campaign.status === 'open' ? t('campaignDetail.openCampaign') : t(`account.${campaign.status}`) }}
             </p>
+            <PresentationDemoBadge v-if="campaign.isPresentationDemo" />
             <h1>{{ campaign.title }}</h1>
             <MarketplaceSafetyActions kind="campaign" :slug="campaign.slug" :owner-slug="campaign.company.slug" />
             <p class="brief-hero__summary">{{ campaign.summary }}</p>

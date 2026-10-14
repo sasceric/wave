@@ -20,6 +20,14 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     private string $email;
 
     #[ORM\Column(length: 40, nullable: true)]
+    private ?string $presentationDemoKey = null;
+
+    public function getPresentationDemoKey(): ?string { return $this->presentationDemoKey; }
+    public function isPresentationDemo(): bool { return $this->presentationDemoKey !== null; }
+    public function markPresentationDemo(string $key): void { $this->presentationDemoKey = $key; }
+
+
+    #[ORM\Column(length: 40, nullable: true)]
     private ?string $phone = null;
 
     #[ORM\Column(length: 70, nullable: true)]

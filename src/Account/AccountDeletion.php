@@ -89,6 +89,7 @@ final class AccountDeletion
                 }
                 $creator = $user->getCreator();
                 if ($creator !== null) {
+                    $db->delete('creator_profile_visit', ['creator_id' => $creator->getId()]);
                     $this->redirects->deleted($creator);
                     $db->delete('directory_index', ['id' => 'creator:'.$creator->getId()]);
                     $creator->anonymize();

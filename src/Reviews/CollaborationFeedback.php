@@ -109,6 +109,7 @@ final class CollaborationFeedback
         $blocked = $this->blocks?->blocked($author->getId()) ?? false;
         return [
             'id' => $review->getId(),
+            'isPresentationDemo' => $author->isPresentationDemo() || $review->getRecipient()->isPresentationDemo(),
             'rating' => $review->getRating(),
             'comment' => $blocked ? '' : $review->getComment(),
             'createdAt' => $review->getCreatedAt()->format(DATE_ATOM),

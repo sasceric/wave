@@ -3,6 +3,7 @@ import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { ArrowRight, Check, ClipboardCheck, Coins, Handshake, Mail, Megaphone, Pencil, ShieldCheck } from '@lucide/vue'
 import AccountPage from '../components/account/AccountPage.vue'
+import CreatorProfileStatistics from '../components/account/CreatorProfileStatistics.vue'
 import AccountSidebar from '../components/account/AccountSidebar.vue'
 import LocalizedLink from '../components/shared/LocalizedLink.vue'
 import StatusMessage from '../components/shared/StatusMessage.vue'
@@ -140,6 +141,7 @@ onBeforeUnmount(() => { ++revision })
             </LocalizedLink>
           </aside>
         </div>
+        <CreatorProfileStatistics v-if="creator" />
       </template>
     </template>
   </AccountPage>

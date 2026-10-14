@@ -143,7 +143,12 @@ export function validateForm(form, focus = true) {
     renderError(field, result, state)
     if (result && !first) first = field
   }
-  if (first && focus) controlFor(first).focus()
+  if (first && focus) {
+    // A multi-step editor can reveal the invalid field before restoring its focus.
+    const EventType = form.ownerDocument?.defaultView?.CustomEvent
+    if (EventType) form.dispatchEvent(new EventType('wave-invalid', { detail: { field: first } }))
+    controlFor(first).focus()
+  }
   return !first
 }
 

@@ -46,6 +46,7 @@ test('required radio choices show one asterisk on their group legend, not on an 
 
 async function validationFixture({ custom = false, value = '', required = true } = {}) {
   const messages = []
+  const dispatched = []
   const listeners = new Map()
   const attributes = new Map([['aria-describedby', 'existing-hint']])
   const classes = new Set()
@@ -74,6 +75,8 @@ async function validationFixture({ custom = false, value = '', required = true }
   }
   const form = {
     noValidate: false,
+    ownerDocument: { defaultView: { CustomEvent } },
+    dispatchEvent: event => { dispatched.push(event) },
     elements: [field],
     querySelectorAll: () => [field],
     contains: candidate => candidate === field,
@@ -104,7 +107,7 @@ async function validationFixture({ custom = false, value = '', required = true }
   const directive = module.namespace.default
   directive.mounted(form)
   return {
-    directive, form, field, messages, classes, attributes, listeners,
+    directive, form, field, messages, classes, attributes, listeners, dispatched,
     focused: () => focused,
     setValue: value => { field.value = value; field.dataset.validationValue = value },
     submit: () => {
@@ -163,4 +166,15 @@ test('reset clears errors, preserves accessibility hints, and requires validatio
   ui.directive.unmounted(ui.form)
   assert.equal(ui.listeners.size, 0)
   assert.equal(ui.form.noValidate, false)
+})
+
+test('invalid multi-step submissions identify the first field so its editor can reveal it', async () => {
+  const ui = await validationFixture()
+  assert.equal(ui.submit().prevented, true)
+  assert.equal(ui.dispatched.length, 1)
+  assert.equal(ui.dispatched[0].type, 'wave-invalid')
+  assert.equal(ui.dispatched[0].detail.field, ui.field)
+  ui.setValue('Complete')
+  assert.equal(ui.submit().prevented, false)
+  assert.equal(ui.dispatched.length, 1)
 })

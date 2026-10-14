@@ -1,31 +1,43 @@
 <script setup>
+import PresentationDemoBadge from '../components/shared/PresentationDemoBadge.vue'
+import { useCreatorProfileVisit } from '../composables/useCreatorProfileVisit'
 import MarketplaceSafetyActions from '../components/shared/MarketplaceSafetyActions.vue'
 import ProfileReviews from '../components/reviews/ProfileReviews.vue'
 import RatingSummary from '../components/reviews/RatingSummary.vue'
 import SingleSelect from '../components/shared/SingleSelect.vue'
+import FormModal from '../components/shared/FormModal.vue'
+import CreatorPresentationPreview from '../components/creators/CreatorPresentationPreview.vue'
 import RichTextContent from '../components/shared/RichTextContent.vue'
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import RouterLink from '../components/shared/LocalizedLink.vue'
 import { useI18n } from 'vue-i18n'
-import { Camera, Check, CirclePlay, MapPin, MessageCircle, Music2, Plus, X } from '@lucide/vue'
+import { Camera, Check, ChevronRight, CirclePlay, FileText, MapPin, MessageCircle, Music2, Plus, Send, X } from '@lucide/vue'
 import FaqSection from '../components/shared/FaqSection.vue'
-import PortfolioGallery from '../components/shared/PortfolioGallery.vue'
+import CreatorWorks from '../components/creators/CreatorWorks.vue'
+import CreatorAudience from '../components/creators/CreatorAudience.vue'
+import CreatorPackageFacts from '../components/creators/CreatorPackageFacts.vue'
+import { languageOptions } from '../lib/creatorPresentation'
 import LoadingSkeleton from '../components/shared/LoadingSkeleton.vue'
 import StatusMessage from '../components/shared/StatusMessage.vue'
 import { useMarketplaceCatalog } from '../composables/useMarketplaceCatalog'
-import { apiGet, apiRequest, formatDate, formatFollowers, formatMoney } from '../lib/api'
-import { CREATOR_PLACEHOLDER, CURRENCIES, SOCIAL_PLATFORMS } from '../lib/marketplace'
+import { apiGet, apiRequest, formatDate, formatMoney } from '../lib/api'
+import { CREATOR_PLACEHOLDER, CURRENCIES } from '../lib/marketplace'
 import { getSeoOrigin, updateSeo } from '../lib/seo'
 import { localizedPath } from '../routePaths'
 
 const route = useRoute()
 const creator = ref(null)
+useCreatorProfileVisit(creator)
 const viewer = ref(null)
 const error = ref('')
-const notice = ref('')
-const selectedPlatform = ref('All')
 const requestDialog = ref(null)
+const presentationOpen = ref(false)
+const invitationOpen = ref(false)
+const inviteLoading = ref(false)
+const inviteSubmitted = ref(false)
+const activeSection = ref('creator-works')
+let profileGeneration = 0
 const requestForm = ref({
   packageIds: [],
   other: false,
@@ -78,44 +90,10 @@ const canSubmitCampaignInvitation = computed(() => {
   return Boolean(campaign && !campaignInviteStatus(campaign))
 })
 
-const availablePlatforms = computed(() => {
-  if (!creator.value) {
-    return ['All']
-  }
-  const usedPlatforms = [
-    ...creator.value.socialProfiles.map(({ platform }) => platform),
-    ...creator.value.packages.map(({ platform }) => platform),
-    ...creator.value.portfolio.map(({ platform }) => platform),
-  ]
-
-  return ['All', ...SOCIAL_PLATFORMS.filter((platform) => usedPlatforms.includes(platform))]
-})
-
-const visiblePortfolio = computed(() => {
-  if (!creator.value) {
-    return []
-  }
-  if (selectedPlatform.value === 'All') {
-    return creator.value.portfolio
-  }
-
-  return creator.value.portfolio.filter((item) => item.platform === 'All' || item.platform === selectedPlatform.value)
-})
-
-
-const visiblePackages = computed(() => {
-  if (!creator.value) {
-    return []
-  }
-  if (selectedPlatform.value === 'All') {
-    return creator.value.packages
-  }
-
-  return creator.value.packages.filter((item) => item.platform === selectedPlatform.value)
-})
+const visiblePortfolio = computed(() => creator.value?.portfolio || [])
 
 const profilePackages = computed(() => [
-  ...visiblePackages.value.map((packageItem) => ({
+  ...(creator.value?.packages || []).map((packageItem) => ({
     ...packageItem,
     profileKey: `package-${packageItem.id}`,
     expansionId: `package-${packageItem.id}`,
@@ -145,69 +123,87 @@ const profileFaqs = computed(() => (
   }))
 ))
 
+const canInvite = computed(() => viewer.value?.accountType === 'company'
+  && viewer.value.emailVerified && viewer.value.approved && viewer.value.profileComplete !== false
+  && creator.value?.canReceiveCampaignInvitations)
+
 async function loadCreator() {
-  if (requestDialog.value?.open) {
-    requestDialog.value.close()
-  }
+  const generation = ++profileGeneration
+  requestDialog.value?.close()
+  presentationOpen.value = false
+  invitationOpen.value = false
   creator.value = null
   viewer.value = null
   viewerLoaded.value = false
   inviteCampaigns.value = []
   inviteError.value = ''
-  selectedPlatform.value = 'All'
+  inviteSubmitted.value = false
+  inviteLoading.value = false
+  activeSection.value = 'creator-works'
   error.value = ''
-  notice.value = ''
   requestError.value = ''
   requestSubmitted.value = false
   try {
     const response = await apiGet(`/creators/${encodeURIComponent(route.params.slug)}`)
+    if (generation !== profileGeneration) return
     creator.value = response.data
-    requestForm.value = {
-      packageIds: [],
-      other: false,
-      proposedAmount: '',
-      currency: 'BAM',
-      message: '',
-    }
-
-    try {
-      const currentUser = await apiGet('/auth/me')
-      viewer.value = currentUser.data
-      viewerLoaded.value = true
-      if (viewer.value.accountType === 'company' && viewer.value.emailVerified && viewer.value.approved) {
-        const campaignResponse = await apiGet('/me/campaigns')
-        inviteCampaigns.value = campaignResponse.data.filter((campaign) => (
-          campaign.status === 'open'
-        ))
-        inviteForm.value.campaignSlug = (
-          inviteCampaigns.value.find((campaign) => !campaignInviteStatus(campaign))
-          || inviteCampaigns.value[0]
-        )?.slug || ''
-      }
-    } catch (cause) {
-      if (cause.status === 401) {
-        viewer.value = null
-        viewerLoaded.value = true
-      } else {
-        throw cause
-      }
-    }
+    requestForm.value = { packageIds: [], other: false, proposedAmount: '', currency: 'BAM', message: '' }
+    const session = await apiGet('/auth/session')
+    if (generation !== profileGeneration) return
+    viewer.value = session.data
+    viewerLoaded.value = true
   } catch (cause) {
+    if (generation !== profileGeneration) return
     error.value = cause.message
     if (cause.status === 404 && !creator.value) {
-      updateSeo({
-        route: { ...route, meta: { ...route.meta, routeName: 'not-found' } },
-        locale: locale.value,
-        title: t('seo.notFoundTitle'),
-        description: t('seo.notFoundDescription'),
-        noindex: true,
-      })
+      updateSeo({ route: { ...route, meta: { ...route.meta, routeName: 'not-found' } }, locale: locale.value,
+        title: t('seo.notFoundTitle'), description: t('seo.notFoundDescription'), noindex: true })
     }
   }
 }
 
+async function openCampaignInvitation() {
+  invitationOpen.value = true
+  inviteError.value = ''
+  inviteSubmitted.value = false
+  inviteForm.value = { campaignSlug: '', message: '' }
+  if (!canInvite.value) return
+  const generation = profileGeneration
+  inviteLoading.value = true
+  try {
+    const response = await apiGet('/me/campaigns')
+    if (generation !== profileGeneration) return
+    inviteCampaigns.value = response.data.filter(campaign => campaign.status === 'open')
+    inviteForm.value.campaignSlug = inviteCampaigns.value.find(campaign => !campaignInviteStatus(campaign))?.slug || ''
+  } catch (cause) {
+    if (generation === profileGeneration) inviteError.value = cause.message
+  } finally {
+    if (generation === profileGeneration) inviteLoading.value = false
+  }
+}
+
+function scrollToSection(id, event) {
+  const target = document.getElementById(id)
+  if (!target) return
+  activeSection.value = id
+  const behavior = window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth'
+  target.scrollIntoView({ behavior, block: 'start' })
+  const link = event?.currentTarget
+  const tabs = link?.parentElement
+  if (tabs) tabs.scrollTo({ left: tabs.scrollLeft + link.getBoundingClientRect().left - tabs.getBoundingClientRect().left - 12, behavior })
+}
+
+function scrollTabs(event) {
+  const tabs = event.currentTarget
+  if (tabs.scrollWidth <= tabs.clientWidth || Math.abs(event.deltaX) >= Math.abs(event.deltaY)) return
+  const next = Math.max(0, Math.min(tabs.scrollWidth - tabs.clientWidth, tabs.scrollLeft + event.deltaY))
+  if (next === tabs.scrollLeft) return
+  event.preventDefault()
+  tabs.scrollLeft = next
+}
+
 async function sendCampaignInvitation() {
-  if (!canSubmitCampaignInvitation.value) {
+  if (!canInvite.value || !canSubmitCampaignInvitation.value || inviteBusy.value) {
     return
   }
 
@@ -237,7 +233,7 @@ async function sendCampaignInvitation() {
       inviteCampaigns.value.find((campaign) => !campaignInviteStatus(campaign))
       || inviteCampaigns.value.find(({ slug }) => slug === campaignSlug)
     )?.slug || ''
-    notice.value = t('campaignChat.invitationSent')
+    inviteSubmitted.value = true
     inviteForm.value.message = ''
   } catch (cause) {
     inviteError.value = cause.message
@@ -300,10 +296,6 @@ function handleRequestDialogCancel(event) {
   if (requestBusy.value) {
     event.preventDefault()
   }
-}
-
-function selectPlatform(platform) {
-  selectedPlatform.value = platform
 }
 
 function togglePackageDescription(packageId) {
@@ -405,6 +397,7 @@ async function submitRequest() {
 }
 
 watch([() => route.params.slug, locale], loadCreator)
+watch(canInvite, ready => { if (ready && invitationOpen.value && !inviteLoading.value) openCampaignInvitation() })
 watch(profilePackages, () => nextTick(measurePackageDescriptions), { flush: 'post' })
 watch(
   [creator, locale],
@@ -443,14 +436,15 @@ onMounted(() => {
   }
   loadCreator()
 })
-onBeforeUnmount(() => packageDescriptionObserver?.disconnect())
+onBeforeUnmount(() => { ++profileGeneration; packageDescriptionObserver?.disconnect() })
 </script>
 
 <template>
   <section v-if="error && !creator" class="page-width profile-error">
     <StatusMessage variant="error">{{ error }}</StatusMessage>
     <RouterLink class="text-link" to="/creators">
-      {{ t('creatorProfile.back') }} ↗
+      {{ t('creatorProfile.back') }}
+      ↗
     </RouterLink>
   </section>
   <LoadingSkeleton v-else-if="!creator" variant="profile" :label="t('creatorProfile.loading')" />
@@ -481,18 +475,14 @@ onBeforeUnmount(() => packageDescriptionObserver?.disconnect())
         </header>
         <StatusMessage v-if="requestError" variant="error">{{ requestError }}</StatusMessage>
         <StatusMessage v-if="requestSubmitted">{{ t('creatorProfile.requestSent') }}</StatusMessage>
-        <button
-          v-if="requestSubmitted"
-          class="button button--dark"
-          type="button"
-          @click="closeRequestForm"
-        >
+        <button v-if="requestSubmitted" class="button button--dark" type="button" @click="closeRequestForm">
           {{ t('creatorProfile.closeRequest') }}
         </button>
         <div v-else-if="!viewer" class="profile-request__login">
           <p>{{ t('creatorProfile.companyOnly') }}</p>
           <RouterLink class="button button--dark" to="/account">
-            {{ t('creatorProfile.signInAsCompany') }} <span aria-hidden="true">↗</span>
+            {{ t('creatorProfile.signInAsCompany') }}
+            <span aria-hidden="true">↗</span>
           </RouterLink>
         </div>
         <StatusMessage v-else-if="!viewer.approved" variant="error">
@@ -514,7 +504,10 @@ onBeforeUnmount(() => packageDescriptionObserver?.disconnect())
               <div class="profile-request-choice__heading">
                 <component :is="packagePlatformIcons[packageItem.platform] || Camera" :size="23" aria-hidden="true" />
                 <h3>{{ packageItem.title }}</h3>
-                <strong>{{ packageItem.price ? formatMoney(packageItem.price, packageItem.currency) : t('creatorProfile.priceOnRequest') }}</strong>
+                <strong>
+                  {{ packageItem.priceMode === 'from' ? t('studio.priceFrom') : '' }}
+                  {{ packageItem.price ? formatMoney(packageItem.price, packageItem.currency) : t('creatorProfile.priceOnRequest') }}
+                </strong>
                 <button
                   class="profile-request-choice__toggle"
                   type="button"
@@ -570,7 +563,11 @@ onBeforeUnmount(() => packageDescriptionObserver?.disconnect())
               <span>{{ t('creatorProfile.proposedAmount') }}</span>
               <input v-model="requestForm.proposedAmount" type="number" min="1" max="10000000" />
             </label>
-            <SingleSelect v-model="requestForm.currency" :label="t('account.currency')" :options="CURRENCIES.map(value => ({ value, label: value }))" />
+            <SingleSelect
+              v-model="requestForm.currency"
+              :label="t('account.currency')"
+              :options="CURRENCIES.map(value => ({ value, label: value }))"
+            />
           </div>
           <label class="form-field">
             <span>{{ t('creatorProfile.requestMessage') }}</span>
@@ -583,67 +580,195 @@ onBeforeUnmount(() => packageDescriptionObserver?.disconnect())
         </form>
       </div>
     </dialog>
+    <FormModal :open="presentationOpen" :title="t('studio.presentationTitle')" wide @update:open="presentationOpen = $event">
+      <CreatorPresentationPreview :profile="creator" />
+      <template #actions="{ close }">
+        <button class="button button--outline" type="button" @click="close">{{ t('reviews.close') }}</button>
+      </template>
+    </FormModal>
+    <FormModal
+      :open="invitationOpen"
+      :title="t('creatorProfile.inviteAction')"
+      :description="t('campaignChat.inviteDescription')"
+      :busy="inviteBusy"
+      @update:open="invitationOpen = $event"
+      @submit="sendCampaignInvitation"
+    >
+      <p class="profile-invitation-target">{{ creator.displayName }}</p>
+      <StatusMessage v-if="!viewerLoaded">{{ t('app.loading') }}</StatusMessage>
+      <template v-else-if="!viewer">
+        <p>{{ t('campaignChat.companyOnlyStart') }}</p>
+        <RouterLink class="button button--dark" :to="{ name: 'account', query: { mode: 'login' } }">
+          {{ t('creatorProfile.signInAsCompany') }}
+        </RouterLink>
+      </template>
+      <StatusMessage v-else-if="viewer.accountType !== 'company'" variant="empty">
+        {{ t('campaignChat.companyOnlyStart') }}
+      </StatusMessage>
+      <StatusMessage v-else-if="!viewer.approved" variant="empty">{{ t('creatorProfile.accountPendingApproval') }}</StatusMessage>
+      <StatusMessage v-else-if="!viewer.emailVerified" variant="empty">{{ t('creatorProfile.verifyEmail') }}</StatusMessage>
+      <StatusMessage v-else-if="!canInvite" variant="empty">{{ t('creatorProfile.inviteUnavailable') }}</StatusMessage>
+      <StatusMessage v-else-if="inviteSubmitted">{{ t('campaignChat.invitationSent') }}</StatusMessage>
+      <p v-else-if="inviteLoading" role="status">{{ t('app.loading') }}</p>
+      <template v-else>
+        <StatusMessage v-if="inviteError" variant="error">{{ inviteError }}</StatusMessage>
+        <template v-if="inviteCampaigns.length">
+          <SingleSelect
+            v-model="inviteForm.campaignSlug"
+            :label="t('campaignChat.chooseCampaign')"
+            :options="inviteCampaigns.map(campaign => ({ value: campaign.slug, label: campaign.title + (campaignInviteStatus(campaign) ? ` — ${campaignInviteStatus(campaign)}` : ''), disabled: Boolean(campaignInviteStatus(campaign)) }))"
+            required
+          />
+          <label class="form-field">
+            <span>{{ t('campaignChat.invitationMessage') }}</span>
+            <textarea v-model.trim="inviteForm.message" required minlength="1" maxlength="2000"></textarea>
+          </label>
+        </template>
+        <template v-else>
+          <StatusMessage variant="empty">{{ t('campaignChat.noInviteCampaigns') }}</StatusMessage>
+          <RouterLink class="text-link" :to="{ name: 'account-campaigns' }">{{ t('account.campaigns') }} ↗</RouterLink>
+        </template>
+      </template>
+      <template #actions="{ close }">
+        <button class="button button--outline" type="button" :disabled="inviteBusy" @click="close">{{ t('reviews.close') }}</button>
+        <button
+          v-if="canInvite && !inviteSubmitted && inviteCampaigns.length && !inviteLoading"
+          class="button button--dark"
+          type="submit"
+          :disabled="inviteBusy || !canSubmitCampaignInvitation"
+        >
+          <Send :size="16" aria-hidden="true" />
+          {{ t(inviteBusy ? 'campaignChat.sending' : 'campaignChat.inviteButton') }}
+        </button>
+      </template>
+    </FormModal>
     <section class="creator-profile">
-      <div class="creator-profile__backdrop" aria-hidden="true"><span></span><span></span><span></span></div>
       <section class="profile-layout page-width">
+        <nav class="profile-breadcrumbs" :aria-label="t('creatorProfile.breadcrumbs')">
+          <RouterLink :to="{ name: 'creators' }">{{ t('app.creatorsNav') }}</RouterLink>
+          <ChevronRight :size="14" aria-hidden="true" />
+          <span aria-current="page">{{ creator.displayName }}</span>
+          <PresentationDemoBadge v-if="creator.isPresentationDemo" />
+        </nav>
+        <header class="profile-heading">
+          <div class="profile-heading__identity">
+            <div class="profile-heading__avatar">
+              <img :src="creator.avatarUrl || CREATOR_PLACEHOLDER" :alt="creator.displayName" />
+            </div>
+            <div class="profile-heading__copy">
+              <p class="eyebrow">{{ categoryLabel }}</p>
+              <h1>{{ creator.displayName }}</h1>
+              <p v-if="creator.tagline" class="profile-tagline">{{ creator.tagline }}</p>
+              <div class="profile-heading__meta">
+                <span v-if="creator.city">
+                  <MapPin :size="15" aria-hidden="true" />
+                  {{ creator.city }}
+                </span>
+                <RatingSummary :rating="creator.rating" profile />
+              </div>
+              <div v-if="creator.creatorTypes?.length || creator.presentation?.languages?.length" class="profile-presentation-pills">
+                <span v-for="type in creator.creatorTypes" :key="type">{{ t(`creatorTypes.options.${type}`) }}</span>
+                <span v-for="code in creator.presentation?.languages || []" :key="code">
+                  {{ languageOptions(locale, t).find(item => item.value === code)?.label || code }}
+                </span>
+              </div>
+              <a
+                v-if="creator.presentation?.introVideoUrl"
+                class="profile-intro-video"
+                :href="creator.presentation.introVideoUrl"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                {{ t('studio.introVideo') }}
+                ↗
+              </a>
+            </div>
+          </div>
+          <div class="profile-heading__actions">
+            <button class="button button--outline" type="button" @click="presentationOpen = true">
+              <FileText :size="16" aria-hidden="true" />
+              {{ t('studio.presentationTitle') }}
+            </button>
+            <button class="button button--dark" type="button" @click="openCampaignInvitation">
+              <Send :size="16" aria-hidden="true" />
+              {{ t('creatorProfile.inviteAction') }}
+            </button>
+            <span
+              v-if="creator.presentation?.availability && creator.presentation.availability !== 'unspecified'"
+              class="profile-heading__availability"
+              :class="{
+                'profile-heading__availability--busy': creator.presentation.availability === 'busy',
+                'profile-heading__availability--scheduled': creator.presentation.availability === 'from',
+              }"
+            >
+              <span class="profile-heading__availability-dot" aria-hidden="true"></span>
+              <span>{{ t(`studio.${creator.presentation.availability}`) }}
+              <template v-if="creator.presentation.availability === 'from'"> · {{ formatDate(creator.presentation.availableFrom) }}</template></span>
+            </span>
+          </div>
+        </header>
+        <nav class="profile-section-nav" :aria-label="t('studio.profileSections')" @wheel="scrollTabs">
+          <a
+            v-if="visiblePortfolio.length"
+            href="#creator-works"
+            :aria-current="activeSection === 'creator-works' ? 'location' : undefined"
+            @click.prevent="scrollToSection('creator-works', $event)"
+          >
+            {{ t('studio.tabWorks') }}
+          </a>
+          <a
+            v-if="creator.socialProfiles.length"
+            href="#creator-audience"
+            :aria-current="activeSection === 'creator-audience' ? 'location' : undefined"
+            @click.prevent="scrollToSection('creator-audience', $event)"
+          >
+            {{ t('studio.tabAudience') }}
+          </a>
+          <a
+            href="#creator-packages"
+            :aria-current="activeSection === 'creator-packages' ? 'location' : undefined"
+            @click.prevent="scrollToSection('creator-packages', $event)"
+          >
+            {{ t('studio.tabPackages') }}
+          </a>
+          <a
+            href="#creator-reviews"
+            :aria-current="activeSection === 'creator-reviews' ? 'location' : undefined"
+            @click.prevent="scrollToSection('creator-reviews', $event)"
+          >
+            {{ t('studio.tabReviews') }}
+          </a>
+          <a
+            v-if="profileFaqs.length"
+            href="#creator-faqs"
+            :aria-current="activeSection === 'creator-faqs' ? 'location' : undefined"
+            @click.prevent="scrollToSection('creator-faqs', $event)"
+          >
+            {{ t('studio.tabFaq') }}
+          </a>
+        </nav>
         <div class="profile-column">
           <div class="profile-main">
-            <div class="profile-heading">
-              <div class="profile-heading__identity">
-                <div class="profile-heading__avatar">
-                  <img :src="creator.avatarUrl || CREATOR_PLACEHOLDER" :alt="creator.displayName" />
-                </div>
-                <div>
-                  <p class="eyebrow">{{ categoryLabel }}<template v-if="creator.city"> · {{ creator.city }}</template></p>
-                  <h1>{{ creator.displayName }}</h1>
-                  <RatingSummary :rating="creator.rating" />
-                  <p v-if="creator.tagline" class="profile-tagline">{{ creator.tagline }}</p>
-                  <div v-if="creator.creatorTypes?.length" class="profile-stat-pills" :aria-label="t('creatorTypes.label')" role="group">
-                    <span v-for="type in creator.creatorTypes" :key="type">{{ t(`creatorTypes.options.${type}`) }}</span>
-                  </div>
-                  <div
-                    v-if="creator.socialProfiles.length || creator.city"
-                    class="profile-stat-pills"
-                    role="group"
-                    :aria-label="t('creatorProfile.mediaKit')"
-                  >
-                    <span
-                      v-for="profile in creator.socialProfiles"
-                      :key="profile.platform"
-                      :title="t('creatorProfile.updated', { date: formatDate(profile.lastUpdated) })"
-                      :aria-label="`${formatFollowers(profile.followers)} ${profile.platform}. ${t('creatorProfile.updated', { date: formatDate(profile.lastUpdated) })}. ${t('creatorProfile.selfReported')}`"
-                    >
-                      <component :is="packagePlatformIcons[profile.platform] || Camera" :size="19" aria-hidden="true" />
-                      <strong>{{ formatFollowers(profile.followers) }}</strong>
-                    </span>
-                    <span v-if="creator.city"><MapPin :size="18" aria-hidden="true" />{{ creator.city }}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <RichTextContent class="profile-bio" :html="creator.bio" />
-            <div class="profile-tags"><span v-for="tag in creator.tags" :key="tag">{{ tag }}</span></div>
             <StatusMessage v-if="catalogError" variant="error">{{ catalogError }}</StatusMessage>
-
-            <PortfolioGallery v-if="visiblePortfolio.length" class="profile-portfolio" :items="visiblePortfolio" :name="creator.displayName" />
+            <CreatorWorks
+              id="creator-works"
+              v-if="visiblePortfolio.length"
+              class="profile-portfolio"
+              :items="visiblePortfolio"
+              :name="creator.displayName"
+            />
           </div>
-          <section class="profile-content-section profile-packages">
+          <CreatorAudience id="creator-audience" class="profile-audience" :demo="creator.isPresentationDemo" :profiles="creator.socialProfiles" :languages="creator.presentation?.languages || []" :description="creator.tagline || ''" />
+          <MarketplaceSafetyActions kind="creator" :slug="creator.slug" />
+          <ProfileReviews id="creator-reviews" kind="creators" :slug="creator.slug" />
+        </div>
+        <div class="profile-sidebar">
+          <section id="creator-packages" class="profile-content-section profile-packages">
             <div class="profile-section-heading">
-              <div><p class="eyebrow">{{ t('creatorProfile.collaborateEyebrow') }}</p><h2>{{ t('creatorProfile.packages') }}</h2></div>
-            </div>
-            <div class="profile-platform-tabs" role="tablist" :aria-label="t('creatorProfile.platforms')">
-              <button
-                v-for="platform in availablePlatforms"
-                :key="platform"
-                class="profile-platform-tabs__item"
-                :class="{ 'is-active': selectedPlatform === platform }"
-                type="button"
-                role="tab"
-                :aria-selected="selectedPlatform === platform"
-                @click="selectPlatform(platform)"
-              >
-                {{ platform === 'All' ? t('creatorProfile.allPlatforms') : platform }}
-              </button>
+              <div>
+                <p class="eyebrow">{{ t('creatorProfile.collaborateEyebrow') }}</p>
+                <h2>{{ t('studio.myServices') }}</h2>
+              </div>
             </div>
             <div class="profile-package-grid">
               <article
@@ -653,32 +778,16 @@ onBeforeUnmount(() => packageDescriptionObserver?.disconnect())
                 :class="{ 'profile-package--negotiation': packageItem.isNegotiationOption }"
               >
                 <div class="profile-package__details">
-                  <div
-                    class="profile-package__heading"
-                    :class="{ 'profile-package__heading--no-action': !canOpenRequest }"
-                  >
-                    <component
-                      :is="packageItem.isNegotiationOption ? MessageCircle : (packagePlatformIcons[packageItem.platform] || Camera)"
-                      :size="23"
-                      aria-hidden="true"
-                    />
+                  <div class="profile-package__heading" :class="{ 'profile-package__heading--no-action': !canOpenRequest }">
                     <h3>{{ packageItem.title }}</h3>
                     <strong>
+                      {{ packageItem.priceMode === 'from' ? t('studio.priceFrom') : '' }}
                       {{ packageItem.isNegotiationOption
                         ? t('creatorProfile.priceByAgreement')
                         : !packageItem.price
                           ? t('creatorProfile.priceOnRequest')
                         : formatMoney(packageItem.price, packageItem.currency) }}
                     </strong>
-                    <button
-                      v-if="canOpenRequest"
-                      class="profile-package__request"
-                      type="button"
-                      :aria-label="`${t('creatorProfile.requestPackage')}: ${packageItem.title}`"
-                      @click="openRequestForm(packageItem.isNegotiationOption ? null : packageItem, packageItem.isNegotiationOption)"
-                    >
-                      <Plus :size="20" aria-hidden="true" />
-                    </button>
                   </div>
                   <div class="profile-package__description-row">
                     <p
@@ -697,78 +806,41 @@ onBeforeUnmount(() => packageDescriptionObserver?.disconnect())
                       {{ t(expandedDescriptionIds.has(`profile:${packageItem.expansionId}`) ? 'creatorProfile.showLess' : 'creatorProfile.showMore') }}
                     </button>
                   </div>
+                  <CreatorPackageFacts v-if="!packageItem.isNegotiationOption" :item="packageItem" />
+                  <button
+                    v-if="canOpenRequest"
+                    class="profile-package__request"
+                    type="button"
+                    :aria-label="`${t('creatorProfile.requestPackage')}: ${packageItem.title}`"
+                    @click="openRequestForm(packageItem.isNegotiationOption ? null : packageItem, packageItem.isNegotiationOption)"
+                  >
+                    <MessageCircle :size="16" aria-hidden="true" />
+                    {{ t('creatorProfile.requestPackage') }}
+                  </button>
                 </div>
               </article>
             </div>
           </section>
-
-          <MarketplaceSafetyActions kind="creator" :slug="creator.slug" />
-          <ProfileReviews kind="creators" :slug="creator.slug" />
-        </div>
-        <div class="profile-sidebar">
-          <aside class="profile-aside">
-            <p class="eyebrow">{{ t('creatorProfile.goodFit') }}</p>
-            <h3>{{ t('creatorProfile.brandsCategory', { category: categoryLabel.toLowerCase() }) }}</h3>
-            <p>{{ t('creatorProfile.goodFitDescription') }}</p>
-            <button
-              v-if="canOpenRequest"
-              class="button button--dark button--full"
-              type="button"
-              @click="openRequestForm()"
-            >
-              {{ t('creatorProfile.requestCollaboration') }} <span aria-hidden="true">↗</span>
-            </button>
-            <p v-if="canOpenRequest" class="profile-aside__note">{{ t('creatorProfile.chatNote') }}</p>
-            <form v-form-validation
-              v-if="viewer?.accountType === 'company' && viewer.emailVerified && viewer.approved && creator.canReceiveCampaignInvitations"
-              class="campaign-invite-form"
-              @submit.prevent="sendCampaignInvitation"
-            >
-              <h4>{{ t('campaignChat.inviteTitle') }}</h4>
-              <p>{{ t('campaignChat.inviteDescription') }}</p>
-              <StatusMessage v-if="inviteError" variant="error">{{ inviteError }}</StatusMessage>
-              <StatusMessage v-if="notice">{{ notice }}</StatusMessage>
-              <template v-if="inviteCampaigns.length">
-                <SingleSelect v-model="inviteForm.campaignSlug" :label="t('campaignChat.chooseCampaign')" :options="inviteCampaigns.map(campaign => ({ value: campaign.slug, label: campaign.title + (campaignInviteStatus(campaign) ? ` — ${campaignInviteStatus(campaign)}` : ''), disabled: Boolean(campaignInviteStatus(campaign)) }))" required />
-                <label class="form-field">
-                  <span>{{ t('campaignChat.invitationMessage') }}</span>
-                  <textarea v-model.trim="inviteForm.message" required minlength="1" maxlength="2000"></textarea>
-                </label>
-                <button
-                  class="button button--outline button--full"
-                  type="submit"
-                  :disabled="inviteBusy || !canSubmitCampaignInvitation"
-                >
-                  {{ inviteBusy ? t('campaignChat.sending') : t('campaignChat.inviteButton') }}
-                </button>
-              </template>
-              <StatusMessage v-else variant="empty">{{ t('campaignChat.noInviteCampaigns') }}</StatusMessage>
-            </form>
-          </aside>
+          <section v-if="creator.bio || creator.tags.length" class="profile-about">
+            <h2>{{ t('studio.aboutCreator') }}</h2>
+            <RichTextContent class="profile-bio" :html="creator.bio" />
+            <div class="profile-tags">
+              <span v-for="tag in creator.tags" :key="tag">{{ tag }}</span>
+            </div>
+          </section>
           <div class="profile-sidebar-details">
             <FaqSection
+              id="creator-faqs"
               v-if="profileFaqs.length"
               class="profile-content-section profile-faqs"
               :eyebrow="t('creatorProfile.faqEyebrow')"
               :title="t('creatorProfile.faqTitle')"
               :items="profileFaqs"
             />
-            <section
-              v-if="creator.categoryLabels.length"
-              class="profile-content-section profile-related-categories"
-            >
-              <div class="profile-section-heading">
-                <h2>{{ t('creatorProfile.relatedCategories') }}</h2>
-              </div>
-              <div class="profile-related-categories__items">
-                <span v-for="category in creator.categoryLabels" :key="category">{{ category }}</span>
-              </div>
-            </section>
           </div>
         </div>
       </section>
     </section>
   </template>
 </template>
-
 <style lang="scss" src="../scss/views/CreatorProfileView.scss"></style>

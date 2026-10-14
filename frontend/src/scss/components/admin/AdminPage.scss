@@ -58,3 +58,13 @@
     }
   }
 }
+
+// Account/admin actions use the same compact brand buttons as the profile studio.
+.admin-dashboard .button {
+  min-height: 36px; gap: 8px; padding: 8px 12px; border-radius: 8px; font-size: 12px; box-shadow: none;
+  &:hover { transform: none; }
+  &--dark { border-color: var(--forest); color: #fffefa; background: var(--forest); }
+  &--outline { border-color: #bfcbbf; color: var(--forest); background: #fffefa; }
+  &--outline:hover { background: var(--sage); }
+  @media (max-width: 760px) { min-height: 44px; }
+}

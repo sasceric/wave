@@ -4,6 +4,7 @@ namespace App\Controller\Api;
 
 use App\Account\CreatorBirthday;
 use App\Account\CreatorTypes;
+use App\Account\CreatorPresentation;
 use App\Api\ApiAccess;
 use App\Api\Currency;
 use App\Api\CreatorResource;
@@ -18,6 +19,7 @@ use App\Entity\User;
 use App\Localization\ApiMessages;
 use App\Localization\LocaleContext;
 use App\Service\RichTextSanitizer;
+use App\Safety\BlockPolicy;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -27,6 +29,46 @@ use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
 
 final class ProfileController
 {
+    #[Route('/api/me/profile-statistics', name: 'api_profile_statistics', methods: ['GET'])]
+    public function statistics(Request $request, EntityManagerInterface $entityManager, Security $security): JsonResponse
+    {
+        $user = $security->getUser();
+        $locale = LocaleContext::fromRequest($request) ?? 'bs';
+        if (!$user instanceof User || !$user->getCreator()) return new JsonResponse(['error' => ApiMessages::get('authentication_required', $locale)], 401);
+        $days = $request->query->getInt('days', 30);
+        if (!in_array($days, [7, 30, 90], true)) return new JsonResponse(['error' => ApiMessages::get('invalid_request', $locale)], 400);
+        $since = (new \DateTimeImmutable('today', new \DateTimeZone('UTC')))->modify('-'.($days - 1).' days')->format('Y-m-d');
+        $db = $entityManager->getConnection();
+        $params = ['creator' => $user->getCreator()->getId(), 'since' => $since];
+        $rows = $db->fetchAllAssociative('SELECT day, views FROM creator_profile_visit WHERE creator_id = :creator AND day >= :since ORDER BY day', $params);
+        $counts = ['views' => array_sum(array_column($rows, 'views'))];
+        foreach (['inquiries' => 'creator_inquiry', 'invitations' => 'campaign_invitation'] as $key => $table) {
+            $counts[$key] = (int) $db->fetchOne("SELECT COUNT(*) FROM $table WHERE creator_id = :creator AND created_at >= :since", $params);
+        }
+        $counts['hired'] = (int) $db->fetchOne("SELECT COUNT(*) FROM campaign_offer o JOIN campaign_application a ON a.id = o.application_id JOIN campaign c ON c.id = a.campaign_id WHERE a.creator_id = :creator AND o.status = 'accepted' AND c.status != 'cancelled' AND o.responded_at >= :since", $params);
+        return new JsonResponse(['userId' => $user->getId(), 'data' => ['counts' => $counts, 'daily' => $rows, 'since' => $since, 'days' => $days]]);
+    }
+
+    #[Route('/api/me/portfolio-campaigns', name: 'api_profile_portfolio_campaigns', methods: ['GET'])]
+    public function portfolioCampaigns(Request $request, EntityManagerInterface $entityManager, Security $security, BlockPolicy $blocks): JsonResponse
+    {
+        $user = $security->getUser();
+        $locale = LocaleContext::fromRequest($request) ?? 'bs';
+        if (!$user instanceof User || !$user->getCreator()) return new JsonResponse(['error' => ApiMessages::get('authentication_required', $locale)], 401);
+        $before = max(0, $request->query->getInt('before'));
+        $query = $entityManager->getRepository(\App\Entity\Application::class)->createQueryBuilder('a')
+            ->join('a.campaign', 'c')->addSelect('c')->join('c.company', 'p')->addSelect('p')->join('a.offer', 'o')
+            ->leftJoin('p.owner', 'owner')->andWhere($blocks->visible('owner.id'))
+            ->andWhere('(owner.id IS NULL OR owner.deletedAt IS NULL)')
+            ->where('a.creator = :creator')->andWhere("c.status = 'finished'")->andWhere("o.status = 'accepted'")
+            ->setParameter('creator', $user->getCreator())->orderBy('c.id', 'DESC')->setMaxResults(21);
+        if ($before) $query->andWhere('c.id < :before')->setParameter('before', $before);
+        $rows = $query->getQuery()->getResult();
+        $more = count($rows) > 20;
+        $data = array_map(static fn (\App\Entity\Application $a): array => ['id' => $a->getCampaign()->getId(), 'title' => $a->getCampaign()->getTitle(), 'company' => $a->getCampaign()->getCompany()->getName(), 'companyType' => $a->getCampaign()->getCompany()->getCompanyType(), 'finishedAt' => $a->getCampaign()->getFinishedAt()?->format('Y-m-d')], array_slice($rows, 0, 20));
+        return new JsonResponse(['data' => $data, 'meta' => ['hasMore' => $more, 'nextCursor' => $more ? $data[array_key_last($data)]['id'] : null]]);
+    }
+
     #[Route('/api/me/account-visibility', name: 'api_profile_visibility_update', methods: ['PUT'])]
     public function updateVisibility(
         Request $request,
@@ -134,33 +176,42 @@ final class ProfileController
                 ? null
                 : $this->imageUrl($data, 'avatarUrl');
             $tags = $this->stringList($data['tags'] ?? null, 10, 40);
-            $socialProfiles = $this->socialProfiles($data['socialProfiles'] ?? null);
+            try {
+                $presentation = array_key_exists('presentation', $data) ? CreatorPresentation::settings($data['presentation']) : $creator->getPresentation();
+                $socialProfiles = CreatorPresentation::social($data['socialProfiles'] ?? [], $creator->getSocialProfiles());
+            } catch (\InvalidArgumentException) {
+                return new JsonResponse(['error' => ApiMessages::get('invalid_profile', $locale)], 400);
+            }
             $portfolio = $this->portfolio($data['portfolio'] ?? [], $creator, $user, $entityManager);
             $packages = $this->packages($data['packages'] ?? []);
             $faqs = $this->faqs($data['faqs'] ?? []);
-            if ($name === null || $category === null || $categories === null || $categories === [] || $bio === null || $phone === false || $city === false || $countryCode === false || $tagline === null || $avatarUrl === false || $avatarMedia === false || $tags === null || $socialProfiles === null || $portfolio === null || $packages === null || $faqs === null) {
+            if ($name === null || $category === null || $categories === null || $categories === [] || $bio === null || $phone === false || $city === false || $countryCode === false || $tagline === null || $avatarUrl === false || $avatarMedia === false || $tags === null || $portfolio === null || $packages === null || $faqs === null) {
                 return new JsonResponse(['error' => ApiMessages::get('invalid_profile', $locale)], 400);
             }
             $creator->updateProfile($name, $category, $city ?? '', $bio, $socialProfiles, $tags, $avatarUrl, $tagline, $portfolio['items'], $packages, $categories, $faqs);
             $creator->setAvatarMedia($avatarMedia);
             $creator->setBirthday($birthday);
             $creator->setCreatorTypes($creatorTypes);
+            $creator->setPresentation($presentation);
             $user->setPhone($phone);
             $user->setCity($city);
             $user->setCountryCode($countryCode);
-            $creator->clearPortfolioMedia();
-            foreach ($portfolio['associations'] as $association) {
-                $creator->addPortfolioMedia(new CreatorPortfolioMedia(
-                    $creator,
-                    $association['media'],
-                    $association['position'],
-                    $association['title'],
-                    $association['platform'],
-                ));
-            }
-            $entityManager->flush();
+            $entityManager->wrapInTransaction(static function (EntityManagerInterface $manager) use ($creator, $portfolio): void {
+                // Delete old positions before inserting replacements; Doctrine otherwise inserts first.
+                $creator->clearPortfolioMedia();
+                $manager->flush();
+                foreach ($portfolio['associations'] as $association) {
+                    $creator->addPortfolioMedia(new CreatorPortfolioMedia(
+                        $creator,
+                        $association['media'],
+                        $association['position'],
+                        $association['title'],
+                        $association['platform'],
+                    ));
+                }
+            });
 
-            return new JsonResponse(['data' => CreatorResource::fromEntity($creator, $locale) + ['birthday' => $creator->getBirthday()?->format('Y-m-d')]]);
+            return new JsonResponse(['data' => CreatorResource::fromEntity($creator, $locale, public: false) + ['birthday' => $creator->getBirthday()?->format('Y-m-d')]]);
         }
 
         $company = $user->getCompany();
@@ -319,39 +370,6 @@ final class ProfileController
         return $items;
     }
 
-    private function socialProfiles(mixed $value): ?array
-    {
-        if (!is_array($value) || count($value) > 5) {
-            return null;
-        }
-        $profiles = [];
-        $today = (new \DateTimeImmutable('today'))->format('Y-m-d');
-        foreach ($value as $profile) {
-            if (!is_array($profile)
-                || !is_string($profile['platform'] ?? null)
-                || !is_string($profile['handle'] ?? null)
-                || !is_int($profile['followers'] ?? null)
-                || $profile['followers'] < 0
-                || $profile['followers'] > 200_000_000
-            ) {
-                return null;
-            }
-            $platform = trim($profile['platform']);
-            $handle = trim($profile['handle']);
-            if ($platform === '' || mb_strlen($platform) > 30 || $handle === '' || mb_strlen($handle) > 120) {
-                return null;
-            }
-            $profiles[] = [
-                'platform' => $platform,
-                'handle' => $handle,
-                'followers' => $profile['followers'],
-                'lastUpdated' => $today,
-            ];
-        }
-
-        return $profiles;
-    }
-
     /** @return list<array{platform: string, url: string}>|null */
     private function socialLinks(mixed $value): ?array
     {
@@ -417,7 +435,7 @@ final class ProfileController
                 : bin2hex(random_bytes(8));
             if (mb_strlen($title) > 120
                 || !is_string($platform)
-                || !in_array($platform, ['All', 'TikTok', 'Instagram', 'YouTube'], true)
+                || !in_array($platform, ['All', ...CreatorPresentation::PLATFORMS], true)
             ) {
                 return null;
             }
@@ -485,6 +503,47 @@ final class ProfileController
             }
         }
 
+        $featured = 0;
+        try {
+            foreach ($items as $index => &$item) {
+                $raw = $value[$index];
+                $details = CreatorPresentation::work($raw);
+                if ($details['featured'] && ++$featured > 1) return null;
+                if ($details['source'] === 'wave') {
+                    $application = $entityManager->getRepository(\App\Entity\Application::class)->findOneBy(['creator' => $creator, 'campaign' => $details['campaignId']]);
+                    if (!$application instanceof \App\Entity\Application || $application->getOffer()?->getStatus() !== 'accepted' || $application->getCampaign()->getStatus() !== 'finished') return null;
+                    $details['projectDate'] ??= $application->getCampaign()->getFinishedAt()?->format('Y-m-d');
+                    $company = $application->getCampaign()->getCompany();
+                    if ($company->getCompanyType() === 'agency') $details['agency'] = $company->getName();
+                    else { $details['client'] = $company->getName(); $details['agency'] = ''; }
+                }
+                $item += $details;
+                $item['coverMediaId'] = null;
+                $item['media'] = [];
+                $extras = $raw['media'] ?? [];
+                if (!is_array($extras) || !array_is_list($extras) || count($extras) > 4) return null;
+                foreach ([['type' => 'image', 'mediaId' => $raw['coverMediaId'] ?? null, 'cover' => true], ...$extras] as $extra) {
+                    if (!is_array($extra)) return null;
+                    if (($extra['type'] ?? null) === 'image') {
+                        if (($extra['cover'] ?? false) && empty($extra['mediaId'])) continue;
+                        $media = $this->ownedMedia($extra['mediaId'] ?? null, $user, 'creator-portfolio', $entityManager);
+                        if (!$media instanceof Media) return null;
+                        if (!isset($mediaIds[$media->getId()])) {
+                            $mediaIds[$media->getId()] = true;
+                            $associations[] = ['media' => $media, 'position' => 100 + count($associations), 'title' => $item['title'], 'platform' => $item['platform']];
+                        }
+                        if ($extra['cover'] ?? false) $item['coverMediaId'] = $media->getId();
+                        else $item['media'][] = ['type' => 'image', 'mediaId' => $media->getId()];
+                    } elseif (($extra['type'] ?? null) === 'video') {
+                        $url = CreatorPresentation::url($extra['url'] ?? '');
+                        if ($url === '' || ($embedUrl = $this->videoEmbedUrl($url)) === null) return null;
+                        $item['media'][] = ['type' => 'video', 'url' => $url, 'embedUrl' => $embedUrl];
+                    } else return null;
+                }
+            }
+            unset($item);
+        } catch (\InvalidArgumentException) { return null; }
+
         return ['items' => $items, 'associations' => $associations];
     }
 
@@ -534,7 +593,7 @@ final class ProfileController
         foreach ($value as $package) {
             if (!is_array($package)
                 || !is_string($package['platform'] ?? null)
-                || !in_array($package['platform'], ['TikTok', 'Instagram', 'YouTube'], true)
+                || !in_array($package['platform'], ['All', ...CreatorPresentation::PLATFORMS], true)
                 || !is_string($package['title'] ?? null)
                 || !is_string($package['description'] ?? null)
             ) {
@@ -545,7 +604,7 @@ final class ProfileController
                 : bin2hex(random_bytes(8));
             $title = trim($package['title']);
             $description = trim($package['description']);
-            $price = $package['price'] ?? null;
+            $price = ($package['priceMode'] ?? null) === 'agreement' ? null : ($package['price'] ?? null);
             $currency = $package['currency'] ?? 'BAM';
             if (isset($ids[$id])
                 || mb_strlen($title) < 3
@@ -559,6 +618,7 @@ final class ProfileController
             }
 
             $ids[$id] = true;
+            try { $details = CreatorPresentation::package($package); } catch (\InvalidArgumentException) { return null; }
             $packages[] = [
                 'id' => $id,
                 'platform' => $package['platform'],
@@ -566,6 +626,7 @@ final class ProfileController
                 'description' => $description,
                 'price' => $price,
                 'currency' => $currency,
+                ...$details,
             ];
         }
 

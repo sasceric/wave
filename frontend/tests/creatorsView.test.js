@@ -2,10 +2,11 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import { ref } from 'vue'
 import { setupView } from './setupView.js'
+import { PRESENTATION_PLATFORMS } from '../src/lib/creatorPresentation.js'
 const modules = {
   '../composables/useInfiniteDirectory': { useInfiniteDirectory: () => ({ items: ref([]), total: ref(0), loading: ref(false), error: ref(''), hasMore: ref(false), loadMore: async () => {} }) },
   '../composables/useMarketplaceCatalog': { useMarketplaceCatalog: () => ({ categories: ref([]), error: ref(''), refresh: async () => {} }) },
-  '../lib/marketplace': { SOCIAL_PLATFORMS: ['TikTok', 'Instagram', 'YouTube'] },
+  '../lib/creatorPresentation': { PRESENTATION_PLATFORMS },
 }
 test('creator selections use stable values and clear without changing sorting', async () => {
   const { state } = await setupView('../src/views/CreatorsView.vue', modules)
@@ -27,5 +28,7 @@ test('creator selections use stable values and clear without changing sorting', 
 test('creator platform links retain their filter and reject unsupported platforms', async () => {
   const { state } = await setupView('../src/views/CreatorsView.vue', modules)
   assert.deepEqual([...state.normalizePlatform('instagram')], ['Instagram'])
+  assert.deepEqual([...state.normalizePlatform('twitch')], ['Twitch'])
+  assert.deepEqual([...state.normalizePlatform('spotify')], ['Spotify'])
   assert.equal(state.normalizePlatform('unsupported').length, 0)
 })

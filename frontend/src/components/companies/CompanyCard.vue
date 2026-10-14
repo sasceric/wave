@@ -1,4 +1,5 @@
 <script setup>
+import PresentationDemoBadge from '../shared/PresentationDemoBadge.vue'
 import RatingSummary from '../reviews/RatingSummary.vue'
 import '../../scss/components/companies/CompanyCard.scss'
 import { ArrowRight, BadgeCheck, MapPin, Megaphone } from '@lucide/vue'
@@ -25,6 +26,7 @@ const { t } = useI18n()
         <span v-if="company.verified" class="company-directory-card__verified" :aria-label="t('companyDirectory.verified')"><BadgeCheck :size="15" aria-hidden="true" /></span>
         <div class="company-directory-card__heading"><h2>{{ company.name }}</h2><p>{{ t(`companyTypes.options.${company.companyType || 'brand'}`) }} · {{ company.industryLabels?.join(', ') || company.industry }}</p></div>
       </div>
+      <PresentationDemoBadge v-if="company.isPresentationDemo" compact />
       <RatingSummary :rating="company.rating" compact />
       <p v-if="company.summary || company.about" class="company-directory-card__description">{{ company.summary || company.about || '' }}</p>
       <div class="company-directory-card__footer">

@@ -1,4 +1,5 @@
 <script setup>
+import PresentationDemoBadge from '../shared/PresentationDemoBadge.vue'
 import RatingSummary from '../reviews/RatingSummary.vue'
 import '../../scss/components/creators/CreatorCard.scss'
 import { computed } from 'vue'
@@ -72,6 +73,7 @@ const startingPrice = computed(() => {
           <h3>{{ creator.displayName }}</h3>
           <strong v-if="startingPrice" class="creator-card__price">{{ startingPrice }}</strong>
         </div>
+      <PresentationDemoBadge v-if="creator.isPresentationDemo" compact />
         <RatingSummary :rating="creator.rating" compact />
         <p class="creator-card__categories">{{ categories.join(', ') }}</p>
       </div>

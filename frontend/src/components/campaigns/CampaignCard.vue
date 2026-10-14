@@ -1,4 +1,5 @@
 <script setup>
+import PresentationDemoBadge from '../shared/PresentationDemoBadge.vue'
 import CampaignHiringProgress from './CampaignHiringProgress.vue'
 import '../../scss/components/campaigns/CampaignCard.scss'
 import { computed, ref, watch } from 'vue'
@@ -139,6 +140,7 @@ async function confirmRemoveBookmark() {
         >✓</span>
       </RouterLink>
 
+      <PresentationDemoBadge v-if="campaign.isPresentationDemo" compact />
       <h3>{{ campaign.title }}</h3>
       <p class="campaign-card__summary">{{ campaign.summary }}</p>
 

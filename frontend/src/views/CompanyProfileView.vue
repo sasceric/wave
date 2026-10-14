@@ -1,4 +1,5 @@
 <script setup>
+import PresentationDemoBadge from '../components/shared/PresentationDemoBadge.vue'
 import MarketplaceSafetyActions from '../components/shared/MarketplaceSafetyActions.vue'
 import ProfileReviews from '../components/reviews/ProfileReviews.vue'
 import RatingSummary from '../components/reviews/RatingSummary.vue'
@@ -107,6 +108,7 @@ onMounted(loadCompany)
       <div class="company-profile__hero-image" :style="{ backgroundImage: `url(${coverUrl})` }" aria-hidden="true" />
       <div class="page-width company-profile__hero-inner">
         <div class="company-profile__hero-content">
+          <PresentationDemoBadge v-if="company.isPresentationDemo" class="company-profile__demo" />
           <div class="company-profile__identity">
             <div class="company-profile__logo">
               <img v-if="company.logoUrl" :src="company.logoUrl" :alt="company.name" />

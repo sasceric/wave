@@ -172,58 +172,13 @@
 }
 
 .profile-tabs {
-  display: flex;
-  gap: 6px;
-  overflow-x: auto;
-  margin-bottom: 14px;
-  padding: 6px 14px;
-  border: 1px solid #e2e6df;
-  border-radius: 15px;
-  background: rgba(255,255,255,.55);
-  scrollbar-width: thin;
-
-  button {
-    min-height: 44px;
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    flex: 0 0 auto;
-    padding: 10px 20px;
-    border: 0;
-    border-radius: 10px;
-    color: #6c7b71;
-    background: transparent;
-    font: inherit;
-    font-size: 13px;
-    font-weight: 500;
-    white-space: nowrap;
-    cursor: pointer;
-
-    &:hover {
-      background: #edf0e8;
-      color: var(--forest);
-    }
-
-    &[aria-selected="true"] {
-      color: white;
-      background: var(--forest);
-    }
-
-    span {
-      min-width: 22px;
-      display: grid;
-      place-items: center;
-      padding: 2px 5px;
-      border-radius: 50%;
-      color: var(--forest);
-      background: #edf0e8;
-      font-size: 12px;
-    }
-
-    &:focus-visible {
-      outline: 2px solid var(--forest);
-      outline-offset: 2px;
-    }
+  display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 18px; padding: 0; border: 0; background: transparent;
+  button { display: inline-flex; align-items: center; gap: 6px; flex: 0 0 auto; min-height: 36px; padding: 7px 11px; border: 1px solid #dce2d9; border-radius: 8px; color: var(--muted); background: #fffefa; font: inherit; font-size: 12px; font-weight: 500; white-space: nowrap; cursor: pointer;
+    &:hover { background: var(--sage); color: var(--forest); }
+    &[aria-selected="true"] { border-color: var(--forest); color: #fffefa; background: var(--forest); }
+    span { min-width: 18px; padding: 1px 4px; border-radius: 20px; font-size: 10px; line-height: 1.5; color: inherit; background: #173d360a; }
+    &[aria-selected="true"] span { background: #ffffff1a; }
+    &:focus-visible { outline: 2px solid var(--forest); outline-offset: 2px; }
   }
 }
 
@@ -1192,9 +1147,6 @@
     margin-bottom: 18px;
   }
 
-  .account-page--editing .profile-tabs:has(button#account-tab-about[aria-selected="true"]) {
-    display: none;
-  }
 
   .profile-edit-layout .form-field input, .profile-edit-layout .form-field textarea {
     font-size: 16px;
@@ -1269,5 +1221,30 @@
 @include breakpoints.down(760px) {
   .account-bookmarks {
     padding: 18px;
+  }
+}
+
+.profile-tag-suggestions { display:flex; flex-wrap:wrap; gap:6px; button { border:1px solid #dce2d9; border-radius:20px; padding:5px 10px; color:var(--forest); background:#edf0e8; font:inherit; font-size:11px; cursor:pointer; &:disabled { opacity:.45; cursor:default; } } }
+
+// Shared compact controls from the approved account prototype.
+.account-page .profile-form {
+  .button { min-height: 36px; gap: 8px; padding: 8px 12px; border-radius: 8px; font-size: 12px; box-shadow: none; &:hover { transform: none; } }
+  .button--dark { background: var(--forest); border-color: var(--forest); color: #fffefa; }
+  .button--outline { border-color: #bfcbbf; background: #fffefa; color: var(--forest); }
+  .profile-editor__add { background: #fffefa; border-color: #bfcbbf; }
+  .profile-tabs { flex-wrap: wrap; margin-bottom: 18px; padding: 0; border: 0; border-radius: 0; background: transparent; }
+  .profile-tabs button { min-height: 36px; padding: 7px 11px; font-size: 12px; border: 1px solid #dce2d9; border-radius: 8px; }
+  .profile-tabs button[aria-selected=true] { border-color: var(--forest); }
+  .profile-edit-layout .form-grid { gap: 14px 16px; }
+  .profile-edit-basics { margin-bottom: 14px; }
+  .profile-edit-basics > :last-child { grid-column: auto; }
+  .profile-edit-layout .account-profile-card { background: #fffefa; border-radius: 13px; }
+  .profile-edit-layout .account-profile-card__heading h3 { font-size: 14px; gap: 9px; }
+  .profile-edit-layout .account-profile-card__heading svg { width: 18px; height: 18px; }
+  @media (max-width: 760px) {
+    .button, .profile-editor__add, .profile-editor__remove, .creator-studio__icon, .creator-studio__steps button, .creator-studio__networks button { min-height: 44px; }
+    .creator-studio__icon { width: 44px; }
+    .profile-tabs { flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: thin; overscroll-behavior-x: contain; }
+    .profile-tabs button { min-height: 44px; }
   }
 }

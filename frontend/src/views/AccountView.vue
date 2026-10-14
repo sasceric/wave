@@ -22,6 +22,9 @@ import AccountSidebar from '../components/account/AccountSidebar.vue'
 import AccountProfileSummary from '../components/account/AccountProfileSummary.vue'
 import AccountProfileCard from '../components/account/AccountProfileCard.vue'
 import AccountProfileDetails from '../components/account/AccountProfileDetails.vue'
+import CreatorProfileExtras from '../components/account/CreatorProfileExtras.vue'
+import CreatorStudioPanel from '../components/account/CreatorStudioPanel.vue'
+import { normalizePresentation, presentationPayload } from '../lib/creatorPresentation'
 import CreatorCampaignActivity from '../components/account/CreatorCampaignActivity.vue'
 import CompanyCampaignDetail from '../components/account/CompanyCampaignDetail.vue'
 import CompanyCampaignList from '../components/account/CompanyCampaignList.vue'
@@ -49,7 +52,8 @@ import { formatInternationalPhoneNumber } from '../lib/phoneNumbers'
 import { localizedPath, localizedRouteName } from '../routePaths'
 import countries from '../data/countries.json'
 
-const { t, locale } = useI18n()
+const { t, tm, rt, locale } = useI18n()
+const tagSuggestions = computed(() => tm('studio.tagSuggestions').map(message => rt(message)))
 const companyTypes = computed(() => companyTypeOptions(t))
 const typeOptions = computed(() => creatorTypeOptions(t))
 const route = useRoute()
@@ -73,7 +77,8 @@ const countryOptions = computed(() => {
     .map((code) => ({ value: code, label: countryNames.of(code) || code }))
     .sort((first, second) => first.label.localeCompare(second.label, countryDisplayLocale.value))
 })
-const PROFILE_TABS = ['about', 'social', 'portfolio', 'packages', 'faqs']
+const PROFILE_TABS = ['about', 'social', 'portfolio', 'packages', 'faqs', 'kit']
+const STUDIO_TABS = ['social', 'portfolio', 'packages', 'kit']
 const LEGACY_ACCOUNT_TABS = {
   applications: 'account-applications',
   offers: 'account-applications',
@@ -99,6 +104,7 @@ const profileImageField = ref(null)
 const companyCoverField = ref(null)
 const profilePhoneCountry = ref('BA')
 const tags = ref([])
+const creatorStudio = ref(null)
 const campaigns = ref([])
 const statusChange = ref(null)
 const reviewId = computed(() => {
@@ -286,7 +292,7 @@ function incompleteProfileTab() {
   if (profile.value.socialProfiles.some((social) => (
     !social.platform.trim()
     || !social.handle.trim()
-    || !Number.isInteger(Number(social.followers))
+    || (social.followers != null && social.followers !== '' && !Number.isInteger(Number(social.followers)))
     || Number(social.followers) < 0
     || Number(social.followers) > 200000000
   ))) {
@@ -357,6 +363,7 @@ async function loadDashboard(authenticatedUser = null, { sectionOnly = false } =
           city: response.data.city || '',
           countryCode: response.data.countryCode || '',
         }
+        if (response.data.accountType === 'creator') normalizePresentation(profile.value)
         profilePhoneCountry.value = parsePhoneNumberFromString(profile.value.phone)?.country
           || profile.value.countryCode
           || 'BA'
@@ -601,28 +608,7 @@ async function saveProfile() {
         avatarMediaId: profile.value.avatarMediaId || null,
         avatarUrl: profile.value.avatarMediaId ? null : profile.value.avatarUrl || null,
         tags: [...tags.value],
-        socialProfiles: profile.value.socialProfiles.map(({ platform, handle, followers }) => ({
-          platform,
-          handle,
-          followers: Number(followers),
-        })),
-        portfolio: profile.value.portfolio.map((item) => ({
-          id: item.id,
-          type: item.type,
-          title: item.title,
-          platform: item.platform || 'All',
-          ...(item.type === 'image' && item.mediaId
-            ? { mediaId: Number(item.mediaId) }
-            : { url: item.url }),
-        })),
-        packages: profile.value.packages.map(({ id, platform, title, description, price, currency }) => ({
-          id,
-          platform,
-          title,
-          description,
-          price: price === '' || price === null ? null : Number(price),
-          currency: currency || 'BAM',
-        })),
+        ...presentationPayload(profile.value),
         faqs: profile.value.faqs.map(({ question, answer }) => ({ question, answer })),
       }
     : {
@@ -686,41 +672,10 @@ async function saveProfile() {
   }
 }
 
-function addSocialProfile() {
-  if (profile.value.socialProfiles.length < 5) {
-    profile.value.socialProfiles.push({ platform: 'TikTok', handle: '', followers: 0 })
-  }
-}
-
 function addCompanySocialLink() {
   profile.value.socialLinks ||= []
   if (profile.value.socialLinks.length < COMPANY_SOCIAL_PLATFORMS.length) {
     profile.value.socialLinks.push({ platform: COMPANY_SOCIAL_PLATFORMS.find((platform) => !profile.value.socialLinks.some((link) => link.platform === platform)) || 'Website', url: '' })
-  }
-}
-
-function addPortfolioItem() {
-  if (profile.value.portfolio.length < 4) {
-    profile.value.portfolio.push({ id: '', type: 'image', url: '', title: '', platform: 'All' })
-  }
-}
-
-function changePortfolioType(item) {
-  item.url = ''
-  item.mediaId = null
-  delete item.embedUrl
-}
-
-function addPackage() {
-  if (profile.value.packages.length < 12) {
-    profile.value.packages.push({
-      id: '',
-      platform: 'Instagram',
-      title: '',
-      description: '',
-      price: null,
-      currency: 'BAM',
-    })
   }
 }
 
@@ -1038,6 +993,7 @@ onMounted(loadDashboard)
         v-if="accountSection === 'profile'"
         class="profile-form profile-form--wide"
         @submit.prevent="saveProfile"
+        @wave-invalid="creatorStudio?.revealInvalidField($event.detail.field)"
       >
         <nav
           v-if="user.accountType === 'creator'"
@@ -1053,7 +1009,7 @@ onMounted(loadDashboard)
             :aria-selected="accountTab === 'about'"
             :tabindex="accountTab === 'about' ? 0 : -1"
             @click="selectAccountTab('about')"
-          >{{ t('account.profileBasics') }}</button>
+          >{{ t('studio.tabAbout') }}</button>
           <button
             id="account-tab-social"
             type="button"
@@ -1061,7 +1017,7 @@ onMounted(loadDashboard)
             :aria-selected="accountTab === 'social'"
             :tabindex="accountTab === 'social' ? 0 : -1"
             @click="selectAccountTab('social')"
-          >{{ t('account.socialProfiles') }} <span>{{ profile.socialProfiles.length }}</span></button>
+          >{{ t('studio.tabNetworks') }} <span>{{ profile.socialProfiles.length }}</span></button>
           <button
             id="account-tab-portfolio"
             type="button"
@@ -1069,7 +1025,7 @@ onMounted(loadDashboard)
             :aria-selected="accountTab === 'portfolio'"
             :tabindex="accountTab === 'portfolio' ? 0 : -1"
             @click="selectAccountTab('portfolio')"
-          >{{ t('account.portfolio') }} <span>{{ profile.portfolio.length }}/4</span></button>
+          >{{ t('studio.tabWorks') }} <span>{{ profile.portfolio.length }}/4</span></button>
           <button
             id="account-tab-packages"
             type="button"
@@ -1077,7 +1033,7 @@ onMounted(loadDashboard)
             :aria-selected="accountTab === 'packages'"
             :tabindex="accountTab === 'packages' ? 0 : -1"
             @click="selectAccountTab('packages')"
-          >{{ t('account.packages') }} <span>{{ profile.packages.length }}</span></button>
+          >{{ t('studio.tabPackages') }} <span>{{ profile.packages.length }}</span></button>
           <button
             id="account-tab-faqs"
             type="button"
@@ -1085,11 +1041,13 @@ onMounted(loadDashboard)
             :aria-selected="accountTab === 'faqs'"
             :tabindex="accountTab === 'faqs' ? 0 : -1"
             @click="selectAccountTab('faqs')"
-          >{{ t('account.creatorFaqs') }} <span>{{ profile.faqs.length }}</span></button>
+          >{{ t('studio.tabFaq') }} <span>{{ profile.faqs.length }}</span></button>
+          <button id="account-tab-kit" type="button" role="tab" :aria-selected="accountTab === 'kit'" :tabindex="accountTab === 'kit' ? 0 : -1" @click="selectAccountTab('kit')">{{ t('studio.tabPresentation') }}</button>
         </nav>
 
+        <CreatorStudioPanel ref="creatorStudio" v-if="user.accountType === 'creator' && STUDIO_TABS.includes(accountTab)" v-model:profile="profile" :tab="accountTab" :editing="editingProfile" @edit="startProfileEdit" />
         <AccountProfileDetails
-          v-if="!editingProfile"
+          v-else-if="!editingProfile"
           :profile="profile"
           :account-type="user.accountType"
           :tab="accountTab"
@@ -1097,7 +1055,7 @@ onMounted(loadDashboard)
           :categories="categories"
           @edit="startProfileEdit"
         />
-        <div v-if="editingProfile" class="profile-edit-layout">
+        <div v-if="editingProfile && !(user.accountType === 'creator' && STUDIO_TABS.includes(accountTab))" class="profile-edit-layout">
         <template v-if="user.accountType === 'creator'">
           <section
             v-if="accountTab === 'about'"
@@ -1106,7 +1064,7 @@ onMounted(loadDashboard)
             role="tabpanel"
             aria-labelledby="account-tab-about"
           >
-            <AccountProfileCard :title="t('account.basicInformation')" :icon="UserRound">
+            <AccountProfileCard :title="t('studio.introduction')" :icon="UserRound">
             <div class="profile-edit-avatar">
               <ProfileImageField
                 ref="profileImageField"
@@ -1131,6 +1089,16 @@ onMounted(loadDashboard)
                 <span>{{ t('auth.name') }}</span>
                 <input v-model.trim="profile.displayName" required minlength="2" maxlength="120" autocomplete="name" />
               </label>
+              <MultiSelect
+                v-model="profile.creatorTypes"
+                :options="typeOptions"
+                :label="t('creatorTypes.label')"
+                :placeholder="t('creatorTypes.select')"
+                :search-placeholder="t('creatorTypes.search')"
+                :no-results-label="t('creatorTypes.empty')"
+                :remove-label="t('account.remove')"
+                :helper-text="t('creatorTypes.hint')"
+              />
               <MultiSelect required
                 v-model="profile.categories"
                 :options="categories"
@@ -1141,16 +1109,6 @@ onMounted(loadDashboard)
                 :remove-label="t('account.remove')"
                 :helper-text="t('account.categoriesHint')"
                 :max-selections="5"
-              />
-              <MultiSelect
-                v-model="profile.creatorTypes"
-                :options="typeOptions"
-                :label="t('creatorTypes.label')"
-                :placeholder="t('creatorTypes.select')"
-                :search-placeholder="t('creatorTypes.search')"
-                :no-results-label="t('creatorTypes.empty')"
-                :remove-label="t('account.remove')"
-                :helper-text="t('creatorTypes.hint')"
               />
 
               <SearchableSelect required
@@ -1166,28 +1124,7 @@ onMounted(loadDashboard)
                 <span>{{ t('auth.city') }}</span>
                 <input v-model.trim="profile.city" required maxlength="70" autocomplete="address-level2" />
               </label>
-              <DatePicker
-                v-model="profile.birthday"
-                :label="t('account.birthday')"
-                :placeholder="t('datePicker.placeholder')"
-                :helper-text="t('account.birthdayPrivate')"
-                min="1900-01-01"
-                :max="dateOnly()"
-                :disabled="busy"
-              />
-              <PhoneNumberField
-                v-model="profile.phone"
-                v-model:country-code="profilePhoneCountry"
-                :label="t('auth.phone')"
-                :placeholder="t('auth.phonePlaceholder')"
-                :country-label="t('auth.phoneCountry')"
-                :country-placeholder="t('auth.selectCountry')"
-                :country-search-placeholder="t('auth.searchPhoneCountry')"
-                :no-countries-found-label="t('auth.noPhoneCountriesFound')"
-              />
             </div>
-            </AccountProfileCard>
-            <AccountProfileCard :title="t('account.additionalInformation')" :icon="FileText">
             <div class="form-grid">
               <label class="form-field form-field--wide">
                 <span>{{ t('account.tagline') }}</span>
@@ -1214,167 +1151,36 @@ onMounted(loadDashboard)
                 :max-length="40"
                 :disabled="busy"
               />
+              <div class="form-field--wide profile-tag-suggestions">
+                <button v-for="suggestion in tagSuggestions" :key="suggestion" type="button" :disabled="busy || tags.length >= 10 || tags.includes(suggestion)" @click="tags.push(suggestion)">{{ suggestion }}</button>
+              </div>
             </div>
+            <CreatorProfileExtras v-model:profile="profile" editing embedded />
             </AccountProfileCard>
-          </section>
-
-          <section
-            v-else-if="accountTab === 'social'"
-            id="account-panel-social"
-            class="profile-tab-panel"
-            role="tabpanel"
-            aria-labelledby="account-tab-social"
-          >
-            <div class="profile-editor__heading">
-              <div>
-                <h3>{{ t('account.socialProfiles') }}</h3>
-                <small>{{ t('account.socialMetricsHint') }}</small>
-              </div>
-              <button
-                class="profile-editor__add"
-                type="button"
-                :disabled="profile.socialProfiles.length >= 5"
-                @click="addSocialProfile"
-              >
-                <Plus :size="16" aria-hidden="true" />
-                {{ t('account.addSocial') }}
-              </button>
-            </div>
-            <div v-if="!profile.socialProfiles.length" class="profile-editor__empty">{{ t('account.noSocialProfiles') }}</div>
-            <article v-for="(social, index) in profile.socialProfiles" :key="index" class="social-editor">
-              <div class="social-editor__top">
-                <strong>{{ social.platform }}</strong>
-                <button
-                  class="profile-editor__remove"
-                  type="button"
-                  :aria-label="`${t('account.remove')}: ${social.platform}`"
-                  @click="profile.socialProfiles.splice(index, 1)"
-                >
-                  <Trash2 :size="15" aria-hidden="true" />
-                  <span>{{ t('account.remove') }}</span>
-                </button>
-              </div>
-              <SingleSelect v-model="social.platform" :label="t('account.platform')" :options="SOCIAL_PLATFORMS.map(value => ({ value, label: value }))" required />
-              <label class="form-field">
-                <span>{{ t('account.handle') }}</span>
-                <input v-model.trim="social.handle" required maxlength="120" />
-              </label>
-              <label class="form-field">
-                <span>{{ t('account.followers') }}</span>
-                <input v-model.number="social.followers" type="number" min="0" max="200000000" required />
-              </label>
-            </article>
-          </section>
-
-          <section
-            v-else-if="accountTab === 'portfolio'"
-            id="account-panel-portfolio"
-            class="profile-tab-panel"
-            role="tabpanel"
-            aria-labelledby="account-tab-portfolio"
-          >
-            <div class="profile-editor__heading">
-              <div>
-                <h3>{{ t('account.portfolio') }}</h3>
-                <small>{{ t('account.portfolioHint') }}</small>
-              </div>
-              <button
-                class="profile-editor__add"
-                type="button"
-                :disabled="profile.portfolio.length >= 4"
-                @click="addPortfolioItem"
-              >
-                <Plus :size="16" aria-hidden="true" />
-                {{ t('account.addPortfolioItem') }}
-              </button>
-            </div>
-            <div v-if="!profile.portfolio.length" class="profile-editor__empty">{{ t('account.noPortfolioItems') }}</div>
-            <article v-for="(item, index) in profile.portfolio" :key="item.id || index" class="portfolio-editor">
-              <div class="portfolio-editor__top">
-                <strong>{{ item.title || t('account.mediaTitle') }}</strong>
-                <button
-                  class="profile-editor__remove"
-                  type="button"
-                  :aria-label="`${t('account.remove')}: ${item.title || t('account.mediaTitle')}`"
-                  @click="profile.portfolio.splice(index, 1)"
-                >
-                  <Trash2 :size="15" aria-hidden="true" />
-                  <span>{{ t('account.remove') }}</span>
-                </button>
-              </div>
+            <AccountProfileCard :title="t('studio.privateDetails')" :icon="UserRound">
+              <p class="creator-studio__hint creator-studio__privacy">{{ t('studio.privateDetailsHint') }}</p>
               <div class="form-grid">
-                <SingleSelect v-model="item.type" :label="t('account.mediaType')" :options="[{ value: 'image', label: t('account.image') }, { value: 'video', label: t('account.video') }]" @update:model-value="changePortfolioType(item)" />
-                <SingleSelect v-model="item.platform" :label="t('account.mediaPlatform')" :options="[{ value: 'All', label: t('account.allPlatforms') }, ...SOCIAL_PLATFORMS.map(value => ({ value, label: value }))]" />
-              </div>
-              <label class="form-field">
-                <span>{{ t('account.mediaTitle') }}</span>
-                <input v-model.trim="item.title" maxlength="120" />
-              </label>
-              <MediaUploadField
-                v-if="item.type === 'image'"
-                v-model="item.mediaId"
-                folder="creator-portfolio"
-                :preview-url="item.url"
-                @uploaded="item.url = $event.url"
+              <DatePicker
+                v-model="profile.birthday"
+                :label="t('account.birthday')"
+                :placeholder="t('datePicker.placeholder')"
+                :helper-text="t('account.birthdayPrivate')"
+                min="1900-01-01"
+                :max="dateOnly()"
+                :disabled="busy"
               />
-              <label v-else class="form-field">
-                <span>{{ t('account.mediaUrl') }}</span>
-                <input v-model.trim="item.url" type="url" required placeholder="https://" maxlength="1000" />
-              </label>
-            </article>
-          </section>
-
-          <section
-            v-else-if="accountTab === 'packages'"
-            id="account-panel-packages"
-            class="profile-tab-panel"
-            role="tabpanel"
-            aria-labelledby="account-tab-packages"
-          >
-            <div class="profile-editor__heading">
-              <div>
-                <h3>{{ t('account.packages') }}</h3>
-                <small>{{ t('account.packagesHint') }}</small>
+              <PhoneNumberField
+                v-model="profile.phone"
+                v-model:country-code="profilePhoneCountry"
+                :label="t('auth.phone')"
+                :placeholder="t('auth.phonePlaceholder')"
+                :country-label="t('auth.phoneCountry')"
+                :country-placeholder="t('auth.selectCountry')"
+                :country-search-placeholder="t('auth.searchPhoneCountry')"
+                :no-countries-found-label="t('auth.noPhoneCountriesFound')"
+              />
               </div>
-              <button
-                class="profile-editor__add"
-                type="button"
-                :disabled="profile.packages.length >= 12"
-                @click="addPackage"
-              >
-                <Plus :size="16" aria-hidden="true" />
-                {{ t('account.addPackage') }}
-              </button>
-            </div>
-            <div v-if="!profile.packages.length" class="profile-editor__empty">{{ t('account.noPackages') }}</div>
-            <article v-for="(packageItem, index) in profile.packages" :key="packageItem.id || index" class="package-editor">
-              <div class="portfolio-editor__top">
-                <strong>{{ packageItem.title || t('account.packageTitle') }}</strong>
-                <button
-                  class="profile-editor__remove"
-                  type="button"
-                  :aria-label="`${t('account.remove')}: ${packageItem.title || t('account.packageTitle')}`"
-                  @click="profile.packages.splice(index, 1)"
-                >
-                  <Trash2 :size="15" aria-hidden="true" />
-                  <span>{{ t('account.remove') }}</span>
-                </button>
-              </div>
-              <SingleSelect v-model="packageItem.platform" :label="t('account.platform')" :options="SOCIAL_PLATFORMS.map(value => ({ value, label: value }))" />
-              <label class="form-field">
-                <span>{{ t('account.packageTitle') }}</span>
-                <input v-model.trim="packageItem.title" required minlength="3" maxlength="120" />
-              </label>
-              <label class="form-field">
-                <span>{{ t('account.packageDescription') }}</span>
-                <textarea v-model.trim="packageItem.description" required minlength="10" maxlength="1200"></textarea>
-              </label>
-              <label class="form-field">
-                <span>{{ t('account.packagePrice') }}</span>
-                <input v-model="packageItem.price" type="number" min="1" max="10000000" />
-              </label>
-              <SingleSelect v-model="packageItem.currency" :label="t('account.currency')" :options="CURRENCIES.map(value => ({ value, label: value }))" />
-            </article>
+            </AccountProfileCard>
           </section>
 
           <section
@@ -1559,11 +1365,11 @@ onMounted(loadDashboard)
             </div>
           </section>
         </section>
-          <footer class="profile-form__footer">
+        </div>
+          <footer v-if="editingProfile" class="profile-form__footer">
             <button class="button button--outline" type="button" :disabled="busy" @click="cancelProfileEdit">{{ t('account.richTextCancel') }}</button>
             <button class="button button--dark" type="submit" :disabled="busy">{{ t('account.saveProfile') }}</button>
           </footer>
-        </div>
       </form>
 
       <CreatorCampaignActivity

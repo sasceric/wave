@@ -18,6 +18,27 @@ use Symfony\Component\Routing\Attribute\Route;
 
 final class CreatorController
 {
+    #[Route('/api/creators/{slug}/view', name: 'api_creator_record_view', methods: ['POST'])]
+    public function recordView(string $slug, Request $request, EntityManagerInterface $entityManager, Security $security, \Symfony\Component\Security\Csrf\CsrfTokenManagerInterface $tokens): JsonResponse
+    {
+        $locale = LocaleContext::fromRequest($request) ?? 'bs';
+        if ($error = \App\Api\ApiAccess::requireCsrf($request, $tokens, $locale)) return $error;
+        $visible = $this->show($slug, $request, $entityManager, $security);
+        if ($visible->getStatusCode() !== 200) return $visible;
+        $creator = $entityManager->getRepository(Creator::class)->findOneBy(['slug' => $slug]);
+        if (!$creator instanceof Creator) return new JsonResponse(['recorded' => false]);
+        if ($security->getUser() === $creator->getOwner() || $security->isGranted('ROLE_ADMIN')) return new JsonResponse(['recorded' => false]);
+        $day = gmdate('Y-m-d');
+        $session = $request->getSession();
+        $seen = $session->get('creator_profile_views', []);
+        $key = $creator->getId().':'.$day;
+        if (isset($seen[$key])) return new JsonResponse(['recorded' => false]);
+        $entityManager->getConnection()->executeStatement('INSERT INTO creator_profile_visit (creator_id, day, views) VALUES (?, ?, 1) ON CONFLICT (creator_id, day) DO UPDATE SET views = creator_profile_visit.views + 1', [$creator->getId(), $day]);
+        $seen[$key] = true;
+        $session->set('creator_profile_views', array_slice($seen, -100, null, true));
+        return new JsonResponse(['recorded' => true]);
+    }
+
     public function __construct(private readonly CollaborationFeedback $feedback, private readonly \App\Safety\BlockPolicy $blocks)
     {
     }
@@ -263,6 +284,7 @@ final class CreatorController
                 $locale,
                 $categoryLabels[$creator->getCategory()] ?? null,
                 $categoryLabels,
+                public: true,
             ) + ['rating' => $this->feedback->summary($owner)],
         ]);
     }

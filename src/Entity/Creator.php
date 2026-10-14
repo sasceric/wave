@@ -76,6 +76,12 @@ class Creator
     #[ORM\Column(type: 'json', options: ['default' => '[]'])]
     private array $creatorTypes = [];
 
+    #[ORM\Column(type: 'json', options: ['default' => '{}'])]
+    private array $presentation = [];
+
+    public function getPresentation(): array { return $this->presentation; }
+    public function setPresentation(array $presentation): void { $this->presentation = $presentation; }
+
     #[ORM\Column(options: ['default' => false])]
     private bool $featured = false;
 
@@ -364,6 +370,7 @@ class Creator
 
     public function anonymize(): void
     {
+        $this->presentation = [];
         $this->updateProfile('Deleted account', '', '', '', [], [], null, '', [], [], [], []);
         $this->slug = 'deleted-creator-'.bin2hex(random_bytes(12));
         $this->avatarMedia = null;

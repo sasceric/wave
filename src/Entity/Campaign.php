@@ -10,12 +10,20 @@ use Doctrine\ORM\Mapping as ORM;
 #[ORM\Index(name: 'idx_campaign_company_available', columns: ['company_id', 'status', 'closes_at'])]
 #[ORM\Table(name: 'campaign')]
 #[ORM\UniqueConstraint(name: 'uniq_campaign_slug', columns: ['slug'])]
+#[ORM\UniqueConstraint(name: 'uniq_campaign_presentation_demo_key', columns: ['presentation_demo_key'])]
 class Campaign
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
     private ?int $id = null;
+
+    #[ORM\Column(length: 40, nullable: true)]
+    private ?string $presentationDemoKey = null;
+
+    public function getPresentationDemoKey(): ?string { return $this->presentationDemoKey; }
+    public function markPresentationDemo(string $key): void { $this->presentationDemoKey = $key; }
+
 
     #[ORM\Column(length: 120)]
     private string $slug;

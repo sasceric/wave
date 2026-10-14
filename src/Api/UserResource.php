@@ -12,6 +12,7 @@ final class UserResource
 
         return [
             'id' => $user->getId(),
+            'isPresentationDemo' => $user->isPresentationDemo(),
             'email' => $user->getEmail(),
             'phone' => $user->getPhone(),
             'city' => $user->getCity(),
@@ -25,7 +26,7 @@ final class UserResource
             'hide_my_account' => !$user->isApproved() || $user->isHideMyAccount() ? 1 : 0,
             'notificationsEnabled' => $user->isNotificationsEnabled(),
             'profile' => $profile instanceof \App\Entity\Creator
-                ? CreatorResource::fromEntity($profile, $locale, categoryLabels: $categoryLabels) + ['birthday' => $profile->getBirthday()?->format('Y-m-d')]
+                ? CreatorResource::fromEntity($profile, $locale, categoryLabels: $categoryLabels, public: false) + ['birthday' => $profile->getBirthday()?->format('Y-m-d')]
                 : ($profile instanceof \App\Entity\Company ? CompanyResource::fromEntity($profile, $locale, categoryLabels: $categoryLabels) : null),
         ];
     }
