@@ -9,6 +9,17 @@ backups, supervised consumers and scheduled-task setup, see
 [server services, jobs and queues](server-operations.md). The deploy workflow
 does not provision those host services or schedules.
 
+## Confirmed legacy creator redirect
+
+Migration `Version20261016170000` restores the owner-confirmed
+`suad-asceric-de986b` URLs (including `/hr/` and other historical aliases) to
+`/kreatori/suad-asceric`. It only repairs enabled generated directory fallbacks
+and missing aliases when the target exists; manual/disabled/custom rules are
+preserved. The normal workflow applies it automatically. No frontend build or
+new service is required specifically for this data repair. Verify both
+`/kreatori/suad-asceric-de986b` and `/hr/kreatori/suad-asceric-de986b` return a
+single 301 to the current profile after deployment. See [redirect history](url-redirects.md#confirmed-legacy-profile-repair-2026-10-16).
+
 ## German and structured data
 
 The German release includes `frontend/src/locales/de.json`,

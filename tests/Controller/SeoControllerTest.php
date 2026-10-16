@@ -335,7 +335,7 @@ final class SeoControllerTest extends WebTestCase
         self::assertStringContainsString('<html lang="bs">', $html);
         self::assertStringContainsString('name="wave:origin" content="http://127.0.0.1:8000"', $html);
         self::assertStringNotContainsString('rel="preload" as="image"', $html);
-        self::assertStringContainsString('<title>Maya Chen — kreator/ica | Wave</title>', $html);
+        self::assertStringContainsString('<title>Maya Chen — profil kreatora | Wave</title>', $html);
         self::assertStringContainsString('rel="canonical" href="http://127.0.0.1:8000/kreatori/maya-chen"', $html);
         self::assertStringContainsString('property="og:image" content="http://127.0.0.1:8000/images/logo-icon.svg"', $html);
         self::assertStringContainsString('"@type":"Person"', $html);

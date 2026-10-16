@@ -82,6 +82,27 @@ Missing or unavailable public profiles and campaigns return localized 404 metada
 The SPA leaves detail pages noindex until their record loads and clears canonical,
 alternates and structured data when the record is missing.
 
+## Confirmed legacy profile repair (2026-10-16)
+
+The owner confirmed that `/kreatori/suad-asceric-de986b` and its old language
+variants belong to the current `/kreatori/suad-asceric` profile. Production was
+returning 301s to creator directories for those old URLs. Local history has
+different generated suffixes, so this association cannot be reconstructed by
+rerunning the general slug migration or matching names.
+
+Migration `Version20261016170000` repairs this exact confirmed association when
+the current, non-deleted target profile exists. It changes enabled, generated
+directory redirects to the profile, fills missing historical aliases, reserves
+the old slug and preserves query settings. Manual rules, disabled rules, other
+destinations and unrelated profiles are preserved. It is repeatable and tested
+on PostgreSQL and SQLite. No runtime name matching or broad hash-prefix fallback
+is introduced. Future URL changes continue to collapse incoming redirects.
+
+The normal deployment applies the repair; it is not a production change until
+that deployment runs. Afterward verify both old Bosnian and Croatian URLs return
+a single HTTP 301 to `/kreatori/suad-asceric`, then inspect the current URL in
+Search Console. Google may continue displaying old URLs/titles until it recrawls.
+
 Validation: the full isolated PostgreSQL backend suite, all frontend tests,
 PHPStan, ESLint and the production build passed. A read-only desktop/mobile preview
 with demo rows checked selection, confirmation, sorting and fixed action columns.
