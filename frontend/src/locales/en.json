@@ -2682,6 +2682,13 @@
     "backToOverview": "Back to overview",
     "loading": "Loading your overview…",
     "creatorContinue": "Find your next campaign.",
-    "checkStatus": "Check status"
+    "profileCompletionEyebrow": "Profile and services",
+    "profileCompletionTitle": "Creator profile completion",
+    "profileCompletionHint": "Total creator accounts: {count}. Current state across all accounts, independent of the selected period.",
+    "profileCompletion_networks": "Network added",
+    "profileCompletion_works": "Work samples added",
+    "profileCompletion_packages": "Packages added",
+    "profileCompletion_complete": "All three steps",
+    "profileCompletionNote": "At least one saved item per step. Demo, staff and deleted accounts are excluded. These details are not required for approval."
   }
 }

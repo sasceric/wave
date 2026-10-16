@@ -1,5 +1,5 @@
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { ArrowRight, Check, Circle, Mail, ShieldCheck } from '@lucide/vue'
 import LocalizedLink from '../shared/LocalizedLink.vue'
@@ -31,6 +31,8 @@ async function refreshStatus() {
   catch (cause) { if (id === props.user.id) error.value = cause.message }
   finally { refreshing.value = false }
 }
+onMounted(() => window.addEventListener('wave:inbox-refresh', refreshStatus))
+onBeforeUnmount(() => window.removeEventListener('wave:inbox-refresh', refreshStatus))
 async function resend() {
   if (sending.value) return
   const id = props.user.id
@@ -56,7 +58,7 @@ async function resend() {
       </li>
     </ol>
     <StatusMessage v-if="error" variant="error">{{ error }}</StatusMessage><StatusMessage v-if="notice" variant="success">{{ notice }}</StatusMessage>
-    <div class="activation-panel__review"><ShieldCheck :size="23" aria-hidden="true" /><div><strong>{{ t(complete === 3 ? 'activation.reviewTitle' : 'activation.lockedTitle') }}</strong><p>{{ t(complete === 3 ? 'activation.reviewHint' : 'activation.lockedHint') }}</p><button type="button" class="text-link" :disabled="refreshing" @click="refreshStatus">{{ t('activation.checkStatus') }}</button></div></div>
+    <div class="activation-panel__review"><ShieldCheck :size="23" aria-hidden="true" /><div><strong>{{ t(complete === 3 ? 'activation.reviewTitle' : 'activation.lockedTitle') }}</strong><p>{{ t(complete === 3 ? 'activation.reviewHint' : 'activation.lockedHint') }}</p></div></div>
     <div class="activation-panel__optional"><h3>{{ t('activation.optional') }}</h3><p>{{ t('activation.optionalHint') }}</p><LocalizedLink v-for="item in optional" :key="item.key" :to="{ name: 'account', query: { tab: item.tab, edit: '1' } }"><Check v-if="item.done" :size="16" aria-hidden="true" /><Circle v-else :size="16" aria-hidden="true" /><span>{{ t(`activation.optional_${item.key}`) }}</span><ArrowRight :size="15" aria-hidden="true" /></LocalizedLink></div>
   </section>
 </template>

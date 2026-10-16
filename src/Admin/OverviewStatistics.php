@@ -5,6 +5,7 @@ namespace App\Admin;
 use DateTimeImmutable;
 use DateTimeZone;
 use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\Platforms\PostgreSQLPlatform;
 
 final class OverviewStatistics
 {
@@ -47,8 +48,28 @@ final class OverviewStatistics
         }
         $recent = $this->db->fetchAllAssociative('SELECT id, title, status, published_at FROM campaign ORDER BY published_at DESC, id DESC LIMIT 5');
         return ['days' => $days, 'from' => $from->format('Y-m-d'), 'to' => $today->format('Y-m-d'), 'timezone' => 'UTC',
-            'activation' => $this->activation($parameters, $accountType), 'attention' => array_map(intval(...), $attention ?: []), 'totals' => $totals,
+            'activation' => $this->activation($parameters, $accountType), 'profileCompletion' => $this->profileCompletion(),
+            'attention' => array_map(intval(...), $attention ?: []), 'totals' => $totals,
             'series' => array_values($series), 'campaignStatuses' => $statuses, 'recentCampaigns' => $recent];
+    }
+
+    /** Current saved profile content, including accounts older than milestone measurement. */
+    private function profileCompletion(): array
+    {
+        $postgres = $this->db->getDatabasePlatform() instanceof PostgreSQLPlatform;
+        $present = [];
+        foreach (['networks' => 'social_profiles', 'works' => 'portfolio', 'packages' => 'packages'] as $key => $column) {
+            $present[$key] = $postgres ? "jsonb_array_length(c.$column::jsonb) > 0" : "json_array_length(c.$column) > 0";
+        }
+        $counts = $this->db->fetchAssociative('SELECT COUNT(*) AS total,
+            SUM(CASE WHEN '.$present['networks'].' THEN 1 ELSE 0 END) AS networks,
+            SUM(CASE WHEN '.$present['works'].' THEN 1 ELSE 0 END) AS works,
+            SUM(CASE WHEN '.$present['packages'].' THEN 1 ELSE 0 END) AS packages,
+            SUM(CASE WHEN '.$present['networks'].' AND '.$present['works'].' AND '.$present['packages'].' THEN 1 ELSE 0 END) AS complete
+            FROM creator c JOIN wave_user u ON u.id = c.owner_id
+            WHERE u.role = \'ROLE_CREATOR\' AND u.deleted_at IS NULL AND u.presentation_demo_key IS NULL AND u.admin = FALSE AND u.moderator = FALSE');
+
+        return array_map(intval(...), $counts ?: []);
     }
     private function activation(array $parameters, string $accountType): array
     {

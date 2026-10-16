@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { nextTick, ref } from 'vue'
+import { computed, nextTick, ref } from 'vue'
 import { setupView } from './setupView.js'
 
 const tick = () => new Promise(resolve => setImmediate(resolve))
@@ -57,12 +57,20 @@ test('visibility cannot be enabled before all eligibility rules pass', async () 
 })
 
 
-test('pending accounts can refresh verification and approval without polling', async () => {
+test('pending accounts refresh verification and approval on inbox resume events and clean up without polling', async () => {
   let refreshed = 0
-  const { state } = await setupView('../src/components/account/AccountActivationPanel.vue', {
+  let mount, unmount
+  const { state, windowTarget } = await setupView('../src/components/account/AccountActivationPanel.vue', {
+    vue: { computed, ref, onMounted: callback => { mount = callback }, onBeforeUnmount: callback => { unmount = callback } },
     '../../composables/useCurrentUser': { loadCurrentUser: async () => { refreshed++ } },
   }, { user: { id: 1, accountType: 'creator', profile: {} } })
-  await state.refreshStatus()
+  mount()
+  windowTarget.dispatchEvent(new Event('wave:inbox-refresh'))
+  await tick()
   assert.equal(refreshed, 1)
   assert.equal(state.refreshing.value, false)
+  unmount()
+  windowTarget.dispatchEvent(new Event('wave:inbox-refresh'))
+  await tick()
+  assert.equal(refreshed, 1)
 })

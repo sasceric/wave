@@ -8,6 +8,11 @@ Login lands on `account-dashboard`, including incomplete accounts. Their overvie
 
 Approved accounts see real activity/financial/review/credit statistics and a next action. The visibility switch calls the existing CSRF-protected visibility endpoint. Approval never enables public visibility automatically. Existing visibility choices are preserved.
 
+Pending accounts no longer have a manual “Check status” button. The activation
+panel refreshes the session on the existing inbox-resume event, triggered when
+the app regains focus, reconnects or receives a push. It removes its listener on
+unmount; there is no polling timer or additional submission action.
+
 ## Opt-in campaign emails
 
 `GET/PUT /api/me/campaign-alerts` is creator-only, owner-scoped and non-cacheable. PUT requires CSRF and validates category values, country codes, daily/weekly frequency and an explicit boolean opt-in. No preference row means disabled. These emails are independently opted into, separate from device notifications.
@@ -21,6 +26,19 @@ The six localized email copies use `templates/emails/campaign_alert.html`, inclu
 The admin overview adds an account-type filter and a registration-cohort funnel for the selected 7/30/90-day period. A Doctrine flush listener records each reached milestone once: registered, email verified, required profile complete, approved, first creator application/company campaign. The display uses nested completed stages, so percentages always represent conversion from the previous stage in the same cohort.
 
 Measurement starts when this code is deployed. Existing accounts are not backfilled with invented registration dates. Demo, staff and deleted accounts are excluded. No page visits, device tracking or abandoned-form counts are inferred. Stage records reference the account with cascading deletion, without storing names, emails or browser identifiers.
+
+The separate **Creator profile completion** section reads current saved profiles,
+including accounts created before milestone measurement. It shows counts and
+percentages with at least one social network, portfolio work or package, plus
+accounts with all three. These match the optional setup checklist, including
+saved private portfolio work and negotiable packages; they do not assert that
+audience statistics are verified or that content is publicly visible. Removing
+the saved items reduces the current count. All real creator accounts are in the
+denominator, including pending and hidden accounts; demo, staff, deleted and
+ownerless imported records are excluded. The section is explicitly independent
+of the period/account-type filter used by the registration funnel. One aggregate
+query runs as part of the existing admin overview request; no migration, event
+tracking writes, browser tracking requests or new background task is needed.
 
 ## Deployment and verification
 

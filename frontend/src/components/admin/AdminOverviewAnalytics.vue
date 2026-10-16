@@ -1,7 +1,7 @@
 <script setup>
 import { computed, onBeforeUnmount, onMounted, ref, useId, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { ArrowUpRight, CalendarDays, Check, ClipboardCheck, Flag, LifeBuoy, Megaphone, Send, Users, Building2, UserRoundCheck, Activity } from '@lucide/vue'
+import { ArrowUpRight, CalendarDays, Check, ClipboardCheck, Flag, LifeBuoy, Megaphone, Send, Users, Building2, UserRoundCheck, Activity, Share2, Images, Package } from '@lucide/vue'
 import SingleSelect from '../shared/SingleSelect.vue'
 import LocalizedLink from '../shared/LocalizedLink.vue'
 import LoadingSkeleton from '../shared/LoadingSkeleton.vue'
@@ -27,6 +27,12 @@ const activationRows = computed(() => {
   })
 })
 const statistics = ref(null)
+const profileCompletionRows = computed(() => {
+  const counts = statistics.value?.profileCompletion || {}
+  return [['networks', Share2], ['works', Images], ['packages', Package], ['complete', Check]].map(([key, icon]) => ({
+    key, icon, count: counts[key] || 0, rate: counts.total ? Math.round((counts[key] || 0) / counts.total * 100) : 0,
+  }))
+})
 const loading = ref(false)
 const error = ref('')
 let generation = 0
@@ -125,6 +131,23 @@ const attentionTotal = computed(() => Object.values(statistics.value?.attention 
         <header><div><span class="wave-overview__eyebrow">{{ t('activation.funnelEyebrow') }}</span><h2>{{ t('activation.funnelTitle') }}</h2><p>{{ t('activation.funnelHint') }}</p></div><SingleSelect v-model="accountType" :options="activationTypes" :label="t('auth.accountType')" :show-label="false" /></header>
         <ol><li v-for="row in activationRows" :key="row.key"><div><span>{{ t(`activation.stage_${row.key}`) }}</span><strong>{{ row.count }}</strong><small>{{ row.rate === null ? '—' : `${row.rate}%` }}</small></div><span class="activation-funnel__track"><i :style="{ width: `${row.width}%` }"></i></span></li></ol>
         <p class="activation-funnel__note">{{ t('activation.funnelNote') }}<template v-if="statistics.activation?.measuredSince"> · {{ formatDate(statistics.activation.measuredSince) }}</template></p>
+      </section>
+      <section class="profile-completion" aria-labelledby="profile-completion-title">
+        <header>
+          <span class="wave-overview__eyebrow">{{ t('activation.profileCompletionEyebrow') }}</span>
+          <h2 id="profile-completion-title">{{ t('activation.profileCompletionTitle') }}</h2>
+          <p>{{ t('activation.profileCompletionHint', { count: statistics.profileCompletion?.total || 0 }) }}</p>
+        </header>
+        <dl class="profile-completion__grid">
+          <div v-for="row in profileCompletionRows" :key="row.key">
+            <dt><component :is="row.icon" :size="18" aria-hidden="true" />{{ t(`activation.profileCompletion_${row.key}`) }}</dt>
+            <dd>
+              <div class="profile-completion__value"><strong>{{ row.count }}</strong><span>{{ row.rate }}%</span></div>
+              <div class="profile-completion__track" aria-hidden="true"><span :style="{ width: `${row.rate}%` }"></span></div>
+            </dd>
+          </div>
+        </dl>
+        <p class="profile-completion__note">{{ t('activation.profileCompletionNote') }}</p>
       </section>
       <div class="wave-overview__grid">
         <article class="wave-overview__card wave-overview__activity">

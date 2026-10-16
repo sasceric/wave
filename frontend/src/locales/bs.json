@@ -2683,6 +2683,13 @@
     "backToOverview": "Nazad na pregled",
     "loading": "Učitavamo tvoj pregled…",
     "creatorContinue": "Pronađi svoju sljedeću kampanju.",
-    "checkStatus": "Provjeri status"
+    "profileCompletionEyebrow": "Profil i ponuda",
+    "profileCompletionTitle": "Popunjenost profila kreatora",
+    "profileCompletionHint": "Ukupno računa kreatora: {count}. Trenutno stanje svih računa, nezavisno od odabranog perioda.",
+    "profileCompletion_networks": "Dodana mreža",
+    "profileCompletion_works": "Dodani radovi",
+    "profileCompletion_packages": "Dodani paketi",
+    "profileCompletion_complete": "Sva tri koraka",
+    "profileCompletionNote": "Najmanje jedna sačuvana stavka po koraku. Demo, službeni i obrisani računi nisu uključeni. Ovi podaci nisu uslov za odobrenje."
   }
 }

@@ -92,6 +92,43 @@ final class AccountActivationTest extends WebTestCase
         self::assertSame(1, $snapshot['activation']['counts']['first_action']);
         self::assertSame(5, (int) $this->em->getConnection()->fetchOne('SELECT COUNT(*) FROM account_milestone WHERE user_id = ?', [$creator->getId()]));
     }
+    public function testOptionalProfileCountsDescribeSavedContentAndExcludeDemoStaffAndDeletedAccounts(): void
+    {
+        $statistics = self::getContainer()->get(OverviewStatistics::class);
+        self::assertSame(['total' => 0, 'networks' => 0, 'works' => 0, 'packages' => 0, 'complete' => 0], $statistics->snapshot(7)['profileCompletion']);
+        $all = null;
+        foreach (['empty', 'networks', 'works', 'packages', 'all', 'demo', 'admin', 'moderator', 'deleted'] as $key) {
+            $user = $this->user('completion-'.$key, 'ROLE_CREATOR');
+            $filled = in_array($key, ['all', 'demo', 'admin', 'moderator', 'deleted'], true);
+            $profile = new Creator('completion-'.$key, 'Creator', 'Travel', 'Sarajevo', 'Bio',
+                $filled || $key === 'networks' ? [['platform' => 'Instagram', 'url' => 'https://instagram.com/example']] : [],
+                portfolio: $filled || $key === 'works' ? [['type' => 'image', 'title' => 'Sample', 'publicPermission' => false]] : [],
+                packages: $filled || $key === 'packages' ? [['title' => 'UGC video', 'priceMode' => 'agreement']] : [],
+                createdAt: new \DateTimeImmutable('-2 years'),
+            );
+            $user->setCreator($profile);
+            if ($key === 'demo') $user->markPresentationDemo('completion-test');
+            if ($key === 'admin') $user->setAdmin(true);
+            if ($key === 'moderator') $user->setModerator(true);
+            if ($key === 'deleted') $user->anonymize();
+            if ($key === 'all') {
+                $all = $profile;
+                $user->setApproved(false);
+                $user->setHideMyAccount(true);
+            }
+            $this->em->persist($user);
+        }
+        $this->company();
+        $this->em->persist(new Creator('ownerless-completion', 'Imported', 'Travel', '', '', [['platform' => 'Instagram']]));
+        $this->em->flush();
+        $expected = ['total' => 5, 'networks' => 2, 'works' => 2, 'packages' => 2, 'complete' => 1];
+        self::assertSame($expected, $statistics->snapshot(7)['profileCompletion']);
+        self::assertSame($expected, $statistics->snapshot(90, 'company')['profileCompletion']);
+        self::assertInstanceOf(Creator::class, $all);
+        $all->setPortfolio([]);
+        $this->em->flush();
+        self::assertSame(['total' => 5, 'networks' => 2, 'works' => 1, 'packages' => 2, 'complete' => 0], $statistics->snapshot(30)['profileCompletion']);
+    }
     private function creator(string $key = 'creator'): User
     {
         $user = $this->user($key, 'ROLE_CREATOR'); $user->setCreator(new Creator($key, 'Amina', 'Travel', 'Sarajevo', 'Bio', [])); $this->em->persist($user);

@@ -56,7 +56,7 @@ and [Google review snippets](https://developers.google.com/search/docs/appearanc
 ## German
 
 German is the seventh locale (`de`, language tag `de`, Open Graph `de_DE`).
-`frontend/src/locales/de.json` contains all 2,325 interface messages;
+`frontend/src/locales/de.json` contains all interface messages;
 `config/translations/de.json` contains 251 API and email messages. German is
 lazy-loaded, available in language selection, date pickers, admin email templates
 and catalog editing. Key/placeholder parity and message compilation are tested.

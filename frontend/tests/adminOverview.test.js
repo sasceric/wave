@@ -23,6 +23,12 @@ test('overview uses bounded periods and drops stale responses when changing peri
   await new Promise(resolve => setImmediate(resolve))
   assert.equal(state.statistics.value.days, 7)
   assert.equal(state.maximum.value, 4)
+  state.statistics.value.profileCompletion = { total: 5, networks: 2, works: 3, packages: 1, complete: 1 }
+  assert.deepEqual(Array.from(state.profileCompletionRows.value, row => [row.key, row.count, row.rate]), [
+    ['networks', 2, 40], ['works', 3, 60], ['packages', 1, 20], ['complete', 1, 20],
+  ])
+  state.statistics.value.profileCompletion = { total: 0 }
+  assert.equal(state.profileCompletionRows.value.every(row => row.count === 0 && row.rate === 0), true)
   state.days.value = 90
   await nextTick()
   currentUser.value = { id: 2, isAdmin: false }

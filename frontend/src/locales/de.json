@@ -2682,6 +2682,13 @@
     "backToOverview": "Zurück zur Übersicht",
     "loading": "Deine Übersicht wird geladen…",
     "creatorContinue": "Finde deine nächste Kampagne.",
-    "checkStatus": "Status prüfen"
+    "profileCompletionEyebrow": "Profil und Leistungen",
+    "profileCompletionTitle": "Vollständigkeit der Creator-Profile",
+    "profileCompletionHint": "Creator-Konten insgesamt: {count}. Aktueller Stand aller Konten, unabhängig vom gewählten Zeitraum.",
+    "profileCompletion_networks": "Netzwerk hinzugefügt",
+    "profileCompletion_works": "Arbeiten hinzugefügt",
+    "profileCompletion_packages": "Pakete hinzugefügt",
+    "profileCompletion_complete": "Alle drei Schritte",
+    "profileCompletionNote": "Mindestens ein gespeicherter Eintrag pro Schritt. Demo-, Mitarbeiter- und gelöschte Konten sind ausgeschlossen. Diese Angaben sind für die Freigabe nicht erforderlich."
   }
 }
