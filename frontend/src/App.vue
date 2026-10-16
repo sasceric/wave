@@ -21,6 +21,7 @@ import { mobileAccountSidebarOpen } from './composables/useMobileAccountSidebar'
 import { setLocale } from './i18n'
 import { apiGet, apiRequest } from './lib/api'
 import { startInboxSync } from './lib/inboxSync'
+import { startPwaUpdates } from './lib/pwaUpdates'
 import { updateAppBadge } from './lib/appBadge'
 import { notificationDestination, startNotificationNavigation } from './lib/notificationNavigation'
 import { updateSeo } from './lib/seo'
@@ -126,9 +127,7 @@ let notificationsRequestVersion = 0
 let unreadMessagesRequestVersion = 0
 const seenRealtimeNotificationIds = new Set()
 let installPrompt = null
-let updateServiceWorker = null
-let serviceWorkerRegistration = null
-let serviceWorkerUpdateTimer = null
+let pwaUpdates = null
 let previousScrollY = 0
 let scrollDirection = 0
 let scrollDirectionDistance = 0
@@ -252,23 +251,22 @@ onMounted(() => {
     }
   })
   if (!import.meta.env.DEV && 'serviceWorker' in navigator) {
-    updateServiceWorker = registerSW({
-      // Let the page's fonts and hero image finish before precaching the app.
-      immediate: false,
-      onNeedRefresh() {
-        updateAvailable.value = true
-        updateError.value = ''
+    pwaUpdates = startPwaUpdates({
+      registerSW,
+      buildId: import.meta.env.VITE_WAVE_BUILD_ID,
+      onAvailable(value) {
+        updateAvailable.value = value
+        if (!updateInProgress.value) updateError.value = ''
       },
-      onRegisteredSW(scriptUrl, registration) {
-        void scriptUrl
-        serviceWorkerRegistration = registration ?? null
+      onUpdating(value) {
+        updateInProgress.value = value
+        if (value) updateError.value = ''
       },
-      onRegisterError(cause) {
-        console.error('Unable to register the Wave service worker.', cause)
+      onError(cause) {
+        console.error('Unable to apply the available Wave update.', cause)
+        updateError.value = t('app.updateFailed')
       },
     })
-    document.addEventListener('visibilitychange', checkForWaveUpdate)
-    serviceWorkerUpdateTimer = window.setInterval(checkForWaveUpdate, 30 * 60 * 1000)
   }
   window.addEventListener('scroll', handleMobileScroll, { passive: true })
   window.addEventListener('resize', resetMobileChrome)
@@ -297,8 +295,7 @@ onBeforeUnmount(() => {
   window.removeEventListener('wave:safety-changed', safetyChanged)
   window.removeEventListener('wave:support-read', loadNotifications)
   window.removeEventListener('wave:open-notifications', openSidebarNotifications)
-  document.removeEventListener('visibilitychange', checkForWaveUpdate)
-  if (serviceWorkerUpdateTimer !== null) window.clearInterval(serviceWorkerUpdateTimer)
+  pwaUpdates?.stop()
   document.removeEventListener('pointerdown', closeMobileMenuOnOutsideClick)
   document.removeEventListener('pointerdown', closeAuthMenuOnOutsideClick)
   document.removeEventListener('pointerdown', closeNotificationsOnOutsideClick)
@@ -794,16 +791,6 @@ function onAppInstalled() {
   refreshAppBadge()
 }
 
-function checkForWaveUpdate() {
-  if (!serviceWorkerRegistration || document.visibilityState !== 'visible') {
-    return
-  }
-
-  void serviceWorkerRegistration.update().catch((cause) => {
-    console.error('Unable to check for a Wave update.', cause)
-  })
-}
-
 async function installWave() {
   if (!installPrompt) {
     installHelpVisible.value = !installHelpVisible.value
@@ -816,19 +803,7 @@ async function installWave() {
 }
 
 async function applyWaveUpdate() {
-  if (!updateServiceWorker || updateInProgress.value) {
-    return
-  }
-
-  updateInProgress.value = true
-  updateError.value = ''
-  try {
-    await updateServiceWorker(true)
-  } catch (cause) {
-    console.error('Unable to apply the available Wave update.', cause)
-    updateError.value = t('app.updateFailed')
-    updateInProgress.value = false
-  }
+  await pwaUpdates?.apply()
 }
 
 async function markAllNotificationsRead() {

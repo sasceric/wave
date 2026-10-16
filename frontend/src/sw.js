@@ -10,6 +10,9 @@ self.addEventListener('message', (event) => {
   if (event.data?.type === 'SKIP_WAITING') {
     self.skipWaiting()
   }
+  if (event.data?.type === 'WAVE_GET_BUILD') {
+    event.ports?.[0]?.postMessage({ type: 'WAVE_BUILD_ID', buildId: import.meta.env.VITE_WAVE_BUILD_ID })
+  }
 })
 
 self.addEventListener('push', (event) => {

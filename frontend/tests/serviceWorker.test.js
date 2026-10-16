@@ -24,7 +24,10 @@ async function worker({ windows = [], navigator = {}, session = { id: 1 }, sessi
     return { ok: true, json: async () => ({ data: session }) }
   }
   const context = vm.createContext({ self, URL, MessageChannel, setTimeout, clearTimeout, fetch, AbortSignal })
-  const module = new vm.SourceTextModule(await readFile(new URL('../src/sw.js', import.meta.url), 'utf8'), { context })
+  const module = new vm.SourceTextModule(await readFile(new URL('../src/sw.js', import.meta.url), 'utf8'), {
+    context,
+    initializeImportMeta(meta) { meta.env = { VITE_WAVE_BUILD_ID: 'test-build' } },
+  })
   await module.link(async (specifier) => {
     if (specifier === './lib/appBadge') {
       return new vm.SourceTextModule(await readFile(new URL('../src/lib/appBadge.js', import.meta.url), 'utf8'), { context })
@@ -51,8 +54,18 @@ async function worker({ windows = [], navigator = {}, session = { id: 1 }, sessi
     handlers.get('push')({ data: { json: () => legacy ? payload : { userId: 1, ...payload } }, waitUntil: (promise) => { completion = promise } })
     await completion
   }
-  return { opened, navigated, displayed, click, push, sessionReads }
+  return { opened, navigated, displayed, click, push, sessionReads, message: event => handlers.get('message')(event) }
 }
+
+test('the worker identifies its build over the requested channel without reading private account data', async () => {
+  const { message, sessionReads } = await worker()
+  const responses = []
+  message({ data: { type: 'WAVE_GET_BUILD' }, ports: [{ postMessage: value => responses.push(value) }] })
+  assert.equal(responses[0].type, 'WAVE_BUILD_ID')
+  assert.equal(responses[0].buildId, 'test-build')
+  assert.deepEqual(sessionReads, [])
+  message({ data: { type: 'WAVE_GET_BUILD' } })
+})
 
 test('push click focuses before navigating and preserves the intended conversation', async () => {
   const actions = []

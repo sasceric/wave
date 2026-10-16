@@ -306,6 +306,17 @@ Once those headers are correct, open the production site or installed PWA while
 online. The browser can then revalidate the worker and fetch the new app assets;
 clearing site storage should not be necessary.
 
+The app checks for updates on launch and when it returns to the foreground
+(`pageshow`, focus, visibility and reconnect), as well as every 30 minutes while
+visible. Each build shares an identifier between the page and service worker,
+so a suspended PWA can detect that another window has already activated a newer
+worker. The update notice does not reload open forms automatically. Accepting it
+waits for worker activation/control before reloading; failed or timed-out updates
+leave the current app usable and allow retry. Sessions and push subscriptions
+are preserved. An installed PWA still running code from before this fix may need
+to be fully closed from the device's app switcher and reopened online once after
+deployment to receive the improved update handling.
+
 After configuring the web server, verify that
 `https://wave.ba/api/health` returns JSON such as
 `{"status":"ok","service":"wave-api"}`. If `/index.php/api/health` works but

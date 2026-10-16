@@ -1,4 +1,5 @@
 import { rmSync } from 'node:fs'
+import { randomUUID } from 'node:crypto'
 import vue from '@vitejs/plugin-vue'
 import VueI18nPlugin from '@intlify/unplugin-vue-i18n/vite'
 import { fileURLToPath } from 'node:url'
@@ -8,6 +9,9 @@ import { defineConfig } from 'vite'
 const builtAssetsDirectory = fileURLToPath(new URL('../public/build/assets', import.meta.url))
 
 export default defineConfig({
+  define: {
+    'import.meta.env.VITE_WAVE_BUILD_ID': JSON.stringify(randomUUID()),
+  },
   plugins: [
     {
       name: 'clean-wave-assets',
