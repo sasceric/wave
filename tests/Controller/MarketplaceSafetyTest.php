@@ -284,6 +284,7 @@ final class MarketplaceSafetyTest extends WebTestCase
             $this->write('POST', '/api/me/offers/'.$offer['id'].'/respond', ['decision' => 'accept']);
             self::assertResponseIsSuccessful();
             self::assertSame(1, $this->payload()['data']['campaign']['hiredCount']);
+            self::assertSame(0, (int) static::getContainer()->get(EntityManagerInterface::class)->getConnection()->fetchOne('SELECT application_count FROM campaign WHERE id = ?', [$campaign->getId()]));
             $this->client->request('GET', '/api/me/conversations/'.$conversationId.'/messages');
             $messages = $this->payload()['data'];
             self::assertSame('hired', end($messages)['event']['type']);

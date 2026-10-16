@@ -78,6 +78,10 @@ class Campaign
     #[ORM\Column]
     private int $creatorCount;
 
+    // Updated atomically on submission, never overwritten by stale profile edits.
+    #[ORM\Column(options: ['default' => 0], updatable: false)]
+    private int $applicationCount = 0;
+
     #[ORM\Column]
     private DateTimeImmutable $closesAt;
 
@@ -226,6 +230,11 @@ class Campaign
     public function getCreatorCount(): int
     {
         return $this->creatorCount;
+    }
+
+    public function getApplicationCount(): int
+    {
+        return $this->applicationCount;
     }
 
     public function getClosesAt(): DateTimeImmutable

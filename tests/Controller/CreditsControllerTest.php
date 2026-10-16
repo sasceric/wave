@@ -191,6 +191,7 @@ final class CreditsControllerTest extends WebTestCase
         $this->request('POST', '/api/campaigns/credits-campaign/applications', ['message' => 'short']);
         self::assertResponseStatusCodeSame(400);
         self::assertSame(50, $this->credits()->account($this->user($this->creatorId))['balance']);
+        self::assertSame(0, (int) $this->db()->fetchOne("SELECT application_count FROM campaign WHERE slug = 'credits-campaign'"));
         $this->request('POST', '/api/campaigns/credits-campaign/applications', ['message' => 'I would like to apply to this campaign.']);
         self::assertResponseStatusCodeSame(201);
         self::assertSame(40, $this->credits()->account($this->user($this->creatorId))['balance']);
@@ -198,6 +199,7 @@ final class CreditsControllerTest extends WebTestCase
         self::assertResponseStatusCodeSame(409);
         self::assertSame(40, $this->credits()->account($this->user($this->creatorId))['balance']);
         self::assertSame(1, (int) $this->db()->fetchOne('SELECT COUNT(*) FROM campaign_application'));
+        self::assertSame(1, (int) $this->db()->fetchOne("SELECT application_count FROM campaign WHERE slug = 'credits-campaign'"));
     }
 
     public function testPublishingChargesOnlyNewCampaignAndEditingIsFree(): void

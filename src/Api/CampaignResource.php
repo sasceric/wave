@@ -32,6 +32,7 @@ final class CampaignResource
             'categoryLabels' => array_map(static fn (string $category): string => $categoryLabels[$category] ?? $category, $campaign->getCategories()),
             'creatorCount' => $campaign->getCreatorCount(),
             'hiredCount' => $hiredCount,
+            'applicationRange' => CampaignApplicationRanges::fromCount($campaign->getApplicationCount()),
             'closesAt' => $campaign->getClosesAt()->format(DATE_ATOM),
             'publishedAt' => $campaign->getPublishedAt()->format(DATE_ATOM),
             'status' => $campaign->getStatus(),

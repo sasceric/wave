@@ -47,6 +47,7 @@ final class MarketplaceWorkflowController
         NotificationDelivery $notificationDelivery,
         AccountEmailSender $accountEmailSender,
         \App\Credits\CreditService $credits,
+        \App\Service\CampaignApplicationCounter $applicationCounter,
     ): JsonResponse {
         $locale = LocaleContext::fromRequest($request);
         if ($locale === null) {
@@ -108,11 +109,12 @@ final class MarketplaceWorkflowController
             $entityManager->persist($notification);
         }
         try {
-            $credits->spend($user, 'application', function () use ($entityManager, $application, $campaign): array {
+            $credits->spend($user, 'application', function () use ($entityManager, $application, $campaign, $applicationCounter): array {
                 if ($entityManager->getRepository(Application::class)->findOneBy(['campaign' => $campaign, 'creator' => $application->getCreator()]) instanceof Application) {
                     throw new \App\Credits\CreditException('already_applied', 409);
                 }
                 $entityManager->flush();
+                $applicationCounter->increment($campaign);
 
                 return ['id' => $application->getId(), 'title' => $campaign->getTitle()];
             });

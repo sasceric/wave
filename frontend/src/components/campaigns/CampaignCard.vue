@@ -1,6 +1,7 @@
 <script setup>
 import PresentationDemoBadge from '../shared/PresentationDemoBadge.vue'
 import CampaignHiringProgress from './CampaignHiringProgress.vue'
+import CampaignApplicationRange from './CampaignApplicationRange.vue'
 import '../../scss/components/campaigns/CampaignCard.scss'
 import { computed, ref, watch } from 'vue'
 import { ArrowRight, Bookmark, Camera, CirclePlay, MapPin, Megaphone, Music2 } from '@lucide/vue'
@@ -159,6 +160,10 @@ async function confirmRemoveBookmark() {
 
     <div class="campaign-card__footer">
       <span><CampaignHiringProgress :campaign="campaign" /> · {{ t('campaignCard.closes', { date: formatDate(campaign.closesAt) }) }}</span>
+      <CampaignApplicationRange :range="campaign.applicationRange" />
+      <p v-if="bookmarkError" class="campaign-card__bookmark-error" role="alert">
+        {{ bookmarkError }}
+      </p>
       <RouterLink
         :to="{ name: 'campaign-detail', params: { slug: campaign.slug } }"
         class="campaign-card__cta button button--dark"
@@ -167,9 +172,6 @@ async function confirmRemoveBookmark() {
         <ArrowRight :size="16" aria-hidden="true" />
       </RouterLink>
     </div>
-    <p v-if="bookmarkError" class="campaign-card__bookmark-error" role="alert">
-      {{ bookmarkError }}
-    </p>
     <ConfirmationModal
       :open="removeBookmarkConfirmationOpen"
       :title="t('campaignCard.removeBookmarkTitle')"

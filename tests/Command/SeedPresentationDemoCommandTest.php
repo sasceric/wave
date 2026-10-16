@@ -50,6 +50,7 @@ final class SeedPresentationDemoCommandTest extends KernelTestCase
         self::assertSame(3, $em->getRepository(User::class)->count([]));
         self::assertSame(6, $em->getRepository(Campaign::class)->count([]));
         self::assertSame(4, $em->getRepository(CampaignApplication::class)->count([]));
+        self::assertSame(4, (int) $em->getConnection()->fetchOne('SELECT SUM(application_count) FROM campaign'));
         self::assertSame(8, $em->getRepository(CampaignReview::class)->count([]));
         self::assertSame(12, $em->getRepository(CampaignMessage::class)->count([]));
         $user = $em->getRepository(User::class)->findOneBy(['presentationDemoKey' => 'wave-showcase-amina']);
@@ -86,6 +87,7 @@ final class SeedPresentationDemoCommandTest extends KernelTestCase
         self::assertTrue($again['amina']['hidden']);
         self::assertSame('/kreatori/amina-demo-promijenjeno', $again['amina']['path']);
         self::assertSame($hash, $user->getPassword());
+        self::assertSame(4, (int) $em->getConnection()->fetchOne('SELECT SUM(application_count) FROM campaign'));
         self::assertSame(6, $em->getRepository(Campaign::class)->count([]));
         self::assertSame(8, $em->getRepository(CampaignReview::class)->count([]));
         self::assertSame(12, $em->getRepository(CampaignMessage::class)->count([]));

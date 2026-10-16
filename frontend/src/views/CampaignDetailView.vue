@@ -6,6 +6,7 @@ import MarketplaceSafetyActions from '../components/shared/MarketplaceSafetyActi
 import CreditActionNotice from '../components/account/CreditActionNotice.vue'
 import { refreshCredits } from '../composables/useCredits'
 import CampaignHiringProgress from '../components/campaigns/CampaignHiringProgress.vue'
+import CampaignApplicationRange from '../components/campaigns/CampaignApplicationRange.vue'
 import { campaignPlace } from '../lib/marketplace'
 import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
@@ -91,10 +92,14 @@ async function applyToCampaign() {
   applying.value = true
   applyError.value = ''
   try {
-    await apiRequest(`/campaigns/${encodeURIComponent(route.params.slug)}/applications`, {
+    const response = await apiRequest(`/campaigns/${encodeURIComponent(route.params.slug)}/applications`, {
       method: 'POST',
       body: { message: applicationMessage.value },
     })
+    const updatedCampaign = response?.data?.campaign
+    if (updatedCampaign?.applicationRange && updatedCampaign.slug === campaign.value?.slug) {
+      campaign.value.applicationRange = updatedCampaign.applicationRange
+    }
     refreshCredits().catch(() => {})
     applicationSent.value = true
     applicationMessage.value = ''
@@ -206,6 +211,9 @@ onMounted(loadCampaign)
               <span>{{ t('campaignDetail.closes') }}</span>
               <strong>{{ formatDate(campaign.closesAt) }}</strong>
             </div>
+            <p v-if="campaign.applicationRange" class="brief-application-card__proposals">
+              <CampaignApplicationRange :range="campaign.applicationRange" />
+            </p>
 
             <div v-if="campaign.status === 'cancelled'" class="brief-notice" role="status">{{ t('account.cancelled') }}</div>
             <div v-else-if="campaign.readOnly" class="brief-notice" role="status">{{ t('campaignChat.deletedAccountNotice') }}</div>

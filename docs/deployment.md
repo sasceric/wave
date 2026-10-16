@@ -9,6 +9,16 @@ backups, supervised consumers and scheduled-task setup, see
 [server services, jobs and queues](server-operations.md). The deploy workflow
 does not provision those host services or schedules.
 
+## Campaign application totals
+
+Migration `Version20261016150000` adds `campaign.application_count` and initializes
+it from existing genuine submissions. The deploy workflow runs this migration
+before resuming the app/workers. New applications increment it transactionally;
+public cards/details read the saved total and expose only the agreed ranges.
+Invitation-based hires do not increase it. No scheduled recount or new service
+is required. For manual deployment, run the normal Doctrine migrations before
+serving the updated backend.
+
 ## Validation workflow
 
 The separate **Validate** workflow uses independent backend and frontend jobs.

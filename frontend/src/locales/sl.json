@@ -750,6 +750,16 @@
     "loading": "Iščemo dober brief …",
     "empty": "Trenutno ni ustreznih briefov. Kmalu znova preveri."
   },
+  "campaignApplications": {
+    "label": "Prijave",
+    "ranges": {
+      "fewerThan5": "Manj kot 5",
+      "upTo10": "Do 10",
+      "10to20": "10–20",
+      "20to50": "20–50",
+      "50plus": "50+"
+    }
+  },
   "campaignCard": {
     "featured": "Izpostavljeno",
     "verified": "Preverjena znamka",

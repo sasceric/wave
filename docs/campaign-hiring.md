@@ -1,5 +1,25 @@
 # Campaign invitations and confirmed hiring
 
+Public campaign cards (including home, company profiles and saved campaigns) and
+campaign details show proposal ranges: fewer than 5, up to 10, 10–20, 20–50 and
+50+. Boundaries are 0–4, 5–10, 11–20, 21–50 and 51+. The API only exposes a range
+key, never an exact public application count. `campaign.application_count` stores the
+full total, initialized to zero and incremented atomically by one in the same
+transaction as each successful submission. Public resources derive their range from
+this column; no application-count query or extra browser request runs on page loads.
+Rejected/canceled applications remain historical submissions. Invitations and offer
+applications created from invitations do not increment it. A declined invitation
+followed by a voluntary application counts normally. Duplicate or failed submissions
+cannot increase the total. The showcase upsert increments only for newly inserted
+applications. The column is excluded from ORM updates to prevent stale campaign
+edits overwriting concurrent increments.
+
+Migration `Version20261016150000` adds the column and backfills existing genuine
+applications once (including rejected applications and excluding invitation-based
+hires). Run migrations during deployment before serving the new backend. The owner's
+full applicant list is unchanged; a successful application response also refreshes the
+displayed range.
+
 Company campaign creator lists combine applications and invitations. Invitations
 without applications use virtual rows and show Invited, with the accepted invitation's
 conversation link. Once an offer creates an application, its row replaces the invitation

@@ -40,6 +40,7 @@ final class PresentationDemoSeeder
         private readonly UserPasswordHasherInterface $hasher,
         private readonly PublicUrlSlugs $slugs,
         private readonly MediaStorage $storage,
+        private readonly \App\Service\CampaignApplicationCounter $applicationCounter,
         #[Autowire('%kernel.project_dir%')] private readonly string $projectDir,
     ) {}
 
@@ -181,7 +182,8 @@ final class PresentationDemoSeeder
             $campaigns[$key] = $campaign;
             if ($amount === null) continue;
             $application = $this->em->getRepository(Application::class)->findOneBy(['campaign' => $campaign, 'creator' => $creator]);
-            if (!$application) {
+            $newApplication = !$application;
+            if ($newApplication) {
                 $application = new Application($campaign, $creator, 'Voljela bih pripremiti prirodan sadržaj u svom stilu. Predlažem kratak video i fotografije prema dogovorenom zadatku. Demo prijava.');
                 $offer = new Offer($application, $amount, 'Dogovoreni demo iznos za navedene isporuke.');
                 $offer->respond('accepted');
@@ -196,6 +198,7 @@ final class PresentationDemoSeeder
                 }
             }
             $this->em->flush();
+            if ($newApplication) $this->applicationCounter->increment($campaign);
             foreach ([[$owner, $users['amina'], $creatorScore, 'Odlična komunikacija i prirodan sadržaj, isporučen prema dogovoru. Izmišljena recenzija za prikaz profila.'], [$users['amina'], $owner, $companyScore, 'Jasan zadatak i ugodna saradnja od prve ideje do pregleda materijala. Izmišljena recenzija za prikaz profila.']] as [$author, $recipient, $score, $comment]) {
                 if (!$this->em->getRepository(CampaignReview::class)->findOneBy(['application' => $application, 'author' => $author])) {
                     $this->em->persist(new CampaignReview($application, $author, $recipient, $score, $comment));
