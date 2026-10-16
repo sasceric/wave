@@ -220,7 +220,19 @@
     gap: 10px;
     padding: 12px 10px 10px;
     color: var(--muted-text);
-    font-size: 10px;
+    font-size: 12px;
+  }
+
+  &__meta {
+    display: grid;
+    gap: 4px;
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+  }
+
+  &__meta .campaign-application-range {
+    color: var(--forest);
+    font-weight: 500;
   }
 
   &__cta {

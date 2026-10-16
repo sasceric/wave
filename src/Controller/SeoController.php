@@ -21,7 +21,7 @@ final class SeoController
         $content .= '- [Creators]('.$origin->url('/kreatori')."): Discover public creator profiles, portfolios and collaboration packages.\n";
         $content .= '- [Companies]('.$origin->url('/kompanije')."): Discover public company profiles.\n";
         $content .= '- [Campaigns]('.$origin->url('/kampanje')."): Browse open campaign briefs, budgets and requirements.\n";
-        $content .= '- [Sitemap]('.$origin->url('/sitemap.xml')."): Localized public pages in Bosnian, Croatian, Serbian, Slovenian, English and Montenegrin.\n\n";
+        $content .= '- [Sitemap]('.$origin->url('/sitemap.xml')."): Localized public pages in Bosnian, Croatian, Serbian, Slovenian, English, Montenegrin and German.\n\n";
         $content .= "## Account actions\n\nApplications, invitations, package orders and messaging require a signed-in, verified and approved account. Private account and chat data are not public resources. Wave does not expose an autonomous agent or MCP service.\n";
 
         return new Response($content, headers: ['Content-Type' => 'text/plain; charset=UTF-8', 'Cache-Control' => 'public, max-age=3600']);

@@ -74,9 +74,9 @@ Cloudflare location headers are accepted only from allowlisted edge peers; see
 | Images, thumbnails and indexing | `MediaController.php`, `src/Service/MediaStorage.php`, `ImageUploadProcessor.php`, `MediaThumbnails.php`, `GenerateMediaThumbnailsCommand.php`; `docs/media-thumbnails.md` |
 | Visual styles | `frontend/src/scss/` mirrors Vue component/view folders; `frontend/src/scss/global.scss` holds foundations; `docs/frontend-styles.md` |
 | Localized navigation | `config/localized_routes.json`, `frontend/src/routePaths.js`, `frontend/src/router.js` |
-| Translations | `frontend/src/locales/`, `src/Localization/` |
+| Translations | `frontend/src/locales/`, `src/Localization/`, `config/translations/de.json`; [German localization](structured-data.md#german) |
 | Country SEO and guides | `RegionalSeoContent.php`, `CountryCreatorsView.vue`, `SeoGuidesView.vue`, `config/seo_countries.json`; `docs/seo-keyword-plan.md` |
-| SEO and server-rendered metadata | `src/Controller/FrontendController.php`, `SeoController.php`, `src/Service/SeoMetadataProvider.php`, `SitemapGenerator.php`, `frontend/src/lib/seo.js` |
+| SEO and server-rendered metadata | `src/Controller/FrontendController.php`, `SeoController.php`, `src/Service/SeoMetadataProvider.php`, `ProfileStructuredData.php`, `SitemapGenerator.php`, `frontend/src/lib/seo.js`; [schema coverage](structured-data.md) |
 | Service worker and app shell | `frontend/src/sw.js`, `frontend/vite.config.js`, `frontend/src/App.vue` |
 | Tests | `tests/Controller/` plus API, OAuth, service, command, and migration tests |
 | Deployment and server jobs | `.github/workflows/deploy-production.yml`, `docs/deployment.md`, `docs/server-operations.md`, `docs/mercure-server-setup.md` |
@@ -122,7 +122,7 @@ Controller filenames in this table are under `src/Controller/Api/` unless a full
   needed. Validate native gestures on installed iOS/Android apps before release.
 - The full-screen startup splash lives in `frontend/index.html` with critical SCSS in `frontend/src/scss/startup.scss`, so it displays before Vue loads. `main.js` restores the session once and removes the splash after the initial route and session settle, with a ten-second fallback for stalled requests. Later navigation, page requests, and chat history use their existing skeletons; do not wait for images, realtime connections, or service-worker updates to dismiss startup.
 - Canonical prefixes are configured separately in `config/localized_route_prefixes.json`: `/rs`, `/me` and `/si` permanently replace `/sr`, `/cnr` and `/sl`; locale identifiers do not change.
-- Supported frontend locales are `bs` (default), `hr`, `sr` (Latin), `sl`, `en`, and `cnr` (Montenegrin). Older documentation lists only five; the current `i18n.js` loads all six. Keep new interface copy in the catalogs and update localized routes consistently when adding pages.
+- Supported locales are `bs` (default), `hr`, `sr` (Latin), `sl`, `en`, `cnr` (Montenegrin), and `de` (German). The current `i18n.js` loads all seven. Keep new interface copy in the catalogs and update localized routes consistently when adding pages. Historical six-locale snapshots remain unchanged; German standard area labels are added by `Version20261016160000`.
 - Reuse existing UI components and design styles before adding new patterns.
 - Preserve the exact brand palette and fonts documented in `docs/frontend-styles.md`;
   performance and SEO changes must not replace them.

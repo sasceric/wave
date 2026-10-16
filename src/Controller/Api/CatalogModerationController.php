@@ -116,7 +116,7 @@ final class CatalogModerationController
             return new JsonResponse(['error' => ApiMessages::get('invalid_request', $locale)], 400);
         }
 
-        $category->update($labels, $position, $active);
+        $category->update($labels + $category->getLabels(), $position, $active);
         $entityManager->flush();
 
         return new JsonResponse(['data' => self::categoryResource($category)]);
@@ -189,7 +189,7 @@ final class CatalogModerationController
             return new JsonResponse(['error' => ApiMessages::get('invalid_request', $locale)], 400);
         }
 
-        $faq->update($questions, $answers, $position, $active);
+        $faq->update($questions + $faq->getQuestions(), $answers + $faq->getAnswers(), $position, $active);
         $entityManager->flush();
 
         return new JsonResponse(['data' => self::faqResource($faq)]);
@@ -204,6 +204,7 @@ final class CatalogModerationController
         $localized = [];
         foreach (LocaleContext::SUPPORTED as $locale) {
             $text = $value[$locale] ?? null;
+            if ($locale === 'de' && ($text === null || $text === '')) continue;
             if (!is_string($text)) {
                 return null;
             }

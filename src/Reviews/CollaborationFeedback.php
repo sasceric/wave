@@ -119,10 +119,10 @@ final class CollaborationFeedback
         ];
     }
 
-    public function publicReviews(User $user, string $locale, int $before = 0, int $page = 1): array
+    public function publicReviews(User $user, string $locale, int $before = 0, int $page = 1, ?array $summary = null, bool $forSchema = false): array
     {
         $db = $this->entityManager->getConnection();
-        $summary = $this->summary($user);
+        $summary ??= $this->summary($user);
         $page = min(max(1, $page), max(1, (int) ceil($summary['reviewCount'] / 10)));
         $ids = $db->fetchFirstColumn('SELECT r.id FROM campaign_review r
             JOIN campaign_application a ON a.id = r.application_id JOIN campaign c ON c.id = a.campaign_id
@@ -137,7 +137,14 @@ final class CollaborationFeedback
             ->join('r.application', 'a')->join('a.campaign', 'c')
             ->where('r.id IN (:ids)')->setParameter('ids', $ids)->orderBy('r.id', 'DESC')->getQuery()->getResult();
 
-        return ['data' => array_map(fn (CampaignReview $review): array => $this->resource($review, $locale), $reviews),
+        $hasDemoReviews = $user->isPresentationDemo();
+        if ($forSchema && !$hasDemoReviews && $summary['reviewCount'] > 0) {
+            $hasDemoReviews = (bool) $db->fetchOne('SELECT 1 FROM campaign_review r JOIN wave_user author ON author.id = r.author_id
+                JOIN campaign_application a ON a.id = r.application_id JOIN campaign c ON c.id = a.campaign_id
+                JOIN campaign_offer o ON o.application_id = a.id WHERE r.recipient_id = :user AND author.presentation_demo_key IS NOT NULL AND '.$this->publicCondition().' LIMIT 1',
+                ['user' => $user->getId(), 'cutoff' => (new DateTimeImmutable('-14 days'))->format('Y-m-d H:i:s')]);
+        }
+        return ($forSchema ? ['hasDemoReviews' => $hasDemoReviews] : []) + ['data' => array_map(fn (CampaignReview $review): array => $this->resource($review, $locale), $reviews),
             'summary' => $summary, 'meta' => ['page' => $page, 'limit' => 10, 'total' => $summary['reviewCount'], 'hasMore' => $hasMore, 'nextCursor' => $hasMore ? (int) end($ids) : null]];
     }
 

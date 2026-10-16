@@ -16,12 +16,14 @@ final class SeoMetadataProvider
     private array $translations = [];
     private array $catalogs = [];
     private array $routeTitles;
+    private array $breadcrumbParents;
 
     public function __construct(
         private readonly EntityManagerInterface $entityManager,
         private readonly LocalizedRouteMap $routeMap,
         private readonly SiteOrigin $siteOrigin,
         private readonly RegionalSeoContent $regionalContent,
+        private readonly ProfileStructuredData $profileSchema,
         #[Autowire('%kernel.project_dir%')] string $projectDir,
     ) {
         $titles = file_get_contents($projectDir.'/config/seo_route_titles.json');
@@ -29,6 +31,7 @@ final class SeoMetadataProvider
             throw new RuntimeException('Unable to read route title configuration.');
         }
         $this->routeTitles = json_decode($titles, true, flags: JSON_THROW_ON_ERROR);
+        $this->breadcrumbParents = json_decode((string) file_get_contents($projectDir.'/config/seo_breadcrumbs.json'), true, flags: JSON_THROW_ON_ERROR);
         foreach ($this->routeMap->locales() as $locale) {
             $contents = file_get_contents($projectDir.'/frontend/src/locales/'.$locale.'.json');
             if ($contents === false) {
@@ -144,6 +147,9 @@ final class SeoMetadataProvider
             $description = $copy['intro'] ?? $guideCopy['intro'];
             if ($copy !== null) {
                 $entitySchema = ['@type' => 'Article', 'headline' => $copy['title'], 'description' => $copy['intro'], 'author' => ['@type' => 'Organization', 'name' => 'Wave'], 'publisher' => ['@id' => $this->siteOrigin->url('/').'#organization']];
+            } else {
+                $entitySchema = ['@type' => 'ItemList', 'itemListElement' => []];
+                foreach ($guideCopy['guides'] as $slug => $guide) $entitySchema['itemListElement'][] = ['@type' => 'ListItem', 'position' => count($entitySchema['itemListElement']) + 1, 'name' => $guide['title'], 'url' => $this->siteOrigin->url($this->routeMap->localizedPath($forCreators ? 'creator-guide' : 'seo-guide', $locale, ['guide' => $slug]))];
             }
             $contentHtml = $this->regionalContent->html($name, $locale, $params, $this->routeMap);
         }
@@ -171,7 +177,7 @@ final class SeoMetadataProvider
                 $description = $this->plainDescription($translation['bio'] ?? $creator->getBio(), $description);
                 $image = $this->absoluteUrl($creator->getAvatarMedia()?->getUrl() ?? $creator->getAvatarUrl())
                     ?? $this->absoluteUrl('/images/logo-icon.svg');
-                $entitySchema = $this->creatorSchema($creator, $locale, $params, $image);
+                $entitySchema = $this->profileSchema->creator($creator, $locale);
             }
         } elseif ($name === 'company-profile') {
             $company = $this->entityManager->getRepository(Company::class)->createQueryBuilder('company')
@@ -193,10 +199,10 @@ final class SeoMetadataProvider
                     '{name} — Wave',
                     ['{name}' => $company->getName()],
                 );
-                $description = $translation['industry'] ?? $company->getIndustry();
+                $description = $this->plainDescription($company->getAbout() ?? '', $translation['industry'] ?? $company->getIndustry());
                 $image = $this->absoluteUrl($company->getLogoMedia()?->getUrl() ?? $company->getLogoUrl())
                     ?? $this->absoluteUrl('/images/logo-icon.svg');
-                $entitySchema = $this->companySchema($company, $locale, $params, $image);
+                $entitySchema = $this->profileSchema->company($company, $locale);
             }
         } elseif ($name === 'campaign-detail') {
             $campaign = $this->entityManager->getRepository(Campaign::class)->createQueryBuilder('campaign')
@@ -321,7 +327,7 @@ final class SeoMetadataProvider
                 '@type' => 'ContactPoint',
                 'contactType' => 'customer support',
                 'email' => 'info@wave.ba',
-                'availableLanguage' => ['bs', 'hr', 'sr-Latn', 'sr-Latn-ME', 'sl', 'en'],
+                'availableLanguage' => ['bs', 'hr', 'sr-Latn', 'sr-Latn-ME', 'sl', 'en', 'de'],
             ],
         ];
         $page = [
@@ -329,6 +335,7 @@ final class SeoMetadataProvider
             '@type' => match ($routeName) {
                 'creators', 'companies', 'campaigns', 'country-creators', 'seo-guides', 'creator-guides' => 'CollectionPage',
                 'creator-profile', 'company-profile' => 'ProfilePage',
+                'support' => 'ContactPage',
                 default => 'WebPage',
             },
             '@id' => $canonicalUrl.'#webpage',
@@ -341,52 +348,26 @@ final class SeoMetadataProvider
         if ($entitySchema !== null) {
             $page['mainEntity'] = $entitySchema;
         }
-
-        return [$website, $organization, $page];
-    }
-
-    private function creatorSchema(Creator $creator, string $locale, array $params, ?string $image): array
-    {
-        $schema = [
-            '@type' => 'Person',
-            '@id' => $this->siteOrigin->url($this->routeMap->localizedPath('creator-profile', $locale, $params)).'#person',
-            'name' => $creator->getDisplayName(),
-            'url' => $this->siteOrigin->url($this->routeMap->localizedPath('creator-profile', $locale, $params)),
-            'description' => $creator->getTranslations()[$locale]['bio'] ?? $creator->getBio(),
-            'address' => ['@type' => 'PostalAddress', 'addressLocality' => $creator->getCity()],
-            'knowsAbout' => $creator->getCategories(),
-        ];
-        if ($image !== null) {
-            $schema['image'] = $image;
+        if ($routeName === 'home') {
+            $faq = $this->catalogs[$locale]['siteFaq'];
+            $page['hasPart'] = ['@type' => 'FAQPage', '@id' => $canonicalUrl.'#faq', 'mainEntity' => array_map(static fn (int $index): array => ['@type' => 'Question', 'name' => $faq['question'.$index], 'acceptedAnswer' => ['@type' => 'Answer', 'text' => $faq['answer'.$index]]], range(1, 5))];
         }
-        $sameAs = [];
-        foreach ($creator->getSocialProfiles() as $profile) {
-            $url = $profile['url'] ?? null;
-            if (is_string($url) && filter_var($url, FILTER_VALIDATE_URL) !== false) {
-                $sameAs[] = $url;
+
+        $nodes = [];
+        if ($routeName !== 'home') {
+            $crumbs = [['@type' => 'ListItem', 'position' => 1, 'name' => $this->catalogs[$locale]['app']['home'], 'item' => $this->siteOrigin->url($this->routeMap->localizedPath('home', $locale))]];
+            $parent = $this->breadcrumbParents[$routeName] ?? null;
+            if ($parent !== null) {
+                $label = $this->catalogs[$locale];
+                foreach (explode('.', $parent['label']) as $key) $label = $label[$key];
+                $crumbs[] = ['@type' => 'ListItem', 'position' => count($crumbs) + 1, 'name' => $label, 'item' => $this->siteOrigin->url($this->routeMap->localizedPath($parent['route'], $locale))];
             }
+            $crumbs[] = ['@type' => 'ListItem', 'position' => count($crumbs) + 1, 'name' => preg_replace('/\s*(?:[|—]\s*Wave)\s*$/u', '', $title), 'item' => $canonicalUrl];
+            $breadcrumb = ['@context' => 'https://schema.org', '@type' => 'BreadcrumbList', '@id' => $canonicalUrl.'#breadcrumbs', 'itemListElement' => $crumbs];
+            $page['breadcrumb'] = ['@id' => $breadcrumb['@id']];
+            $nodes[] = $breadcrumb;
         }
-        if ($sameAs !== []) {
-            $schema['sameAs'] = array_values(array_unique($sameAs));
-        }
-
-        return $schema;
-    }
-
-    private function companySchema(Company $company, string $locale, array $params, ?string $image): array
-    {
-        $schema = [
-            '@type' => 'Organization',
-            '@id' => $this->siteOrigin->url($this->routeMap->localizedPath('company-profile', $locale, $params)).'#organization',
-            'name' => $company->getName(),
-            'url' => $this->siteOrigin->url($this->routeMap->localizedPath('company-profile', $locale, $params)),
-            'industry' => $company->getTranslations()[$locale]['industry'] ?? $company->getIndustry(),
-        ];
-        if ($image !== null) {
-            $schema['logo'] = $image;
-        }
-
-        return $schema;
+        return [$website, $organization, $page, ...$nodes];
     }
 
     private function campaignSchema(Campaign $campaign, string $locale, array $params): array

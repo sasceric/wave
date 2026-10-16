@@ -4,7 +4,7 @@ import { useI18n } from 'vue-i18n'
 import { VueDatePicker } from '@vuepic/vue-datepicker'
 import '@vuepic/vue-datepicker/dist/main.css'
 import { format } from 'date-fns'
-import { bs, enUS, hr, sl, srLatn } from 'date-fns/locale'
+import { bs, de, enUS, hr, sl, srLatn } from 'date-fns/locale'
 import { parseDateOnly } from '../../lib/datePicker'
 
 const props = defineProps({
@@ -20,7 +20,7 @@ const props = defineProps({
 const emit = defineEmits(['update:modelValue'])
 const { locale, t } = useI18n()
 const id = `date-picker-${useId()}`
-const dateLocale = computed(() => ({ bs, hr, sl, sr: srLatn, cnr: srLatn, en: enUS })[locale.value] || bs)
+const dateLocale = computed(() => ({ bs, de, hr, sl, sr: srLatn, cnr: srLatn, en: enUS })[locale.value] || bs)
 const yearRange = computed(() => [
   parseDateOnly(props.min)?.getFullYear() || 1900,
   parseDateOnly(props.max)?.getFullYear() || new Date().getFullYear() + 10,

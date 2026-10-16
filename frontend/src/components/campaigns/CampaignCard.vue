@@ -159,8 +159,10 @@ async function confirmRemoveBookmark() {
     </div>
 
     <div class="campaign-card__footer">
-      <span><CampaignHiringProgress :campaign="campaign" /> · {{ t('campaignCard.closes', { date: formatDate(campaign.closesAt) }) }}</span>
-      <CampaignApplicationRange :range="campaign.applicationRange" />
+      <div class="campaign-card__meta">
+        <span><CampaignHiringProgress :campaign="campaign" /> · {{ t('campaignCard.closes', { date: formatDate(campaign.closesAt) }) }}</span>
+        <CampaignApplicationRange :range="campaign.applicationRange" />
+      </div>
       <p v-if="bookmarkError" class="campaign-card__bookmark-error" role="alert">
         {{ bookmarkError }}
       </p>

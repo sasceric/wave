@@ -39,7 +39,7 @@ final class CreatorController
         return new JsonResponse(['recorded' => true]);
     }
 
-    public function __construct(private readonly CollaborationFeedback $feedback, private readonly \App\Safety\BlockPolicy $blocks)
+    public function __construct(private readonly CollaborationFeedback $feedback, private readonly \App\Safety\BlockPolicy $blocks, private readonly \App\Service\ProfileStructuredData $profileSchema)
     {
     }
 
@@ -278,6 +278,7 @@ final class CreatorController
         }
         $categoryLabels = MarketplaceCategoryLabels::forLocale($entityManager, $locale);
 
+        $rating = $this->feedback->summary($owner);
         return new JsonResponse([
             'data' => CreatorResource::fromEntity(
                 $creator,
@@ -285,7 +286,7 @@ final class CreatorController
                 $categoryLabels[$creator->getCategory()] ?? null,
                 $categoryLabels,
                 public: true,
-            ) + ['rating' => $this->feedback->summary($owner)],
+            ) + ['rating' => $rating, 'indexable' => $owner === null || ($owner->isApproved() && !$owner->isHideMyAccount() && !$owner->isDeleted()), 'structuredData' => str_ends_with($request->getPathInfo(), '/view') ? null : $this->profileSchema->creator($creator, $locale, $rating)],
         ]);
     }
 }

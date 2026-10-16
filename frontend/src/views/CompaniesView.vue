@@ -1,4 +1,6 @@
 <script setup>
+import { updateSeo, getSeoOrigin } from '../lib/seo'
+import { localizedPath } from '../routePaths'
 import { companyTypeOptions } from '../lib/companyTypes'
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { LayoutGrid, List, Sparkles } from '@lucide/vue'
@@ -88,6 +90,12 @@ function clearFilters() {
   verified.value = false
   featured.value = false
 }
+watch([companies, locale], () => {
+  if (route.meta.routeName !== 'companies') return
+  updateSeo({ route, locale: locale.value, title: t('seo.companiesTitle'), description: t('seo.companiesDescription'),
+    mainEntity: { '@type': 'ItemList', numberOfItems: companies.value.length, itemListElement: companies.value.map((item, index) => ({ '@type': 'ListItem', position: index + 1, name: item.name, url: new URL(localizedPath('company-profile', locale.value, { slug: item.slug }), getSeoOrigin()).href })) },
+  })
+}, { flush: 'post' })
 </script>
 
 <template>

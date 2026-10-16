@@ -1,4 +1,5 @@
 <script setup>
+import { updateProfileReviewSchema } from '../../lib/seo'
 import PresentationDemoBadge from '../shared/PresentationDemoBadge.vue'
 import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
 import { Star } from '@lucide/vue'
@@ -31,6 +32,8 @@ async function load() {
     summary.value = result.summary
     total.value = result.meta.total ?? result.summary.reviewCount ?? 0
     page.value = result.meta.page ?? page.value
+    await nextTick()
+    if (current === generation) updateProfileReviewSchema(props.kind, props.slug, rows.value)
   } catch (cause) { if (current === generation) error.value = cause.message }
   finally { if (current === generation) loading.value = false }
 }
@@ -73,7 +76,7 @@ onBeforeUnmount(() => { ++generation })
       <p v-else-if="loading" role="status">{{ t('reviews.loading') }}</p>
       <p v-else-if="!rows.length">{{ t('reviews.empty') }}</p>
       <div v-else class="profile-reviews__list" aria-live="polite">
-        <article v-for="review in rows" :key="review.id">
+        <article v-for="review in rows" :id="`review-${review.id}`" :key="review.id">
           <div class="profile-reviews__identity">
             <span class="profile-reviews__avatar" aria-hidden="true">{{ initials(review.authorName) }}</span>
             <div>

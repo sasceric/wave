@@ -84,7 +84,7 @@ test('app startup keeps server metadata until Router resolves, and only an actua
       watch: (...args) => { const stop = vue.watch(...args); watchers.push(stop); return stop },
     },
     'vue-router': { useRoute: () => route, useRouter: () => ({}), RouterView: {}, isNavigationFailure: () => false, NavigationFailureType: {} },
-    './lib/seo': { updateSeo: data => updates.push(data) },
+    './lib/seo': { getSeoOrigin: () => 'https://wave.ba', updateSeo: data => updates.push(data) },
     './lib/routeMetadata': { routeMetadata: metadata },
   })
   assert.deepEqual(updates, [])

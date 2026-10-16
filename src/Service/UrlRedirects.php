@@ -156,7 +156,7 @@ final class UrlRedirects
             || in_array($name, ['messages', 'verify-email', 'reset-password', 'moderation', 'support-create', 'support-track'], true))) {
             return false;
         }
-        $unprefixed = preg_replace('~^/(?:hr|rs|me|si|en|sr|cnr|sl)(?=/)~', '', $path) ?? $path;
+        $unprefixed = preg_replace('~^/(?:hr|rs|me|si|en|de|sr|cnr|sl)(?=/)~', '', $path) ?? $path;
 
         return preg_match('~^/(?:api|admin|account|racun|messages|poruke|q|assets|build|images|media|uploads|fonts|_profiler|_wdt)(?:/|$)~', $unprefixed) !== 1
             && !str_contains($path, '.');

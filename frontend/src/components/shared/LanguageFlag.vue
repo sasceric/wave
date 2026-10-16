@@ -4,6 +4,7 @@ defineProps({
 })
 
 const flags = {
+  de: '🇩🇪',
   bs: '🇧🇦',
   hr: '🇭🇷',
   sr: '🇷🇸',

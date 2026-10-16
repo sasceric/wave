@@ -227,10 +227,6 @@
   &--directory .campaign-card__panel {
     min-height: 175px;
   }
-
-  &--directory .campaign-card__footer > span {
-    min-height: 26px;
-  }
 }
 
 @include breakpoints.down(1200px) {

@@ -86,13 +86,14 @@ watch(
       route,
       locale: locale.value,
       title: t('seo.companyProfileTitle', { name: value.name }),
-      description: value.industry,
+      description: value.structuredData?.description || value.industry,
       image: logo,
-      mainEntity: {
+      noindex: value.indexable === false,
+      mainEntity: value.structuredData || {
         '@type': 'Organization',
         name: value.name,
         url: new URL(localizedPath('company-profile', locale.value, { slug: value.slug }), getSeoOrigin()).href,
-        industry: value.industry,
+        knowsAbout: value.industry,
         logo,
       },
     })

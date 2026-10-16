@@ -362,7 +362,7 @@ watch(locale, language => { const names = new Intl.DisplayNames([language === 'c
       <article v-else class="creator-studio__card">
         <header>
           <h3>{{ work.title || t('studio.workTitle') }}</h3>
-          <button type="button" class="profile-editor__add" @click="selectedWork=null">{{ t('account.back') }}</button>
+          <button type="button" class="button button--outline creator-studio__back" @click="selectedWork=null">{{ t('account.back') }}</button>
         </header>
         <nav class="creator-studio__steps" :aria-label="t('studio.workDetails')">
           <button v-for="value in [1,2,3]" :key="value" type="button" :aria-pressed="step===value" @click="step=value">
@@ -591,7 +591,7 @@ watch(locale, language => { const names = new Intl.DisplayNames([language === 'c
       >
         <header>
           <h3>{{ item.title || t('account.packageTitle') }}</h3>
-          <button type="button" class="profile-editor__add" @click="selectedPackage = null">{{ t('studio.backToPackages') }}</button>
+          <button type="button" class="button button--outline creator-studio__back" @click="selectedPackage = null">{{ t('studio.backToPackages') }}</button>
         </header>
         <div class="form-grid">
           <label class="form-field form-field--wide">

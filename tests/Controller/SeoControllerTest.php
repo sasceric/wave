@@ -85,7 +85,7 @@ final class SeoControllerTest extends WebTestCase
                 self::assertGreaterThan(100, mb_strlen($crawler->filter('#app')->text()));
                 self::assertSame('http://127.0.0.1:8000'.$path, $crawler->filter('link[rel="canonical"]')->attr('href'));
                 self::assertSame('index, follow', $crawler->filter('meta[name="robots"]')->attr('content'));
-                self::assertCount(7, $crawler->filter('link[rel="alternate"][hreflang]'));
+                self::assertCount(count($routes->locales()) + 1, $crawler->filter('link[rel="alternate"][hreflang]'));
             }
         }
         $this->client->request('GET', '/vodici-za-kreatore/not-a-guide');
@@ -181,7 +181,7 @@ final class SeoControllerTest extends WebTestCase
                     self::assertStringContainsString($section['body'], $crawler->filter('#app')->text());
                 }
                 self::assertSame('http://127.0.0.1:8000'.$path, $crawler->filter('link[rel="canonical"]')->attr('href'));
-                self::assertCount(7, $crawler->filter('link[hreflang]'));
+                self::assertCount(count($routes->locales()) + 1, $crawler->filter('link[hreflang]'));
                 self::assertStringContainsString('"@type":"Article"', $crawler->filter('#wave-schema')->text());
             }
         }
@@ -386,7 +386,7 @@ final class SeoControllerTest extends WebTestCase
     public function testPublicLocaleCanonicalsAndAlternatesAreReciprocalAndMatchTheSitemap(): void
     {
         $routes = static::getContainer()->get(LocalizedRouteMap::class);
-        $languages = ['bs' => 'bs', 'hr' => 'hr', 'sr' => 'sr-RS', 'sl' => 'sl', 'en' => 'en', 'cnr' => 'sr-ME'];
+        $languages = ['bs' => 'bs', 'hr' => 'hr', 'sr' => 'sr-RS', 'sl' => 'sl', 'en' => 'en', 'cnr' => 'sr-ME', 'de' => 'de'];
         $this->client->request('GET', '/sitemap.xml');
         $sitemap = new \Symfony\Component\DomCrawler\Crawler($this->client->getResponse()->getContent());
         $sitemap->registerNamespace('sm', 'http://www.sitemaps.org/schemas/sitemap/0.9');

@@ -68,8 +68,8 @@ class CreatorFaq
     public function localized(string $locale): array
     {
         return [
-            'question' => $this->questions[$locale] ?? $this->questions['bs'] ?? '',
-            'answer' => $this->answers[$locale] ?? $this->answers['bs'] ?? '',
+            'question' => $this->questions[$locale] ?? ($locale === 'de' ? ($this->questions['en'] ?? null) : null) ?? $this->questions['bs'] ?? '',
+            'answer' => $this->answers[$locale] ?? ($locale === 'de' ? ($this->answers['en'] ?? null) : null) ?? $this->answers['bs'] ?? '',
         ];
     }
 }

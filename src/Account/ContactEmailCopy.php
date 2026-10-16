@@ -143,6 +143,7 @@ final class ContactEmailCopy
      */
     public static function forLocale(string $locale): array
     {
+        if ($locale === 'de') return \App\Localization\GermanTranslations::section('contact');
         return self::COPY[$locale] ?? self::COPY['bs'];
     }
 
@@ -159,6 +160,7 @@ final class ContactEmailCopy
             'cnr' => 'Volio/voljela bih da saznam više o saradnji sa Waveom.',
             'sl' => 'Želel/a bi izvedeti več o sodelovanju z Waveom.',
             'en' => 'I would love to learn more about working with Wave.',
+            'de' => 'Ich möchte gerne mehr über die Zusammenarbeit mit Wave erfahren.',
         ];
 
         return [
@@ -183,6 +185,7 @@ final class ContactEmailCopy
     public static function languageTag(string $locale): string
     {
         return match ($locale) {
+            'de' => 'de',
             'sr' => 'sr-Latn',
             'cnr' => 'cnr-Latn-ME',
             default => isset(self::COPY[$locale]) ? $locale : 'bs',

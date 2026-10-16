@@ -3,7 +3,7 @@ import countries from '../../../config/seo_countries.json'
 export { countries }
 export const guideSlugs = ['find-creators', 'choose-package', 'campaign-brief']
 export const creatorGuideSlugs = ['create-profile', 'offer-packages', 'apply-to-campaigns']
-export const regionalLanguageTags = { bs: 'bs-BA', hr: 'hr-HR', sr: 'sr-RS', cnr: 'sr-ME', sl: 'sl-SI', en: 'en' }
+export const regionalLanguageTags = { bs: 'bs-BA', hr: 'hr-HR', sr: 'sr-RS', cnr: 'sr-ME', sl: 'sl-SI', en: 'en', de: 'de' }
 
 export function countryCodeForSlug(slug) {
   return Object.keys(countries).find(code => countries[code].slug === slug) || null

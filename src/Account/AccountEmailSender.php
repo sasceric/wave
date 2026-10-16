@@ -699,6 +699,12 @@ final class AccountEmailSender
         if ($template === 'credits_activated') {
             return CreditsEmailCopy::forLocale($locale);
         }
+        if ($locale === 'de') {
+            return \App\Localization\GermanTranslations::section('account')[$template]
+                ?? \App\Localization\GermanTranslations::section('notifications')[$template]
+                ?? MarketplaceEmailCopy::forLocale($template, $locale)
+                ?? throw new \InvalidArgumentException(sprintf('Unknown account email template \"%s\".', $template));
+        }
         $copy = self::COPY[$locale][$template]
             ?? self::NOTIFICATION_COPY[$locale][$template]
             ?? MarketplaceEmailCopy::forLocale($template, $locale);
@@ -711,7 +717,7 @@ final class AccountEmailSender
 
     private function normalizedLocale(string $locale): string
     {
-        return isset(self::COPY[$locale]) ? $locale : 'bs';
+        return in_array($locale, \App\Localization\LocaleContext::SUPPORTED, true) ? $locale : 'bs';
     }
 
     private function localizedRoutePath(string $routeName, string $locale): string

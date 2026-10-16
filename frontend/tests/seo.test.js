@@ -28,9 +28,10 @@ async function seoFixture() {
   const context = vm.createContext({ document, window: { location: { origin: 'http://127.0.0.1:5173' } }, URL })
   const routes = JSON.parse(await readFile(new URL('../../config/localized_routes.json', import.meta.url), 'utf8'))
   const prefixes = JSON.parse(await readFile(new URL('../../config/localized_route_prefixes.json', import.meta.url), 'utf8'))
+  const shared = JSON.parse(await readFile(new URL('../../config/shared_public_routes.json', import.meta.url), 'utf8'))
   const countries = JSON.parse(await readFile(new URL('../../config/seo_countries.json', import.meta.url), 'utf8'))
   const paths = new vm.SourceTextModule(await readFile(new URL('../src/routePaths.js', import.meta.url), 'utf8'), { context })
-  await paths.link(path => new vm.SyntheticModule(['default'], function () { this.setExport('default', path.includes('prefixes') ? prefixes : routes) }, { context }))
+  await paths.link(path => new vm.SyntheticModule(['default'], function () { this.setExport('default', path.includes('prefixes') ? prefixes : path.includes('shared_public') ? shared : routes) }, { context }))
   const regional = new vm.SourceTextModule(await readFile(new URL('../src/lib/regionalSeo.js', import.meta.url), 'utf8'), { context })
   await regional.link(() => new vm.SyntheticModule(['default'], function () { this.setExport('default', countries) }, { context }))
   const seo = new vm.SourceTextModule(await readFile(new URL('../src/lib/seo.js', import.meta.url), 'utf8'), { context, initializeImportMeta: meta => { meta.env = {} } })
@@ -40,9 +41,13 @@ async function seoFixture() {
   const metrics = new vm.SyntheticModule(['trackPageView'], function () {
     this.setExport('trackPageView', (path, options) => pageViews.push({ path, ...options, documentTitle: document.title }))
   }, { context })
-  await seo.link(path => path.includes('privacyMetrics') ? metrics : path.includes('regionalSeo') ? regional : path.includes('pageTitle') ? title : paths)
+  const breadcrumbConfig = JSON.parse(await readFile(new URL('../../config/seo_breadcrumbs.json', import.meta.url), 'utf8'))
+  const breadcrumbs = new vm.SyntheticModule(['default'], function () { this.setExport('default', breadcrumbConfig) }, { context })
+  const catalog = JSON.parse(await readFile(new URL('../src/locales/bs.json', import.meta.url), 'utf8'))
+  const i18n = new vm.SyntheticModule(['default'], function () { this.setExport('default', { global: { t: key => key.split('.').reduce((value, part) => value[part], catalog) } }) }, { context })
+  await seo.link(path => path.includes('seo_breadcrumbs') ? breadcrumbs : path.includes('i18n') ? i18n : path.includes('privacyMetrics') ? metrics : path.includes('regionalSeo') ? regional : path.includes('pageTitle') ? title : paths)
   await seo.evaluate()
-  return { updateSeo: seo.namespace.updateSeo, regionalMetadata: regional.namespace.regionalMetadata, document, nodes, pageViews }
+  return { updateSeo: seo.namespace.updateSeo, regionalMetadata: regional.namespace.regionalMetadata, document, nodes, pageViews, updateProfileReviewSchema: seo.namespace.updateProfileReviewSchema }
 }
 
 test('page views receive the new title after SEO commits it, keep private pages excluded and retain real 404s', async () => {
@@ -74,9 +79,10 @@ test('SPA navigation retains one self canonical and reciprocal localized alterna
     sl: 'https://wave.ba/si/ustvarjalci',
     en: 'https://wave.ba/en/creators',
     'sr-ME': 'https://wave.ba/me/kreatori',
+    de: 'https://wave.ba/de/kreative',
     'x-default': 'https://wave.ba/kreatori',
   }
-  const languages = { bs: 'bs', hr: 'hr', sr: 'sr-Latn', sl: 'sl', en: 'en', cnr: 'sr-Latn-ME' }
+  const languages = { bs: 'bs', hr: 'hr', sr: 'sr-Latn', sl: 'sl', en: 'en', cnr: 'sr-Latn-ME', de: 'de' }
   for (const [locale, language] of Object.entries(languages)) {
     updateSeo({ route: { meta: { routeName: 'creators' }, params: {}, path: '/ignored?q=travel#fragment' }, locale, title: 'Creators', description: 'Find a creator' })
     const canonical = document.head.querySelectorAll('link[rel="canonical"]')
@@ -111,9 +117,9 @@ test('private and unknown SPA routes clear public alternates and schema without 
 test('country directories retain the same country across language alternates and invalid content clears its canonical', async () => {
   const { updateSeo, regionalMetadata, document } = await seoFixture()
   const countries = JSON.parse(await readFile(new URL('../../config/seo_countries.json', import.meta.url), 'utf8'))
-  const prefixes = { bs: '', hr: '/hr', sr: '/rs', cnr: '/me', sl: '/si', en: '/en' }
-  const segments = { bs: 'influenseri', hr: 'influenceri', sr: 'influenseri', cnr: 'influenseri', sl: 'vplivnezi', en: 'influencers' }
-  const tags = { bs: 'bs-BA', hr: 'hr-HR', sr: 'sr-RS', cnr: 'sr-ME', sl: 'sl-SI', en: 'en' }
+  const prefixes = { bs: '', hr: '/hr', sr: '/rs', cnr: '/me', sl: '/si', en: '/en', de: '/de' }
+  const segments = { bs: 'influenseri', hr: 'influenceri', sr: 'influenseri', cnr: 'influenseri', sl: 'vplivnezi', en: 'influencers', de: 'influencer' }
+  const tags = { bs: 'bs-BA', hr: 'hr-HR', sr: 'sr-RS', cnr: 'sr-ME', sl: 'sl-SI', en: 'en', de: 'de' }
   for (const [code, country] of Object.entries(countries)) {
     for (const locale of Object.keys(prefixes)) {
       const catalog = JSON.parse(await readFile(new URL(`../src/locales/${locale}.json`, import.meta.url), 'utf8'))
@@ -134,4 +140,28 @@ test('country directories retain the same country across language alternates and
   updateSeo({ route: { meta: { routeName: 'country-creators' }, params: { country: 'srbija' } }, locale: 'sr', title: 'Wave', description: 'Wave', noindex: true })
   assert.equal(document.head.querySelectorAll('link[hreflang]').length, 0)
   assert.equal(document.getElementById('wave-schema'), undefined)
+})
+
+test('profile reviews follow pagination, omit prototypes and leave the aggregate intact', async () => {
+  const { updateSeo, updateProfileReviewSchema, document } = await seoFixture()
+  const url = 'https://wave.ba/kreatori/amina'
+  updateSeo({ route: { meta: { routeName: 'creator-profile' }, params: { slug: 'amina' } }, locale: 'de', title: 'Amina', description: 'Creator',
+    mainEntity: { '@type': 'Person', url, makesOffer: { '@type': 'Offer', itemOffered: { '@type': 'Service', aggregateRating: { '@type': 'AggregateRating', reviewCount: 15, ratingValue: 4.5 } } } },
+  })
+  const rows = [{ id: 11, authorName: 'Brand', comment: 'Excellent work.', rating: 5, createdAt: '2026-10-16T12:00:00Z' },
+    { id: 12, authorName: 'Demo brand', comment: 'Fictional review', rating: 5, isPresentationDemo: true }]
+  updateProfileReviewSchema('creators', 'other-profile', rows)
+  let service = JSON.parse(document.getElementById('wave-schema').textContent)[2].mainEntity.makesOffer.itemOffered
+  assert.equal(service.review, undefined)
+  updateProfileReviewSchema('creators', 'amina', rows)
+  service = JSON.parse(document.getElementById('wave-schema').textContent)[2].mainEntity.makesOffer.itemOffered
+  assert.equal(service.aggregateRating.reviewCount, 15)
+  assert.equal(service.review.length, 1)
+  assert.equal(service.review[0]['@id'], `${url}#review-11`)
+  assert.equal(service.review[0].author['@type'], 'Organization')
+  updateProfileReviewSchema('creators', 'amina', [])
+  service = JSON.parse(document.getElementById('wave-schema').textContent)[2].mainEntity.makesOffer.itemOffered
+  assert.equal(service.review, undefined)
+  const nodes = JSON.parse(document.getElementById('wave-schema').textContent)
+  assert.equal(nodes.find(node => node['@type'] === 'BreadcrumbList').itemListElement[1].item, 'https://wave.ba/de/kreative')
 })

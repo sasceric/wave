@@ -1,4 +1,6 @@
 <script setup>
+import { updateSeo, getSeoOrigin } from '../lib/seo'
+import { localizedPath } from '../routePaths'
 import { computed, onMounted, onBeforeUnmount, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
@@ -94,6 +96,12 @@ function clearFilters() {
   budgetMin.value = ''
   budgetMax.value = ''
 }
+watch([campaigns, locale], () => {
+  if (route.meta.routeName !== 'campaigns') return
+  updateSeo({ route, locale: locale.value, title: t('seo.campaignsTitle'), description: t('seo.campaignsDescription'),
+    mainEntity: { '@type': 'ItemList', numberOfItems: campaigns.value.length, itemListElement: campaigns.value.map((item, index) => ({ '@type': 'ListItem', position: index + 1, name: item.title, url: new URL(localizedPath('campaign-detail', locale.value, { slug: item.slug }), getSeoOrigin()).href })) },
+  })
+}, { flush: 'post' })
 </script>
 
 <template>

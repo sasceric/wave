@@ -465,6 +465,7 @@ final class MarketplaceEmailCopy
      */
     public static function forLocale(string $template, string $locale): ?array
     {
+        if ($locale === 'de') return \App\Localization\GermanTranslations::section('marketplace')[$template] ?? null;
         if ($template === 'creator_inquiry_accepted') {
             return self::ACCEPTED_COPY[$locale] ?? null;
         }

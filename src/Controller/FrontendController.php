@@ -159,6 +159,7 @@ final class FrontendController
             'sr' => 'sr_RS',
             'cnr' => 'sr_ME',
             'sl' => 'sl_SI',
+            'de' => 'de_DE',
             default => 'en_US',
         };
     }

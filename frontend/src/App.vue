@@ -24,8 +24,8 @@ import { startInboxSync } from './lib/inboxSync'
 import { startPwaUpdates } from './lib/pwaUpdates'
 import { updateAppBadge } from './lib/appBadge'
 import { notificationDestination, startNotificationNavigation } from './lib/notificationNavigation'
-import { updateSeo } from './lib/seo'
-import { regionalMetadata } from './lib/regionalSeo'
+import { getSeoOrigin, updateSeo } from './lib/seo'
+import { regionalMetadata, guideSlugs, creatorGuideSlugs } from './lib/regionalSeo'
 import { routeMetadata } from './lib/routeMetadata'
 import { localizedPath } from './routePaths'
 
@@ -209,13 +209,25 @@ watch(
     const routeName = route.meta.routeName
     const regional = regionalMetadata(route, t)
     if (regional) {
+      const forCreators = routeName?.startsWith('creator-')
+      const copyKey = forCreators ? 'regionalSeo.creatorGuides.guides' : 'regionalSeo.guides'
+      let mainEntity = null
+      if (!regional.invalid && ['seo-guide', 'creator-guide'].includes(routeName)) {
+        mainEntity = { '@type': 'Article', headline: t(`${copyKey}.${route.params.guide}.title`), description: regional.description,
+          author: { '@type': 'Organization', name: 'Wave' }, publisher: { '@id': `${getSeoOrigin()}/#organization` } }
+      } else if (['seo-guides', 'creator-guides'].includes(routeName)) {
+        mainEntity = { '@type': 'ItemList', itemListElement: (forCreators ? creatorGuideSlugs : guideSlugs).map((slug, index) => ({
+          '@type': 'ListItem', position: index + 1, name: t(`${copyKey}.${slug}.title`),
+          url: new URL(localizedPath(forCreators ? 'creator-guide' : 'seo-guide', locale.value, { guide: slug }), getSeoOrigin()).href,
+        })) }
+      }
       updateSeo({
         route: regional.invalid ? { ...route, meta: { ...route.meta, routeName: 'not-found' } } : route,
         locale: locale.value,
         title: regional.title || t('seo.notFoundTitle'),
         description: regional.description || t('seo.notFoundDescription'),
         noindex: Boolean(regional.invalid),
-        mainEntity: routeName === 'seo-guide' && !regional.invalid ? { '@type': 'Article', headline: t(`regionalSeo.guides.${route.params.guide}.title`), description: regional.description, author: { '@type': 'Organization', name: 'Wave' } } : null,
+        mainEntity,
       })
       return
     }

@@ -121,6 +121,7 @@ watch(
       route,
       locale: locale.value,
       title: t('seo.campaignProfileTitle', { name: value.title }),
+      noindex: value.readOnly || value.status !== 'open' || new Date(value.closesAt).getTime() < new Date().setHours(0, 0, 0, 0),
       description: value.summary,
       mainEntity: {
         '@type': 'CreativeWork',

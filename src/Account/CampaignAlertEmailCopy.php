@@ -6,6 +6,7 @@ final class CampaignAlertEmailCopy
 {
     public static function forLocale(string $locale): array
     {
+        if ($locale === 'de') return \App\Localization\GermanTranslations::section('campaignAlert');
         $copy = [
             'bs' => ['Nove kampanje za tebe', 'Zdravo,', 'Pogledaj nove kampanje koje odgovaraju tvojim odabranim oblastima i lokacijama.', 'Kampanje', 'Pogledaj kampanju', 'Ove poruke primaš jer su uključene obavijesti o kampanjama. Postavke možeš promijeniti ili isključiti na svom pregledu.', 'Uredi obavijesti'],
             'hr' => ['Nove kampanje za tebe', 'Pozdrav,', 'Pogledaj nove kampanje koje odgovaraju tvojim odabranim područjima i lokacijama.', 'Kampanje', 'Pogledaj kampanju', 'Ove poruke primaš jer su uključene obavijesti o kampanjama. Postavke možeš promijeniti ili isključiti na svom pregledu.', 'Uredi obavijesti'],

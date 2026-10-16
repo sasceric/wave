@@ -31,7 +31,7 @@ const media = computed(() => selected.value ? [{ ...selected.value, id: 'main' }
             <Pin :size="13" />
             {{ t('studio.featuredWork') }}
           </span>
-          <small>{{ item.source === 'sample' ? t('studio.sample') : item.client || item.platform }}</small>
+          <small>{{ item.source === 'sample' ? t('studio.sample') : item.client || (item.platform === 'All' ? t('platforms.all') : item.platform) }}</small>
           <strong>{{ item.title }}</strong>
           <span>{{ item.summary }}</span>
           <span class="creator-works__link">

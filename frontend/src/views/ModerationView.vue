@@ -19,12 +19,12 @@ const editingCategoryId = ref(null)
 const editingFaqId = ref(null)
 const categoryForm = ref(emptyCategory())
 const faqForm = ref(emptyFaq())
-const catalogLocales = ['bs', 'hr', 'sr', 'cnr', 'sl', 'en']
+const catalogLocales = ['bs', 'hr', 'sr', 'cnr', 'sl', 'en', 'de']
 
 function emptyCategory() {
   return {
     value: '',
-    labels: { bs: '', hr: '', sr: '', cnr: '', sl: '', en: '' },
+    labels: { bs: '', hr: '', sr: '', cnr: '', sl: '', en: '', de: '' },
     position: 0,
     active: true,
   }
@@ -32,8 +32,8 @@ function emptyCategory() {
 
 function emptyFaq() {
   return {
-    questions: { bs: '', hr: '', sr: '', cnr: '', sl: '', en: '' },
-    answers: { bs: '', hr: '', sr: '', cnr: '', sl: '', en: '' },
+    questions: { bs: '', hr: '', sr: '', cnr: '', sl: '', en: '', de: '' },
+    answers: { bs: '', hr: '', sr: '', cnr: '', sl: '', en: '', de: '' },
     position: 0,
     active: true,
   }
@@ -177,7 +177,7 @@ onMounted(loadModerationCatalog)
               </label>
               <label v-for="language in catalogLocales" :key="language" class="form-field">
                 <span>{{ t('moderation.labelFor') }} {{ language.toUpperCase() }}</span>
-                <input v-model.trim="categoryForm.labels[language]" required minlength="2" maxlength="80" />
+                <input v-model.trim="categoryForm.labels[language]" :required="language !== 'de'" minlength="2" maxlength="80" />
               </label>
               <label class="form-field">
                 <span>{{ t('moderation.position') }}</span>
@@ -217,11 +217,11 @@ onMounted(loadModerationCatalog)
               <template v-for="language in catalogLocales" :key="language">
                 <label class="form-field">
                   <span>{{ t('moderation.questionFor') }} {{ language.toUpperCase() }}</span>
-                  <input v-model.trim="faqForm.questions[language]" required minlength="2" maxlength="180" />
+                  <input v-model.trim="faqForm.questions[language]" :required="language !== 'de'" minlength="2" maxlength="180" />
                 </label>
                 <label class="form-field">
                   <span>{{ t('moderation.answerFor') }} {{ language.toUpperCase() }}</span>
-                  <textarea v-model.trim="faqForm.answers[language]" required minlength="10" maxlength="2000"></textarea>
+                  <textarea v-model.trim="faqForm.answers[language]" :required="language !== 'de'" minlength="10" maxlength="2000"></textarea>
                 </label>
               </template>
               <label class="form-field">

@@ -66,6 +66,7 @@ final class NewsletterSubscriberEmailCopy
      */
     public static function forLocale(string $locale): array
     {
+        if ($locale === 'de') return \App\Localization\GermanTranslations::section('newsletter');
         return self::COPY[$locale] ?? self::COPY['bs'];
     }
 

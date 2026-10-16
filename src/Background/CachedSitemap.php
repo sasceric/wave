@@ -25,8 +25,8 @@ final class CachedSitemap
     public function index(): ?string
     {
         $path = $this->directory . '/sitemap.xml';
-        if (!is_file($path) || !str_contains((string) file_get_contents($path), 'wave-shared-public-urls-v1')) {
-            $this->jobs->enqueue('SitemapGenerateTask', [], 'sitemap:' . intdiv(time(), 300));
+        if (!is_file($path) || !str_contains((string) file_get_contents($path), 'wave-shared-public-urls-v2-de')) {
+            $this->jobs->enqueue('SitemapGenerateTask', [], 'sitemap:de-v2:' . intdiv(time(), 300));
 
             return null;
         }
@@ -91,7 +91,7 @@ final class CachedSitemap
                 fclose($handle);
                 $handle = null;
             }
-            $xml = '<?xml version="1.0" encoding="UTF-8"?><!--wave-shared-public-urls-v1--><sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">';
+            $xml = '<?xml version="1.0" encoding="UTF-8"?><!--wave-shared-public-urls-v2-de--><sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">';
             foreach ($parts as $part) {
                 $xml .= '<sitemap><loc>' . $this->escape($this->origin->url('/sitemaps/' . $part)) . '</loc></sitemap>';
             }

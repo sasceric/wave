@@ -6,7 +6,7 @@ use Symfony\Component\HttpFoundation\Request;
 
 final class LocaleContext
 {
-    public const SUPPORTED = ['bs', 'hr', 'sr', 'cnr', 'sl', 'en'];
+    public const SUPPORTED = ['bs', 'hr', 'sr', 'cnr', 'sl', 'en', 'de'];
 
     public static function fromRequest(Request $request): ?string
     {

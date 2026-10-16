@@ -1,3 +1,5 @@
+import i18n from '../i18n'
+import breadcrumbParents from '../../../config/seo_breadcrumbs.json'
 import { localizedPath, routeSegments, isSharedRoute } from '../routePaths'
 import { regionalLanguageTags } from './regionalSeo'
 import { pageTitle } from './pageTitle'
@@ -10,8 +12,9 @@ const languageTags = {
   cnr: 'sr-Latn-ME',
   sl: 'sl',
   en: 'en',
+  de: 'de',
 }
-const hreflangTags = { bs: 'bs', hr: 'hr', sr: 'sr-RS', cnr: 'sr-ME', sl: 'sl', en: 'en' }
+const hreflangTags = { bs: 'bs', hr: 'hr', sr: 'sr-RS', cnr: 'sr-ME', sl: 'sl', en: 'en', de: 'de' }
 
 function setMeta(attribute, key, value) {
   let element = document.head.querySelector(`meta[${attribute}="${key}"]`)
@@ -92,6 +95,7 @@ export function updateSeo({
     cnr: 'sr_ME',
     sl: 'sl_SI',
     en: 'en_US',
+    de: 'de_DE',
   })[locale] || 'en_US')
   const hasShareImage = Boolean(image) || routeName === 'home'
   setMeta('name', 'twitter:card', hasShareImage ? 'summary_large_image' : 'summary')
@@ -185,8 +189,17 @@ export function updateSeo({
       '@type': 'ContactPoint',
       contactType: 'customer support',
       email: 'info@wave.ba',
-      availableLanguage: ['bs', 'hr', 'sr-Latn', 'sr-Latn-ME', 'sl', 'en'],
+      availableLanguage: ['bs', 'hr', 'sr-Latn', 'sr-Latn-ME', 'sl', 'en', 'de'],
     },
+  }
+  // Vite and the API can use different local ports; keep profile IDs tied to
+  // this page's canonical URL while leaving external images and links intact.
+  if (mainEntity?.url && canonicalUrl) {
+    const originalUrl = mainEntity.url
+    mainEntity = JSON.parse(JSON.stringify(mainEntity, (key, value) => (
+      ['url', '@id'].includes(key) && typeof value === 'string' && (value === originalUrl || value.startsWith(`${originalUrl}#`))
+        ? canonicalUrl + value.slice(originalUrl.length) : value
+    )))
   }
   const page = {
     '@context': 'https://schema.org',
@@ -194,7 +207,7 @@ export function updateSeo({
       ? 'CollectionPage'
       : ['creator-profile', 'company-profile'].includes(routeName)
         ? 'ProfilePage'
-        : 'WebPage',
+        : routeName === 'support' ? 'ContactPage' : 'WebPage',
     '@id': `${canonicalUrl}#webpage`,
     url: canonicalUrl,
     name: title,
@@ -210,5 +223,40 @@ export function updateSeo({
         }
       : {}),
   }
-  setStructuredData([website, organization, page])
+  if (routeName === 'home') {
+    page.hasPart = { '@type': 'FAQPage', '@id': `${canonicalUrl}#faq`, mainEntity: Array.from({ length: 5 }, (_, index) => ({ '@type': 'Question', name: i18n.global.t(`siteFaq.question${index + 1}`), acceptedAnswer: { '@type': 'Answer', text: i18n.global.t(`siteFaq.answer${index + 1}`) } })) }
+  }
+  const nodes = []
+  if (routeName !== 'home') {
+    const crumbs = [{ '@type': 'ListItem', position: 1, name: i18n.global.t('app.home'), item: new URL(localizedPath('home', locale), origin).href }]
+    const parent = breadcrumbParents[routeName]
+    if (parent) crumbs.push({ '@type': 'ListItem', position: crumbs.length + 1, name: i18n.global.t(parent.label), item: new URL(localizedPath(parent.route, locale), origin).href })
+    crumbs.push({ '@type': 'ListItem', position: crumbs.length + 1, name: title.replace(/\s*(?:[|—]\s*Wave)\s*$/u, ''), item: canonicalUrl })
+    const breadcrumb = { '@context': 'https://schema.org', '@type': 'BreadcrumbList', '@id': `${canonicalUrl}#breadcrumbs`, itemListElement: crumbs }
+    page.breadcrumb = { '@id': breadcrumb['@id'] }
+    nodes.push(breadcrumb)
+  }
+  setStructuredData([website, organization, page, ...nodes])
+}
+
+// Update the review nodes after pagination without emitting another page view.
+export function updateProfileReviewSchema(kind, slug, rows) {
+  const element = document.getElementById('wave-schema')
+  if (!element || !['creators', 'companies'].includes(kind)) return
+  let nodes
+  try { nodes = JSON.parse(element.textContent) } catch { return }
+  if (!Array.isArray(nodes)) return
+  const url = new URL(localizedPath(kind === 'creators' ? 'creator-profile' : 'company-profile', 'bs', { slug }), getSeoOrigin()).href
+  const entity = nodes.find(node => node['@type'] === 'ProfilePage' && node.url === url)?.mainEntity
+  const target = kind === 'creators' ? entity?.makesOffer?.itemOffered : entity
+  if (!target || entity.url !== url) return
+  const reviews = rows.filter(row => !row.isPresentationDemo && row.comment && row.authorName).map(row => ({
+    '@type': 'Review', '@id': `${url}#review-${row.id}`,
+    author: { '@type': kind === 'creators' ? 'Organization' : 'Person', name: row.authorName },
+    reviewBody: row.comment, datePublished: row.createdAt,
+    reviewRating: { '@type': 'Rating', ratingValue: row.rating, bestRating: 5, worstRating: 1 },
+  }))
+  if (reviews.length) target.review = reviews
+  else delete target.review
+  setStructuredData(nodes)
 }

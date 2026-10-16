@@ -1,0 +1,8 @@
+{
+  "creator-profile": { "route": "creators", "label": "app.creatorsNav" },
+  "company-profile": { "route": "companies", "label": "app.companies" },
+  "campaign-detail": { "route": "campaigns", "label": "app.campaigns" },
+  "seo-guide": { "route": "seo-guides", "label": "regionalSeo.guideTitle" },
+  "creator-guide": { "route": "creator-guides", "label": "regionalSeo.creatorGuides.title" },
+  "country-creators": { "route": "creators", "label": "app.creatorsNav" }
+}

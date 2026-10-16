@@ -188,7 +188,7 @@ final class RedirectControllerTest extends WebTestCase
         $this->em->flush();
         $campaignId = $campaign->getId();
         static::getContainer()->get(AccountDeletion::class)->delete([$owner, $creatorOwner]);
-        self::assertSame(30, $this->em->getRepository(UrlRedirect::class)->count([]));
+        self::assertSame(33, $this->em->getRepository(UrlRedirect::class)->count([]));
         self::assertNotNull($this->em->find(Campaign::class, $campaignId));
         self::assertSame(1, $this->em->getRepository(\App\Entity\Application::class)->count([]));
         $routes = static::getContainer()->get(LocalizedRouteMap::class);
@@ -221,7 +221,7 @@ final class RedirectControllerTest extends WebTestCase
         $this->client->request('GET', '/api/auth/csrf?locale=en');
         $this->client->jsonRequest('DELETE', '/api/admin/campaigns/bulk-delete?locale=en', ['ids' => [$campaign->getId()]], ['HTTP_X_CSRF_TOKEN' => $this->payload()['csrfToken']]);
         self::assertResponseIsSuccessful();
-        self::assertSame(10, $this->em->getRepository(UrlRedirect::class)->count([]));
+        self::assertSame(11, $this->em->getRepository(UrlRedirect::class)->count([]));
         $this->client->request('GET', '/kampanje/removed-campaign');
         self::assertResponseRedirects('/kampanje', 301);
     }

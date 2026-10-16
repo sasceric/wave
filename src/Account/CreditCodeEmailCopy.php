@@ -17,6 +17,7 @@ final class CreditCodeEmailCopy
 
     public static function forLocale(string $locale): array
     {
+        if ($locale === 'de') return \App\Localization\GermanTranslations::section('creditCode');
         return array_combine(['subject', 'preheader', 'eyebrow', 'heading', 'greeting', 'message', 'firstLabel', 'secondLabel', 'detailsLabel', 'details', 'buttonLabel', 'footer'], self::COPY[$locale] ?? self::COPY['bs']);
     }
 }

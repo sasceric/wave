@@ -413,13 +413,14 @@ watch(
       route,
       locale: locale.value,
       title: t('seo.creatorProfileTitle', { name: value.displayName }),
-      description: value.bio,
+      description: value.structuredData?.description || value.bio,
       image,
-      mainEntity: {
+      noindex: value.indexable === false,
+      mainEntity: value.structuredData || {
         '@type': 'Person',
         name: value.displayName,
         url: new URL(localizedPath('creator-profile', locale.value, { slug: value.slug }), getSeoOrigin()).href,
-        description: value.bio,
+        description: value.structuredData?.description || value.bio,
         address: { '@type': 'PostalAddress', addressLocality: value.city },
         knowsAbout: value.categories,
         ...(sameAs.length ? { sameAs } : {}),

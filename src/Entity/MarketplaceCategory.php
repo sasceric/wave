@@ -67,6 +67,6 @@ class MarketplaceCategory
 
     public function label(string $locale): string
     {
-        return $this->labels[$locale] ?? $this->labels['bs'] ?? $this->value;
+        return $this->labels[$locale] ?? ($locale === 'de' ? ($this->labels['en'] ?? null) : null) ?? $this->labels['bs'] ?? $this->value;
     }
 }

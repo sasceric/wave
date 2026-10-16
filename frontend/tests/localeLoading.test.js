@@ -5,7 +5,7 @@ import { readFile } from 'node:fs/promises'
 
 test('lazy catalogs load once, preserve every language and cannot overwrite a newer language selection', async () => {
   const catalogs = {}
-  for (const code of ['bs', 'hr', 'sr', 'sl', 'en', 'cnr']) catalogs[code] = JSON.parse(await readFile(new URL(`../src/locales/${code}.json`, import.meta.url), 'utf8'))
+  for (const code of ['bs', 'hr', 'sr', 'sl', 'en', 'cnr', 'de']) catalogs[code] = JSON.parse(await readFile(new URL(`../src/locales/${code}.json`, import.meta.url), 'utf8'))
   const document = { title: 'Current creator | Wave', documentElement: {}, querySelector: () => { throw new Error('Locale loading must not overwrite page metadata') } }
   const context = vm.createContext({ window: { localStorage: { getItem: () => 'bs', setItem: () => {} } }, document, Map })
   let global
@@ -46,7 +46,7 @@ test('lazy catalogs load once, preserve every language and cannot overwrite a ne
   await Promise.all([first, second])
   assert.equal(englishRequests, 1)
   assert.equal(global.locale.value, 'hr')
-  for (const code of ['en', 'sr', 'sl', 'cnr', 'bs']) {
+  for (const code of ['en', 'sr', 'sl', 'cnr', 'de', 'bs']) {
     await module.namespace.setLocale(code)
     assert.equal(global.locale.value, code)
     assert.equal(document.documentElement.lang, code === 'cnr' ? 'sr-Latn-ME' : code === 'sr' ? 'sr-Latn' : code)

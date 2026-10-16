@@ -9,6 +9,21 @@ backups, supervised consumers and scheduled-task setup, see
 [server services, jobs and queues](server-operations.md). The deploy workflow
 does not provision those host services or schedules.
 
+## German and structured data
+
+The German release includes `frontend/src/locales/de.json`,
+`config/translations/de.json`, updated localized routes and migration
+`Version20261016160000` with `migrations/data/marketplace-labels-de-20261016.json`.
+The normal workflow builds the frontend and applies the additive label migration.
+For manual deployment, run the normal Doctrine migrations before serving the
+updated API and SPA. Existing labels and user profile data are preserved.
+
+The cached sitemap format marker changes to `wave-shared-public-urls-v2-de`.
+An outdated sitemap queues regeneration through the existing background worker;
+until ready, the endpoint uses its existing retry response. No new worker or
+server configuration is needed. Shared profile/campaign detail URLs remain
+unchanged. See [the schema and localization audit](structured-data.md).
+
 ## Campaign application totals
 
 Migration `Version20261016150000` adds `campaign.application_count` and initializes

@@ -101,6 +101,7 @@ final class CreditsEmailCopy
 
     public static function forLocale(string $locale): array
     {
+        if ($locale === 'de') return \App\Localization\GermanTranslations::section('credits');
         return self::COPY[$locale] ?? self::COPY['bs'];
     }
 }

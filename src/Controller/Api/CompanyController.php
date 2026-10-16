@@ -19,7 +19,7 @@ use Symfony\Component\Routing\Attribute\Route;
 
 final class CompanyController
 {
-    public function __construct(private readonly CollaborationFeedback $feedback, private readonly \App\Safety\BlockPolicy $blocks)
+    public function __construct(private readonly CollaborationFeedback $feedback, private readonly \App\Safety\BlockPolicy $blocks, private readonly \App\Service\ProfileStructuredData $profileSchema)
     {
     }
 
@@ -333,6 +333,7 @@ final class CompanyController
         if (str_ends_with($request->getPathInfo(), '/reviews')) {
             return new JsonResponse($owner === null ? ['data' => [], 'summary' => $this->feedback->summary(null), 'meta' => ['hasMore' => false, 'nextCursor' => null]] : $this->feedback->publicReviews($owner, $locale, max(0, $request->query->getInt('before')), max(1, $request->query->getInt('page', 1))));
         }
-        return new JsonResponse(['data' => CompanyResource::fromEntity($company, $locale, categoryLabels: MarketplaceCategoryLabels::forLocale($entityManager, $locale)) + ['rating' => $this->feedback->summary($owner)]]);
+        $rating = $this->feedback->summary($owner);
+        return new JsonResponse(['data' => CompanyResource::fromEntity($company, $locale, categoryLabels: MarketplaceCategoryLabels::forLocale($entityManager, $locale)) + ['rating' => $rating, 'indexable' => $owner === null || ($owner->isApproved() && !$owner->isHideMyAccount() && !$owner->isDeleted()), 'structuredData' => $this->profileSchema->company($company, $locale, $rating)]]);
     }
 }

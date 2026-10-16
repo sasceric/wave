@@ -115,6 +115,12 @@ function clearFilters() {
   city.value = ''
   audience.value = ''
 }
+watch([creators, locale], () => {
+  if (route.meta.routeName !== 'creators') return
+  updateSeo({ route, locale: locale.value, title: t('seo.creatorsTitle'), description: t('seo.creatorsDescription'),
+    mainEntity: { '@type': 'ItemList', numberOfItems: creators.value.length, itemListElement: creators.value.map((item, index) => ({ '@type': 'ListItem', position: index + 1, name: item.displayName, url: new URL(localizedPath('creator-profile', locale.value, { slug: item.slug }), getSeoOrigin()).href })) },
+  })
+}, { flush: 'post' })
 </script>
 
 <template>

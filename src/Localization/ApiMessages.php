@@ -549,6 +549,7 @@ final class ApiMessages
 
     public static function get(string $key, string $locale): string
     {
+        if ($locale === 'de') return GermanTranslations::section('api')[$key] ?? self::MESSAGES['en'][$key] ?? $key;
         return self::MESSAGES[$locale][$key] ?? self::MESSAGES['bs'][$key] ?? $key;
     }
 }

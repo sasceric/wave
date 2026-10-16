@@ -8,6 +8,7 @@ export const localeNames = {
   sl: 'Slovenščina',
   en: 'English',
   cnr: 'Crnogorski',
+  de: 'Deutsch',
 }
 
 const supportedLocales = Object.keys(localeNames)
@@ -20,6 +21,7 @@ const catalogs = {
   sl: () => import('./locales/sl.json').then((module) => module.default),
   en: () => import('./locales/en.json').then((module) => module.default),
   cnr: () => import('./locales/cnr.json').then((module) => module.default),
+  de: () => import('./locales/de.json').then((module) => module.default),
 }
 const pendingCatalogs = new Map()
 let localeRequest = 0

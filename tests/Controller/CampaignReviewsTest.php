@@ -54,6 +54,91 @@ final class CampaignReviewsTest extends WebTestCase
         $em->flush();
     }
 
+    public function testPackagesUseServiceOffersWithTruthfulPricesAndPublicFaqs(): void
+    {
+        $creator = new Creator('schema-packages', 'Creator', 'Beauty', 'Sarajevo', '<p>Plain <strong>biography</strong>.</p>', [],
+            avatarUrl: 'https://images.example.test/creator.webp',
+            portfolio: [
+                ['type' => 'image', 'url' => 'https://images.example.test/public.webp', 'title' => 'A public work', 'publicPermission' => true],
+                ['type' => 'image', 'url' => 'https://images.example.test/private.webp', 'publicPermission' => false],
+            ],
+            packages: [
+                ['id' => 'fixed', 'title' => 'UGC video', 'description' => '<p>One video.</p>', 'price' => 250, 'priceMode' => 'fixed', 'currency' => 'BAM'],
+                ['id' => 'from', 'title' => 'Photo set', 'price' => 180, 'priceMode' => 'from', 'currency' => 'EUR'],
+                ['id' => 'agreement', 'title' => 'Custom campaign', 'price' => 999, 'priceMode' => 'agreement'],
+            ], faqs: [['question' => 'How long does delivery take?', 'answer' => 'Five working days.']]);
+        $person = static::getContainer()->get(\App\Service\ProfileStructuredData::class)->creator($creator, 'de');
+        self::assertSame('Plain biography.', $person['description']);
+        self::assertSame('https://images.example.test/creator.webp', $person['image']);
+        $offers = $person['hasOfferCatalog']['itemListElement'];
+        self::assertSame('Offer', $offers[0]['@type']);
+        self::assertSame('Service', $offers[0]['itemOffered']['@type']);
+        self::assertSame(250.0, $offers[0]['price']);
+        self::assertSame('BAM', $offers[0]['priceCurrency']);
+        self::assertSame('One video.', $offers[0]['itemOffered']['description']);
+        self::assertSame(180.0, $offers[1]['priceSpecification']['minPrice']);
+        self::assertArrayNotHasKey('price', $offers[1]);
+        self::assertArrayNotHasKey('price', $offers[2]);
+        self::assertArrayNotHasKey('priceCurrency', $offers[2]);
+        self::assertSame('FAQPage', $person['subjectOf'][0]['@type']);
+        self::assertSame('Answer', $person['subjectOf'][0]['mainEntity'][0]['acceptedAnswer']['@type']);
+        self::assertSame('ImageGallery', $person['subjectOf'][1]['@type']);
+        self::assertCount(1, $person['subjectOf'][1]['hasPart']);
+        self::assertSame('https://images.example.test/public.webp', $person['subjectOf'][1]['hasPart'][0]['contentUrl']);
+        self::assertStringNotContainsString('private.webp', json_encode($person, JSON_THROW_ON_ERROR));
+    }
+
+    public function testProfileSchemaMatchesTheApiAndNeverLeaksBlindOrFictionalReviews(): void
+    {
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $companyReview = new CampaignReview($this->application, $this->companyUser, $this->creatorUser, 4, 'Excellent work with a clear brief.');
+        $em->persist($companyReview);
+        $em->flush();
+        $factory = static::getContainer()->get(\App\Service\ProfileStructuredData::class);
+        $person = $factory->creator($this->creatorUser->getCreator(), 'de');
+        self::assertArrayNotHasKey('aggregateRating', $person);
+        self::assertArrayNotHasKey('review', $person['makesOffer']['itemOffered']);
+        $em->persist(new CampaignReview($this->application, $this->creatorUser, $this->companyUser, 5, 'A thoughtful and professional company.'));
+        $em->flush();
+        $this->client->request('GET', '/api/creators/review-creator?locale=de');
+        self::assertResponseIsSuccessful();
+        $person = $this->payload()['data']['structuredData'];
+        self::assertSame('Person', $person['@type']);
+        self::assertArrayNotHasKey('aggregateRating', $person);
+        self::assertArrayNotHasKey('review', $person);
+        $service = $person['makesOffer']['itemOffered'];
+        self::assertSame('Service', $service['@type']);
+        self::assertSame(4.0, (float) $service['aggregateRating']['ratingValue']);
+        self::assertSame(1, $service['aggregateRating']['reviewCount']);
+        self::assertSame('Organization', $service['review'][0]['author']['@type']);
+        self::assertSame($person['@id'], $service['provider']['@id']);
+        $crawler = $this->client->request('GET', '/kreatori/review-creator');
+        self::assertResponseIsSuccessful();
+        $graph = json_decode($crawler->filter('#wave-schema')->text(), true, flags: JSON_THROW_ON_ERROR);
+        self::assertSame($person, $graph[2]['mainEntity']);
+        self::assertSame('BreadcrumbList', $graph[3]['@type']);
+        $this->client->request('GET', '/api/companies/review-company?locale=de');
+        $company = $this->payload()['data']['structuredData'];
+        self::assertSame('Organization', $company['@type']);
+        self::assertArrayNotHasKey('industry', $company);
+        self::assertSame('Beauty', $company['knowsAbout']);
+        self::assertSame(5.0, (float) $company['aggregateRating']['ratingValue']);
+        self::assertSame('Person', $company['review'][0]['author']['@type']);
+
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $creatorOwner = $em->find(User::class, $this->creatorUser->getId());
+        $creatorOwner->markPresentationDemo('fictional-schema-test');
+        $em->flush();
+        $this->client->request('GET', '/api/creators/review-creator');
+        $service = $this->payload()['data']['structuredData']['makesOffer']['itemOffered'];
+        self::assertArrayNotHasKey('aggregateRating', $service);
+        self::assertArrayNotHasKey('review', $service);
+        $this->client->request('GET', '/api/companies/review-company');
+        $company = $this->payload()['data']['structuredData'];
+        self::assertArrayNotHasKey('aggregateRating', $company);
+        self::assertArrayNotHasKey('review', $company);
+    }
+
     public function testTwoWayFeedbackIsBlindUntilBothSubmitAndDuplicateIsRejected(): void
     {
         $this->client->loginUser($this->creatorUser);
