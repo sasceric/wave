@@ -32,7 +32,7 @@ job-success score, feedback revision, or payment processing.
   currency. They are agreed amounts, not proof of payment or a payment ledger;
   no currency conversion is performed. Wave does not collect or verify payments.
 - The account summary includes a password-change modal requiring current password,
-  a different new password of at least 12 characters, and matching confirmation.
+  a different new password of at least 8 characters, and matching confirmation.
   Social-only users can email themselves a password recovery link first.
 
 ## Access and API

@@ -121,7 +121,9 @@ test('company registration sends the same single name field', async () => {
   await view.state.submit()
   assert.equal(submitted.path, '/auth/register')
   assert.equal(submitted.body.name, 'Studio Wave')
-  assert.deepEqual(Array.from(submitted.body.industries), ['Travel'])
+  assert.equal('industries' in submitted.body, false)
+  assert.equal('phone' in submitted.body, false)
+  assert.equal('country' in submitted.body, false)
 })
 
 test('social registration prefills and submits a single editable name', async () => {
@@ -163,5 +165,15 @@ for (const approved of [false, true]) {
     await view.state.updateAccountVisibility(0)
     assert.equal(requests.length, approved ? 1 : 0)
     assert.equal(view.state.user.value.hide_my_account, approved ? 0 : 1)
+  })
+}
+
+for (const [requested, expected] of [['creator', 'creator'], ['company', 'company'], ['admin', 'creator']]) {
+  test(`registration entry selects ${expected} for accountType=${requested}`, async () => {
+    const view = await setupView('../src/components/account/AccountAccessPanel.vue', {
+      'vue-router': { useRoute: () => ({ query: { mode: 'register', accountType: requested } }), useRouter: () => ({}) },
+      '../../composables/useMarketplaceCatalog': { useMarketplaceCatalog: () => ({ categories: ref([]), industries: ref([]), error: ref('') }) },
+    })
+    assert.equal(view.state.form.accountType, expected)
   })
 }

@@ -193,7 +193,7 @@ final class AccountEmailSender
                 'greeting' => 'Zdravo!',
                 'message' => 'Tvoja e-mail adresa je potvrđena, a registracija je zaprimljena. Naš tim će pregledati račun i poslati ti e-mail čim bude odobren.',
                 'buttonLabel' => 'Otvori Wave',
-                'expiration' => 'Nije potrebna dodatna radnja dok čekaš pregled.',
+                'expiration' => 'Dopuni obavezne podatke profila na stranici Pregled kako bi tim mogao odobriti račun.',
                 'security' => 'Možeš se prijaviti i urediti svoj profil dok je račun na čekanju.',
                 'fallback' => 'Ako se dugme ne otvori, kopiraj ovu adresu u preglednik:',
                 'footer' => 'Automatska poruka od Wavea. Molimo ne odgovaraj na ovu e-poruku.',
@@ -221,7 +221,7 @@ final class AccountEmailSender
                 'greeting' => 'Pozdrav!',
                 'message' => 'Tvoja je adresa e-pošte potvrđena, a registracija je zaprimljena. Naš će tim pregledati račun i poslati ti e-poštu čim bude odobren.',
                 'buttonLabel' => 'Otvori Wave',
-                'expiration' => 'Nije potrebna dodatna radnja dok čekaš pregled.',
+                'expiration' => 'Dopuni obvezne podatke profila na stranici Pregled kako bi tim mogao odobriti račun.',
                 'security' => 'Možeš se prijaviti i urediti profil dok je račun na čekanju.',
                 'fallback' => 'Ako se gumb ne otvori, kopiraj ovu adresu u preglednik:',
                 'footer' => 'Automatska poruka od Wavea. Molimo ne odgovaraj na ovu poruku.',
@@ -249,7 +249,7 @@ final class AccountEmailSender
                 'greeting' => 'Zdravo!',
                 'message' => 'Tvoja e-mail adresa je potvrđena, a registracija je primljena. Naš tim će pregledati nalog i poslati ti e-mail čim bude odobren.',
                 'buttonLabel' => 'Otvori Wave',
-                'expiration' => 'Nije potrebna dodatna radnja dok čekaš pregled.',
+                'expiration' => 'Dopuni obavezne podatke profila na stranici Pregled kako bi tim mogao da odobri nalog.',
                 'security' => 'Možeš da se prijaviš i urediš profil dok je nalog na čekanju.',
                 'fallback' => 'Ako se dugme ne otvori, kopiraj ovu adresu u pregledač:',
                 'footer' => 'Automatska poruka od Wavea. Molimo te, ne odgovaraj na ovu e-poruku.',
@@ -277,7 +277,7 @@ final class AccountEmailSender
                 'greeting' => 'Zdravo!',
                 'message' => 'Tvoja e-mail adresa je potvrđena, a registracija je primljena. Naš tim će pregledati nalog i poslati ti e-mail čim bude odobren.',
                 'buttonLabel' => 'Otvori Wave',
-                'expiration' => 'Nije potrebna dodatna radnja dok čekaš pregled.',
+                'expiration' => 'Dopuni obavezne podatke profila na stranici Pregled kako bi tim mogao da odobri nalog.',
                 'security' => 'Možeš da se prijaviš i urediš profil dok je nalog na čekanju.',
                 'fallback' => 'Ako se dugme ne otvori, kopiraj ovu adresu u pregledač:',
                 'footer' => 'Automatska poruka od Wavea. Molimo te, ne odgovaraj na ovu e-poruku.',
@@ -305,7 +305,7 @@ final class AccountEmailSender
                 'greeting' => 'Pozdravljeni!',
                 'message' => 'Tvoj e-poštni naslov je potrjen, registracija pa je prejeta. Naša ekipa bo pregledala račun in ti poslala e-pošto, ko bo odobren.',
                 'buttonLabel' => 'Odpri Wave',
-                'expiration' => 'Med čakanjem ni potrebno dodatno dejanje.',
+                'expiration' => 'Dopolni obvezne podatke profila na strani Pregled, da lahko ekipa odobri račun.',
                 'security' => 'Prijaviš se lahko in urediš profil, medtem ko je račun v pregledu.',
                 'fallback' => 'Če se gumb ne odpre, kopiraj ta naslov v brskalnik:',
                 'footer' => 'To je samodejno sporočilo Wave. Prosimo, ne odgovarjaj nanj.',
@@ -333,7 +333,7 @@ final class AccountEmailSender
                 'greeting' => 'Hello!',
                 'message' => 'Your email address is verified and your registration has been received. Our team will review your account and email you as soon as it is approved.',
                 'buttonLabel' => 'Open Wave',
-                'expiration' => 'No further action is needed while your account is under review.',
+                'expiration' => 'Complete the required profile details in your overview so our team can approve your account.',
                 'security' => 'You can sign in and update your profile while you wait.',
                 'fallback' => 'If the button does not work, copy this address into your browser:',
                 'footer' => 'This is an automated message from Wave. Please do not reply.',
@@ -377,7 +377,7 @@ final class AccountEmailSender
 
     public function sendRegistrationReceived(User $user, string $locale): void
     {
-        $this->send($user, null, $locale, 'registered', 'account');
+        $this->send($user, null, $locale, 'registered', 'account-dashboard');
     }
 
     public function sendApproval(User $user, string $locale): void

@@ -2,9 +2,11 @@
 import SingleSelect from '../components/shared/SingleSelect.vue'
 import CardGrid from '../components/shared/CardGrid.vue'
 import CountryDirectoryLinks from '../components/shared/CountryDirectoryLinks.vue'
+import RegistrationPrompt from '../components/shared/RegistrationPrompt.vue'
+import { currentUser } from '../composables/useCurrentUser'
 import { computed, nextTick, onMounted, reactive, ref, useId, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { ArrowRight, ArrowUpRight, Building2, Camera, CircleCheck, ClipboardCheck, CreditCard, FileCheck2, FileText, HelpCircle, Mail, Map, Search, ShieldCheck, UserRound, UsersRound } from '@lucide/vue'
+import { ArrowRight, ArrowUpRight, Building2, Camera, CircleCheck, ClipboardCheck, CreditCard, FileCheck2, FileText, Handshake, HelpCircle, Mail, MailCheck, Map, Search, ShieldCheck, UserRound, UserRoundPen, UsersRound } from '@lucide/vue'
 import CampaignCard from '../components/campaigns/CampaignCard.vue'
 import CreatorCard from '../components/creators/CreatorCard.vue'
 import DirectorySkeletonCard from '../components/shared/DirectorySkeletonCard.vue'
@@ -152,6 +154,11 @@ onMounted(loadHome)
       <span>{{ t('home.lessNoise') }} <span aria-hidden="true">↓</span></span>
     </div>
   </section>
+
+  <div v-if="!currentUser" class="home-registration page-width">
+    <RegistrationPrompt audience="creator" variant="home" />
+    <RegistrationPrompt audience="company" variant="home" />
+  </div>
 
   <section class="section page-width">
     <div class="section-heading">
@@ -460,6 +467,17 @@ onMounted(loadHome)
         <LocalizedLink class="audience-promo__button" to="/campaigns">{{ t('home.exploreCampaigns') }}<ArrowRight :size="21" aria-hidden="true" /></LocalizedLink>
       </div>
     </div>
+  </section>
+
+  <section class="home-onboarding page-width" aria-labelledby="home-onboarding-title">
+    <h2 id="home-onboarding-title">{{ t('registrationPrompts.stepsTitle') }}</h2>
+    <ol class="home-onboarding__steps">
+      <li v-for="(icon, index) in [MailCheck, UserRoundPen, Handshake]" :key="index">
+        <component :is="icon" :size="25" stroke-width="1.7" aria-hidden="true" />
+        <h3>{{ t(`registrationPrompts.step${index + 1}Title`) }}</h3>
+        <p>{{ t(`registrationPrompts.step${index + 1}Description`) }}</p>
+      </li>
+    </ol>
   </section>
 
 </template>

@@ -27,6 +27,23 @@ final class OAuthRegistrationFlowTest extends WebTestCase
         $schemaTool->createSchema($entityManager->getMetadataFactory()->getAllMetadata());
     }
 
+    public function testSocialSignupDefersProfileDetailsForBothAccountTypes(): void
+    {
+        foreach (['creator', 'company'] as $type) {
+            $this->client->request('GET', '/api/auth/csrf?locale=en');
+            $csrf = $this->payload()['csrfToken'];
+            $session = $this->client->getRequest()->getSession();
+            $session->set('wave_oauth_registration', ['provider' => 'google', 'subject' => 'short-'.$type, 'email' => 'short-'.$type.'@example.test', 'accountType' => $type, 'createdAt' => time()]);
+            $session->save();
+            $this->client->jsonRequest('POST', '/api/auth/oauth/complete?locale=en', ['accountType' => $type, 'name' => 'Amina Studio'], ['HTTP_X_CSRF_TOKEN' => $csrf]);
+            self::assertResponseStatusCodeSame(201);
+            self::assertTrue($this->payload()['data']['emailVerified']);
+            self::assertFalse($this->payload()['data']['profileComplete']);
+            self::assertFalse($this->payload()['data']['approved']);
+            self::assertSame(1, $this->payload()['data']['hide_my_account']);
+        }
+    }
+
     public function testGoogleCompanyRegistrationStoresAgencyType(): void
     {
         $this->client->request('GET', '/api/auth/csrf?locale=en');

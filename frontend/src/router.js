@@ -4,6 +4,7 @@ import { defaultLocale, localizedPath, localizedRouteName, routeSegments, locale
 import { ensureCurrentUser } from './composables/useCurrentUser'
 import { accountAccessRedirect, accountLanding } from './lib/accountAccess'
 import { resolvePublicRedirect } from './lib/publicRedirects'
+import { registrationReturn } from './lib/registrationIntent'
 
 const accountView = () => import('./views/AccountView.vue')
 const adminDashboardView = () => import('./views/AdminDashboardView.vue')
@@ -219,6 +220,10 @@ router.beforeEach(async (to, from) => {
   const navigationLocale = to.meta.locale || (to.meta.sharedPublic ? preferredLocale() : defaultLocale)
   let user
   try { user = await ensureCurrentUser() } catch { /* The page API retains its access/error checks. */ }
+  if (['account', 'account-dashboard'].includes(to.meta.routeName) && !to.query.bookmark) {
+    const pendingReturn = registrationReturn(user)
+    if (pendingReturn) return pendingReturn
+  }
   const gate = accountAccessRedirect(to, user)
   if (gate) return { name: localizedRouteName(gate.name, navigationLocale) }
   if (user && to.meta.routeName === 'account' && !to.query.bookmark && !to.query.returnTo && (['login', 'register'].includes(to.query.mode) || to.query.oauth === 'success') && accountLanding(user) !== 'account') {

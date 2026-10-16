@@ -264,16 +264,19 @@ final class OAuthController extends AbstractController
             return new JsonResponse(['error' => ApiMessages::get('invalid_request', $locale)], 400);
         }
 
+        foreach (['phone', 'city', 'country', 'category'] as $field) {
+            if (array_key_exists($field, $data) && !is_string($data[$field])) {
+                return new JsonResponse(['error' => ApiMessages::get('invalid_registration', $locale)], 400);
+            }
+        }
         $type = $data['accountType'] ?? null;
         $phone = is_string($data['phone'] ?? null) ? trim($data['phone']) : '';
         $city = is_string($data['city'] ?? null) ? trim($data['city']) : '';
         $countryCode = is_string($data['country'] ?? null) ? strtoupper(trim($data['country'])) : '';
         if (!in_array($type, ['creator', 'company'], true)
-            || $phone === ''
             || mb_strlen($phone) > 40
-            || $city === ''
             || mb_strlen($city) > 70
-            || preg_match('/^[A-Z]{2}$/', $countryCode) !== 1
+            || ($countryCode !== '' && preg_match('/^[A-Z]{2}$/', $countryCode) !== 1)
         ) {
             return new JsonResponse(['error' => ApiMessages::get('invalid_registration', $locale)], 400);
         }
@@ -323,14 +326,14 @@ final class OAuthController extends AbstractController
         $user->setHideMyAccount(true);
 
         if ($type === 'creator') {
-            $categories = $this->categoryList($data['categories'] ?? []);
+            $categories = array_key_exists('categories', $data) ? $this->categoryList($data['categories']) : [];
             if ($categories === null) {
                 return new JsonResponse(['error' => ApiMessages::get('invalid_registration', $locale)], 400);
             }
             $user->setCreator(new Creator(
                 $publicSlugs->reserve('creator', $name),
                 $name,
-                $categories[0],
+                $categories[0] ?? '',
                 $city,
                 '',
                 [],
@@ -341,20 +344,20 @@ final class OAuthController extends AbstractController
         } else {
             $companyType = array_key_exists('companyType', $data) ? $data['companyType'] : 'brand';
             if (!is_string($companyType) || !\App\Account\CompanyTypes::valid($companyType)) return new JsonResponse(['error' => ApiMessages::get('invalid_registration', $locale)], 400);
-            $industries = $data['industries'] ?? [$data['industry'] ?? ''];
-            if (!is_array($industries) || !array_is_list($industries) || count($industries) < 1 || count($industries) > 20
+            $industries = $data['industries'] ?? (isset($data['industry']) ? [$data['industry']] : []);
+            if (!is_array($industries) || !array_is_list($industries) || count($industries) > 20
                 || array_filter($industries, static fn ($value): bool => !is_string($value) || mb_strlen(trim($value)) < 2 || mb_strlen($value) > 100) !== []
             ) {
                 return new JsonResponse(['error' => ApiMessages::get('invalid_profile', $locale)], 400);
             }
             $industries = array_values(array_unique(array_map('trim', $industries)));
-            $industry = $industries[0];
-            if ($industry === '' || mb_strlen($industry) > 100) {
+            $industry = $industries[0] ?? '';
+            if (mb_strlen($industry) > 100) {
                 return new JsonResponse(['error' => ApiMessages::get('invalid_registration', $locale)], 400);
             }
             $company = new Company($publicSlugs->reserve('company', $name), $name, $industry);
             $company->setCompanyType($companyType);
-            $company->setIndustries($industries);
+            if ($industries !== []) $company->setIndustries($industries);
             $user->setCompany($company);
         }
 

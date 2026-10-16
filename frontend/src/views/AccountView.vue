@@ -1,5 +1,6 @@
 <script setup>
 import { accountLanding } from '../lib/accountAccess'
+import { registrationReturn } from '../lib/registrationIntent'
 import { companyTypeOptions } from '../lib/companyTypes'
 import { mergeCampaignActivity } from '../lib/campaignActivity'
 import CampaignCancellationAction from '../components/account/CampaignCancellationAction.vue'
@@ -264,6 +265,11 @@ async function handleAuthenticated(authenticatedUser) {
   await nextTick()
   // Login replaces this view in place, so the login form's scroll position survives.
   window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
+  const pendingReturn = registrationReturn(authenticatedUser)
+  if (pendingReturn && !route.query.bookmark) {
+    await router.replace(pendingReturn)
+    return
+  }
   if (authenticatedUser && !route.query.bookmark && !route.query.returnTo) await router.replace({ name: localizedRouteName(accountLanding(authenticatedUser), locale.value) })
 }
 
@@ -368,6 +374,10 @@ async function loadDashboard(authenticatedUser = null, { sectionOnly = false } =
           || profile.value.countryCode
           || 'BA'
       }
+    }
+    if (route.query.edit === '1' && profile.value && !editingProfile.value) {
+      startProfileEdit(isAccountTab(route.query.tab) ? route.query.tab : 'about')
+      void router.replace({ query: { ...route.query, edit: undefined } })
     }
     const canAccessMarketplace = response.data.approved || response.data.isAdmin
     if (route.query.bookmark && canAccessMarketplace) {

@@ -5,6 +5,7 @@ import RouterLink from '../components/shared/LocalizedLink.vue'
 import { useI18n } from 'vue-i18n'
 import LoadingSkeleton from '../components/shared/LoadingSkeleton.vue'
 import StatusMessage from '../components/shared/StatusMessage.vue'
+import { currentUser, loadCurrentUser } from '../composables/useCurrentUser'
 import { apiRequest } from '../lib/api'
 
 const { t } = useI18n()
@@ -22,6 +23,8 @@ onMounted(async () => {
   try {
     await apiRequest('/auth/verify-email', { method: 'POST', body: { token } })
     status.value = 'complete'
+    // Verification may have happened in another tab; refresh the authenticated session, never infer its identity from the token.
+    void loadCurrentUser().catch(() => {})
   } catch (cause) {
     error.value = cause.message
     status.value = 'invalid'
@@ -39,7 +42,7 @@ onMounted(async () => {
       <StatusMessage v-else-if="status === 'invalid'" variant="error">
         {{ error || t('auth.verificationInvalid') }}
       </StatusMessage>
-      <RouterLink v-if="status !== 'pending'" class="button button--dark" to="/account">{{ t('auth.backToSignIn') }} <span aria-hidden="true">↗</span></RouterLink>
+      <RouterLink v-if="status !== 'pending'" class="button button--dark" :to="{ name: currentUser ? 'account-dashboard' : 'account' }">{{ t(currentUser ? 'activation.backToOverview' : 'auth.backToSignIn') }} <span aria-hidden="true">↗</span></RouterLink>
     </div>
   </AccountPage>
 </template>

@@ -1,0 +1,58 @@
+@use '../../breakpoints';
+
+.registration-prompt {
+  min-width: 0;
+  padding: 32px;
+  border-radius: 24px;
+  background: var(--forest);
+  color: #fffefa;
+
+  &__copy { min-width: 0; }
+  &__title { margin: 0 0 14px; color: inherit; font-family: var(--serif); font-size: 32px; font-weight: 400; line-height: 1.15; letter-spacing: -.5px; }
+  &__title > span { display: block; }
+  &__description { max-width: 540px; margin: 0; color: inherit; font-size: 15px; line-height: 1.65; }
+  &__action { flex-shrink: 0; gap: 18px; min-height: 52px; padding: 12px 23px; border-radius: 12px; color: var(--forest); background: #fffefa; font-size: 14px; }
+  &__action svg { flex-shrink: 0; }
+  &__action.button--dark { color: #fffefa; background: var(--forest); }
+  &--company { color: var(--forest); background: color-mix(in srgb, var(--paper) 84%, var(--coral) 16%); }
+  &--home { display: flex; flex-direction: column; align-items: flex-start; padding: clamp(28px, 3.5vw, 48px); }
+  &--home .eyebrow { margin: 0 0 28px; color: inherit; opacity: .72; }
+  &--home .registration-prompt__title { font-size: clamp(30px, 3.1vw, 42px); }
+  &--home .registration-prompt__description { max-width: 465px; margin-bottom: 27px; font-size: 17px; }
+  &--home .registration-prompt__action { margin-top: auto; }
+  &--banner { display: flex; grid-column: 1 / -1; align-items: center; justify-content: space-between; gap: 28px; margin: 10px 0; }
+  &--sidebar { margin-top: 24px; padding: 22px 0 0; border-top: 1px solid var(--line); border-radius: 0; color: var(--forest); background: transparent; }
+  &--sidebar .registration-prompt__title { margin-bottom: 12px; font-size: 26px; }
+  &--sidebar .registration-prompt__description { font-size: 13px; }
+  &--sidebar .registration-prompt__action { justify-content: flex-start; gap: 12px; min-height: 44px; margin-top: 17px; padding: 0; color: var(--forest); background: transparent; font-size: 13px; }
+  &--profile, &--campaign { padding: 28px; border: 1px solid var(--line); border-radius: 22px; color: var(--forest); background: #fffefa; }
+  &--profile .registration-prompt__title, &--campaign .registration-prompt__title { font-size: 30px; }
+  &--profile .registration-prompt__action, &--campaign .registration-prompt__action { width: 100%; }
+  &--profile .registration-prompt__description, &--campaign .registration-prompt__description { color: var(--muted-text); }
+  &--campaign .eyebrow { margin: 0 0 20px; color: var(--muted-text); }
+  &--campaign .registration-prompt__action { margin-top: 24px; }
+  &__benefits { display: grid; gap: 15px; margin: 25px 0; padding: 0; list-style: none; }
+  &__benefits li { display: flex; align-items: flex-start; gap: 12px; font-size: 14px; line-height: 1.6; }
+  &__benefits svg { flex-shrink: 0; margin-top: 2px; color: var(--coral); }
+  &__login { margin: 24px 0 0; color: var(--muted-text); font-size: 14px; }
+  &__login a { color: var(--forest); font-weight: 600; text-underline-offset: 4px; }
+}
+
+@include breakpoints.down(1000px) {
+  .registration-prompt--banner { align-items: flex-start; flex-direction: column; gap: 20px; }
+}
+
+@include breakpoints.down(760px) {
+  .registration-prompt {
+    padding: 25px;
+    border-radius: 20px;
+
+    &__title { font-size: 29px; }
+    &__description { font-size: 14px; }
+    &__action { width: 100%; min-height: 48px; font-size: 13px; }
+    &--home .eyebrow { margin-bottom: 20px; }
+    &--home .registration-prompt__title { font-size: 32px; }
+    &--home .registration-prompt__description { margin-bottom: 23px; font-size: 15px; }
+    &--sidebar { display: none; }
+  }
+}

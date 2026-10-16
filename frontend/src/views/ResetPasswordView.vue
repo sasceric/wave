@@ -59,12 +59,12 @@ async function resetPassword() {
         <p>{{ t('auth.resetIntro') }}</p>
         <label class="form-field">
           <span>{{ t('auth.newPassword') }}</span>
-          <input v-model="password" data-validation-key="new-password" type="password" required minlength="12" maxlength="4096" autocomplete="new-password" />
+          <input v-model="password" data-validation-key="new-password" type="password" required minlength="8" maxlength="4096" autocomplete="new-password" />
           <small>{{ t('auth.passwordHint') }}</small>
         </label>
         <label class="form-field">
           <span>{{ t('auth.confirmPassword') }}</span>
-          <input v-model="confirmation" data-equal-to="new-password" type="password" required minlength="12" maxlength="4096" autocomplete="new-password" />
+          <input v-model="confirmation" data-equal-to="new-password" type="password" required minlength="8" maxlength="4096" autocomplete="new-password" />
         </label>
         <StatusMessage v-if="error" variant="error">{{ error }}</StatusMessage>
         <button class="button button--dark button--full" type="submit" :disabled="busy">{{ t('auth.resetTitle') }} <span aria-hidden="true">↗</span></button>

@@ -5,13 +5,13 @@ import { accountAccessRedirect, accountLanding } from '../src/lib/accountAccess.
 import { campaignActivityStage } from '../src/lib/campaignActivity.js'
 import { setupView } from './setupView.js'
 
-test('login lands on overview, incomplete accounts stay on their profile, collaboration waits for approval and verification', () => {
+test('login lands on overview, incomplete accounts can use the setup overview, collaboration waits for approval and verification', () => {
   const ready = { approved: true, emailVerified: true, profileComplete: true }
   const route = name => ({ meta: { routeName: name } })
   assert.equal(accountLanding(ready), 'account-dashboard')
-  assert.equal(accountLanding({ ...ready, profileComplete: false }), 'account')
-  for (const name of ['home', 'campaigns', 'messages', 'account-applications', 'account-dashboard']) assert.deepEqual(accountAccessRedirect(route(name), { ...ready, profileComplete: false }), { name: 'account' })
-  for (const name of ['account', 'support-create', 'account-support', 'verify-email', 'privacy-policy']) assert.equal(accountAccessRedirect(route(name), { ...ready, profileComplete: false }), null)
+  assert.equal(accountLanding({ ...ready, profileComplete: false }), 'account-dashboard')
+  for (const name of ['home', 'campaigns', 'messages', 'account-applications']) assert.deepEqual(accountAccessRedirect(route(name), { ...ready, profileComplete: false }), { name: 'account' })
+  for (const name of ['account-dashboard', 'account', 'support-create', 'account-support', 'verify-email', 'privacy-policy']) assert.equal(accountAccessRedirect(route(name), { ...ready, profileComplete: false }), null)
   for (const flag of ['approved', 'emailVerified']) {
     for (const name of ['messages', 'account-campaigns', 'account-applications', 'account-reviews']) assert.deepEqual(accountAccessRedirect(route(name), { ...ready, [flag]: false }), { name: 'account-dashboard' })
     for (const name of ['account-dashboard', 'account', 'account-support']) assert.equal(accountAccessRedirect(route(name), { ...ready, [flag]: false }), null)

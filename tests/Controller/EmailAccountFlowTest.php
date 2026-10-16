@@ -173,7 +173,7 @@ final class EmailAccountFlowTest extends WebTestCase
         self::assertSame($knownAccountResponse, $this->payload());
         self::assertEmailCount(0);
 
-        $newPassword = 'another-long-passphrase-for-wave';
+        $newPassword = 'eight888';
         $this->jsonRequest('POST', '/api/auth/password-resets', [
             'token' => $resetToken,
             'password' => $newPassword,

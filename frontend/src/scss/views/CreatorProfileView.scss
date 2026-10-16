@@ -879,7 +879,7 @@
 
 // Public creator presentation, aligned with the approved profile prototype.
 .creator-profile {
-  .profile-layout { max-width:1000px; grid-template-columns:minmax(0,1fr) 245px; gap:24px; padding-top:24px; }
+  .profile-layout { grid-template-columns:minmax(0,1fr) minmax(285px,.45fr); gap:24px; padding-top:24px; }
   .profile-breadcrumbs { flex-wrap:wrap; grid-column:1/-1; display:flex; align-items:center; gap:8px; min-width:0; color:var(--muted); font-size:12px; a { color:inherit; text-decoration:none; } span { overflow-wrap:anywhere; } }
   .profile-heading { grid-column:1/-1; min-height:0; padding:0; gap:24px; align-items:center; }
   .profile-heading__identity { flex:1; min-width:0; gap:22px; align-items:center; }

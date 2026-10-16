@@ -701,3 +701,7 @@ accepts a JSON `companyTypes` array, matching either selected type; the selectio
 part of its signed cursor scope. Type facets honor visibility and personal blocks.
 Migration `Version20261013170000` defaults existing companies to brand and is applied
 locally. All copy and route titles are present in six locales.
+
+## Account activation (October 2026)
+
+See `docs/account-activation.md`: signup now collects identity/credentials first (eight-character password minimum); all existing profile fields remain in account setup. Incomplete accounts can use Pregled. New opt-in campaign digests use the existing scheduler/mail queue, and admin cohort analytics record real account milestones without backfilling old registrations. Migration `Version20261016120000` adds only two new tables.

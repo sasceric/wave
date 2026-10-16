@@ -1,5 +1,7 @@
 {
-  "presentationDemo": { "badge": "Prototype · fictional data" },
+  "presentationDemo": {
+    "badge": "Prototype · fictional data"
+  },
   "meta": {
     "title": "Wave | creator and brand partnerships",
     "description": "A place for creators and brands to find the right partners."
@@ -438,6 +440,75 @@
     "noIndustries": "No categories match your search.",
     "selectIndustries": "Select categories"
   },
+  "registrationPrompts": {
+    "companyDirectory": {
+      "title": "Introduce your company.",
+      "description": "Create a brand or agency profile, showcase what you do and connect with creators.",
+      "action": "Create a company profile"
+    },
+    "homeCreator": {
+      "eyebrow": "For creators",
+      "title": "Your work deserves",
+      "titleTail": "to be seen.",
+      "description": "Your work, audience and services in one profile you can share with companies.",
+      "action": "Create your profile"
+    },
+    "homeCompany": {
+      "eyebrow": "For companies and agencies",
+      "title": "Your idea.",
+      "titleTail": "The right creators.",
+      "description": "Find creative collaborators or publish a campaign for your brand or client.",
+      "action": "Publish a campaign"
+    },
+    "bannerCreator": {
+      "title": "Your work. Your profile. New opportunities.",
+      "description": "Showcase your work and services. Discover campaigns and receive collaboration invitations.",
+      "action": "Create your profile"
+    },
+    "bannerCompany": {
+      "title": "The right creators for your idea.",
+      "description": "Publish a campaign or invite creators whose work suits your brand.",
+      "action": "Publish a campaign"
+    },
+    "sidebarCreator": {
+      "title": "Want your work to be here?",
+      "description": "Create your profile and show what you can do.",
+      "action": "Create a profile"
+    },
+    "sidebarCompany": {
+      "title": "Is your company next?",
+      "description": "Showcase your brand or agency and find collaborators.",
+      "action": "Add your company"
+    },
+    "profileCompany": {
+      "title": "Found the right creator?",
+      "description": "Create a company account to send an inquiry or campaign invitation.",
+      "action": "Create a company account"
+    },
+    "campaignCreator": {
+      "eyebrow": "Your next step",
+      "title": "See yourself in this campaign?",
+      "description": "Create a creator profile and apply once your profile is approved.",
+      "action": "Apply to the campaign"
+    },
+    "benefitWork": "Explore creators’ work and services",
+    "benefitCampaign": "Publish campaigns and choose collaborators",
+    "benefitMessages": "Messages and agreements in one place",
+    "campaignSaved": "Your selected campaign stays saved during registration.",
+    "campaignRequirements": "Verify your email and complete your profile before applying.",
+    "hasAccount": "Already have an account?",
+    "signIn": "Sign in",
+    "collaborationTitle": "How does a collaboration start?",
+    "collaborationDescription": "Apply, talk with the company and confirm the agreed terms.",
+    "noPayments": "Wave does not process payments.",
+    "stepsTitle": "A clear start. Step by step.",
+    "step1Title": "Verify your email",
+    "step1Description": "Create an account and verify your email address.",
+    "step2Title": "Showcase your work",
+    "step2Description": "Complete the required information and submit your profile for review.",
+    "step3Title": "Start collaborating",
+    "step3Description": "Once approved, you can apply and discuss collaborations."
+  },
   "home": {
     "kicker": "Creators × brands",
     "headlineLead": "Good things happen when",
@@ -801,7 +872,7 @@
     "industryPlaceholder": "e.g. travel, fashion, food and beverage, or beauty",
     "signIn": "Sign in",
     "register": "Create account",
-    "passwordHint": "At least 12 characters.",
+    "passwordHint": "At least 8 characters.",
     "forgotPassword": "Forgot your password?",
     "verifyTitle": "Verify your email address.",
     "resetTitle": "Set a new password.",
@@ -2130,7 +2201,7 @@
   },
   "passwordChange": {
     "title": "Change password",
-    "hint": "Enter your current password and a new password of at least 12 characters.",
+    "hint": "Enter your current password and a new password of at least 8 characters.",
     "current": "Current password",
     "new": "New password",
     "confirm": "Confirm new password",
@@ -2537,5 +2608,70 @@
     ],
     "unspecified": "Availability not specified",
     "workTitle": "Work title"
+  },
+  "activation": {
+    "signupHint": "To get started, we only need the basics. Complete the rest in your account.",
+    "start": "Your start on Wave",
+    "title": "Prepare your profile for collaborations.",
+    "hint": "Three required steps, followed by a review from our team. Every profile field remains available in the editor.",
+    "progress": "Required steps",
+    "emailTitle": "Confirm your email",
+    "emailHint": "Open the link in the message we sent you.",
+    "contactTitle": "Add contact details and location",
+    "contactHint": "Phone, city and country. Your phone number is private.",
+    "identityTitle": "Introduce yourself or your company",
+    "identityHint": "Add your name or company name and select your categories.",
+    "resend": "Resend email",
+    "complete": "Complete",
+    "reviewTitle": "Your profile is awaiting review",
+    "reviewHint": "Your required details are ready. Our team will review your profile and notify you after approval. No additional submission is needed.",
+    "lockedTitle": "Complete the required steps",
+    "lockedHint": "Once your email is confirmed and your details are complete, our team can approve your profile. Your account stays hidden until then.",
+    "optional": "Give people more reasons to work with you",
+    "optionalHint": "Recommended for a stronger profile. These details are optional for approval.",
+    "optional_networks": "Connect your networks and describe your audience",
+    "optional_works": "Add your best work",
+    "optional_packages": "Present your packages and prices",
+    "optional_company": "Add a logo and introduce your company",
+    "approved": "Profile approved",
+    "preparing": "Profile in preparation",
+    "publicProfile": "Public profile",
+    "visibilityHint": "You choose when your profile becomes visible to others.",
+    "visibilityLocked": "Enable visibility after completing your details, confirming your email and receiving approval.",
+    "next": "Your next step",
+    "creatorReady": "Your work is ready. Find your first campaign.",
+    "companyReady": "Your idea is ready. Publish a campaign.",
+    "creatorReadyHint": "Explore opportunities, present your offer and plan your next collaboration.",
+    "companyReadyHint": "Describe the brief, meet creators and choose collaborators for your brand or client.",
+    "alertsTitle": "Campaigns that interest you",
+    "alertsHint": "Choose categories and locations. New opportunities can arrive directly in your inbox.",
+    "alertsEnabled": "Email alerts are enabled. Change or turn them off at any time.",
+    "alertsConfigure": "Manage alerts",
+    "alertsDescription": "Receive an email digest of new campaigns matching your choices.",
+    "alertsSwitch": "Send me campaign alerts",
+    "allCategories": "All categories",
+    "allCountries": "All countries",
+    "frequency": "Frequency",
+    "daily": "Once a day",
+    "weekly": "Once a week",
+    "alertsNote": "Delivery starts once your email is verified, your details are complete and your profile is approved. We only send new matches; no new results means no email.",
+    "saved": "Preferences saved.",
+    "save": "Save",
+    "funnelEyebrow": "From signup to the first collaboration",
+    "funnelTitle": "How new accounts progress",
+    "funnelHint": "Accounts registered during the selected period and their progress. Percentages show conversion from the previous step.",
+    "funnelNote": "Measurement starts with this feature. Older accounts, deleted accounts and demo profiles are excluded. Site visits and abandoned signups are outside this report.",
+    "filter_all": "All accounts",
+    "filter_creator": "Creators",
+    "filter_company": "Companies and agencies",
+    "stage_registered": "Account registered",
+    "stage_verified": "Email verified",
+    "stage_completed": "Required profile completed",
+    "stage_approved": "Profile approved",
+    "stage_first_action": "First application or published campaign",
+    "backToOverview": "Back to overview",
+    "loading": "Loading your overview…",
+    "creatorContinue": "Find your next campaign.",
+    "checkStatus": "Check status"
   }
 }

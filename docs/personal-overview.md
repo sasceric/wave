@@ -18,8 +18,8 @@ appear in activity queries. Invitations and applications for the same creator an
 campaign appear once. No conversation history is fetched, and no polling or
 additional server service is required.
 
-Password and completed social sign-in land on Pregled. Incomplete profiles land
-on the account editor. Existing support-return and saved-campaign deep links remain
+Password and completed social sign-in land on Pregled. Incomplete profiles see
+the setup checklist there and can open the existing account editor. Existing support-return and saved-campaign deep links remain
 supported. `lib/accountAccess.js` sends incomplete participants back to their
 account settings when they attempt other pages, while preserving support,
 verification and legal pages. Required fields are the existing `hasCompleteProfile`
@@ -27,7 +27,7 @@ fields: name/company name, topic/industry, phone, city and country. Optional soc
 profiles, packages, biography and portfolio do not become mandatory.
 
 Approval and verified email still gate marketplace account features and messages.
-Complete accounts awaiting approval can use Pregled to check the three onboarding
+Accounts awaiting completion or approval can use Pregled to check the three onboarding
 steps. The API retains its existing role/approval/verification checks; the visibility
 endpoint additionally requires a complete profile and verified email. Keeping an
 eligible profile hidden is a personal choice and does not disable collaboration.
@@ -37,3 +37,5 @@ The sidebar starts with personal Pregled, followed by the account's campaign and
 collaboration pages, saved campaigns for creators, and reviews. Account settings,
 tickets, blocks and logout remain separate; administration and marketing links
 remain grouped for staff.
+
+See [account-activation.md](account-activation.md) for the setup checklist, shorter signup, opt-in campaign emails and measured admin activation funnel.

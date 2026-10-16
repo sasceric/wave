@@ -168,7 +168,7 @@ final class CampaignReviewsTest extends WebTestCase
         $otherBrowser->request('GET', '/api/auth/me');
         self::assertSame(200, $otherBrowser->getResponse()->getStatusCode());
         $url = '/api/me/password';
-        $valid = ['currentPassword' => 'old-long-password', 'newPassword' => 'new-long-password', 'confirmPassword' => 'new-long-password'];
+        $valid = ['currentPassword' => 'old-long-password', 'newPassword' => 'eight888', 'confirmPassword' => 'eight888'];
         $this->client->jsonRequest('PUT', $url, $valid);
         self::assertResponseStatusCodeSame(403);
         foreach ([['currentPassword' => 'wrong-password'], ['confirmPassword' => 'not-the-same-password'], ['newPassword' => 'short', 'confirmPassword' => 'short']] as $invalid) {
@@ -189,7 +189,7 @@ final class CampaignReviewsTest extends WebTestCase
         self::assertSame(0, $em->getRepository(UserActionToken::class)->count(['purpose' => 'reset_password']));
         $user = $em->find(User::class, $this->creatorUser->getId());
         $hasher = static::getContainer()->get(UserPasswordHasherInterface::class);
-        self::assertTrue($hasher->isPasswordValid($user, 'new-long-password'));
+        self::assertTrue($hasher->isPasswordValid($user, 'eight888'));
         self::assertFalse($hasher->isPasswordValid($user, 'old-long-password'));
         $otherBrowser->request('GET', '/api/auth/me');
         self::assertSame(401, $otherBrowser->getResponse()->getStatusCode());
@@ -276,7 +276,7 @@ final class CampaignReviewsTest extends WebTestCase
         $this->client->request('GET', '/api/auth/csrf');
         $csrf = $this->payload()['csrfToken'];
         for ($attempt = 0; $attempt < 6; ++$attempt) {
-            $this->client->jsonRequest('PUT', '/api/me/password', ['currentPassword' => 'wrong-password', 'newPassword' => 'new-long-password', 'confirmPassword' => 'new-long-password'], ['HTTP_X_CSRF_TOKEN' => $csrf]);
+            $this->client->jsonRequest('PUT', '/api/me/password', ['currentPassword' => 'wrong-password', 'newPassword' => 'eight888', 'confirmPassword' => 'eight888'], ['HTTP_X_CSRF_TOKEN' => $csrf]);
             self::assertResponseStatusCodeSame($attempt < 5 ? 400 : 429);
         }
         self::assertNotNull($this->client->getResponse()->headers->get('Retry-After'));

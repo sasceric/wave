@@ -33,7 +33,7 @@ php8.4 bin/console app:seed-presentation-demo --env=prod --dry-run
 php8.4 bin/console app:seed-presentation-demo --env=prod
 ```
 
-The final command asks for a hidden password (minimum 12 characters). The operator
+The final command asks for a hidden password (minimum 8 characters). The operator
 supplies the requested shared password; it is never embedded in code, logs or this
 file. For non-interactive use, supply `WAVE_PRESENTATION_PASSWORD` through a temporary
 process environment and use `--no-interaction`. Do not keep it in the server's

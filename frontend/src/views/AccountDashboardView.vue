@@ -1,7 +1,10 @@
 <script setup>
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { ArrowRight, Check, ClipboardCheck, Coins, Handshake, Mail, Megaphone, Pencil, ShieldCheck } from '@lucide/vue'
+import { ArrowRight, ClipboardCheck, Coins, Handshake, Mail, Megaphone, Pencil } from '@lucide/vue'
+import AccountActivationPanel from '../components/account/AccountActivationPanel.vue'
+import AccountVisibilityCard from '../components/account/AccountVisibilityCard.vue'
+import CampaignAlertSettings from '../components/account/CampaignAlertSettings.vue'
 import AccountPage from '../components/account/AccountPage.vue'
 import CreatorProfileStatistics from '../components/account/CreatorProfileStatistics.vue'
 import AccountSidebar from '../components/account/AccountSidebar.vue'
@@ -22,11 +25,6 @@ const ready = computed(() => snapshot.value?.ready === true)
 const metrics = computed(() => (creator.value ? [
   ['invitations', Mail], ['offers', ClipboardCheck], ['active', Handshake], ['applications', Megaphone],
 ] : [['campaigns', Megaphone], ['applications', ClipboardCheck], ['offers', Mail], ['active', Handshake]]).map(([key, icon]) => ({ key, icon, count: snapshot.value?.counts?.[key] || 0 })))
-const checks = computed(() => [
-  { key: 'profile', done: currentUser.value?.profileComplete === true },
-  { key: 'email', done: currentUser.value?.emailVerified === true },
-  { key: 'approval', done: currentUser.value?.approved === true },
-])
 function metricLink(key) {
   const status = creator.value ? { invitations: 'pending', offers: 'offered', active: 'hired', applications: 'all' }[key] : key === 'campaigns' ? 'open' : 'all'
   return { name: creator.value ? 'account-applications' : 'account-campaigns', query: { status } }
@@ -68,31 +66,17 @@ onBeforeUnmount(() => { ++revision })
         <h1>{{ t('personalDashboard.title') }}</h1>
         <p>{{ t(`personalDashboard.${creator ? 'creatorIntro' : 'companyIntro'}`) }}</p>
       </div>
-      <LocalizedLink class="button button--outline" :to="{ name: 'account' }">
+      <LocalizedLink v-if="ready" class="button button--outline" :to="{ name: 'account' }">
         <Pencil :size="15" aria-hidden="true" />{{ t('personalDashboard.editProfile') }}
       </LocalizedLink>
     </header>
     <StatusMessage v-if="error" variant="error">{{ error }}</StatusMessage>
     <LocalizedLink v-if="!currentUser" class="button button--dark" :to="{ name: 'account', query: { mode: 'login' } }">{{ t('app.login') }}</LocalizedLink>
-    <p v-else-if="loading && !snapshot" role="status">{{ t('adminDashboard.loading') }}</p>
+    <p v-else-if="loading && !snapshot" role="status">{{ t('activation.loading') }}</p>
     <template v-else-if="snapshot">
-      <section v-if="!ready" class="personal-overview__setup">
-        <ShieldCheck :size="30" aria-hidden="true" />
-        <div><h2>{{ t('personalDashboard.setupTitle') }}</h2><p>{{ t('personalDashboard.setupHint') }}</p></div>
-        <ol>
-          <li v-for="item in checks" :key="item.key">
-            <span :class="{ 'is-done': item.done }">
-              <Check v-if="item.done" :size="15" aria-hidden="true" />
-              {{ t(`personalDashboard.checks.${item.key}`) }}
-              <small>{{ t(item.done ? 'personalDashboard.done' : 'personalDashboard.pending') }}</small>
-            </span>
-          </li>
-        </ol>
-        <LocalizedLink class="button button--outline" :to="{ name: 'account' }">
-          {{ t('personalDashboard.editProfile') }}<ArrowRight :size="16" aria-hidden="true" />
-        </LocalizedLink>
-      </section>
+      <div v-if="!ready" class="activation-layout"><AccountActivationPanel :user="currentUser" /><AccountVisibilityCard /></div>
       <template v-else>
+        <section class="activation-spotlight"><div><p>{{ t('activation.next') }}</p><h2>{{ t(creator ? (snapshot.counts.applications > 0 ? 'activation.creatorContinue' : 'activation.creatorReady') : 'activation.companyReady') }}</h2><p>{{ t(creator ? 'activation.creatorReadyHint' : 'activation.companyReadyHint') }}</p></div><LocalizedLink class="button" :to="{ name: creator ? 'campaigns' : 'account-campaign-create' }">{{ t(creator ? 'personalDashboard.findCampaign' : 'personalDashboard.newCampaign') }}<ArrowRight :size="17" aria-hidden="true" /></LocalizedLink></section>
         <div class="personal-overview__metrics">
           <LocalizedLink v-for="metric in metrics" :key="metric.key" class="personal-overview__metric" :to="metricLink(metric.key)">
             <span><component :is="metric.icon" :size="18" aria-hidden="true" />{{ t(`personalDashboard.${creator ? 'creator' : 'company'}.${metric.key}`) }}</span>
@@ -101,6 +85,7 @@ onBeforeUnmount(() => { ++revision })
           </LocalizedLink>
         </div>
         <div class="personal-overview__body">
+          <div class="personal-overview__main">
           <section class="personal-overview__activity">
             <header>
               <div><h2>{{ t('personalDashboard.recent') }}</h2><p>{{ t('personalDashboard.recentHint') }}</p></div>
@@ -117,7 +102,10 @@ onBeforeUnmount(() => { ++revision })
               </li>
             </ul>
           </section>
+          <CreatorProfileStatistics v-if="creator" />
+          </div>
           <aside class="personal-overview__aside">
+            <AccountVisibilityCard />
             <section class="personal-overview__financial">
               <p>{{ t(creator ? 'reviews.earnings' : 'reviews.spending') }}</p>
               <template v-if="snapshot.financial?.totals?.length">
@@ -141,8 +129,8 @@ onBeforeUnmount(() => { ++revision })
             </LocalizedLink>
           </aside>
         </div>
-        <CreatorProfileStatistics v-if="creator" />
       </template>
+      <CampaignAlertSettings v-if="creator" :key="currentUser.id" />
     </template>
   </AccountPage>
 </template>

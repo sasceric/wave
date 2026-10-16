@@ -1,5 +1,7 @@
 {
-  "presentationDemo": { "badge": "Prototip · izmišljeni podatki" },
+  "presentationDemo": {
+    "badge": "Prototip · izmišljeni podatki"
+  },
   "meta": {
     "title": "Wave | sodelovanja ustvarjalcev in blagovnih znamk",
     "description": "Prostor, kjer ustvarjalci in blagovne znamke najdejo prave partnerje."
@@ -439,6 +441,75 @@
     "noIndustries": "Ni področij, ki bi ustrezala iskanju.",
     "selectIndustries": "Izberi področja"
   },
+  "registrationPrompts": {
+    "companyDirectory": {
+      "title": "Predstavi svoje podjetje.",
+      "description": "Dodaj profil znamke ali agencije, predstavi svojo dejavnost in se poveži z ustvarjalci.",
+      "action": "Ustvari profil podjetja"
+    },
+    "homeCreator": {
+      "eyebrow": "Za ustvarjalce",
+      "title": "Tvoje delo si zasluži,",
+      "titleTail": "da ga opazijo.",
+      "description": "Dela, občinstvo in ponudba na enem profilu, ki ga lahko deliš s podjetji.",
+      "action": "Ustvari svoj profil"
+    },
+    "homeCompany": {
+      "eyebrow": "Za podjetja in agencije",
+      "title": "Tvoja ideja.",
+      "titleTail": "Pravi ustvarjalci.",
+      "description": "Poišči ustvarjalne sodelavce ali objavi kampanjo za svojo znamko ali naročnika.",
+      "action": "Objavi kampanjo"
+    },
+    "bannerCreator": {
+      "title": "Tvoje delo. Tvoj profil. Nove priložnosti.",
+      "description": "Predstavi dela in ponudbo. Poišči kampanje in prejemaj vabila k sodelovanju.",
+      "action": "Ustvari svoj profil"
+    },
+    "bannerCompany": {
+      "title": "Pravi ustvarjalci za tvojo idejo.",
+      "description": "Objavi kampanjo ali povabi ustvarjalce, katerih delo ustreza tvoji znamki.",
+      "action": "Objavi kampanjo"
+    },
+    "sidebarCreator": {
+      "title": "Želiš svoje delo predstaviti tukaj?",
+      "description": "Ustvari svoj profil in pokaži, kaj znaš.",
+      "action": "Ustvari profil"
+    },
+    "sidebarCompany": {
+      "title": "Je tvoje podjetje naslednje?",
+      "description": "Predstavi znamko ali agencijo in poišči sodelavce.",
+      "action": "Dodaj podjetje"
+    },
+    "profileCompany": {
+      "title": "Ste našli pravega ustvarjalca?",
+      "description": "Ustvari račun podjetja za pošiljanje povpraševanj ali vabil v kampanjo.",
+      "action": "Ustvari račun podjetja"
+    },
+    "campaignCreator": {
+      "eyebrow": "Tvoj naslednji korak",
+      "title": "Se vidiš v tej kampanji?",
+      "description": "Ustvari profil ustvarjalca in se prijavi po odobritvi profila.",
+      "action": "Prijavi se na kampanjo"
+    },
+    "benefitWork": "Pregled del in ponudb ustvarjalcev",
+    "benefitCampaign": "Objava kampanj in izbira sodelavcev",
+    "benefitMessages": "Sporočila in dogovori na enem mestu",
+    "campaignSaved": "Izbrana kampanja ostane shranjena med registracijo.",
+    "campaignRequirements": "Pred prijavo potrdiš e-pošto in dopolniš profil.",
+    "hasAccount": "Že imaš račun?",
+    "signIn": "Prijavi se",
+    "collaborationTitle": "Kako se začne sodelovanje?",
+    "collaborationDescription": "Pošlji prijavo, pogovori se s podjetjem in potrdi dogovorjene pogoje.",
+    "noPayments": "Wave ne obdeluje plačil.",
+    "stepsTitle": "Jasen začetek. Korak za korakom.",
+    "step1Title": "Potrdi e-pošto",
+    "step1Description": "Ustvari račun in potrdi svoj e-poštni naslov.",
+    "step2Title": "Predstavi svoje delo",
+    "step2Description": "Izpolni obvezne podatke in pošlji profil v pregled.",
+    "step3Title": "Začni sodelovati",
+    "step3Description": "Po odobritvi se lahko prijavljaš in dogovarjaš za sodelovanja."
+  },
   "home": {
     "kicker": "Creators × brands",
     "headlineLead": "Dobre stvari se zgodijo, ko",
@@ -802,7 +873,7 @@
     "industryPlaceholder": "Npr. turizem, moda, hrana in pijača ali kozmetika",
     "signIn": "Prijava",
     "register": "Ustvari račun",
-    "passwordHint": "Vsaj 12 znakov.",
+    "passwordHint": "Vsaj 8 znakov.",
     "forgotPassword": "Pozabil/a si geslo?",
     "verifyTitle": "Potrdi svoj e-poštni naslov.",
     "resetTitle": "Nastavi novo geslo.",
@@ -2131,7 +2202,7 @@
   },
   "passwordChange": {
     "title": "Spremeni geslo",
-    "hint": "Vnesi trenutno geslo in novo geslo z najmanj 12 znaki.",
+    "hint": "Vnesi trenutno geslo in novo geslo z najmanj 8 znaki.",
     "current": "Trenutno geslo",
     "new": "Novo geslo",
     "confirm": "Potrdi novo geslo",
@@ -2538,5 +2609,70 @@
     ],
     "unspecified": "Razpoložljivost ni navedena",
     "workTitle": "Naslov dela"
+  },
+  "activation": {
+    "signupHint": "Za začetek potrebujemo le osnovne podatke. Ostalo izpolniš v svojem računu.",
+    "start": "Tvoj začetek na Wave",
+    "title": "Pripravi profil za sodelovanja.",
+    "hint": "Trije obvezni koraki, nato pregled naše ekipe. Vsa polja profila ostanejo na voljo v urejevalniku.",
+    "progress": "Obvezni koraki",
+    "emailTitle": "Potrdi e-poštni naslov",
+    "emailHint": "Odpri povezavo v sporočilu, ki smo ti ga poslali.",
+    "contactTitle": "Dodaj stik in lokacijo",
+    "contactHint": "Telefon, mesto in država. Telefonska številka je zasebna.",
+    "identityTitle": "Predstavi sebe ali podjetje",
+    "identityHint": "Dodaj ime ali naziv podjetja in izberi področja.",
+    "resend": "Pošlji znova",
+    "complete": "Dopolni",
+    "reviewTitle": "Profil čaka na pregled",
+    "reviewHint": "Obvezni podatki so pripravljeni. Ekipa bo pregledala profil in te obvestila po odobritvi. Dodatno pošiljanje ni potrebno.",
+    "lockedTitle": "Dokončaj obvezne korake",
+    "lockedHint": "Po potrditvi e-pošte in dopolnitvi podatkov lahko ekipa odobri profil. Do takrat račun ostane skrit.",
+    "optional": "Dodaj več razlogov za sodelovanje",
+    "optionalHint": "Priporočeno za boljši profil. Ti podatki niso pogoj za odobritev.",
+    "optional_networks": "Poveži omrežja in predstavi občinstvo",
+    "optional_works": "Dodaj svoja najboljša dela",
+    "optional_packages": "Predstavi pakete in cene",
+    "optional_company": "Dodaj logotip in predstavi podjetje",
+    "approved": "Profil je odobren",
+    "preparing": "Profil je v pripravi",
+    "publicProfile": "Javni profil",
+    "visibilityHint": "Sam/a izbereš, kdaj bo profil viden drugim.",
+    "visibilityLocked": "Vidnost lahko vključiš po dopolnitvi podatkov, potrditvi e-pošte in odobritvi.",
+    "next": "Tvoj naslednji korak",
+    "creatorReady": "Tvoje delo je pripravljeno. Poišči prvo kampanjo.",
+    "companyReady": "Tvoja ideja je pripravljena. Objavi kampanjo.",
+    "creatorReadyHint": "Razišči priložnosti, predstavi ponudbo in se dogovori za naslednje sodelovanje.",
+    "companyReadyHint": "Predstavi nalogo, spoznaj ustvarjalce in izberi sodelavce za znamko ali naročnika.",
+    "alertsTitle": "Kampanje, ki te zanimajo",
+    "alertsHint": "Izberi področja in lokacije. Nove priložnosti lahko prejemaš po e-pošti.",
+    "alertsEnabled": "E-poštna obvestila so vključena. Nastavitve lahko kadarkoli spremeniš ali izključiš.",
+    "alertsConfigure": "Uredi obvestila",
+    "alertsDescription": "Prejemaj e-poštni povzetek novih kampanj, ki ustrezajo tvoji izbiri.",
+    "alertsSwitch": "Želim obvestila o kampanjah",
+    "allCategories": "Vsa področja",
+    "allCountries": "Vse države",
+    "frequency": "Pogostost",
+    "daily": "Enkrat na dan",
+    "weekly": "Enkrat na teden",
+    "alertsNote": "Pošiljanje se začne po potrditvi e-pošte, dopolnitvi podatkov in odobritvi profila. Pošiljamo le nove rezultate; brez novih rezultatov ni sporočila.",
+    "saved": "Nastavitve so shranjene.",
+    "save": "Shrani",
+    "funnelEyebrow": "Od računa do prvega sodelovanja",
+    "funnelTitle": "Kako napredujejo novi računi",
+    "funnelHint": "Računi, registrirani v izbranem obdobju, in njihov napredek. Odstotek prikazuje prehod iz prejšnjega koraka.",
+    "funnelNote": "Merjenje se začne z uvedbo te funkcije. Starejši, izbrisani in predstavitveni računi niso vključeni. Obiski strani in opuščene registracije niso del tega prikaza.",
+    "filter_all": "Vsi računi",
+    "filter_creator": "Ustvarjalci",
+    "filter_company": "Podjetja in agencije",
+    "stage_registered": "Registriran račun",
+    "stage_verified": "Potrjena e-pošta",
+    "stage_completed": "Izpolnjen obvezni profil",
+    "stage_approved": "Odobren profil",
+    "stage_first_action": "Prva prijava ali objavljena kampanja",
+    "backToOverview": "Nazaj na pregled",
+    "loading": "Nalagamo tvoj pregled…",
+    "creatorContinue": "Poišči svojo naslednjo kampanjo.",
+    "checkStatus": "Preveri stanje"
   }
 }

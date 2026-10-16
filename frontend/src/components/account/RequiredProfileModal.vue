@@ -2,6 +2,7 @@
 import { companyTypeOptions } from '../../lib/companyTypes'
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
+import LocalizedLink from '../shared/LocalizedLink.vue'
 import SingleSelect from '../shared/SingleSelect.vue'
 import MultiSelect from '../shared/MultiSelect.vue'
 import PhoneNumberField from '../shared/PhoneNumberField.vue'
@@ -54,9 +55,9 @@ onBeforeUnmount(() => {
     @click.self.prevent
   >
     <section class="required-profile-modal__content" :aria-busy="busy">
-      <p class="eyebrow">{{ t('auth.registrationEyebrow') }}</p>
-      <h2 id="required-profile-title">{{ t('auth.registrationHeroTitle') }}</h2>
-      <p id="required-profile-description">{{ t('account.profileIncomplete') }}</p>
+      <p class="eyebrow">{{ t('activation.start') }}</p>
+      <h2 id="required-profile-title">{{ t('activation.title') }}</h2>
+      <p id="required-profile-description">{{ t('activation.lockedHint') }}</p>
       <form v-form-validation class="required-profile-modal__form" @submit.prevent="emit('save')">
         <template v-if="user.accountType === 'creator'">
           <label class="form-field">
@@ -121,6 +122,7 @@ onBeforeUnmount(() => {
           {{ busy ? `${t('account.saveProfile')}…` : t('account.saveProfile') }}
         </button>
       </form>
+      <LocalizedLink class="required-profile-modal__return text-link" :to="{ name: 'account-dashboard' }">{{ t('activation.backToOverview') }}</LocalizedLink>
     </section>
   </dialog>
 </template>

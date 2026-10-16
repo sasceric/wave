@@ -60,7 +60,7 @@ final class PresentationDemoSeeder
 
     public function seed(string $password, bool $resetPasswords = false): array
     {
-        if (strlen($password) < 12) throw new \InvalidArgumentException('The seed password must contain at least 12 characters.');
+        if (strlen($password) < 8) throw new \InvalidArgumentException('The seed password must contain at least 8 characters.');
         $this->preflight();
         $this->createdPaths = [];
         try {

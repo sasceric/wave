@@ -226,10 +226,10 @@ test('campaign Save sends separate city, country, areas and deliverables', async
   assert.ok(!('location' in requests[0].body))
 })
 
-test('successful password or social authentication navigates to overview while incomplete profiles remain in settings', async () => {
+test('successful password or social authentication navigates to overview including incomplete profiles using the setup checklist', async () => {
   const { state, account, navigations } = await setupAccount()
   await state.handleAuthenticated(account)
   assert.equal(navigations.at(-1).name, 'account-dashboard-bs')
   await state.handleAuthenticated({ ...account, profileComplete: false })
-  assert.equal(navigations.at(-1).name, 'account-bs')
+  assert.equal(navigations.at(-1).name, 'account-dashboard-bs')
 })

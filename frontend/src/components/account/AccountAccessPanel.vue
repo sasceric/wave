@@ -1,7 +1,6 @@
 <script setup>
-import { companyTypeOptions } from '../../lib/companyTypes'
 import AccountPage from './AccountPage.vue'
-import { computed, onMounted, reactive, ref, watch } from 'vue'
+import { onMounted, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import {
@@ -17,94 +16,35 @@ import {
 } from '@lucide/vue'
 import LanguageSwitcher from '../shared/LanguageSwitcher.vue'
 import StatusMessage from '../shared/StatusMessage.vue'
-import SingleSelect from '../shared/SingleSelect.vue'
-import MultiSelect from '../shared/MultiSelect.vue'
-import DatePicker from '../shared/DatePicker.vue'
-import { dateOnly } from '../../lib/datePicker'
-import SearchableSelect from '../shared/SearchableSelect.vue'
 import WaveWordmark from '../shared/WaveWordmark.vue'
-import PhoneNumberField from '../shared/PhoneNumberField.vue'
 import { apiRequest } from '../../lib/api'
-import { formatInternationalPhoneNumber } from '../../lib/phoneNumbers'
-import { useMarketplaceCatalog } from '../../composables/useMarketplaceCatalog'
-import countries from '../../data/countries.json'
 
 const emit = defineEmits(['authenticated'])
 const route = useRoute()
 const router = useRouter()
 const { t, locale } = useI18n()
-const companyTypes = computed(() => companyTypeOptions(t))
-const { categories, industries, error: catalogError } = useMarketplaceCatalog(locale, { includeIndustries: true })
 const mode = ref(['register', 'reset'].includes(route.query.mode) ? route.query.mode : 'login')
 const busy = ref(false)
 const error = ref('')
 const notice = ref(route.query.deleted === '1' ? t('accountDeletion.success') : '')
 const showPassword = ref(false)
 const socialPending = ref(false)
-const phoneCountryWasManuallySelected = ref(false)
 const oauthProviders = ref({ google: false, apple: false })
 const form = reactive({
   email: '',
   password: '',
-  accountType: 'creator',
+  accountType: route.query.accountType === 'company' ? 'company' : 'creator',
   name: '',
-  birthday: '',
-  phone: '',
-  phoneCountry: defaultPhoneCountry(locale.value),
-  categories: ['Lifestyle'],
-  country: '',
-  city: '',
-  industries: [],
-  companyType: 'brand',
 })
-const phoneCountry = computed({
-  get: () => form.phoneCountry,
-  set: (countryCode) => {
-    form.phoneCountry = countryCode
-    phoneCountryWasManuallySelected.value = true
-  },
-})
-const countryDisplayLocale = computed(() => {
-  if (locale.value === 'cnr') return 'bs'
-  if (locale.value === 'sr') return 'sr-Latn'
-  return locale.value
-})
-const countryOptions = computed(() => {
-  const countryNames = new Intl.DisplayNames([countryDisplayLocale.value], { type: 'region' })
-
-  return countries
-    .map((code) => ({ value: code, label: countryNames.of(code) || code }))
-    .sort((first, second) => first.label.localeCompare(second.label, countryDisplayLocale.value))
-})
-
-function defaultPhoneCountry(currentLocale) {
-  return {
-    bs: 'BA',
-    cnr: 'ME',
-    en: 'US',
-    hr: 'HR',
-    sl: 'SI',
-    sr: 'RS',
-  }[currentLocale] || 'BA'
-}
-
-function updateRegistrationCountry(countryCode) {
-  form.country = countryCode
-
-  if (countryCode && !phoneCountryWasManuallySelected.value) {
-    form.phoneCountry = countryCode
-  }
-}
 
 watch(() => route.query.mode, (queryMode) => {
   mode.value = ['register', 'reset'].includes(queryMode) ? queryMode : 'login'
 })
-watch(() => form.country, (country, previousCountry) => {
-  if (previousCountry && country !== previousCountry) {
-    form.city = ''
+watch(() => route.query.accountType, (accountType) => {
+  if (mode.value === 'register' && ['creator', 'company'].includes(accountType)) {
+    form.accountType = accountType
   }
 })
-
 onMounted(() => {
   void loadOAuthState()
 })
@@ -151,19 +91,6 @@ async function submit() {
   error.value = ''
   notice.value = ''
 
-  if (mode.value === 'register' && !form.country) {
-    error.value = t('auth.countryRequired')
-    return
-  }
-
-  const normalizedPhone = mode.value === 'register'
-    ? formatInternationalPhoneNumber(form.phone, form.phoneCountry)
-    : null
-  if (mode.value === 'register' && !normalizedPhone) {
-    error.value = t('auth.phoneInvalid')
-    return
-  }
-
   busy.value = true
   if (mode.value === 'reset') {
     try {
@@ -188,16 +115,6 @@ async function submit() {
     Object.assign(body, {
       accountType: form.accountType,
       name: form.name.trim(),
-      country: form.country,
-      city: form.city.trim(),
-      phone: normalizedPhone,
-      ...(form.accountType === 'creator'
-        ? {
-            category: form.categories[0],
-            categories: form.categories,
-            birthday: form.birthday || null,
-          }
-        : { industries: form.industries, companyType: form.companyType }),
     })
   }
 
@@ -328,7 +245,6 @@ function changeMode(nextMode) {
         'auth-splash-form-panel': mode === 'login',
       }"
     >
-      <StatusMessage v-if="catalogError" variant="error">{{ catalogError }}</StatusMessage>
       <form v-form-validation
         class="form-card auth-form"
         :class="{
@@ -344,8 +260,25 @@ function changeMode(nextMode) {
         </div>
         <div v-if="mode === 'register'" class="registration-form-heading">
           <h2>{{ t('auth.registrationCardTitle') }}</h2>
-          <p>{{ t('auth.registrationCardDescription') }}</p>
+          <p>{{ t('activation.signupHint') }}</p>
         </div>
+        <fieldset v-if="mode === 'register'" class="form-field form-field--wide registration-type-field">
+          <legend>{{ t('auth.accountType') }}</legend>
+          <div class="registration-type-options">
+            <label class="registration-type-option" :class="{ 'is-selected': form.accountType === 'creator' }">
+              <input v-model="form.accountType" type="radio" value="creator" />
+              <UserRound :size="19" stroke-width="1.7" aria-hidden="true" />
+              <span>{{ t('auth.creator') }}</span>
+              <span class="registration-type-option__indicator" aria-hidden="true"></span>
+            </label>
+            <label class="registration-type-option" :class="{ 'is-selected': form.accountType === 'company' }">
+              <input v-model="form.accountType" type="radio" value="company" />
+              <Building2 :size="19" stroke-width="1.7" aria-hidden="true" />
+              <span>{{ t('auth.company') }}</span>
+              <span class="registration-type-option__indicator" aria-hidden="true"></span>
+            </label>
+          </div>
+        </fieldset>
         <div
           v-if="mode !== 'reset' && !(mode === 'register' && socialPending)"
           class="oauth-options"
@@ -376,23 +309,6 @@ function changeMode(nextMode) {
           <p class="oauth-options__divider"><span>{{ t('auth.orContinueWith') }}</span></p>
         </div>
         <div v-if="mode === 'register'" class="form-grid">
-        <fieldset class="form-field form-field--wide registration-type-field">
-          <legend>{{ t('auth.accountType') }}</legend>
-          <div class="registration-type-options">
-            <label class="registration-type-option" :class="{ 'is-selected': form.accountType === 'creator' }">
-              <input v-model="form.accountType" type="radio" value="creator" />
-              <UserRound :size="19" stroke-width="1.7" aria-hidden="true" />
-              <span>{{ t('auth.creator') }}</span>
-              <span class="registration-type-option__indicator" aria-hidden="true"></span>
-            </label>
-            <label class="registration-type-option" :class="{ 'is-selected': form.accountType === 'company' }">
-              <input v-model="form.accountType" type="radio" value="company" />
-              <Building2 :size="19" stroke-width="1.7" aria-hidden="true" />
-              <span>{{ t('auth.company') }}</span>
-              <span class="registration-type-option__indicator" aria-hidden="true"></span>
-            </label>
-            </div>
-        </fieldset>
         <label class="form-field form-field--wide">
           <span>{{ t('auth.name') }}</span>
           <input
@@ -404,64 +320,6 @@ function changeMode(nextMode) {
             :placeholder="t('auth.namePlaceholder')"
           />
         </label>
-        <template v-if="form.accountType === 'creator'">
-          <DatePicker class="form-field--wide" v-model="form.birthday" :label="t('account.birthday')" :helper-text="t('account.birthdayPrivate')" min="1900-01-01" :max="dateOnly()" />
-          <MultiSelect required
-            class="form-field--wide"
-            v-model="form.categories"
-            :options="categories"
-            :label="t('auth.category')"
-            :placeholder="t('account.selectCategories')"
-            :search-placeholder="t('account.searchCategories')"
-            :no-results-label="t('account.noCategoriesFound')"
-            :remove-label="t('account.remove')"
-            :helper-text="t('account.categoriesHint')"
-            :max-selections="5"
-          />
-        </template>
-        <template v-else>
-          <SingleSelect v-model="form.companyType" :label="t('companyTypes.label')" :options="companyTypes" required />
-          <MultiSelect required
-              v-model="form.industries"
-              :options="industries || []"
-              :label="t('auth.industry')"
-              :placeholder="t('companyDirectory.selectIndustries')"
-              :search-placeholder="t('companyDirectory.searchIndustries')"
-              :no-results-label="t('companyDirectory.noIndustries')"
-              :remove-label="t('account.remove')"
-              :max-selections="20"
-            />
-        </template>
-        <SearchableSelect required
-          :model-value="form.country"
-          :options="countryOptions"
-          :label="t('auth.country')"
-          :placeholder="t('auth.selectCountry')"
-          :search-placeholder="t('auth.searchCountry')"
-          :no-results-label="t('auth.noCountriesFound')"
-          @update:model-value="updateRegistrationCountry"
-        />
-        <label class="form-field">
-          <span>{{ t('auth.city') }}</span>
-          <input
-            v-model.trim="form.city"
-            type="text"
-            required
-            maxlength="70"
-            autocomplete="address-level2"
-            :placeholder="t('auth.cityPlaceholder')"
-          />
-        </label>
-        <PhoneNumberField
-          v-model="form.phone"
-          v-model:country-code="phoneCountry"
-          :label="t('auth.phone')"
-          :placeholder="t('auth.phonePlaceholder')"
-          :country-label="t('auth.phoneCountry')"
-          :country-placeholder="t('auth.selectCountry')"
-          :country-search-placeholder="t('auth.searchPhoneCountry')"
-          :no-countries-found-label="t('auth.noPhoneCountriesFound')"
-        />
       </div>
 
       <label class="form-field">
@@ -513,7 +371,7 @@ function changeMode(nextMode) {
           v-model="form.password"
           type="password"
           required
-          :minlength="mode === 'register' ? 12 : 1"
+          :minlength="mode === 'register' ? 8 : 1"
           autocomplete="current-password"
         />
         <small v-if="mode === 'register'">{{ t('auth.passwordHint') }}</small>

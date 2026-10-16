@@ -10,7 +10,7 @@ final class OverviewStatistics
 {
     public function __construct(private readonly Connection $db) {}
 
-    public function snapshot(int $days): array
+    public function snapshot(int $days, string $accountType = 'all'): array
     {
         $today = new DateTimeImmutable('today', new DateTimeZone('UTC'));
         $from = $today->modify('-'.($days - 1).' days');
@@ -47,7 +47,25 @@ final class OverviewStatistics
         }
         $recent = $this->db->fetchAllAssociative('SELECT id, title, status, published_at FROM campaign ORDER BY published_at DESC, id DESC LIMIT 5');
         return ['days' => $days, 'from' => $from->format('Y-m-d'), 'to' => $today->format('Y-m-d'), 'timezone' => 'UTC',
-            'attention' => array_map(intval(...), $attention ?: []), 'totals' => $totals,
+            'activation' => $this->activation($parameters, $accountType), 'attention' => array_map(intval(...), $attention ?: []), 'totals' => $totals,
             'series' => array_values($series), 'campaignStatuses' => $statuses, 'recentCampaigns' => $recent];
     }
+    private function activation(array $parameters, string $accountType): array
+    {
+        $scope = '';
+        if ($accountType !== 'all') { $scope = ' AND u.role = :role'; $parameters['role'] = $accountType === 'creator' ? 'ROLE_CREATOR' : 'ROLE_COMPANY'; }
+        $counts = $this->db->fetchAssociative("SELECT COUNT(*) AS registered,
+            SUM(CASE WHEN v.user_id IS NOT NULL THEN 1 ELSE 0 END) AS verified,
+            SUM(CASE WHEN v.user_id IS NOT NULL AND c.user_id IS NOT NULL THEN 1 ELSE 0 END) AS completed,
+            SUM(CASE WHEN v.user_id IS NOT NULL AND c.user_id IS NOT NULL AND a.user_id IS NOT NULL THEN 1 ELSE 0 END) AS approved,
+            SUM(CASE WHEN v.user_id IS NOT NULL AND c.user_id IS NOT NULL AND a.user_id IS NOT NULL AND f.user_id IS NOT NULL THEN 1 ELSE 0 END) AS first_action
+            FROM account_milestone r JOIN wave_user u ON u.id = r.user_id
+            LEFT JOIN account_milestone v ON v.user_id = r.user_id AND v.stage = 'verified'
+            LEFT JOIN account_milestone c ON c.user_id = r.user_id AND c.stage = 'completed'
+            LEFT JOIN account_milestone a ON a.user_id = r.user_id AND a.stage = 'approved'
+            LEFT JOIN account_milestone f ON f.user_id = r.user_id AND f.stage = 'first_action'
+            WHERE r.stage = 'registered' AND r.occurred_at >= :from AND r.occurred_at < :until AND u.deleted_at IS NULL AND u.presentation_demo_key IS NULL AND u.admin = FALSE AND u.moderator = FALSE".$scope, $parameters);
+        return ['accountType' => $accountType, 'counts' => array_map(intval(...), $counts ?: []), 'measuredSince' => $this->db->fetchOne("SELECT MIN(occurred_at) FROM account_milestone WHERE stage = 'registered'") ?: null];
+    }
+
 }

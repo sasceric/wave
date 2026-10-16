@@ -2,6 +2,7 @@
 import { computed, onBeforeUnmount, onMounted, ref, useId, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { ArrowUpRight, CalendarDays, Check, ClipboardCheck, Flag, LifeBuoy, Megaphone, Send, Users, Building2, UserRoundCheck, Activity } from '@lucide/vue'
+import SingleSelect from '../shared/SingleSelect.vue'
 import LocalizedLink from '../shared/LocalizedLink.vue'
 import LoadingSkeleton from '../shared/LoadingSkeleton.vue'
 import StatusMessage from '../shared/StatusMessage.vue'
@@ -13,6 +14,18 @@ const props = defineProps({ metrics: { type: Object, default: () => ({}) } })
 const { t, locale } = useI18n()
 const chartId = useId()
 const days = ref(30)
+const accountType = ref('all')
+const activationTypes = computed(() => ['all', 'creator', 'company'].map(value => ({ value, label: t(`activation.filter_${value}`) })))
+const activationRows = computed(() => {
+  const counts = statistics.value?.activation?.counts || {}
+  let previous = 0
+  return ['registered', 'verified', 'completed', 'approved', 'first_action'].map((key, index) => {
+    const count = counts[key] || 0
+    const row = { key, count, width: counts.registered ? count / counts.registered * 100 : 0, rate: index > 0 && previous ? Math.round(count / previous * 100) : null }
+    previous = count
+    return row
+  })
+})
 const statistics = ref(null)
 const loading = ref(false)
 const error = ref('')
@@ -26,7 +39,7 @@ async function load() {
   if (!currentUser.value?.isAdmin) { loading.value = false; return }
   loading.value = true
   try {
-    const response = await apiGet(`/admin/overview?days=${days.value}`)
+    const response = await apiGet(`/admin/overview?days=${days.value}&accountType=${accountType.value}`)
     if (disposed || version !== generation || currentUser.value?.id !== userId) return
     if (response.userId !== userId) { await loadCurrentUser(); return }
     statistics.value = response.data
@@ -36,7 +49,7 @@ async function load() {
     if (version === generation) loading.value = false
   }
 }
-watch([days, locale, () => currentUser.value?.id, () => currentUser.value?.isAdmin], load, { immediate: true })
+watch([days, accountType, locale, () => currentUser.value?.id, () => currentUser.value?.isAdmin], load, { immediate: true })
 onMounted(() => window.addEventListener('wave:admin-counts-changed', load))
 onBeforeUnmount(() => {
   disposed = true
@@ -108,6 +121,11 @@ const attentionTotal = computed(() => Object.values(statistics.value?.attention 
     <StatusMessage v-if="error" variant="error">{{ error }} <button type="button" class="text-link" @click="load">{{ t('reviews.retry') }}</button></StatusMessage>
     <LoadingSkeleton v-else-if="loading && !statistics" variant="dashboard" :label="t('adminDashboard.loading')" />
     <template v-if="statistics">
+      <section class="activation-funnel">
+        <header><div><span class="wave-overview__eyebrow">{{ t('activation.funnelEyebrow') }}</span><h2>{{ t('activation.funnelTitle') }}</h2><p>{{ t('activation.funnelHint') }}</p></div><SingleSelect v-model="accountType" :options="activationTypes" :label="t('auth.accountType')" :show-label="false" /></header>
+        <ol><li v-for="row in activationRows" :key="row.key"><div><span>{{ t(`activation.stage_${row.key}`) }}</span><strong>{{ row.count }}</strong><small>{{ row.rate === null ? '—' : `${row.rate}%` }}</small></div><span class="activation-funnel__track"><i :style="{ width: `${row.width}%` }"></i></span></li></ol>
+        <p class="activation-funnel__note">{{ t('activation.funnelNote') }}<template v-if="statistics.activation?.measuredSince"> · {{ formatDate(statistics.activation.measuredSince) }}</template></p>
+      </section>
       <div class="wave-overview__grid">
         <article class="wave-overview__card wave-overview__activity">
           <header class="wave-overview__card-header"><div><span class="wave-overview__eyebrow">{{ t('overview.activity') }}</span><h2>{{ t('overview.applicationsAndInvites') }}</h2></div><span class="wave-overview__pill">{{ t('overview.days', { count: statistics.days }) }}</span></header>

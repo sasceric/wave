@@ -41,6 +41,8 @@ framework:
             failed: 'doctrine://default?queue_name=failed&auto_setup=false'
         routing:
             'App\Message\CreditsAnnouncementMessage': mail
+            'App\Message\CampaignAlertEmailMessage': mail
+            'App\Message\CampaignAlertTask': background
             'App\Message\SendEmailMessage': mail
             'App\Message\SendWebPushMessage': push
             'App\Message\PublishRealtimeMessage': realtime

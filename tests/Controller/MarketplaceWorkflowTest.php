@@ -984,7 +984,7 @@ final class MarketplaceWorkflowTest extends WebTestCase
         self::assertResponseStatusCodeSame(409);
     }
 
-    public function testRegistrationRequiresTypeSpecificAndSharedFields(): void
+    public function testRegistrationRequiresIdentityAndCredentialsWhileProfileDetailsCanBeCompletedLater(): void
     {
         $creatorPayload = [
             'accountType' => 'creator',
@@ -999,7 +999,7 @@ final class MarketplaceWorkflowTest extends WebTestCase
             'location' => 'Sarajevo, Bosnia and Herzegovina',
         ];
 
-        foreach (['name', 'phone', 'city', 'country'] as $requiredField) {
+        foreach (['name', 'email', 'password', 'accountType'] as $requiredField) {
             $payload = $creatorPayload;
             unset($payload[$requiredField]);
             $this->jsonRequest('POST', '/api/auth/register', $payload, $this->csrfToken());
@@ -1023,7 +1023,7 @@ final class MarketplaceWorkflowTest extends WebTestCase
             'country' => 'BA',
         ];
 
-        foreach (['name', 'phone', 'city', 'country'] as $requiredField) {
+        foreach (['name', 'email', 'password', 'accountType'] as $requiredField) {
             $payload = $companyPayload;
             unset($payload[$requiredField]);
             $this->jsonRequest('POST', '/api/auth/register', $payload, $this->csrfToken());

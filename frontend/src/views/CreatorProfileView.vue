@@ -1,4 +1,5 @@
 <script setup>
+import RegistrationPrompt from '../components/shared/RegistrationPrompt.vue'
 import PresentationDemoBadge from '../components/shared/PresentationDemoBadge.vue'
 import { useCreatorProfileVisit } from '../composables/useCreatorProfileVisit'
 import MarketplaceSafetyActions from '../components/shared/MarketplaceSafetyActions.vue'
@@ -763,6 +764,7 @@ onBeforeUnmount(() => { ++profileGeneration; packageDescriptionObserver?.disconn
           <ProfileReviews id="creator-reviews" kind="creators" :slug="creator.slug" />
         </div>
         <div class="profile-sidebar">
+          <RegistrationPrompt audience="company" variant="profile" :return-to="localizedPath('creator-profile', locale, { slug: creator.slug })" />
           <section id="creator-packages" class="profile-content-section profile-packages">
             <div class="profile-section-heading">
               <div>

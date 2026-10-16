@@ -4,6 +4,7 @@ import { useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { Megaphone, ArrowRight, LayoutGrid, List } from '@lucide/vue'
 import CardGrid from '../components/shared/CardGrid.vue'
+import RegistrationPrompt from '../components/shared/RegistrationPrompt.vue'
 import CampaignCard from '../components/campaigns/CampaignCard.vue'
 import DirectoryHero from '../components/shared/DirectoryHero.vue'
 import DirectoryHeroCollage from '../components/shared/DirectoryHeroCollage.vue'
@@ -134,6 +135,7 @@ function clearFilters() {
           <RangeSlider :model-value="budgetRange" :max="30000" :disabled="!currency" :label="t('campaignDirectory.budgetLabel')" :from-label="t('campaignDirectory.budgetFrom')" :to-label="t('campaignDirectory.budgetTo')" :currency="currency" @update:model-value="updateBudget" />
           <p class="campaign-directory__hint" :class="{ 'campaign-directory__hint--currency': !currency }">{{ t(currency ? 'campaignDirectory.budgetHint' : 'campaignDirectory.chooseCurrency') }}</p>
         </fieldset>
+        <RegistrationPrompt audience="creator" variant="sidebar" />
         <template #mobile><fieldset><SingleSelect v-model="sort" :options="sortOptions" :label="t('campaignDirectory.sortLabel')" /></fieldset></template>
       </DirectoryFilterPanel>
       <div class="campaign-directory__results">
@@ -146,9 +148,13 @@ function clearFilters() {
         </div>
         <StatusMessage v-if="!loading && !error && !campaigns.length" variant="empty">{{ t('campaignsPage.empty') }}</StatusMessage>
         <CardGrid v-if="campaigns.length || loading" kind="campaign" layout="directory" :class="{ 'campaign-directory__grid--list': layout === 'list' }" :aria-busy="loading">
-          <CampaignCard v-for="campaign in campaigns" :key="campaign.id" :campaign="campaign" :image-sizes="layout === 'list' ? '(max-width: 760px) 50vw, 360px' : imageSizes" />
+          <template v-for="(campaign, index) in campaigns" :key="campaign.id">
+            <CampaignCard :campaign="campaign" :image-sizes="layout === 'list' ? '(max-width: 760px) 50vw, 360px' : imageSizes" />
+            <RegistrationPrompt v-if="index === Math.min(3, campaigns.length - 1)" audience="creator" />
+          </template>
           <DirectorySkeletonCard v-for="index in loading ? (campaigns.length ? 2 : 8) : 0" :key="`loading-${index}`" kind="campaign" />
         </CardGrid>
+        <RegistrationPrompt v-if="!loading && !campaigns.length" audience="creator" />
         <DirectoryLoadMore :loading="loading" :error="error" :has-more="hasMore" :count="campaigns.length" @load="loadMore" />
       </div>
     </div>

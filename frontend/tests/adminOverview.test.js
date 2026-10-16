@@ -12,10 +12,10 @@ test('overview uses bounded periods and drops stale responses when changing peri
     '../../lib/overviewCharts': charts,
     '../../lib/api': { apiGet: path => new Promise(resolve => pending.push({ path, resolve })), formatDate: value => value },
   })
-  assert.equal(pending[0].path, '/admin/overview?days=30')
+  assert.equal(pending[0].path, '/admin/overview?days=30&accountType=all')
   state.days.value = 7
   await nextTick()
-  assert.equal(pending[1].path, '/admin/overview?days=7')
+  assert.equal(pending[1].path, '/admin/overview?days=7&accountType=all')
   pending[0].resolve({ userId: 1, data: { days: 30 } })
   await new Promise(resolve => setImmediate(resolve))
   assert.equal(state.statistics.value, null)

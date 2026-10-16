@@ -8,6 +8,8 @@ final class JobCatalog
 {
     public const TYPES = [
         'CreditsAnnouncementMessage' => 'mail',
+        'CampaignAlertTask' => 'background',
+        'CampaignAlertEmailMessage' => 'mail',
         'SendEmailMessage' => 'mail',
         'SendWebPushMessage' => 'push',
         'PublishRealtimeMessage' => 'realtime',

@@ -1,4 +1,6 @@
 <script setup>
+import RegistrationPrompt from '../components/shared/RegistrationPrompt.vue'
+import { rememberRegistrationIntent } from '../lib/registrationIntent'
 import PresentationDemoBadge from '../components/shared/PresentationDemoBadge.vue'
 import MarketplaceSafetyActions from '../components/shared/MarketplaceSafetyActions.vue'
 import CreditActionNotice from '../components/account/CreditActionNotice.vue'
@@ -264,8 +266,8 @@ onMounted(loadCampaign)
               {{ t('account.applicationSent') }}
             </div>
             <div v-else-if="!user" class="brief-application-card__guest">
-              <RouterLink class="button button--dark button--full" to="/account">
-                {{ t('auth.signIn') }} <ArrowRight :size="17" aria-hidden="true" />
+              <RouterLink class="button button--dark button--full" :to="{ name: 'account', query: { mode: 'register', accountType: 'creator', returnTo: route.path } }" @click="rememberRegistrationIntent(route.path, 'creator')">
+                {{ t('registrationPrompts.campaignCreator.action') }} <ArrowRight :size="17" aria-hidden="true" />
               </RouterLink>
               <p>{{ t('account.signInToApply') }}</p>
             </div>
@@ -303,6 +305,12 @@ onMounted(loadCampaign)
         </div>
       </article>
       <aside class="brief-sidebar">
+        <RegistrationPrompt v-if="campaign.status === 'open' && !campaign.readOnly" audience="creator" variant="campaign" :return-to="route.path" />
+        <section v-if="!user && campaign.status === 'open' && !campaign.readOnly" class="brief-aside">
+          <h2>{{ t('registrationPrompts.collaborationTitle') }}</h2>
+          <p>{{ t('registrationPrompts.collaborationDescription') }}</p>
+          <p>{{ t('registrationPrompts.noPayments') }}</p>
+        </section>
         <section class="brief-aside">
           <div class="brief-aside__top">
             <span class="eyebrow">{{ t('campaignDetail.details') }}</span>

@@ -21,6 +21,7 @@ use Symfony\Component\Mime\RawMessage;
 final class JobExecutor
 {
     public function __construct(
+        private readonly \App\Account\CampaignAlertDelivery $campaignAlerts,
         private readonly Connection $connection,
         private readonly EntityManagerInterface $entityManager,
         private readonly JobDispatcher $jobs,
@@ -44,6 +45,8 @@ final class JobExecutor
     public function execute(string $type, array $payload, string $id): void
     {
         match ($type) {
+            'CampaignAlertTask' => $this->campaignAlerts->schedule((int) ($payload['after'] ?? 0)),
+            'CampaignAlertEmailMessage' => $this->campaignAlerts->deliver((int) $payload['userId'], (string) $payload['since']),
             'CreditsAnnouncementMessage' => $this->credits->announce((string) $payload['announcementId']),
             'SendEmailMessage' => $this->email($payload),
             'SendWebPushMessage' => $this->push->deliver($payload),
