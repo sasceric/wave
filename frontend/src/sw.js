@@ -1,9 +1,25 @@
 import { clientsClaim } from 'workbox-core'
-import { precacheAndRoute } from 'workbox-precaching'
+import { matchPrecache, precacheAndRoute } from 'workbox-precaching'
+import { registerRoute } from 'workbox-routing'
 import { updateAppBadge } from './lib/appBadge'
 import { requestClientNavigation } from './lib/notificationNavigation'
 
 clientsClaim()
+// Register before precacheAndRoute: its cache-first /index.html alias also
+// matches /. Online navigations must get the current server document, rather
+// than boot an old bundle from an older worker's cached HTML.
+registerRoute(
+  ({ request, url }) => request.mode === 'navigate'
+    && url.origin === self.location.origin && !/^\/api(?:\/|$)/.test(url.pathname),
+  async ({ request }) => {
+    try {
+      return await fetch(request, { cache: 'no-store' })
+    } catch {
+      // Only the static build shell is cached, never authenticated server HTML.
+      return await matchPrecache('/index.html') || Response.error()
+    }
+  },
+)
 precacheAndRoute(self.__WB_MANIFEST)
 
 self.addEventListener('message', (event) => {

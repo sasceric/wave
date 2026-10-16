@@ -268,6 +268,15 @@ The Vite build also accepts `VITE_GOOGLE_SITE_VERIFICATION` if the frontend is s
 6. In the web stream's **Enhanced measurement** settings, turn off **Page views → Page changes based on browser history events**. Wave sends its own page-view events for public SPA routes; leaving this automatic option enabled can count navigations twice. Analytics does not load or send events until a visitor opts in using the cookie banner.
 7. After deployment, open `https://wave.ba` in a private browser window, accept Analytics in the cookie banner, then visit a few public pages. In Analytics, open **Reports → Realtime** and check that the visit and page views appear. If not, check the browser Network panel for `googletagmanager.com/gtag/js?id=G-...` and confirm analytics consent was accepted. Use [Google Tag Assistant](https://tagassistant.google.com/) to inspect the tag if needed.
 
+Page-view events use the title committed by the route's SEO update. Restored
+consent waits for the first resolved page instead of reading startup metadata;
+profile/campaign details wait for their record title. Account, admin and private
+conversation pages stay excluded. Genuine missing public pages retain their 404
+title and path for diagnosis. Historical events with incorrect titles remain in
+GA4 after a fix; validate using new events and their page paths. SEO catalogs use
+an em dash before title formatting because Vue I18n interprets a raw `|` as plural
+syntax; the shared formatter renders the final browser title with ` | `.
+
 Google Search Console is separate and does require property ownership verification. Add a **Domain** property in [Search Console](https://search.google.com/search-console), verify it by adding Google's DNS TXT record at the domain's DNS provider, then submit `https://wave.ba/sitemap.xml`. To link verified Search Console data into GA4, use **GA4 Admin → Product links → Search Console links → Link** and select the `wave.ba` Search Console property and Wave web stream.
 
 Registration and login use hashed passwords, rate limits, and same-origin server sessions with HTTP-only, same-site cookies and CSRF validation on all writes. Obtain the current CSRF token from `/api/auth/csrf` and send it in the `X-CSRF-Token` header. Email/password registrations must verify their email before the admin can approve the account; verified accounts still wait for admin approval before participating in marketplace actions. The registration email explains both steps, and an approval email is sent when an admin approves the account. Google and Apple registration accept the provider's verified email, still collect all required creator/company profile fields, send a registration-pending email, and remain unapproved until an admin reviews them. Profile editing and reading remain available while approval is pending. Verification links expire after 24 hours, reset links after one hour, and both are single-use. Password-reset requests return the same response whether or not an account exists.

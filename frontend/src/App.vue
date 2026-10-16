@@ -27,7 +27,6 @@ import { notificationDestination, startNotificationNavigation } from './lib/noti
 import { updateSeo } from './lib/seo'
 import { regionalMetadata } from './lib/regionalSeo'
 import { routeMetadata } from './lib/routeMetadata'
-import { trackPageView } from './lib/privacyMetrics'
 import { localizedPath } from './routePaths'
 
 const ReportNotices = defineAsyncComponent(() => import('./components/shared/ReportNotices.vue'))
@@ -154,16 +153,6 @@ watch(() => route.fullPath, () => {
     void loadUnreadMessages()
   }
 })
-watch(() => route.path, (path) => {
-  if (
-    !route.meta.accountSection
-    && !route.meta.adminSection
-    && route.name !== 'legacy-not-found'
-    && !['messages', 'verify-email', 'reset-password', 'moderation', 'not-found'].includes(route.meta.routeName)
-  ) {
-    trackPageView(path)
-  }
-})
 watch(currentUser, (user, previousUser) => {
   mobileAccountSidebarOpen.value = false
   authMenuOpen.value = false
@@ -212,8 +201,11 @@ watch(currentUser, (user, previousUser) => {
   }
 })
 watch(
-  () => [route.fullPath, locale.value, route.meta.accountAccessPage && Boolean(currentUser.value)],
+  () => [route.name, route.fullPath, locale.value, route.meta.accountAccessPage && Boolean(currentUser.value)],
   () => {
+    // Vue Router starts with an unmatched placeholder before its first navigation.
+    // Keep the server's metadata until there is an actual resolved page.
+    if (!route.name) return
     const routeName = route.meta.routeName
     const regional = regionalMetadata(route, t)
     if (regional) {

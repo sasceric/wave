@@ -50,8 +50,6 @@ export async function setLocale(locale) {
     : locale === 'sr'
       ? 'sr-Latn'
       : locale
-  document.title = i18n.global.t('meta.title')
-  document.querySelector('meta[name="description"]')?.setAttribute('content', i18n.global.t('meta.description'))
 }
 
 export const initialLocaleReady = setLocale(initialLocale)

@@ -165,8 +165,11 @@ test('the service worker displays a push and tells open windows to reload author
     if (specifier === './lib/notificationNavigation') {
       return new vm.SourceTextModule(await readFile(new URL('../src/lib/notificationNavigation.js', import.meta.url), 'utf8'), { context })
     }
-    const name = specifier === 'workbox-core' ? 'clientsClaim' : 'precacheAndRoute'
-    return new vm.SyntheticModule([name], function () { this.setExport(name, () => {}) }, { context })
+    const names = specifier === 'workbox-core' ? ['clientsClaim']
+      : specifier === 'workbox-routing' ? ['registerRoute'] : ['precacheAndRoute', 'matchPrecache']
+    return new vm.SyntheticModule(names, function () {
+      for (const name of names) this.setExport(name, () => {})
+    }, { context })
   })
   await module.evaluate()
   let completion

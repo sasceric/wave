@@ -2,6 +2,8 @@ const measurementId = import.meta.env.VITE_GA_MEASUREMENT_ID?.trim()
 
 let analyticsConsent = false
 let analyticsInitialized = false
+let currentPage = null
+let lastPage = null
 
 function initializeGoogleAnalytics() {
   if (!measurementId || analyticsInitialized) {
@@ -31,13 +33,14 @@ export function setAnalyticsConsent(allowed) {
     if (window.gtag) {
       window.gtag('consent', 'update', { analytics_storage: 'granted' })
     }
-    trackPageView(window.location.pathname)
+    sendPageView()
     return
   }
 
   if (window.gtag) {
     window.gtag('consent', 'update', { analytics_storage: 'denied' })
   }
+  lastPage = null
 
   const hostParts = window.location.hostname.split('.')
   const domains = new Set([null])
@@ -61,15 +64,25 @@ export function setAnalyticsConsent(allowed) {
   }
 }
 
-export function trackPageView(path) {
-  if (!analyticsConsent || !analyticsInitialized || !window.gtag) {
+export function trackPageView(path, { title = document.title, allowed = true } = {}) {
+  if (!allowed || !path) {
+    currentPage = null
+    lastPage = null
     return
   }
-
   const pageUrl = new URL(path, window.location.origin)
-  window.gtag('event', 'page_view', {
-    page_title: document.title,
+  currentPage = {
+    page_title: title,
     page_location: `${pageUrl.origin}${pageUrl.pathname}`,
     page_path: pageUrl.pathname,
-  })
+  }
+  sendPageView()
+}
+
+function sendPageView() {
+  if (!currentPage || !analyticsConsent || !analyticsInitialized || !window.gtag) return
+  const key = JSON.stringify(currentPage)
+  if (key === lastPage) return
+  window.gtag('event', 'page_view', currentPage)
+  lastPage = key
 }

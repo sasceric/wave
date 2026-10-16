@@ -317,6 +317,15 @@ are preserved. An installed PWA still running code from before this fix may need
 to be fully closed from the device's app switcher and reopened online once after
 deployment to receive the improved update handling.
 
+Online document navigations now bypass the worker/HTTP HTML cache and fetch the
+server response. The precached `index.html` is only an offline fallback; private
+API responses and authenticated server documents are not stored. Older workers
+can still own a cache-first homepage until their replacement activates. For a
+one-time recovery of such a browser/PWA, open
+`https://wave.ba/?wave-update=20261016` in that same browser or installed app.
+The explicit query bypasses the old worker's precached `/` alias and boots the
+current server bundle without clearing sessions or site storage.
+
 After configuring the web server, verify that
 `https://wave.ba/api/health` returns JSON such as
 `{"status":"ok","service":"wave-api"}`. If `/index.php/api/health` works but

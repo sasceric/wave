@@ -7,7 +7,7 @@ import CreditActionNotice from '../components/account/CreditActionNotice.vue'
 import { refreshCredits } from '../composables/useCredits'
 import CampaignHiringProgress from '../components/campaigns/CampaignHiringProgress.vue'
 import { campaignPlace } from '../lib/marketplace'
-import { onMounted, ref, watch } from 'vue'
+import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { ArrowRight, BadgeCheck, CalendarDays, DollarSign, MapPin, Tag, UsersRound } from '@lucide/vue'
 import RouterLink from '../components/shared/LocalizedLink.vue'
@@ -34,8 +34,10 @@ const engaged = ref(false)
 const collaborationCancelled = ref(false)
 const user = ref(null)
 const { t, locale } = useI18n()
+let campaignGeneration = 0
 
 async function loadCampaign() {
+  const generation = ++campaignGeneration
   const slug = route.params.slug
   campaign.value = null
   error.value = ''
@@ -47,25 +49,30 @@ async function loadCampaign() {
   engaged.value = false
   collaborationCancelled.value = false
   try {
-    const [response] = await Promise.all([
+    const [response, session] = await Promise.all([
       apiGet(`/campaigns/${encodeURIComponent(slug)}`),
-      apiGet('/auth/session').then(({ data }) => (user.value = data)).catch(() => (user.value = null)),
+      apiGet('/auth/session').catch(() => ({ data: null })),
     ])
+    if (generation !== campaignGeneration) return
+    user.value = session.data
     campaign.value = response.data
 
     if (user.value?.accountType === 'creator') {
       try {
         const [applicationsResponse, invitationsResponse] = await Promise.all([apiGet('/me/applications'), apiGet('/me/invitations')])
+        if (generation !== campaignGeneration) return
         const application = applicationsResponse.data.find(item => item.campaign.slug === slug)
         alreadyApplied.value = Boolean(application)
         engaged.value = application?.offer?.status === 'accepted'
         collaborationCancelled.value = application?.status === 'cancelled' || application?.offer?.status === 'cancelled'
         invitation.value = invitationsResponse.data.find(item => item.campaign.slug === slug && item.status !== 'declined') || null
       } catch (cause) {
+        if (generation !== campaignGeneration) return
         applyError.value = cause.message
       }
     }
   } catch (cause) {
+    if (generation !== campaignGeneration) return
     error.value = cause.message
     if (cause.status === 404 && !campaign.value) {
       updateSeo({
@@ -99,6 +106,7 @@ async function applyToCampaign() {
 }
 
 watch([() => route.params.slug, locale], loadCampaign)
+onBeforeUnmount(() => { ++campaignGeneration })
 watch(
   [campaign, locale],
   ([value]) => {

@@ -36,10 +36,34 @@ async function seoFixture() {
   const seo = new vm.SourceTextModule(await readFile(new URL('../src/lib/seo.js', import.meta.url), 'utf8'), { context, initializeImportMeta: meta => { meta.env = {} } })
   const title = new vm.SourceTextModule(await readFile(new URL('../src/lib/pageTitle.js', import.meta.url), 'utf8'), { context })
   await title.link(() => {})
-  await seo.link(path => path.includes('regionalSeo') ? regional : path.includes('pageTitle') ? title : paths)
+  const pageViews = []
+  const metrics = new vm.SyntheticModule(['trackPageView'], function () {
+    this.setExport('trackPageView', (path, options) => pageViews.push({ path, ...options, documentTitle: document.title }))
+  }, { context })
+  await seo.link(path => path.includes('privacyMetrics') ? metrics : path.includes('regionalSeo') ? regional : path.includes('pageTitle') ? title : paths)
   await seo.evaluate()
-  return { updateSeo: seo.namespace.updateSeo, regionalMetadata: regional.namespace.regionalMetadata, document, nodes }
+  return { updateSeo: seo.namespace.updateSeo, regionalMetadata: regional.namespace.regionalMetadata, document, nodes, pageViews }
 }
+
+test('page views receive the new title after SEO commits it, keep private pages excluded and retain real 404s', async () => {
+  const { updateSeo, pageViews } = await seoFixture()
+  const update = (name, path, title, extra = {}) => updateSeo({ route: { meta: { routeName: name }, params: {}, path }, locale: 'bs', title, description: '', ...extra })
+  update('home', '/', 'Wave — saradnje kreatora i brendova')
+  assert.equal(pageViews.at(-1).title, 'Wave | saradnje kreatora i brendova')
+  assert.equal(pageViews.at(-1).title, pageViews.at(-1).documentTitle)
+  for (const name of ['account', 'account-dashboard', 'admin', 'admin-reports', 'messages', 'verify-email', 'support-track']) {
+    update(name, '/private', 'Private')
+    assert.equal(pageViews.at(-1).allowed, false, name)
+  }
+  update('creator-profile', '/kreatori/amina-kovac', 'Creators', { analyticsReady: false, noindex: true })
+  assert.equal(pageViews.at(-1).allowed, false)
+  update('creator-profile', '/kreatori/amina-kovac', 'Amina Kovač — kreator/ica')
+  assert.equal(pageViews.at(-1).allowed, true)
+  assert.equal(pageViews.at(-1).title, 'Amina Kovač — kreator/ica | Wave')
+  update('not-found', '/does-not-exist', 'Stranica nije pronađena', { noindex: true })
+  assert.equal(pageViews.at(-1).allowed, true)
+  assert.equal(pageViews.at(-1).title, 'Stranica nije pronađena | Wave')
+})
 
 test('SPA navigation retains one self canonical and reciprocal localized alternates on the public origin', async () => {
   const { updateSeo, document } = await seoFixture()

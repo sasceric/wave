@@ -6,7 +6,7 @@ import { readFile } from 'node:fs/promises'
 test('lazy catalogs load once, preserve every language and cannot overwrite a newer language selection', async () => {
   const catalogs = {}
   for (const code of ['bs', 'hr', 'sr', 'sl', 'en', 'cnr']) catalogs[code] = JSON.parse(await readFile(new URL(`../src/locales/${code}.json`, import.meta.url), 'utf8'))
-  const document = { documentElement: {}, querySelector: () => null }
+  const document = { title: 'Current creator | Wave', documentElement: {}, querySelector: () => { throw new Error('Locale loading must not overwrite page metadata') } }
   const context = vm.createContext({ window: { localStorage: { getItem: () => 'bs', setItem: () => {} } }, document, Map })
   let global
   const modules = {
@@ -54,4 +54,5 @@ test('lazy catalogs load once, preserve every language and cannot overwrite a ne
     assert.ok(catalogs[code].app.campaigns)
   }
   assert.equal(englishRequests, 1)
+  assert.equal(document.title, 'Current creator | Wave')
 })

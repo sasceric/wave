@@ -12,7 +12,7 @@ async function metrics(id = 'G-TEST123') {
   const module = new vm.SourceTextModule(await readFile(new URL('../src/lib/privacyMetrics.js', import.meta.url), 'utf8'), { context, initializeImportMeta: (meta) => { meta.env = { VITE_GA_MEASUREMENT_ID: id } } })
   await module.link(() => { throw new Error('Unexpected dependency') })
   await module.evaluate()
-  return { api: module.namespace, window, scripts, cookies }
+  return { api: module.namespace, window, document, scripts, cookies }
 }
 
 test('analytics loads only after consent and queues Google-compatible commands once', async () => {
@@ -32,6 +32,46 @@ test('analytics loads only after consent and queues Google-compatible commands o
   assert.equal(commands.at(-1)[2].page_location, 'https://wave.ba/kreatori')
   api.setAnalyticsConsent(true)
   assert.equal(scripts.length, 1)
+  assert.equal(commands.filter(command => command[1] === 'page_view').length, 1)
+})
+
+test('restored consent waits for resolved page metadata instead of recording a temporary not-found title', async () => {
+  const { api, window, document } = await metrics()
+  document.title = 'Stranica nije pronađena | Wave'
+  api.setAnalyticsConsent(true)
+  assert.equal(window.dataLayer.filter(command => command[1] === 'page_view').length, 0)
+  api.trackPageView('/', { title: 'Wave | saradnje kreatora i brendova' })
+  assert.equal(window.dataLayer.at(-1)[2].page_title, 'Wave | saradnje kreatora i brendova')
+  assert.equal(window.dataLayer.at(-1)[2].page_path, '/')
+  // A second consent notification or SEO refresh must not count the visit twice.
+  api.setAnalyticsConsent(true)
+  api.trackPageView('/', { title: 'Wave | saradnje kreatora i brendova' })
+  assert.equal(window.dataLayer.filter(command => command[1] === 'page_view').length, 1)
+})
+
+test('leaving a real missing page does not attach its title to the next valid page', async () => {
+  const { api, window, document } = await metrics()
+  api.setAnalyticsConsent(true)
+  api.trackPageView('/missing', { title: 'Stranica nije pronađena | Wave' })
+  document.title = 'Stranica nije pronađena | Wave'
+  api.trackPageView('/kampanje', { title: 'Kampanje za kreatore | Wave' })
+  const events = window.dataLayer.filter(command => command[1] === 'page_view')
+  assert.equal(events.length, 2)
+  assert.equal(events[0][2].page_path, '/missing')
+  assert.equal(events[1][2].page_path, '/kampanje')
+  assert.equal(events[1][2].page_title, 'Kampanje za kreatore | Wave')
+})
+
+test('private pages clear pending public page views before consent and public returns count again', async () => {
+  const { api, window } = await metrics()
+  api.trackPageView('/kreatori', { title: 'Kreatori | Wave' })
+  api.trackPageView('/racun', { allowed: false })
+  api.setAnalyticsConsent(true)
+  assert.equal(window.dataLayer.filter(command => command[1] === 'page_view').length, 0)
+  api.trackPageView('/kreatori', { title: 'Kreatori | Wave' })
+  api.trackPageView('/racun', { allowed: false })
+  api.trackPageView('/kreatori', { title: 'Kreatori | Wave' })
+  assert.equal(window.dataLayer.filter(command => command[1] === 'page_view').length, 2)
 })
 
 test('withdrawing consent stops events and deletes only analytics cookies', async () => {

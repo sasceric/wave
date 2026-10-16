@@ -5,11 +5,13 @@ import vm from 'node:vm'
 import { updateAppBadge } from '../src/lib/appBadge.js'
 import { MessageChannel } from 'node:worker_threads'
 
-async function worker({ windows = [], navigator = {}, session = { id: 1 }, sessionError = false, sessionResponse = null } = {}) {
+async function worker({ windows = [], navigator = {}, session = { id: 1 }, sessionError = false, sessionResponse = null, navigationResponse = null, offlineShell = null } = {}) {
   const handlers = new Map()
   const opened = []
   const navigated = []
   const displayed = []
+  const navigationReads = []
+  const routes = []
   const self = {
     __WB_MANIFEST: [], navigator, location: { origin: 'https://wave.example.test' },
     addEventListener: (type, callback) => handlers.set(type, callback),
@@ -18,12 +20,17 @@ async function worker({ windows = [], navigator = {}, session = { id: 1 }, sessi
   }
   const sessionReads = []
   const fetch = async (url, options) => {
+    if (typeof url !== 'string') {
+      navigationReads.push({ request: url, options })
+      if (navigationResponse) return navigationResponse
+      throw new Error('Offline')
+    }
     sessionReads.push({ url, options })
     if (sessionError) throw new Error('Offline')
     if (sessionResponse) await sessionResponse
     return { ok: true, json: async () => ({ data: session }) }
   }
-  const context = vm.createContext({ self, URL, MessageChannel, setTimeout, clearTimeout, fetch, AbortSignal })
+  const context = vm.createContext({ self, URL, MessageChannel, setTimeout, clearTimeout, fetch, AbortSignal, Response })
   const module = new vm.SourceTextModule(await readFile(new URL('../src/sw.js', import.meta.url), 'utf8'), {
     context,
     initializeImportMeta(meta) { meta.env = { VITE_WAVE_BUILD_ID: 'test-build' } },
@@ -35,8 +42,16 @@ async function worker({ windows = [], navigator = {}, session = { id: 1 }, sessi
     if (specifier === './lib/notificationNavigation') {
       return new vm.SourceTextModule(await readFile(new URL('../src/lib/notificationNavigation.js', import.meta.url), 'utf8'), { context })
     }
-    const name = specifier === 'workbox-core' ? 'clientsClaim' : 'precacheAndRoute'
-    return new vm.SyntheticModule([name], function () { this.setExport(name, () => {}) }, { context })
+    if (specifier === 'workbox-routing') {
+      return new vm.SyntheticModule(['registerRoute'], function () { this.setExport('registerRoute', (match, handle) => routes.push({ match, handle })) }, { context })
+    }
+    if (specifier === 'workbox-precaching') {
+      return new vm.SyntheticModule(['precacheAndRoute', 'matchPrecache'], function () {
+        this.setExport('precacheAndRoute', () => routes.push({ precache: true }))
+        this.setExport('matchPrecache', async url => url === '/index.html' ? offlineShell : undefined)
+      }, { context })
+    }
+    return new vm.SyntheticModule(['clientsClaim'], function () { this.setExport('clientsClaim', () => {}) }, { context })
   })
   await module.evaluate()
   const click = async (url, userId = 1) => {
@@ -54,8 +69,39 @@ async function worker({ windows = [], navigator = {}, session = { id: 1 }, sessi
     handlers.get('push')({ data: { json: () => legacy ? payload : { userId: 1, ...payload } }, waitUntil: (promise) => { completion = promise } })
     await completion
   }
-  return { opened, navigated, displayed, click, push, sessionReads, message: event => handlers.get('message')(event) }
+  return { opened, navigated, displayed, click, push, sessionReads, routes, navigationReads, message: event => handlers.get('message')(event) }
 }
+
+test('online homepage navigation gets fresh server HTML before the cache-first app shell can match it', async () => {
+  const response = new Response('<title>New release</title>')
+  const { routes, navigationReads } = await worker({ navigationResponse: response, offlineShell: new Response('Old shell') })
+  assert.equal(routes[0].precache, undefined)
+  assert.equal(routes[1].precache, true)
+  const request = { mode: 'navigate', url: 'https://wave.example.test/' }
+  assert.equal(routes[0].match({ request, url: new URL(request.url) }), true)
+  assert.equal(await routes[0].handle({ request }), response)
+  assert.equal(navigationReads[0].options.cache, 'no-store')
+})
+
+test('offline navigation uses only the static shell and online HTTP errors retain their status', async () => {
+  const shell = new Response('Static offline shell')
+  const offline = await worker({ offlineShell: shell })
+  assert.equal(await offline.routes[0].handle({ request: { mode: 'navigate' } }), shell)
+  const missing = new Response('Not found', { status: 404 })
+  const online = await worker({ offlineShell: shell, navigationResponse: missing })
+  assert.equal(await online.routes[0].handle({ request: { mode: 'navigate' } }), missing)
+  const empty = await worker()
+  assert.equal((await empty.routes[0].handle({ request: { mode: 'navigate' } })).type, 'error')
+})
+
+test('navigation routing cannot intercept API, subresource or cross-origin requests', async () => {
+  const { routes, navigationReads, sessionReads } = await worker()
+  for (const [mode, path] of [['navigate', '/api'], ['navigate', '/api/auth/session'], ['cors', '/build/assets/app.js'], ['navigate', 'https://other.example.test/']]) {
+    assert.equal(routes[0].match({ request: { mode }, url: new URL(path, 'https://wave.example.test') }), false)
+  }
+  assert.deepEqual(navigationReads, [])
+  assert.deepEqual(sessionReads, [])
+})
 
 test('the worker identifies its build over the requested channel without reading private account data', async () => {
   const { message, sessionReads } = await worker()

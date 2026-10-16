@@ -18,5 +18,5 @@ export function routeMetadata(route, locale, t, authenticated = false) {
           : ({ imprint: 'imprintDescription', 'privacy-policy': 'privacyDescription', 'cookie-policy': 'cookiesDescription', support: 'supportDescription' })[name]
             || (known ? 'privateDescription' : 'notFoundDescription')
   const loadingProfile = ['creator-profile', 'company-profile', 'campaign-detail'].includes(name)
-  return { title: t(key), description: t(`seo.${description}`), noindex: privatePage || !known || loadingProfile }
+  return { title: t(key), description: t(`seo.${description}`), noindex: privatePage || !known || loadingProfile, analyticsReady: !loadingProfile }
 }

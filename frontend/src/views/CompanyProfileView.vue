@@ -3,7 +3,7 @@ import PresentationDemoBadge from '../components/shared/PresentationDemoBadge.vu
 import MarketplaceSafetyActions from '../components/shared/MarketplaceSafetyActions.vue'
 import ProfileReviews from '../components/reviews/ProfileReviews.vue'
 import RatingSummary from '../components/reviews/RatingSummary.vue'
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { ExternalLink, Globe, Link2, MapPin, Megaphone, Music2 } from '@lucide/vue'
 import CardGrid from '../components/shared/CardGrid.vue'
 import { useRoute } from 'vue-router'
@@ -25,6 +25,7 @@ const company = ref(null)
 const campaigns = ref([])
 const error = ref('')
 const { t, locale } = useI18n()
+let profileGeneration = 0
 const countryDisplayLocale = computed(() => {
   if (locale.value === 'cnr') return 'bs'
   if (locale.value === 'sr') return 'sr-Latn'
@@ -47,6 +48,7 @@ const coverUrl = computed(() => company.value?.coverUrl || '/images/company-cove
 const socialLinks = computed(() => (company.value?.socialLinks || []).filter((link) => link.platform && link.url))
 
 async function loadCompany() {
+  const generation = ++profileGeneration
   company.value = null
   campaigns.value = []
   error.value = ''
@@ -56,9 +58,11 @@ async function loadCompany() {
       apiGet(`/companies/${slug}`),
       apiGet(`/campaigns?company=${slug}&limit=50`),
     ])
+    if (generation !== profileGeneration) return
     company.value = companyResponse.data
     campaigns.value = campaignResponse.data
   } catch (cause) {
+    if (generation !== profileGeneration) return
     error.value = cause.message
     if (cause.status === 404 && !company.value) {
       updateSeo({
@@ -95,6 +99,7 @@ watch(
   },
 )
 onMounted(loadCompany)
+onBeforeUnmount(() => { ++profileGeneration })
 </script>
 
 <template>

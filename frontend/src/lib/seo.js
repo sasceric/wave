@@ -1,6 +1,7 @@
 import { localizedPath, routeSegments, isSharedRoute } from '../routePaths'
 import { regionalLanguageTags } from './regionalSeo'
 import { pageTitle } from './pageTitle'
+import { trackPageView } from './privacyMetrics'
 
 const languageTags = {
   bs: 'bs',
@@ -59,6 +60,7 @@ export function updateSeo({
   noindex = false,
   image = null,
   mainEntity = null,
+  analyticsReady = true,
 }) {
   title = pageTitle(title)
   document.title = title
@@ -66,6 +68,13 @@ export function updateSeo({
   const origin = getSeoOrigin()
   const routeName = route.meta?.routeName
   const knownRoute = routeSegments[locale]?.[routeName] !== undefined
+  const privatePage = route.meta?.accountSection || route.meta?.adminSection
+    || routeName === 'account' || routeName?.startsWith('account-')
+    || routeName === 'admin' || routeName?.startsWith('admin-')
+    || ['messages', 'verify-email', 'reset-password', 'moderation', 'support-create', 'support-track'].includes(routeName)
+  // Publish the page and its final title together. Never sample document.title
+  // from a separate route watcher before this metadata update has run.
+  trackPageView(route.path, { title, allowed: analyticsReady && !privatePage })
   setMeta('name', 'description', description)
   setMeta('name', 'robots', noindex || !knownRoute ? 'noindex, nofollow' : 'index, follow')
   setMeta('property', 'og:type', 'website')
