@@ -144,15 +144,15 @@ const navigationItems = computed(() => {
   if (props.user?.isAdmin) {
     items.push(
       { route: 'admin', labelKey: 'adminDashboard.overviewPageTitle', icon: LayoutDashboard },
-      { route: 'admin-registrations', labelKey: 'adminDashboard.navRegistrations', icon: ClipboardCheck, badge: adminCounts.value?.approvals ?? props.pendingRegistrations },
       { route: 'admin-homepage', labelKey: 'adminDashboard.navHomepage', icon: House, group: 'marketing' },
       { route: 'admin-creators', labelKey: 'adminDashboard.navCreators', icon: Users },
       { route: 'admin-companies', labelKey: 'adminDashboard.navCompanies', icon: Building2 },
-      { route: 'admin-reports', labelKey: 'safety.reports', icon: Flag, badge: adminCounts.value?.reports },
       { route: 'admin-campaigns', labelKey: 'adminDashboard.navCampaigns', icon: Megaphone },
       { route: 'admin-email-templates', labelKey: 'adminDashboard.navEmailTemplates', icon: Mail, group: 'marketing' },
       { route: 'admin-credit-settings', labelKey: 'credits.adminTitle', icon: Coins, group: 'settings' },
       { route: 'admin-tools', labelKey: 'adminTools.title', icon: Wrench, group: 'settings' },
+      { route: 'admin-registrations', labelKey: 'adminDashboard.navRegistrations', icon: ClipboardCheck, group: 'settings', badge: adminCounts.value?.approvals ?? props.pendingRegistrations },
+      { route: 'admin-reports', labelKey: 'safety.reports', icon: Flag, group: 'settings', badge: adminCounts.value?.reports },
       { route: 'admin-support', labelKey: 'support.adminTitle', icon: LifeBuoy, group: 'settings', badge: adminCounts.value?.tickets },
       { route: 'admin-qr', labelKey: 'adminQr.title', icon: QrCode, group: 'marketing' },
       { route: 'admin-redirects', labelKey: 'adminRedirects.title', icon: CornerUpRight, group: 'marketing' },
