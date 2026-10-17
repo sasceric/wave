@@ -189,6 +189,7 @@ final class AdminDashboardTest extends WebTestCase
         $creatorUser->setPassword('unused-test-hash');
         $creatorUser->setEmailVerified(true);
         $creatorUser->setApproved(false);
+        $creatorUser->setHideMyAccount(true);
         $creatorUser->setPreferredLocale('en');
         $creatorUser->setPhone('+38761123456');
         $creatorUser->setCity('Sarajevo');
@@ -261,8 +262,9 @@ final class AdminDashboardTest extends WebTestCase
         $approvalEmail = self::getMailerMessage();
         self::assertInstanceOf(Email::class, $approvalEmail);
         self::assertEmailSubjectContains($approvalEmail, 'Your Wave account has been approved');
-        self::assertEmailTextBodyContains($approvalEmail, 'Turn off “Hide my account”');
+        self::assertEmailTextBodyContains($approvalEmail, 'now publicly visible');
         self::assertTrue($entityManager->getRepository(User::class)->find($creatorUser->getId())->isApproved());
+        self::assertFalse($entityManager->getRepository(User::class)->find($creatorUser->getId())->isHideMyAccount());
         $this->client->request(
             'POST',
             '/api/admin/registrations/' . $creatorUser->getId() . '/approve?locale=en',
@@ -301,7 +303,7 @@ final class AdminDashboardTest extends WebTestCase
         self::assertNull($entityManager->getRepository(Campaign::class)->find($campaign->getId()));
     }
 
-    public function testBulkApprovalKeepsProfilesHiddenUntilOwnersEnableVisibility(): void
+    public function testBulkApprovalMakesCreatorsAndCompaniesPublic(): void
     {
         $entityManager = static::getContainer()->get(EntityManagerInterface::class);
         $admin = new User('admin@example.test', 'ROLE_COMPANY');
@@ -312,6 +314,7 @@ final class AdminDashboardTest extends WebTestCase
         $creatorUser->setPassword('unused-test-hash');
         $creatorUser->setEmailVerified(true);
         $creatorUser->setApproved(false);
+        $creatorUser->setHideMyAccount(true);
         $creatorUser->setPreferredLocale('en');
         $creatorUser->setPhone('+38761123456');
         $creatorUser->setCity('Sarajevo');
@@ -323,6 +326,7 @@ final class AdminDashboardTest extends WebTestCase
         $companyUser->setPassword('unused-test-hash');
         $companyUser->setEmailVerified(true);
         $companyUser->setApproved(false);
+        $companyUser->setHideMyAccount(true);
         $companyUser->setPreferredLocale('en');
         $companyUser->setPhone('+385911234567');
         $companyUser->setCity('Zagreb');
@@ -334,12 +338,14 @@ final class AdminDashboardTest extends WebTestCase
         $incompleteUser->setPassword('unused-test-hash');
         $incompleteUser->setEmailVerified(true);
         $incompleteUser->setApproved(false);
+        $incompleteUser->setHideMyAccount(true);
         $incompleteUser->setCreator(new Creator('incomplete-creator', 'Incomplete Creator', '', '', '', []));
 
         $unverifiedUser = new User('unverified@example.test', 'ROLE_CREATOR');
         $unverifiedUser->setPassword('unused-test-hash');
         $unverifiedUser->setEmailVerified(false);
         $unverifiedUser->setApproved(false);
+        $unverifiedUser->setHideMyAccount(true);
         $unverifiedUser->setCreator(
             new Creator('unverified-creator', 'Unverified Creator', 'Travel', 'Mostar', 'Private profile.', []),
         );
@@ -425,12 +431,7 @@ final class AdminDashboardTest extends WebTestCase
             $this->client->loginUser($approvedUser, 'main');
             $this->client->request('GET', '/api/auth/me?locale=en');
             self::assertTrue($this->payload()['data']['approved']);
-            self::assertSame(1, $this->payload()['data']['hide_my_account']);
-            $this->client->request('PUT', '/api/me/account-visibility?locale=en', server: [
-                'CONTENT_TYPE' => 'application/json',
-                'HTTP_X_CSRF_TOKEN' => $this->csrfToken(),
-            ], content: json_encode(['hide_my_account' => 0], JSON_THROW_ON_ERROR));
-            self::assertResponseIsSuccessful();
+            self::assertSame(0, $this->payload()['data']['hide_my_account']);
         }
         $this->client->loginUser($admin, 'main');
 
@@ -450,6 +451,84 @@ final class AdminDashboardTest extends WebTestCase
         self::assertResponseIsSuccessful();
         $this->client->request('GET', '/api/campaigns/private-campaign?locale=en');
         self::assertResponseIsSuccessful();
+
+        $this->client->getCookieJar()->clear();
+        foreach (['/creators/pending-creator', '/companies/pending-company', '/campaigns/private-campaign'] as $path) {
+            $this->client->request('GET', '/api'.$path.'?locale=en');
+            self::assertResponseIsSuccessful();
+        }
+
+        foreach ([$creatorUser, $companyUser] as $approvedUser) {
+            $this->client->loginUser($approvedUser, 'main');
+            $this->client->jsonRequest('PUT', '/api/me/account-visibility?locale=en', ['hide_my_account' => 1], [
+                'HTTP_X_CSRF_TOKEN' => $this->csrfToken(),
+            ]);
+            self::assertResponseIsSuccessful();
+            self::assertSame(1, $this->payload()['data']['hide_my_account']);
+        }
+
+        $this->client->loginUser($admin, 'main');
+        $this->client->jsonRequest('POST', '/api/admin/registrations/bulk-approve?locale=en', [
+            'ids' => [$creatorUser->getId(), $companyUser->getId()],
+        ], ['HTTP_X_CSRF_TOKEN' => $this->csrfToken()]);
+        self::assertResponseIsSuccessful();
+        self::assertSame(0, $this->payload()['data']['approved']);
+        self::assertSame(2, $this->payload()['data']['alreadyApproved']);
+        self::assertEmailCount(0);
+
+        $this->client->getCookieJar()->clear();
+        foreach (['/creators/pending-creator', '/companies/pending-company', '/campaigns/private-campaign'] as $path) {
+            $this->client->request('GET', '/api'.$path.'?locale=en');
+            self::assertResponseStatusCodeSame(404);
+        }
+    }
+
+    public function testSingleCompanyApprovalPublishesProfileAndPreservesLaterHiding(): void
+    {
+        $entityManager = static::getContainer()->get(EntityManagerInterface::class);
+        $admin = new User('approval-admin@example.test', 'ROLE_COMPANY');
+        $admin->setPassword('unused-test-hash');
+        $admin->setAdmin(true);
+        $owner = new User('approval-company@example.test', 'ROLE_COMPANY');
+        $owner->setPassword('unused-test-hash');
+        $owner->setApproved(false);
+        $owner->setHideMyAccount(true);
+        $owner->setEmailVerified(true);
+        $owner->setPhone('+38761123456');
+        $owner->setCity('Sarajevo');
+        $owner->setCountryCode('BA');
+        $owner->setCompany(new Company('approval-company', 'Approval Company', 'Food'));
+        $entityManager->persist($admin);
+        $entityManager->persist($owner);
+        $entityManager->flush();
+
+        $this->client->request('GET', '/api/companies/approval-company?locale=en');
+        self::assertResponseStatusCodeSame(404);
+        $this->client->loginUser($admin, 'main');
+        $this->client->jsonRequest('POST', '/api/admin/registrations/'.$owner->getId().'/approve?locale=en', [], [
+            'HTTP_X_CSRF_TOKEN' => $this->csrfToken(),
+        ]);
+        self::assertResponseIsSuccessful();
+        self::assertEmailCount(1);
+
+        $this->client->getCookieJar()->clear();
+        $this->client->request('GET', '/api/companies/approval-company?locale=en');
+        self::assertResponseIsSuccessful();
+        $this->client->loginUser($owner, 'main');
+        $this->client->jsonRequest('PUT', '/api/me/account-visibility?locale=en', ['hide_my_account' => 1], [
+            'HTTP_X_CSRF_TOKEN' => $this->csrfToken(),
+        ]);
+        self::assertResponseIsSuccessful();
+
+        $this->client->loginUser($admin, 'main');
+        $this->client->jsonRequest('POST', '/api/admin/registrations/'.$owner->getId().'/approve?locale=en', [], [
+            'HTTP_X_CSRF_TOKEN' => $this->csrfToken(),
+        ]);
+        self::assertResponseIsSuccessful();
+        self::assertEmailCount(0);
+        $this->client->getCookieJar()->clear();
+        $this->client->request('GET', '/api/companies/approval-company?locale=en');
+        self::assertResponseStatusCodeSame(404);
     }
 
     private function csrfToken(): string

@@ -6,7 +6,7 @@ The shorter signup collects account type, name, email and an eight-character min
 
 Login lands on `account-dashboard`, including incomplete accounts. Their overview shows email verification, contact/location and identity/category completion. Links open the existing editor with `tab` and a one-use `edit=1` query. The required-fields modal can return to the overview; marketplace routes and server approval/verification checks still apply. Portfolio, social profiles, offers and audience data remain optional. The existing admin approval process automatically reviews eligible accounts; there is no extra submission endpoint or fake submit action.
 
-Approved accounts see real activity/financial/review/credit statistics and a next action. The visibility switch calls the existing CSRF-protected visibility endpoint. Approval never enables public visibility automatically. Existing visibility choices are preserved.
+Approved accounts see real activity/financial/review/credit statistics and a next action. The visibility switch calls the existing CSRF-protected visibility endpoint. Individual and bulk admin approval make newly approved creator and company profiles public automatically. Email verification and required profile completion remain prerequisites. Owners can hide their profiles afterward; repeating approval for an already approved account preserves that later visibility choice. Existing approved profiles are not republished by a backfill.
 
 Pending accounts no longer have a manual “Check status” button. The activation
 panel refreshes the session on the existing inbox-resume event, triggered when

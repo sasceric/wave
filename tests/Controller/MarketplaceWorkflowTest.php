@@ -216,7 +216,7 @@ final class MarketplaceWorkflowTest extends WebTestCase
         $csrf = $this->csrfToken();
         $this->client->request('GET', '/api/auth/me?locale=bs');
         self::assertTrue($this->payload()['data']['approved']);
-        self::assertSame(1, $this->payload()['data']['hide_my_account']);
+        self::assertSame(0, $this->payload()['data']['hide_my_account']);
         $this->jsonRequest('PUT', '/api/me/account-visibility', ['hide_my_account' => 0], $csrf);
         self::assertResponseIsSuccessful();
 
