@@ -24,6 +24,8 @@ final class AgencyServicesMigrationTest extends KernelTestCase
         $migration = new \DoctrineMigrations\Version20261017210000($db, new NullLogger());
         $migration->up(new Schema());
         foreach ($migration->getSql() as $query) $db->executeStatement($query->getStatement(), $query->getParameters(), $query->getTypes());
+        self::assertSame('[]', $db->fetchOne('SELECT services FROM company WHERE id = 1'));
+        $migration->postUp($db->createSchemaManager()->introspectSchema());
         $services = json_decode($db->fetchOne('SELECT services FROM company WHERE id = 1'), true, flags: JSON_THROW_ON_ERROR);
         self::assertSame(['Vođenje kampanja', 'X'], array_column($services, 'title'));
         self::assertSame([], $services[0]['deliverables']);
