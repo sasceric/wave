@@ -61,12 +61,13 @@ final class ProfileStructuredData
             if (!($item['publicPermission'] ?? true) || ($item['type'] ?? 'image') !== 'image') continue;
             $imageUrl = isset($item['mediaId']) ? ($mediaUrls[$item['mediaId']] ?? null) : ($item['url'] ?? null);
             if (!is_string($imageUrl) || $imageUrl === '') continue;
-            $images[] = ['@type' => 'ImageObject', 'contentUrl' => $this->absolute($imageUrl),
-                'caption' => $this->plain($item['title'] ?? ''), 'creator' => ['@id' => $url.'#person']];
+            // Permission to display work does not establish its author, copyright or reuse license.
+            // Keep ordinary gallery images until verified per-image rights metadata is available.
+            $images[] = $this->absolute($imageUrl);
         }
         if ($images !== []) {
             $gallery = ['@type' => 'ImageGallery', '@id' => $url.'#portfolio', 'name' => $creator->getDisplayName(),
-                'isPartOf' => ['@id' => $url.'#webpage'], 'hasPart' => $images];
+                'isPartOf' => ['@id' => $url.'#webpage'], 'image' => $images];
             $person['subjectOf'] = isset($person['subjectOf']) ? [$person['subjectOf'], $gallery] : $gallery;
         }
         if ($offers !== []) $person['hasOfferCatalog'] = ['@type' => 'OfferCatalog', 'name' => $creator->getDisplayName(), 'itemListElement' => $offers];

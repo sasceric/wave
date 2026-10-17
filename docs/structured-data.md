@@ -11,7 +11,7 @@ it does not expose private account information or grant marketplace access.
 | Creator/company/campaign directories | `CollectionPage`; Vue adds `ItemList` from the results actually loaded, including subsequent result pages |
 | Country creator directory | Existing `CollectionPage` and creator `ItemList`, with localized country content |
 | Creator profile | `ProfilePage` with a `Person`; their `Service` carries public reviews and aggregate rating; packages use `OfferCatalog`/`Offer`/`Service` |
-| Creator portfolio and questions | Public images use `ImageGallery`/`ImageObject`; populated creator questions use `FAQPage`/`Question`/`Answer` |
+| Creator portfolio and questions | Public images use `ImageGallery.image` URL values; populated creator questions use `FAQPage`/`Question`/`Answer` |
 | Company profile | `ProfilePage` with an `Organization`, public reviews/aggregate rating, and topics in `knowsAbout` |
 | Open campaign | `CreativeWork` describing the collaboration brief |
 | Guide indexes and articles | `CollectionPage`/`ItemList` and `Article`; retained after SPA navigation for both creator and company guides |
@@ -52,6 +52,28 @@ References: [Schema.org review domains](https://schema.org/review),
 [Service](https://schema.org/Service), [industry](https://schema.org/industry),
 [Google profile pages](https://developers.google.com/search/docs/appearance/structured-data/profile-page),
 and [Google review snippets](https://developers.google.com/search/docs/appearance/structured-data/review-snippet).
+
+## Portfolio image rights
+
+Portfolio galleries use the Schema.org `image` property with absolute image URLs.
+The saved permission to publish a portfolio item does not establish who took its
+photos, who owns their copyright, or which reuse license applies. Do not infer
+these from the account owner or assign Wave as the copyright owner.
+
+The previous `ImageObject` nodes included an assumed `creator`, which triggered
+Google's optional Image Metadata recommendations for `copyrightNotice`, `license`,
+`acquireLicensePage` and `creditText`. Ordinary gallery markup retains the public
+images without making unsupported attribution/licensing claims. It does not
+request Google's image licensing enhancement; image indexing does not require
+that enhancement. Add detailed image rights markup only when the corresponding
+verified information and actual licensing pages are available.
+
+After deployment, test an affected profile's live HTML with Rich Results Test and
+request revalidation in Search Console. Existing reports can persist until Google
+recrawls the changed pages; deployment alone does not clear the report instantly.
+
+References: [Schema.org image](https://schema.org/image),
+[Google image metadata](https://developers.google.com/search/docs/appearance/structured-data/image-license-metadata).
 
 ## German
 
