@@ -232,6 +232,7 @@
     "instagram": "Wave na Instagramu",
     "tiktok": "Wave na TikToku",
     "facebook": "Wave na Facebooku",
+    "youtube": "Wave na YouTubeu",
     "language": "Jezik",
     "openMenu": "Otvori navigaciju",
     "closeMenu": "Zatvori navigaciju",
@@ -1993,7 +1994,18 @@
       "startTitle": "Spreman za saradnju?",
       "startIntro": "Predstavi svoj rad ili brend, pronađi pravi spoj i započni novu saradnju."
     },
-    "guideRelatedIntro": "Od izbora kreatora do jasnog briefa: pronađi sljedeći korak za svoj brend."
+    "guideRelatedIntro": "Od izbora kreatora do jasnog briefa: pronađi sljedeći korak za svoj brend.",
+    "videoTutorials": {
+      "title": "Video vodiči",
+      "intro": "Prati postupak korak po korak, pa nastavi uz pisani vodič.",
+      "language": "Bosanska naracija i titlovi",
+      "play": "Pusti video: {title}",
+      "watch": "Pogledaj na YouTubeu",
+      "creatorProfile": "Registracija i profil kreatora",
+      "collaboration": "Od prijave na kampanju do recenzije",
+      "companyProfile": "Registracija i profil kompanije",
+      "campaigns": "Kreiranje kampanje i upravljanje statusima"
+    }
   },
   "support": {
     "label": "Podrška",

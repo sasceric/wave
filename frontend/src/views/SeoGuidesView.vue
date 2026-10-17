@@ -6,6 +6,7 @@ import LocalizedLink from '../components/shared/LocalizedLink.vue'
 import CountryDirectoryLinks from '../components/shared/CountryDirectoryLinks.vue'
 import SeoGuideLinks from '../components/shared/SeoGuideLinks.vue'
 import SeoHeroArtwork from '../components/shared/SeoHeroArtwork.vue'
+import GuideVideo from '../components/shared/GuideVideo.vue'
 import NotFoundView from './NotFoundView.vue'
 import { guideSlugs, creatorGuideSlugs } from '../lib/regionalSeo'
 import { apiGet } from '../lib/api'
@@ -20,6 +21,13 @@ const slugs = computed(() => forCreators.value ? creatorGuideSlugs : guideSlugs)
 const copyKey = computed(() => forCreators.value ? 'regionalSeo.creatorGuides.guides' : 'regionalSeo.guides')
 const titleKey = computed(() => forCreators.value ? 'regionalSeo.creatorGuides.title' : 'regionalSeo.guideTitle')
 const valid = computed(() => !guide.value || slugs.value.includes(guide.value))
+const tutorials = [
+  { id: 'nresOESQ5xs', topic: 'creatorProfile', creator: true, guide: 'create-profile', poster: '/images/tutorials/creator-profile.png' },
+  { id: 'nLD4UMrJZOI', topic: 'collaboration', creator: true, guide: 'apply-to-campaigns', poster: '/images/tutorials/collaboration.png' },
+  { id: 'z_raLkGJJdk', topic: 'companyProfile', creator: false, poster: '/images/tutorials/company-profile.png' },
+  { id: 'UQz_2XxLQ9g', topic: 'campaigns', creator: false, guide: 'campaign-brief', poster: '/images/tutorials/campaigns.png' },
+]
+const videos = computed(() => tutorials.filter(video => video.creator === forCreators.value && (!guide.value || video.guide === guide.value)))
 const guideImages = {
   'find-creators': '/images/home-step-match.webp',
   'choose-package': '/images/home-step-create.webp',
@@ -68,6 +76,15 @@ onMounted(async () => {
       </div>
       <SeoHeroArtwork article :icon="guideIcons[guide]" />
     </div>
+    <section v-if="videos.length" class="seo-content__videos" aria-labelledby="guide-videos-title">
+      <header>
+        <h2 id="guide-videos-title">{{ t('regionalSeo.videoTutorials.title') }}</h2>
+        <p>{{ t('regionalSeo.videoTutorials.intro') }}</p>
+      </header>
+      <div class="seo-content__video-grid" :class="{ 'seo-content__video-grid--single': videos.length === 1 }">
+        <GuideVideo v-for="video in videos" :key="video.id" :video="video" />
+      </div>
+    </section>
     <article v-if="guide" class="seo-content__article">
       <section v-for="index in 3" :key="`${guide}-${index}`" class="seo-content__step">
         <span class="seo-content__step-number" aria-hidden="true">{{ index }}</span>

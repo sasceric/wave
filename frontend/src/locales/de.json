@@ -231,6 +231,7 @@
     "instagram": "Wave auf Instagram",
     "tiktok": "Wave auf TikTok",
     "facebook": "Wave auf Facebook",
+    "youtube": "Wave auf YouTube",
     "language": "Sprache",
     "openMenu": "Navigation öffnen",
     "closeMenu": "Navigation schließen",
@@ -1992,7 +1993,18 @@
       "startTitle": "Bereit zur Zusammenarbeit?",
       "startIntro": "Stelle deine Arbeit oder Marke vor, finde den passenden Partner und beginne eine neue Kooperation."
     },
-    "guideRelatedIntro": "Von der Creator-Auswahl bis zum klaren Briefing: Finde den nächsten Schritt für deine Marke."
+    "guideRelatedIntro": "Von der Creator-Auswahl bis zum klaren Briefing: Finde den nächsten Schritt für deine Marke.",
+    "videoTutorials": {
+      "title": "Videoanleitungen",
+      "intro": "Folge den Schritten im Video und lies anschließend die schriftliche Anleitung.",
+      "language": "Bosnische Sprachausgabe und Untertitel",
+      "play": "Video abspielen: {title}",
+      "watch": "Auf YouTube ansehen",
+      "creatorProfile": "Registrierung und Profil für Kreative",
+      "collaboration": "Von der Kampagnenbewerbung bis zur Bewertung",
+      "companyProfile": "Registrierung und Unternehmensprofil",
+      "campaigns": "Kampagnen erstellen und Status verwalten"
+    }
   },
   "support": {
     "label": "Hilfe",

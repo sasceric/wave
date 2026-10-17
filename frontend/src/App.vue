@@ -1220,8 +1220,18 @@ async function signOut() {
                 <path d="M13.5 21v-8h2.7l.4-3.1h-3.1v-2c0-.9.3-1.5 1.6-1.5h1.7V3.6c-.3 0-1.3-.1-2.5-.1-2.5 0-4.2 1.5-4.2 4.3v2.1H7.3V13h2.8v8h3.4Z" />
               </svg>
             </a>
-
-
+            <a
+              class="site-footer__social-icon site-footer__social-icon--youtube"
+              href="https://www.youtube.com/@wavebaapp"
+              target="_blank"
+              rel="noopener noreferrer"
+              :aria-label="t('app.youtube')"
+            >
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <rect x="3" y="5" width="18" height="14" rx="4" />
+                <path class="site-footer__social-dot" d="m10 9 5 3-5 3Z" />
+              </svg>
+            </a>
           </nav>
           <span class="site-footer__social-note">{{ t('app.socialFollow') }}</span>
         </div>

@@ -48,6 +48,12 @@ cards and compact related-guide links; their regional panel reuses the same map.
 headers. The how-it-works page has audience workflow cards and a collaboration
 call to action; public guides do not describe internal credit settings.
 
+`SeoGuidesView.vue` maps the four published YouTube tutorials to the creator and
+company guide indexes and their relevant articles. `GuideVideo.vue` shows local
+posters from `frontend/public/images/tutorials/` and loads a responsive
+youtube-nocookie.com player only after a click. Labels use all seven locales;
+the recordings are in Bosnian. The footer channel link lives in `App.vue`.
+
 Admin QR scan counts use `QrScanStatistics.php` and `wave_qr_scan_daily`, added by
 `Version20261008160000`. Counts are daily location aggregates, not visitor records.
 Cloudflare location headers are accepted only from allowlisted edge peers; see

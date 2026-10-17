@@ -231,6 +231,7 @@
     "instagram": "Wave on Instagram",
     "tiktok": "Wave on TikTok",
     "facebook": "Wave on Facebook",
+    "youtube": "Wave on YouTube",
     "language": "Language",
     "openMenu": "Open navigation",
     "closeMenu": "Close navigation",
@@ -1992,7 +1993,18 @@
       "startTitle": "Ready to collaborate?",
       "startIntro": "Introduce your work or brand, find the right match and start a new collaboration."
     },
-    "guideRelatedIntro": "From choosing a creator to writing a clear brief: find the next step for your brand."
+    "guideRelatedIntro": "From choosing a creator to writing a clear brief: find the next step for your brand.",
+    "videoTutorials": {
+      "title": "Video tutorials",
+      "intro": "Follow each step on screen, then continue with the written guide.",
+      "language": "Bosnian narration and captions",
+      "play": "Play video: {title}",
+      "watch": "Watch on YouTube",
+      "creatorProfile": "Creator registration and profile",
+      "collaboration": "From campaign application to review",
+      "companyProfile": "Company registration and profile",
+      "campaigns": "Creating campaigns and managing statuses"
+    }
   },
   "support": {
     "label": "Support",

@@ -206,6 +206,30 @@
     margin: 28px 0 20px;
   }
 
+  &__videos {
+    margin: 32px 0;
+  }
+
+  &__videos > header h2 {
+    margin: 0 0 8px;
+  }
+
+  &__videos > header p {
+    margin: 0 0 20px;
+    font-size: 15px;
+  }
+
+  &__video-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 24px;
+  }
+
+  &__video-grid--single {
+    grid-template-columns: minmax(0, 1fr);
+    max-width: 990px;
+  }
+
   &__guide-card {
     display: flex;
     flex-direction: column;
@@ -468,6 +492,11 @@
       grid-template-columns: 1fr;
       gap: 16px;
       margin-top: 26px;
+    }
+
+    &__video-grid {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 20px;
     }
 
     &__guide-media {
