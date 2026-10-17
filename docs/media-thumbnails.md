@@ -36,8 +36,10 @@ controls, and shimmer is disabled for reduced-motion preferences.
 
 ## Image storage and indexing
 
-`ImageUploadProcessor` still creates a lossless WebP master at most 600px wide,
-without cropping or upscaling, preserving alpha and JPEG orientation. New uploads
+`ImageUploadProcessor` creates a lossless WebP master at most 1920px wide for
+company/campaign covers, 1600px for report evidence, and 600px for other images.
+Smaller images keep their dimensions. Processing preserves aspect ratio, alpha
+and JPEG orientation, without cropping or upscaling. Existing uploads are unchanged. New uploads
 queue generation of WebP thumbnails at quality 82 at fixed maximum widths of **96, 320 and
 480px**. Each thumbnail keeps proportional height. Directory cards use thumbnail
 URLs; profile detail views retain the master URL.
@@ -66,6 +68,29 @@ immutable source paths. Changing the thumbnail recipe requires a new
 `ImageVariants::VERSION` so its URL and storage namespace invalidate old browser
 and server caches together. Old derivative versions are removed when the owning
 media is deleted.
+
+## Removing unused uploads
+
+Profile saves remove obsolete avatar, company logo/cover and portfolio media
+records after all replacement associations have been saved. Campaign edits do
+the same for replaced or removed covers. This is handled by the server, including
+portfolio project covers and extra gallery images; it does not depend on a second
+browser request. Reordering projects or reusing an image keeps its file.
+
+`UnusedMediaCleanup` checks all avatar, logo, company/campaign cover, portfolio
+and private report references before removing a media record. Database deletion
+and the `stored_file_deletion` retry entry share the save transaction. The response
+subscriber removes the source file and every thumbnail version only after commit;
+a rollback keeps both the media record and its files. Failed filesystem deletions
+remain queued for `app:media:cleanup-deleted` or daily maintenance to retry.
+
+The existing daily `MediaMaintenanceTask` and its bounded `MediaIndexingMessage`
+batches also remove unreferenced uploads older than 24 hours, covering abandoned
+forms and previously orphaned media records. Fresh uploads have this grace period
+so an unfinished form can still attach them. Hidden, pending and private profiles
+retain their referenced images. External image URLs and bundled site assets are
+not managed uploads and are not deleted. Run Media Maintenance in Admin Tools to
+start the same cleanup immediately; the background worker must be running.
 
 Existing media is supported without replacing its source. With queues enabled,
 a missing variant queues a deduplicated repair and temporarily serves the master;

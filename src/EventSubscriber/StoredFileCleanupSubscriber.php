@@ -21,7 +21,7 @@ final class StoredFileCleanupSubscriber implements EventSubscriberInterface
 
     public function finish(ResponseEvent $event): void
     {
-        if ($event->isMainRequest() && $event->getRequest()->isMethod('DELETE')
+        if ($event->isMainRequest() && !$event->getRequest()->isMethodSafe()
             && str_starts_with($event->getRequest()->getPathInfo(), '/api/')
             && $event->getResponse()->isSuccessful()) {
             $this->cleanup->run();

@@ -648,13 +648,6 @@ async function saveProfile() {
     for (const { id, url, change } of imageChanges) {
       profile.value[id] = change.mediaId
       profile.value[url] = change.url
-      if (change.previousMediaId) {
-        try {
-          await apiRequest(`/media/${change.previousMediaId}`, { method: 'DELETE' })
-        } catch (cause) {
-          error.value = `${t('account.profileImageCleanupFailed')} ${cause.message}`
-        }
-      }
     }
     notice.value = t('account.profileSaved')
     await loadDashboard()
@@ -1269,7 +1262,7 @@ onMounted(loadDashboard)
               :add-label="t('account.addCompanyCover')"
               :change-label="t('account.changeCompanyCover')"
               :remove-label="t('account.removeCompanyCover')"
-              :helper-text="t('account.profileImageSaveHint')"
+              :helper-text="`${t('account.coverUploadHint')} ${t('account.coverSaveHint')}`"
               :remove-title="t('account.removeCompanyCoverTitle')"
               :remove-message="t('account.removeCompanyCoverMessage')"
               :confirm-label="t('account.remove')"

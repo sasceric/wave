@@ -19,6 +19,7 @@ use App\Entity\User;
 use App\Localization\ApiMessages;
 use App\Localization\LocaleContext;
 use App\Service\RichTextSanitizer;
+use App\Service\UnusedMediaCleanup;
 use App\Safety\BlockPolicy;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\SecurityBundle\Security;
@@ -115,6 +116,7 @@ final class ProfileController
         Security $security,
         CsrfTokenManagerInterface $tokenManager,
         RichTextSanitizer $richTextSanitizer,
+        UnusedMediaCleanup $unusedMedia,
     ): JsonResponse {
         $locale = LocaleContext::fromRequest($request);
         if ($locale === null) {
@@ -188,6 +190,10 @@ final class ProfileController
             if ($name === null || $category === null || $categories === null || $categories === [] || $bio === null || $phone === false || $city === false || $countryCode === false || $tagline === null || $avatarUrl === false || $avatarMedia === false || $tags === null || $portfolio === null || $packages === null || $faqs === null) {
                 return new JsonResponse(['error' => ApiMessages::get('invalid_profile', $locale)], 400);
             }
+            $previousMediaIds = [$creator->getAvatarMedia()?->getId()];
+            foreach ($creator->getPortfolioMedia() as $entry) {
+                $previousMediaIds[] = $entry->getMedia()->getId();
+            }
             $creator->updateProfile($name, $category, $city ?? '', $bio, $socialProfiles, $tags, $avatarUrl, $tagline, $portfolio['items'], $packages, $categories, $faqs);
             $creator->setAvatarMedia($avatarMedia);
             $creator->setBirthday($birthday);
@@ -196,7 +202,7 @@ final class ProfileController
             $user->setPhone($phone);
             $user->setCity($city);
             $user->setCountryCode($countryCode);
-            $entityManager->wrapInTransaction(static function (EntityManagerInterface $manager) use ($creator, $portfolio): void {
+            $entityManager->wrapInTransaction(static function (EntityManagerInterface $manager) use ($creator, $portfolio, $unusedMedia, $previousMediaIds): void {
                 // Delete old positions before inserting replacements; Doctrine otherwise inserts first.
                 $creator->clearPortfolioMedia();
                 $manager->flush();
@@ -209,6 +215,8 @@ final class ProfileController
                         $association['platform'],
                     ));
                 }
+                $manager->flush();
+                $unusedMedia->remove($previousMediaIds);
             });
 
             return new JsonResponse(['data' => CreatorResource::fromEntity($creator, $locale, public: false) + ['birthday' => $creator->getBirthday()?->format('Y-m-d')]]);
@@ -266,6 +274,7 @@ final class ProfileController
         ) {
             return new JsonResponse(['error' => ApiMessages::get('invalid_profile', $locale)], 400);
         }
+        $previousMediaIds = [$company->getLogoMedia()?->getId(), $company->getCoverMedia()?->getId()];
         $company->updateProfile($name, $industry, $logoUrl, $about);
         $company->setCompanyType($companyType);
         $company->setIndustries($industries);
@@ -275,7 +284,10 @@ final class ProfileController
         $user->setPhone($phone);
         $user->setCity($city);
         $user->setCountryCode($countryCode);
-        $entityManager->flush();
+        $entityManager->wrapInTransaction(static function (EntityManagerInterface $manager) use ($unusedMedia, $previousMediaIds): void {
+            $manager->flush();
+            $unusedMedia->remove($previousMediaIds);
+        });
 
         return new JsonResponse(['data' => UserResource::fromEntity($user, $locale, MarketplaceCategoryLabels::forLocale($entityManager, $locale))]);
     }

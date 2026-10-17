@@ -335,18 +335,18 @@ final class MarketplaceWorkflowTest extends WebTestCase
         $entityManager = static::getContainer()->get(EntityManagerInterface::class);
         $owner = $entityManager->find(User::class, $ownerId);
         $this->client->loginUser($owner, 'main');
+        $storage = static::getContainer()->get(\App\Service\MediaStorage::class);
+        $media = $entityManager->find(Media::class, $mediaId);
+        $thumbnailPath = static::getContainer()->get(\App\Service\MediaThumbnails::class)->path($media, 320);
+        $sourcePath = $storage->absolutePath($media->getStoragePath());
         $this->jsonRequest('PUT', '/api/me/profile', [
             'displayName' => 'Thumbnail Owner', 'category' => 'Lifestyle', 'categories' => ['Lifestyle'],
             'location' => 'Sarajevo', 'bio' => '', 'tagline' => '', 'avatarMediaId' => null,
             'avatarUrl' => null, 'tags' => [], 'socialProfiles' => [], 'portfolio' => [], 'packages' => [], 'faqs' => [],
         ], $this->csrfToken());
         self::assertResponseIsSuccessful();
-        $storage = static::getContainer()->get(\App\Service\MediaStorage::class);
-        $media = static::getContainer()->get(EntityManagerInterface::class)->find(Media::class, $mediaId);
-        $thumbnailPath = static::getContainer()->get(\App\Service\MediaThumbnails::class)->path($media, 320);
-        $sourcePath = $storage->absolutePath($media->getStoragePath());
         $this->jsonRequest('DELETE', '/api/media/'.$mediaId, [], $this->csrfToken());
-        self::assertResponseIsSuccessful();
+        self::assertResponseStatusCodeSame(404);
         self::assertFileDoesNotExist($thumbnailPath);
         self::assertFileDoesNotExist($sourcePath);
     }
@@ -380,7 +380,8 @@ final class MarketplaceWorkflowTest extends WebTestCase
                 $media = $entityManager->find(Media::class, $uploaded['id']);
                 $storage = static::getContainer()->get(\App\Service\MediaStorage::class);
                 $storedPath = $storage->absolutePath($media->getStoragePath());
-                self::assertSame([600, 400, IMAGETYPE_WEBP], array_slice(getimagesize($storedPath), 0, 3));
+                $expectedDimensions = in_array($folder, ['company-cover', 'campaign-cover'], true) ? [1200, 800] : [600, 400];
+                self::assertSame([...$expectedDimensions, IMAGETYPE_WEBP], array_slice(getimagesize($storedPath), 0, 3));
                 self::assertSame(filesize($storedPath), $uploaded['fileSize']);
                 $this->client->request('GET', $uploaded['url']);
                 self::assertResponseIsSuccessful();
@@ -566,7 +567,7 @@ final class MarketplaceWorkflowTest extends WebTestCase
         ], $this->csrfToken());
         self::assertResponseIsSuccessful();
         $this->jsonRequest('DELETE', '/api/media/'.$logo['data']['id'], [], $this->csrfToken());
-        self::assertResponseIsSuccessful();
+        self::assertResponseStatusCodeSame(404);
     }
 
     public function testCompanyCoverIsOwnedPublicOnlyWhenVisibleAndCannotBeDeletedWhileUsed(): void
@@ -609,7 +610,7 @@ final class MarketplaceWorkflowTest extends WebTestCase
         self::assertNull($this->payload()['data']['profile']['coverMediaId']);
         self::assertSame(['Technology', 'Travel'], $this->payload()['data']['profile']['industries']);
         $this->jsonRequest('DELETE', '/api/media/'.$id, [], $this->csrfToken());
-        self::assertResponseIsSuccessful();
+        self::assertResponseStatusCodeSame(404);
         $this->jsonRequest('PUT', '/api/me/profile', ['name' => 'Cover company', 'industries' => []], $this->csrfToken());
         self::assertResponseStatusCodeSame(400);
     }

@@ -30,6 +30,7 @@ final class JobExecutor
         private readonly HubInterface $hub,
         private readonly MediaThumbnails $thumbnails,
         private readonly \App\Service\StoredFileCleanup $fileCleanup,
+        private readonly \App\Service\UnusedMediaCleanup $unusedMedia,
         private readonly CachedSitemap $sitemap,
         private readonly DirectoryIndexer $indexer,
         private readonly ReminderBatch $reminders,
@@ -145,11 +146,16 @@ final class JobExecutor
         $after = (int) ($payload['after'] ?? 0);
         $upper = (int) ($payload['upper'] ?? $this->connection->fetchOne('SELECT COALESCE(MAX(id), 0) FROM media'));
         $rows = $this->connection->fetchAllAssociative('SELECT id, storage_path FROM media WHERE id > ? AND id <= ? ORDER BY id LIMIT 50', [$after, $upper]);
+        $removedIds = $this->unusedMedia->remove(array_map(static fn (array $row): int => (int) $row['id'], $rows), new \DateTimeImmutable('-24 hours'));
         foreach ($rows as $row) {
+            if (in_array((int) $row['id'], $removedIds, true)) {
+                continue;
+            }
             if (!$this->thumbnails->complete($row['storage_path'])) {
                 $this->jobs->enqueue('GenerateThumbnailsMessage', ['mediaId' => (int) $row['id']], 'thumbnail-repair:' . $row['id'] . ':' . gmdate('Y-m-d'));
             }
         }
+        $this->fileCleanup->run();
         if (count($rows) === 50) {
             $this->jobs->enqueue('MediaIndexingMessage', ['after' => (int) end($rows)['id'], 'upper' => $upper]);
         }

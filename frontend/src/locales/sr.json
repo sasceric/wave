@@ -1123,6 +1123,8 @@
     "mediaUpload": "Otpremi sliku",
     "mediaUploading": "Otpremanje slike…",
     "mediaUploadHint": "JPEG, PNG ili WebP, do 10 MB. Slike se čuvaju kao WebP, širine do 600 px, uz očuvane proporcije i bez isecanja.",
+    "coverUploadHint": "JPEG, PNG ili WebP, do 10 MB. Naslovne slike se čuvaju kao WebP, širine do 1920 px, bez isecanja i povećavanja manjih slika.",
+    "coverSaveHint": "Promene se čuvaju kada sačuvaš profil.",
     "selectCategories": "Izaberi do 5 oblasti",
     "searchCategories": "Pretraži oblasti",
     "noCategoriesFound": "Nema oblasti koje odgovaraju pretrazi.",

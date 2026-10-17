@@ -1122,6 +1122,8 @@
     "mediaUpload": "Bild hochladen",
     "mediaUploading": "Bild wird hochgeladen…",
     "mediaUploadHint": "JPEG, PNG oder WebP bis 10 MB. Bilder werden als WebP mit höchstens 600 px Breite gespeichert. Das Seitenverhältnis bleibt erhalten, ohne Zuschnitt.",
+    "coverUploadHint": "JPEG, PNG oder WebP bis 10 MB. Titelbilder werden als WebP mit höchstens 1920 px Breite gespeichert, ohne Zuschnitt oder Vergrößerung kleinerer Bilder.",
+    "coverSaveHint": "Änderungen werden beim Speichern deines Profils übernommen.",
     "selectCategories": "Bis zu 5 Themenbereiche auswählen",
     "searchCategories": "Themenbereiche suchen",
     "noCategoriesFound": "Keine Themenbereiche entsprechen deiner Suche.",

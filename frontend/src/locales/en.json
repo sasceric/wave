@@ -1122,6 +1122,8 @@
     "mediaUpload": "Upload image",
     "mediaUploading": "Uploading image…",
     "mediaUploadHint": "JPEG, PNG, or WebP, up to 10 MB. Images are saved as WebP, up to 600 px wide, keeping their proportions without cropping.",
+    "coverUploadHint": "JPEG, PNG, or WebP, up to 10 MB. Covers are saved as WebP, up to 1920 px wide, without cropping or enlarging smaller images.",
+    "coverSaveHint": "Changes are saved when you save your profile.",
     "selectCategories": "Select up to 5 categories",
     "searchCategories": "Search categories",
     "noCategoriesFound": "No categories match your search.",

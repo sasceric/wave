@@ -133,7 +133,8 @@ Controller filenames in this table are under `src/Controller/Api/` unless a full
 - Reuse existing UI components and design styles before adding new patterns.
 - Preserve the exact brand palette and fonts documented in `docs/frontend-styles.md`;
   performance and SEO changes must not replace them.
-- New JPEG/PNG/WebP uploads are processed centrally into lossless WebP, at most 600px wide, with proportional height, no cropping and no upscaling. Preserve alpha and apply JPEG EXIF orientation before measuring. Record the encoded MIME type and byte size. Existing media stays unchanged; preserve media ownership and public visibility checks.
+- New JPEG/PNG/WebP uploads are processed centrally into lossless WebP, at most 1920px wide for company/campaign covers, 1600px for report evidence, and 600px for other images, with proportional height, no cropping and no upscaling. Preserve alpha and apply JPEG EXIF orientation before measuring. Record the encoded MIME type and byte size. Existing media stays unchanged; preserve media ownership and public visibility checks.
+- `UnusedMediaCleanup` removes replaced profile/campaign images and removed portfolio images only when no references remain. Save transactions enqueue physical deletion through `StoredFileCleanup`; sources and all thumbnails are removed after commit, with retries on failure. Daily media maintenance also cleans unattached uploads older than 24 hours in its existing bounded batches. See `docs/media-thumbnails.md`.
 - Schema changes need Doctrine migrations. Historical SQLite migrations have a PostgreSQL compatibility layer in `src/Migration/`; avoid manual schema baselining.
 - Edit source assets in `frontend/public/` and frontend source files, then rebuild. The Vite build writes into `public/` and preserves Symfony's entry point; generated bundles are not the place to edit features.
 

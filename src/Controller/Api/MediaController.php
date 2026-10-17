@@ -213,7 +213,7 @@ final class MediaController
         EntityManagerInterface $entityManager,
         Security $security,
         CsrfTokenManagerInterface $tokenManager,
-        \App\Service\StoredFileCleanup $cleanup,
+        \App\Service\UnusedMediaCleanup $unusedMedia,
     ): JsonResponse {
         $locale = LocaleContext::fromRequest($request);
         if ($locale === null) {
@@ -231,20 +231,13 @@ final class MediaController
         if (!$media instanceof Media || $media->getOwner() !== $user) {
             return new JsonResponse(['error' => ApiMessages::get('invalid_media', $locale)], 404);
         }
-        $isReferenced = (bool) $entityManager->getConnection()->fetchOne('SELECT 1 FROM marketplace_report_media WHERE media_id = ? LIMIT 1', [$id])
-            || $entityManager->getRepository(CreatorPortfolioMedia::class)->count(['media' => $media]) > 0
-            || $entityManager->getRepository(Creator::class)->count(['avatarMedia' => $media]) > 0
-            || $entityManager->getRepository(Company::class)->count(['logoMedia' => $media]) > 0
-            || $entityManager->getRepository(Company::class)->count(['coverMedia' => $media]) > 0
-            || $entityManager->getRepository(Campaign::class)->count(['coverMedia' => $media]) > 0;
-        if ($isReferenced) {
+        if ($unusedMedia->isReferenced($id)) {
             return new JsonResponse(['error' => ApiMessages::get('media_in_use', $locale)], 409);
         }
 
-        $entityManager->wrapInTransaction(function () use ($entityManager, $cleanup, $media): void {
-            $cleanup->schedule('media', $media->getStoragePath());
-            $entityManager->remove($media);
-        });
+        if ($unusedMedia->remove([$id]) === []) {
+            return new JsonResponse(['error' => ApiMessages::get('media_in_use', $locale)], 409);
+        }
 
         return new JsonResponse(['data' => ['id' => $id]]);
     }

@@ -208,14 +208,43 @@ final class MediaStorageTest extends TestCase
         self::assertFalse($this->storage->supports($file));
     }
 
-    private function store(string $path): array
+    public static function folderSizes(): iterable
+    {
+        foreach (['company-cover', 'campaign-cover'] as $folder) {
+            yield $folder.' large' => [$folder, 2400, 800, 1920, 640];
+            yield $folder.' medium' => [$folder, 1200, 400, 1200, 400];
+            yield $folder.' small' => [$folder, 300, 100, 300, 100];
+            yield $folder.' at maximum' => [$folder, 1920, 640, 1920, 640];
+        }
+        foreach (['creator-avatar', 'creator-portfolio', 'company-logo'] as $folder) {
+            yield $folder => [$folder, 2400, 800, 600, 200];
+        }
+        yield 'report evidence keeps its existing limit' => ['report-evidence', 2400, 800, 1600, 533];
+    }
+
+    #[DataProvider('folderSizes')]
+    public function testFolderUploadLimitsPreserveDimensionsAndWholeFrame(
+        string $folder, int $width, int $height, int $expectedWidth, int $expectedHeight,
+    ): void {
+        $path = $this->directory.'/source.png';
+        imagepng($this->quadrants($width, $height), $path);
+        $stored = $this->store($path, $folder);
+        $output = imagecreatefromwebp($this->storage->absolutePath($stored['path']));
+        self::assertSame($expectedWidth, $stored['width']);
+        self::assertSame($expectedHeight, $stored['height']);
+        self::assertSame($expectedWidth, imagesx($output));
+        self::assertSame($expectedHeight, imagesy($output));
+        $this->assertQuadrants($output, ['red', 'green', 'blue', 'yellow']);
+    }
+
+    private function store(string $path, string $folder = 'creator-portfolio'): array
     {
         $owner = new User('media-test@example.test', 'ROLE_CREATOR');
         (new \ReflectionProperty(User::class, 'id'))->setValue($owner, 42);
 
         return $this->storage->store(
             new UploadedFile($path, basename($path), null, null, true),
-            new MediaFolder('creator-portfolio', 'Portfolio'),
+            new MediaFolder($folder, $folder),
             $owner,
         );
     }

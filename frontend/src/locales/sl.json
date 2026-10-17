@@ -1123,6 +1123,8 @@
     "mediaUpload": "Naloži sliko",
     "mediaUploading": "Nalaganje slike…",
     "mediaUploadHint": "JPEG, PNG ali WebP, do 10 MB. Slike se shranijo kot WebP, široke največ 600 px, z ohranjenim razmerjem stranic in brez obrezovanja.",
+    "coverUploadHint": "JPEG, PNG ali WebP, do 10 MB. Naslovne slike se shranijo kot WebP, široke največ 1920 px, brez obrezovanja ali povečevanja manjših slik.",
+    "coverSaveHint": "Spremembe se shranijo ob shranjevanju profila.",
     "selectCategories": "Izberi do 5 področij",
     "searchCategories": "Išči področja",
     "noCategoriesFound": "Ni področij, ki bi ustrezala iskanju.",

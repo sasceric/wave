@@ -55,7 +55,7 @@ async function upload(event) {
       :preview-url="preview"
       :add-label="busy ? t('account.mediaUploading') : t('account.mediaUpload')"
       :change-label="t('account.changeProfileImage')"
-      :helper-text="t('account.mediaUploadHint')"
+      :helper-text="t(['company-cover', 'campaign-cover'].includes(folder) ? 'account.coverUploadHint' : 'account.mediaUploadHint')"
       :disabled="busy"
       @choose="fileInput?.click()"
     />

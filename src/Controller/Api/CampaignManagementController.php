@@ -147,6 +147,7 @@ final class CampaignManagementController
         EntityManagerInterface $entityManager,
         Security $security,
         CsrfTokenManagerInterface $tokenManager,
+        \App\Service\UnusedMediaCleanup $unusedMedia,
     ): JsonResponse {
         $locale = LocaleContext::fromRequest($request);
         if ($locale === null) {
@@ -206,9 +207,13 @@ final class CampaignManagementController
             $fields['countryCode'],
             $fields['categories'],
         );
+        $previousCoverId = $campaign->getCoverMedia()?->getId();
         $campaign->setCoverMedia($coverMedia);
         $this->finishApplications($campaign, $entityManager);
-        $entityManager->flush();
+        $entityManager->wrapInTransaction(static function (EntityManagerInterface $manager) use ($unusedMedia, $previousCoverId): void {
+            $manager->flush();
+            $unusedMedia->remove([$previousCoverId]);
+        });
 
         return new JsonResponse(['data' => CampaignResource::fromEntity($campaign, $locale, categoryLabels: MarketplaceCategoryLabels::forLocale($entityManager, $locale), hiredCount: CampaignHiredCounts::forCampaign($entityManager, $campaign))]);
     }

@@ -48,8 +48,13 @@ final class MediaStorage
         );
         $absoluteDirectory = $this->storagePath . '/' . dirname($relativePath);
         $this->filesystem->mkdir($absoluteDirectory);
+        $maxWidth = match ($folder->getSlug()) {
+            'company-cover', 'campaign-cover' => 1920,
+            'report-evidence' => 1600,
+            default => 600,
+        };
         try {
-            $fileSize = $this->imageProcessor->writeWebp($file->getPathname(), $this->absolutePath($relativePath), $folder->getSlug() === 'report-evidence' ? 1600 : 600);
+            $fileSize = $this->imageProcessor->writeWebp($file->getPathname(), $this->absolutePath($relativePath), $maxWidth);
             $dimensions = $this->queued ? $this->imageProcessor->dimensions($this->absolutePath($relativePath)) : $this->thumbnails->warm($relativePath);
         } catch (\Throwable $exception) {
             $this->filesystem->remove($this->absolutePath($relativePath));
