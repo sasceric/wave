@@ -32,7 +32,7 @@ async function getCsrfToken(locale = i18n.global.locale.value) {
   csrfToken = payload.csrfToken
 }
 
-export async function apiRequest(path, { method = 'GET', body, locale } = {}) {
+export async function apiRequest(path, { method = 'GET', body, locale, signal } = {}) {
   const unsafe = !['GET', 'HEAD', 'OPTIONS'].includes(method.toUpperCase())
   if (unsafe && (path.startsWith('/auth/') || ['/me/account', '/me/password'].includes(path))) {
     authenticationGeneration += 1
@@ -50,6 +50,7 @@ export async function apiRequest(path, { method = 'GET', body, locale } = {}) {
     headers,
     credentials: 'same-origin',
     cache: path.startsWith('/auth/') ? 'no-store' : 'default',
+    signal,
     body: body === undefined ? undefined : multipart ? body : JSON.stringify(body),
   })
 

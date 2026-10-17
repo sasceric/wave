@@ -254,6 +254,8 @@
     "installApp": "Namesti Wave kot aplikacijo",
     "installHint": "Namesti Wave za hitro izkušnjo, podobno aplikaciji.",
     "installIosHint": "V iPhonu tapni Deli in nato Dodaj na začetni zaslon.",
+    "reloadRequired": "Dela strani ni mogoče naložiti. Shrani vnesene podatke in nato osveži stran.",
+    "reloadNow": "Osveži stran",
     "updateReady": "Na voljo je nova različica Wave.",
     "updateNow": "Posodobi zdaj",
     "updating": "Posodabljanje…",

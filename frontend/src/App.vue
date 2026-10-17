@@ -87,6 +87,7 @@ const pushSubscribed = ref(false)
 const pushStatus = ref('')
 const pushBusy = ref(false)
 const updateAvailable = ref(false)
+const updateReloadRequired = ref(false)
 const updateInProgress = ref(false)
 const updateError = ref('')
 const installHelpVisible = ref(false)
@@ -258,8 +259,9 @@ onMounted(() => {
     pwaUpdates = startPwaUpdates({
       registerSW,
       buildId: import.meta.env.VITE_WAVE_BUILD_ID,
-      onAvailable(value) {
+      onAvailable(value, reason) {
         updateAvailable.value = value
+        if (reason === 'load-failed') updateReloadRequired.value = true
         if (!updateInProgress.value) updateError.value = ''
       },
       onUpdating(value) {
@@ -1383,11 +1385,11 @@ async function signOut() {
       aria-live="polite"
     >
       <div>
-        <p>{{ t('app.updateReady') }}</p>
+        <p>{{ t(updateReloadRequired ? 'app.reloadRequired' : 'app.updateReady') }}</p>
         <p v-if="updateError" class="pwa-update-notice__error" role="alert">{{ updateError }}</p>
       </div>
       <button type="button" :disabled="updateInProgress" @click="applyWaveUpdate">
-        {{ t(updateInProgress ? 'app.updating' : 'app.updateNow') }}
+        {{ t(updateInProgress ? 'app.updating' : updateReloadRequired ? 'app.reloadNow' : 'app.updateNow') }}
       </button>
     </aside>
 

@@ -349,7 +349,13 @@ so a suspended PWA can detect that another window has already activated a newer
 worker. The update notice does not reload open forms automatically. Accepting it
 waits for worker activation/control before reloading; failed or timed-out updates
 leave the current app usable and allow retry. Sessions and push subscriptions
-are preserved. An installed PWA still running code from before this fix may need
+are preserved. Failed lazy JavaScript/CSS imports (`vite:preloadError`) also show
+an explicit refresh notice. This covers an open tab requesting a previous build's
+chunk after deployment; it does not reload unsaved forms automatically or claim
+that every network error means a new version exists. The notice works even if
+service-worker registration has not finished. Public SPA redirect lookups abort
+after five seconds and allow ordinary routing to continue if the network stalls.
+An installed PWA still running code from before this fix may need
 to be fully closed from the device's app switcher and reopened online once after
 deployment to receive the improved update handling.
 

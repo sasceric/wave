@@ -253,6 +253,8 @@
     "installApp": "Install Wave as an app",
     "installHint": "Install Wave for a quick, app-like experience.",
     "installIosHint": "On iPhone, tap Share, then Add to Home Screen.",
+    "reloadRequired": "Part of the page could not load. Save your changes, then refresh the page.",
+    "reloadNow": "Refresh page",
     "updateReady": "A new version of Wave is available.",
     "updateNow": "Update now",
     "updating": "Updating…",

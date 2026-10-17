@@ -253,6 +253,8 @@
     "installApp": "Wave als App installieren",
     "installHint": "Installiere Wave für einen schnellen Zugriff wie in einer App.",
     "installIosHint": "Tippe auf dem iPhone auf „Teilen“ und anschließend auf „Zum Home-Bildschirm“.",
+    "reloadRequired": "Ein Teil der Seite konnte nicht geladen werden. Speichere deine Änderungen und lade die Seite neu.",
+    "reloadNow": "Seite neu laden",
     "updateReady": "Eine neue Version von Wave ist verfügbar.",
     "updateNow": "Jetzt aktualisieren",
     "updating": "Wird aktualisiert…",

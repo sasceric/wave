@@ -48,7 +48,8 @@ function setStructuredData(data) {
     element.type = 'application/ld+json'
     document.head.append(element)
   }
-  element.textContent = JSON.stringify(data)
+  // A context-bearing graph avoids Safari's top-level JSON-LD array parser bug.
+  element.textContent = JSON.stringify({ '@context': 'https://schema.org', '@graph': data })
 }
 
 export function getSeoOrigin() {
@@ -245,7 +246,11 @@ export function updateProfileReviewSchema(kind, slug, rows) {
   const element = document.getElementById('wave-schema')
   if (!element || !['creators', 'companies'].includes(kind)) return
   let nodes
-  try { nodes = JSON.parse(element.textContent) } catch { return }
+  try {
+    const schema = JSON.parse(element.textContent)
+    // Accept the previous server format during a rolling deployment too.
+    nodes = Array.isArray(schema) ? schema : schema?.['@graph']
+  } catch { return }
   if (!Array.isArray(nodes)) return
   const url = new URL(localizedPath(kind === 'creators' ? 'creator-profile' : 'company-profile', 'bs', { slug }), getSeoOrigin()).href
   const entity = nodes.find(node => node['@type'] === 'ProfilePage' && node.url === url)?.mainEntity

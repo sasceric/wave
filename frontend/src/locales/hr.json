@@ -254,6 +254,8 @@
     "installApp": "Instaliraj Wave kao aplikaciju",
     "installHint": "Instaliraj Wave za brzo iskustvo poput aplikacije.",
     "installIosHint": "Na iPhoneu dodirni Dijeli, a zatim Dodaj na početni zaslon.",
+    "reloadRequired": "Dio stranice nije moguće učitati. Spremi unesene podatke pa osvježi stranicu.",
+    "reloadNow": "Osvježi stranicu",
     "updateReady": "Dostupna je nova verzija Wavea.",
     "updateNow": "Ažuriraj sada",
     "updating": "Ažuriranje…",

@@ -33,6 +33,7 @@ function environment(t, { controller = worker(), waiting = null, installing = nu
   let interval
   const clearedIntervals = []
   const available = []
+  const reasons = []
   const updating = []
   const errors = []
   const checkErrors = []
@@ -47,7 +48,7 @@ function environment(t, { controller = worker(), waiting = null, installing = nu
     registerSW: value => { options = value },
     buildId: 'page-build', windowTarget, documentTarget,
     activationTimeout: 40, probeTimeout: 20,
-    onAvailable: value => available.push(value),
+    onAvailable: (value, reason) => { available.push(value); reasons.push(reason) },
     onUpdating: value => updating.push(value),
     onError: cause => errors.push(cause.message),
     onCheckError: cause => checkErrors.push(cause.message),
@@ -55,7 +56,7 @@ function environment(t, { controller = worker(), waiting = null, installing = nu
   t.after(() => sync.stop())
   return {
     sync, windowTarget, documentTarget, serviceWorker, registration, options,
-    available, updating, errors, checkErrors, clearedIntervals,
+    available, reasons, updating, errors, checkErrors, clearedIntervals,
     get reloads() { return reloads }, get checks() { return checks },
     register: async () => { options.onRegisteredSW('/sw.js', registration); await sync.check() },
     activate(next) {
@@ -240,4 +241,31 @@ test('a stalled network update check cannot leave Update spinning indefinitely',
   assert.match(env.errors[0], /check timed out/)
   assert.equal(env.updating.at(-1), false)
   assert.equal(env.reloads, 0)
+})
+
+test('a failed lazy import offers refresh without discarding the current document', async (t) => {
+  const env = environment(t)
+  await env.register()
+  const event = new Event('vite:preloadError', { cancelable: true })
+  env.windowTarget.dispatchEvent(event)
+  assert.ok(env.available.includes(true))
+  assert.ok(env.reasons.includes('load-failed'))
+  assert.equal(event.defaultPrevented, false, 'router must still handle the rejected import')
+  assert.equal(env.reloads, 0, 'discovery must preserve unsaved work')
+  await env.sync.apply()
+  await env.sync.apply()
+  assert.equal(env.reloads, 1)
+})
+
+test('lazy import recovery works before registration finishes and cleanup removes it', async (t) => {
+  const env = environment(t)
+  env.windowTarget.dispatchEvent(new Event('vite:preloadError'))
+  assert.ok(env.reasons.includes('load-failed'))
+  assert.equal(env.reloads, 0)
+  await env.sync.apply()
+  assert.equal(env.reloads, 1)
+  env.sync.stop()
+  const notices = env.available.length
+  env.windowTarget.dispatchEvent(new Event('vite:preloadError'))
+  assert.equal(env.available.length, notices)
 })

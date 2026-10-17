@@ -39,7 +39,8 @@ final class GermanLocaleTest extends WebTestCase
             self::assertSame('de', $crawler->filter('html')->attr('lang'));
             self::assertSame('de_DE', $crawler->filter('meta[property="og:locale"]')->attr('content'));
             $graph = json_decode($crawler->filter('#wave-schema')->text(), true, flags: JSON_THROW_ON_ERROR);
-            self::assertSame('de', $graph[2]['inLanguage']);
+            self::assertSame('https://schema.org', $graph['@context']);
+            self::assertSame('de', $graph['@graph'][2]['inLanguage']);
             self::assertCount(8, $crawler->filter('link[hreflang]'));
         }
         $client->request('GET', '/api/homepage?locale=de');

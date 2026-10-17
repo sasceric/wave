@@ -91,7 +91,7 @@ test('SPA navigation retains one self canonical and reciprocal localized alterna
     assert.equal(document.documentElement.lang, language)
     const alternates = document.head.querySelectorAll('link[rel="alternate"][hreflang]')
     assert.deepEqual(Object.fromEntries(alternates.map(link => [link.hreflang, link.href])), expected)
-    const schema = JSON.parse(document.getElementById('wave-schema').textContent)
+    const schema = JSON.parse(document.getElementById('wave-schema').textContent)['@graph']
     assert.equal(schema[2].url, expected[({ 'sr-Latn': 'sr-RS', 'sr-Latn-ME': 'sr-ME' })[language] || language])
     assert.equal(schema[2].inLanguage, language)
   }
@@ -142,6 +142,20 @@ test('country directories retain the same country across language alternates and
   assert.equal(document.getElementById('wave-schema'), undefined)
 })
 
+test('JSON-LD uses a context-bearing graph compatible with Safari metadata parsing', async () => {
+  const { updateSeo, document } = await seoFixture()
+  for (const routeName of ['home', 'creators']) {
+    updateSeo({ route: { meta: { routeName }, params: {}, path: '/' }, locale: 'bs', title: 'Wave', description: 'Wave' })
+    const schema = JSON.parse(document.getElementById('wave-schema').textContent)
+    // Safari's injected metadata reader calls this on the top-level object.
+    assert.equal(schema['@context'].toLowerCase(), 'https://schema.org')
+    assert.equal(Array.isArray(schema), false)
+    assert.equal(schema['@graph'][0]['@type'], 'WebSite')
+    assert.equal(schema['@graph'][1]['@type'], 'Organization')
+    assert.equal(schema['@graph'][2]['@type'], routeName === 'home' ? 'WebPage' : 'CollectionPage')
+  }
+})
+
 test('profile reviews follow pagination, omit prototypes and leave the aggregate intact', async () => {
   const { updateSeo, updateProfileReviewSchema, document } = await seoFixture()
   const url = 'https://wave.ba/kreatori/amina'
@@ -151,17 +165,17 @@ test('profile reviews follow pagination, omit prototypes and leave the aggregate
   const rows = [{ id: 11, authorName: 'Brand', comment: 'Excellent work.', rating: 5, createdAt: '2026-10-16T12:00:00Z' },
     { id: 12, authorName: 'Demo brand', comment: 'Fictional review', rating: 5, isPresentationDemo: true }]
   updateProfileReviewSchema('creators', 'other-profile', rows)
-  let service = JSON.parse(document.getElementById('wave-schema').textContent)[2].mainEntity.makesOffer.itemOffered
+  let service = JSON.parse(document.getElementById('wave-schema').textContent)['@graph'][2].mainEntity.makesOffer.itemOffered
   assert.equal(service.review, undefined)
   updateProfileReviewSchema('creators', 'amina', rows)
-  service = JSON.parse(document.getElementById('wave-schema').textContent)[2].mainEntity.makesOffer.itemOffered
+  service = JSON.parse(document.getElementById('wave-schema').textContent)['@graph'][2].mainEntity.makesOffer.itemOffered
   assert.equal(service.aggregateRating.reviewCount, 15)
   assert.equal(service.review.length, 1)
   assert.equal(service.review[0]['@id'], `${url}#review-11`)
   assert.equal(service.review[0].author['@type'], 'Organization')
   updateProfileReviewSchema('creators', 'amina', [])
-  service = JSON.parse(document.getElementById('wave-schema').textContent)[2].mainEntity.makesOffer.itemOffered
+  service = JSON.parse(document.getElementById('wave-schema').textContent)['@graph'][2].mainEntity.makesOffer.itemOffered
   assert.equal(service.review, undefined)
-  const nodes = JSON.parse(document.getElementById('wave-schema').textContent)
+  const nodes = JSON.parse(document.getElementById('wave-schema').textContent)['@graph']
   assert.equal(nodes.find(node => node['@type'] === 'BreadcrumbList').itemListElement[1].item, 'https://wave.ba/de/kreative')
 })

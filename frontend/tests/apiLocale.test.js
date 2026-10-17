@@ -59,3 +59,12 @@ test('an authentication mutation invalidates pending session sharing', async () 
   await Promise.all([before, logout, after])
   assert.equal(calls.filter(call => call.url === '/api/auth/session').length, 2)
 })
+
+test('read request cancellation reaches fetch without changing authentication', async () => {
+  const { api, calls } = await client()
+  const controller = new AbortController()
+  await api.apiGet('/redirects/resolve?path=%2Fkreatori', { signal: controller.signal })
+  assert.equal(calls[0].options.signal, controller.signal)
+  assert.equal(calls[0].options.credentials, 'same-origin')
+  assert.equal(calls.length, 1)
+})

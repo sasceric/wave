@@ -83,8 +83,8 @@ final class CampaignReviewsTest extends WebTestCase
         self::assertSame('FAQPage', $person['subjectOf'][0]['@type']);
         self::assertSame('Answer', $person['subjectOf'][0]['mainEntity'][0]['acceptedAnswer']['@type']);
         self::assertSame('ImageGallery', $person['subjectOf'][1]['@type']);
-        self::assertCount(1, $person['subjectOf'][1]['hasPart']);
-        self::assertSame('https://images.example.test/public.webp', $person['subjectOf'][1]['hasPart'][0]['contentUrl']);
+        self::assertSame(['https://images.example.test/public.webp'], $person['subjectOf'][1]['image']);
+        self::assertArrayNotHasKey('hasPart', $person['subjectOf'][1]);
         self::assertStringNotContainsString('private.webp', json_encode($person, JSON_THROW_ON_ERROR));
     }
 
@@ -115,8 +115,9 @@ final class CampaignReviewsTest extends WebTestCase
         $crawler = $this->client->request('GET', '/kreatori/review-creator');
         self::assertResponseIsSuccessful();
         $graph = json_decode($crawler->filter('#wave-schema')->text(), true, flags: JSON_THROW_ON_ERROR);
-        self::assertSame($person, $graph[2]['mainEntity']);
-        self::assertSame('BreadcrumbList', $graph[3]['@type']);
+        self::assertSame('https://schema.org', $graph['@context']);
+        self::assertSame($person, $graph['@graph'][2]['mainEntity']);
+        self::assertSame('BreadcrumbList', $graph['@graph'][3]['@type']);
         $this->client->request('GET', '/api/companies/review-company?locale=de');
         $company = $this->payload()['data']['structuredData'];
         self::assertSame('Organization', $company['@type']);

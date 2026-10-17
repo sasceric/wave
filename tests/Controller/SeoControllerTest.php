@@ -70,6 +70,18 @@ final class SeoControllerTest extends WebTestCase
         self::assertStringNotContainsString('/pretraga', $this->client->getResponse()->getContent());
     }
 
+    public function testInitialHtmlUsesAContextBearingGraphForSafari(): void
+    {
+        $crawler = $this->client->request('GET', '/');
+        self::assertResponseIsSuccessful();
+        $schema = json_decode($crawler->filter('#wave-schema')->text(), true, flags: JSON_THROW_ON_ERROR);
+        self::assertSame('https://schema.org', $schema['@context']);
+        self::assertFalse(array_is_list($schema));
+        self::assertSame(['WebSite', 'Organization', 'WebPage'], array_column($schema['@graph'], '@type'));
+        self::assertSame('FAQPage', $schema['@graph'][2]['hasPart']['@type']);
+        self::assertCount(5, $schema['@graph'][2]['hasPart']['mainEntity']);
+    }
+
     public function testExistingEnglishAccountAndAdminAliasesHaveCanonicalRedirects(): void
     {
         foreach (['/account/applications' => '/racun/prijave', '/admin/tools' => '/admin/alati', '/admin/redirects' => '/admin/preusmjerenja', '/account/campaigns/new' => '/racun/kampanje/nova', '/account/campaigns/example' => '/racun/kampanje/example'] as $source => $target) {

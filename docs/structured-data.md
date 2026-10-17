@@ -22,6 +22,11 @@ Generic filtered directory lists are populated after their API response, not
 invented in the initial HTML. Profile entities come from the shared
 `ProfileStructuredData` factory, used by both initial HTML and the profile API.
 The Vue SEO helper keeps the graph current during navigation and review pagination.
+Initial HTML and SPA updates serialize one object with a string `@context` and
+an `@graph` array. A top-level JSON-LD array is valid, but triggers Safari's
+metadata reader error `r["@context"].toLowerCase`; the object wrapper preserves
+the same entities while avoiding that browser bug. Review pagination accepts
+the older array format during deployment and writes the object format back.
 Private routes, unavailable profiles and non-public/closed campaign history
 remain noindex and do not receive public entity markup.
 
@@ -52,6 +57,7 @@ References: [Schema.org review domains](https://schema.org/review),
 [Service](https://schema.org/Service), [industry](https://schema.org/industry),
 [Google profile pages](https://developers.google.com/search/docs/appearance/structured-data/profile-page),
 and [Google review snippets](https://developers.google.com/search/docs/appearance/structured-data/review-snippet).
+Safari compatibility: [Apple bug 255764](https://bugs.webkit.org/show_bug.cgi?id=255764).
 
 ## Portfolio image rights
 

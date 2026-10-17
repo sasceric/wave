@@ -19,10 +19,20 @@ export function startPwaUpdates({
   let applying = false
   let reloaded = false
   let checking = null
+  let moduleLoadFailed = false
   const pending = new Set()
 
-  function available() {
-    if (!stopped) onAvailable(true)
+  function available(reason = 'update') {
+    if (!stopped) onAvailable(true, reason)
+  }
+
+  function moduleFailed() {
+    // An open tab may request a lazy chunk removed by a deployment. Keep its
+    // current form intact and offer an explicit refresh, including when worker
+    // registration has not completed. Do not swallow the router's import error.
+    moduleLoadFailed = true
+    available('load-failed')
+    void check()
   }
 
   function reload() {
@@ -116,7 +126,11 @@ export function startPwaUpdates({
   }
 
   async function apply() {
-    if (stopped || applying || reloaded || !registration) return
+    if (stopped || applying || reloaded) return
+    if (!registration) {
+      if (moduleLoadFailed) reload()
+      return
+    }
     applying = true
     onUpdating(true)
     try {
@@ -153,6 +167,7 @@ export function startPwaUpdates({
   }
 
   serviceWorker.addEventListener('controllerchange', controllerChanged)
+  windowTarget.addEventListener('vite:preloadError', moduleFailed)
   documentTarget.addEventListener('visibilitychange', check)
   for (const event of ['focus', 'pageshow', 'online']) windowTarget.addEventListener(event, check)
   const interval = windowTarget.setInterval(check, 30 * 60 * 1000)
@@ -177,6 +192,7 @@ export function startPwaUpdates({
     stop() {
       stopped = true
       serviceWorker.removeEventListener('controllerchange', controllerChanged)
+      windowTarget.removeEventListener('vite:preloadError', moduleFailed)
       documentTarget.removeEventListener('visibilitychange', check)
       for (const event of ['focus', 'pageshow', 'online']) windowTarget.removeEventListener(event, check)
       windowTarget.clearInterval(interval)

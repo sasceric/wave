@@ -133,7 +133,8 @@ final class FrontendController
         }
         if ($seo['structuredData'] !== []) {
             $structuredData = json_encode(
-                $seo['structuredData'],
+                // Safari's metadata reader fails on a top-level JSON-LD array.
+                ['@context' => 'https://schema.org', '@graph' => $seo['structuredData']],
                 JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR,
             );
             $head .= "\n    <script id=\"wave-schema\" type=\"application/ld+json\">".$structuredData.'</script>';
