@@ -29,11 +29,23 @@ test('overview uses bounded periods and drops stale responses when changing peri
   ])
   state.statistics.value.profileCompletion = { total: 0 }
   assert.equal(state.profileCompletionRows.value.every(row => row.count === 0 && row.rate === 0), true)
+  state.statistics.value.agencyProfileCompletion = { total: 4, services: 2, works: 1, packages: 3, complete: 1 }
+  assert.deepEqual(Array.from(state.agencyProfileCompletionRows.value, row => [row.key, row.count, row.rate]), [
+    ['services', 2, 50], ['works', 1, 25], ['packages', 3, 75], ['complete', 1, 25],
+  ])
+  assert.equal(state.completionSections.value[0].total, 0)
+  assert.equal(state.completionSections.value[1].total, 4)
+  state.statistics.value.agencyProfileCompletion = { total: 0 }
+  assert.equal(state.agencyProfileCompletionRows.value.every(row => row.count === 0 && row.rate === 0), true)
+  assert.deepEqual(Array.from(state.activationTypes.value, option => option.value), ['all', 'creator', 'company', 'brand', 'agency'])
+  state.accountType.value = 'agency'
+  await nextTick()
+  assert.equal(pending.at(-1).path, '/admin/overview?days=7&accountType=agency')
   state.days.value = 90
   await nextTick()
   currentUser.value = { id: 2, isAdmin: false }
   await nextTick()
-  pending[2].resolve({ userId: 1, data: { days: 90 } })
+  pending.at(-1).resolve({ userId: 1, data: { days: 90 } })
   await new Promise(resolve => setImmediate(resolve))
   assert.equal(state.statistics.value, null)
   assert.equal(state.loading.value, false)

@@ -23,7 +23,7 @@ final class AdminOverviewController
         $days = $request->query->getString('days', '30');
         if (!in_array($days, ['7', '30', '90'], true)) return new JsonResponse(['error' => ApiMessages::get('invalid_request', $locale)], 400);
         $accountType = $request->query->getString('accountType', 'all');
-        if (!in_array($accountType, ['all', 'creator', 'company'], true)) return new JsonResponse(['error' => ApiMessages::get('invalid_request', $locale)], 400);
+        if (!in_array($accountType, ['all', 'creator', 'company', 'brand', 'agency'], true)) return new JsonResponse(['error' => ApiMessages::get('invalid_request', $locale)], 400);
         return new JsonResponse(['userId' => $user->getId(), 'data' => $statistics->snapshot((int) $days, $accountType)], headers: ['Cache-Control' => 'private, no-store']);
     }
 }

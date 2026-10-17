@@ -15,7 +15,7 @@ const { t, locale } = useI18n()
 const chartId = useId()
 const days = ref(30)
 const accountType = ref('all')
-const activationTypes = computed(() => ['all', 'creator', 'company'].map(value => ({ value, label: t(`activation.filter_${value}`) })))
+const activationTypes = computed(() => ['all', 'creator', 'company', 'brand', 'agency'].map(value => ({ value, label: t(`activation.filter_${value}`) })))
 const activationRows = computed(() => {
   const counts = statistics.value?.activation?.counts || {}
   let previous = 0
@@ -33,6 +33,16 @@ const profileCompletionRows = computed(() => {
     key, icon, count: counts[key] || 0, rate: counts.total ? Math.round((counts[key] || 0) / counts.total * 100) : 0,
   }))
 })
+const agencyProfileCompletionRows = computed(() => {
+  const counts = statistics.value?.agencyProfileCompletion || {}
+  return [['services', ClipboardCheck], ['works', Images], ['packages', Package], ['complete', Check]].map(([key, icon]) => ({
+    key, icon, count: counts[key] || 0, rate: counts.total ? Math.round((counts[key] || 0) / counts.total * 100) : 0,
+  }))
+})
+const completionSections = computed(() => [
+  { key: 'creator', title: 'profileCompletionTitle', hint: 'profileCompletionHint', total: statistics.value?.profileCompletion?.total || 0, rows: profileCompletionRows.value },
+  { key: 'agency', title: 'agencyCompletionTitle', hint: 'agencyCompletionHint', total: statistics.value?.agencyProfileCompletion?.total || 0, rows: agencyProfileCompletionRows.value },
+])
 const loading = ref(false)
 const error = ref('')
 let generation = 0
@@ -128,18 +138,26 @@ const attentionTotal = computed(() => Object.values(statistics.value?.attention 
     <LoadingSkeleton v-else-if="loading && !statistics" variant="dashboard" :label="t('adminDashboard.loading')" />
     <template v-if="statistics">
       <section class="activation-funnel">
-        <header><div><span class="wave-overview__eyebrow">{{ t('activation.funnelEyebrow') }}</span><h2>{{ t('activation.funnelTitle') }}</h2><p>{{ t('activation.funnelHint') }}</p></div><SingleSelect v-model="accountType" :options="activationTypes" :label="t('auth.accountType')" :show-label="false" /></header>
+        <header><div><span class="wave-overview__eyebrow">{{ t('activation.funnelEyebrow') }}</span><h2>{{ t('activation.funnelTitle') }}</h2><p>{{ t('activation.funnelHint') }}</p></div><SingleSelect v-model="accountType" :options="activationTypes" :label="t('adminDashboard.accountType')" :show-label="false" /></header>
+        <div v-if="accountType !== 'creator'" class="activation-funnel__companies">
+          <p>{{ t('activation.companyBreakdownHint') }}</p>
+          <div role="group" :aria-label="t('activation.companyBreakdownLabel')">
+            <button v-for="kind in ['brand', 'agency']" :key="kind" type="button" :aria-pressed="accountType === kind" @click="accountType = kind">
+              <span>{{ t(`activation.filter_${kind}`) }}</span><strong>{{ statistics.activation?.breakdown?.[kind] || 0 }}</strong>
+            </button>
+          </div>
+        </div>
         <ol><li v-for="row in activationRows" :key="row.key"><div><span>{{ t(`activation.stage_${row.key}`) }}</span><strong>{{ row.count }}</strong><small>{{ row.rate === null ? '—' : `${row.rate}%` }}</small></div><span class="activation-funnel__track"><i :style="{ width: `${row.width}%` }"></i></span></li></ol>
         <p class="activation-funnel__note">{{ t('activation.funnelNote') }}<template v-if="statistics.activation?.measuredSince"> · {{ formatDate(statistics.activation.measuredSince) }}</template></p>
       </section>
-      <section class="profile-completion" aria-labelledby="profile-completion-title">
+      <section v-for="section in completionSections" :key="section.key" class="profile-completion" :aria-labelledby="`${chartId}-completion-${section.key}`">
         <header>
           <span class="wave-overview__eyebrow">{{ t('activation.profileCompletionEyebrow') }}</span>
-          <h2 id="profile-completion-title">{{ t('activation.profileCompletionTitle') }}</h2>
-          <p>{{ t('activation.profileCompletionHint', { count: statistics.profileCompletion?.total || 0 }) }}</p>
+          <h2 :id="`${chartId}-completion-${section.key}`">{{ t(`activation.${section.title}`) }}</h2>
+          <p>{{ t(`activation.${section.hint}`, { count: section.total }) }}</p>
         </header>
         <dl class="profile-completion__grid">
-          <div v-for="row in profileCompletionRows" :key="row.key">
+          <div v-for="row in section.rows" :key="row.key">
             <dt><component :is="row.icon" :size="18" aria-hidden="true" />{{ t(`activation.profileCompletion_${row.key}`) }}</dt>
             <dd>
               <div class="profile-completion__value"><strong>{{ row.count }}</strong><span>{{ row.rate }}%</span></div>

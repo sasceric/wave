@@ -163,6 +163,14 @@
   &__track { height: 8px; border-radius: 5px; background: #eeeee6; display: block; overflow: hidden; i { display: block; height: 100%; background: var(--forest); border-radius: inherit; } }
   li:nth-child(2) i { background: #55776a; } li:nth-child(3) i { background: #8ea39b; } li:nth-child(4) i { background: #d98368; } li:nth-child(5) i { background: #b5634a; }
   &__note { margin: 20px 0 0; color: #627971; font-size: 11px; line-height: 1.8; }
+  &__companies {
+    margin-top: 20px;
+    > p { margin: 0 0 10px; color: var(--muted-text); font-size: 11px; line-height: 1.7; }
+    > div { display: flex; flex-wrap: wrap; gap: 10px; }
+    button { display: inline-flex; align-items: center; gap: 18px; min-height: 44px; padding: 10px 16px; border: 1px solid var(--surface); border-radius: 12px; color: var(--forest); background: var(--paper); font: inherit; font-size: 12px; cursor: pointer; }
+    button[aria-pressed='true'] { border-color: var(--forest); background: #e7ede5; }
+    strong { font-size: 17px; font-weight: 600; }
+  }
   @media (max-width: 760px) { padding: 20px; header { align-items: stretch; flex-direction: column; } }
 }
 

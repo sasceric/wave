@@ -25,6 +25,14 @@ The six localized email copies use `templates/emails/campaign_alert.html`, inclu
 
 The admin overview adds an account-type filter and a registration-cohort funnel for the selected 7/30/90-day period. A Doctrine flush listener records each reached milestone once: registered, email verified, required profile complete, approved, first creator application/company campaign. The display uses nested completed stages, so percentages always represent conversion from the previous stage in the same cohort.
 
+The filter includes All, Creators, Companies, Brands and Agencies. Companies
+includes both brands and agencies; an agency is one company account even after
+its private service participant is created. The company registration breakdown
+uses the same real-account registration cohort, with current saved company type
+(switching type moves its classification without adding another registration).
+An agency's first application or published campaign reaches `first_action`
+once per account, even when it performs both actions.
+
 Measurement starts when this code is deployed. Existing accounts are not backfilled with invented registration dates. Demo, staff and deleted accounts are excluded. No page visits, device tracking or abandoned-form counts are inferred. Stage records reference the account with cascading deletion, without storing names, emails or browser identifiers.
 
 The separate **Creator profile completion** section reads current saved profiles,
@@ -39,6 +47,17 @@ ownerless imported records are excluded. The section is explicitly independent
 of the period/account-type filter used by the registration funnel. One aggregate
 query runs as part of the existing admin overview request; no migration, event
 tracking writes, browser tracking requests or new background task is needed.
+
+The separate **Agency profile completion** section counts saved services, work
+samples and packages, plus agencies with all three. Its denominator includes all
+real company accounts currently set to Agency, including agencies without a
+service participant or any optional content. Hidden and pending agencies count;
+demo, staff and deleted accounts do not. Switching back to Brand removes the
+account from this current agency report without deleting its studio data.
+Creator completion excludes agency participants. Both completion sections are
+independent of the registration period and filter and do not change approval
+requirements. Agency completion adds one aggregate query to the existing admin
+request, with no new tables, tracking writes or client requests.
 
 ## Deployment and verification
 

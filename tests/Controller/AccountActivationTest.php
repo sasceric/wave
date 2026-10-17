@@ -129,6 +129,126 @@ final class AccountActivationTest extends WebTestCase
         $this->em->flush();
         self::assertSame(['total' => 5, 'networks' => 2, 'works' => 1, 'packages' => 2, 'complete' => 0], $statistics->snapshot(30)['profileCompletion']);
     }
+
+    public function testAgencyRegistrationAndFirstActionCountOnceAcrossBothRoles(): void
+    {
+        $this->creator();
+        $brand = $this->company();
+        $agency = $this->agency('agency');
+        $provider = \App\Account\AgencyProfiles::ensure($agency, $this->em);
+        $campaign = $this->campaign($brand, 'agency-opportunity', 'BA');
+        $this->em->persist(new Application($campaign, $provider, 'Agency proposal'));
+        $this->em->flush();
+        $this->campaign($agency, 'agency-client-campaign', 'BA');
+        $statistics = self::getContainer()->get(OverviewStatistics::class);
+        $snapshot = $statistics->snapshot(7);
+        self::assertSame(['registered' => 3, 'verified' => 3, 'completed' => 3, 'approved' => 3, 'first_action' => 2], $snapshot['activation']['counts']);
+        self::assertSame(['creator' => 1, 'company' => 2, 'brand' => 1, 'agency' => 1], $snapshot['activation']['breakdown']);
+        self::assertSame(1, $snapshot['totals']['creators']);
+        self::assertSame(1, $snapshot['profileCompletion']['total']);
+        foreach (['creator' => 1, 'company' => 2, 'brand' => 1, 'agency' => 1] as $type => $expected) {
+            self::assertSame($expected, $statistics->snapshot(7, $type)['activation']['counts']['registered']);
+        }
+        self::assertSame(1, $statistics->snapshot(7, 'agency')['activation']['counts']['first_action']);
+        self::assertSame(5, (int) $this->em->getConnection()->fetchOne('SELECT COUNT(*) FROM account_milestone WHERE user_id = ?', [$agency->getId()]));
+        $this->em->getConnection()->executeStatement("UPDATE account_milestone SET occurred_at = ? WHERE user_id = ? AND stage = 'registered'", [gmdate('Y-m-d H:i:s', time() - 45 * 86400), $brand->getId()]);
+        self::assertSame(0, $statistics->snapshot(7, 'brand')['activation']['counts']['registered']);
+        self::assertSame(1, $statistics->snapshot(7, 'company')['activation']['counts']['registered']);
+        self::assertSame(2, $statistics->snapshot(90, 'company')['activation']['counts']['registered']);
+        $agency->getCompany()->setCompanyType('brand');
+        $this->em->flush();
+        self::assertSame(['creator' => 1, 'company' => 1, 'brand' => 1, 'agency' => 0], $statistics->snapshot(7)['activation']['breakdown']);
+        self::assertSame(1, $statistics->snapshot(7, 'brand')['activation']['counts']['first_action']);
+        self::assertSame(1, $statistics->snapshot(7)['profileCompletion']['total']);
+    }
+
+    public function testAgencyCompletionIncludesEmptyStudiosAndExcludesBrandsAndNonRealAccounts(): void
+    {
+        $statistics = self::getContainer()->get(OverviewStatistics::class);
+        self::assertSame(['total' => 0, 'services' => 0, 'works' => 0, 'packages' => 0, 'complete' => 0], $statistics->snapshot(7)['agencyProfileCompletion']);
+        $all = null;
+        $completeAgency = null;
+        foreach (['empty', 'studio', 'services', 'works', 'packages', 'all', 'demo', 'admin', 'moderator', 'deleted', 'brand'] as $key) {
+            $agency = $this->agency('completion-agency-'.$key);
+            if ($key === 'empty') continue; // No internal creator row yet.
+            $studio = \App\Account\AgencyProfiles::ensure($agency, $this->em);
+            $filled = in_array($key, ['all', 'demo', 'admin', 'moderator', 'deleted', 'brand'], true);
+            $studio->updateProfile($studio->getDisplayName(), 'Travel', 'Sarajevo', 'Bio', [],
+                $filled || $key === 'services' ? ['Campaign strategy'] : [],
+                avatarUrl: null, tagline: '',
+                portfolio: $filled || $key === 'works' ? [['title' => 'Private work', 'publicPermission' => false]] : [],
+                packages: $filled || $key === 'packages' ? [['title' => 'Content package', 'priceMode' => 'agreement']] : [],
+                categories: ['Travel'], faqs: [],
+            );
+            if ($key === 'demo') $agency->markPresentationDemo('agency-completion-test');
+            if ($key === 'admin') $agency->setAdmin(true);
+            if ($key === 'moderator') $agency->setModerator(true);
+            if ($key === 'deleted') $agency->anonymize();
+            if ($key === 'brand') $agency->getCompany()->setCompanyType('brand');
+            if ($key === 'all') {
+                $all = $studio;
+                $completeAgency = $agency;
+                $agency->setApproved(false);
+                $agency->setHideMyAccount(true);
+                // Optional completeness also includes accounts predating milestone measurement.
+                $this->em->getConnection()->delete('account_milestone', ['user_id' => $agency->getId()]);
+            }
+            $this->em->flush();
+        }
+        $this->creator();
+        $expected = ['total' => 6, 'services' => 2, 'works' => 2, 'packages' => 2, 'complete' => 1];
+        foreach (['all', 'creator', 'company', 'brand', 'agency'] as $type) {
+            self::assertSame($expected, $statistics->snapshot(7, $type)['agencyProfileCompletion']);
+        }
+        self::assertSame($expected, $statistics->snapshot(90)['agencyProfileCompletion']);
+        self::assertSame(1, $statistics->snapshot(7)['profileCompletion']['total']);
+        self::assertSame(['creator' => 1, 'company' => 6, 'brand' => 1, 'agency' => 5], $statistics->snapshot(7)['activation']['breakdown']);
+        self::assertInstanceOf(Creator::class, $all);
+        $all->setPortfolio([]);
+        $this->em->flush();
+        self::assertSame(['total' => 6, 'services' => 2, 'works' => 1, 'packages' => 2, 'complete' => 0], $statistics->snapshot(7)['agencyProfileCompletion']);
+        self::assertInstanceOf(User::class, $completeAgency);
+        $completeAgency->getCompany()->setCompanyType('brand');
+        $this->em->flush();
+        self::assertSame(['total' => 5, 'services' => 1, 'works' => 1, 'packages' => 1, 'complete' => 0], $statistics->snapshot(7)['agencyProfileCompletion']);
+    }
+
+    public function testAgencyStatisticsFiltersRemainAdminOnlyAndNonCacheable(): void
+    {
+        $this->client->disableReboot();
+        $this->client->request('GET', '/api/admin/overview?accountType=agency');
+        self::assertResponseStatusCodeSame(401);
+        $agency = $this->agency('api-agency');
+        $this->client->loginUser($agency);
+        $this->client->request('GET', '/api/admin/overview?accountType=agency');
+        self::assertResponseStatusCodeSame(403);
+        $admin = $this->user('statistics-admin', 'ROLE_COMPANY');
+        $admin->setAdmin(true);
+        $this->em->persist($admin);
+        $this->em->flush();
+        $this->client->loginUser($admin);
+        foreach (['brand' => 0, 'agency' => 1, 'company' => 1] as $type => $expected) {
+            $this->client->request('GET', '/api/admin/overview?days=7&accountType='.$type);
+            self::assertResponseIsSuccessful();
+            self::assertStringContainsString('no-store', $this->client->getResponse()->headers->get('Cache-Control'));
+            self::assertSame($type, $this->payload()['data']['activation']['accountType']);
+            self::assertSame($expected, $this->payload()['data']['activation']['counts']['registered']);
+            self::assertSame(1, $this->payload()['data']['agencyProfileCompletion']['total']);
+        }
+        $this->client->request('GET', '/api/admin/overview?accountType=unknown');
+        self::assertResponseStatusCodeSame(400);
+    }
+
+    private function agency(string $key): User
+    {
+        $user = $this->user($key, 'ROLE_COMPANY');
+        $company = new Company($key, 'Agency', 'Travel');
+        $company->setCompanyType('agency');
+        $user->setCompany($company);
+        $this->em->persist($user);
+        $this->em->flush();
+        return $user;
+    }
     private function creator(string $key = 'creator'): User
     {
         $user = $this->user($key, 'ROLE_CREATOR'); $user->setCreator(new Creator($key, 'Amina', 'Travel', 'Sarajevo', 'Bio', [])); $this->em->persist($user);
