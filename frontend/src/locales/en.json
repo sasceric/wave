@@ -7,6 +7,8 @@
     "description": "A place for creators and brands to find the right partners."
   },
   "seo": {
+    "searchTitle": "Search | Wave",
+    "searchDescription": "Search creators, campaigns and companies.",
     "homeTitle": "Wave — creator and brand partnerships",
     "homeDescription": "A place for creators and brands to find the right partners.",
     "creatorsTitle": "Influencer and UGC creator directory | Wave",
@@ -810,11 +812,12 @@
     "emailSubject": "Question about a Wave brief"
   },
   "notFound": {
-    "eyebrow": "A little off course",
-    "headlineLead": "Nothing to see",
-    "headlineEmphasis": "over here.",
-    "description": "That page may have moved. Let's find you a good place to start.",
-    "backHome": "Back to Wave"
+    "eyebrow": "404 · Page not found",
+    "headlineLead": "A little lost?",
+    "headlineEmphasis": "Nothing here.",
+    "description": "This page seems to be missing or may have moved somewhere nicer. Let’s get you back to somewhere with interesting content.",
+    "backHome": "Back to homepage",
+    "browseCreators": "Explore creators"
   },
   "auth": {
     "signInTitle": "Welcome back.",
@@ -1738,7 +1741,22 @@
     "empty": "No results for this search.",
     "error": "Results are currently unavailable.",
     "retry": "Try again",
-    "seeAll": "See all results for “{query}”"
+    "seeAll": "See all results for “{query}”",
+    "pageTitle": "Search",
+    "all": "All",
+    "resultsFor": "Results for “{query}”",
+    "resultCount": "Results found: {count}",
+    "startHint": "Enter a name, topic or location in the search above.",
+    "emptyHint": "Try another name, broader topic or different city.",
+    "home": "Home",
+    "breadcrumb": "Breadcrumb",
+    "open_creators": "View profile",
+    "open_campaigns": "View campaign",
+    "open_companies": "View company",
+    "startTitle": "Enter a search term.",
+    "startDescription": "Find creators, campaigns or companies by name, topic or location.",
+    "browseCampaigns": "Explore campaigns",
+    "description": "Search creators, campaigns and companies."
   },
   "adminQr": {
     "title": "QR codes",
@@ -2754,6 +2772,7 @@
     "offeringTitle": "Our offering",
     "campaignsTitle": "Campaigns by {company}",
     "emptyCampaigns": "This agency currently has no open campaigns.",
-    "noServices": "Add the services your agency offers to clients."
+    "noServices": "Add the services your agency offers to clients.",
+    "noDeliverables": "Add the specific items the client receives as part of this service."
   }
 }

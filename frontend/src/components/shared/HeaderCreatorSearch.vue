@@ -3,6 +3,7 @@ import { computed, nextTick, onBeforeUnmount, onMounted, ref, useId, watch } fro
 import { ArrowRight, MapPin, Coins, Search, X } from '@lucide/vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
+import { currentUser } from '../../composables/useCurrentUser'
 import { apiGet, apiRequest, formatMoney } from '../../lib/api'
 import { localizedRouteName } from '../../routePaths'
 import CardImage from './CardImage.vue'
@@ -34,6 +35,7 @@ let timer
 let requestId = 0
 let lastLogged = ''
 let restoringFocus = false
+let suggestionBatch = null
 
 function positionPanel() {
   if (!form.value) return
@@ -59,6 +61,8 @@ function closeSearch(restoreFocus = false) {
     restoringFocus = false
   })
 }
+function resetSuggestions() { suggestionBatch = null; counts.value = {}; results.value = []; closeSearch() }
+watch(() => currentUser.value?.id, resetSuggestions)
 function handleInputFocus() {
   if (!restoringFocus && query.value.trim()) scheduleSearch()
 }
@@ -95,14 +99,20 @@ async function loadSuggestions() {
   error.value = false
   positionPanel()
   try {
-    const params = new URLSearchParams({ q: term, limit: '5' })
-    if (selected !== 'creators') params.set('view', 'card')
-    const response = await apiGet(`/${selected}?${params}`, { locale: language })
+    const key = JSON.stringify([language, term])
+    // Fetch each directory once per search; switching pills reuses its rows and total.
+    if (suggestionBatch?.key !== key) {
+      suggestionBatch = {
+        key,
+        promise: apiGet(`/search?${new URLSearchParams({ q: term, mode: 'suggest' })}`, { locale: language }),
+      }
+    }
+    const response = await suggestionBatch.promise
     if (id !== requestId) return
-    results.value = response.data ?? []
-    counts.value = { ...counts.value, [selected]: response.meta?.total ?? results.value.length }
+    counts.value = response.meta?.counts ?? {}
+    results.value = (response.data?.[selected] ?? []).slice(0, 10)
   } catch {
-    if (id === requestId) error.value = true
+    if (id === requestId) { suggestionBatch = null; error.value = true }
   } finally {
     if (id === requestId) loading.value = false
   }
@@ -118,28 +128,28 @@ function recordSearch(source) {
 }
 async function handleSubmit() {
   if (mobile.value && !expanded.value) return openSearch()
-  if (!query.value.trim()) return seeAll()
-  recordSearch('submit')
-  await loadSuggestions()
+  showResults('submit')
 }
-function seeAll() {
+function showResults(source = 'all') {
   const term = query.value.trim()
-  recordSearch('all')
-  router.push({ name: localizedRouteName(type.value, locale.value), query: term ? { q: term } : {} })
+  recordSearch(source)
+  router.push({ name: localizedRouteName('search', locale.value), query: term ? { q: term } : {} })
   closeSearch()
 }
+function seeAll() { showResults() }
 function itemRoute(item) {
   const names = { creators: 'creator-profile', companies: 'company-profile', campaigns: 'campaign-detail' }
   return { name: names[type.value], params: { slug: item.slug } }
 }
-function image(item) { return type.value === 'creators' ? item.avatarImage : type.value === 'companies' ? item.logoImage : item.coverImage }
-function imageUrl(item) { return type.value === 'creators' ? item.avatarUrl : type.value === 'companies' ? item.logoUrl : item.coverImageUrl }
-function title(item) { return type.value === 'creators' ? item.displayName : type.value === 'companies' ? item.name : item.title }
-function subtitle(item) { return type.value === 'creators' ? (item.categoryLabels ?? [item.categoryLabel]).filter(Boolean).join(', ') : type.value === 'companies' ? (item.industryLabels ?? [item.industry]).filter(Boolean).join(', ') : item.company?.name }
+function image(item) { return item.image }
+function imageUrl(item) { return item.imageUrl }
+function title(item) { return item.title }
+function subtitle(item) { return item.subtitle }
 function focusResult() { panel.value?.querySelector('a')?.focus() }
 function handleKey(event) { if (event.key === 'Escape' && (open.value || expanded.value)) { event.preventDefault(); closeSearch(true) } }
 
 watch([query, locale], () => {
+  suggestionBatch = null
   counts.value = {}
   lastLogged = ''
   scheduleSearch()
@@ -158,6 +168,8 @@ onMounted(() => {
   mediaQuery.addEventListener('change', updateViewport)
   window.addEventListener('resize', positionPanel)
   document.addEventListener('keydown', handleKey)
+  window.addEventListener('wave:safety-changed', resetSuggestions)
+  window.addEventListener('focus', resetSuggestions)
 })
 onBeforeUnmount(() => {
   requestId++
@@ -165,6 +177,8 @@ onBeforeUnmount(() => {
   mediaQuery?.removeEventListener('change', updateViewport)
   window.removeEventListener('resize', positionPanel)
   document.removeEventListener('keydown', handleKey)
+  window.removeEventListener('wave:safety-changed', resetSuggestions)
+  window.removeEventListener('focus', resetSuggestions)
 })
 </script>
 
@@ -193,7 +207,7 @@ onBeforeUnmount(() => {
           <LocalizedLink v-for="item in loading || error ? [] : results" :key="item.id" class="global-search-panel__row" :to="itemRoute(item)" @click="recordSearch('all'); closeSearch()">
             <CardImage :image="image(item)" :src="imageUrl(item) || ''" :alt="title(item)" sizes="76px" />
             <span class="global-search-panel__identity"><strong>{{ title(item) }}</strong><span>{{ subtitle(item) }}</span></span>
-            <span v-if="item.city" class="global-search-panel__location"><MapPin :size="16" aria-hidden="true" />{{ item.city }}</span>
+            <span v-if="item.location" class="global-search-panel__location"><MapPin :size="16" aria-hidden="true" />{{ item.location }}</span>
             <span v-if="type === 'campaigns'" class="global-search-panel__budget"><Coins :size="18" aria-hidden="true" />{{ formatMoney(item.budgetMin, item.currency) }} – {{ formatMoney(item.budgetMax, item.currency) }}</span>
           </LocalizedLink>
         </div>

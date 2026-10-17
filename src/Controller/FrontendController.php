@@ -111,7 +111,7 @@ final class FrontendController
         if ($googleSiteVerification !== '') {
             $head .= "\n    <meta name=\"google-site-verification\" content=\"".$this->escape($googleSiteVerification)."\" />";
         }
-        $head .= "\n    <meta name=\"robots\" content=\"".($seo['noindex'] ? 'noindex, nofollow' : 'index, follow')."\" />";
+        $head .= "\n    <meta name=\"robots\" content=\"".($seo['robots'] ?? ($seo['noindex'] ? 'noindex, nofollow' : 'index, follow'))."\" />";
         $head .= "\n    <meta property=\"og:type\" content=\"website\" />";
         $head .= "\n    <meta property=\"og:site_name\" content=\"Wave\" />";
         $head .= "\n    <meta property=\"og:title\" content=\"".$title."\" />";

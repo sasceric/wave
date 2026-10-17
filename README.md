@@ -437,3 +437,10 @@ production requires supervised CLI consumers and a scheduled-task dispatcher.
 Follow [server setup](docs/server-operations.md) before enabling this release on
 production. Keep APP_SECRET stable and the existing notification/Mercure/VAPID
 configuration. No Redis or RabbitMQ service is required.
+
+### Public search
+
+Global search supports database and Meilisearch backends through
+`MEILISEARCH_ENABLED=false/true`. See [Meilisearch setup](docs/meilisearch.md)
+for local coexistence with other projects, private environment keys, the ARM64
+server installer, manual indexing and the daily batched queue reconciliation.

@@ -64,10 +64,11 @@ final class BackgroundPipelineTest extends KernelTestCase
     public function testTasksRegisterIdempotentlyAndManualRunsAreQueuedAndCompleted(): void
     {
         $tasks = self::getContainer()->get(TaskRegistry::class);
-        self::assertSame(9, $tasks->register());
+        self::assertSame(10, $tasks->register());
         $reminder = $this->db->fetchAssociative("SELECT * FROM wave_scheduled_task WHERE name = 'UnreadMessageReminderTask'");
         self::assertSame(3600, (int) $reminder['interval_seconds']);
         self::assertEqualsWithDelta(time() + 3600, strtotime($reminder['next_run_at'].' UTC'), 5);
+        self::assertSame(86400, (int) $this->db->fetchOne("SELECT interval_seconds FROM wave_scheduled_task WHERE name = 'SearchReconcileTask'"));
         self::assertSame(0, $tasks->register());
         self::assertSame($reminder, $this->db->fetchAssociative("SELECT * FROM wave_scheduled_task WHERE name = 'UnreadMessageReminderTask'"));
         $id = $tasks->action('CachePruneTask', 'run');
@@ -82,7 +83,7 @@ final class BackgroundPipelineTest extends KernelTestCase
         self::assertSame(0, $tasks->register());
         self::assertSame('inactive', $this->db->fetchOne("SELECT status FROM wave_scheduled_task WHERE name = 'CachePruneTask'"));
         $this->db->executeStatement('UPDATE wave_scheduled_task SET next_run_at = ?', ['2000-01-01 00:00:00']);
-        self::assertSame(8, $tasks->dispatchDue());
+        self::assertSame(9, $tasks->dispatchDue());
         self::assertSame(0, $tasks->dispatchDue());
     }
 
@@ -99,7 +100,7 @@ final class BackgroundPipelineTest extends KernelTestCase
         $this->db->delete('wave_scheduled_task', ['name' => 'LogCleanupTask']);
         $before = $this->db->fetchAllAssociativeIndexed('SELECT * FROM wave_scheduled_task');
 
-        self::assertSame(9, $tasks->registerAndReschedule());
+        self::assertSame(10, $tasks->registerAndReschedule());
         $rows = $this->db->fetchAllAssociativeIndexed('SELECT * FROM wave_scheduled_task');
         $origins = [];
         foreach ($rows as $name => $row) {

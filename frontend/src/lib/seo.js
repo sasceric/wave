@@ -61,6 +61,7 @@ export function updateSeo({
   title,
   description,
   noindex = false,
+  robots = null,
   image = null,
   mainEntity = null,
   analyticsReady = true,
@@ -79,7 +80,7 @@ export function updateSeo({
   // from a separate route watcher before this metadata update has run.
   trackPageView(route.path, { title, allowed: analyticsReady && !privatePage })
   setMeta('name', 'description', description)
-  setMeta('name', 'robots', noindex || !knownRoute ? 'noindex, nofollow' : 'index, follow')
+  setMeta('name', 'robots', robots || (noindex || !knownRoute ? 'noindex, nofollow' : 'index, follow'))
   setMeta('property', 'og:type', 'website')
   setMeta('property', 'og:site_name', 'Wave')
   setMeta('property', 'og:title', title)
@@ -156,7 +157,7 @@ export function updateSeo({
       '@type': 'SearchAction',
       target: {
         '@type': 'EntryPoint',
-        urlTemplate: `${origin}${localizedPath('creators', locale)}?q={search_term_string}`,
+        urlTemplate: `${origin}${localizedPath('search', locale)}?q={search_term_string}`,
       },
       'query-input': 'required name=search_term_string',
     },

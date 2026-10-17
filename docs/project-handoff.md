@@ -715,3 +715,13 @@ locally. All copy and route titles are present in six locales.
 ## Account activation (October 2026)
 
 See `docs/account-activation.md`: signup now collects identity/credentials first (eight-character password minimum); all existing profile fields remain in account setup. Incomplete accounts can use Pregled. New opt-in campaign digests use the existing scheduler/mail queue, and admin cohort analytics record real account milestones without backfilling old registrations. Migration `Version20261016120000` adds only two new tables.
+
+## Public Meilisearch search
+
+See [Meilisearch](meilisearch.md) for the server installer, environment keys,
+local coexistence with Zeka, bootstrap/manual commands, 24-hour batched queue task,
+security invalidation fence and integration tests. `PublicSearch` serves global
+suggestions (10 per category, exact totals) and the localized `SearchView` (25 per
+page, including All); SQL directory filtering remains for normal directory pages.
+New search and legacy directory `?q=` URLs are noindex/follow. MEILISEARCH_ENABLED=false uses database search by default; true selects the indexed
+backend after service, scoped keys, migration and initial import are configured.

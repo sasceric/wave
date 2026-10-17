@@ -91,7 +91,7 @@
   gap: 10px;
   margin-top: 27px;
 
-  span {
+  > span {
     display: inline-flex;
     align-items: center;
     gap: 8px;
@@ -235,7 +235,7 @@
   .company-profile__hero h1 { font-size: 39px; }
   .company-profile__tagline { font-size: 14px; }
   .company-profile__stats { margin-top: 28px; }
-  .company-profile__stats span { padding: 8px 11px; font-size: 11px; }
+  .company-profile__stats > span { padding: 8px 11px; font-size: 11px; }
   .company-profile__hero-action { margin-top: 24px; }
   .company-profile__body { padding-top: 28px; padding-bottom: 70px; }
   .company-profile__overview-grid { grid-template-columns: 1fr; gap: 12px; }

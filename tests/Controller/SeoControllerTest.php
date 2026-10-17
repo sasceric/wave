@@ -54,6 +54,22 @@ final class SeoControllerTest extends WebTestCase
         }
     }
 
+
+    public function testSearchPagesAndLegacyQueryDirectoriesAreNoindexInEveryLocale(): void
+    {
+        $routes = static::getContainer()->get(LocalizedRouteMap::class);
+        foreach ($routes->locales() as $locale) {
+            foreach (['search', 'creators', 'companies', 'campaigns'] as $name) {
+                $crawler = $this->client->request('GET', $routes->localizedPath($name, $locale).'?q=example');
+                self::assertResponseIsSuccessful();
+                self::assertSame('noindex, follow', $crawler->filter('meta[name="robots"]')->attr('content'));
+                self::assertSame(0, $crawler->filter('link[hreflang]')->count());
+            }
+        }
+        $this->client->request('GET', '/sitemap.xml');
+        self::assertStringNotContainsString('/pretraga', $this->client->getResponse()->getContent());
+    }
+
     public function testExistingEnglishAccountAndAdminAliasesHaveCanonicalRedirects(): void
     {
         foreach (['/account/applications' => '/racun/prijave', '/admin/tools' => '/admin/alati', '/admin/redirects' => '/admin/preusmjerenja', '/account/campaigns/new' => '/racun/kampanje/nova', '/account/campaigns/example' => '/racun/kampanje/example'] as $source => $target) {
@@ -400,7 +416,7 @@ final class SeoControllerTest extends WebTestCase
             ksort($expected);
             foreach ($languages as $locale => $language) {
                 $url = $expected[$language];
-                $crawler = $this->client->request('GET', $url.'?q=example&utm_source=test');
+                $crawler = $this->client->request('GET', $url.'?utm_source=test');
                 self::assertResponseIsSuccessful();
                 self::assertSame($url, $crawler->filter('head link[rel="canonical"]')->attr('href'));
                 self::assertSame(1, $crawler->filter('head link[rel="canonical"]')->count());

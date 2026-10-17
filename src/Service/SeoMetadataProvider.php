@@ -116,7 +116,9 @@ final class SeoMetadataProvider
         $description = $this->translation($locale, $descriptionKey);
         $image = $name === 'home' ? $this->absoluteUrl('/images/share.webp') : null;
         $entitySchema = null;
-        $indexable = !$private;
+        $searchResults = $name === 'search' || (in_array($name, ['creators', 'companies', 'campaigns'], true) && trim(is_string($query['q'] ?? null) ? $query['q'] : '') !== '');
+        $indexable = !$private && !$searchResults;
+        if ($name === 'search') $description = $this->catalogs[$locale]['seo']['searchDescription'];
         $contentHtml = null;
 
         if ($name === 'country-creators') {
@@ -251,6 +253,7 @@ final class SeoMetadataProvider
             'image' => $image,
             'preloadImage' => $name === 'home' ? '/images/banner-girl.webp' : null,
             'noindex' => !$indexable,
+            'robots' => $searchResults ? 'noindex, follow' : ($indexable ? 'index, follow' : 'noindex, nofollow'),
             'contentHtml' => $contentHtml,
             'structuredData' => $indexable ? $this->structuredData(self::pageTitle($title), $description, $canonicalUrl, $locale, $name, $entitySchema) : [],
         ];
@@ -294,7 +297,7 @@ final class SeoMetadataProvider
                 '@type' => 'SearchAction',
                 'target' => [
                     '@type' => 'EntryPoint',
-                    'urlTemplate' => $this->siteOrigin->url($this->routeMap->localizedPath('creators', $locale)).'?q={search_term_string}',
+                    'urlTemplate' => $this->siteOrigin->url($this->routeMap->localizedPath('search', $locale)).'?q={search_term_string}',
                 ],
                 'query-input' => 'required name=search_term_string',
             ],

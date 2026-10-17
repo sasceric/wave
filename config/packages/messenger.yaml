@@ -59,3 +59,6 @@ framework:
             'App\Message\MediaMaintenanceTask': background
             'App\Message\IndexReconcileTask': background
             'App\Message\QueueMaintenanceTask': background
+
+            'App\Message\SearchReconcileTask': background
+            'App\Message\SearchIndexBatchMessage': background

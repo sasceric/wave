@@ -43,5 +43,6 @@
   "admin-reports": "safety.reports",
   "account-blocks": "safety.myBlocks",
   "account-reviews": "safety.myReviews",
-  "account-dashboard": "personalDashboard.title"
+  "account-dashboard": "personalDashboard.title",
+  "search": "seo.searchTitle"
 }

@@ -40,6 +40,7 @@ final class JobExecutor
         #[Autowire('%kernel.logs_dir%')] private readonly string $logsDirectory,
         #[Autowire('%env(int:LOG_RETENTION_DAYS)%')] private readonly int $logRetention,
         private readonly \App\Safety\BlockPolicy $blocks,
+        private readonly \App\Search\SearchIndexer $searchIndexer,
     ) {
     }
 
@@ -65,6 +66,8 @@ final class JobExecutor
             'LogCleanupTask' => $this->cleanupLogs(),
             'ExpiredTokenCleanupTask' => $this->cleanupTokens(),
             'QueueMaintenanceTask' => $this->cleanupJobs(),
+            'SearchReconcileTask' => $this->searchIndexer->reconcile(array_diff_key($payload, ['taskName' => true])),
+            'SearchIndexBatchMessage' => $this->searchIndexer->index($payload['kind'], $payload['ids']),
             default => throw new \Symfony\Component\Messenger\Exception\UnrecoverableMessageHandlingException('Unknown job type.'),
         };
     }

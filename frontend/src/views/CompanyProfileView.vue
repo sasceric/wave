@@ -7,7 +7,8 @@ import MarketplaceSafetyActions from '../components/shared/MarketplaceSafetyActi
 import ProfileReviews from '../components/reviews/ProfileReviews.vue'
 import RatingSummary from '../components/reviews/RatingSummary.vue'
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
-import { ExternalLink, Globe, Link2, MapPin, Megaphone, Music2 } from '@lucide/vue'
+import { ExternalLink, Globe, MapPin, Megaphone } from '@lucide/vue'
+import SocialPlatformIcon from '../components/shared/SocialPlatformIcon.vue'
 import CardGrid from '../components/shared/CardGrid.vue'
 import { useRoute } from 'vue-router'
 import RouterLink from '../components/shared/LocalizedLink.vue'
@@ -22,7 +23,6 @@ import { getSeoOrigin, updateSeo } from '../lib/seo'
 import { localizedPath } from '../routePaths'
 import { sanitizeRichText } from '../lib/richText'
 
-const SOCIAL_ICONS = { Instagram: Link2, TikTok: Music2, YouTube: Link2, Facebook: Link2, LinkedIn: Link2, Website: Globe }
 const route = useRoute()
 const company = ref(null)
 const campaigns = ref([])
@@ -147,7 +147,7 @@ onBeforeUnmount(() => { ++profileGeneration })
           </div>
           <div class="company-profile__stats">
             <span v-if="locationLabel"><MapPin :size="17" aria-hidden="true" />{{ locationLabel }}</span>
-            <span v-for="link in socialLinks" :key="link.platform"><component :is="SOCIAL_ICONS[link.platform] || Globe" :size="17" aria-hidden="true" />{{ link.platform }}</span>
+            <span v-for="link in socialLinks" :key="link.platform"><SocialPlatformIcon :platform="link.platform" :size="17" />{{ link.platform }}</span>
           </div>
         </div>
         <AgencyContactActions v-if="company.companyType === 'agency'" ref="contact" :company="company" />
@@ -179,7 +179,7 @@ onBeforeUnmount(() => { ++profileGeneration })
         <article v-if="socialLinks.length" class="company-profile__card company-profile__social-card">
           <h2>{{ t('companyProfile.followUs') }}</h2>
           <a v-for="link in socialLinks" :key="link.platform" :href="link.url" target="_blank" rel="noopener noreferrer">
-            <component :is="SOCIAL_ICONS[link.platform] || Globe" :size="20" aria-hidden="true" />
+            <SocialPlatformIcon :platform="link.platform" :size="20" />
             <span>{{ link.platform }}</span>
             <ExternalLink :size="15" aria-hidden="true" />
           </a>

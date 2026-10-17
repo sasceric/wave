@@ -1,5 +1,6 @@
 {
   "api": {
+    "search_unavailable": "Die Suche ist vorübergehend nicht verfügbar. Bitte versuche es in Kürze erneut.",
     "hiring_cancelled": "Kooperation abgesagt:",
     "campaign_cancelled": "Die Kampagne wurde abgesagt. Bewerbungen, Angebote und Einladungen können nicht mehr geändert werden.",
     "collaboration_cancelled": "Die Kooperation wurde abgesagt. Der Verlauf bleibt verfügbar, Nachrichten können jedoch nicht mehr gesendet werden.",

@@ -7,6 +7,8 @@
     "description": "Prostor, kjer ustvarjalci in blagovne znamke najdejo prave partnerje."
   },
   "seo": {
+    "searchTitle": "Iskanje | Wave",
+    "searchDescription": "Iskanje ustvarjalcev, kampanj in podjetij.",
     "homeTitle": "Wave — sodelovanja ustvarjalcev in blagovnih znamk",
     "homeDescription": "Prostor, kjer ustvarjalci in blagovne znamke najdejo prave partnerje.",
     "creatorsTitle": "Seznam vplivnežev in UGC ustvarjalcev | Wave",
@@ -811,11 +813,12 @@
     "emailSubject": "Vprašanje o kampanji Wave"
   },
   "notFound": {
-    "eyebrow": "Malo smo zašli s poti",
-    "headlineLead": "Tukaj ni",
-    "headlineEmphasis": "ničesar za videti.",
-    "description": "Stran je bila morda premaknjena. Poiščimo dobro izhodišče.",
-    "backHome": "Nazaj na Wave"
+    "eyebrow": "404 · Strani ni mogoče najti",
+    "headlineLead": "Kaj iščeš?",
+    "headlineEmphasis": "Tukaj ni ničesar.",
+    "description": "Videti je, da ta stran ne obstaja ali pa se je preselila nekam drugam. Vrnimo se tja, kjer te čaka zanimiva vsebina.",
+    "backHome": "Nazaj na začetno stran",
+    "browseCreators": "Razišči ustvarjalce"
   },
   "auth": {
     "signInTitle": "Lepo, da si nazaj.",
@@ -1739,7 +1742,22 @@
     "empty": "Za to iskanje ni rezultatov.",
     "error": "Rezultati trenutno niso na voljo.",
     "retry": "Poskusi znova",
-    "seeAll": "Prikaži vse rezultate za »{query}«"
+    "seeAll": "Prikaži vse rezultate za »{query}«",
+    "pageTitle": "Iskanje",
+    "all": "Vse",
+    "resultsFor": "Rezultati za »{query}«",
+    "resultCount": "Najdenih rezultatov: {count}",
+    "startHint": "V zgornje iskanje vpiši ime, področje ali lokacijo.",
+    "emptyHint": "Poskusi z drugim imenom, širšim področjem ali drugim mestom.",
+    "home": "Domov",
+    "breadcrumb": "Pot strani",
+    "open_creators": "Poglej profil",
+    "open_campaigns": "Poglej kampanjo",
+    "open_companies": "Poglej podjetje",
+    "startTitle": "Vpiši iskalni pojem.",
+    "startDescription": "Poišči ustvarjalce, kampanje ali podjetja po imenu, področju ali lokaciji.",
+    "browseCampaigns": "Oglej si kampanje",
+    "description": "Iskanje ustvarjalcev, kampanj in podjetij."
   },
   "adminQr": {
     "title": "QR kode",
@@ -2755,6 +2773,7 @@
     "offeringTitle": "Naša ponudba",
     "campaignsTitle": "Kampanje agencije {company}",
     "emptyCampaigns": "Ta agencija trenutno nima odprtih kampanj.",
-    "noServices": "Dodaj storitve, ki jih tvoja agencija ponuja strankam."
+    "noServices": "Dodaj storitve, ki jih tvoja agencija ponuja strankam.",
+    "noDeliverables": "Dodaj konkretne postavke, ki jih naročnik prejme v okviru te storitve."
   }
 }

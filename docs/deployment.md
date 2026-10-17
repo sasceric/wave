@@ -535,3 +535,13 @@ index is ready, the endpoint uses its existing retry response. Old sitemap parts
 retain their existing 48-hour grace period. No new environment variables, Mercure
 configuration or worker services are required. This migration is applied locally;
 this update has not been pushed or deployed.
+
+## Meilisearch public search
+
+Before enabling the new search endpoints, follow [Meilisearch installation and
+cutover](meilisearch.md#hetzner-arm64-server-installation). The server needs the
+prepared loopback-only systemd service, scoped server-side environment keys,
+migration `Version20261018010000`, an initial `app:search:index --sync`, restarted
+queue consumers and normal scheduled-task registration. The new daily task uses
+the existing dispatcher and background transport. The repository does not install
+Meilisearch on the server automatically during deployment.

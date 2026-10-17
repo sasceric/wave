@@ -7,6 +7,12 @@
 # Put parameters here that don't need to change on each machine where the app is deployed
 # https://symfony.com/doc/current/best_practices.html#use-parameters-for-application-configuration
 parameters:
+    env(MEILISEARCH_ENABLED): '0'
+    env(MEILISEARCH_HOST): 'http://127.0.0.1:7700'
+    env(MEILISEARCH_INDEX_PREFIX): 'wave_dev'
+    env(MEILISEARCH_ADMIN_KEY): ''
+    env(MEILISEARCH_SEARCH_KEY): ''
+    env(MEILISEARCH_MASTER_KEY): ''
     env(GOOGLE_OAUTH_CLIENT_ID): ''
     env(GOOGLE_OAUTH_CLIENT_SECRET): ''
     env(GOOGLE_OAUTH_REDIRECT_URI): ''

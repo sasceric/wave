@@ -3,11 +3,12 @@ import test from 'node:test'
 import { nextTick, reactive, ref } from 'vue'
 import { setupView } from './setupView.js'
 
-async function searchSetup(get = async () => ({ data: [], meta: { total: 0 } }), log = async () => ({ recorded: true })) {
+async function searchSetup(get = async () => ({ data: { creators: [], campaigns: [], companies: [] }, meta: { counts: { creators: 0, campaigns: 0, companies: 0 } } }), log = async () => ({ recorded: true })) {
   const calls = [], logs = [], navigations = []
   const route = reactive({ query: {}, params: {}, meta: {}, fullPath: '/' })
   const locale = ref('bs')
   const setup = await setupView('../src/components/shared/HeaderCreatorSearch.vue', {
+    '../../composables/useCurrentUser': { currentUser: ref(null) },
     '../../lib/api': {
       apiGet: async (...args) => { calls.push(args); return get(...args) },
       apiRequest: async (...args) => { logs.push(args); return log(...args) },
@@ -20,15 +21,21 @@ async function searchSetup(get = async () => ({ data: [], meta: { total: 0 } }),
   return { ...setup, calls, logs, navigations, route, locale }
 }
 
-test('suggestions query only the chosen directory and do not log keystrokes', async () => {
-  const { state, calls, logs } = await searchSetup(async () => ({ data: [{ id: 1, slug: 'summer' }], meta: { total: 12 } }))
-  state.query.value = '  ljetna kampanja  '
-  state.type.value = 'campaigns'
+test('suggestions use Meilisearch buckets, show exact totals and reuse results when switching pills', async () => {
+  const totals = { creators: 50, campaigns: 12, companies: 3 }
+  const { state, calls, logs } = await searchSetup(async () => ({ data: { creators: Array.from({ length: 10 }, (_, id) => ({ id, title: `Creator ${id}` })), campaigns: [{ id: 2 }], companies: [{ id: 3 }] }, meta: { counts: totals } }))
+  state.query.value = '  ljepota  '
   await nextTick()
   await state.loadSuggestions()
   assert.equal(calls.length, 1)
-  assert.equal(calls[0][0], '/campaigns?q=ljetna+kampanja&limit=5&view=card')
-  assert.equal(state.counts.value.campaigns, 12)
+  assert.equal(calls[0][0], '/search?q=ljepota&mode=suggest')
+  assert.deepEqual({ ...state.counts.value }, totals)
+  assert.equal(state.results.value.length, 10)
+  state.type.value = 'companies'
+  await nextTick()
+  await state.loadSuggestions()
+  assert.equal(calls.length, 1)
+  assert.equal(state.results.value[0].id, 3)
   assert.equal(logs.length, 0)
 })
 
@@ -45,24 +52,25 @@ test('submit followed by see all logs once and routes the selected category with
   assert.equal(logs[0][1].body.query, 'Natura')
   assert.equal(logs[0][1].body.type, 'companies')
   assert.equal(logs[0][1].body.source, 'submit')
-  assert.equal(navigations[0].name, 'companies-en')
+  assert.equal(navigations[0].name, 'search-en')
   assert.equal(navigations[0].query.q, 'Natura')
   assert.equal(state.open.value, false)
 })
 
-test('a late response for a previous type cannot replace current results', async () => {
+test('a late suggestion response cannot replace a new query', async () => {
   let resolveOld
-  const { state } = await searchSetup(path => path.startsWith('/creators') ? new Promise(resolve => { resolveOld = resolve }) : Promise.resolve({ data: [{ id: 2 }], meta: { total: 1 } }))
-  state.query.value = 'test'
+  const response = id => ({ data: { creators: [{ id }], campaigns: [], companies: [] }, meta: { counts: { creators: id, campaigns: 0, companies: 0 } } })
+  const { state } = await searchSetup(path => path.includes('q=old') ? new Promise(resolve => { resolveOld = resolve }) : Promise.resolve(response(2)))
+  state.query.value = 'old'
   await nextTick()
   const old = state.loadSuggestions()
-  state.type.value = 'campaigns'
+  state.query.value = 'new'
   await nextTick()
   await state.loadSuggestions()
-  resolveOld({ data: [{ id: 1 }], meta: { total: 99 } })
+  resolveOld(response(99))
   await old
   assert.equal(state.results.value[0].id, 2)
-  assert.equal(state.counts.value.creators, undefined)
+  assert.equal(state.counts.value.creators, 2)
 })
 
 test('failed logging never prevents see all, and failed suggestions never show stale rows', async () => {
@@ -77,6 +85,17 @@ test('failed logging never prevents see all, and failed suggestions never show s
   assert.equal(navigations.length, 1)
 })
 
+test('submit and search icon navigate directly without loading suggestions', async () => {
+  const { state, navigations, calls } = await searchSetup()
+  state.query.value = 'ljepota'
+  await nextTick()
+  await state.handleSubmit()
+  assert.equal(calls.length, 0)
+  assert.equal(navigations[0].name, 'search-bs')
+  assert.equal(navigations[0].query.q, 'ljepota')
+  assert.equal(state.open.value, false)
+})
+
 test('closing the popup ignores in-flight results and directory navigation closes search', async () => {
   let resolveRequest
   const { state, route } = await searchSetup(() => new Promise(resolve => { resolveRequest = resolve }))
@@ -84,7 +103,7 @@ test('closing the popup ignores in-flight results and directory navigation close
   await nextTick()
   const pending = state.loadSuggestions()
   state.closeSearch()
-  resolveRequest({ data: [{ id: 1 }], meta: { total: 1 } })
+  resolveRequest({ data: { creators: [{ id: 1 }] }, meta: { counts: { creators: 1 } } })
   await pending
   assert.equal(state.results.value.length, 0)
   route.query = { q: 'new term' }

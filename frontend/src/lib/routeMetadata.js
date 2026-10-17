@@ -11,12 +11,13 @@ export function routeMetadata(route, locale, t, authenticated = false) {
   if (account && !authenticated) {
     key = ({ register: 'seo.registerTitle', reset: 'seo.forgotPasswordTitle' })[route.query?.mode] || 'seo.loginTitle'
   }
-  const description = name === 'home' ? 'homeDescription'
+  const description = name === 'search' ? 'searchDescription' : name === 'home' ? 'homeDescription'
     : name?.startsWith('creator') || name === 'creators' ? 'creatorsDescription'
       : name === 'companies' || name === 'company-profile' ? 'companiesDescription'
         : name === 'campaigns' || name === 'campaign-detail' ? 'campaignsDescription'
           : ({ imprint: 'imprintDescription', 'privacy-policy': 'privacyDescription', 'cookie-policy': 'cookiesDescription', support: 'supportDescription' })[name]
             || (known ? 'privateDescription' : 'notFoundDescription')
+  const searchPage = name === 'search' || (['creators', 'companies', 'campaigns'].includes(name) && Boolean(route.query?.q?.trim?.()))
   const loadingProfile = ['creator-profile', 'company-profile', 'campaign-detail'].includes(name)
-  return { title: t(key), description: t(`seo.${description}`), noindex: privatePage || !known || loadingProfile, analyticsReady: !loadingProfile }
+  return { title: t(key), description: t(`seo.${description}`), noindex: privatePage || !known || loadingProfile || searchPage, robots: searchPage ? 'noindex, follow' : undefined, analyticsReady: !loadingProfile }
 }

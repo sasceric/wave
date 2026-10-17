@@ -42,6 +42,7 @@ const routeViews = {
   messages: () => import('./views/MessagesView.vue'),
   'verify-email': () => import('./views/VerifyEmailView.vue'),
   'reset-password': () => import('./views/ResetPasswordView.vue'),
+  search: () => import('./views/SearchView.vue'),
   creators: () => import('./views/CreatorsView.vue'),
   'creator-profile': () => import('./views/CreatorProfileView.vue'),
   companies: () => import('./views/CompaniesView.vue'),

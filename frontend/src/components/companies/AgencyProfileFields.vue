@@ -1,7 +1,7 @@
 <script setup>
 import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { Briefcase, Pencil, Plus, Trash2 } from '@lucide/vue'
+import { Briefcase, ListChecks, Pencil, Trash2 } from '@lucide/vue'
 import AccountProfileCard from '../account/AccountProfileCard.vue'
 import ProfileCollectionCard from '../account/ProfileCollectionCard.vue'
 import AgencyServiceCard from './AgencyServiceCard.vue'
@@ -51,17 +51,25 @@ defineExpose({ revealInvalidService })
       <div class="agency-service-list">
         <AgencyServiceCard v-for="(service, index) in profile.services" :key="service.id" :service="service">
           <template #actions><div class="agency-service-editor__actions">
-            <button class="button button--outline" type="button" :aria-expanded="editing && selectedId === service.id" @click="editService(service.id)"><Pencil :size="15" aria-hidden="true" />{{ t('account.edit') }}</button>
+            <button class="button button--outline" type="button" :aria-label="`${t('account.edit')}: ${service.title || t('agency.serviceTitle')}`" :aria-expanded="editing && selectedId === service.id" @click="editService(service.id)"><Pencil :size="17" aria-hidden="true" /><span>{{ t('account.edit') }}</span></button>
             <button v-if="editing" class="profile-editor__remove" type="button" :aria-label="`${t('account.remove')}: ${service.title || t('agency.serviceTitle')}`" @click="profile.services.splice(index, 1)"><Trash2 :size="16" aria-hidden="true" /><span>{{ t('account.remove') }}</span></button>
           </div></template>
           <template v-if="editing && selectedId === service.id" #default>
             <div class="agency-service-editor">
               <label class="form-field"><span>{{ t('agency.serviceTitle') }}</span><input v-model.trim="service.title" required minlength="1" maxlength="120" /></label>
               <label class="form-field"><span>{{ t('agency.serviceDescription') }}</span><textarea v-model.trim="service.description" maxlength="800" rows="3"></textarea></label>
-              <fieldset class="form-field"><legend>{{ t('agency.serviceIncludes') }}</legend>
+              <ProfileCollectionCard
+                :title="t('agency.serviceIncludes')"
+                :icon="ListChecks"
+                :empty="!service.deliverables.length"
+                :empty-message="t('agency.noDeliverables')"
+                editing
+                :add-label="t('agency.addDeliverable')"
+                :add-disabled="service.deliverables.length >= 10"
+                @add="service.deliverables.push('')"
+              >
                 <label v-for="(_, itemIndex) in service.deliverables" :key="itemIndex" class="agency-service-editor__deliverable"><span class="sr-only">{{ t('agency.deliverableNumber', { number: itemIndex + 1 }) }}</span><input v-model.trim="service.deliverables[itemIndex]" required maxlength="180" /><button class="profile-editor__remove" type="button" :aria-label="t('account.remove')" @click="service.deliverables.splice(itemIndex, 1)"><Trash2 :size="16" aria-hidden="true" /></button></label>
-                <button class="profile-editor__add" type="button" :disabled="service.deliverables.length >= 10" @click="service.deliverables.push('')"><Plus :size="15" aria-hidden="true" />{{ t('agency.addDeliverable') }}</button>
-              </fieldset>
+              </ProfileCollectionCard>
               <MultiSelect v-model="service.platforms" :options="platforms" :label="t('agency.servicePlatforms')" :placeholder="t('agency.servicePlatforms')" :search-placeholder="t('agency.servicePlatforms')" :no-results-label="t('account.notProvided')" :remove-label="t('account.remove')" />
               <SingleSelect v-model="service.engagement" :options="engagements" :label="t('agency.engagement')" />
             </div>

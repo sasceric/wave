@@ -7,6 +7,8 @@
     "description": "Der Ort, an dem Creator und Marken die passenden Partner finden."
   },
   "seo": {
+    "searchTitle": "Suche | Wave",
+    "searchDescription": "Suche nach Creatorn, Kampagnen und Unternehmen.",
     "homeTitle": "Wave — Kooperationen zwischen Creatorn und Marken",
     "homeDescription": "Der Ort, an dem Creator und Marken die passenden Partner finden.",
     "creatorsTitle": "Influencer und UGC-Creator entdecken | Wave",
@@ -810,11 +812,12 @@
     "emailSubject": "Frage zu einem Wave-Briefing"
   },
   "notFound": {
-    "eyebrow": "Ein wenig vom Weg abgekommen",
-    "headlineLead": "Hier gibt es",
-    "headlineEmphasis": "gerade nichts.",
-    "description": "Diese Seite wurde möglicherweise verschoben. Lass uns einen guten Ausgangspunkt finden.",
-    "backHome": "Zurück zu Wave"
+    "eyebrow": "404 · Seite nicht gefunden",
+    "headlineLead": "Was suchst du?",
+    "headlineEmphasis": "Hier ist nichts.",
+    "description": "Diese Seite scheint nicht zu existieren oder ist vielleicht an einen schöneren Ort umgezogen. Lass uns dorthin zurückkehren, wo interessante Inhalte auf dich warten.",
+    "backHome": "Zur Startseite",
+    "browseCreators": "Creator entdecken"
   },
   "auth": {
     "signInTitle": "Willkommen zurück.",
@@ -1738,7 +1741,22 @@
     "empty": "Keine Ergebnisse für diese Suche.",
     "error": "Ergebnisse sind derzeit nicht verfügbar.",
     "retry": "Erneut versuchen",
-    "seeAll": "Alle Ergebnisse für „{query}“ ansehen"
+    "seeAll": "Alle Ergebnisse für „{query}“ ansehen",
+    "pageTitle": "Suche",
+    "all": "Alle",
+    "resultsFor": "Ergebnisse für „{query}“",
+    "resultCount": "Gefundene Ergebnisse: {count}",
+    "startHint": "Gib oben einen Namen, ein Thema oder einen Ort ein.",
+    "emptyHint": "Versuche einen anderen Namen, ein breiteres Thema oder eine andere Stadt.",
+    "home": "Startseite",
+    "breadcrumb": "Seitennavigation",
+    "open_creators": "Profil ansehen",
+    "open_campaigns": "Kampagne ansehen",
+    "open_companies": "Unternehmen ansehen",
+    "startTitle": "Gib einen Suchbegriff ein.",
+    "startDescription": "Finde Creator, Kampagnen oder Unternehmen nach Name, Thema oder Ort.",
+    "browseCampaigns": "Kampagnen entdecken",
+    "description": "Suche nach Creatorn, Kampagnen und Unternehmen."
   },
   "adminQr": {
     "title": "QR-Codes",
@@ -2754,6 +2772,7 @@
     "offeringTitle": "Unser Angebot",
     "campaignsTitle": "Kampagnen von {company}",
     "emptyCampaigns": "Diese Agentur hat derzeit keine offenen Kampagnen.",
-    "noServices": "Füge Leistungen hinzu, die deine Agentur Kunden anbietet."
+    "noServices": "Füge Leistungen hinzu, die deine Agentur Kunden anbietet.",
+    "noDeliverables": "Füge die konkreten Leistungen hinzu, die der Kunde im Rahmen dieses Angebots erhält."
   }
 }

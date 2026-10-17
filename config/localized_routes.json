@@ -50,7 +50,8 @@
     "admin-reports": "admin/prijave-sadrzaja",
     "account-blocks": "racun/blokirani-racuni",
     "account-reviews": "racun/recenzije",
-    "account-dashboard": "racun/pregled"
+    "account-dashboard": "racun/pregled",
+    "search": "pretraga"
   },
   "hr": {
     "home": "",
@@ -103,7 +104,8 @@
     "admin-reports": "admin/prijave-sadrzaja",
     "account-blocks": "racun/blokirani-racuni",
     "account-reviews": "racun/recenzije",
-    "account-dashboard": "racun/pregled"
+    "account-dashboard": "racun/pregled",
+    "search": "pretraga"
   },
   "sr": {
     "home": "",
@@ -156,7 +158,8 @@
     "admin-reports": "admin/prijave-sadrzaja",
     "account-blocks": "nalog/blokirani-nalozi",
     "account-reviews": "nalog/recenzije",
-    "account-dashboard": "nalog/pregled"
+    "account-dashboard": "nalog/pregled",
+    "search": "pretraga"
   },
   "cnr": {
     "home": "",
@@ -209,7 +212,8 @@
     "admin-reports": "admin/prijave-sadrzaja",
     "account-blocks": "nalog/blokirani-nalozi",
     "account-reviews": "nalog/recenzije",
-    "account-dashboard": "nalog/pregled"
+    "account-dashboard": "nalog/pregled",
+    "search": "pretraga"
   },
   "sl": {
     "home": "",
@@ -262,7 +266,8 @@
     "admin-reports": "admin/prijave-vsebine",
     "account-blocks": "racun/blokirani-racuni",
     "account-reviews": "racun/ocene",
-    "account-dashboard": "racun/pregled"
+    "account-dashboard": "racun/pregled",
+    "search": "iskanje"
   },
   "en": {
     "home": "",
@@ -315,7 +320,8 @@
     "admin-reports": "admin/reports",
     "account-blocks": "account/blocked-accounts",
     "account-reviews": "account/reviews",
-    "account-dashboard": "account/overview"
+    "account-dashboard": "account/overview",
+    "search": "search"
   },
   "de": {
     "home": "",
@@ -368,6 +374,7 @@
     "admin-reports": "admin/meldungen",
     "account-blocks": "konto/blockierte-konten",
     "account-reviews": "konto/bewertungen",
-    "account-dashboard": "konto/uebersicht"
+    "account-dashboard": "konto/uebersicht",
+    "search": "suche"
   }
 }

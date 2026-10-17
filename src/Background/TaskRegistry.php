@@ -18,6 +18,7 @@ final class TaskRegistry
         'CachePruneTask' => [86400, null],
         'MediaMaintenanceTask' => [86400, null],
         'IndexReconcileTask' => [86400, null],
+        'SearchReconcileTask' => [86400, null],
     ];
 
     public function __construct(private readonly Connection $connection, private readonly JobDispatcher $jobs, private readonly LoggerInterface $logger)

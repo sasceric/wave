@@ -1,0 +1,27 @@
+[Unit]
+Description=Wave Meilisearch
+After=network.target
+
+[Service]
+Type=simple
+User=wave-meilisearch
+Group=wave-meilisearch
+EnvironmentFile=/etc/wave/meilisearch.env
+ExecStart=/usr/local/bin/wave-meilisearch
+WorkingDirectory=/var/lib/wave-meilisearch
+Restart=on-failure
+RestartSec=5
+StateDirectory=wave-meilisearch
+StateDirectoryMode=0750
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/wave-meilisearch
+UMask=0077
+LimitNOFILE=65536
+MemoryHigh=2G
+MemoryMax=3G
+
+[Install]
+WantedBy=multi-user.target
