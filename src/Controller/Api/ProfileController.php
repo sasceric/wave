@@ -282,7 +282,8 @@ final class ProfileController
             $portfolio = array_key_exists('portfolio', $data) ? $this->portfolio($data['portfolio'], $candidate, $user, $entityManager) : null;
             $packages = array_key_exists('packages', $data) ? $this->packages($data['packages']) : $candidate->getPackages();
             $faqs = array_key_exists('faqs', $data) ? $this->faqs($data['faqs']) : $candidate->getFaqs();
-            $services = array_key_exists('services', $data) ? $this->stringList($data['services'], 10, 40) : $candidate->getTags();
+            try { $services = array_key_exists('services', $data) ? \App\Account\AgencyServices::parse($data['services'], \App\Account\AgencyServices::saved($company)) : \App\Account\AgencyServices::saved($company); }
+            catch (\InvalidArgumentException) { $services = null; }
             try { $presentation = array_key_exists('presentation', $data) ? CreatorPresentation::settings($data['presentation']) : $candidate->getPresentation(); }
             catch (\InvalidArgumentException) { $presentation = null; }
             if ((array_key_exists('portfolio', $data) && $portfolio === null) || $packages === null || $faqs === null || $services === null || $presentation === null) {
@@ -293,6 +294,7 @@ final class ProfileController
         $previousMediaIds = [$company->getLogoMedia()?->getId(), $company->getCoverMedia()?->getId()];
         $company->updateProfile($name, $industry, $logoUrl, $about);
         $company->setCompanyType($companyType);
+        if ($agencyStudio !== null) $company->setServices($agencyStudio['services']);
         $company->setIndustries($industries);
         $company->setCoverMedia($coverMedia);
         $company->setLogoMedia($logoMedia);
@@ -305,7 +307,7 @@ final class ProfileController
                 $provider = \App\Account\AgencyProfiles::ensure($user, $manager);
                 $portfolio = $agencyStudio['portfolio'];
                 foreach ($provider->getPortfolioMedia() as $entry) $previousMediaIds[] = $entry->getMedia()->getId();
-                $provider->updateProfile($provider->getDisplayName(), $provider->getCategory(), $user->getCity() ?? '', $provider->getBio(), [], $agencyStudio['services'], $provider->getAvatarUrl(), '', $portfolio['items'] ?? $provider->getPortfolio(), $agencyStudio['packages'], $provider->getCategories(), $agencyStudio['faqs']);
+                $provider->updateProfile($provider->getDisplayName(), $provider->getCategory(), $user->getCity() ?? '', $provider->getBio(), [], [], $provider->getAvatarUrl(), '', $portfolio['items'] ?? $provider->getPortfolio(), $agencyStudio['packages'], $provider->getCategories(), $agencyStudio['faqs']);
                 $provider->setPresentation($agencyStudio['presentation']);
                 if ($portfolio !== null) {
                     $provider->clearPortfolioMedia();

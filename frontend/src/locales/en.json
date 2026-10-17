@@ -2735,6 +2735,24 @@
     "scope": "Services and deliverables",
     "timeline": "Proposed timeline",
     "team": "Team — optional",
-    "proposal": "Agency proposal"
+    "proposal": "Agency proposal",
+    "structuredServicesHint": "Describe what your agency does and what the client receives. Define prices and delivery times in packages.",
+    "addService": "Add service",
+    "serviceTitle": "Service name",
+    "serviceDescription": "Short description",
+    "serviceIncludes": "What is included",
+    "deliverableNumber": "Item {number}",
+    "addDeliverable": "Add item",
+    "servicePlatforms": "Platforms — optional",
+    "engagement": "Collaboration type",
+    "engagement_project": "Project collaboration",
+    "engagement_monthly": "Monthly collaboration",
+    "engagement_both": "Project or monthly collaboration",
+    "chooseOffering": "Service or package — optional",
+    "chooseOfferingHint": "Selecting an offering fills a draft you can customize before sending. Package prices are copied only when currencies match.",
+    "customProposal": "Write a custom proposal",
+    "offeringTitle": "Our offering",
+    "campaignsTitle": "Campaigns by {company}",
+    "emptyCampaigns": "This agency currently has no open campaigns."
   }
 }

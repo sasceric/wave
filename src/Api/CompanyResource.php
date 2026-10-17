@@ -51,7 +51,7 @@ final class CompanyResource
             $studio = $provider?->isAgencyProfile() ? CreatorResource::fromEntity($provider, $locale, public: $public) : [];
             $resource += [
                 'providerId' => $provider?->getId(),
-                'services' => $studio['tags'] ?? [], 'portfolio' => $studio['portfolio'] ?? [],
+                'services' => \App\Account\AgencyServices::saved($company), 'portfolio' => $studio['portfolio'] ?? [],
                 'packages' => $studio['packages'] ?? [], 'faqs' => $studio['faqs'] ?? [],
                 'presentation' => $studio['presentation'] ?? [],
             ];

@@ -42,7 +42,7 @@ final class AgencyWorkflowTest extends WebTestCase
         $profile = $this->payload()['data'];
         self::assertSame('company', $profile['accountType']);
         self::assertTrue($profile['canOfferServices']);
-        self::assertSame(['Campaign strategy', 'Content production'], $profile['profile']['services']);
+        self::assertSame(['Campaign strategy', 'Content production'], array_column($profile['profile']['services'], 'title'));
         self::assertCount(1, $profile['profile']['portfolio']);
         $this->request('GET', '/api/me/campaigns');
         self::assertResponseIsSuccessful();

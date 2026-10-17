@@ -2736,6 +2736,24 @@
     "scope": "Storitve in izvedba",
     "timeline": "Predlagani rok",
     "team": "Ekipa — neobvezno",
-    "proposal": "Ponudba agencije"
+    "proposal": "Ponudba agencije",
+    "structuredServicesHint": "Opiši delo svoje agencije in kaj stranka prejme. Cene in roke določi v paketih.",
+    "addService": "Dodaj storitev",
+    "serviceTitle": "Naziv storitve",
+    "serviceDescription": "Kratek opis",
+    "serviceIncludes": "Kaj je vključeno",
+    "deliverableNumber": "Postavka {number}",
+    "addDeliverable": "Dodaj postavko",
+    "servicePlatforms": "Platforme — neobvezno",
+    "engagement": "Način sodelovanja",
+    "engagement_project": "Projektno sodelovanje",
+    "engagement_monthly": "Mesečno sodelovanje",
+    "engagement_both": "Projektno ali mesečno sodelovanje",
+    "chooseOffering": "Storitev ali paket — neobvezno",
+    "chooseOfferingHint": "Izbira izpolni osnutek ponudbe, ki ga lahko pred pošiljanjem prilagodiš. Cena paketa se prenese le, če se valuta ujema.",
+    "customProposal": "Napiši prilagojeno ponudbo",
+    "offeringTitle": "Naša ponudba",
+    "campaignsTitle": "Kampanje agencije {company}",
+    "emptyCampaigns": "Ta agencija trenutno nima odprtih kampanj."
   }
 }

@@ -1,5 +1,6 @@
 <script setup>
 import AgencyContactActions from '../components/companies/AgencyContactActions.vue'
+import ProfileTabs from '../components/shared/ProfileTabs.vue'
 import AgencyProfileSections from '../components/companies/AgencyProfileSections.vue'
 import PresentationDemoBadge from '../components/shared/PresentationDemoBadge.vue'
 import MarketplaceSafetyActions from '../components/shared/MarketplaceSafetyActions.vue'
@@ -26,7 +27,7 @@ const route = useRoute()
 const company = ref(null)
 const campaigns = ref([])
 const error = ref('')
-const agencyTab = ref('about')
+const activeSection = ref('company-about')
 const reviewRole = ref('provider')
 const contact = ref(null)
 const { t, locale } = useI18n()
@@ -52,6 +53,17 @@ const industries = computed(() => company.value?.industryLabels?.length
 const coverUrl = computed(() => company.value?.coverUrl || '/images/company-cover.webp')
 const socialLinks = computed(() => (company.value?.socialLinks || []).filter((link) => link.platform && link.url))
 
+const sectionTabs = computed(() => [
+  { key: 'company-about', label: t('agency.about') },
+  { key: 'company-services', label: t('agency.services') },
+  ...(company.value?.portfolio?.length ? [{ key: 'company-works', label: t('studio.tabWorks') }] : []),
+  { key: 'company-packages', label: t('studio.tabPackages') },
+  ...(company.value?.faqs?.length ? [{ key: 'company-faqs', label: t('studio.tabFaq') }] : []),
+  { key: 'company-reviews', label: t('studio.tabReviews') },
+  { key: 'company-campaigns', label: t('app.campaigns') },
+])
+const reviewTabs = computed(() => ['provider', 'client'].map(key => ({ key, label: t(key === 'provider' ? 'agency.asProvider' : 'agency.asClient') })))
+
 async function loadCompany() {
   const generation = ++profileGeneration
   company.value = null
@@ -65,7 +77,7 @@ async function loadCompany() {
     ])
     if (generation !== profileGeneration) return
     company.value = companyResponse.data
-    agencyTab.value = 'about'
+    activeSection.value = 'company-about'
     campaigns.value = campaignResponse.data
   } catch (cause) {
     if (generation !== profileGeneration) return
@@ -146,10 +158,8 @@ onBeforeUnmount(() => { ++profileGeneration })
     </section>
 
     <main class="page-width company-profile__body">
-      <nav v-if="company.companyType === 'agency'" class="agency-profile-tabs" :aria-label="t('agency.services')">
-        <button v-for="[key, label] in [['about', 'agency.about'], ['portfolio', 'studio.tabWorks'], ['packages', 'studio.tabPackages'], ['campaigns', 'app.campaigns'], ['reviews', 'reviews.title']]" :key="key" class="button" :class="agencyTab === key ? 'button--dark' : 'button--outline'" type="button" :aria-pressed="agencyTab === key" @click="agencyTab = key">{{ t(label) }}</button>
-      </nav>
-      <div v-show="company.companyType !== 'agency' || agencyTab === 'about'" class="company-profile__overview-grid">
+      <ProfileTabs v-if="company.companyType === 'agency'" v-model="activeSection" :items="sectionTabs" :label="t('studio.profileSections')" sections />
+      <div id="company-about" class="company-profile__overview-grid">
         <article class="company-profile__card company-profile__about-card">
           <p class="eyebrow">{{ t('companyProfile.aboutEyebrow') }}</p>
           <h2>{{ t('companyProfile.aboutTitle', { company: company.name }) }}</h2>
@@ -176,21 +186,21 @@ onBeforeUnmount(() => { ++profileGeneration })
         </article>
       </div>
 
-      <AgencyProfileSections v-if="company.companyType === 'agency'" :company="company" :tab="agencyTab" @request="contact?.openRequest($event)" />
+      <AgencyProfileSections v-if="company.companyType === 'agency'" :company="company" @request="contact?.openRequest($event)" />
       <MarketplaceSafetyActions kind="company" :slug="company.slug" />
-      <div v-if="company.companyType === 'agency' && agencyTab === 'reviews'" class="agency-profile-tabs">
-        <button v-for="role in ['provider', 'client']" :key="role" class="button" :class="reviewRole === role ? 'button--dark' : 'button--outline'" type="button" :aria-pressed="reviewRole === role" @click="reviewRole = role">{{ t(role === 'provider' ? 'agency.asProvider' : 'agency.asClient') }}</button>
-      </div>
-      <ProfileReviews v-if="company.companyType !== 'agency' || agencyTab === 'reviews'" kind="companies" :slug="company.slug" :review-role="company.companyType === 'agency' ? reviewRole : ''" />
-      <section v-show="company.companyType !== 'agency' || agencyTab === 'campaigns'" class="company-profile__campaigns">
+      <section id="company-reviews">
+        <ProfileTabs v-if="company.companyType === 'agency'" v-model="reviewRole" :items="reviewTabs" :label="t('reviews.title')" id-prefix="agency-review" />
+        <ProfileReviews kind="companies" :slug="company.slug" :review-role="company.companyType === 'agency' ? reviewRole : ''" />
+      </section>
+      <section id="company-campaigns" class="company-profile__campaigns">
         <div class="section-heading">
-          <div><p class="eyebrow">{{ t('companyProfile.openCalls') }}</p><h2>{{ t('companyProfile.campaignsFrom', { company: company.name }) }}</h2></div>
+          <div><p class="eyebrow">{{ t('companyProfile.openCalls') }}</p><h2>{{ t(company.companyType === 'agency' ? 'agency.campaignsTitle' : 'companyProfile.campaignsFrom', { company: company.name }) }}</h2></div>
           <RouterLink class="text-link" to="/campaigns">{{ t('companyProfile.allBriefs') }} <span aria-hidden="true">↗</span></RouterLink>
         </div>
         <CardGrid v-if="campaigns.length" kind="campaign" layout="directory">
           <CampaignCard v-for="campaign in campaigns" :key="campaign.id" :campaign="campaign" :image-sizes="DIRECTORY_IMAGE_SIZES" />
         </CardGrid>
-        <StatusMessage v-else variant="empty">{{ t('companyProfile.empty') }}</StatusMessage>
+        <StatusMessage v-else variant="empty">{{ t(company.companyType === 'agency' ? 'agency.emptyCampaigns' : 'companyProfile.empty') }}</StatusMessage>
       </section>
     </main>
   </template>

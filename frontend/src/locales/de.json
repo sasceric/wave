@@ -2735,6 +2735,24 @@
     "scope": "Leistungen und Ergebnisse",
     "timeline": "Vorgeschlagener Zeitplan",
     "team": "Team — optional",
-    "proposal": "Agenturangebot"
+    "proposal": "Agenturangebot",
+    "structuredServicesHint": "Beschreibe, was deine Agentur leistet und was der Kunde erhält. Preise und Lieferzeiten legst du in Paketen fest.",
+    "addService": "Leistung hinzufügen",
+    "serviceTitle": "Name der Leistung",
+    "serviceDescription": "Kurzbeschreibung",
+    "serviceIncludes": "Enthaltene Leistungen",
+    "deliverableNumber": "Position {number}",
+    "addDeliverable": "Position hinzufügen",
+    "servicePlatforms": "Plattformen — optional",
+    "engagement": "Art der Zusammenarbeit",
+    "engagement_project": "Projektbezogene Zusammenarbeit",
+    "engagement_monthly": "Monatliche Zusammenarbeit",
+    "engagement_both": "Projektbezogene oder monatliche Zusammenarbeit",
+    "chooseOffering": "Leistung oder Paket — optional",
+    "chooseOfferingHint": "Die Auswahl erstellt einen Entwurf, den du vor dem Senden anpassen kannst. Paketpreise werden nur bei gleicher Währung übernommen.",
+    "customProposal": "Individuelles Angebot schreiben",
+    "offeringTitle": "Unser Angebot",
+    "campaignsTitle": "Kampagnen von {company}",
+    "emptyCampaigns": "Diese Agentur hat derzeit keine offenen Kampagnen."
   }
 }

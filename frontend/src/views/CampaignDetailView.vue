@@ -4,6 +4,8 @@ import { rememberRegistrationIntent } from '../lib/registrationIntent'
 import PresentationDemoBadge from '../components/shared/PresentationDemoBadge.vue'
 import MarketplaceSafetyActions from '../components/shared/MarketplaceSafetyActions.vue'
 import CreditActionNotice from '../components/account/CreditActionNotice.vue'
+import SingleSelect from '../components/shared/SingleSelect.vue'
+import { proposalFromOffering } from '../lib/agencyServices'
 import { refreshCredits } from '../composables/useCredits'
 import CampaignHiringProgress from '../components/campaigns/CampaignHiringProgress.vue'
 import CampaignApplicationRange from '../components/campaigns/CampaignApplicationRange.vue'
@@ -30,6 +32,16 @@ const canApply = computed(() => user.value?.accountType === 'creator' || user.va
 const ownCampaign = computed(() => campaign.value?.company?.ownerId === user.value?.id)
 const applicationMessage = ref('')
 const agencyProposal = ref({ amount: null, scope: '', timeline: '', team: '' })
+const selectedOffering = ref('')
+const offerings = computed(() => [
+  ...(user.value?.profile?.services || []).map(item => ({ key: `service:${item.id}`, label: `${t('agency.services')} · ${item.title}`, item })),
+  ...(user.value?.profile?.packages || []).map(item => ({ key: `package:${item.id}`, label: `${t('studio.tabPackages')} · ${item.title}`, item })),
+])
+const offeringOptions = computed(() => [{ value: '', label: t('agency.customProposal') }, ...offerings.value.map(row => ({ value: row.key, label: row.label }))])
+watch(selectedOffering, value => {
+  const offering = offerings.value.find(row => row.key === value)
+  if (offering && campaign.value) agencyProposal.value = { ...agencyProposal.value, ...proposalFromOffering(offering.item, campaign.value.currency, t) }
+})
 const applicationSent = ref(false)
 const applicationFormOpen = ref(false)
 const alreadyApplied = ref(false)
@@ -52,6 +64,8 @@ async function loadCampaign() {
   invitation.value = null
   engaged.value = false
   collaborationCancelled.value = false
+  selectedOffering.value = ''
+  agencyProposal.value = { amount: null, scope: '', timeline: '', team: '' }
   try {
     const [response, session] = await Promise.all([
       apiGet(`/campaigns/${encodeURIComponent(slug)}`),
@@ -106,7 +120,8 @@ async function applyToCampaign() {
     refreshCredits().catch(() => {})
     applicationSent.value = true
     applicationMessage.value = ''
-  agencyProposal.value = { amount: null, scope: '', timeline: '', team: '' }
+    agencyProposal.value = { amount: null, scope: '', timeline: '', team: '' }
+    selectedOffering.value = ''
   } catch (cause) {
     applyError.value = cause.message
   } finally {
@@ -261,6 +276,8 @@ onMounted(loadCampaign)
                 <CreditActionNotice action="application" />
                 <fieldset v-if="user?.profile?.companyType === 'agency'" class="agency-proposal-fields">
                   <legend>{{ t('agency.proposal') }}</legend>
+                  <SingleSelect v-if="offerings.length" v-model="selectedOffering" :options="offeringOptions" :label="t('agency.chooseOffering')" />
+                  <p v-if="offerings.length" class="creator-studio__hint">{{ t('agency.chooseOfferingHint') }}</p>
                   <label class="form-field"><span>{{ t('agency.amount') }} ({{ campaign.currency }})</span><input v-model.number="agencyProposal.amount" type="number" min="1" max="10000000" /></label>
                   <label class="form-field"><span>{{ t('agency.scope') }}</span><textarea v-model.trim="agencyProposal.scope" maxlength="2000"></textarea></label>
                   <label class="form-field"><span>{{ t('agency.timeline') }}</span><input v-model.trim="agencyProposal.timeline" maxlength="240" /></label>

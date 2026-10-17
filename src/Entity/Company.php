@@ -40,6 +40,12 @@ class Company
     #[ORM\Column(length: 20, options: ['default' => 'brand'])]
     private string $companyType = 'brand';
 
+    #[ORM\Column(type: 'json', options: ['default' => '[]'])]
+    private array $services = [];
+
+    public function getServices(): array { return $this->services; }
+    public function setServices(array $services): void { $this->services = $services; }
+
     #[ORM\Column(type: 'text', nullable: true)]
     private ?string $about = null;
 
@@ -241,6 +247,7 @@ class Company
         $this->slug = 'deleted-company-'.bin2hex(random_bytes(12));
         $this->logoMedia = $this->coverMedia = null;
         $this->socialLinks = [];
+        $this->services = [];
         $this->industrySelections->clear();
         $this->verified = $this->featured = false;
     }

@@ -1,5 +1,7 @@
 <script setup>
 import { ChevronDown } from '@lucide/vue'
+import { useId } from 'vue'
+const titleId = `${useId()}-faq-title`
 
 defineProps({
   eyebrow: { type: String, required: true },
@@ -10,10 +12,10 @@ defineProps({
 </script>
 
 <template>
-  <section class="faq-section" aria-labelledby="faq-title">
+  <section class="faq-section" :aria-labelledby="titleId">
     <div class="faq-section__intro">
       <p class="eyebrow">{{ eyebrow }}</p>
-      <h2 id="faq-title"><slot name="title">{{ title }}</slot></h2>
+      <h2 :id="titleId"><slot name="title">{{ title }}</slot></h2>
       <p v-if="description">{{ description }}</p>
     </div>
     <div class="faq-section__list">

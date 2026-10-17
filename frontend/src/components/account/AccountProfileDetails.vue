@@ -1,6 +1,7 @@
 <script setup>
-import { BadgeCheck, Building2, CalendarDays, ExternalLink, FileText, Globe, Handshake, Images, MessageCircleQuestion, Pencil, Phone, Tags, UserRound, UsersRound } from '@lucide/vue'
+import { BadgeCheck, Building2, CalendarDays, ExternalLink, FileText, Globe, Handshake, Images, Pencil, Phone, Tags, UserRound, UsersRound } from '@lucide/vue'
 import AccountProfileCard from './AccountProfileCard.vue'
+import ProfileFaqFields from './ProfileFaqFields.vue'
 import CreatorProfileExtras from './CreatorProfileExtras.vue'
 import RichTextContent from '../shared/RichTextContent.vue'
 import { computed } from 'vue'
@@ -106,13 +107,7 @@ const aboutHtml = computed(() => sanitizeRichText(
       </AccountProfileCard>
     </template>
     <template v-else-if="tab === 'faqs'">
-      <AccountProfileCard :title="t('account.creatorFaqs')" :icon="MessageCircleQuestion" editable @edit="emit('edit', 'faqs')">
-        <p v-if="!profile.faqs.length" class="profile-editor__empty">{{ t('account.noCreatorFaqs') }}</p>
-        <article v-for="(faq, index) in profile.faqs" :key="index" class="profile-details__item">
-          <h3>{{ faq.question }}</h3>
-          <p class="profile-details__description">{{ faq.answer }}</p>
-        </article>
-      </AccountProfileCard>
+      <ProfileFaqFields :model-value="profile.faqs" @edit="emit('edit', 'faqs')" />
     </template>
   </section>
 </template>

@@ -173,6 +173,7 @@ final class AccountActivationTest extends WebTestCase
             if ($key === 'empty') continue; // No internal creator row yet.
             $studio = \App\Account\AgencyProfiles::ensure($agency, $this->em);
             $filled = in_array($key, ['all', 'demo', 'admin', 'moderator', 'deleted', 'brand'], true);
+            $agency->getCompany()->setServices(\App\Account\AgencyServices::parse($filled || $key === 'services' ? ['Campaign strategy'] : []));
             $studio->updateProfile($studio->getDisplayName(), 'Travel', 'Sarajevo', 'Bio', [],
                 $filled || $key === 'services' ? ['Campaign strategy'] : [],
                 avatarUrl: null, tagline: '',

@@ -14,10 +14,11 @@ import { useRoute } from 'vue-router'
 import RouterLink from '../components/shared/LocalizedLink.vue'
 import { useI18n } from 'vue-i18n'
 import { Camera, Check, ChevronRight, CirclePlay, FileText, MapPin, MessageCircle, Music2, Plus, Send, X } from '@lucide/vue'
-import FaqSection from '../components/shared/FaqSection.vue'
+import ProfileFaqs from '../components/shared/ProfileFaqs.vue'
+import ProfileTabs from '../components/shared/ProfileTabs.vue'
+import ProfilePackages from '../components/shared/ProfilePackages.vue'
 import CreatorWorks from '../components/creators/CreatorWorks.vue'
 import CreatorAudience from '../components/creators/CreatorAudience.vue'
-import CreatorPackageFacts from '../components/creators/CreatorPackageFacts.vue'
 import { languageOptions } from '../lib/creatorPresentation'
 import LoadingSkeleton from '../components/shared/LoadingSkeleton.vue'
 import StatusMessage from '../components/shared/StatusMessage.vue'
@@ -109,6 +110,14 @@ const profilePackages = computed(() => [
   },
 ])
 
+const sectionTabs = computed(() => [
+  ...(visiblePortfolio.value.length ? [{ key: 'creator-works', label: t('studio.tabWorks') }] : []),
+  ...(creator.value?.socialProfiles.length ? [{ key: 'creator-audience', label: t('studio.tabAudience') }] : []),
+  { key: 'creator-packages', label: t('studio.tabPackages') },
+  { key: 'creator-reviews', label: t('studio.tabReviews') },
+  ...(profileFaqs.value.length ? [{ key: 'creator-faqs', label: t('studio.tabFaq') }] : []),
+])
+
 const categoryLabel = computed(() => (
   creator.value?.categoryLabel
   || categories.value.find(({ value }) => value === creator.value?.category)?.label
@@ -181,26 +190,6 @@ async function openCampaignInvitation() {
   } finally {
     if (generation === profileGeneration) inviteLoading.value = false
   }
-}
-
-function scrollToSection(id, event) {
-  const target = document.getElementById(id)
-  if (!target) return
-  activeSection.value = id
-  const behavior = window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth'
-  target.scrollIntoView({ behavior, block: 'start' })
-  const link = event?.currentTarget
-  const tabs = link?.parentElement
-  if (tabs) tabs.scrollTo({ left: tabs.scrollLeft + link.getBoundingClientRect().left - tabs.getBoundingClientRect().left - 12, behavior })
-}
-
-function scrollTabs(event) {
-  const tabs = event.currentTarget
-  if (tabs.scrollWidth <= tabs.clientWidth || Math.abs(event.deltaX) >= Math.abs(event.deltaY)) return
-  const next = Math.max(0, Math.min(tabs.scrollWidth - tabs.clientWidth, tabs.scrollLeft + event.deltaY))
-  if (next === tabs.scrollLeft) return
-  event.preventDefault()
-  tabs.scrollLeft = next
 }
 
 async function sendCampaignInvitation() {
@@ -709,46 +698,7 @@ onBeforeUnmount(() => { ++profileGeneration; packageDescriptionObserver?.disconn
             </span>
           </div>
         </header>
-        <nav class="profile-section-nav" :aria-label="t('studio.profileSections')" @wheel="scrollTabs">
-          <a
-            v-if="visiblePortfolio.length"
-            href="#creator-works"
-            :aria-current="activeSection === 'creator-works' ? 'location' : undefined"
-            @click.prevent="scrollToSection('creator-works', $event)"
-          >
-            {{ t('studio.tabWorks') }}
-          </a>
-          <a
-            v-if="creator.socialProfiles.length"
-            href="#creator-audience"
-            :aria-current="activeSection === 'creator-audience' ? 'location' : undefined"
-            @click.prevent="scrollToSection('creator-audience', $event)"
-          >
-            {{ t('studio.tabAudience') }}
-          </a>
-          <a
-            href="#creator-packages"
-            :aria-current="activeSection === 'creator-packages' ? 'location' : undefined"
-            @click.prevent="scrollToSection('creator-packages', $event)"
-          >
-            {{ t('studio.tabPackages') }}
-          </a>
-          <a
-            href="#creator-reviews"
-            :aria-current="activeSection === 'creator-reviews' ? 'location' : undefined"
-            @click.prevent="scrollToSection('creator-reviews', $event)"
-          >
-            {{ t('studio.tabReviews') }}
-          </a>
-          <a
-            v-if="profileFaqs.length"
-            href="#creator-faqs"
-            :aria-current="activeSection === 'creator-faqs' ? 'location' : undefined"
-            @click.prevent="scrollToSection('creator-faqs', $event)"
-          >
-            {{ t('studio.tabFaq') }}
-          </a>
-        </nav>
+        <ProfileTabs v-model="activeSection" :items="sectionTabs" :label="t('studio.profileSections')" sections />
         <div class="profile-column">
           <div class="profile-main">
             <StatusMessage v-if="catalogError" variant="error">{{ catalogError }}</StatusMessage>
@@ -766,64 +716,7 @@ onBeforeUnmount(() => { ++profileGeneration; packageDescriptionObserver?.disconn
         </div>
         <div class="profile-sidebar">
           <RegistrationPrompt audience="company" variant="profile" :return-to="localizedPath('creator-profile', locale, { slug: creator.slug })" />
-          <section id="creator-packages" class="profile-content-section profile-packages">
-            <div class="profile-section-heading">
-              <div>
-                <p class="eyebrow">{{ t('creatorProfile.collaborateEyebrow') }}</p>
-                <h2>{{ t('studio.myServices') }}</h2>
-              </div>
-            </div>
-            <div class="profile-package-grid">
-              <article
-                v-for="packageItem in profilePackages"
-                :key="packageItem.profileKey"
-                class="profile-package"
-                :class="{ 'profile-package--negotiation': packageItem.isNegotiationOption }"
-              >
-                <div class="profile-package__details">
-                  <div class="profile-package__heading" :class="{ 'profile-package__heading--no-action': !canOpenRequest }">
-                    <h3>{{ packageItem.title }}</h3>
-                    <strong>
-                      {{ packageItem.priceMode === 'from' ? t('studio.priceFrom') : '' }}
-                      {{ packageItem.isNegotiationOption
-                        ? t('creatorProfile.priceByAgreement')
-                        : !packageItem.price
-                          ? t('creatorProfile.priceOnRequest')
-                        : formatMoney(packageItem.price, packageItem.currency) }}
-                    </strong>
-                  </div>
-                  <div class="profile-package__description-row">
-                    <p
-                      :ref="(element) => setPackageDescriptionElement(`profile:${packageItem.expansionId}`, element)"
-                      :class="{ 'is-expanded': expandedDescriptionIds.has(`profile:${packageItem.expansionId}`) }"
-                    >
-                      {{ packageItem.description }}
-                    </p>
-                    <button
-                      v-if="packageDescriptionOverflow.has(`profile:${packageItem.expansionId}`)"
-                      class="profile-package__toggle"
-                      type="button"
-                      :aria-expanded="expandedDescriptionIds.has(`profile:${packageItem.expansionId}`)"
-                      @click="togglePackageDescription(`profile:${packageItem.expansionId}`)"
-                    >
-                      {{ t(expandedDescriptionIds.has(`profile:${packageItem.expansionId}`) ? 'creatorProfile.showLess' : 'creatorProfile.showMore') }}
-                    </button>
-                  </div>
-                  <CreatorPackageFacts v-if="!packageItem.isNegotiationOption" :item="packageItem" />
-                  <button
-                    v-if="canOpenRequest"
-                    class="profile-package__request"
-                    type="button"
-                    :aria-label="`${t('creatorProfile.requestPackage')}: ${packageItem.title}`"
-                    @click="openRequestForm(packageItem.isNegotiationOption ? null : packageItem, packageItem.isNegotiationOption)"
-                  >
-                    <MessageCircle :size="16" aria-hidden="true" />
-                    {{ t('creatorProfile.requestPackage') }}
-                  </button>
-                </div>
-              </article>
-            </div>
-          </section>
+          <ProfilePackages id="creator-packages" :items="profilePackages" :can-request="canOpenRequest" @request="openRequestForm($event.isNegotiationOption ? null : $event, $event.isNegotiationOption)" />
           <section v-if="creator.bio || creator.tags.length" class="profile-about">
             <h2>{{ t('studio.aboutCreator') }}</h2>
             <RichTextContent class="profile-bio" :html="creator.bio" />
@@ -832,12 +725,10 @@ onBeforeUnmount(() => { ++profileGeneration; packageDescriptionObserver?.disconn
             </div>
           </section>
           <div class="profile-sidebar-details">
-            <FaqSection
+            <ProfileFaqs
               id="creator-faqs"
               v-if="profileFaqs.length"
               class="profile-content-section profile-faqs"
-              :eyebrow="t('creatorProfile.faqEyebrow')"
-              :title="t('creatorProfile.faqTitle')"
               :items="profileFaqs"
             />
           </div>

@@ -1,0 +1,20 @@
+.profile-packages {
+  min-width: 0; margin: 0; padding: 18px; background: #fffefa; border: 1px solid #dce2d9; border-radius: 14px;
+  > .profile-section-heading { margin: 0 0 12px; padding: 0; border: 0; h2 { margin: 0; font-size: 23px; color: var(--forest); } }
+}
+.profile-package-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 0; }
+.profile-package {
+  min-width: 0; padding: 16px 0; border: 0; border-bottom: 1px solid #dce2d9; border-radius: 0; background: transparent; box-shadow: none;
+  &:last-child { border-bottom: 0; padding-bottom: 0; }
+  &__details { min-width: 0; }
+  &__heading { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: start; gap: 8px;
+    h3 { min-width: 0; margin: 0; color: var(--ink); font: 600 13px/1.5 var(--font-body, 'DM Sans', sans-serif); overflow-wrap: anywhere; }
+    > strong { color: var(--ink); font-size: 16px; font-weight: 700; white-space: nowrap; }
+  }
+  &__description { margin: 8px 0 0; color: var(--muted); font-size: 12px; line-height: 1.7; white-space: pre-line; overflow-wrap: anywhere; }
+  &__request { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; min-height: 40px; margin-top: 14px; padding: 9px 12px; border: 1px solid #bfcbbf; border-radius: 9px; font: inherit; font-size: 12px; font-weight: 600; color: var(--forest); background: #fffefa; cursor: pointer;
+    &:hover { color: #fffefa; background: var(--forest); border-color: var(--forest); }
+    &:focus-visible { outline: 2px solid var(--forest); outline-offset: 3px; }
+  }
+}
+@media (max-width: 760px) { .profile-packages { padding: 16px; } .profile-package__request { min-height: 44px; } }

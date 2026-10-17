@@ -1,0 +1,42 @@
+.profile-faqs {
+  .faq-section__intro > p:last-child {
+    margin-top: 0;
+  }
+
+  & {
+    padding: 0;
+  }
+
+  .faq-section__intro {
+    max-width: none;
+    margin: 0 0 18px;
+    padding: 0;
+    border: 0;
+    text-align: left;
+  }
+
+  .faq-section__intro .eyebrow {
+    margin: 0 0 7px;
+  }
+
+  .faq-section__intro h2 {
+    margin: 0;
+    color: var(--ink);
+    font-size: 25px;
+    font-weight: 500;
+    letter-spacing: normal;
+    line-height: 1.2;
+  }
+
+  .faq-section__item summary {
+    min-height: 56px;
+    font-size: 12px;
+  }
+
+  .faq-section__answer {
+    font-size: 11px;
+  }
+}
+
+
+@media (max-width: 760px) { .profile-faqs .faq-section__intro h2 { font-size: 23px; } }

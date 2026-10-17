@@ -56,15 +56,16 @@ test('guests and creators can open the invitation explanation without company AP
 })
 
 test('profile section links scroll to the requested content and select its tab', async () => {
-  const { state, scrolls } = await profileView()
-  state.scrollToSection('creator-reviews')
-  assert.equal(state.activeSection.value, 'creator-reviews')
+  const { state, documentTarget } = await setupView('../src/components/shared/ProfileTabs.vue', {}, { sections: true, items: [], modelValue: '' })
+  const scrolls = []
+  documentTarget.getElementById = id => ({ scrollIntoView: options => scrolls.push({ id, options }) })
+  state.choose({ key: 'creator-reviews' })
   assert.equal(scrolls[0].id, 'creator-reviews')
   assert.equal(scrolls[0].options.block, 'start')
 })
 
 test('overflowing tabs scroll horizontally without trapping the page at the end', async () => {
-  const { state } = await profileView()
+  const { state } = await setupView('../src/components/shared/ProfileTabs.vue', {}, { sections: true, items: [] })
   const tabs = { scrollWidth: 600, clientWidth: 300, scrollLeft: 0 }
   let prevented = 0
   const event = { currentTarget: tabs, deltaX: 0, deltaY: 70, preventDefault: () => { prevented++ } }

@@ -6,6 +6,27 @@ portfolio, packages and FAQs to the existing company editor. Existing company
 fields, logos, covers, campaign publishing and creator hiring remain unchanged.
 There are no mandatory personal creator or audience fields for agencies.
 
+Services are structured company records (`company.services` JSON): stable ID,
+title, short description, included deliverables, optional platforms and project /
+monthly / both collaboration type. Prices and delivery times remain in packages.
+Migration `Version20261017210000` converts existing service labels into titled
+records without inventing descriptions, including studios currently set back to
+Brand. Old API clients may still submit service strings. Omitting services keeps
+saved records; sending an empty list removes them. Type changes preserve content;
+account anonymization clears it. No extra service images are stored.
+
+The account uses `ProfileTabs`, `ProfileFaqFields`, `AccountProfileCard` and the
+existing studio editor for both creator and agency accounts. Public profiles share
+`ProfileTabs` section navigation, `ProfilePackages`, `ProfileFaqs` and `CreatorWorks`,
+including mobile scrolling, keyboard controls, package actions and FAQ appearance.
+Agency public sections remain visible together, like creator sections; review
+role selection still separates provider/client feedback.
+
+Agencies may select a saved service/package when applying. It fills editable scope
+and delivery terms; package price is copied only for the campaign currency. The
+submitted proposal is a snapshot of those edited terms, so later profile changes
+do not rewrite existing applications.
+
 ## Collaboration model
 
 `AgencyProfiles` reuses the existing `Creator` studio/collaboration participant
@@ -63,7 +84,8 @@ queue as individual portfolios. Removing projects/gallery media deletes unused
 files and thumbnails. Changing company type preserves optional studio data;
 it does not destroy projects or ongoing collaboration history.
 
-Deploy normally, including Doctrine migration `Version20261017120000`. It adds
+Deploy normally, including Doctrine migrations `Version20261017120000` and
+`Version20261017210000`. The first adds
 `creator.agency_profile` and `campaign_application.proposal` with safe defaults;
 existing account, profile, application and media data is preserved. No seed or
 manual production data conversion is required.

@@ -24,6 +24,9 @@ import AccountProfileSummary from '../components/account/AccountProfileSummary.v
 import AccountProfileCard from '../components/account/AccountProfileCard.vue'
 import AccountProfileDetails from '../components/account/AccountProfileDetails.vue'
 import CreatorProfileExtras from '../components/account/CreatorProfileExtras.vue'
+import ProfileTabs from '../components/shared/ProfileTabs.vue'
+import ProfileFaqFields from '../components/account/ProfileFaqFields.vue'
+import { normalizeServices } from '../lib/agencyServices'
 import AgencyProfileFields from '../components/companies/AgencyProfileFields.vue'
 import CreatorStudioPanel from '../components/account/CreatorStudioPanel.vue'
 import { normalizePresentation, presentationPayload } from '../lib/creatorPresentation'
@@ -103,7 +106,16 @@ const profile = ref(null)
 const editingProfile = ref(false)
 const agency = computed(() => profile.value?.companyType === 'agency')
 const provider = computed(() => user.value?.accountType === 'creator' || user.value?.canOfferServices || user.value?.hasServiceHistory)
+const profileTabs = computed(() => [
+  { key: 'about', label: t(agency.value ? 'agency.about' : 'studio.tabAbout') },
+  ...(agency.value ? [{ key: 'services', label: t('agency.services'), count: profile.value?.services?.length || 0 }] : [{ key: 'social', label: t('studio.tabNetworks'), count: profile.value?.socialProfiles?.length || 0 }]),
+  { key: 'portfolio', label: t('studio.tabWorks'), count: `${profile.value?.portfolio?.length || 0}/4` },
+  { key: 'packages', label: t('studio.tabPackages'), count: profile.value?.packages?.length || 0 },
+  { key: 'faqs', label: t('studio.tabFaq'), count: profile.value?.faqs?.length || 0 },
+  ...(!agency.value ? [{ key: 'kit', label: t('studio.tabPresentation') }] : []),
+])
 const studioPanelTab = computed(() => user.value?.accountType === 'creator' ? STUDIO_TABS.includes(accountTab.value) : agency.value && ['portfolio', 'packages'].includes(accountTab.value))
+const agencyFields = ref(null)
 let profileBeforeEdit = null
 const profileImageField = ref(null)
 const companyCoverField = ref(null)
@@ -299,6 +311,7 @@ function incompleteProfileTab() {
   if (user.value.accountType !== 'creator' && !agency.value) {
     return ''
   }
+  if (agency.value && profile.value.services.some(item => !item.title.trim() || item.deliverables.some(value => !value.trim()))) return 'services'
   if (profile.value.socialProfiles.some((social) => (
     !social.platform.trim()
     || !social.handle.trim()
@@ -375,7 +388,7 @@ async function loadDashboard(authenticatedUser = null, { sectionOnly = false } =
         }
         normalizePresentation(profile.value)
         profile.value.faqs ||= []
-        profile.value.services ||= []
+        profile.value.services = normalizeServices(profile.value.services)
         profilePhoneCountry.value = parsePhoneNumberFromString(profile.value.phone)?.country
           || profile.value.countryCode
           || 'BA'
@@ -589,6 +602,10 @@ async function saveProfile() {
   const invalidTab = incompleteProfileTab()
   if (invalidTab) {
     selectAccountTab(invalidTab)
+    if (invalidTab === 'services') {
+      await nextTick()
+      agencyFields.value?.revealInvalidService()
+    }
     error.value = t('account.profileIncomplete')
     notice.value = ''
     return
@@ -690,34 +707,8 @@ function addCompanySocialLink() {
   }
 }
 
-function addCreatorFaq() {
-  if (profile.value.faqs.length < 10) {
-    profile.value.faqs.push({ question: '', answer: '' })
-  }
-}
 
-function handleProfileTabKeydown(event) {
-  const tabs = agency.value ? ['about', 'services', 'portfolio', 'packages', 'faqs'] : PROFILE_TABS.filter(tab => tab !== 'services')
-  const currentIndex = tabs.indexOf(accountTab.value)
-  let nextIndex = currentIndex
 
-  if (event.key === 'ArrowRight') {
-    nextIndex = (currentIndex + 1) % tabs.length
-  } else if (event.key === 'ArrowLeft') {
-    nextIndex = (currentIndex - 1 + tabs.length) % tabs.length
-  } else if (event.key === 'Home') {
-    nextIndex = 0
-  } else if (event.key === 'End') {
-    nextIndex = tabs.length - 1
-  } else {
-    return
-  }
-
-  event.preventDefault()
-  const nextTab = tabs[nextIndex]
-  selectAccountTab(nextTab)
-  document.getElementById(`account-tab-${nextTab}`)?.focus()
-}
 
 function setCampaignForm(campaign = null) {
   if (!campaign) {
@@ -1007,63 +998,12 @@ onMounted(loadDashboard)
         @submit.prevent="saveProfile"
         @wave-invalid="creatorStudio?.revealInvalidField($event.detail.field)"
       >
-        <nav
-          v-if="user.accountType === 'creator'"
-          class="profile-tabs"
-          role="tablist"
-          :aria-label="t('account.creatorProfile')"
-          @keydown="handleProfileTabKeydown"
-        >
-          <button
-            id="account-tab-about"
-            type="button"
-            role="tab"
-            :aria-selected="accountTab === 'about'"
-            :tabindex="accountTab === 'about' ? 0 : -1"
-            @click="selectAccountTab('about')"
-          >{{ t('studio.tabAbout') }}</button>
-          <button
-            id="account-tab-social"
-            type="button"
-            role="tab"
-            :aria-selected="accountTab === 'social'"
-            :tabindex="accountTab === 'social' ? 0 : -1"
-            @click="selectAccountTab('social')"
-          >{{ t('studio.tabNetworks') }} <span>{{ profile.socialProfiles.length }}</span></button>
-          <button
-            id="account-tab-portfolio"
-            type="button"
-            role="tab"
-            :aria-selected="accountTab === 'portfolio'"
-            :tabindex="accountTab === 'portfolio' ? 0 : -1"
-            @click="selectAccountTab('portfolio')"
-          >{{ t('studio.tabWorks') }} <span>{{ profile.portfolio.length }}/4</span></button>
-          <button
-            id="account-tab-packages"
-            type="button"
-            role="tab"
-            :aria-selected="accountTab === 'packages'"
-            :tabindex="accountTab === 'packages' ? 0 : -1"
-            @click="selectAccountTab('packages')"
-          >{{ t('studio.tabPackages') }} <span>{{ profile.packages.length }}</span></button>
-          <button
-            id="account-tab-faqs"
-            type="button"
-            role="tab"
-            :aria-selected="accountTab === 'faqs'"
-            :tabindex="accountTab === 'faqs' ? 0 : -1"
-            @click="selectAccountTab('faqs')"
-          >{{ t('studio.tabFaq') }} <span>{{ profile.faqs.length }}</span></button>
-          <button id="account-tab-kit" type="button" role="tab" :aria-selected="accountTab === 'kit'" :tabindex="accountTab === 'kit' ? 0 : -1" @click="selectAccountTab('kit')">{{ t('studio.tabPresentation') }}</button>
-        </nav>
-
-        <nav v-if="agency" class="profile-tabs" role="tablist" :aria-label="t('agency.services')" @keydown="handleProfileTabKeydown">
-          <button v-for="[key, label] in [['about', 'agency.about'], ['services', 'agency.services'], ['portfolio', 'studio.tabWorks'], ['packages', 'studio.tabPackages'], ['faqs', 'studio.tabFaq']]" :key="key" :id="`account-tab-${key}`" type="button" role="tab" :aria-selected="accountTab === key" :tabindex="accountTab === key ? 0 : -1" @click="selectAccountTab(key)">{{ t(label) }}</button>
-        </nav>
-        <AgencyProfileFields v-if="agency && ['services', 'faqs'].includes(accountTab)" v-model:profile="profile" :tab="accountTab" :editing="editingProfile" @edit="startProfileEdit" />
+        <ProfileTabs v-if="user.accountType === 'creator' || agency" :model-value="accountTab" :items="profileTabs" id-prefix="account" :label="t('studio.profileSections')" @update:model-value="selectAccountTab" />
+        <AgencyProfileFields v-if="agency && accountTab === 'services'" ref="agencyFields" v-model:profile="profile" :editing="editingProfile" @edit="startProfileEdit" />
+        <ProfileFaqFields v-if="accountTab === 'faqs' && (agency || user.accountType === 'creator')" v-model="profile.faqs" :editing="editingProfile" @edit="startProfileEdit" />
         <CreatorStudioPanel ref="creatorStudio" v-if="studioPanelTab" v-model:profile="profile" :tab="accountTab" :editing="editingProfile" @edit="startProfileEdit" />
         <AccountProfileDetails
-          v-else-if="!editingProfile && !(agency && ['services', 'faqs'].includes(accountTab))"
+          v-else-if="!editingProfile && !((agency && accountTab === 'services') || accountTab === 'faqs')"
           :profile="profile"
           :account-type="user.accountType"
           :tab="accountTab"
@@ -1071,7 +1011,7 @@ onMounted(loadDashboard)
           :categories="categories"
           @edit="startProfileEdit"
         />
-        <div v-if="editingProfile && !studioPanelTab && !(agency && ['services', 'faqs'].includes(accountTab))" class="profile-edit-layout">
+        <div v-if="editingProfile && !studioPanelTab && !((agency && accountTab === 'services') || accountTab === 'faqs')" class="profile-edit-layout">
         <template v-if="user.accountType === 'creator'">
           <section
             v-if="accountTab === 'about'"
@@ -1103,7 +1043,7 @@ onMounted(loadDashboard)
             <div class="form-grid profile-edit-basics">
               <label class="form-field form-field--wide">
                 <span>{{ t('auth.name') }}</span>
-                <input v-model.trim="profile.displayName" required minlength="2" maxlength="120" autocomplete="name" />
+                <input v-model.trim="profile.displayName" required minlength="1" maxlength="120" autocomplete="name" />
               </label>
               <MultiSelect
                 v-model="profile.creatorTypes"
@@ -1199,52 +1139,6 @@ onMounted(loadDashboard)
             </AccountProfileCard>
           </section>
 
-          <section
-            v-else-if="accountTab === 'faqs'"
-            id="account-panel-faqs"
-            class="profile-tab-panel"
-            role="tabpanel"
-            aria-labelledby="account-tab-faqs"
-          >
-            <div class="profile-editor__heading">
-              <div>
-                <h3>{{ t('account.creatorFaqs') }}</h3>
-                <small>{{ t('account.creatorFaqsHint') }}</small>
-              </div>
-              <button
-                class="profile-editor__add"
-                type="button"
-                :disabled="profile.faqs.length >= 10"
-                @click="addCreatorFaq"
-              >
-                <Plus :size="16" aria-hidden="true" />
-                {{ t('account.addFaq') }}
-              </button>
-            </div>
-            <div v-if="!profile.faqs.length" class="profile-editor__empty">{{ t('account.noCreatorFaqs') }}</div>
-            <article v-for="(faq, index) in profile.faqs" :key="index" class="creator-faq-editor">
-              <div class="portfolio-editor__top">
-                <strong>{{ faq.question || t('account.faqQuestion') }}</strong>
-                <button
-                  class="profile-editor__remove"
-                  type="button"
-                  :aria-label="`${t('account.remove')}: ${faq.question || t('account.faqQuestion')}`"
-                  @click="profile.faqs.splice(index, 1)"
-                >
-                  <Trash2 :size="15" aria-hidden="true" />
-                  <span>{{ t('account.remove') }}</span>
-                </button>
-              </div>
-              <label class="form-field">
-                <span>{{ t('account.faqQuestion') }}</span>
-                <input v-model.trim="faq.question" required minlength="3" maxlength="180" />
-              </label>
-              <label class="form-field">
-                <span>{{ t('account.faqAnswer') }}</span>
-                <textarea v-model.trim="faq.answer" required minlength="10" maxlength="1500"></textarea>
-              </label>
-            </article>
-          </section>
         </template>
         <section v-else class="profile-tab-panel">
           <div class="company-profile-images">
@@ -1473,7 +1367,7 @@ onMounted(loadDashboard)
                 :no-results-label="t('auth.noCountriesFound')"
                 required
               />
-              <label class="form-field"><span>{{ t('auth.city') }}</span><input v-model.trim="campaignForm.city" required minlength="2" maxlength="120" /></label>
+              <label class="form-field"><span>{{ t('auth.city') }}</span><input v-model.trim="campaignForm.city" required minlength="1" maxlength="120" /></label>
             </div>
             <MultiSelect
               v-model="campaignForm.channels"

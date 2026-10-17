@@ -3,6 +3,7 @@ import { test } from 'node:test'
 import { ref } from 'vue'
 import { mergeCampaignActivity } from '../src/lib/campaignActivity.js'
 import { accountLanding } from '../src/lib/accountAccess.js'
+import { normalizeServices } from '../src/lib/agencyServices.js'
 import { setupView } from './setupView.js'
 
 async function setupAccount({ saveError = null, accountType = 'company' } = {}) {
@@ -27,6 +28,7 @@ async function setupAccount({ saveError = null, accountType = 'company' } = {}) 
   const view = await setupView('../src/views/AccountView.vue', {
     '../composables/useMarketplaceCatalog': { useMarketplaceCatalog: () => ({ categories: ref([]), error: ref('') }) },
     '../composables/useCampaignBookmarks': { useCampaignBookmarks: () => ({ bookmarks: ref([]), loadCampaignBookmarks: async () => {} }) },
+    '../lib/agencyServices': { normalizeServices },
     '../lib/campaignActivity': { mergeCampaignActivity },
     '../lib/accountAccess': { accountLanding },
     '../routePaths': { localizedRouteName: (name, locale) => `${name}-${locale}`, localizedPath: name => `/racun/${name}` },

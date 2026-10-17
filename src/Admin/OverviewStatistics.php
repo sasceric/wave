@@ -78,8 +78,8 @@ final class OverviewStatistics
     {
         $postgres = $this->db->getDatabasePlatform() instanceof PostgreSQLPlatform;
         $present = [];
-        foreach (['services' => 'tags', 'works' => 'portfolio', 'packages' => 'packages'] as $key => $column) {
-            $length = $postgres ? "jsonb_array_length(c.$column::jsonb)" : "json_array_length(c.$column)";
+        foreach (['services' => 'p.services', 'works' => 'c.portfolio', 'packages' => 'c.packages'] as $key => $column) {
+            $length = $postgres ? "jsonb_array_length($column::jsonb)" : "json_array_length($column)";
             $present[$key] = "COALESCE($length, 0) > 0";
         }
         $counts = $this->db->fetchAssociative('SELECT COUNT(*) AS total,
