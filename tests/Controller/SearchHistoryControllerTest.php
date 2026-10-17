@@ -58,6 +58,9 @@ final class SearchHistoryControllerTest extends TestCase
         foreach ([
             ['type' => 'users', 'query' => 'test', 'source' => 'all'],
             ['type' => 'creators', 'query' => '', 'source' => 'all'],
+            ['type' => 'creators', 'query' => 'a', 'source' => 'all'],
+            ['type' => 'creators', 'query' => ' ab ', 'source' => 'all'],
+            ['type' => 'creators', 'query' => '😀😀', 'source' => 'all'],
             ['type' => 'creators', 'query' => str_repeat('a', 201), 'source' => 'all'],
             ['type' => 'creators', 'query' => "test\nforged entry", 'source' => 'all'],
             ['type' => 'creators', 'query' => 'test', 'source' => 'suggestion'],

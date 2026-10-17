@@ -6,6 +6,7 @@ use App\Api\ApiAccess;
 use App\Api\JsonPayload;
 use App\Localization\ApiMessages;
 use App\Localization\LocaleContext;
+use App\Search\PublicSearch;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\DependencyInjection\Attribute\Target;
@@ -38,7 +39,7 @@ final class SearchHistoryController
         $query = is_string($data['query'] ?? null) ? trim($data['query']) : '';
         $type = $data['type'] ?? null;
         $source = $data['source'] ?? null;
-        if ($query === '' || mb_strlen($query) > 200 || preg_match('/[\x00-\x1F\x7F]/u', $query)
+        if (mb_strlen($query) < PublicSearch::MIN_QUERY_LENGTH || mb_strlen($query) > 200 || preg_match('/[\x00-\x1F\x7F]/u', $query)
             || !in_array($type, ['creators', 'companies', 'campaigns'], true)
             || !in_array($source, ['submit', 'all'], true)) {
             return $this->response(['error' => ApiMessages::get('invalid_request', $locale)], 400);

@@ -20,7 +20,18 @@
       &[aria-selected='true'] { border-bottom-color: var(--forest); background: transparent; color: var(--forest); font-weight: 700; span { background: transparent; } }
     }
   }
-  &__grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; }
+  &__groups { display: grid; gap: 36px; }
+  &__group { min-width: 0; }
+  &__group-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 16px;
+    h2 { display: flex; align-items: center; gap: 10px; margin: 0; color: var(--forest); font: 400 28px/1.25 var(--serif); span { color: var(--muted-text); font: 500 13px/1.4 'DM Sans', sans-serif; } }
+    > a { display: inline-flex; align-items: center; gap: 9px; flex-shrink: 0; min-height: 44px; color: var(--forest); font-size: 12px; font-weight: 600; text-decoration: none; &:hover { text-decoration: underline; text-underline-offset: 4px; } &:focus-visible { outline: 2px solid var(--forest); outline-offset: 3px; } }
+  }
+  &__grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 20px; }
   &__empty {
     display: flex;
     flex-direction: column;
@@ -49,6 +60,8 @@
   @media (max-width: 1000px) { &__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
   @media (max-width: 760px) {
     padding-top: 24px;
+    &__groups { gap: 28px; }
+    &__group-heading { gap: 8px; margin-bottom: 12px; h2 { gap: 6px; font-size: 23px; span { font-size: 11px; } } > a { gap: 5px; font-size: 11px; } }
     &__empty { min-height: 420px; padding: 32px 0 48px; h2 { margin-top: 20px; } p { font-size: 14px; } }
     &__empty-art { width: 120px; height: 110px; }
     &__empty-actions { width: 100%; gap: 12px; margin-top: 26px; .button { min-width: min(220px, 100%); min-height: 46px; font-size: 12px; } }

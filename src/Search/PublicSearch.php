@@ -8,12 +8,14 @@ use Doctrine\DBAL\Connection;
 final class PublicSearch
 {
     public const TYPES = ['creators', 'campaigns', 'companies'];
+    public const MIN_QUERY_LENGTH = 3;
     public function __construct(private readonly Meilisearch $meili, private readonly Connection $db, private readonly BlockPolicy $blocks, private readonly DatabaseSearch $database) {}
 
     public function search(string $term, string $locale, string $type = 'all', int $page = 1, bool $suggest = false): array
     {
+        $term = trim($term);
         if (!in_array($type, ['all', ...self::TYPES], true) || $page < 1 || $page > 40_000_000 || mb_strlen($term) > 200) throw new \InvalidArgumentException('Invalid search request.');
-        if (trim($term) === '') return ['data' => $suggest ? array_fill_keys(self::TYPES, []) : [], 'meta' => ['counts' => array_fill_keys(self::TYPES, 0), 'total' => 0, 'page' => $page, 'pageSize' => $suggest ? 10 : 25]];
+        if (mb_strlen($term) < self::MIN_QUERY_LENGTH) return ['data' => $suggest ? array_fill_keys(self::TYPES, []) : [], 'meta' => ['counts' => array_fill_keys(self::TYPES, 0), 'total' => 0, 'page' => $page, 'pageSize' => $suggest ? 10 : 25]];
         if (!$this->meili->enabled) return $this->database->search($term, $locale, $type, $page, $suggest);
         // Security fences only. No SQL matching, COUNT, result hydration, or directory fallback.
         $pending = $this->db->fetchFirstColumn('SELECT id FROM search_index_change LIMIT 5001');

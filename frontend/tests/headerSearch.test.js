@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import { nextTick, reactive, ref } from 'vue'
 import { setupView } from './setupView.js'
+import * as searchQuery from '../src/lib/searchQuery.js'
 
 async function searchSetup(get = async () => ({ data: { creators: [], campaigns: [], companies: [] }, meta: { counts: { creators: 0, campaigns: 0, companies: 0 } } }), log = async () => ({ recorded: true })) {
   const calls = [], logs = [], navigations = []
@@ -15,6 +16,7 @@ async function searchSetup(get = async () => ({ data: { creators: [], campaigns:
       formatMoney: value => String(value),
     },
     '../../routePaths': { localizedRouteName: (name, language) => `${name}-${language}` },
+    '../../lib/searchQuery': searchQuery,
     'vue-router': { useRoute: () => route, useRouter: () => ({ push: async value => navigations.push(value) }) },
     'vue-i18n': { useI18n: () => ({ locale, t: key => key }) },
   })
@@ -37,6 +39,46 @@ test('suggestions use Meilisearch buckets, show exact totals and reuse results w
   assert.equal(calls.length, 1)
   assert.equal(state.results.value[0].id, 3)
   assert.equal(logs.length, 0)
+})
+
+test('short queries never fetch, navigate or log and count Unicode characters consistently', async () => {
+  const { state, calls, logs, navigations } = await searchSetup()
+  for (const term of ['', 'a', ' ab ', 'šđ', '😀😀']) {
+    state.query.value = term
+    await nextTick()
+    await state.loadSuggestions()
+    await state.handleSubmit()
+    assert.equal(state.canSearch.value, false)
+    assert.equal(state.loading.value, false)
+  }
+  assert.equal(calls.length, 0)
+  assert.equal(logs.length, 0)
+  assert.equal(navigations.length, 0)
+  assert.equal(searchQuery.isSearchableQuery('😀😀😀'), true)
+  state.query.value = ' UGC '
+  await nextTick()
+  await state.loadSuggestions()
+  assert.equal(calls.length, 1)
+  assert.equal(calls[0][0], '/search?q=UGC&mode=suggest')
+  await state.handleSubmit()
+  assert.equal(logs.length, 1)
+  assert.equal(navigations.length, 1)
+})
+
+test('shrinking a query below three characters ignores a pending result and clears counts', async () => {
+  let resolveRequest
+  const { state } = await searchSetup(() => new Promise(resolve => { resolveRequest = resolve }))
+  state.query.value = 'test'
+  await nextTick()
+  const pending = state.loadSuggestions()
+  state.query.value = 'te'
+  await nextTick()
+  resolveRequest({ data: { creators: [{ id: 1 }] }, meta: { counts: { creators: 1 } } })
+  await pending
+  assert.equal(state.results.value.length, 0)
+  assert.deepEqual({ ...state.counts.value }, {})
+  assert.equal(state.loading.value, false)
+  assert.equal(state.open.value, true)
 })
 
 test('submit followed by see all logs once and routes the selected category with localized query', async () => {

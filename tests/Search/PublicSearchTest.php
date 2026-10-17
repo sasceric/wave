@@ -12,6 +12,26 @@ use Symfony\Component\HttpClient\Response\MockResponse;
 
 final class PublicSearchTest extends TestCase
 {
+    public function testShortQueriesNeverReachEitherBackend(): void
+    {
+        foreach ([false, true] as $enabled) {
+            $db = $this->createMock(Connection::class);
+            $db->expects(self::never())->method('fetchFirstColumn');
+            $db->expects(self::never())->method('fetchAllAssociative');
+            $security = $this->createStub(Security::class);
+            $http = new MockHttpClient(function () { self::fail('Short queries must not contact Meilisearch.'); });
+            $blocks = new BlockPolicy($db, $security);
+            $documents = new SearchDocuments($this->createStub(\Doctrine\ORM\EntityManagerInterface::class), new \App\Localization\LocalizedRouteMap(dirname(__DIR__, 2)));
+            $search = new PublicSearch(new Meilisearch($http, $enabled, 'http://127.0.0.1:7700', '', '', 'wave_test'), $db, $blocks, new DatabaseSearch($db, $documents, $blocks));
+            foreach (['', 'a', ' ab ', 'šđ', '😀😀'] as $term) {
+                self::assertSame([], $search->search($term, 'bs')['data']);
+                $suggestions = $search->search($term, 'bs', suggest: true);
+                self::assertSame(array_fill_keys(PublicSearch::TYPES, []), $suggestions['data']);
+                self::assertSame(0, $suggestions['meta']['total']);
+            }
+        }
+    }
+
     public function testModalUsesExactTotalsAndOnlyTenHitsWithSafetyFilters(): void
     {
         $db = $this->createMock(Connection::class);
@@ -46,6 +66,7 @@ final class PublicSearchTest extends TestCase
         $http = new MockHttpClient(function ($method, $url, $options) {
             $queries = json_decode($options['body'], true)['queries'];
             self::assertCount(4, $queries);
+            self::assertSame('UGC', $queries[3]['q']);
             self::assertSame(0, $queries[0]['hitsPerPage']);
             self::assertSame(25, $queries[3]['hitsPerPage']);
             self::assertSame(2, $queries[3]['page']);
@@ -53,7 +74,7 @@ final class PublicSearchTest extends TestCase
             return new MockResponse(json_encode(['results' => [['hits' => [], 'totalHits' => 50], ['hits' => [], 'totalHits' => 12], ['hits' => [], 'totalHits' => 3], ['hits' => [['id' => 'second-page']], 'totalHits' => 50]]]));
         });
         $search = new PublicSearch(new Meilisearch($http, true, 'http://127.0.0.1:7700', '', '', 'wave_test'), $db, new BlockPolicy($db, $security), new DatabaseSearch($db, new SearchDocuments($this->createStub(\Doctrine\ORM\EntityManagerInterface::class), new \App\Localization\LocalizedRouteMap(dirname(__DIR__, 2))), new BlockPolicy($db, $security)));
-        $result = $search->search('test', 'bs', 'creators', 2);
+        $result = $search->search('UGC', 'bs', 'creators', 2);
         self::assertSame(50, $result['meta']['total']);
         self::assertSame(25, $result['meta']['pageSize']);
         self::assertSame(3, $result['meta']['counts']['companies']);

@@ -6,6 +6,7 @@ import { useI18n } from 'vue-i18n'
 import { currentUser } from '../../composables/useCurrentUser'
 import { apiGet, apiRequest, formatMoney } from '../../lib/api'
 import { localizedRouteName } from '../../routePaths'
+import { isSearchableQuery, SEARCH_MIN_LENGTH } from '../../lib/searchQuery'
 import CardImage from './CardImage.vue'
 import LocalizedLink from './LocalizedLink.vue'
 import SingleSelect from './SingleSelect.vue'
@@ -16,6 +17,7 @@ const { t, locale } = useI18n()
 const types = ['creators', 'campaigns', 'companies']
 const type = ref(types.includes(route.meta.routeName) ? route.meta.routeName : 'creators')
 const query = ref(typeof route.query.q === 'string' ? route.query.q : '')
+const canSearch = computed(() => isSearchableQuery(query.value))
 const expanded = ref(false)
 const mobile = ref(false)
 const open = ref(false)
@@ -78,20 +80,23 @@ function scheduleSearch() {
   requestId++
   results.value = []
   error.value = false
-  loading.value = Boolean(query.value.trim())
-  open.value = loading.value
+  open.value = Boolean(query.value.trim())
+  loading.value = canSearch.value
+  if (!canSearch.value) counts.value = {}
   nextTick(positionPanel)
-  if (open.value) timer = window.setTimeout(loadSuggestions, 250)
+  if (canSearch.value) timer = window.setTimeout(loadSuggestions, 250)
 }
 async function loadSuggestions() {
   window.clearTimeout(timer)
   const term = query.value.trim()
-  if (!term) {
-    open.value = false
+  const id = ++requestId
+  if (!canSearch.value) {
+    open.value = Boolean(term)
     loading.value = false
+    results.value = []
+    counts.value = {}
     return
   }
-  const id = ++requestId
   const selected = type.value
   const language = locale.value
   open.value = true
@@ -120,7 +125,7 @@ async function loadSuggestions() {
 function recordSearch(source) {
   const term = query.value.trim()
   const key = `${locale.value}:${type.value}:${term}`
-  if (!term || key === lastLogged) return
+  if (!canSearch.value || key === lastLogged) return
   lastLogged = key
   // A log failure must never interrupt searching or directory navigation.
   apiRequest('/search/history', { method: 'POST', locale: locale.value, body: { query: term, type: type.value, source } })
@@ -132,6 +137,7 @@ async function handleSubmit() {
 }
 function showResults(source = 'all') {
   const term = query.value.trim()
+  if (!canSearch.value) { scheduleSearch(); input.value?.focus(); return }
   recordSearch(source)
   router.push({ name: localizedRouteName('search', locale.value), query: term ? { q: term } : {} })
   closeSearch()
@@ -201,7 +207,8 @@ onBeforeUnmount(() => {
           <button class="global-search-panel__close" type="button" :aria-label="t('app.closeSearch')" @click="closeSearch(true)"><X :size="18" /></button>
         </div>
         <div class="global-search-panel__rows" aria-live="polite">
-          <p v-if="loading" class="global-search-panel__message">{{ t('globalSearch.loading') }}</p>
+          <p v-if="!canSearch" class="global-search-panel__message">{{ t('globalSearch.minimumCharacters', { count: SEARCH_MIN_LENGTH }) }}</p>
+          <p v-else-if="loading" class="global-search-panel__message">{{ t('globalSearch.loading') }}</p>
           <p v-else-if="error" class="global-search-panel__message">{{ t('globalSearch.error') }} <button type="button" @click="loadSuggestions">{{ t('globalSearch.retry') }}</button></p>
           <p v-else-if="!results.length" class="global-search-panel__message">{{ t('globalSearch.empty') }}</p>
           <LocalizedLink v-for="item in loading || error ? [] : results" :key="item.id" class="global-search-panel__row" :to="itemRoute(item)" @click="recordSearch('all'); closeSearch()">
@@ -211,7 +218,7 @@ onBeforeUnmount(() => {
             <span v-if="type === 'campaigns'" class="global-search-panel__budget"><Coins :size="18" aria-hidden="true" />{{ formatMoney(item.budgetMin, item.currency) }} – {{ formatMoney(item.budgetMax, item.currency) }}</span>
           </LocalizedLink>
         </div>
-        <button class="global-search-panel__all" type="button" @click="seeAll"><Search :size="19" aria-hidden="true" /><span>{{ t('globalSearch.seeAll', { query: query.trim() }) }}</span><ArrowRight :size="19" aria-hidden="true" /></button>
+        <button v-if="canSearch" class="global-search-panel__all" type="button" @click="seeAll"><Search :size="19" aria-hidden="true" /><span>{{ t('globalSearch.seeAll', { query: query.trim() }) }}</span><ArrowRight :size="19" aria-hidden="true" /></button>
       </section>
     </template>
   </Teleport>

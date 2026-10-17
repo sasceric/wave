@@ -12,7 +12,7 @@ const route = computed(() => ({ name: { creators: 'creator-profile', campaigns: 
 </script>
 <template>
   <LocalizedLink class="search-result-card" :to="route" :aria-label="`${t(`globalSearch.open_${item.kind}`)}: ${item.title}`">
-    <header><CardImage :image="item.image" :src="item.imageUrl || ''" :alt="item.title" sizes="64px" /><div><small>{{ t(`globalSearch.${item.kind}`) }}</small><h2>{{ item.title }}</h2><p>{{ item.subtitle }}</p></div></header>
+    <header><CardImage :image="item.image" :src="item.imageUrl || ''" :alt="item.title" sizes="64px" /><div><small>{{ t(`globalSearch.${item.kind}`) }}</small><h3>{{ item.title }}</h3><p>{{ item.subtitle }}</p></div></header>
     <p class="search-result-card__summary">{{ item.summary }}</p>
     <div class="search-result-card__facts"><span v-if="item.location"><MapPin :size="15" aria-hidden="true" />{{ item.location }}</span><span v-if="item.kind === 'campaigns'"><Coins :size="15" aria-hidden="true" />{{ formatMoney(item.budgetMin, item.currency) }} – {{ formatMoney(item.budgetMax, item.currency) }}</span></div>
     <PresentationDemoBadge v-if="item.isPresentationDemo" />

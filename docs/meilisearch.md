@@ -6,7 +6,10 @@ are capped at **10 per category**. The displayed numbers are Meilisearch's exhau
 Enter, the magnifier and “Pogledaj sve rezultate” open the localized search page
 (`/pretraga?q=…` in Bosnian). Its All/Creators/Campaigns/Companies tabs retain the
 query and show real totals. Every tab, including All, has **25 results per page**;
-page and type are stored in the URL and browser back/forward works.
+page and type are stored in the URL and browser back/forward works. The All tab
+groups the current page's 25 matches into Creators, Campaigns and Companies,
+with full category totals and links to each category tab. Desktop grids have four
+cards per row, mobile grids two.
 
 ## Backend switch
 
@@ -35,6 +38,12 @@ These are access checks, not database searches. Both hits and totals are filtere
 by these checks in Meilisearch. Empty queries return an empty prompt. Unavailable
 Meilisearch while enabled returns a localized 503 with Retry-After; it never silently
 returns incomplete database search results. API requests are rate limited.
+
+Queries require at least three characters after trimming in both backends.
+The header and results page show a translated hint without making search or
+history requests below that threshold. The API also returns empty hits/counts
+before any database or engine lookup for shorter queries. Header suggestions
+retain their 250ms debounce, and shorter submissions are not logged.
 
 Documents contain only public result summaries, public media representations,
 localized topics and descriptions. No login email, phone, password, private works,
