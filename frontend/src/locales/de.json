@@ -2753,6 +2753,7 @@
     "customProposal": "Individuelles Angebot schreiben",
     "offeringTitle": "Unser Angebot",
     "campaignsTitle": "Kampagnen von {company}",
-    "emptyCampaigns": "Diese Agentur hat derzeit keine offenen Kampagnen."
+    "emptyCampaigns": "Diese Agentur hat derzeit keine offenen Kampagnen.",
+    "noServices": "Füge Leistungen hinzu, die deine Agentur Kunden anbietet."
   }
 }

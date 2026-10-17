@@ -3,6 +3,7 @@ import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { Briefcase, Pencil, Plus, Trash2 } from '@lucide/vue'
 import AccountProfileCard from '../account/AccountProfileCard.vue'
+import ProfileCollectionCard from '../account/ProfileCollectionCard.vue'
 import AgencyServiceCard from './AgencyServiceCard.vue'
 import MultiSelect from '../shared/MultiSelect.vue'
 import SingleSelect from '../shared/SingleSelect.vue'
@@ -35,9 +36,18 @@ defineExpose({ revealInvalidService })
 </script>
 <template>
   <div class="agency-service-list">
-    <AccountProfileCard :title="t('agency.services')" :icon="Briefcase" :editable="!editing" @edit="emit('edit', 'services')">
-      <p class="creator-studio__hint">{{ t('agency.structuredServicesHint') }}</p>
-      <button v-if="editing" class="profile-editor__add agency-service-editor__add" type="button" :disabled="profile.services.length >= 10" @click="addService"><Plus :size="16" aria-hidden="true" />{{ t('agency.addService') }}</button>
+    <ProfileCollectionCard
+      :title="t('agency.services')"
+      :icon="Briefcase"
+      :hint="t('agency.structuredServicesHint')"
+      :empty="!profile.services.length"
+      :empty-message="t('agency.noServices')"
+      :editing="editing"
+      :add-label="t('agency.addService')"
+      :add-disabled="profile.services.length >= 10"
+      @add="addService"
+      @edit="emit('edit', 'services')"
+    >
       <div class="agency-service-list">
         <AgencyServiceCard v-for="(service, index) in profile.services" :key="service.id" :service="service">
           <template #actions><div class="agency-service-editor__actions">
@@ -58,8 +68,7 @@ defineExpose({ revealInvalidService })
           </template>
         </AgencyServiceCard>
       </div>
-      <p v-if="!profile.services.length" class="profile-editor__empty">{{ t('account.notProvided') }}</p>
-    </AccountProfileCard>
+    </ProfileCollectionCard>
     <AccountProfileCard :title="t('studio.availability')" :editable="!editing" @edit="emit('edit', 'services')">
       <div v-if="editing" class="form-grid">
         <MultiSelect v-model="profile.presentation.languages" :options="languages" :label="t('studio.languages')" :placeholder="t('studio.languages')" :search-placeholder="t('studio.languages')" :no-results-label="t('account.notProvided')" :remove-label="t('account.remove')" />

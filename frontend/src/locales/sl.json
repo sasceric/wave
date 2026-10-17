@@ -2754,6 +2754,7 @@
     "customProposal": "Napiši prilagojeno ponudbo",
     "offeringTitle": "Naša ponudba",
     "campaignsTitle": "Kampanje agencije {company}",
-    "emptyCampaigns": "Ta agencija trenutno nima odprtih kampanj."
+    "emptyCampaigns": "Ta agencija trenutno nima odprtih kampanj.",
+    "noServices": "Dodaj storitve, ki jih tvoja agencija ponuja strankam."
   }
 }

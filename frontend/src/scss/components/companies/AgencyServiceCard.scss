@@ -15,6 +15,5 @@
   legend { padding: 0; }
   &__actions { display: flex; flex-wrap: wrap; gap: 8px; }
   &__deliverable { display: flex; align-items: center; gap: 8px; margin-top: 8px; input { flex: 1; min-width: 0; } }
-  &__add { margin-bottom: 16px; }
 }
 @media (max-width: 760px) { .agency-service-card { padding: 16px; } .agency-service-editor__actions button { min-height: 44px; } }

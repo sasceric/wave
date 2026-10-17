@@ -1,0 +1,9 @@
+.profile-collection-card {
+  &__hint { margin: 0 0 18px; color: var(--muted); font-size: 12px; line-height: 1.7; }
+  &__empty { display: grid; place-items: center; min-height: 96px; margin: 0; padding: 24px; border: 1px dashed #dce2d9; border-radius: 12px; background: #f6f8f3; color: var(--muted); font-size: 14px; line-height: 1.7; text-align: center; overflow-wrap: anywhere; }
+  > .account-profile-card__heading { flex-wrap: wrap; align-items: center; gap: 12px; }
+  > .account-profile-card__heading > .profile-editor__add { flex: 0 0 auto; margin-left: auto; }
+  @media (max-width: 760px) {
+    &__empty { min-height: 96px; padding: 20px 16px; }
+  }
+}

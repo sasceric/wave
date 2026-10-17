@@ -2,7 +2,7 @@
 import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { ArrowDown, ArrowUp, Images, Pencil, Pin, Plus, Trash2, UsersRound, Handshake } from '@lucide/vue'
-import AccountProfileCard from './AccountProfileCard.vue'
+import ProfileCollectionCard from './ProfileCollectionCard.vue'
 import CreatorDeliverables from './CreatorDeliverables.vue'
 import SingleSelect from '../shared/SingleSelect.vue'
 import SearchableSelect from '../shared/SearchableSelect.vue'
@@ -21,6 +21,11 @@ import { CURRENCIES } from '../../lib/marketplace'
 const profile = defineModel('profile', { type: Object, required: true })
 const props = defineProps({ tab: { type: String, required: true }, editing: Boolean })
 const emit = defineEmits(['edit'])
+const collection = computed(() => ({
+    social: { title: t('studio.audience'), icon: UsersRound, hint: t('studio.audienceIntro'), emptyMessage: t('account.noSocialProfiles'), count: profile.value.socialProfiles.length, limit: 5, addLabel: t('account.addSocial'), add: addSocial },
+    portfolio: { title: t('studio.selectedWorks'), icon: Images, hint: t('studio.worksIntro'), emptyMessage: t('account.noPortfolioItems'), count: profile.value.portfolio.length, limit: 4, addLabel: t('account.addPortfolioItem'), add: addWork },
+    packages: { title: t('account.packages'), icon: Handshake, hint: t('account.packagesHint'), emptyMessage: t('account.noPackages'), count: profile.value.packages.length, limit: 12, addLabel: t('account.addPackage'), add: addPackage },
+})[props.tab])
 const { t, te } = useI18n()
 const step = ref(1)
 const panel = ref(null)
@@ -163,13 +168,20 @@ watch(locale, language => { const names = new Intl.DisplayNames([language === 'c
     <template v-if="tab === 'kit'">
       <CreatorMediaKit :profile="profile" />
     </template>
-    <template v-else-if="!editing">
-      <AccountProfileCard
-        :title="t(tab === 'social' ? 'studio.audience' : tab === 'portfolio' ? 'studio.selectedWorks' : 'account.packages')"
-        :icon="tab === 'social' ? UsersRound : tab === 'portfolio' ? Images : Handshake"
-        editable
-        @edit="emit('edit',tab)"
-      >
+    <ProfileCollectionCard
+      v-else
+      :title="collection.title"
+      :icon="collection.icon"
+      :hint="collection.hint"
+      :empty="collection.count === 0"
+      :empty-message="collection.emptyMessage"
+      :editing="editing"
+      :add-label="collection.addLabel"
+      :add-disabled="collection.count >= collection.limit"
+      @add="collection.add()"
+      @edit="emit('edit', tab)"
+    >
+      <template v-if="!editing">
         <CreatorAudience v-if="tab === 'social' && profile.socialProfiles.length" :demo="profile.isPresentationDemo" :profiles="profile.socialProfiles" :languages="profile.presentation?.languages || []" :description="profile.tagline || ''" :show-heading="false" />
         <CreatorWorks
           v-else-if="tab === 'portfolio' && profile.portfolio.length"
@@ -190,20 +202,8 @@ watch(locale, language => { const names = new Intl.DisplayNames([language === 'c
             <CreatorPackageFacts :item="item" :agency="profile.companyType === 'agency'" />
           </article>
         </template>
-        <p v-else class="profile-editor__empty">{{ t('account.notProvided') }}</p>
-      </AccountProfileCard>
     </template>
     <template v-else-if="tab === 'social'">
-      <div class="profile-editor__heading">
-        <div>
-          <h3>{{ t('studio.audience') }}</h3>
-          <small>{{ t('studio.audienceIntro') }}</small>
-        </div>
-        <button type="button" class="profile-editor__add" :disabled="profile.socialProfiles.length >= 5" @click="addSocial">
-          <Plus :size="16" />
-          {{ t('account.addSocial') }}
-        </button>
-      </div>
       <div v-if="profile.socialProfiles.length" class="creator-studio__networks" role="group" :aria-label="t('studio.audience')">
         <button
           v-for="(social, index) in profile.socialProfiles"
@@ -216,7 +216,6 @@ watch(locale, language => { const names = new Intl.DisplayNames([language === 'c
           <small v-if="social.handle">{{ social.handle }}</small>
         </button>
       </div>
-      <p v-else class="profile-editor__empty">{{ t('account.noSocialProfiles') }}</p>
       <article
         v-for="(social,index) in profile.socialProfiles"
         :key="index"
@@ -314,16 +313,6 @@ watch(locale, language => { const names = new Intl.DisplayNames([language === 'c
       </article>
     </template>
     <template v-else-if="tab === 'portfolio'">
-      <div class="profile-editor__heading">
-        <div>
-          <h3>{{ t('studio.selectedWorks') }}</h3>
-          <small>{{ t('studio.worksIntro') }}</small>
-        </div>
-        <button type="button" class="profile-editor__add" :disabled="profile.portfolio.length >= 4" @click="addWork">
-          <Plus :size="16" />
-          {{ t('account.addPortfolioItem') }}
-        </button>
-      </div>
       <div v-if="!work" class="creator-studio__card">
         <article v-for="(item,index) in profile.portfolio" :key="item.id || index" class="creator-studio__work-row">
           <img v-if="item.coverUrl || item.url && item.type === 'image'" :src="item.coverUrl || item.url" :alt="item.title" />
@@ -357,7 +346,6 @@ watch(locale, language => { const names = new Intl.DisplayNames([language === 'c
             </button>
           </div>
         </article>
-        <p v-if="!profile.portfolio.length">{{ t('account.noPortfolioItems') }}</p>
       </div>
       <article v-else class="creator-studio__card">
         <header>
@@ -553,13 +541,6 @@ watch(locale, language => { const names = new Intl.DisplayNames([language === 'c
       </article>
     </template>
     <template v-else-if="tab === 'packages'">
-      <div class="profile-editor__heading">
-        <h3>{{ t('account.packages') }}</h3>
-        <button type="button" class="profile-editor__add" :disabled="profile.packages.length>=12" @click="addPackage">
-          <Plus :size="16" />
-          {{ t('account.addPackage') }}
-        </button>
-      </div>
       <div v-if="selectedPackage === null" class="creator-studio__card">
         <article v-for="(item, index) in profile.packages" :key="item.id || index" class="creator-studio__work-row">
           <div>
@@ -580,7 +561,6 @@ watch(locale, language => { const names = new Intl.DisplayNames([language === 'c
             </button>
           </div>
         </article>
-        <p v-if="!profile.packages.length" class="profile-editor__empty">{{ t('account.noPackages') }}</p>
       </div>
       <article
         v-for="(item,index) in profile.packages"
@@ -645,6 +625,7 @@ watch(locale, language => { const names = new Intl.DisplayNames([language === 'c
         </div>
       </article>
     </template>
+    </ProfileCollectionCard>
   </section>
 </template>
 <style lang="scss" src="../../scss/components/account/CreatorStudioPanel.scss"></style>

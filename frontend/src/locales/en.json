@@ -2753,6 +2753,7 @@
     "customProposal": "Write a custom proposal",
     "offeringTitle": "Our offering",
     "campaignsTitle": "Campaigns by {company}",
-    "emptyCampaigns": "This agency currently has no open campaigns."
+    "emptyCampaigns": "This agency currently has no open campaigns.",
+    "noServices": "Add the services your agency offers to clients."
   }
 }
