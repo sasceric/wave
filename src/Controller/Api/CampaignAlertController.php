@@ -19,7 +19,7 @@ final class CampaignAlertController
     {
         $locale = LocaleContext::fromRequest($request);
         if ($locale === null) return new JsonResponse(['error' => ApiMessages::get('unsupported_language', 'bs')], 400);
-        $user = ApiAccess::requireRole($security, 'ROLE_CREATOR', $locale, false, false);
+        $user = ApiAccess::requireProvider($security, $locale, false, false);
         if ($user instanceof JsonResponse) return $user;
         $preference = $em->find(CampaignAlertPreference::class, $user->getId()) ?? new CampaignAlertPreference($user);
         if ($request->isMethod('PUT')) {

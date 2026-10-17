@@ -64,15 +64,22 @@ final class CampaignInvitationController
 
         $data = JsonPayload::fromRequest($request);
         $creatorId = is_array($data) ? ($data['creatorId'] ?? null) : null;
+        $agencyId = is_array($data) ? ($data['agencyId'] ?? null) : null;
         $message = is_array($data) && is_string($data['message'] ?? null) ? trim($data['message']) : '';
-        if (!is_int($creatorId) || mb_strlen($message) < 1 || mb_strlen($message) > 2000) {
+        if ((!is_int($creatorId) && !is_int($agencyId)) || mb_strlen($message) < 1 || mb_strlen($message) > 2000) {
             return new JsonResponse(['error' => ApiMessages::get('invalid_request', $locale)], 400);
         }
 
-        $creator = $entityManager->getRepository(Creator::class)->find($creatorId);
+        $agency = is_int($agencyId) ? $entityManager->find(Company::class, $agencyId) : null;
+        $target = $agency?->getOwner();
+        $creator = $target?->isAgency() && $target->isApproved() && $target->isEmailVerified() && !$target->isHideMyAccount()
+            ? \App\Account\AgencyProfiles::ensure($target, $entityManager)
+            : ($agencyId === null && is_int($creatorId) ? $entityManager->find(Creator::class, $creatorId) : null);
         $creatorOwner = $creator instanceof Creator ? $creator->getOwner() : null;
         if (!$creator instanceof Creator
             || !$creatorOwner instanceof User
+            || $creatorOwner->getId() === $user->getId()
+            || ($creator->isAgencyProfile() && !$creatorOwner->isAgency())
             || !$creatorOwner->isApproved()
             || !$creatorOwner->isEmailVerified()
             || $creatorOwner->isHideMyAccount()
@@ -106,13 +113,13 @@ final class CampaignInvitationController
         if (null === $locale) {
             return new JsonResponse(['error' => ApiMessages::get('unsupported_language', 'bs')], 400);
         }
-        $user = ApiAccess::requireRole($security, 'ROLE_CREATOR', $locale);
+        $user = ApiAccess::requireProvider($security, $locale);
         if ($user instanceof JsonResponse) {
             return $user;
         }
         $creator = $user->getCreator();
         if (!$creator instanceof Creator) {
-            return new JsonResponse(['error' => ApiMessages::get('profile_unavailable', $locale)], 409);
+            return $user->isAgency() ? new JsonResponse(['data' => []]) : new JsonResponse(['error' => ApiMessages::get('profile_unavailable', $locale)], 409);
         }
 
         $invitations = $entityManager->getRepository(CampaignInvitation::class)->findBy(
@@ -154,7 +161,7 @@ final class CampaignInvitationController
         if ($csrfError = ApiAccess::requireCsrf($request, $tokenManager, $locale)) {
             return $csrfError;
         }
-        $user = ApiAccess::requireRole($security, 'ROLE_CREATOR', $locale, requireVerified: true);
+        $user = ApiAccess::requireProvider($security, $locale, requireVerified: true);
         if ($user instanceof JsonResponse) {
             return $user;
         }

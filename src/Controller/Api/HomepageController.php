@@ -40,7 +40,7 @@ final class HomepageController
 
         $mode = $entityManager->find(HomepageSettings::class, 1)?->getCreatorMode() ?? HomepageSettings::MODE_LATEST;
         $creatorQuery = $entityManager->getRepository(Creator::class)->createQueryBuilder('creator')
-            ->leftJoin('creator.owner', 'creatorOwner')
+            ->leftJoin('creator.owner', 'creatorOwner')->andWhere('creator.agencyProfile = false')
             ->andWhere($blocks->visible('creatorOwner.id'))
             ->andWhere('creatorOwner.id IS NULL OR (creatorOwner.approved = :approved AND creatorOwner.hideMyAccount = :visible)')
             ->setParameter('approved', true)

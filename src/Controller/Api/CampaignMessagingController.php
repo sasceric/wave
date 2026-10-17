@@ -44,24 +44,11 @@ final class CampaignMessagingController
             return $user;
         }
 
-        if ($user->getCreator() instanceof Creator) {
-            $conversations = $entityManager->getRepository(CampaignConversation::class)->findBy(
-                ['creator' => $user->getCreator()],
-                ['updatedAt' => 'DESC'],
-            );
-        } elseif ($user->getCompany() instanceof Company) {
-            $conversations = $entityManager->createQueryBuilder()
-                ->select('conversation')
-                ->from(CampaignConversation::class, 'conversation')
-                ->join('conversation.campaign', 'campaign')
-                ->where('campaign.company = :company')
-                ->setParameter('company', $user->getCompany())
-                ->orderBy('conversation.updatedAt', \SortDirection::Descending)
-                ->getQuery()
-                ->getResult();
-        } else {
-            return new JsonResponse(['error' => ApiMessages::get('forbidden', $locale)], 403);
-        }
+        $conversations = $entityManager->createQueryBuilder()->select('conversation')
+            ->from(CampaignConversation::class, 'conversation')->join('conversation.creator', 'provider')
+            ->join('conversation.campaign', 'campaign')->join('campaign.company', 'client')
+            ->where('provider.owner = :user OR client.owner = :user')->setParameter('user', $user)
+            ->orderBy('conversation.updatedAt', \SortDirection::Descending)->getQuery()->getResult();
 
         $hiredCounts = CampaignHiredCounts::forCampaigns($entityManager, array_map(static fn (CampaignConversation $conversation): Campaign => $conversation->getCampaign(), $conversations));
         $unread = $counter->conversations($user);
@@ -272,7 +259,7 @@ final class CampaignMessagingController
             return new JsonResponse(['error' => ApiMessages::get('invalid_request', $locale)], 400);
         }
 
-        if ($user->getCreator() instanceof Creator) {
+        if ($conversation->getCreator()->getOwner()?->getId() === $user->getId()) {
             $companyOwner = $conversation->getCampaign()->getCompany()->getOwner();
             $application = $entityManager->getRepository(Application::class)->findOneBy([
                 'campaign' => $conversation->getCampaign(),

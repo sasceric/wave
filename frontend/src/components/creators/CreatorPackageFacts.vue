@@ -1,14 +1,14 @@
 <script setup>
 import { Check } from '@lucide/vue'
 import { useI18n } from 'vue-i18n'
-defineProps({ item: { type: Object, required: true } })
+defineProps({ item: { type: Object, required: true }, agency: Boolean })
 const { t } = useI18n()
 </script>
 <template>
   <ul v-if="item.deliverables?.length || item.deliveryDays || item.revisions != null || item.usage" class="creator-package-facts">
     <li v-if="item.mode">
       <Check :size="13" aria-hidden="true" />
-      <span>{{ t(`studio.${item.mode}`) }}</span>
+      <span>{{ t(agency && item.mode === 'posting' ? 'agency.posting' : `studio.${item.mode}`) }}</span>
     </li>
     <li v-for="(row, index) in item.deliverables || []" :key="index">
       <Check :size="13" aria-hidden="true" />

@@ -14,7 +14,7 @@ final class PersonalOverview
 
     public function snapshot(User $user): array
     {
-        $creator = $user->getCreator();
+        $creator = $user->hasRole('ROLE_COMPANY') ? null : $user->getCreator();
         $company = $user->getCompany();
         $ready = $user->hasCompleteProfile() && $user->isApproved() && $user->isEmailVerified();
         $counts = $creator !== null ? ['invitations' => 0, 'offers' => 0, 'active' => 0, 'applications' => 0] : ['campaigns' => 0, 'applications' => 0, 'offers' => 0, 'active' => 0];
@@ -49,6 +49,15 @@ final class PersonalOverview
             if (isset($row['amount'])) $row['amount'] = (int) $row['amount'];
             // DBAL returns naive UTC strings on both supported databases.
             $row['created_at'] = (new \DateTimeImmutable($row['created_at'], new \DateTimeZone('UTC')))->format(DATE_ATOM);
+        }
+        if ($user->getCreator()?->isAgencyProfile()) {
+            $service = $this->db->fetchAssociative("SELECT COUNT(*) AS applications,
+                SUM(CASE WHEN o.status = 'pending' AND c.status = 'open' THEN 1 ELSE 0 END) AS offers,
+                SUM(CASE WHEN o.status = 'accepted' AND c.status NOT IN ('finished', 'cancelled') THEN 1 ELSE 0 END) AS active
+                FROM campaign_application a JOIN creator p ON p.id = a.creator_id JOIN campaign c ON c.id = a.campaign_id
+                LEFT JOIN campaign_offer o ON o.application_id = a.id WHERE p.owner_id = ?", [$user->getId()]);
+            $result['serviceCounts'] = array_map('intval', $service);
+            $result['serviceCounts']['invitations'] = (int) $this->db->fetchOne("SELECT COUNT(*) FROM campaign_invitation i JOIN creator p ON p.id = i.creator_id JOIN campaign c ON c.id = i.campaign_id WHERE p.owner_id = ? AND i.status = 'pending' AND c.status = 'open' AND c.closes_at >= ?", [$user->getId(), $today]);
         }
         return [...$result, 'counts' => $counts, 'recent' => $rows, 'financial' => $this->feedback->earnings($user)];
     }

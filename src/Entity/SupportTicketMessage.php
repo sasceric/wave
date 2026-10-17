@@ -51,7 +51,7 @@ class SupportTicketMessage
     {
         $this->ticket = $ticket;
         $this->sender = $sender;
-        $this->senderName = $sender->getCreator()?->getDisplayName() ?? $sender->getCompany()?->getName() ?? ($sender->getId() === $ticket->getOwner()?->getId() ? $ticket->getName() : 'Wave');
+        $this->senderName = $sender->getCompany()?->getName() ?? $sender->getCreator()?->getDisplayName() ?? ($sender->getId() === $ticket->getOwner()?->getId() ? $ticket->getName() : 'Wave');
         $this->staff = $sender->hasRole('ROLE_ADMIN');
         $this->body = $body;
         $this->internal = $internal;

@@ -330,8 +330,10 @@ final class CompanyController
             return new JsonResponse(['error' => ApiMessages::get('company_not_found', $locale)], 404);
         }
 
+        $reviewRole = $request->query->get('role');
+        if ($reviewRole !== null && !in_array($reviewRole, ['provider', 'client'], true)) return new JsonResponse(['error' => ApiMessages::get('invalid_request', $locale)], 400);
         if (str_ends_with($request->getPathInfo(), '/reviews')) {
-            return new JsonResponse($owner === null ? ['data' => [], 'summary' => $this->feedback->summary(null), 'meta' => ['hasMore' => false, 'nextCursor' => null]] : $this->feedback->publicReviews($owner, $locale, max(0, $request->query->getInt('before')), max(1, $request->query->getInt('page', 1))));
+            return new JsonResponse($owner === null ? ['data' => [], 'summary' => $this->feedback->summary(null), 'meta' => ['hasMore' => false, 'nextCursor' => null]] : $this->feedback->publicReviews($owner, $locale, max(0, $request->query->getInt('before')), max(1, $request->query->getInt('page', 1)), role: $reviewRole));
         }
         $rating = $this->feedback->summary($owner);
         return new JsonResponse(['data' => CompanyResource::fromEntity($company, $locale, categoryLabels: MarketplaceCategoryLabels::forLocale($entityManager, $locale)) + ['rating' => $rating, 'indexable' => $owner === null || ($owner->isApproved() && !$owner->isHideMyAccount() && !$owner->isDeleted()), 'structuredData' => $this->profileSchema->company($company, $locale, $rating)]]);

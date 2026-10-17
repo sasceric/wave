@@ -191,12 +191,15 @@ test('company Save sends multiple industries and its cover and logo changes toge
   let committed = 0
   state.startProfileEdit()
   state.profile.value.industries = ['Software', 'Technology']
-  state.profileImageField.value = { prepareSave: async () => ({ mediaId: 11, url: '/logo', uploadedMediaId: 11 }), commit: () => { committed++ } }
-  state.companyCoverField.value = { prepareSave: async () => ({ mediaId: 12, url: '/cover', uploadedMediaId: 12 }), commit: () => { committed++ } }
+  state.profileImageField.value = { prepareSave: async () => ({ mediaId: 11, url: '/logo', previousMediaId: 9, uploadedMediaId: 11 }), commit: () => { committed++ } }
+  state.companyCoverField.value = { prepareSave: async () => ({ mediaId: 12, url: '/cover', previousMediaId: 10, uploadedMediaId: 12 }), commit: () => { committed++ } }
   await state.saveProfile()
   assert.deepEqual(requests[0].body.industries, ['Software', 'Technology'])
   assert.equal(requests[0].body.logoMediaId, 11)
   assert.equal(requests[0].body.coverMediaId, 12)
+  // The backend removes the previous files atomically; a second DELETE would return 404.
+  assert.equal(requests.length, 1)
+  assert.equal(requests[0].path, '/me/profile')
   assert.equal(committed, 2)
 })
 
@@ -209,6 +212,19 @@ test('failed company Save rolls back both staged uploads', async () => {
   }
   await state.saveProfile()
   assert.deepEqual(rolledBack, [11, 12])
+  assert.equal(state.editingProfile.value, true)
+})
+
+test('a failed upload rollback never claims that the profile was saved', async () => {
+  const { state } = await setupAccount({ saveError: 'Failed save' })
+  state.startProfileEdit()
+  state.profileImageField.value = {
+    prepareSave: async () => ({ mediaId: 11, uploadedMediaId: 11 }),
+    rollback: async () => { throw new Error('Cleanup failed') },
+  }
+  await state.saveProfile()
+  assert.equal(state.error.value, 'Failed save account.profileImageRollbackFailed')
+  assert.equal(state.notice.value, '')
   assert.equal(state.editingProfile.value, true)
 })
 

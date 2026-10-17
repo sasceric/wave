@@ -26,7 +26,7 @@ final class CreatorController
         $visible = $this->show($slug, $request, $entityManager, $security);
         if ($visible->getStatusCode() !== 200) return $visible;
         $creator = $entityManager->getRepository(Creator::class)->findOneBy(['slug' => $slug]);
-        if (!$creator instanceof Creator) return new JsonResponse(['recorded' => false]);
+        if (!$creator instanceof Creator || $creator->isAgencyProfile()) return new JsonResponse(['recorded' => false]);
         if ($security->getUser() === $creator->getOwner() || $security->isGranted('ROLE_ADMIN')) return new JsonResponse(['recorded' => false]);
         $day = gmdate('Y-m-d');
         $session = $request->getSession();
@@ -155,7 +155,7 @@ final class CreatorController
             COALESCE(u.city, c.city) AS city, u.country_code, i.search_text, i.tag_text, i.platform_keys, $metric AS followers
             FROM creator c LEFT JOIN wave_user u ON u.id = c.owner_id
             LEFT JOIN directory_index i ON i.kind = 'creator' AND i.entity_id = c.id
-            WHERE u.id IS NULL OR (u.approved = TRUE AND u.hide_my_account = FALSE)";
+            WHERE c.agency_profile = FALSE AND (u.id IS NULL OR (u.approved = TRUE AND u.hide_my_account = FALSE))";
         $base .= ' AND '.$this->blocks->visible('u.id');
         $filtered = ' FROM (' . $base . ') ranked WHERE 1 = 1' . ($conditions === [] ? '' : ' AND ' . implode(' AND ', $conditions));
         $connection = $entityManager->getConnection();
@@ -238,7 +238,7 @@ final class CreatorController
         if ($locale === null) {
             return new JsonResponse(['error' => ApiMessages::get('unsupported_language', 'bs')], 400);
         }
-        $rows = $entityManager->getConnection()->fetchAllAssociative("SELECT UPPER(u.country_code) AS value, COUNT(*) AS count FROM creator c LEFT JOIN wave_user u ON u.id = c.owner_id WHERE (u.id IS NULL OR (u.approved = TRUE AND u.hide_my_account = FALSE)) AND u.country_code IS NOT NULL AND u.country_code <> '' GROUP BY UPPER(u.country_code) ORDER BY UPPER(u.country_code)");
+        $rows = $entityManager->getConnection()->fetchAllAssociative("SELECT UPPER(u.country_code) AS value, COUNT(*) AS count FROM creator c LEFT JOIN wave_user u ON u.id = c.owner_id WHERE c.agency_profile = FALSE AND (u.id IS NULL OR (u.approved = TRUE AND u.hide_my_account = FALSE)) AND u.country_code IS NOT NULL AND u.country_code <> '' GROUP BY UPPER(u.country_code) ORDER BY UPPER(u.country_code)");
         return new JsonResponse(['data' => ['countries' => array_map(static fn (array $row): array => ['value' => $row['value'], 'count' => (int) $row['count']], $rows)]]);
     }
 
@@ -257,12 +257,12 @@ final class CreatorController
 
         $creator = $entityManager->getRepository(Creator::class)->createQueryBuilder('creator')
             ->leftJoin('creator.owner', 'owner')
-            ->andWhere('creator.slug = :slug')
+            ->andWhere('creator.agencyProfile = false')->andWhere('creator.slug = :slug')
             ->setParameter('slug', $slug)
             ->getQuery()
             ->getOneOrNullResult();
         $owner = $creator instanceof Creator ? $creator->getOwner() : null;
-        if (!$creator instanceof Creator
+        if (!$creator instanceof Creator || $creator->isAgencyProfile()
             || $owner?->isDeleted() === true
             || ($owner !== null && !$owner->isApproved() && !$security->isGranted('ROLE_ADMIN'))
             || ($owner !== null

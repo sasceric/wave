@@ -259,6 +259,16 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     {
     }
 
+    public function isAgency(): bool
+    {
+        return $this->hasRole('ROLE_COMPANY') && $this->company?->getCompanyType() === 'agency';
+    }
+
+    public function canOfferServices(): bool
+    {
+        return $this->hasRole('ROLE_CREATOR') || $this->isAgency();
+    }
+
     public function getCreator(): ?Creator
     {
         return $this->creator;

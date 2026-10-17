@@ -8,7 +8,7 @@ final class UserResource
 {
     public static function fromEntity(User $user, string $locale, array $categoryLabels = []): array
     {
-        $profile = $user->getCreator() ?? $user->getCompany();
+        $profile = $user->hasRole('ROLE_COMPANY') ? $user->getCompany() : $user->getCreator();
 
         return [
             'id' => $user->getId(),
@@ -17,6 +17,8 @@ final class UserResource
             'phone' => $user->getPhone(),
             'city' => $user->getCity(),
             'countryCode' => $user->getCountryCode(),
+            'canOfferServices' => $user->canOfferServices(),
+            'hasServiceHistory' => $user->getCreator() !== null,
             'accountType' => $user->hasRole('ROLE_CREATOR') ? 'creator' : 'company',
             'emailVerified' => $user->isEmailVerified(),
             'approved' => $user->isApproved(),
@@ -27,7 +29,7 @@ final class UserResource
             'notificationsEnabled' => $user->isNotificationsEnabled(),
             'profile' => $profile instanceof \App\Entity\Creator
                 ? CreatorResource::fromEntity($profile, $locale, categoryLabels: $categoryLabels, public: false) + ['birthday' => $profile->getBirthday()?->format('Y-m-d')]
-                : ($profile instanceof \App\Entity\Company ? CompanyResource::fromEntity($profile, $locale, categoryLabels: $categoryLabels) : null),
+                : ($profile instanceof \App\Entity\Company ? CompanyResource::fromEntity($profile, $locale, categoryLabels: $categoryLabels, public: false) : null),
         ];
     }
 }

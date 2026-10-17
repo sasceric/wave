@@ -31,7 +31,7 @@ final class PublicUrlController
         if ($locale === null) return new JsonResponse(['error' => ApiMessages::get('unsupported_language', 'bs')], 400);
         $user = $security->getUser();
         if (!$user instanceof User || $user->isDeleted()) return new JsonResponse(['error' => ApiMessages::get('authentication_required', $locale)], 401);
-        $entity = $id === null ? ($user->getCreator() ?? $user->getCompany()) : $em->find(Campaign::class, $id);
+        $entity = $id === null ? ($user->hasRole('ROLE_COMPANY') ? $user->getCompany() : $user->getCreator()) : $em->find(Campaign::class, $id);
         if (!$entity instanceof Creator && !$entity instanceof Company && !$entity instanceof Campaign) return new JsonResponse(['error' => ApiMessages::get('profile_unavailable', $locale)], 404);
         $owner = $entity instanceof Campaign ? $entity->getCompany()->getOwner() : $entity->getOwner();
         if ($owner?->getId() !== $user->getId()) return new JsonResponse(['error' => ApiMessages::get('forbidden', $locale)], 403);

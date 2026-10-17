@@ -22,7 +22,7 @@ export function useCampaignBookmarks() {
 
   async function loadCampaignBookmarks(force = false) {
     const user = currentUser.value
-    if (!user || user.accountType !== 'creator') {
+    if (!user || user.accountType !== 'creator' && !user.canOfferServices && !user.hasServiceHistory) {
       bookmarks.value = []
       loadedForUserId = null
 
@@ -61,7 +61,7 @@ export function useCampaignBookmarks() {
 
   async function toggleCampaignBookmark(campaign) {
     const user = currentUser.value
-    if (!user || user.accountType !== 'creator') {
+    if (!user || user.accountType !== 'creator' && !user.canOfferServices && !user.hasServiceHistory) {
       throw new Error('Only creator accounts can bookmark campaigns.')
     }
 

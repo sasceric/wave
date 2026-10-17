@@ -24,6 +24,7 @@ import AccountProfileSummary from '../components/account/AccountProfileSummary.v
 import AccountProfileCard from '../components/account/AccountProfileCard.vue'
 import AccountProfileDetails from '../components/account/AccountProfileDetails.vue'
 import CreatorProfileExtras from '../components/account/CreatorProfileExtras.vue'
+import AgencyProfileFields from '../components/companies/AgencyProfileFields.vue'
 import CreatorStudioPanel from '../components/account/CreatorStudioPanel.vue'
 import { normalizePresentation, presentationPayload } from '../lib/creatorPresentation'
 import CreatorCampaignActivity from '../components/account/CreatorCampaignActivity.vue'
@@ -78,7 +79,7 @@ const countryOptions = computed(() => {
     .map((code) => ({ value: code, label: countryNames.of(code) || code }))
     .sort((first, second) => first.label.localeCompare(second.label, countryDisplayLocale.value))
 })
-const PROFILE_TABS = ['about', 'social', 'portfolio', 'packages', 'faqs', 'kit']
+const PROFILE_TABS = ['services', 'about', 'social', 'portfolio', 'packages', 'faqs', 'kit']
 const STUDIO_TABS = ['social', 'portfolio', 'packages', 'kit']
 const LEGACY_ACCOUNT_TABS = {
   applications: 'account-applications',
@@ -100,6 +101,9 @@ const visibilitySaving = ref(false)
 const notificationsSaving = ref(false)
 const profile = ref(null)
 const editingProfile = ref(false)
+const agency = computed(() => profile.value?.companyType === 'agency')
+const provider = computed(() => user.value?.accountType === 'creator' || user.value?.canOfferServices || user.value?.hasServiceHistory)
+const studioPanelTab = computed(() => user.value?.accountType === 'creator' ? STUDIO_TABS.includes(accountTab.value) : agency.value && ['portfolio', 'packages'].includes(accountTab.value))
 let profileBeforeEdit = null
 const profileImageField = ref(null)
 const companyCoverField = ref(null)
@@ -292,7 +296,7 @@ function incompleteProfileTab() {
   ) {
     return 'about'
   }
-  if (user.value.accountType !== 'creator') {
+  if (user.value.accountType !== 'creator' && !agency.value) {
     return ''
   }
   if (profile.value.socialProfiles.some((social) => (
@@ -369,7 +373,9 @@ async function loadDashboard(authenticatedUser = null, { sectionOnly = false } =
           city: response.data.city || '',
           countryCode: response.data.countryCode || '',
         }
-        if (response.data.accountType === 'creator') normalizePresentation(profile.value)
+        normalizePresentation(profile.value)
+        profile.value.faqs ||= []
+        profile.value.services ||= []
         profilePhoneCountry.value = parsePhoneNumberFromString(profile.value.phone)?.country
           || profile.value.countryCode
           || 'BA'
@@ -384,7 +390,7 @@ async function loadDashboard(authenticatedUser = null, { sectionOnly = false } =
       pendingBookmarkRedirect = await completePendingBookmark(response.data)
       if (requestId !== dashboardRequestId) return
     }
-    if (user.value.accountType === 'creator') {
+    if (provider.value) {
       if (isAccountTab(route.query.tab)) {
         accountTab.value = route.query.tab
       } else if (typeof route.query.tab === 'string' && LEGACY_ACCOUNT_TABS[route.query.tab]) {
@@ -416,8 +422,9 @@ async function loadDashboard(authenticatedUser = null, { sectionOnly = false } =
         invitations.value = []
       }
       if (canAccessMarketplace && accountSection.value === 'bookmarks') await loadCampaignBookmarks()
-    } else {
-      if (route.query.tab !== undefined) {
+    }
+    if (user.value.accountType === 'company') {
+      if (!agency.value && route.query.tab !== undefined) {
         const query = { ...route.query }
         delete query.tab
         void router.replace({ query })
@@ -506,7 +513,7 @@ async function completePendingBookmark(account) {
 
     return null
   }
-  if (account.accountType !== 'creator') {
+  if (!account.canOfferServices && account.accountType !== 'creator') {
     error.value = t('account.bookmarkCreatorOnly')
     await clearBookmarkIntent()
 
@@ -630,6 +637,7 @@ async function saveProfile() {
         city: profile.value.city?.trim() || null,
         countryCode: profile.value.countryCode || null,
         phone: normalizedPhone,
+        ...(agency.value ? { ...presentationPayload(profile.value), services: profile.value.services, faqs: profile.value.faqs } : {}),
         socialLinks: (profile.value.socialLinks || []).map(({ platform, url }) => ({ platform, url })),
       }
   try {
@@ -657,8 +665,8 @@ async function saveProfile() {
         if (!change.uploadedMediaId) continue
         try {
           await field?.rollback(change)
-        } catch (cleanupCause) {
-          error.value = `${cause.message} ${t('account.profileImageCleanupFailed')} ${cleanupCause.message}`
+        } catch {
+          error.value = `${cause.message} ${t('account.profileImageRollbackFailed')}`
         }
       }
     }
@@ -689,23 +697,24 @@ function addCreatorFaq() {
 }
 
 function handleProfileTabKeydown(event) {
-  const currentIndex = PROFILE_TABS.indexOf(accountTab.value)
+  const tabs = agency.value ? ['about', 'services', 'portfolio', 'packages', 'faqs'] : PROFILE_TABS.filter(tab => tab !== 'services')
+  const currentIndex = tabs.indexOf(accountTab.value)
   let nextIndex = currentIndex
 
   if (event.key === 'ArrowRight') {
-    nextIndex = (currentIndex + 1) % PROFILE_TABS.length
+    nextIndex = (currentIndex + 1) % tabs.length
   } else if (event.key === 'ArrowLeft') {
-    nextIndex = (currentIndex - 1 + PROFILE_TABS.length) % PROFILE_TABS.length
+    nextIndex = (currentIndex - 1 + tabs.length) % tabs.length
   } else if (event.key === 'Home') {
     nextIndex = 0
   } else if (event.key === 'End') {
-    nextIndex = PROFILE_TABS.length - 1
+    nextIndex = tabs.length - 1
   } else {
     return
   }
 
   event.preventDefault()
-  const nextTab = PROFILE_TABS[nextIndex]
+  const nextTab = tabs[nextIndex]
   selectAccountTab(nextTab)
   document.getElementById(`account-tab-${nextTab}`)?.focus()
 }
@@ -895,7 +904,7 @@ async function runAction(path, body) {
 }
 
 watch(() => route.query.tab, (tab) => {
-  if (user.value?.accountType !== 'creator') {
+  if (!provider.value) {
     return
   }
 
@@ -920,7 +929,7 @@ watch([user, accountSection], ([account, section]) => {
 
   const unavailableForRole = account.accountType === 'creator'
     ? section === 'campaigns'
-    : section === 'offers' || section === 'bookmarks' || section === 'applications'
+    : !provider.value && (section === 'offers' || section === 'bookmarks' || section === 'applications')
 
   if (unavailableForRole) {
     void router.replace({ name: localizedRouteName('account', locale.value) })
@@ -1048,9 +1057,13 @@ onMounted(loadDashboard)
           <button id="account-tab-kit" type="button" role="tab" :aria-selected="accountTab === 'kit'" :tabindex="accountTab === 'kit' ? 0 : -1" @click="selectAccountTab('kit')">{{ t('studio.tabPresentation') }}</button>
         </nav>
 
-        <CreatorStudioPanel ref="creatorStudio" v-if="user.accountType === 'creator' && STUDIO_TABS.includes(accountTab)" v-model:profile="profile" :tab="accountTab" :editing="editingProfile" @edit="startProfileEdit" />
+        <nav v-if="agency" class="profile-tabs" role="tablist" :aria-label="t('agency.services')" @keydown="handleProfileTabKeydown">
+          <button v-for="[key, label] in [['about', 'agency.about'], ['services', 'agency.services'], ['portfolio', 'studio.tabWorks'], ['packages', 'studio.tabPackages'], ['faqs', 'studio.tabFaq']]" :key="key" :id="`account-tab-${key}`" type="button" role="tab" :aria-selected="accountTab === key" :tabindex="accountTab === key ? 0 : -1" @click="selectAccountTab(key)">{{ t(label) }}</button>
+        </nav>
+        <AgencyProfileFields v-if="agency && ['services', 'faqs'].includes(accountTab)" v-model:profile="profile" :tab="accountTab" :editing="editingProfile" @edit="startProfileEdit" />
+        <CreatorStudioPanel ref="creatorStudio" v-if="studioPanelTab" v-model:profile="profile" :tab="accountTab" :editing="editingProfile" @edit="startProfileEdit" />
         <AccountProfileDetails
-          v-else-if="!editingProfile"
+          v-else-if="!editingProfile && !(agency && ['services', 'faqs'].includes(accountTab))"
           :profile="profile"
           :account-type="user.accountType"
           :tab="accountTab"
@@ -1058,7 +1071,7 @@ onMounted(loadDashboard)
           :categories="categories"
           @edit="startProfileEdit"
         />
-        <div v-if="editingProfile && !(user.accountType === 'creator' && STUDIO_TABS.includes(accountTab))" class="profile-edit-layout">
+        <div v-if="editingProfile && !studioPanelTab && !(agency && ['services', 'faqs'].includes(accountTab))" class="profile-edit-layout">
         <template v-if="user.accountType === 'creator'">
           <section
             v-if="accountTab === 'about'"
@@ -1376,7 +1389,7 @@ onMounted(loadDashboard)
       </form>
 
       <CreatorCampaignActivity
-        v-if="accountSection === 'applications' && user.accountType === 'creator'"
+        v-if="accountSection === 'applications' && provider"
         kind="activity"
         :initial-status="typeof route.query.status === 'string' ? route.query.status : 'all'"
         :initial-query="typeof route.query.q === 'string' ? route.query.q : ''"
@@ -1388,7 +1401,7 @@ onMounted(loadDashboard)
       />
 
       <section
-        v-if="accountSection === 'bookmarks' && user.accountType === 'creator'"
+        v-if="accountSection === 'bookmarks' && provider"
         class="form-card account-activity-panel account-bookmarks"
       >
         <h1>{{ t('account.bookmarks') }}</h1>
@@ -1535,7 +1548,7 @@ onMounted(loadDashboard)
           <header class="company-applicant-dialog__header">
             <div>
               <p class="eyebrow">{{ t(selectedApplication.source === 'invitation' ? 'hiring.invitationDetails' : 'account.applicantDetails') }}</p>
-              <h2>{{ selectedApplication.creator.displayName }}</h2>
+              <h2>{{ selectedApplication.creator.displayName }}<span v-if="selectedApplication.creator.isAgency" class="status-badge">{{ t('companyTypes.options.agency') }}</span></h2>
             </div>
             <button class="company-applicant-dialog__close" type="button" :aria-label="t('account.closeApplicantDetails')" @click="closeApplicant">
               <X :size="19" aria-hidden="true" />
@@ -1557,6 +1570,11 @@ onMounted(loadDashboard)
             <strong>{{ t(selectedApplication.source === 'invitation' ? 'hiring.invitationMessage' : 'account.yourMessage') }}</strong>
             <p>{{ selectedApplication.message }}</p>
           </div>
+          <section v-if="selectedApplication.creator.isAgency && Object.keys(selectedApplication.proposal || {}).length" class="company-profile__card">
+            <h3>{{ t('agency.proposal') }}</h3>
+            <p v-if="selectedApplication.proposal.amount"><strong>{{ formatMoney(selectedApplication.proposal.amount, selectedApplication.campaign.currency) }}</strong></p>
+            <p v-for="key in ['scope', 'timeline', 'team']" :key="key"><strong v-if="selectedApplication.proposal[key]">{{ t(`agency.${key}`) }}: </strong>{{ selectedApplication.proposal[key] }}</p>
+          </section>
           <StatusMessage v-if="selectedApplication.readOnly" variant="info">{{ t(selectedApplication.blocked ? 'safety.blockedHistory' : 'campaignChat.deletedAccountNotice') }}</StatusMessage>
           <div class="company-applicant-dialog__actions">
             <CampaignCancellationAction v-if="selectedApplication.offer?.status === 'accepted' && selectedApplication.campaign.status !== 'finished' && !selectedApplication.readOnly" :offer-id="selectedApplication.offer.id" @cancelled="closeApplicant(); loadDashboard()" />
@@ -1588,7 +1606,7 @@ onMounted(loadDashboard)
             <RouterLink
               v-if="!selectedApplication.creator.deleted"
               class="button button--outline"
-              :to="{ name: localizedRouteName('creator-profile', locale), params: { slug: selectedApplication.creator.slug } }"
+              :to="{ name: localizedRouteName(selectedApplication.creator.profileRoute || 'creator-profile', locale), params: { slug: selectedApplication.creator.slug } }"
               @click="closeApplicant"
             >
               {{ t('account.viewPublicProfile') }} ↗

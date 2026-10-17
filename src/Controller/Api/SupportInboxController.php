@@ -102,12 +102,12 @@ final class SupportInboxController
         $user = $this->security->getUser();
         $notificationId = $this->em->getRepository(Notification::class)->createQueryBuilder('n')->select('MAX(n.id)')->where('n.recipient = :user AND n.supportTicket = :ticket')->setParameter('user', $user)->setParameter('ticket', $ticket)->getQuery()->getSingleScalarResult();
         $owner = $ticket->getOwner();
-        $profile = $owner?->getCreator() ?? $owner?->getCompany();
+        $profile = $owner?->getCompany() ?? $owner?->getCreator();
         return $this->response(['data' => $this->summary($ticket) + [
             'email' => $ticket->getEmail(), 'phone' => $ticket->getPhone(), 'kind' => $ticket->getKind(), 'category' => $ticket->getCategory(),
             'description' => $ticket->getDescription(), 'createdAt' => $ticket->getCreatedAt()->format(DATE_ATOM), 'priority' => $ticket->getPriority(),
             'assignedToId' => $ticket->getAssignedTo()?->getId(), 'attachments' => $this->files($ticket, $ticket->getAttachments(), $scope),
-            'owner' => $owner ? ['id' => $owner->getId(), 'name' => $this->userName($owner), 'email' => $owner->getEmail(), 'slug' => $profile?->getSlug(), 'creator' => $owner->getCreator() !== null] : null,
+            'owner' => $owner ? ['id' => $owner->getId(), 'name' => $this->userName($owner), 'email' => $owner->getEmail(), 'slug' => $profile?->getSlug(), 'creator' => $owner->hasRole('ROLE_CREATOR')] : null,
             'throughNotificationId' => (int) $notificationId,
         ]]);
     }
@@ -301,7 +301,7 @@ final class SupportInboxController
         }, $files, array_keys($files));
     }
 
-    private function userName(User $user): string { return $user->getCreator()?->getDisplayName() ?? $user->getCompany()?->getName() ?? $user->getEmail(); }
+    private function userName(User $user): string { return $user->getCompany()?->getName() ?? $user->getCreator()?->getDisplayName() ?? $user->getEmail(); }
     private function missing(Request $request): JsonResponse { return $this->response(['error' => $this->copy->get(LocaleContext::fromRequest($request) ?? 'bs', 'notFound')], 404); }
     private function invalid(Request $request): JsonResponse { return $this->response(['error' => ApiMessages::get('invalid_request', LocaleContext::fromRequest($request) ?? 'bs')], 400); }
     private function response(array $data, int $status = 200): JsonResponse { return new JsonResponse($data, $status, ['Cache-Control' => 'private, no-store', 'X-Robots-Tag' => 'noindex, nofollow']); }

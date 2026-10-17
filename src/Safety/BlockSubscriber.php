@@ -53,6 +53,7 @@ final class BlockSubscriber implements EventSubscriberInterface
             }
             if (preg_match('~^/api/company/campaigns/[^/]+/(?:invitations|conversations)$~', $path)) {
                 $data = json_decode($request->getContent(), true);
+                if (is_int($data['agencyId'] ?? null)) { $other[] = $this->db->fetchOne('SELECT owner_id FROM company WHERE id = ?', [$data['agencyId']]); }
                 if (is_int($data['creatorId'] ?? null)) { $other[] = $this->db->fetchOne('SELECT owner_id FROM creator WHERE id = ?', [$data['creatorId']]); }
             }
         }

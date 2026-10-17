@@ -252,7 +252,7 @@ export function updateProfileReviewSchema(kind, slug, rows) {
   if (!target || entity.url !== url) return
   const reviews = rows.filter(row => !row.isPresentationDemo && row.comment && row.authorName).map(row => ({
     '@type': 'Review', '@id': `${url}#review-${row.id}`,
-    author: { '@type': kind === 'creators' ? 'Organization' : 'Person', name: row.authorName },
+    author: { '@type': row.authorType || (kind === 'creators' ? 'Organization' : 'Person'), name: row.authorName },
     reviewBody: row.comment, datePublished: row.createdAt,
     reviewRating: { '@type': 'Rating', ratingValue: row.rating, bestRating: 5, worstRating: 1 },
   }))

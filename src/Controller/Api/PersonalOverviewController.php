@@ -21,7 +21,7 @@ final class PersonalOverviewController
         if ($locale === null) return new JsonResponse(['error' => ApiMessages::get('unsupported_language', 'bs')], 400);
         $user = $security->getUser();
         if (!$user instanceof User || $user->isDeleted()) return new JsonResponse(['error' => ApiMessages::get('authentication_required', $locale)], 401);
-        $role = $user->getCreator() !== null ? 'ROLE_CREATOR' : 'ROLE_COMPANY';
+        $role = $user->hasRole('ROLE_COMPANY') ? 'ROLE_COMPANY' : 'ROLE_CREATOR';
         $access = ApiAccess::requireRole($security, $role, $locale, false, false);
         if ($access instanceof JsonResponse) return $access;
         return new JsonResponse(['userId' => $user->getId(), 'data' => $overview->snapshot($user)], headers: ['Cache-Control' => 'private, no-store']);

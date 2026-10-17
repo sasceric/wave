@@ -8,7 +8,7 @@ import { refreshCredits } from '../composables/useCredits'
 import CampaignHiringProgress from '../components/campaigns/CampaignHiringProgress.vue'
 import CampaignApplicationRange from '../components/campaigns/CampaignApplicationRange.vue'
 import { campaignPlace } from '../lib/marketplace'
-import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { ArrowRight, BadgeCheck, CalendarDays, DollarSign, MapPin, Tag, UsersRound } from '@lucide/vue'
 import RouterLink from '../components/shared/LocalizedLink.vue'
@@ -26,7 +26,10 @@ const campaign = ref(null)
 const error = ref('')
 const applyError = ref('')
 const applying = ref(false)
+const canApply = computed(() => user.value?.accountType === 'creator' || user.value?.canOfferServices)
+const ownCampaign = computed(() => campaign.value?.company?.ownerId === user.value?.id)
 const applicationMessage = ref('')
+const agencyProposal = ref({ amount: null, scope: '', timeline: '', team: '' })
 const applicationSent = ref(false)
 const applicationFormOpen = ref(false)
 const alreadyApplied = ref(false)
@@ -58,7 +61,7 @@ async function loadCampaign() {
     user.value = session.data
     campaign.value = response.data
 
-    if (user.value?.accountType === 'creator') {
+    if (canApply.value) {
       try {
         const [applicationsResponse, invitationsResponse] = await Promise.all([apiGet('/me/applications'), apiGet('/me/invitations')])
         if (generation !== campaignGeneration) return
@@ -94,7 +97,7 @@ async function applyToCampaign() {
   try {
     const response = await apiRequest(`/campaigns/${encodeURIComponent(route.params.slug)}/applications`, {
       method: 'POST',
-      body: { message: applicationMessage.value },
+      body: { message: applicationMessage.value, ...(user.value?.profile?.companyType === 'agency' ? { proposal: { ...agencyProposal.value, amount: agencyProposal.value.amount === '' ? null : agencyProposal.value.amount } } : {}) },
     })
     const updatedCampaign = response?.data?.campaign
     if (updatedCampaign?.applicationRange && updatedCampaign.slug === campaign.value?.slug) {
@@ -103,6 +106,7 @@ async function applyToCampaign() {
     refreshCredits().catch(() => {})
     applicationSent.value = true
     applicationMessage.value = ''
+  agencyProposal.value = { amount: null, scope: '', timeline: '', team: '' }
   } catch (cause) {
     applyError.value = cause.message
   } finally {
@@ -219,7 +223,7 @@ onMounted(loadCampaign)
             <div v-if="campaign.status === 'cancelled'" class="brief-notice" role="status">{{ t('account.cancelled') }}</div>
             <div v-else-if="campaign.readOnly" class="brief-notice" role="status">{{ t('campaignChat.deletedAccountNotice') }}</div>
             <div
-              v-else-if="!campaign.readOnly && user?.accountType === 'creator' && user.emailVerified === false"
+              v-else-if="!campaign.readOnly && canApply && user.emailVerified === false"
               class="brief-notice"
             >
               <p>{{ t('account.emailUnverified') }}</p>
@@ -228,7 +232,7 @@ onMounted(loadCampaign)
               </RouterLink>
             </div>
             <div
-              v-else-if="user?.accountType === 'creator' && !user.approved"
+              v-else-if="canApply && !user.approved"
               class="brief-notice"
               role="status"
             >
@@ -241,10 +245,10 @@ onMounted(loadCampaign)
               <p>{{ t('hiring.invitedHint') }}</p>
               <RouterLink class="button button--dark button--full" :to="invitation.conversationId ? { name: 'messages', query: { conversation: invitation.conversationId } } : { name: 'account-applications' }">{{ t(invitation.conversationId ? 'account.activityChat' : 'hiring.viewInvitation') }} <ArrowRight :size="17" aria-hidden="true" /></RouterLink>
             </div>
-            <div v-else-if="user?.accountType === 'creator' && alreadyApplied" class="brief-notice" role="status">
+            <div v-else-if="canApply && alreadyApplied" class="brief-notice" role="status">
               {{ t('campaignDetail.alreadyApplied') }}
             </div>
-            <div v-else-if="user?.accountType === 'creator' && !applicationSent" class="brief-application">
+            <div v-else-if="canApply && !ownCampaign && !applicationSent" class="brief-application">
               <button
                 v-if="!applicationFormOpen"
                 class="button button--dark button--full"
@@ -255,6 +259,13 @@ onMounted(loadCampaign)
               </button>
               <form v-else v-form-validation @submit.prevent="applyToCampaign">
                 <CreditActionNotice action="application" />
+                <fieldset v-if="user?.profile?.companyType === 'agency'" class="agency-proposal-fields">
+                  <legend>{{ t('agency.proposal') }}</legend>
+                  <label class="form-field"><span>{{ t('agency.amount') }} ({{ campaign.currency }})</span><input v-model.number="agencyProposal.amount" type="number" min="1" max="10000000" /></label>
+                  <label class="form-field"><span>{{ t('agency.scope') }}</span><textarea v-model.trim="agencyProposal.scope" maxlength="2000"></textarea></label>
+                  <label class="form-field"><span>{{ t('agency.timeline') }}</span><input v-model.trim="agencyProposal.timeline" maxlength="240" /></label>
+                  <label class="form-field"><span>{{ t('agency.team') }}</span><input v-model.trim="agencyProposal.team" maxlength="500" /></label>
+                </fieldset>
                 <label class="field-label" for="application-message">{{ t('account.applicationMessage') }}</label>
                 <textarea
                   id="application-message"

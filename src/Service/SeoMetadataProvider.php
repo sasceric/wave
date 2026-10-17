@@ -156,7 +156,7 @@ final class SeoMetadataProvider
 
         if ($name === 'creator-profile') {
             $creator = $this->entityManager->getRepository(Creator::class)->createQueryBuilder('creator')
-                ->leftJoin('creator.owner', 'owner')
+                ->leftJoin('creator.owner', 'owner')->andWhere('creator.agencyProfile = false')
                 ->andWhere('creator.slug = :slug')
                 ->andWhere('owner.id IS NULL OR (owner.approved = :approved AND owner.hideMyAccount = :visible)')
                 ->setParameter('slug', $params['slug'])

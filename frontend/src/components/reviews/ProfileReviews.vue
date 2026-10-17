@@ -7,7 +7,7 @@ import { useI18n } from 'vue-i18n'
 import DirectoryPagination from '../shared/DirectoryPagination.vue'
 import StatusMessage from '../shared/StatusMessage.vue'
 import { apiGet, formatDate } from '../../lib/api'
-const props = defineProps({ kind: { type: String, required: true }, slug: { type: String, required: true } })
+const props = defineProps({ kind: { type: String, required: true }, slug: { type: String, required: true }, reviewRole: { type: String, default: '' } })
 const { t, locale } = useI18n()
 const rows = ref([])
 const summary = ref({})
@@ -26,14 +26,14 @@ async function load() {
   error.value = ''
   rows.value = []
   try {
-    const result = await apiGet(`/${props.kind}/${encodeURIComponent(props.slug)}/reviews?page=${page.value}`)
+    const result = await apiGet(`/${props.kind}/${encodeURIComponent(props.slug)}/reviews?page=${page.value}${props.reviewRole ? `&role=${props.reviewRole}` : ''}`)
     if (current !== generation) return
     rows.value = result.data
     summary.value = result.summary
     total.value = result.meta.total ?? result.summary.reviewCount ?? 0
     page.value = result.meta.page ?? page.value
     await nextTick()
-    if (current === generation) updateProfileReviewSchema(props.kind, props.slug, rows.value)
+    if (current === generation && !props.reviewRole) updateProfileReviewSchema(props.kind, props.slug, rows.value)
   } catch (cause) { if (current === generation) error.value = cause.message }
   finally { if (current === generation) loading.value = false }
 }
@@ -44,7 +44,7 @@ async function changePage(value) {
   heading.value?.focus({ preventScroll: true })
   heading.value?.scrollIntoView({ block: 'start', behavior: 'smooth' })
 }
-watch(() => [props.kind, props.slug, locale.value], () => { page.value = 1; load() }, { immediate: true })
+watch(() => [props.kind, props.slug, props.reviewRole, locale.value], () => { page.value = 1; load() }, { immediate: true })
 onBeforeUnmount(() => { ++generation })
 </script>
 <template>

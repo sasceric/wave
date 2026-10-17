@@ -10,6 +10,7 @@ defineProps({
   removeLabel: { type: String, default: '' },
   helperText: { type: String, default: '' },
   canRemove: { type: Boolean, default: false },
+  allowReplace: { type: Boolean, default: true },
   disabled: { type: Boolean, default: false },
 })
 defineEmits(['choose', 'remove'])
@@ -24,10 +25,10 @@ defineEmits(['choose', 'remove'])
     </button>
     <div v-else class="profile-image-field__image">
       <img :src="previewUrl" :alt="alt" />
-      <button v-if="canRemove && !compact" class="profile-image-field__remove" type="button" :aria-label="removeLabel" :title="removeLabel" :disabled="disabled" @click="$emit('remove')">
+      <button v-if="canRemove && (!compact || !allowReplace)" class="profile-image-field__remove" type="button" :aria-label="removeLabel" :title="removeLabel" :disabled="disabled" @click="$emit('remove')">
         <X :size="17" aria-hidden="true" />
       </button>
-      <button class="profile-image-field__change" data-validation-control type="button" :disabled="disabled" @click="$emit('choose')">
+      <button v-if="allowReplace" class="profile-image-field__change" data-validation-control type="button" :disabled="disabled" @click="$emit('choose')">
         <Camera v-if="compact" :size="20" aria-hidden="true" />
         <Upload v-else :size="14" aria-hidden="true" />
         <span :class="{ 'sr-only': compact }">{{ changeLabel }}</span>

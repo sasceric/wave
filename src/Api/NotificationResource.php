@@ -10,8 +10,8 @@ final class NotificationResource
     public static function fromEntity(Notification $notification, string $locale): array
     {
         $actor = $notification->getActor();
-        $actorName = $actor?->getCreator()?->getDisplayName()
-            ?? $actor?->getCompany()?->getName()
+        $actorName = $actor?->getCompany()?->getName()
+            ?? $actor?->getCreator()?->getDisplayName()
             ?? 'Wave';
         $campaign = $notification->getCampaign();
         $campaignTranslation = $campaign?->getTranslations()[$locale] ?? [];
@@ -36,7 +36,7 @@ final class NotificationResource
             'conversationId' => $notification->getConversation()?->getId(),
             'reviewApplicationId' => $notification->getReviewApplication()?->getId(),
             'reviewAccountType' => $notification->getReviewApplication() === null ? null
-                : ($notification->getRecipient()->getCreator() !== null ? 'creator' : 'company'),
+                : ($notification->getReviewApplication()->getCreator()->getOwner()?->getId() === $notification->getRecipient()->getId() ? 'creator' : 'company'),
         ];
     }
 }

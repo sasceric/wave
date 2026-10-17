@@ -1,4 +1,5 @@
 <script setup>
+import { isProviderInThread } from '../lib/collaborationRole'
 import CampaignCancellationAction from '../components/account/CampaignCancellationAction.vue'
 import CampaignHireAction from '../components/account/CampaignHireAction.vue'
 import RichTextContent from '../components/shared/RichTextContent.vue'
@@ -49,7 +50,7 @@ async function refreshEngagement() {
 }
 function confirmOffer(decision) {
   const offer = selectedConversation.value?.engagement?.offer
-  if (offer?.status !== 'pending' || currentUser.value?.accountType !== 'creator') return
+  if (offer?.status !== 'pending' || !selectedProvider.value) return
   offerError.value = ''
   offerDecision.value = { ...offer, decision, conversationId: selectedConversation.value.id }
 }
@@ -237,13 +238,14 @@ const selectedCreator = computed(() => (
   || pendingDetails.value?.creator
   || null
 ))
+const selectedProvider = computed(() => isProviderInThread(selectedThread.value, currentUser.value))
 const counterpartName = computed(() => (
   selectedThread.value
     ? conversationName(selectedThread.value)
     : selectedCreator.value?.displayName || ''
 ))
 const counterpartAvatar = computed(() => (
-  currentUser.value?.accountType === 'company'
+  !selectedProvider.value
     ? selectedCreator.value?.avatarUrl || null
     : selectedCompany.value?.logoUrl || null
 ))
@@ -1031,18 +1033,18 @@ function handleLoadError(cause) {
 
 function isMessageMine(message) {
   return selectedInquiry.value
-    ? message.senderRole === currentUser.value?.accountType
+    ? message.senderId ? message.senderId === currentUser.value?.id : message.senderRole === (selectedProvider.value ? 'creator' : 'company')
     : message.senderId === currentUser.value?.id
 }
 
 function conversationName(conversation) {
-  return currentUser.value?.accountType === 'company'
+  return !isProviderInThread(conversation, currentUser.value)
     ? conversation.creator.displayName
     : conversation.company.name
 }
 
 function conversationAvatar(conversation) {
-  return currentUser.value?.accountType === 'company'
+  return !isProviderInThread(conversation, currentUser.value)
     ? conversation.creator.avatarUrl
     : conversation.company.logoUrl
 }
@@ -1206,7 +1208,7 @@ function messageTimeDescription(value) {
               <h2>{{ counterpartName }}</h2>
               <LocalizedLink
                 v-if="selectedConversation?.campaign?.slug"
-                :to="{ name: currentUser?.accountType === 'company' ? 'account-campaign-detail' : 'campaign-detail', params: { slug: selectedConversation.campaign.slug } }"
+                :to="{ name: !selectedProvider ? 'account-campaign-detail' : 'campaign-detail', params: { slug: selectedConversation.campaign.slug } }"
               >
                 {{ selectedConversation.campaign.title }}
               </LocalizedLink>
@@ -1274,7 +1276,7 @@ function messageTimeDescription(value) {
                     class="campaign-messages__message"
                     :class="{ 'campaign-messages__message--mine': isMessageMine(message) }"
                   >
-                    <template v-if="message.event"><p>{{ t(`hiring.timeline.${message.event.type}`, { campaign: message.event.campaignTitle, amount: formatMoney(message.event.amount, message.event.currency) }) }}</p><LocalizedLink v-if="message.event.campaignSlug && !selectedThread?.readOnly" class="campaign-messages__event-link" :to="{ name: currentUser?.accountType === 'company' ? 'account-campaign-detail' : 'campaign-detail', params: { slug: message.event.campaignSlug } }">{{ t('campaignChat.viewCampaign') }} →</LocalizedLink></template>
+                    <template v-if="message.event"><p>{{ t(`hiring.timeline.${message.event.type}`, { campaign: message.event.campaignTitle, amount: formatMoney(message.event.amount, message.event.currency) }) }}</p><LocalizedLink v-if="message.event.campaignSlug && !selectedThread?.readOnly" class="campaign-messages__event-link" :to="{ name: !selectedProvider ? 'account-campaign-detail' : 'campaign-detail', params: { slug: message.event.campaignSlug } }">{{ t('campaignChat.viewCampaign') }} →</LocalizedLink></template>
                     <p v-else>{{ message.body }}</p>
                     <div class="campaign-messages__message-meta">
                       <time
@@ -1351,7 +1353,7 @@ function messageTimeDescription(value) {
 
         <button v-if="selectedThread && unseenNewMessages" type="button" class="campaign-messages__new-messages" @click="scrollToLatestMessage">{{ t('campaignChat.newMessages', { count: unseenNewMessages }) }}</button>
         <form v-form-validation v-if="selectedThread || (pendingStart && pendingDetails && currentUser?.accountType === 'company')" class="campaign-messages__composer" @submit.prevent="sendMessage">
-          <div v-if="selectedConversation?.engagement?.offer?.status === 'pending' && currentUser?.accountType === 'creator' && !campaignChatClosed" class="campaign-messages__offer-confirmation">
+          <div v-if="selectedConversation?.engagement?.offer?.status === 'pending' && selectedProvider && !campaignChatClosed" class="campaign-messages__offer-confirmation">
             <p>{{ t('hiring.pendingOffer', { amount: formatMoney(selectedConversation.engagement.offer.amount, selectedCampaign.currency) }) }}</p>
             <button type="button" class="campaign-messages__offer-action campaign-messages__offer-action--accept" @click="confirmOffer('accept')"><Check :size="14" aria-hidden="true" />{{ t('hiring.acceptOffer') }}</button>
             <button type="button" class="campaign-messages__offer-action" @click="confirmOffer('reject')"><X :size="14" aria-hidden="true" />{{ t('hiring.declineOffer') }}</button>
@@ -1493,7 +1495,7 @@ function messageTimeDescription(value) {
               <LocalizedLink
                 v-if="selectedCampaign.slug"
                 class="campaign-messages__campaign-link"
-                :to="{ name: currentUser?.accountType === 'company' ? 'account-campaign-detail' : 'campaign-detail', params: { slug: selectedCampaign.slug } }"
+                :to="{ name: !selectedProvider ? 'account-campaign-detail' : 'campaign-detail', params: { slug: selectedCampaign.slug } }"
               >
                 {{ t('campaignChat.viewCampaign') }}
                 <ArrowRight :size="16" aria-hidden="true" />

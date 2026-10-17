@@ -101,7 +101,7 @@ final class MediaController
         }
         // Own profile images can be prepared while the account awaits approval.
         $profileImage = in_array($folderSlug, ['creator-avatar', 'company-logo', 'company-cover'], true);
-        $user = $folderSlug === 'report-evidence' ? ApiAccess::requireParticipant($security, $locale, true) : ApiAccess::requireRole($security, $folderSettings['role'], $locale, requireApproved: !$profileImage);
+        $user = $folderSlug === 'creator-portfolio' ? ApiAccess::requireProvider($security, $locale, active: true) : ($folderSlug === 'report-evidence' ? ApiAccess::requireParticipant($security, $locale, true) : ApiAccess::requireRole($security, $folderSettings['role'], $locale, requireApproved: !$profileImage));
         if ($user instanceof JsonResponse) {
             return $user;
         }
@@ -254,6 +254,7 @@ final class MediaController
 
     private function isPublicMedia(Media $media, EntityManagerInterface $entityManager): bool
     {
+        if ($media->getFolder()->getSlug() === 'creator-portfolio' && $media->getOwner()->getCreator()?->isAgencyProfile() && !$media->getOwner()->isAgency()) return false;
         $creatorAvatarCount = $entityManager->getRepository(Creator::class)->createQueryBuilder('creator')
             ->select('COUNT(creator.id)')
             ->leftJoin('creator.owner', 'owner')

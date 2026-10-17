@@ -22,14 +22,10 @@ final class CreatorInquiryResource
             'id' => $inquiry->getId(),
             'readOnly' => AccountDeletion::sharedHistoryDeleted($inquiry->getCreator(), $inquiry->getCompany()),
             'role' => $isCreator ? 'creator' : 'company',
-            'creator' => [
-                'slug' => $inquiry->getCreator()->getSlug(),
-                'displayName' => $inquiry->getCreator()->getOwner()?->isDeleted() ? ApiMessages::get('deleted_account', $locale) : $inquiry->getCreator()->getDisplayName(),
-                'deleted' => $inquiry->getCreator()->getOwner()?->isDeleted() ?? false,
-                'avatarUrl' => $inquiry->getCreator()->getAvatarMedia()?->getUrl()
-                    ?? $inquiry->getCreator()->getAvatarUrl(),
-            ],
+            'creator' => CreatorResource::fromEntity($inquiry->getCreator(), $locale),
+            'viewerRole' => $isCreator ? 'provider' : 'client',
             'company' => [
+                'ownerId' => $inquiry->getCompany()->getOwner()?->getId(),
                 'slug' => $inquiry->getCompany()->getSlug(),
                 'name' => $inquiry->getCompany()->getOwner()?->isDeleted() ? ApiMessages::get('deleted_account', $locale) : $inquiry->getCompany()->getName(),
                 'deleted' => $inquiry->getCompany()->getOwner()?->isDeleted() ?? false,

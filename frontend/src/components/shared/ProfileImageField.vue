@@ -1,5 +1,6 @@
 <script setup>
 import { computed, onBeforeUnmount, ref, useId } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { apiRequest, apiUpload } from '../../lib/api'
 import ConfirmationModal from './ConfirmationModal.vue'
 import ImageUploadControl from './ImageUploadControl.vue'
@@ -22,6 +23,7 @@ const props = defineProps({
 })
 
 const inputId = useId()
+const { t } = useI18n()
 const fileInput = ref(null)
 const pendingFile = ref(null)
 const pendingPreview = ref('')
@@ -44,13 +46,14 @@ function revokePendingPreview() {
 }
 
 function openFilePicker() {
+  if (props.disabled || hasPreparedChange.value || preview.value) return
   fileInput.value?.click()
 }
 
 function selectFile(event) {
   const file = event.target.files?.[0]
   event.target.value = ''
-  if (!file) return
+  if (!file || props.disabled || hasPreparedChange.value || preview.value) return
 
   revokePendingPreview()
   pendingFile.value = file
@@ -112,7 +115,12 @@ function commit() {
 async function rollback(change) {
   if (!change?.uploadedMediaId) return
 
-  await apiRequest(`/media/${change.uploadedMediaId}`, { method: 'DELETE' })
+  try {
+    await apiRequest(`/media/${change.uploadedMediaId}`, { method: 'DELETE' })
+  } catch (cause) {
+    // A retry may find an upload that has already been cleaned up.
+    if (cause.status !== 404) throw cause
+  }
   preparedChange = null
   hasPreparedChange.value = false
 }
@@ -133,17 +141,20 @@ defineExpose({ prepareSave, commit, rollback })
       :remove-label="removeLabel"
       :helper-text="helperText"
       :disabled="disabled || hasPreparedChange"
+      :allow-replace="false"
       can-remove
       @choose="openFilePicker"
       @remove="removalConfirmationOpen = true"
     />
+    <p v-if="preview" class="profile-image-upload__hint">{{ t('account.profileImageReplaceHint') }}</p>
+    <p v-else-if="pendingRemoval" class="profile-image-upload__hint" role="status">{{ t('account.profileImageRemovalPending') }}</p>
     <input
       :id="inputId"
       ref="fileInput"
       class="profile-image-field__input"
       type="file"
       accept="image/jpeg,image/png,image/webp"
-      :disabled="disabled || hasPreparedChange"
+      :disabled="disabled || hasPreparedChange || Boolean(preview)"
       @change="selectFile"
     />
     <ConfirmationModal

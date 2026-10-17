@@ -48,7 +48,7 @@ const loadError = ref('')
 let generation = 0
 const platforms = computed(() => PRESENTATION_PLATFORMS.map(value => ({ value, label: value })))
 const allPlatforms = computed(() => [{ value: 'All', label: t('creatorProfile.allPlatforms') }, ...platforms.value])
-const choices = values => values.map(value => ({ value, label: t(`studio.${value}`) }))
+const choices = values => values.map(value => ({ value, label: t(profile.value.companyType === 'agency' && value === 'posting' ? 'agency.posting' : `studio.${value}`) }))
 const work = computed(() => profile.value.portfolio[selectedWork.value])
 const campaignOptions = computed(() => {
     const options = new Map(campaigns.value.map(row => [row.id, { value: row.id, label: `${row.company} · ${row.title}` }]))
@@ -90,7 +90,7 @@ watch(() => [profile.value.id, props.tab, props.editing], () => {
     selectedNetwork.value = 0
     selectedPackage.value = null
     step.value = 1
-    if (props.tab === 'portfolio' && props.editing) loadCampaigns()
+    if (props.tab === 'portfolio' && props.editing && (!profile.value.companyType || profile.value.providerId)) loadCampaigns()
 }, { immediate: true })
 onBeforeUnmount(() => { ++generation; })
 function addWork() { if (profile.value.portfolio.length < 4) {
@@ -175,7 +175,7 @@ watch(locale, language => { const names = new Intl.DisplayNames([language === 'c
           v-else-if="tab === 'portfolio' && profile.portfolio.length"
           :items="profile.portfolio"
           :show-heading="false"
-          :name="profile.displayName"
+          :name="profile.displayName || profile.name"
         />
         <template v-else-if="tab === 'packages' && profile.packages.length">
           <article v-for="item in profile.packages" :key="item.id" class="creator-studio__package">
@@ -187,7 +187,7 @@ watch(locale, language => { const names = new Intl.DisplayNames([language === 'c
               </strong>
             </header>
             <p>{{ item.description }}</p>
-            <CreatorPackageFacts :item="item" />
+            <CreatorPackageFacts :item="item" :agency="profile.companyType === 'agency'" />
           </article>
         </template>
         <p v-else class="profile-editor__empty">{{ t('account.notProvided') }}</p>
@@ -564,7 +564,7 @@ watch(locale, language => { const names = new Intl.DisplayNames([language === 'c
         <article v-for="(item, index) in profile.packages" :key="item.id || index" class="creator-studio__work-row">
           <div>
             <h3>{{ item.title || t('account.packageTitle') }}</h3>
-            <p>{{ item.platform === 'All' ? t('creatorProfile.allPlatforms') : item.platform }} · {{ t(`studio.${item.mode}`) }}</p>
+            <p>{{ item.platform === 'All' ? t('creatorProfile.allPlatforms') : item.platform }} · {{ t(profile.companyType === 'agency' && item.mode === 'posting' ? 'agency.posting' : `studio.${item.mode}`) }}</p>
             <strong class="creator-studio__price">
               {{ item.priceMode === 'from' ? t('studio.priceFrom') : '' }}
               {{ item.priceMode === 'agreement' || !item.price ? t('creatorProfile.priceByAgreement') : formatMoney(item.price, item.currency) }}
@@ -641,7 +641,7 @@ watch(locale, language => { const names = new Intl.DisplayNames([language === 'c
           <strong>
             {{ item.priceMode==='agreement'?t('creatorProfile.priceByAgreement'):`${item.priceMode==='from'?t('studio.priceFrom'):''} ${formatMoney(item.price||0,item.currency)}` }}
           </strong>
-          <CreatorPackageFacts :item="item" />
+          <CreatorPackageFacts :item="item" :agency="profile.companyType === 'agency'" />
         </div>
       </article>
     </template>

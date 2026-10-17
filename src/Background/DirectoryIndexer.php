@@ -22,7 +22,7 @@ final class DirectoryIndexer
             $this->connection->transactional(function () use ($kind, $id): void {
                 $this->connection->executeQuery('SELECT pg_advisory_xact_lock(hashtext(?))', ['wave.index.' . $kind . ':' . $id]);
                 $row = $kind === 'creator'
-                    ? $this->connection->fetchAssociative('SELECT c.*, COALESCE(u.city, c.city) AS city FROM creator c LEFT JOIN wave_user u ON u.id = c.owner_id WHERE c.id = ?', [$id])
+                    ? $this->connection->fetchAssociative('SELECT c.*, COALESCE(u.city, c.city) AS city FROM creator c LEFT JOIN wave_user u ON u.id = c.owner_id WHERE c.id = ? AND c.agency_profile = FALSE', [$id])
                     : $this->connection->fetchAssociative('SELECT * FROM ' . $kind . ' WHERE id = ?', [$id]);
                 if (!$row) {
                     $this->connection->delete('directory_index', ['id' => $kind . ':' . $id]);

@@ -40,7 +40,7 @@ final class RegionalSeoContent
 
     public function countryCounts(): array
     {
-        $rows = $this->connection->fetchAllAssociative('SELECT UPPER(u.country_code) AS code, COUNT(*) AS total FROM creator c JOIN wave_user u ON u.id = c.owner_id WHERE u.approved = TRUE AND u.hide_my_account = FALSE GROUP BY UPPER(u.country_code)');
+        $rows = $this->connection->fetchAllAssociative('SELECT UPPER(u.country_code) AS code, COUNT(*) AS total FROM creator c JOIN wave_user u ON u.id = c.owner_id WHERE c.agency_profile = FALSE AND u.approved = TRUE AND u.hide_my_account = FALSE GROUP BY UPPER(u.country_code)');
         $counts = [];
         foreach ($rows as $row) {
             if (isset($this->countries[$row['code']])) {
@@ -71,7 +71,7 @@ final class RegionalSeoContent
 
     public function creators(string $code): array
     {
-        return $this->connection->fetchAllAssociative('SELECT c.display_name AS name, c.slug, COALESCE(u.city, c.city) AS city FROM creator c JOIN wave_user u ON u.id = c.owner_id WHERE u.approved = TRUE AND u.hide_my_account = FALSE AND UPPER(u.country_code) = :code ORDER BY c.created_at DESC, c.id DESC LIMIT 24', ['code' => $code]);
+        return $this->connection->fetchAllAssociative('SELECT c.display_name AS name, c.slug, COALESCE(u.city, c.city) AS city FROM creator c JOIN wave_user u ON u.id = c.owner_id WHERE c.agency_profile = FALSE AND u.approved = TRUE AND u.hide_my_account = FALSE AND UPPER(u.country_code) = :code ORDER BY c.created_at DESC, c.id DESC LIMIT 24', ['code' => $code]);
     }
 
     /** Initial public content matches the Vue page and remains readable without JavaScript. */

@@ -28,6 +28,7 @@ final class AdminCatalog
     public function page(Request $request, string $kind, string $locale): array
     {
         $builder = $this->query($kind);
+        if ($kind === 'creators') $builder->andWhere('item.agencyProfile = false');
         $limit = $request->query->getInt('limit', 25);
         $page = $request->query->getInt('page', 1);
         if (!in_array($limit, [25, 50, 100], true) || $page < 1 || $page > 1000000) {
@@ -153,8 +154,8 @@ final class AdminCatalog
             'id' => $item->getId(),
             'email' => $item->getEmail(),
             'accountType' => $item->hasRole('ROLE_CREATOR') ? 'creator' : 'company',
-            'name' => $item->getCreator()?->getDisplayName() ?? $item->getCompany()?->getName() ?? $item->getEmail(),
-            'profileSlug' => $item->getCreator()?->getSlug() ?? $item->getCompany()?->getSlug(),
+            'name' => $item->getCompany()?->getName() ?? $item->getCreator()?->getDisplayName() ?? $item->getEmail(),
+            'profileSlug' => $item->getCompany()?->getSlug() ?? $item->getCreator()?->getSlug(),
             'emailVerified' => $item->isEmailVerified(),
             'approved' => $item->isApproved(),
             'profileComplete' => $item->hasCompleteProfile(),

@@ -72,7 +72,10 @@ final class CreatorResource
             $creator->getPackages(),
         );
 
-        return [
+        $resource = [
+            'ownerId' => $owner?->getId(),
+            'profileRoute' => 'creator-profile',
+            'isAgency' => $creator->isAgencyProfile(),
             'id' => $creator->getId(),
             'canReceiveCampaignInvitations' => $owner instanceof User
                 && $owner->isApproved()
@@ -108,5 +111,17 @@ final class CreatorResource
             'faqs' => $creator->getFaqs(),
             'tags' => $translation['tags'] ?? $creator->getTags(),
         ];
+        if ($creator->isAgencyProfile() && ($company = $owner?->getCompany()) !== null) {
+            $resource = array_replace($resource, [
+                'profileRoute' => 'company-profile', 'companyId' => $company->getId(), 'companyType' => 'agency',
+                'slug' => $company->getSlug(), 'displayName' => $company->getName(),
+                'category' => $company->getIndustry(), 'categoryLabel' => $categoryLabels[$company->getIndustry()] ?? $company->getIndustry(),
+                'categories' => $company->getIndustries(), 'categoryLabels' => array_map(static fn (string $value): string => $categoryLabels[$value] ?? $value, $company->getIndustries()),
+                'bio' => $company->getAbout(), 'avatarUrl' => $company->getLogoMedia()?->getUrl() ?? $company->getLogoUrl(),
+                'avatarImage' => MediaImageResource::fromEntity($company->getLogoMedia()),
+                'canReceiveCampaignInvitations' => $resource['canReceiveCampaignInvitations'] && $owner->isAgency(),
+            ]);
+        }
+        return $resource;
     }
 }

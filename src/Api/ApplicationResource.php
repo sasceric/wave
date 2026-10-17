@@ -16,6 +16,7 @@ final class ApplicationResource
             'id' => $application->getId(),
             'readOnly' => $application->getStatus() === 'cancelled' || $application->getCampaign()->getStatus() === 'cancelled' || AccountDeletion::sharedHistoryDeleted($application->getCreator(), $application->getCampaign()->getCompany()),
             'message' => $application->getMessage(),
+            'proposal' => $application->getProposal(),
             'status' => $application->getStatus(),
             'conversationId' => $conversationId,
             'createdAt' => $application->getCreatedAt()->format(DATE_ATOM),

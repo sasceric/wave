@@ -139,6 +139,12 @@ class Creator
         $this->portfolioMedia = new ArrayCollection();
     }
 
+    #[ORM\Column(options: ['default' => false])]
+    private bool $agencyProfile = false;
+
+    public function isAgencyProfile(): bool { return $this->agencyProfile; }
+    public function markAgencyProfile(): void { $this->agencyProfile = true; }
+
     public function getId(): ?int
     {
         return $this->id;

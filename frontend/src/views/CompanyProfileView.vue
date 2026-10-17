@@ -1,4 +1,6 @@
 <script setup>
+import AgencyContactActions from '../components/companies/AgencyContactActions.vue'
+import AgencyProfileSections from '../components/companies/AgencyProfileSections.vue'
 import PresentationDemoBadge from '../components/shared/PresentationDemoBadge.vue'
 import MarketplaceSafetyActions from '../components/shared/MarketplaceSafetyActions.vue'
 import ProfileReviews from '../components/reviews/ProfileReviews.vue'
@@ -24,6 +26,9 @@ const route = useRoute()
 const company = ref(null)
 const campaigns = ref([])
 const error = ref('')
+const agencyTab = ref('about')
+const reviewRole = ref('provider')
+const contact = ref(null)
 const { t, locale } = useI18n()
 let profileGeneration = 0
 const countryDisplayLocale = computed(() => {
@@ -60,6 +65,7 @@ async function loadCompany() {
     ])
     if (generation !== profileGeneration) return
     company.value = companyResponse.data
+    agencyTab.value = 'about'
     campaigns.value = campaignResponse.data
   } catch (cause) {
     if (generation !== profileGeneration) return
@@ -123,8 +129,8 @@ onBeforeUnmount(() => { ++profileGeneration })
             <div>
               <p class="eyebrow">{{ t(`companyTypes.options.${company.companyType || 'brand'}`) }} · {{ industries.join(' · ') }}</p>
               <h1>{{ company.name }}<span v-if="company.verified" class="verified-mark" :aria-label="t('campaignCard.verified')">✓</span></h1>
-              <RatingSummary :rating="company.rating" />
-              <p class="company-profile__tagline">{{ company.about ? t('companyProfile.profileIntro') : t('companyProfile.profileLabel') }}</p>
+              <small v-if="company.companyType === 'agency'" class="agency-rating-context">{{ t('agency.combinedRating') }}</small><RatingSummary :rating="company.rating" />
+              <p class="company-profile__tagline">{{ t(company.companyType === 'agency' ? 'agency.tagline' : company.about ? 'companyProfile.profileIntro' : 'companyProfile.profileLabel') }}</p>
             </div>
           </div>
           <div class="company-profile__stats">
@@ -132,19 +138,23 @@ onBeforeUnmount(() => { ++profileGeneration })
             <span v-for="link in socialLinks" :key="link.platform"><component :is="SOCIAL_ICONS[link.platform] || Globe" :size="17" aria-hidden="true" />{{ link.platform }}</span>
           </div>
         </div>
-        <RouterLink class="button button--light company-profile__hero-action" to="/campaigns">
+        <AgencyContactActions v-if="company.companyType === 'agency'" ref="contact" :company="company" />
+        <RouterLink v-else class="button button--light company-profile__hero-action" to="/campaigns">
           {{ t('companyProfile.openCalls') }} <ExternalLink :size="16" aria-hidden="true" />
         </RouterLink>
       </div>
     </section>
 
     <main class="page-width company-profile__body">
-      <div class="company-profile__overview-grid">
+      <nav v-if="company.companyType === 'agency'" class="agency-profile-tabs" :aria-label="t('agency.services')">
+        <button v-for="[key, label] in [['about', 'agency.about'], ['portfolio', 'studio.tabWorks'], ['packages', 'studio.tabPackages'], ['campaigns', 'app.campaigns'], ['reviews', 'reviews.title']]" :key="key" class="button" :class="agencyTab === key ? 'button--dark' : 'button--outline'" type="button" :aria-pressed="agencyTab === key" @click="agencyTab = key">{{ t(label) }}</button>
+      </nav>
+      <div v-show="company.companyType !== 'agency' || agencyTab === 'about'" class="company-profile__overview-grid">
         <article class="company-profile__card company-profile__about-card">
           <p class="eyebrow">{{ t('companyProfile.aboutEyebrow') }}</p>
           <h2>{{ t('companyProfile.aboutTitle', { company: company.name }) }}</h2>
           <div v-if="aboutHtml" class="company-profile__rich-text" v-html="aboutHtml"></div>
-          <p v-else class="company-profile__muted">{{ t('companyProfile.profileLabel') }}</p>
+          <p v-else class="company-profile__muted">{{ t(company.companyType === 'agency' ? 'agency.tagline' : 'companyProfile.profileLabel') }}</p>
           <div v-if="industries.length" class="company-profile__tags">
             <span v-for="industry in industries" :key="industry">{{ industry }}</span>
           </div>
@@ -166,9 +176,13 @@ onBeforeUnmount(() => { ++profileGeneration })
         </article>
       </div>
 
+      <AgencyProfileSections v-if="company.companyType === 'agency'" :company="company" :tab="agencyTab" @request="contact?.openRequest($event)" />
       <MarketplaceSafetyActions kind="company" :slug="company.slug" />
-      <ProfileReviews kind="companies" :slug="company.slug" />
-      <section class="company-profile__campaigns">
+      <div v-if="company.companyType === 'agency' && agencyTab === 'reviews'" class="agency-profile-tabs">
+        <button v-for="role in ['provider', 'client']" :key="role" class="button" :class="reviewRole === role ? 'button--dark' : 'button--outline'" type="button" :aria-pressed="reviewRole === role" @click="reviewRole = role">{{ t(role === 'provider' ? 'agency.asProvider' : 'agency.asClient') }}</button>
+      </div>
+      <ProfileReviews v-if="company.companyType !== 'agency' || agencyTab === 'reviews'" kind="companies" :slug="company.slug" :review-role="company.companyType === 'agency' ? reviewRole : ''" />
+      <section v-show="company.companyType !== 'agency' || agencyTab === 'campaigns'" class="company-profile__campaigns">
         <div class="section-heading">
           <div><p class="eyebrow">{{ t('companyProfile.openCalls') }}</p><h2>{{ t('companyProfile.campaignsFrom', { company: company.name }) }}</h2></div>
           <RouterLink class="text-link" to="/campaigns">{{ t('companyProfile.allBriefs') }} <span aria-hidden="true">↗</span></RouterLink>

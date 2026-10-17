@@ -95,7 +95,7 @@ final class ProfileStructuredData
         $reviews = [];
         foreach ($result['data'] as $review) {
             if ($review['isPresentationDemo'] || $review['comment'] === '' || !$review['authorName']) continue;
-            $reviews[] = ['@type' => 'Review', '@id' => $url.'#review-'.$review['id'], 'author' => ['@type' => $authorType, 'name' => $review['authorName']],
+            $reviews[] = ['@type' => 'Review', '@id' => $url.'#review-'.$review['id'], 'author' => ['@type' => $review['authorType'] ?? $authorType, 'name' => $review['authorName']],
                 'reviewBody' => $review['comment'], 'datePublished' => $review['createdAt'],
                 'reviewRating' => ['@type' => 'Rating', 'ratingValue' => $review['rating'], 'bestRating' => 5, 'worstRating' => 1]];
         }

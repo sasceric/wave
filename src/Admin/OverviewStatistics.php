@@ -23,7 +23,7 @@ final class OverviewStatistics
         // Timestamp casts and substrings work with PostgreSQL and historical SQLite databases.
         $daily = $this->db->fetchAllAssociative("SELECT day, kind, COUNT(*) AS total FROM (
             SELECT SUBSTR(CAST(c.created_at AS VARCHAR), 1, 10) AS day, 'creators' AS kind FROM creator c
-            JOIN wave_user u ON u.id = c.owner_id WHERE u.deleted_at IS NULL AND c.created_at >= :from AND c.created_at < :until
+            JOIN wave_user u ON u.id = c.owner_id WHERE c.agency_profile = FALSE AND u.deleted_at IS NULL AND c.created_at >= :from AND c.created_at < :until
             UNION ALL SELECT SUBSTR(CAST(published_at AS VARCHAR), 1, 10), 'campaigns' FROM campaign WHERE published_at >= :from AND published_at < :until
             UNION ALL SELECT SUBSTR(CAST(created_at AS VARCHAR), 1, 10), 'applications' FROM campaign_application WHERE created_at >= :from AND created_at < :until
             UNION ALL SELECT SUBSTR(CAST(created_at AS VARCHAR), 1, 10), 'invitations' FROM campaign_invitation WHERE created_at >= :from AND created_at < :until

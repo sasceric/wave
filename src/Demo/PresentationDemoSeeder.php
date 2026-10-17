@@ -104,7 +104,7 @@ final class PresentationDemoSeeder
                 $this->em->flush();
                 return array_map(static fn (User $user): array => [
                     'email' => $user->getEmail(),
-                    'path' => ($user->getCreator() ? '/kreatori/' : '/kompanije/').($user->getCreator()?->getSlug() ?? $user->getCompany()?->getSlug()),
+                    'path' => ($user->getCompany() ? '/kompanije/' : '/kreatori/').($user->getCompany()?->getSlug() ?? $user->getCreator()?->getSlug()),
                     'hidden' => $user->isHideMyAccount(),
                 ], $users);
             });

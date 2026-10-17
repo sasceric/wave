@@ -182,6 +182,38 @@ final class MediaLifecycleTest extends WebTestCase
         $this->assertStored($fresh, false);
     }
 
+    public function testAgencyPortfolioUploadsAndLogoReplacementsCleanUpSharedStudioReferences(): void
+    {
+        $owner = $this->user('company');
+        $owner->getCompany()->setCompanyType('agency');
+        $this->em->flush();
+        $oldLogo = $this->media($owner, 'company-logo');
+        $newLogo = $this->media($owner, 'company-logo');
+        $cover = $this->media($owner, 'creator-portfolio');
+        $extra = $this->media($owner, 'creator-portfolio');
+        $this->client->loginUser($owner, 'main');
+        $this->client->request('GET', '/api/auth/csrf');
+        $csrf = json_decode($this->client->getResponse()->getContent(), true)['csrfToken'];
+        $this->client->request('POST', '/api/media?folder=creator-portfolio', [], [
+            'file' => new UploadedFile($this->directory.'/source.png', 'source.png', null, null, true),
+        ], ['HTTP_X_CSRF_TOKEN' => $csrf]);
+        self::assertResponseStatusCodeSame(201);
+        $id = json_decode($this->client->getResponse()->getContent(), true)['data']['id'];
+        $main = self::getContainer()->get(EntityManagerInterface::class)->find(Media::class, $id);
+        $body = ['name' => 'Agency', 'industries' => ['Travel'], 'companyType' => 'agency', 'logoMediaId' => $oldLogo->getId(),
+            'portfolio' => [['type' => 'image', 'title' => 'Agency project', 'mediaId' => $id, 'coverMediaId' => $cover->getId(), 'media' => [['type' => 'image', 'mediaId' => $extra->getId()]], 'publicPermission' => true]]];
+        $this->request('PUT', '/api/me/profile', $body);
+        self::assertResponseIsSuccessful();
+        foreach ([$oldLogo, $main, $cover, $extra] as $media) $this->assertStored($media, true);
+        $this->request('PUT', '/api/me/profile', [...$body, 'logoMediaId' => $newLogo->getId(), 'portfolio' => []]);
+        self::assertResponseIsSuccessful();
+        foreach ([$oldLogo, $main, $cover, $extra] as $media) $this->assertStored($media, false);
+        $this->assertStored($newLogo, true);
+        $this->request('PUT', '/api/me/profile', [...$body, 'companyType' => 'brand', 'logoMediaId' => null, 'portfolio' => []]);
+        self::assertResponseIsSuccessful();
+        $this->assertStored($newLogo, false);
+    }
+
     private function user(string $role): User
     {
         $user = new User($role.'@lifecycle.example.test', $role === 'creator' ? 'ROLE_CREATOR' : 'ROLE_COMPANY');

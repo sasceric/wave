@@ -33,15 +33,23 @@ final class ApiAccess
         return $user;
     }
 
+    public static function requireProvider(Security $security, string $locale, bool $requireVerified = false, bool $requireApproved = true, bool $active = false): User|JsonResponse
+    {
+        $user = $security->getUser();
+        if (!$user instanceof User) return self::requireRole($security, 'ROLE_CREATOR', $locale, $requireVerified, $requireApproved);
+        if (!$user->canOfferServices() && ($active || !$user->getCreator()?->isAgencyProfile())) {
+            return new JsonResponse(['error' => ApiMessages::get('forbidden', $locale)], 403);
+        }
+        return self::requireRole($security, $user->hasRole('ROLE_COMPANY') ? 'ROLE_COMPANY' : 'ROLE_CREATOR', $locale, $requireVerified, $requireApproved);
+    }
+
     public static function requireParticipant(Security $security, string $locale, bool $requireVerified = false): User|JsonResponse
     {
         $user = $security->getUser();
         if (!$user instanceof User) {
             return new JsonResponse(['error' => ApiMessages::get('authentication_required', $locale)], 401);
         }
-        $role = $user->getCreator() instanceof Creator
-            ? 'ROLE_CREATOR'
-            : ($user->getCompany() instanceof Company ? 'ROLE_COMPANY' : null);
+        $role = $user->getCompany() instanceof Company ? 'ROLE_COMPANY' : ($user->getCreator() instanceof Creator ? 'ROLE_CREATOR' : null);
         if ($role === null) {
             return new JsonResponse(['error' => ApiMessages::get('forbidden', $locale)], 403);
         }

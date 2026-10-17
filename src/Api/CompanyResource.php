@@ -7,7 +7,7 @@ use App\Localization\ApiMessages;
 
 final class CompanyResource
 {
-    public static function fromEntity(Company $company, string $locale, ?int $availableCampaignCount = null, bool $card = false, array $categoryLabels = []): array
+    public static function fromEntity(Company $company, string $locale, ?int $availableCampaignCount = null, bool $card = false, array $categoryLabels = [], bool $public = true): array
     {
         $translation = $company->getTranslations()[$locale] ?? [];
 
@@ -45,6 +45,17 @@ final class CompanyResource
             'featured' => $company->isFeatured(),
         ];
 
+        $resource['ownerId'] = $company->getOwner()?->getId();
+        if (!$card && ($company->getCompanyType() === 'agency' || !$public)) {
+            $provider = $company->getOwner()?->getCreator();
+            $studio = $provider?->isAgencyProfile() ? CreatorResource::fromEntity($provider, $locale, public: $public) : [];
+            $resource += [
+                'providerId' => $provider?->getId(),
+                'services' => $studio['tags'] ?? [], 'portfolio' => $studio['portfolio'] ?? [],
+                'packages' => $studio['packages'] ?? [], 'faqs' => $studio['faqs'] ?? [],
+                'presentation' => $studio['presentation'] ?? [],
+            ];
+        }
         if ($availableCampaignCount !== null) {
             $resource['availableCampaignCount'] = $availableCampaignCount;
         }

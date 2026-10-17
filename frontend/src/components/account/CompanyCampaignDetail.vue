@@ -116,7 +116,7 @@ function chatRoute(application) {
               <td class="creator-offers__campaign">
                 <div class="creator-offers__campaign-identity">
                   <CardImage :image="application.creator.avatarImage" :src="application.creator.avatarUrl || CREATOR_PLACEHOLDER" alt="" sizes="48px" />
-                  <div><button type="button" @click="emit('view-application', application)">{{ application.creator.displayName }}</button><p>{{ application.creator.categoryLabel || application.creator.category }}<template v-if="application.creator.city"> · {{ application.creator.city }}</template></p></div>
+                  <div><button type="button" @click="emit('view-application', application)">{{ application.creator.displayName }}</button><span v-if="application.creator.isAgency" class="status-badge">{{ t('companyTypes.options.agency') }}</span><p>{{ application.creator.categoryLabel || application.creator.category }}<template v-if="application.creator.city"> · {{ application.creator.city }}</template></p></div>
                 </div>
               </td>
               <td><span class="creator-offers__mobile-label">{{ t('safety.date') }}</span><span v-if="application.createdAt" class="creator-offers__deadline"><CalendarDays :size="17" aria-hidden="true" /><time :datetime="application.createdAt">{{ formatDate(application.createdAt) }}</time></span><small v-if="application.createdAt" class="company-campaign-applicants__time">{{ timeFormatter.ago(application.createdAt, Date.now()) }}</small></td>

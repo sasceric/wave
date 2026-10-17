@@ -642,3 +642,5 @@
   color: var(--muted-text);
   font-size: 13px;
 }
+
+.agency-proposal-fields { display: grid; gap: 12px; min-width: 0; margin-block: 16px; padding: 16px; border: 1px solid var(--line); border-radius: 14px; legend { padding-inline: 6px; font-weight: 600; } }

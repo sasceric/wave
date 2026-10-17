@@ -43,6 +43,11 @@ class Application
         $this->createdAt = new DateTimeImmutable();
     }
 
+    #[ORM\Column(type: 'json', options: ['default' => '{}'])]
+    private array $proposal = [];
+    public function getProposal(): array { return $this->proposal; }
+    public function setProposal(array $proposal): void { $this->proposal = $proposal; }
+
     public function getId(): ?int
     {
         return $this->id;

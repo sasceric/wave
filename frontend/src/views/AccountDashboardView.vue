@@ -77,6 +77,7 @@ onBeforeUnmount(() => { ++revision })
       <div v-if="!ready" class="activation-layout"><AccountActivationPanel :user="currentUser" /><AccountVisibilityCard /></div>
       <template v-else>
         <section class="activation-spotlight"><div><p>{{ t('activation.next') }}</p><h2>{{ t(creator ? (snapshot.counts.applications > 0 ? 'activation.creatorContinue' : 'activation.creatorReady') : 'activation.companyReady') }}</h2><p>{{ t(creator ? 'activation.creatorReadyHint' : 'activation.companyReadyHint') }}</p></div><LocalizedLink class="button" :to="{ name: creator ? 'campaigns' : 'account-campaign-create' }">{{ t(creator ? 'personalDashboard.findCampaign' : 'personalDashboard.newCampaign') }}<ArrowRight :size="17" aria-hidden="true" /></LocalizedLink></section>
+        <h2 v-if="!creator && currentUser.canOfferServices">{{ t('agency.clientWork') }}</h2>
         <div class="personal-overview__metrics">
           <LocalizedLink v-for="metric in metrics" :key="metric.key" class="personal-overview__metric" :to="metricLink(metric.key)">
             <span><component :is="metric.icon" :size="18" aria-hidden="true" />{{ t(`personalDashboard.${creator ? 'creator' : 'company'}.${metric.key}`) }}</span>
@@ -84,6 +85,14 @@ onBeforeUnmount(() => { ++revision })
             <small>{{ t(`personalDashboard.${creator ? 'creator' : 'company'}.${metric.key}Hint`) }}<ArrowRight :size="14" aria-hidden="true" /></small>
           </LocalizedLink>
         </div>
+        <template v-if="currentUser.canOfferServices && !creator || currentUser.hasServiceHistory && !creator">
+          <h2>{{ t('agency.providerWork') }}</h2>
+          <div class="personal-overview__metrics">
+            <LocalizedLink v-for="key in ['invitations', 'applications', 'offers', 'active']" :key="key" class="personal-overview__metric" :to="{ name: 'account-applications', query: { status: key === 'invitations' ? 'pending' : key === 'offers' ? 'offered' : key === 'active' ? 'hired' : 'all' } }">
+              <span><Handshake :size="18" />{{ t(`personalDashboard.creator.${key}`) }}</span><strong>{{ snapshot.serviceCounts?.[key] || 0 }}</strong><small>{{ t('agency.providerWork') }}<ArrowRight :size="14" /></small>
+            </LocalizedLink>
+          </div>
+        </template>
         <div class="personal-overview__body">
           <div class="personal-overview__main">
           <section class="personal-overview__activity">
@@ -113,6 +122,11 @@ onBeforeUnmount(() => { ++revision })
               </template>
               <strong v-else>—</strong>
               <small>{{ t('personalDashboard.financialHint') }}</small>
+            </section>
+            <section v-if="currentUser.canOfferServices && !creator" class="personal-overview__financial">
+              <p>{{ t('reviews.earnings') }}</p>
+              <strong v-for="total in snapshot.financial?.serviceTotals || []" :key="total.currency">{{ formatMoney(total.amount, total.currency) }}</strong>
+              <strong v-if="!snapshot.financial?.serviceTotals?.length">—</strong><small>{{ t('personalDashboard.financialHint') }}</small>
             </section>
             <LocalizedLink class="personal-overview__credits" :to="{ name: 'account-credits' }">
               <span><Coins :size="17" aria-hidden="true" />{{ t('credits.title') }}</span>

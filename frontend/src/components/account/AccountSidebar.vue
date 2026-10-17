@@ -135,6 +135,9 @@ const navigationItems = computed(() => {
     )
   }
 
+  if (canUseMarketplace && !creator && (props.user?.canOfferServices || props.user?.hasServiceHistory)) {
+    items.push({ route: 'account-applications', labelKey: 'agency.providerWork', icon: ClipboardCheck }, { route: 'account-bookmarks', labelKey: 'account.bookmarks', icon: House })
+  }
   if (canUseMarketplace) items.push({ route: 'account-reviews', labelKey: 'safety.myReviews', icon: Star }, { route: 'account-blocks', labelKey: 'safety.myBlocks', icon: Ban, group: 'settings' })
 
   if (props.user?.isModerator) {

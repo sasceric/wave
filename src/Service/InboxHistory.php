@@ -24,11 +24,8 @@ final class InboxHistory
             throw new \InvalidArgumentException('Invalid inbox filters.');
         }
         $cursor = $this->decodeCursor($request->query->get('cursor'));
-        $isCreator = $user->getCreator() !== null;
-        $scope = $isCreator ? 'creator_id' : 'company_id';
-        $profileId = $isCreator ? $user->getCreator()->getId() : $user->getCompany()->getId();
-        $companyScope = $isCreator ? 'thread.creator_id = :profile' : 'campaign.company_id = :profile';
-        $params = ['profile' => $profileId, 'viewer' => $user->getId(), 'locale' => $locale];
+        $companyScope = '(creator.owner_id = :viewer OR company.owner_id = :viewer)';
+        $params = ['viewer' => $user->getId(), 'locale' => $locale];
 
         // The lateral lookup uses the inquiry/created_at/id index. It supplies the
         // latest preview and timestamp in one query instead of one ORM query per row.
@@ -38,8 +35,10 @@ final class InboxHistory
                     thread.last_message_preview AS preview, thread.last_message_sender_id AS sender_id,
                     campaign.slug AS campaign_slug,
                     COALESCE(CAST(campaign.translations AS JSONB) -> CAST(:locale AS TEXT) ->> 'title', campaign.title) AS title,
-                    creator.id AS creator_id, creator.slug AS creator_slug, creator.display_name,
-                    creator.avatar_url, creator.avatar_media_id,
+                    creator.id AS creator_id, COALESCE(agency.slug, creator.slug) AS creator_slug, COALESCE(agency.name, creator.display_name) AS display_name,
+                    creator.agency_profile, (company.owner_id = :viewer) AS viewer_client, company.owner_id AS company_owner_id,
+                    creator.owner_id AS creator_owner_id,
+                    COALESCE(agency.logo_url, creator.avatar_url) AS avatar_url, COALESCE(agency.logo_media_id, creator.avatar_media_id) AS avatar_media_id,
                     company.id AS company_id, company.slug AS company_slug, company.name AS company_name,
                     company.logo_url, company.logo_media_id,
                     (creator_owner.deleted_at IS NOT NULL) AS creator_deleted, (company_owner.deleted_at IS NOT NULL) AS company_deleted,
@@ -49,6 +48,7 @@ final class InboxHistory
                 FROM campaign_conversation thread
                 JOIN campaign ON campaign.id = thread.campaign_id
                 JOIN creator ON creator.id = thread.creator_id
+                LEFT JOIN company agency ON agency.owner_id = creator.owner_id AND creator.agency_profile = TRUE
                 JOIN company ON company.id = campaign.company_id
                 LEFT JOIN wave_user creator_owner ON creator_owner.id = creator.owner_id
                 LEFT JOIN wave_user company_owner ON company_owner.id = company.owner_id
@@ -57,8 +57,10 @@ final class InboxHistory
                 SELECT thread.id, 'inquiry' AS thread_type, COALESCE(latest.created_at, thread.created_at) AS activity_at,
                     LEFT(COALESCE(latest.body, thread.message), 240) AS preview, latest.sender_id,
                     NULL AS campaign_slug, COALESCE(thread.package_title, '') AS title,
-                    creator.id AS creator_id, creator.slug AS creator_slug, creator.display_name,
-                    creator.avatar_url, creator.avatar_media_id,
+                    creator.id AS creator_id, COALESCE(agency.slug, creator.slug) AS creator_slug, COALESCE(agency.name, creator.display_name) AS display_name,
+                    creator.agency_profile, (company.owner_id = :viewer) AS viewer_client, company.owner_id AS company_owner_id,
+                    creator.owner_id AS creator_owner_id,
+                    COALESCE(agency.logo_url, creator.avatar_url) AS avatar_url, COALESCE(agency.logo_media_id, creator.avatar_media_id) AS avatar_media_id,
                     company.id AS company_id, company.slug AS company_slug, company.name AS company_name,
                     company.logo_url, company.logo_media_id,
                     (creator_owner.deleted_at IS NOT NULL) AS creator_deleted, (company_owner.deleted_at IS NOT NULL) AS company_deleted, FALSE AS cancelled,
@@ -66,19 +68,20 @@ final class InboxHistory
                         AND message.sender_id <> :viewer AND message.read_at IS NULL AND NOT EXISTS (SELECT 1 FROM user_block b WHERE b.cleared_at IS NULL AND ((b.blocker_id = :viewer AND b.blocked_id = message.sender_id) OR (b.blocked_id = :viewer AND b.blocker_id = message.sender_id)))) AS unread_count
                 FROM creator_inquiry thread
                 JOIN creator ON creator.id = thread.creator_id
+                LEFT JOIN company agency ON agency.owner_id = creator.owner_id AND creator.agency_profile = TRUE
                 JOIN company ON company.id = thread.company_id
                 LEFT JOIN wave_user creator_owner ON creator_owner.id = creator.owner_id
                 LEFT JOIN wave_user company_owner ON company_owner.id = company.owner_id
                 LEFT JOIN LATERAL (SELECT body, created_at, sender_id FROM inquiry_message
                     WHERE inquiry_id = thread.id ORDER BY created_at DESC, id DESC LIMIT 1) latest ON TRUE
-                WHERE thread.$scope = :profile AND thread.status = 'accepted'
+                WHERE $companyScope AND thread.status = 'accepted'
             ) inbox WHERE 1 = 1
             SQL;
         if ($filter === 'unread') {
             $sql .= ' AND unread_count > 0';
         }
         if ($search !== '') {
-            $name = $isCreator ? 'company_name' : 'display_name';
+            $name = 'CASE WHEN viewer_client THEN display_name ELSE company_name END';
             $sql .= " AND (LOWER($name) LIKE :search ESCAPE '!' OR LOWER(title) LIKE :search ESCAPE '!' OR LOWER(preview) LIKE :search ESCAPE '!')";
             $params['search'] = '%' . str_replace(['!', '%', '_'], ['!!', '!%', '!_'], mb_strtolower($search)) . '%';
         }
@@ -112,17 +115,18 @@ final class InboxHistory
         return [
             'id' => $id,
             'threadType' => $type,
+            'viewerRole' => $row['viewer_client'] ? 'client' : 'provider',
             'threadKey' => $type . '-' . $id,
             'readOnly' => (bool) $row['creator_deleted'] || (bool) $row['company_deleted'] || (bool) $row['cancelled'],
             'cancelled' => (bool) $row['cancelled'],
             'campaign' => ['slug' => $row['campaign_slug'], 'title' => $row['title']],
             'creator' => [
-                'id' => (int) $row['creator_id'], 'slug' => $row['creator_slug'], 'displayName' => $row['creator_deleted'] ? ApiMessages::get('deleted_account', $locale) : $row['display_name'],
+                'ownerId' => (int) $row['creator_owner_id'], 'isAgency' => (bool) $row['agency_profile'], 'profileRoute' => $row['agency_profile'] ? 'company-profile' : 'creator-profile', 'id' => (int) $row['creator_id'], 'slug' => $row['creator_slug'], 'displayName' => $row['creator_deleted'] ? ApiMessages::get('deleted_account', $locale) : $row['display_name'],
                 'deleted' => (bool) $row['creator_deleted'],
                 'avatarUrl' => $row['avatar_media_id'] === null ? $row['avatar_url'] : '/api/media/' . $row['avatar_media_id'] . '/thumbnail/' . ImageVariants::VERSION . '/96',
             ],
             'company' => [
-                'id' => (int) $row['company_id'], 'slug' => $row['company_slug'], 'name' => $row['company_deleted'] ? ApiMessages::get('deleted_account', $locale) : $row['company_name'],
+                'ownerId' => (int) $row['company_owner_id'], 'id' => (int) $row['company_id'], 'slug' => $row['company_slug'], 'name' => $row['company_deleted'] ? ApiMessages::get('deleted_account', $locale) : $row['company_name'],
                 'deleted' => (bool) $row['company_deleted'],
                 'logoUrl' => $row['logo_media_id'] === null ? $row['logo_url'] : '/api/media/' . $row['logo_media_id'] . '/thumbnail/' . ImageVariants::VERSION . '/96',
             ],

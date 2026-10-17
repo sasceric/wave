@@ -31,6 +31,7 @@ use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
 
 final class CreatorInquiryController
 {
+    #[Route('/api/companies/{slug}/inquiries', name: 'api_agency_inquiry_create', methods: ['POST'])]
     #[Route('/api/creators/{slug}/inquiries', name: 'api_creator_inquiry_create', methods: ['POST'])]
     public function create(
         string $slug,
@@ -57,8 +58,14 @@ final class CreatorInquiryController
             return new JsonResponse(['error' => ApiMessages::get('profile_unavailable', $locale)], 409);
         }
 
-        $creator = $entityManager->getRepository(Creator::class)->findOneBy(['slug' => $slug]);
+        $agencyRoute = $request->attributes->get('_route') === 'api_agency_inquiry_create';
+        $target = $agencyRoute ? $entityManager->getRepository(Company::class)->findOneBy(['slug' => $slug])?->getOwner() : null;
+        $creator = $agencyRoute
+            ? ($target?->isAgency() && $target->isApproved() && !$target->isHideMyAccount() ? \App\Account\AgencyProfiles::ensure($target, $entityManager) : null)
+            : $entityManager->getRepository(Creator::class)->findOneBy(['slug' => $slug]);
         if (!$creator instanceof Creator
+            || $creator->getOwner()?->getId() === $user->getId()
+            || ($creator->isAgencyProfile() && !$agencyRoute)
             || ($creator->getOwner() !== null
                 && (!$creator->getOwner()->isApproved() || $creator->getOwner()->isHideMyAccount()))
         ) {
@@ -204,15 +211,10 @@ final class CreatorInquiryController
         if (!$user instanceof User) {
             return new JsonResponse(['error' => ApiMessages::get('authentication_required', $locale)], 401);
         }
-        $role = $user->getCreator() instanceof Creator ? 'creator' : ($user->getCompany() instanceof Company ? 'company' : null);
-        if ($role === null) {
-            return new JsonResponse(['error' => ApiMessages::get('forbidden', $locale)], 403);
-        }
-
-        $criteria = $role === 'creator'
-            ? ['creator' => $user->getCreator()]
-            : ['company' => $user->getCompany()];
-        $inquiries = $entityManager->getRepository(CreatorInquiry::class)->findBy($criteria, ['createdAt' => 'DESC']);
+        $inquiries = $entityManager->createQueryBuilder()->select('inquiry')
+            ->from(CreatorInquiry::class, 'inquiry')->join('inquiry.creator', 'provider')->join('inquiry.company', 'client')
+            ->where('provider.owner = :user OR client.owner = :user')->setParameter('user', $user)
+            ->orderBy('inquiry.createdAt', 'DESC')->getQuery()->getResult();
 
         $unread = $counter->inquiries($user);
 
@@ -250,7 +252,7 @@ final class CreatorInquiryController
         if ($csrfError = ApiAccess::requireCsrf($request, $tokenManager, $locale)) {
             return $csrfError;
         }
-        $user = ApiAccess::requireRole($security, 'ROLE_CREATOR', $locale, true);
+        $user = ApiAccess::requireProvider($security, $locale, true);
         if ($user instanceof JsonResponse) {
             return $user;
         }

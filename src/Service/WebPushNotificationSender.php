@@ -127,7 +127,7 @@ final class WebPushNotificationSender
             return;
         }
         foreach ($this->entityManager->getRepository(UserPushSubscription::class)->findBy(['user' => $recipient]) as $subscription) {
-            $this->jobs->enqueue('SendWebPushMessage', ['subscriptionId' => $subscription->getId(), 'senderId' => $sender->getId(), 'userId' => $recipient->getId(), 'title' => $sender->getCreator()?->getDisplayName() ?? $sender->getCompany()?->getName() ?? 'Wave', 'body' => $this->trimPreview($body), 'url' => '/messages?inquiry=' . $inquiryId], 'inquiry-push:' . $messageId . ':' . $subscription->getId());
+            $this->jobs->enqueue('SendWebPushMessage', ['subscriptionId' => $subscription->getId(), 'senderId' => $sender->getId(), 'userId' => $recipient->getId(), 'title' => $sender->getCompany()?->getName() ?? $sender->getCreator()?->getDisplayName() ?? 'Wave', 'body' => $this->trimPreview($body), 'url' => '/messages?inquiry=' . $inquiryId], 'inquiry-push:' . $messageId . ':' . $subscription->getId());
         }
     }
 
@@ -179,8 +179,8 @@ final class WebPushNotificationSender
     private function titleFor(Notification $notification): string
     {
         $actor = $notification->getActor();
-        $actorName = $actor?->getCreator()?->getDisplayName()
-            ?? $actor?->getCompany()?->getName()
+        $actorName = $actor?->getCompany()?->getName()
+            ?? $actor?->getCreator()?->getDisplayName()
             ?? 'Wave';
 
         return '' !== trim($actorName) ? $actorName : 'Wave';
@@ -238,7 +238,7 @@ final class WebPushNotificationSender
     {
         if ($application = $notification->getReviewApplication()) {
             $recipient = $notification->getRecipient();
-            $creator = $recipient->getCreator() !== null;
+            $creator = $application->getCreator()->getOwner()?->getId() === $recipient->getId();
             $route = $creator ? 'account-applications' : 'account-campaign-detail';
             $params = $creator ? [] : ['slug' => $application->getCampaign()->getSlug()];
             $path = $this->routes?->localizedPath($route, $recipient->getPreferredLocale(), $params)

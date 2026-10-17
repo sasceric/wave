@@ -56,11 +56,11 @@ final class MarketplaceWorkflowController
         if ($csrfError = ApiAccess::requireCsrf($request, $tokenManager, $locale)) {
             return $csrfError;
         }
-        $user = ApiAccess::requireRole($security, 'ROLE_CREATOR', $locale, requireVerified: true);
+        $user = ApiAccess::requireProvider($security, $locale, requireVerified: true, active: true);
         if ($user instanceof JsonResponse) {
             return $user;
         }
-        $creator = $user->getCreator();
+        $creator = $user->isAgency() ? \App\Account\AgencyProfiles::ensure($user, $entityManager) : $user->getCreator();
         $campaign = $entityManager->getRepository(Campaign::class)->createQueryBuilder('campaign')
             ->join('campaign.company', 'company')
             ->leftJoin('company.owner', 'companyOwner')
@@ -74,10 +74,13 @@ final class MarketplaceWorkflowController
             ->getQuery()
             ->getOneOrNullResult();
         if (!$creator instanceof Creator) {
-            return new JsonResponse(['error' => ApiMessages::get('profile_unavailable', $locale)], 409);
+            return $user->isAgency() ? new JsonResponse(['data' => []]) : new JsonResponse(['error' => ApiMessages::get('profile_unavailable', $locale)], 409);
         }
         if (!$campaign instanceof Campaign) {
             return new JsonResponse(['error' => ApiMessages::get('campaign_not_found', $locale)], 404);
+        }
+        if ($campaign->getCompany()->getOwner()?->getId() === $user->getId()) {
+            return new JsonResponse(['error' => ApiMessages::get('forbidden', $locale)], 403);
         }
         if ($campaign->getClosesAt() < new DateTimeImmutable('today')) {
             return new JsonResponse(['error' => ApiMessages::get('campaign_closed', $locale)], 409);
@@ -96,6 +99,10 @@ final class MarketplaceWorkflowController
         }
 
         $application = new Application($campaign, $creator, $message);
+        if ($user->isAgency() && array_key_exists('proposal', $data)) {
+            try { $application->setProposal(\App\Account\AgencyProposal::parse($data['proposal'])); }
+            catch (\InvalidArgumentException) { return new JsonResponse(['error' => ApiMessages::get('invalid_application', $locale)], 400); }
+        }
         $entityManager->persist($application);
         $companyOwner = $campaign->getCompany()->getOwner();
         $notification = null;
@@ -143,13 +150,13 @@ final class MarketplaceWorkflowController
         if ($locale === null) {
             return new JsonResponse(['error' => ApiMessages::get('unsupported_language', 'bs')], 400);
         }
-        $user = ApiAccess::requireRole($security, 'ROLE_CREATOR', $locale);
+        $user = ApiAccess::requireProvider($security, $locale);
         if ($user instanceof JsonResponse) {
             return $user;
         }
         $creator = $user->getCreator();
         if (!$creator instanceof Creator) {
-            return new JsonResponse(['error' => ApiMessages::get('profile_unavailable', $locale)], 409);
+            return $user->isAgency() ? new JsonResponse(['data' => []]) : new JsonResponse(['error' => ApiMessages::get('profile_unavailable', $locale)], 409);
         }
         $applications = $entityManager->getRepository(Application::class)->findBy(['creator' => $creator], ['createdAt' => 'DESC']);
         $hiredCounts = CampaignHiredCounts::forCampaigns($entityManager, array_map(static fn (Application $application): Campaign => $application->getCampaign(), $applications));
@@ -406,13 +413,13 @@ final class MarketplaceWorkflowController
         if ($locale === null) {
             return new JsonResponse(['error' => ApiMessages::get('unsupported_language', 'bs')], 400);
         }
-        $user = ApiAccess::requireRole($security, 'ROLE_CREATOR', $locale);
+        $user = ApiAccess::requireProvider($security, $locale);
         if ($user instanceof JsonResponse) {
             return $user;
         }
         $creator = $user->getCreator();
         if (!$creator instanceof Creator) {
-            return new JsonResponse(['error' => ApiMessages::get('profile_unavailable', $locale)], 409);
+            return $user->isAgency() ? new JsonResponse(['data' => []]) : new JsonResponse(['error' => ApiMessages::get('profile_unavailable', $locale)], 409);
         }
         $offers = $entityManager->createQueryBuilder()
             ->select('offer')
@@ -446,7 +453,7 @@ final class MarketplaceWorkflowController
         if ($csrfError = ApiAccess::requireCsrf($request, $tokenManager, $locale)) {
             return $csrfError;
         }
-        $user = ApiAccess::requireRole($security, 'ROLE_CREATOR', $locale, requireVerified: true);
+        $user = ApiAccess::requireProvider($security, $locale, requireVerified: true);
         if ($user instanceof JsonResponse) {
             return $user;
         }

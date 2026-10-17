@@ -95,6 +95,8 @@ Controller filenames in this table are under `src/Controller/Api/` unless a full
 
 ## Behavior to preserve
 
+- Agency companies also offer services and apply to campaigns without becoming creator accounts. `AgencyProfiles` reuses private studio/collaboration participants marked `creator.agency_profile`; exclude those from all public creator discovery and SEO. Keep per-thread client/provider identity and separate public review roles. See [agency service profiles](agency-service-profiles.md) and migration `Version20261017120000`.
+
 - Public deletion redirects live in `UrlRedirects`, `UrlRedirect`,
   `AdminRedirectController` and `AdminRedirectsView.vue`. They capture original
   slugs before anonymization, add canonical and historical alias rules in the deletion transaction,

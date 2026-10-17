@@ -34,7 +34,7 @@ final class SitemapGenerator
         $pages = array_merge($pages, $this->regionalContent->extraPages());
 
         $creators = $this->entityManager->getRepository(Creator::class)->createQueryBuilder('creator')
-            ->leftJoin('creator.owner', 'owner')
+            ->leftJoin('creator.owner', 'owner')->andWhere('creator.agencyProfile = false')
             ->andWhere('owner.id IS NULL OR (owner.approved = :approved AND owner.hideMyAccount = :visible)')
             ->setParameter('approved', true)
             ->setParameter('visible', false)

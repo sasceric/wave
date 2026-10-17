@@ -33,7 +33,7 @@ final class CampaignBookmarkController
         if ($locale === null) {
             return new JsonResponse(['error' => ApiMessages::get('unsupported_language', 'bs')], 400);
         }
-        $user = ApiAccess::requireRole($security, 'ROLE_CREATOR', $locale);
+        $user = ApiAccess::requireProvider($security, $locale);
         if ($user instanceof JsonResponse) {
             return $user;
         }
@@ -87,7 +87,7 @@ final class CampaignBookmarkController
         if ($csrfError = ApiAccess::requireCsrf($request, $tokenManager, $locale)) {
             return $csrfError;
         }
-        $user = ApiAccess::requireRole($security, 'ROLE_CREATOR', $locale);
+        $user = ApiAccess::requireProvider($security, $locale);
         if ($user instanceof JsonResponse) {
             return $user;
         }
@@ -133,7 +133,7 @@ final class CampaignBookmarkController
         if ($csrfError = ApiAccess::requireCsrf($request, $tokenManager, $locale)) {
             return $csrfError;
         }
-        $user = ApiAccess::requireRole($security, 'ROLE_CREATOR', $locale);
+        $user = ApiAccess::requireProvider($security, $locale);
         if ($user instanceof JsonResponse) {
             return $user;
         }

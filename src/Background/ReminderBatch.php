@@ -47,7 +47,7 @@ final class ReminderBatch
                     return 0;
                 }
                 $context = ['conversationId' => (int) $row['id'], 'recipientId' => (int) $row['recipient'], 'firstId' => (int) $unread['first_id']];
-                $this->mailer->withReminder($context, fn () => $this->emails->sendUnreadMessageReminder($recipient, $sender->getCreator()?->getDisplayName() ?? $sender->getCompany()?->getName() ?? 'Wave', $conversation->getCampaign()->getTitle(), (int) $unread['unread_count'], (int) $row['id']));
+                $this->mailer->withReminder($context, fn () => $this->emails->sendUnreadMessageReminder($recipient, $sender->getCompany()?->getName() ?? $sender->getCreator()?->getDisplayName() ?? 'Wave', $conversation->getCampaign()->getTitle(), (int) $unread['unread_count'], (int) $row['id']));
                 $db->executeStatement('UPDATE campaign_conversation SET ' . $field . ' = ? WHERE id = ?', [(new \DateTimeImmutable())->format('Y-m-d H:i:s'), $row['id']]);
                 $this->entityManager->refresh($conversation);
 
