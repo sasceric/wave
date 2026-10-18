@@ -34,7 +34,7 @@
 @include breakpoints.down(760px) {
   .company-directory-card {
     min-height: 300px;
-    &__visual { height: 124px; }
+    &__visual { height: 90px; }
     &__body { padding-inline: 16px; padding-bottom: 17px; }
     &__description { min-height: 45px; margin-top: 9px; margin-bottom: 17px; font-size: 13px; }
     h2 { font-size: 19px; }

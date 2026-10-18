@@ -5,13 +5,15 @@
   min-height: 340px;
   overflow: hidden;
   color: #f8f8f1;
-  background: var(--forest);
+  background: #292a27;
 
   &::after {
     position: absolute;
     inset: 0;
     content: '';
-    background: linear-gradient(90deg, rgba(11, 48, 42, .92) 0%, rgba(11, 48, 42, .74) 45%, rgba(11, 48, 42, .18) 100%);
+    background:
+      linear-gradient(0deg, rgba(25, 26, 24, .4), transparent 60%),
+      linear-gradient(90deg, rgba(25, 26, 24, .8) 0%, rgba(25, 26, 24, .56) 42%, rgba(25, 26, 24, .18) 72%, rgba(25, 26, 24, .06) 100%);
   }
 }
 
@@ -20,7 +22,6 @@
   inset: 0;
   background-position: center;
   background-size: cover;
-  opacity: .95;
 }
 
 .company-profile__hero-inner {
@@ -229,7 +230,7 @@
     padding-bottom: 36px;
   }
   .company-profile__hero-image { background-position: 62% center; }
-  .company-profile__hero::after { background: linear-gradient(180deg, rgba(11, 48, 42, .42), rgba(11, 48, 42, .92) 78%); }
+  .company-profile__hero::after { background: linear-gradient(180deg, rgba(25, 26, 24, .22), rgba(25, 26, 24, .84) 78%); }
   .company-profile__identity { align-items: flex-end; gap: 16px; }
   .company-profile__logo { width: 86px; height: 86px; border-width: 5px; border-radius: 17px; }
   .company-profile__hero h1 { font-size: 39px; }
