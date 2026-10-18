@@ -6,6 +6,7 @@
   &__clear { padding: 0; border: 0; color: #225c50; background: transparent; font: inherit; font-size: 12px; cursor: pointer; }
   fieldset { margin: 10px 0 0; padding: 0; border: 0; min-width: 0; }
   .multi-select { width: 100%; }
+  .form-field { gap: 5px; margin-bottom: 5px; }
   &__close, &__handle, &__mobile, &__apply { display: none; }
 }
 @include breakpoints.down(760px) {

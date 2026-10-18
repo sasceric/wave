@@ -208,8 +208,11 @@
   }
 
   .profile-edit-avatar .profile-image-field {
-    width: 145px;
+    width: min(100%, 440px);
   }
+
+  .profile-edit-avatar .profile-image-field__image,
+  .profile-edit-avatar .profile-image-field__empty { width: 145px; }
 
   .form-field > span, .multi-select > span, .searchable-select > span {
     color: var(--muted);

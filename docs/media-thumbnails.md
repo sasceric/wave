@@ -13,6 +13,14 @@ browser selects an appropriate 96/320/480px thumbnail for its pixel density.
 These variants remain useful; restoring the grid requires no thumbnail deletion
 or regeneration.
 
+Campaign cards share the compact layout across directories, home and profile
+campaign rows: the original warm white background and content panel, proposal
+ranges above the company name, and a date/hiring icon row below. One native
+localized link covers the whole card; the bookmark remains an independent button
+above that link. It preserves sign-in return links and confirmed bookmark removal.
+The hiring icon has the full localized count as its accessible label. Loading
+skeletons use the same card layout without the former action button.
+
 ## Loading across the app
 
 `SkeletonBlock.vue` supplies the shared shimmer primitive; `LoadingSkeleton.vue`
@@ -35,6 +43,27 @@ six locales. Placeholder shapes are hidden from screen readers, have no interact
 controls, and shimmer is disabled for reduced-motion preferences.
 
 ## Image storage and indexing
+
+### Upload guidance and previews
+
+Profile and portfolio image fields show persistent recommendations below the
+upload control, including after selection: creator photos and company logos
+600×600, company/agency covers 1920×640, campaign covers 1200×800, and landscape
+portfolio images 600×400 pixels. These are recommendations, not new validation
+requirements. Accepted formats and the existing 10 MB limit remain visible.
+All seven locale catalogs contain the guidance.
+
+Company and campaign cover controls offer expandable examples of desktop/mobile
+page and listing crops. The shared preview uses the selected draft or saved image;
+opening it never uploads a profile draft or modifies media. Preview frames show
+representative crops rather than complete pages; final crops can vary with screen
+width and page content. Brand and agency previews account for their different
+mobile cover layouts.
+
+On mobile (up to 760px), campaign listing images and the separate campaign-page
+photo use 3:2 proportions, matching the campaign upload recommendation. The page
+photo sits above its text and application card. Desktop campaign image dimensions,
+stored masters, thumbnail sizes and existing uploads are unchanged.
 
 `ImageUploadProcessor` creates a lossless WebP master at most 1920px wide for
 company/campaign covers, 1600px for report evidence, and 600px for other images.

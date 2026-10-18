@@ -1129,8 +1129,8 @@
     "mediaUrl": "YouTube ili Vimeo link",
     "mediaUpload": "Otpremi sliku",
     "mediaUploading": "Otpremanje slike…",
-    "mediaUploadHint": "JPEG, PNG ili WebP, do 10 MB. Slike se čuvaju kao WebP, širine do 600 px, uz očuvane proporcije i bez isecanja.",
-    "coverUploadHint": "JPEG, PNG ili WebP, do 10 MB. Naslovne slike se čuvaju kao WebP, širine do 1920 px, bez isecanja i povećavanja manjih slika.",
+    "mediaUploadHint": "JPEG, PNG ili WebP, do 10 MB.",
+    "coverUploadHint": "JPEG, PNG ili WebP, do 10 MB.",
     "coverSaveHint": "Promene se čuvaju kada sačuvaš profil.",
     "selectCategories": "Izaberi do 5 oblasti",
     "searchCategories": "Pretraži oblasti",
@@ -2813,5 +2813,18 @@
       "packages": "Paketi",
       "faqs": "FAQ"
     }
+  },
+  "imageUpload": {
+    "creator": "Preporučeno: 600 × 600 px (1:1). Lice postavi u sredinu i ostavi malo prostora oko njega.",
+    "logo": "Preporučeno: 600 × 600 px (1:1). Ostavi malo praznog prostora oko logotipa.",
+    "companyCover": "Preporučeno: 1920 × 640 px (3:1). Važne detalje drži dalje od ivica.",
+    "campaignCover": "Preporučeno: 1200 × 800 px (3:2). Glavni motiv postavi u sredinu.",
+    "portfolio": "Preporučeno za vodoravne fotografije: 600 × 400 px (3:2). Možeš koristiti i druge proporcije.",
+    "preview": "Proveri prikaz fotografije",
+    "previewHint": "Primeri izreza fotografije. Konačan prikaz zavisi od širine ekrana i sadržaja stranice.",
+    "desktopPage": "Stranica · računar",
+    "mobilePage": "Stranica · telefon",
+    "desktopCard": "Kartica · računar",
+    "mobileCard": "Kartica · telefon"
   }
 }

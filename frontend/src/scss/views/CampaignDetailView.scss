@@ -537,18 +537,21 @@
     }
 
     &__image {
-      opacity: .55;
+      position: relative;
+      z-index: 0;
+      inset: auto;
+      width: min(calc(100% - 40px), 560px);
+      aspect-ratio: 3 / 2;
+      margin: 0 auto 22px;
+      overflow: hidden;
+      border-radius: 14px;
 
       &::after {
-        background: linear-gradient(
-          90deg,
-          #f6f2ea 0%,
-          rgba(246, 242, 234, .93) 48%,
-          rgba(246, 242, 234, .55) 100%
-        );
+        display: none;
       }
 
       img {
+        inset: 0;
         width: 100%;
       }
     }
@@ -590,6 +593,10 @@
   .brief-sidebar {
     grid-template-columns: minmax(0, 1fr);
   }
+}
+
+@include breakpoints.down(420px) {
+  .brief-hero__image { width: calc(100% - 32px); }
 }
 
 @include breakpoints.down(520px) {

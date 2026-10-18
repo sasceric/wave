@@ -8,6 +8,7 @@ import ImageUploadControl from './ImageUploadControl.vue'
 const props = defineProps({
   compact: { type: Boolean, default: false },
   folder: { type: String, required: true },
+  companyType: { type: String, default: 'brand' },
   modelValue: { type: Number, default: null },
   previewUrl: { type: String, default: '' },
   alt: { type: String, required: true },
@@ -133,6 +134,8 @@ defineExpose({ prepareSave, commit, rollback })
 <template>
   <div class="profile-image-upload">
     <ImageUploadControl
+      :folder="folder"
+      :company-type="companyType"
       :compact="compact"
       :preview-url="preview"
       :alt="alt"

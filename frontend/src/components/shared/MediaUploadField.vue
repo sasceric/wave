@@ -52,6 +52,7 @@ async function upload(event) {
     :data-disabled="busy"
   >
     <ImageUploadControl
+      :folder="folder"
       :preview-url="preview"
       :add-label="busy ? t('account.mediaUploading') : t('account.mediaUpload')"
       :change-label="t('account.changeProfileImage')"

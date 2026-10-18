@@ -1128,8 +1128,8 @@
     "mediaUrl": "YouTube- oder Vimeo-URL",
     "mediaUpload": "Bild hochladen",
     "mediaUploading": "Bild wird hochgeladen…",
-    "mediaUploadHint": "JPEG, PNG oder WebP bis 10 MB. Bilder werden als WebP mit höchstens 600 px Breite gespeichert. Das Seitenverhältnis bleibt erhalten, ohne Zuschnitt.",
-    "coverUploadHint": "JPEG, PNG oder WebP bis 10 MB. Titelbilder werden als WebP mit höchstens 1920 px Breite gespeichert, ohne Zuschnitt oder Vergrößerung kleinerer Bilder.",
+    "mediaUploadHint": "JPEG, PNG oder WebP, bis zu 10 MB.",
+    "coverUploadHint": "JPEG, PNG oder WebP, bis zu 10 MB.",
     "coverSaveHint": "Änderungen werden beim Speichern deines Profils übernommen.",
     "selectCategories": "Bis zu 5 Themenbereiche auswählen",
     "searchCategories": "Themenbereiche suchen",
@@ -2812,5 +2812,18 @@
       "packages": "Pakete",
       "faqs": "FAQ"
     }
+  },
+  "imageUpload": {
+    "creator": "Empfohlen: 600 × 600 px (1:1). Platziere dein Gesicht mittig und lasse etwas Platz darum.",
+    "logo": "Empfohlen: 600 × 600 px (1:1). Lasse etwas freien Platz um dein Logo.",
+    "companyCover": "Empfohlen: 1920 × 640 px (3:1). Wichtige Details sollten nicht am Rand liegen.",
+    "campaignCover": "Empfohlen: 1200 × 800 px (3:2). Platziere das Hauptmotiv mittig.",
+    "portfolio": "Für Querformatfotos empfohlen: 600 × 400 px (3:2). Andere Seitenverhältnisse sind ebenfalls möglich.",
+    "preview": "Fotovorschau prüfen",
+    "previewHint": "Beispiele für Bildausschnitte. Die endgültige Darstellung hängt von der Bildschirmbreite und dem Seiteninhalt ab.",
+    "desktopPage": "Seite · Desktop",
+    "mobilePage": "Seite · Mobil",
+    "desktopCard": "Karte · Desktop",
+    "mobileCard": "Karte · Mobil"
   }
 }

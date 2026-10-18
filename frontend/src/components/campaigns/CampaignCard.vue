@@ -3,8 +3,8 @@ import PresentationDemoBadge from '../shared/PresentationDemoBadge.vue'
 import CampaignHiringProgress from './CampaignHiringProgress.vue'
 import CampaignApplicationRange from './CampaignApplicationRange.vue'
 import '../../scss/components/campaigns/CampaignCard.scss'
-import { computed, ref, watch } from 'vue'
-import { ArrowRight, Bookmark, Camera, CirclePlay, MapPin, Megaphone, Music2 } from '@lucide/vue'
+import { computed, ref, useId, watch } from 'vue'
+import { BadgeCheck, Bookmark, CalendarDays, MapPin } from '@lucide/vue'
 import { useRoute, useRouter } from 'vue-router'
 import RouterLink from '../shared/LocalizedLink.vue'
 import { useI18n } from 'vue-i18n'
@@ -14,6 +14,7 @@ import { useCampaignBookmarks } from '../../composables/useCampaignBookmarks'
 import { localizedRouteName } from '../../routePaths'
 import ConfirmationModal from '../shared/ConfirmationModal.vue'
 import CardImage from '../shared/CardImage.vue'
+import SocialPlatformIcon from '../shared/SocialPlatformIcon.vue'
 import { campaignPlace, CAMPAIGN_PLACEHOLDER } from '../../lib/marketplace'
 
 const props = defineProps({
@@ -21,6 +22,7 @@ const props = defineProps({
   imageSizes: { type: String, default: undefined },
 })
 const { t, locale } = useI18n()
+const titleId = useId()
 const route = useRoute()
 const router = useRouter()
 const { isCampaignBookmarked, loadCampaignBookmarks, toggleCampaignBookmark } = useCampaignBookmarks()
@@ -28,15 +30,6 @@ const bookmarkBusy = ref(false)
 const bookmarkError = ref('')
 const removeBookmarkConfirmationOpen = ref(false)
 const bookmarked = computed(() => isCampaignBookmarked(props.campaign.slug))
-const platformIcons = {
-  Instagram: Camera,
-  TikTok: Music2,
-  YouTube: CirclePlay,
-}
-
-function platformIcon(platform) {
-  return platformIcons[platform] || Megaphone
-}
 
 watch(() => currentUser.value?.id, () => {
   if (currentUser.value?.accountType === 'creator') {
@@ -93,6 +86,11 @@ async function confirmRemoveBookmark() {
 
 <template>
   <article class="campaign-card">
+    <RouterLink
+      class="campaign-card__link"
+      :to="{ name: 'campaign-detail', params: { slug: campaign.slug } }"
+      :aria-labelledby="titleId"
+    />
     <div class="campaign-card__cover">
       <CardImage
         class="campaign-card__cover-image"
@@ -119,7 +117,7 @@ async function confirmRemoveBookmark() {
         :aria-label="t(bookmarked ? 'campaignCard.removeBookmark' : 'campaignCard.addBookmark')"
         :aria-pressed="bookmarked"
         :disabled="bookmarkBusy"
-        @click="handleBookmarkClick"
+        @click.stop="handleBookmarkClick"
       >
         <Bookmark :size="19" stroke-width="1.8" aria-hidden="true" />
       </button>
@@ -129,51 +127,42 @@ async function confirmRemoveBookmark() {
     </div>
 
     <div class="campaign-card__panel">
-      <RouterLink
-        class="campaign-card__company"
-        :to="{ name: 'company-profile', params: { slug: campaign.company.slug } }"
-      >
-        {{ campaign.company.name }}
+      <CampaignApplicationRange class="campaign-card__proposals" :range="campaign.applicationRange" />
+      <div class="campaign-card__company">
+        <span class="campaign-card__company-name">{{ campaign.company.name }}</span>
         <span
           v-if="campaign.company.verified"
           class="campaign-card__verified"
+          role="img"
           :aria-label="t('campaignCard.verified')"
-        >✓</span>
-      </RouterLink>
+        ><BadgeCheck :size="16" fill="currentColor" stroke="#fffefa" :stroke-width="2" aria-hidden="true" /></span>
+      </div>
 
       <PresentationDemoBadge v-if="campaign.isPresentationDemo" compact />
-      <h3>{{ campaign.title }}</h3>
+      <h3 :id="titleId">{{ campaign.title }}</h3>
       <p class="campaign-card__summary">{{ campaign.summary }}</p>
 
       <div v-if="campaign.channels?.length" class="campaign-card__channels" :aria-label="campaign.channels.join(', ')">
         <span v-for="channel in campaign.channels" :key="channel">
-          <component :is="platformIcon(channel)" :size="14" stroke-width="2" aria-hidden="true" />
+          <SocialPlatformIcon :platform="channel" :size="14" />
           {{ channel }}
         </span>
       </div>
 
       <div class="campaign-card__details">
         <strong>{{ formatMoney(campaign.budgetMin, campaign.currency) }}–{{ formatMoney(campaign.budgetMax, campaign.currency) }}</strong>
-        <span><MapPin :size="14" aria-hidden="true" />{{ campaignPlace(campaign, locale) }}</span>
+        <span class="campaign-card__location"><MapPin :size="14" aria-hidden="true" /><span>{{ campaignPlace(campaign, locale) }}</span></span>
       </div>
     </div>
 
-    <div class="campaign-card__footer">
-      <div class="campaign-card__meta">
-        <span><CampaignHiringProgress :campaign="campaign" /> · {{ t('campaignCard.closes', { date: formatDate(campaign.closesAt) }) }}</span>
-        <CampaignApplicationRange :range="campaign.applicationRange" />
-      </div>
-      <p v-if="bookmarkError" class="campaign-card__bookmark-error" role="alert">
-        {{ bookmarkError }}
-      </p>
-      <RouterLink
-        :to="{ name: 'campaign-detail', params: { slug: campaign.slug } }"
-        class="campaign-card__cta button button--dark"
-      >
-        {{ t('campaignCard.viewBrief') }}
-        <ArrowRight :size="16" aria-hidden="true" />
-      </RouterLink>
-    </div>
+    <footer class="campaign-card__footer">
+      <span class="campaign-card__deadline" :aria-label="t('campaignCard.closes', { date: formatDate(campaign.closesAt) })">
+        <CalendarDays :size="14" aria-hidden="true" />
+        <time :datetime="campaign.closesAt">{{ formatDate(campaign.closesAt) }}</time>
+      </span>
+      <CampaignHiringProgress :campaign="campaign" compact />
+    </footer>
+    <p v-if="bookmarkError" class="campaign-card__bookmark-error" role="alert">{{ bookmarkError }}</p>
     <ConfirmationModal
       :open="removeBookmarkConfirmationOpen"
       :title="t('campaignCard.removeBookmarkTitle')"

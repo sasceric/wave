@@ -25,7 +25,7 @@ defineProps({ kind: { type: String, required: true } })
     </div>
     <div class="campaign-card__footer">
       <span class="skeleton-line"></span>
-      <span class="skeleton-button"></span>
+      <span class="skeleton-line skeleton-line--short"></span>
     </div>
   </div>
   <div v-else class="company-directory-card directory-skeleton directory-skeleton--company" aria-hidden="true">

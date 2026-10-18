@@ -1163,6 +1163,7 @@ onMounted(loadDashboard)
               class="company-cover-field"
               ref="companyCoverField"
               folder="company-cover"
+              :company-type="profile.companyType"
               :model-value="profile.coverMediaId"
               :preview-url="profile.coverUrl || ''"
               :alt="profile.name"

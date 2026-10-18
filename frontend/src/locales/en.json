@@ -1128,8 +1128,8 @@
     "mediaUrl": "YouTube or Vimeo URL",
     "mediaUpload": "Upload image",
     "mediaUploading": "Uploading image…",
-    "mediaUploadHint": "JPEG, PNG, or WebP, up to 10 MB. Images are saved as WebP, up to 600 px wide, keeping their proportions without cropping.",
-    "coverUploadHint": "JPEG, PNG, or WebP, up to 10 MB. Covers are saved as WebP, up to 1920 px wide, without cropping or enlarging smaller images.",
+    "mediaUploadHint": "JPEG, PNG, or WebP, up to 10 MB.",
+    "coverUploadHint": "JPEG, PNG, or WebP, up to 10 MB.",
     "coverSaveHint": "Changes are saved when you save your profile.",
     "selectCategories": "Select up to 5 categories",
     "searchCategories": "Search categories",
@@ -2812,5 +2812,18 @@
       "packages": "Packages",
       "faqs": "FAQ"
     }
+  },
+  "imageUpload": {
+    "creator": "Recommended: 600 × 600 px (1:1). Center your face and leave some space around it.",
+    "logo": "Recommended: 600 × 600 px (1:1). Leave some clear space around your logo.",
+    "companyCover": "Recommended: 1920 × 640 px (3:1). Keep important details away from the edges.",
+    "campaignCover": "Recommended: 1200 × 800 px (3:2). Keep the main subject centered.",
+    "portfolio": "Recommended for landscape photos: 600 × 400 px (3:2). Other proportions are also welcome.",
+    "preview": "Check photo previews",
+    "previewHint": "Example photo crops. The final display depends on the screen width and page content.",
+    "desktopPage": "Page · desktop",
+    "mobilePage": "Page · mobile",
+    "desktopCard": "Card · desktop",
+    "mobileCard": "Card · mobile"
   }
 }

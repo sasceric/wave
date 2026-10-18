@@ -199,7 +199,7 @@
     }
 
     &--directory .campaign-card h3 {
-      font-size: 15px;
+      font-size: 14px;
       overflow-wrap: anywhere;
     }
 
@@ -216,16 +216,6 @@
       font-size: 12px;
     }
 
-    &--directory .campaign-card__cta {
-      padding: 8px 5px;
-      font-size: 11px;
-    }
-  }
-}
-
-.campaign-grid {
-  &--directory .campaign-card__panel {
-    min-height: 175px;
   }
 }
 
