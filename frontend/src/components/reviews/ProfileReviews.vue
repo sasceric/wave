@@ -7,7 +7,7 @@ import { useI18n } from 'vue-i18n'
 import DirectoryPagination from '../shared/DirectoryPagination.vue'
 import StatusMessage from '../shared/StatusMessage.vue'
 import { apiGet, formatDate } from '../../lib/api'
-const props = defineProps({ kind: { type: String, required: true }, slug: { type: String, required: true }, reviewRole: { type: String, default: '' } })
+const props = defineProps({ kind: { type: String, required: true }, slug: { type: String, required: true }, reviewRole: { type: String, default: '' }, title: { type: String, default: '' }, description: { type: String, default: '' } })
 const { t, locale } = useI18n()
 const rows = ref([])
 const summary = ref({})
@@ -50,10 +50,11 @@ onBeforeUnmount(() => { ++generation })
 <template>
   <section class="profile-reviews" :aria-label="t('reviews.title')" :aria-busy="loading">
     <header class="profile-reviews__heading">
-      <h2 ref="heading" tabindex="-1">{{ t('reviews.title') }}</h2>
-      <p>{{ t('studio.reviewsIntro') }}</p>
+      <h2 ref="heading" tabindex="-1">{{ title || t('reviews.title') }}</h2>
+      <p>{{ description || t('studio.reviewsIntro') }}</p>
     </header>
     <div class="profile-reviews__surface">
+      <slot name="filters" />
       <div class="profile-reviews__summary">
         <strong class="profile-reviews__average">{{ summary.average == null ? '—' : number(summary.average) }}</strong>
         <div>

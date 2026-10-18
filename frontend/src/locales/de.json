@@ -2779,6 +2779,10 @@
     "campaignsTitle": "Kampagnen von {company}",
     "emptyCampaigns": "Diese Agentur hat derzeit keine offenen Kampagnen.",
     "noServices": "Füge Leistungen hinzu, die deine Agentur Kunden anbietet.",
-    "noDeliverables": "Füge die konkreten Leistungen hinzu, die der Kunde im Rahmen dieses Angebots erhält."
+    "noDeliverables": "Füge die konkreten Leistungen hinzu, die der Kunde im Rahmen dieses Angebots erhält.",
+    "publicServicesTitle": "Was wir tun",
+    "publicServicesHint": "Ein klarer Leistungsumfang, von der Vorbereitung bis zur Lieferung.",
+    "publicReviewsTitle": "Zusammenarbeit und Bewertungen",
+    "publicReviewsHint": "Erfahrungen von beiden Seiten der Zusammenarbeit."
   }
 }

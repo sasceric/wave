@@ -3,12 +3,12 @@ import { MessageCircle } from '@lucide/vue'
 import { useI18n } from 'vue-i18n'
 import CreatorPackageFacts from '../creators/CreatorPackageFacts.vue'
 import { formatMoney } from '../../lib/api'
-defineProps({ items: { type: Array, required: true }, canRequest: Boolean, agency: Boolean, title: { type: String, default: '' } })
+defineProps({ items: { type: Array, required: true }, canRequest: Boolean, agency: Boolean, compact: Boolean, title: { type: String, default: '' } })
 defineEmits(['request'])
 const { t } = useI18n()
 </script>
 <template>
-  <section class="profile-content-section profile-packages">
+  <section class="profile-content-section profile-packages" :class="{ 'profile-packages--compact': compact }">
     <div class="profile-section-heading"><h2>{{ title || t('studio.myServices') }}</h2></div>
     <div class="profile-package-grid">
       <article v-for="item in items" :key="item.id || item.profileKey" class="profile-package" :class="{ 'profile-package--negotiation': item.isNegotiationOption }">

@@ -1,5 +1,10 @@
 # Production deployment
 
+The manual workflow's optional `seed_agency_showcase` input runs the explicitly
+requested Studio Luma import after the release is built. It defaults to false,
+including on pushes. See [presentation profiles](presentation-demo.md#studio-luma-agency-showcase)
+for the imported data, dry run, idempotency and account-collision protections.
+
 The `Deploy production` GitHub Actions workflow deploys `main` to
 `/home/steelcodeweb/web/wave.ba/public_html/` after each push. It can also be
 started manually from **Actions → Deploy production → Run workflow**.

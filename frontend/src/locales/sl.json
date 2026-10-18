@@ -2780,6 +2780,10 @@
     "campaignsTitle": "Kampanje agencije {company}",
     "emptyCampaigns": "Ta agencija trenutno nima odprtih kampanj.",
     "noServices": "Dodaj storitve, ki jih tvoja agencija ponuja strankam.",
-    "noDeliverables": "Dodaj konkretne postavke, ki jih naročnik prejme v okviru te storitve."
+    "noDeliverables": "Dodaj konkretne postavke, ki jih naročnik prejme v okviru te storitve.",
+    "publicServicesTitle": "Kaj počnemo",
+    "publicServicesHint": "Jasen obseg storitve, od priprave do izvedbe.",
+    "publicReviewsTitle": "Sodelovanja in ocene",
+    "publicReviewsHint": "Izkušnje z obeh strani sodelovanja."
   }
 }

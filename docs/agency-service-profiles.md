@@ -22,6 +22,15 @@ including mobile scrolling, keyboard controls, package actions and FAQ appearanc
 Agency public sections remain visible together, like creator sections; review
 role selection still separates provider/client feedback.
 
+The public agency page uses the services-first layout: compact cover and identity,
+expandable structured services, an equal-size portfolio grid, provider/client
+review filters, FAQs and campaigns. Packages and company information sit beside
+the main column on desktop and join the reading order on mobile. Creator work
+details, packages, FAQs, ratings and reviews reuse their existing shared
+components; default creator layouts remain unchanged. Logo, cover, industries,
+description, location, social links, languages, availability and optional intro
+video remain visible. Contact and campaign invitation permissions are unchanged.
+
 Agencies may select a saved service/package when applying. It fills editable scope
 and delivery terms; package price is copied only for the campaign currency. The
 submitted proposal is a snapshot of those edited terms, so later profile changes

@@ -6,13 +6,13 @@ import FormModal from '../shared/FormModal.vue'
 import PortfolioGallery from '../shared/PortfolioGallery.vue'
 import { formatDate } from '../../lib/api'
 import { CREATOR_PLACEHOLDER } from '../../lib/marketplace'
-defineProps({ items: { type: Array, default: () => [] }, name: { type: String, required: true }, showHeading: { type: Boolean, default: true } })
+defineProps({ items: { type: Array, default: () => [] }, name: { type: String, required: true }, showHeading: { type: Boolean, default: true }, layout: { type: String, default: 'featured' } })
 const { t } = useI18n()
 const selected = ref(null)
 const media = computed(() => selected.value ? [{ ...selected.value, id: 'main' }, ...(selected.value.media || []).map((item, index) => ({ ...item, id: `extra-${index}`, title: selected.value.title }))].filter(item => item.url || item.embedUrl) : [])
 </script>
 <template>
-  <section v-if="items.length" class="creator-works">
+  <section v-if="items.length" class="creator-works" :class="{ 'creator-works--grid': layout === 'grid' }">
     <header v-if="showHeading">
       <h2>{{ t('studio.selectedWorks') }}</h2>
       <p>{{ t('studio.worksIntro') }}</p>
@@ -90,6 +90,7 @@ const media = computed(() => selected.value ? [{ ...selected.value, id: 'main' }
 </template>
 <style scoped lang="scss">
 .creator-works { min-width:0; h2 { font-size:27px; margin:0; color:var(--forest); } header p { color:var(--muted); font-size:12px; margin:8px 0 16px; }
+  &--grid { .creator-works__grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } .creator-works__item--featured { grid-column: auto; display: block; img { height: 155px; } } .creator-works__copy { padding: 13px; > strong { font-size: 15px; } } .creator-works__pin { display: none; } }
   &__grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
   &__item { overflow:hidden; text-align:left; background:#fffefa; border:1px solid #dce2d9; padding:0; border-radius:15px; font:inherit; color:var(--forest); cursor:pointer; min-width:0; img { display:block; width:100%; height:155px; object-fit:cover; } &--featured { grid-column:1/-1; display:grid; grid-template-columns:1fr 1fr; img { height:240px; } } }
   &__copy { display:flex; flex-direction:column; gap:7px; padding:16px; justify-content:center; small, >span:not(.creator-works__link):not(.creator-works__pin) { color:var(--muted); font-size:12px; line-height:1.6; } >strong { font-size:17px; } }
@@ -97,5 +98,6 @@ const media = computed(() => selected.value ? [{ ...selected.value, id: 'main' }
   &__details { display:grid; gap:16px; p { white-space:pre-wrap; overflow-wrap:anywhere; font-size:13px; line-height:1.7; } h3 { font-size:14px; } }
   &__results { display:flex; flex-wrap:wrap; gap:15px; padding:15px; background:#e5ebe2; border-radius:10px; strong,span { display:block; } span { font-size:12px; } } &__source { font-size:11px; color:var(--muted); }
   @media(max-width:760px) { &__item--featured { display:block; img { height:200px; min-height:0; } } &__copy { padding:12px; } }
+  @media(max-width:760px) { &--grid { .creator-works__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .creator-works__item:last-child:nth-child(odd) { grid-column: 1/-1; } .creator-works__item img { height: 135px; } } }
 }
 </style>

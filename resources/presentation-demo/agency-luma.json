@@ -1,0 +1,470 @@
+{
+  "accounts": [
+    {
+      "id": "luma",
+      "key": "wave-agency-luma",
+      "email": "studio.luma.demo@wave.ba",
+      "name": "Studio Luma",
+      "type": "company",
+      "hidden": false
+    },
+    {
+      "id": "dn",
+      "key": "wave-showcase-dn",
+      "email": "dnkozmetik@wave.ba",
+      "name": "DN kozmetik",
+      "type": "company",
+      "hidden": false
+    },
+    {
+      "id": "amina",
+      "key": "wave-showcase-amina",
+      "email": "amina.kovac@wave.ba",
+      "name": "Amina Kovač",
+      "type": "creator",
+      "hidden": false
+    },
+    {
+      "id": "coffee",
+      "key": "wave-agency-luma-coffee",
+      "email": "kafa.ritual.demo@wave.ba",
+      "name": "Kafa Ritual",
+      "type": "company",
+      "hidden": false
+    },
+    {
+      "id": "bloom",
+      "key": "wave-agency-luma-bloom",
+      "email": "studio.bloom.demo@wave.ba",
+      "name": "Studio Bloom",
+      "type": "company",
+      "hidden": false
+    },
+    {
+      "id": "local",
+      "key": "wave-agency-luma-local",
+      "email": "local.stories.demo@wave.ba",
+      "name": "Local Stories",
+      "type": "company",
+      "hidden": false
+    },
+    {
+      "id": "lejla",
+      "key": "wave-agency-luma-lejla",
+      "email": "lejla.hadzic.demo@wave.ba",
+      "name": "Lejla Hadžić",
+      "type": "creator",
+      "hidden": false
+    },
+    {
+      "id": "applicant-a",
+      "key": "wave-agency-luma-applicant-a",
+      "email": "luma.applicant.a.demo@wave.ba",
+      "name": "Demo kandidat 1",
+      "type": "creator",
+      "hidden": true
+    },
+    {
+      "id": "applicant-b",
+      "key": "wave-agency-luma-applicant-b",
+      "email": "luma.applicant.b.demo@wave.ba",
+      "name": "Demo kandidat 2",
+      "type": "creator",
+      "hidden": true
+    },
+    {
+      "id": "applicant-c",
+      "key": "wave-agency-luma-applicant-c",
+      "email": "luma.applicant.c.demo@wave.ba",
+      "name": "Demo kandidat 3",
+      "type": "creator",
+      "hidden": true
+    }
+  ],
+  "about": "<p>Pomažemo brendovima da ideje pretvore u kratke videozapise, fotografije i priče koje ljudi pamte.</p><p>Kreativni tim iz Sarajeva. Spajamo ideju, produkciju i saradnju s kreatorima u sadržaj za digitalne kanale.</p><p>Radimo s brendovima koji cijene jasnu komunikaciju, dobru pripremu i pažnju prema detaljima.</p>",
+  "industries": [
+    "Marketing",
+    "Beauty",
+    "Lifestyle"
+  ],
+  "services": [
+    {
+      "id": "luma-production",
+      "title": "Produkcija sadržaja",
+      "description": "Videozapisi i fotografije za kanale tvog brenda.",
+      "deliverables": [
+        "Kreativni koncept i plan snimanja",
+        "Snimanje proizvoda i završna obrada",
+        "Formati prilagođeni digitalnim kanalima"
+      ],
+      "platforms": [
+        "Instagram",
+        "TikTok"
+      ],
+      "engagement": "both"
+    },
+    {
+      "id": "luma-photography",
+      "title": "Fotografija proizvoda",
+      "description": "Detalji, teksture i scene koje predstavljaju proizvod.",
+      "deliverables": [
+        "Vizuelni smjer i priprema scene",
+        "Studijsko ili ambijentalno fotografisanje",
+        "Obrada odabranih fotografija"
+      ],
+      "platforms": [],
+      "engagement": "project"
+    },
+    {
+      "id": "luma-campaigns",
+      "title": "Kampanje s kreatorima",
+      "description": "Od izbora saradnika do usklađenog sadržaja.",
+      "deliverables": [
+        "Priprema briefa i izbor kreatora",
+        "Koordinacija rokova i isporuka",
+        "Pregled sadržaja i završni izvještaj"
+      ],
+      "platforms": [
+        "Instagram",
+        "YouTube"
+      ],
+      "engagement": "project"
+    }
+  ],
+  "packages": [
+    {
+      "id": "luma-content",
+      "title": "Sadržaj za novu priču",
+      "description": "Koncept, produkcija i gotovi materijali za kanale tvog brenda.",
+      "price": 650,
+      "deliveryDays": 10,
+      "revisions": 1,
+      "usage": "organic",
+      "usageDays": null,
+      "deliverables": [
+        {
+          "quantity": 2,
+          "format": "video",
+          "duration": 30
+        },
+        {
+          "quantity": 6,
+          "format": "photo",
+          "duration": null
+        }
+      ],
+      "currency": "BAM",
+      "priceMode": "from",
+      "mode": "content",
+      "platform": "All"
+    },
+    {
+      "id": "luma-monthly",
+      "title": "Mjesečna produkcija",
+      "description": "Više sadržaja, uz usklađen vizuelni smjer i plan isporuke.",
+      "price": 1200,
+      "deliveryDays": 20,
+      "revisions": 2,
+      "usage": "ads",
+      "usageDays": 30,
+      "deliverables": [
+        {
+          "quantity": 4,
+          "format": "video",
+          "duration": 30
+        },
+        {
+          "quantity": 12,
+          "format": "photo",
+          "duration": null
+        }
+      ],
+      "currency": "BAM",
+      "priceMode": "from",
+      "mode": "content",
+      "platform": "All"
+    }
+  ],
+  "faqs": [
+    {
+      "question": "Šta je potrebno za početak saradnje?",
+      "answer": "Pošalji cilj projekta, opis proizvoda i željeni rok. U razgovoru usklađujemo koncept, isporuke i uslove prije početka."
+    },
+    {
+      "question": "Gdje organizujete snimanje?",
+      "answer": "Produkciju planiramo u Sarajevu. Snimanje na drugoj lokaciji i pripadajuće troškove dogovaramo posebno."
+    },
+    {
+      "question": "Jesu li izmjene i prava korištenja uključeni?",
+      "answer": "Broj izmjena i prava korištenja navedeni su uz svaki paket. Dodatne verzije, oglase i druga prava dogovaramo u ponudi."
+    }
+  ],
+  "portfolio": [
+    {
+      "id": "luma-work-njega",
+      "title": "Njega bez komplikacija",
+      "type": "image",
+      "platform": "Instagram",
+      "summary": "Koncept, produkcija i završna obrada za novu liniju njege.",
+      "source": "wave",
+      "client": "DN kozmetik",
+      "agency": "",
+      "brief": "Približiti novu liniju njege kroz prirodne rutine i detalje proizvoda.",
+      "contribution": "Kreativni koncept, plan snimanja, produkcija i završna obrada. Tim je pripremio dva vertikalna videa i šest fotografija.",
+      "projectDate": "2026-10-10",
+      "postUrl": "",
+      "deliverables": [
+        {
+          "quantity": 2,
+          "format": "video",
+          "duration": 30
+        },
+        {
+          "quantity": 6,
+          "format": "photo",
+          "duration": null
+        }
+      ],
+      "results": [
+        {
+          "metric": "Pregledi — demo",
+          "value": 18400,
+          "period": "Prvih 14 dana"
+        }
+      ],
+      "measuredAt": "2026-10-18",
+      "featured": true,
+      "publicPermission": true,
+      "coverMediaId": null,
+      "media": [],
+      "campaignKey": "provider-0",
+      "asset": "cosmetics"
+    },
+    {
+      "id": "luma-work-kafa",
+      "title": "Mali jutarnji ritual",
+      "type": "image",
+      "platform": "Instagram",
+      "summary": "Sadržaj s kojim počinje dan.",
+      "source": "external",
+      "client": "Kafa Ritual",
+      "agency": "",
+      "brief": "Predstaviti proizvod kroz topao i prepoznatljiv jutarnji trenutak.",
+      "contribution": "Scenarij, priprema scene, snimanje i montaža kratkog videa uz prateće fotografije.",
+      "projectDate": "2026-09-28",
+      "postUrl": "",
+      "deliverables": [
+        {
+          "quantity": 1,
+          "format": "video",
+          "duration": 30
+        },
+        {
+          "quantity": 4,
+          "format": "photo",
+          "duration": null
+        }
+      ],
+      "results": [],
+      "measuredAt": null,
+      "featured": false,
+      "publicPermission": true,
+      "coverMediaId": null,
+      "media": [],
+      "campaignKey": null,
+      "asset": "coffee"
+    },
+    {
+      "id": "luma-work-torba",
+      "title": "Jednostavno, svaki dan",
+      "type": "image",
+      "platform": "Instagram",
+      "summary": "Svjetlo, tekstura i detalji.",
+      "source": "sample",
+      "client": "",
+      "agency": "",
+      "brief": "Istražiti kako svjetlo, teksture i kadar predstavljaju jednostavan proizvod.",
+      "contribution": "Stiliziranje scene, fotografisanje i obrada fotografija proizvoda.",
+      "projectDate": "2026-09-18",
+      "postUrl": "",
+      "deliverables": [
+        {
+          "quantity": 5,
+          "format": "photo",
+          "duration": null
+        }
+      ],
+      "results": [],
+      "measuredAt": null,
+      "featured": false,
+      "publicPermission": true,
+      "coverMediaId": null,
+      "media": [],
+      "campaignKey": null,
+      "asset": "bag"
+    }
+  ],
+  "presentation": {
+    "languages": [
+      "bs",
+      "en"
+    ],
+    "availability": "available",
+    "availableFrom": null,
+    "introVideoUrl": ""
+  },
+  "socialLinks": [
+    {
+      "platform": "Website",
+      "url": "https://example.com/studio-luma/website"
+    },
+    {
+      "platform": "Instagram",
+      "url": "https://example.com/studio-luma/instagram"
+    },
+    {
+      "platform": "TikTok",
+      "url": "https://example.com/studio-luma/tiktok"
+    },
+    {
+      "platform": "YouTube",
+      "url": "https://example.com/studio-luma/youtube"
+    },
+    {
+      "platform": "Facebook",
+      "url": "https://example.com/studio-luma/facebook"
+    },
+    {
+      "platform": "LinkedIn",
+      "url": "https://example.com/studio-luma/linkedin"
+    }
+  ],
+  "history": [
+    {
+      "key": "provider-0",
+      "client": "dn",
+      "provider": "luma",
+      "title": "Njega bez komplikacija",
+      "amount": 650,
+      "review": {
+        "author": "dn",
+        "rating": 5,
+        "comment": "Od jasnog koncepta do završnih materijala, sve je bilo pažljivo pripremljeno. Sadržaj se odlično uklopio u naš brend.",
+        "date": "12.10.2026."
+      }
+    },
+    {
+      "key": "provider-1",
+      "client": "coffee",
+      "provider": "luma",
+      "title": "Mali jutarnji ritual",
+      "amount": 650,
+      "review": {
+        "author": "coffee",
+        "rating": 5,
+        "comment": "Razumjeli su atmosferu koju smo željeli. Komunikacija je bila jednostavna, a isporuka u dogovorenom roku.",
+        "date": "04.10.2026."
+      }
+    },
+    {
+      "key": "provider-2",
+      "client": "bloom",
+      "provider": "luma",
+      "title": "Fotografije nove kolekcije",
+      "amount": 650,
+      "review": {
+        "author": "bloom",
+        "rating": 4,
+        "comment": "Fotografije su vjerno prenijele detalje proizvoda. Izmjene smo dogovorili brzo i jasno.",
+        "date": "28.09.2026."
+      }
+    },
+    {
+      "key": "provider-3",
+      "client": "local",
+      "provider": "luma",
+      "title": "Serija kratkih videa",
+      "amount": 650,
+      "review": {
+        "author": "local",
+        "rating": 5,
+        "comment": "Dobra priprema i otvorenost za naše ideje. Rado bismo ponovo sarađivali.",
+        "date": "15.09.2026."
+      }
+    },
+    {
+      "key": "provider-extra",
+      "client": "dn",
+      "provider": "luma",
+      "title": "Nova priča o njezi",
+      "amount": 650
+    },
+    {
+      "key": "client-0",
+      "client": "luma",
+      "provider": "amina",
+      "title": "Tvoja jutarnja rutina",
+      "amount": 450,
+      "review": {
+        "author": "amina",
+        "rating": 5,
+        "comment": "Jasan brief i brzi odgovori. Imala sam prostora za vlastitu ideju, a svi uslovi bili su dogovoreni unaprijed.",
+        "date": "10.10.2026."
+      }
+    },
+    {
+      "key": "client-1",
+      "client": "luma",
+      "provider": "lejla",
+      "title": "Priča o svakodnevnim ritualima",
+      "amount": 450,
+      "review": {
+        "author": "lejla",
+        "rating": 5,
+        "comment": "Profesionalna i ugodna saradnja. Dobila sam jasne smjernice i korisne povratne informacije na sadržaj.",
+        "date": "22.09.2026."
+      }
+    },
+    {
+      "key": "client-extra",
+      "client": "luma",
+      "provider": "amina",
+      "title": "Detalji koji pričaju priču",
+      "amount": 350
+    }
+  ],
+  "open": [
+    {
+      "key": "open-njega",
+      "title": "Tvoja jutarnja rutina njege",
+      "asset": "cosmetics",
+      "category": "Beauty",
+      "channels": [
+        "Instagram"
+      ],
+      "min": 350,
+      "max": 550,
+      "creators": 2,
+      "applicants": []
+    },
+    {
+      "key": "open-kafa",
+      "title": "Podijeli svoj mali ritual",
+      "asset": "coffee",
+      "category": "Food",
+      "channels": [
+        "TikTok"
+      ],
+      "min": 250,
+      "max": 400,
+      "creators": 3,
+      "applicants": [
+        "lejla",
+        "amina",
+        "applicant-a",
+        "applicant-b",
+        "applicant-c"
+      ]
+    }
+  ]
+}

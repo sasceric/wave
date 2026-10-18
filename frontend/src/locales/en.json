@@ -2779,6 +2779,10 @@
     "campaignsTitle": "Campaigns by {company}",
     "emptyCampaigns": "This agency currently has no open campaigns.",
     "noServices": "Add the services your agency offers to clients.",
-    "noDeliverables": "Add the specific items the client receives as part of this service."
+    "noDeliverables": "Add the specific items the client receives as part of this service.",
+    "publicServicesTitle": "What we do",
+    "publicServicesHint": "A clear scope, from preparation to delivery.",
+    "publicReviewsTitle": "Collaborations and reviews",
+    "publicReviewsHint": "Experiences from both sides of a collaboration."
   }
 }

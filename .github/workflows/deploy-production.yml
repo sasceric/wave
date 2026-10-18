@@ -5,6 +5,11 @@ on:
     branches:
       - main
   workflow_dispatch:
+    inputs:
+      seed_agency_showcase:
+        description: 'After deployment, upsert the clearly marked Studio Luma agency showcase'
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -21,7 +26,10 @@ jobs:
     steps:
       - name: Deploy over SSH
         uses: appleboy/ssh-action@v1.2.2
+        env:
+          WAVE_SEED_AGENCY: ${{ inputs.seed_agency_showcase && '1' || '0' }}
         with:
+          envs: WAVE_SEED_AGENCY
           host: ${{ secrets.PRODUCTION_SSH_HOST }}
           username: ${{ secrets.PRODUCTION_SSH_USER }}
           key: ${{ secrets.PRODUCTION_SSH_PRIVATE_KEY }}
@@ -94,3 +102,9 @@ jobs:
               done
             fi
             trap - EXIT
+            # Keep the deployed application and its workers available even if
+            # the optional showcase preflight refuses an identity collision.
+            if [ "$WAVE_SEED_AGENCY" = "1" ]; then
+              as_web env APP_ENV=prod APP_DEBUG=0 "$deploy_php" bin/console app:seed-agency-showcase --dry-run --no-interaction
+              as_web env APP_ENV=prod APP_DEBUG=0 "$deploy_php" bin/console app:seed-agency-showcase --no-interaction
+            fi

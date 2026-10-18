@@ -35,6 +35,28 @@ final class PresentationDemoSeeder
     ];
     private array $createdPaths = [];
 
+    private function agencyImporter(): AgencyShowcaseImporter
+    {
+        return new AgencyShowcaseImporter($this->em, $this->hasher, $this->slugs, $this->applicationCounter, $this->projectDir, fn (User $owner, string $folder, string $asset): Media => $this->media($owner, $folder, $asset));
+    }
+
+    public function preflightAgencyShowcase(): array
+    {
+        return $this->agencyImporter()->preflight();
+    }
+
+    public function seedAgencyShowcase(?string $password = null): array
+    {
+        $this->preflightAgencyShowcase();
+        $this->createdPaths = [];
+        try {
+            return $this->em->wrapInTransaction(fn (): array => $this->agencyImporter()->seed($password));
+        } catch (\Throwable $error) {
+            $this->cleanupCreatedMedia();
+            throw $error;
+        }
+    }
+
     public function __construct(
         private readonly EntityManagerInterface $em,
         private readonly UserPasswordHasherInterface $hasher,
@@ -43,6 +65,11 @@ final class PresentationDemoSeeder
         private readonly \App\Service\CampaignApplicationCounter $applicationCounter,
         #[Autowire('%kernel.project_dir%')] private readonly string $projectDir,
     ) {}
+
+    private function cleanupCreatedMedia(): void
+    {
+        foreach ($this->createdPaths as $path) $this->storage->removePath($path);
+    }
 
     public function preflight(): void
     {
@@ -109,7 +136,7 @@ final class PresentationDemoSeeder
                 ], $users);
             });
         } catch (\Throwable $error) {
-            foreach ($this->createdPaths as $path) $this->storage->removePath($path);
+            $this->cleanupCreatedMedia();
             throw $error;
         }
     }

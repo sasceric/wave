@@ -57,3 +57,42 @@ for repair instead of creating orphaned replacements.
 
 This is a deliberate console operation, not a migration side effect, cron job or
 auto-run deployment seed. Deploying the code alone does not create demo accounts.
+
+## Studio Luma agency showcase
+
+The approved **Usluge u fokusu** design has a separate, explicit import:
+
+```sh
+php8.4 bin/console app:seed-agency-showcase --env=prod --dry-run
+php8.4 bin/console app:seed-agency-showcase --env=prod --no-interaction
+```
+
+`resources/presentation-demo/agency-luma.json` contains the prototype's Bosnian
+copy: three structured services, three portfolio projects, two packages (from
+650/1,200 BAM), three FAQs, public channels, languages and availability. The
+logo and cover use owned imported media, alongside the existing demonstration
+project photos. The intro video remains empty, as it was unconnected in the
+prototype. Reserved example links never impersonate real social profiles.
+
+The import creates Studio Luma and its marked fictional counterparties. Existing
+marked Amina/DN accounts are reused without rewriting their profiles or account
+settings; any conflicting unmarked email stops preflight. Nova Digital is not
+replaced. Three additional hidden demo creators supply the example campaign's
+five real application rows, rather than assigning an invented application total.
+One accepted offer gives that campaign its `1/3` hired count. The other open
+campaign has no applications. Both close on 10 November 2026.
+
+Eight finished collaborations represent five provider and three client projects.
+Six received reviews reproduce the prototype: four provider reviews averaging
+4.8 and two client reviews averaging 5.0; combined, 4.8 from six reviews. Reciprocal
+demo feedback follows the existing publication rules. All involved accounts,
+campaigns and feedback retain their fictional-data markers and existing schema/
+analytics exclusions. No emails, chat events or push notifications are sent.
+
+Runs are transactional and repeatable: passwords, public URLs, approval,
+visibility, existing reviews and campaign history are preserved. New accounts
+receive random passwords unless `WAVE_PRESENTATION_PASSWORD` is supplied for that
+run; no password is logged. Ordinary deployment never runs this seed. For an
+intentional production run through GitHub Actions, manually dispatch **Deploy
+production** with `seed_agency_showcase` enabled. It deploys, runs preflight and
+imports the showcase using the existing production SSH credentials.
