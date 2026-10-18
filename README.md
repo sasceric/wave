@@ -32,6 +32,9 @@ The default local database is SQLite, and PHP needs the `pdo_sqlite` extension w
 
 ## Run locally
 
+For all local services, exact startup commands, queue modes, Meilisearch indexing
+and troubleshooting, use the [step-by-step local services guide](docs/local-development.md).
+
 From the project root, use the PHP 8.4 and Node 22 executables without changing Homebrew's global PHP link:
 
 ```sh
