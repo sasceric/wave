@@ -2362,8 +2362,8 @@
   },
   "hiring": {
     "hire": "Hire",
-    "confirmTitle": "Confirm the agreed amount",
-    "confirmHint": "Enter the final amount agreed in chat. The creator must accept the offer before being hired.",
+    "confirmTitle": "Confirm hiring terms",
+    "confirmHint": "Enter the amount and delivery deadline agreed in the conversation. The creator confirms the offer before being hired.",
     "defaultMessage": "We confirm the agreed collaboration terms for this campaign.",
     "sendOffer": "Send offer",
     "invited": "Invited",
@@ -2397,7 +2397,21 @@
     "applied": "Applied",
     "discussing": "In discussion",
     "compensation": "Compensation",
-    "activityDate": "Date"
+    "activityDate": "Date",
+    "acceptApplication": "Accept and open chat",
+    "acceptApplicationHint": "Accepting opens the conversation. Agree on the amount and deadline, then send a hiring offer from the chat.",
+    "dueDate": "Delivery deadline",
+    "deliveryDue": "Delivery deadline: {date}.",
+    "declineHint": "The conversation stays open. You can agree on new terms and send another offer.",
+    "cancellationReason": "Cancellation reason",
+    "cancellationReasonHint": "Explain why you are canceling (10–1000 characters). The other participant will see this reason.",
+    "directReviewAmount": "Agreed amount: {amount}.",
+    "directTimeline": {
+      "offer_sent": "A collaboration offer was sent: {amount}.",
+      "hired": "The engagement is confirmed: {amount}.",
+      "offer_declined": "The collaboration offer was declined: {amount}.",
+      "cancelled": "Collaboration on {campaign} was canceled. Agreed amount: {amount} (excluded from earnings and spending)."
+    }
   },
   "overview": {
     "title": "Platform activity",
@@ -2657,7 +2671,8 @@
       "Unboxing"
     ],
     "unspecified": "Availability not specified",
-    "workTitle": "Work title"
+    "workTitle": "Work title",
+    "editPackage": "Edit package"
   },
   "activation": {
     "signupHint": "To get started, we only need the basics. Complete the rest in your account.",

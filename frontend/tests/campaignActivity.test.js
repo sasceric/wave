@@ -45,6 +45,7 @@ test('cancellation keeps the modal on failure and drops stale responses after an
       return new Promise(resolve => { finish = resolve })
     } },
   }, { offerId: 300, autoOpen: true, hideTrigger: true })
+  state.reason.value = 'The agreed schedule is no longer possible.'
   await state.cancel()
   assert.equal(state.open.value, true)
   assert.equal(state.error.value, 'Try again')
@@ -80,4 +81,31 @@ test('unified activity exposes review eligibility, compact responses and distinc
   state.confirmResponse()
   assert.equal(emitted[0][0], 'respond')
   assert.equal(emitted[0][1].offer.id, 6)
+})
+
+
+test('declining an offer returns the collaboration to discussion and preserves only the latest terms in activity', () => {
+  const application = { id: 100, status: 'shortlisted', campaign, conversationId: 20 }
+  const old = { id: 300, status: 'rejected', campaign, amount: 300, createdAt: '2026-10-01' }
+  assert.equal(campaignActivityStage({ ...application, offer: old }), 'discussing')
+  assert.equal(campaignActivityStage({ ...application, status: 'offer_declined', offer: old }), 'discussing')
+  const latest = { ...old, id: 301, status: 'pending', amount: 400, dueDate: '2099-01-20' }
+  const rows = mergeCampaignActivity([application], [], [latest, old])
+  assert.equal(rows[0].offer.id, 301)
+  assert.equal(campaignActivityStage(rows[0]), 'offered')
+  assert.equal(campaignActivityStage({ ...application, status: 'rejected', offer: old }), 'rejected')
+})
+
+
+test('cancellation requires a reason and includes it in the request', async () => {
+  const calls = []
+  const { state } = await setupView('../src/components/account/CampaignCancellationAction.vue', {
+    '../../lib/api': { apiRequest: async (path, options) => { calls.push({ path, ...options }); return { data: { status: 'cancelled' } } } },
+  }, { offerId: 27, autoOpen: true, fullWidth: true })
+  await state.cancel()
+  assert.equal(calls.length, 0)
+  state.reason.value = '  The agreed delivery date no longer works.  '
+  await state.cancel()
+  assert.equal(calls[0].body.reason, 'The agreed delivery date no longer works.')
+  assert.equal(state.open.value, false)
 })

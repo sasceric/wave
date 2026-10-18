@@ -139,6 +139,12 @@ function statusLabel(offer) {
   return t(isOffers.value && key === 'pending' ? 'account.offerAwaitingResponse' : `account.${key}`)
 }
 
+function responseSummary(item) {
+  const offer = activeOffer(item)
+  const amount = t('hiring.reviewAmount', { campaign: item.campaign.title, amount: formatMoney(offer.amount, item.campaign.currency) })
+  return offer.dueDate ? `${amount} ${t('hiring.deliveryDue', { date: formatDate(offer.dueDate) })}` : amount
+}
+
 function activeOffer(item) { return isOffers.value ? item : item?.offer }
 function canAnswer(item) {
   if (!item || item.readOnly || item.campaign?.status !== 'open') return false
@@ -359,6 +365,7 @@ onBeforeUnmount(() => {
           <section v-if="isOffers || activeOffer(selectedItem)" class="offer-campaign-modal__offer">
             <h3>{{ t('account.offerDetails') }}</h3>
             <strong>{{ formatMoney(activeOffer(selectedItem).amount, campaign.currency) }}</strong>
+            <p v-if="activeOffer(selectedItem).dueDate">{{ t('hiring.deliveryDue', { date: formatDate(activeOffer(selectedItem).dueDate) }) }}</p>
             <p v-if="activeOffer(selectedItem).message">{{ activeOffer(selectedItem).message }}</p>
             <span class="creator-offer__status" :class="`creator-offer__status--${statusGroup(selectedItem)}`">{{ statusLabel(selectedItem) }}</span>
             <div v-if="activeOffer(selectedItem)?.status === 'pending' && campaign.status === 'open' && !selectedItem.readOnly" class="button-row">
@@ -403,7 +410,7 @@ onBeforeUnmount(() => {
     </dialog>
     <CampaignCancellationAction v-if="cancelOfferId" :offer-id="cancelOfferId" auto-open hide-trigger @closed="cancelOfferId = null" @cancelled="emit('cancelled')" />
     <ReviewAction v-if="reviewApplicationId" :application-id="reviewApplicationId" auto-open hide-trigger @closed="reviewApplicationId = null" />
-    <ConfirmationModal :open="Boolean(pendingResponse)" :title="t('hiring.confirmTitle')" :message="pendingResponse ? t('hiring.reviewAmount', { campaign: pendingResponse.item.campaign.title, amount: formatMoney(activeOffer(pendingResponse.item).amount, pendingResponse.item.campaign.currency) }) : ''" :confirm-label="t(pendingResponse?.decision === 'accept' ? 'hiring.acceptOffer' : 'hiring.declineOffer')" :cancel-label="t('safety.cancel')" @update:open="!$event && (pendingResponse = null)" @confirm="confirmResponse" />
+    <ConfirmationModal :open="Boolean(pendingResponse)" :title="t('hiring.confirmTitle')" :message="pendingResponse ? `${responseSummary(pendingResponse.item)}${pendingResponse.decision === 'reject' ? ` ${t('hiring.declineHint')}` : ''}` : ''" :confirm-label="t(pendingResponse?.decision === 'accept' ? 'hiring.acceptOffer' : 'hiring.declineOffer')" :cancel-label="t('safety.cancel')" @update:open="!$event && (pendingResponse = null)" @confirm="confirmResponse" />
   </section>
 </template>
 

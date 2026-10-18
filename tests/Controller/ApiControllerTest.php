@@ -314,7 +314,7 @@ final class ApiControllerTest extends WebTestCase
         $em->flush();
         $filters = ['categories' => '["Travel","Food"]', 'channels' => '["Instagram","TikTok"]', 'city' => 'ZENICA', 'countries' => '["BA"]', 'currency' => 'BAM', 'budgetMin' => '200', 'budgetMax' => '500', 'pagination' => 'cursor', 'view' => 'card', 'limit' => 1];
         $firstCursor = null;
-        foreach (['recommended' => ['a', 'b', 'c'], 'newest' => ['c', 'b', 'a'], 'closing' => ['b', 'c', 'a']] as $sort => $expected) {
+        foreach (['recommended' => ['a', 'c', 'b'], 'newest' => ['c', 'b', 'a'], 'closing' => ['b', 'c', 'a']] as $sort => $expected) {
             $path = '/api/campaigns?' . http_build_query($filters + ['sort' => $sort]);
             $next = null;
             $loaded = [];
@@ -360,6 +360,61 @@ final class ApiControllerTest extends WebTestCase
             $this->client->request('GET', '/api/campaigns?' . http_build_query($filters));
             self::assertResponseStatusCodeSame(400);
         }
+    }
+
+    public function testCampaignDefaultOrderKeepsFeaturedFirstThenNewestAcrossPages(): void
+    {
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $company = new Company('latest-campaign-brand', 'Latest Campaign Brand', 'Food');
+        $em->persist($company);
+        $campaigns = [];
+        foreach ([
+            ['regular-old', false, '-10 days', '+1 day'],
+            ['featured-old', true, '-20 days', '+2 days'],
+            ['regular-new', false, 'today', '+30 days'],
+            ['featured-new', true, '-1 day', '+20 days'],
+            ['featured-tie', true, '-1 day', '+19 days'],
+            ['regular-tie', false, 'today', '+29 days'],
+        ] as [$slug, $featured, $published, $closes]) {
+            $campaigns[$slug] = new Campaign($slug, $slug, 'Summary', 'Brief', 'Food', [], [], 100, 200, 'Zenica', 2,
+                new \DateTimeImmutable($closes), new \DateTimeImmutable($published), $company, $featured);
+            $em->persist($campaigns[$slug]);
+        }
+        $em->flush();
+        $expected = ['featured-tie', 'featured-new', 'featured-old', 'regular-tie', 'regular-new', 'regular-old'];
+        foreach ([[], ['sort' => 'recommended']] as $sort) {
+            $filters = $sort + ['company' => $company->getSlug(), 'limit' => 2];
+            $offsetRows = [];
+            for ($offset = 0; $offset < 6; $offset += 2) {
+                $this->client->request('GET', '/api/campaigns?'.http_build_query($filters + ['offset' => $offset]));
+                self::assertResponseIsSuccessful();
+                $payload = json_decode($this->client->getResponse()->getContent(), true, flags: JSON_THROW_ON_ERROR);
+                $offsetRows = [...$offsetRows, ...array_column($payload['data'], 'slug')];
+            }
+            self::assertSame($expected, $offsetRows);
+            $cursorRows = [];
+            $next = null;
+            do {
+                $params = $filters + ['pagination' => 'cursor'];
+                if ($next !== null) $params['cursor'] = $next;
+                $this->client->request('GET', '/api/campaigns?'.http_build_query($params));
+                self::assertResponseIsSuccessful();
+                $payload = json_decode($this->client->getResponse()->getContent(), true, flags: JSON_THROW_ON_ERROR);
+                $cursorRows = [...$cursorRows, ...array_column($payload['data'], 'slug')];
+                self::assertLessThanOrEqual(6, count($cursorRows));
+                $next = $payload['meta']['nextCursor'];
+            } while ($next !== null);
+            self::assertSame($expected, $cursorRows);
+        }
+
+        // A cursor issued before the change must not reinterpret a closing date as a publication date.
+        $params = ['company' => $company->getSlug(), 'pagination' => 'cursor', 'sort' => 'recommended', 'limit' => 2];
+        $request = \Symfony\Component\HttpFoundation\Request::create('/api/campaigns', 'GET', $params);
+        $legacy = static::getContainer()->get(\App\Api\DirectoryCursor::class)->encode($request, 'campaign', [
+            'featured' => true, 'date' => $campaigns['featured-old']->getClosesAt()->format('Y-m-d H:i:s'), 'id' => $campaigns['featured-old']->getId(),
+        ]);
+        $this->client->request('GET', '/api/campaigns?'.http_build_query($params + ['cursor' => $legacy]));
+        self::assertResponseStatusCodeSame(400);
     }
 
     public function testCompanyFiltersUseVisibleCompanyFieldsAndPreserveCursorScope(): void
@@ -769,6 +824,7 @@ final class ApiControllerTest extends WebTestCase
         }
         $entityManager->flush();
 
+        $expected['campaigns'] = array_reverse($expected['campaigns']);
         foreach ($expected as $directory => $slugs) {
             $loaded = [];
             foreach ([0 => 30, 30 => 30, 60 => 1, 90 => 0] as $offset => $count) {

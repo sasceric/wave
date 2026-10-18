@@ -6,7 +6,7 @@ import { accountLanding } from '../src/lib/accountAccess.js'
 import { normalizeServices } from '../src/lib/agencyServices.js'
 import { setupView } from './setupView.js'
 
-async function setupAccount({ saveError = null, accountType = 'company' } = {}) {
+async function setupAccount({ saveError = null, accountType = 'company', actionResponse = null } = {}) {
   const requests = []
   const scrolls = []
   const navigations = []
@@ -39,6 +39,7 @@ async function setupAccount({ saveError = null, accountType = 'company' } = {}) 
       apiRequest: async (path, options) => {
         requests.push({ path, ...options })
         if (saveError) throw new Error(saveError)
+        if (actionResponse) return actionResponse
         account.profile = { ...account.profile, ...options.body }
         return { data: account }
       },
@@ -250,4 +251,19 @@ test('successful password or social authentication navigates to overview includi
   assert.equal(navigations.at(-1).name, 'account-dashboard-bs')
   await state.handleAuthenticated({ ...account, profileComplete: false })
   assert.equal(navigations.at(-1).name, 'account-dashboard-bs')
+})
+
+test('accepting an application only opens its chat and sends no financial terms', async () => {
+  const { state, requests } = await setupAccount({ actionResponse: { conversationId: 88 } })
+  const navigation = []
+  state.router.push = async target => navigation.push(target)
+  const response = { id: 77, campaign: { slug: 'summer' } }
+  state.selectedApplication.value = response
+  await state.shortlistApplication(response)
+  assert.equal(requests.length, 1)
+  assert.equal(requests[0].path, '/company/applications/77/shortlist')
+  assert.deepEqual(Object.keys(requests[0].body), [])
+  assert.equal(navigation[0].name, 'messages-bs')
+  assert.equal(navigation[0].query.conversation, 88)
+  assert.equal(state.selectedApplication.value, null)
 })

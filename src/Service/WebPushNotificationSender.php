@@ -255,6 +255,10 @@ final class WebPushNotificationSender
         if (null !== $notification->getConversation()?->getId()) {
             return '/messages?conversation=' . $notification->getConversation()->getId();
         }
+        if ($notification->getType() === 'application_received' && ($campaign = $notification->getCampaign()) !== null) {
+            return $this->routes?->localizedPath('account-campaign-detail', $notification->getRecipient()->getPreferredLocale(), ['slug' => $campaign->getSlug()])
+                ?? '/racun/kampanje/'.rawurlencode($campaign->getSlug());
+        }
 
         return match ($notification->getType()) {
             'campaign_invitation', 'campaign_cancelled' => '/account/applications',

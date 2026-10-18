@@ -90,3 +90,16 @@ test('public presentation uses the largest known channel and omits private work'
   assert.equal(state.images.value.length, 1)
   assert.equal(state.images.value[0].id, 'public')
 })
+
+
+test('the initial direct inquiry sends only package selection and message, without proposed money terms', async () => {
+  const { state, requests } = await profileView({ accountType: 'company', approved: true, emailVerified: true, profileComplete: true })
+  state.openRequestForm(null, true)
+  state.requestForm.value.message = 'Let us discuss a video collaboration in chat.'
+  await state.submitRequest()
+  const request = requests.find(request => request.options)
+  assert.equal(request.path, '/creators/amina/inquiries')
+  assert.equal(request.options.body.other, true)
+  assert.equal('proposedAmount' in request.options.body, false)
+  assert.equal('currency' in request.options.body, false)
+})

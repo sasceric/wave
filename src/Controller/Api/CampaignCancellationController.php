@@ -6,6 +6,7 @@ use App\Account\AccountDeletion;
 use App\Api\ApiAccess;
 use App\Api\CampaignHiredCounts;
 use App\Api\OfferResource;
+use App\Api\JsonPayload;
 use App\Entity\Offer;
 use App\Localization\ApiMessages;
 use App\Localization\LocaleContext;
@@ -34,7 +35,9 @@ final class CampaignCancellationController
         $application = $offer->getApplication();
         if (AccountDeletion::sharedHistoryDeleted($application->getCreator(), $application->getCampaign()->getCompany())) return new JsonResponse(['error' => ApiMessages::get('account_deleted_history', $locale)], 409);
         if ($blocks->pair($application->getCreator()->getOwner()?->getId(), $application->getCampaign()->getCompany()->getOwner()?->getId())) return new JsonResponse(['error' => ApiMessages::get('blocked_history', $locale)], 409);
-        try { $cancellation->offer($offer, $user); }
+        $data = JsonPayload::fromRequest($request);
+        $reason = is_string($data['reason'] ?? null) ? trim($data['reason']) : '';
+        try { $cancellation->offer($offer, $user, $reason); }
         catch (HttpException $error) { return new JsonResponse(['error' => ApiMessages::get($error->getMessage(), $locale)], $error->getStatusCode()); }
         return new JsonResponse(['data' => OfferResource::fromEntity($offer, $locale, CampaignHiredCounts::forCampaign($em, $application->getCampaign()))], headers: ['Cache-Control' => 'private, no-store']);
     }

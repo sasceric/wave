@@ -32,7 +32,9 @@ class Application
     #[ORM\Column]
     private DateTimeImmutable $createdAt;
 
-    #[ORM\OneToOne(mappedBy: 'application', targetEntity: Offer::class, cascade: ['persist', 'remove'])]
+    // Current terms only; older offers remain attached through Offer.application.
+    #[ORM\OneToOne(targetEntity: Offer::class, cascade: ['persist'])]
+    #[ORM\JoinColumn(name: 'offer_id', nullable: true, unique: true, onDelete: 'SET NULL')]
     private ?Offer $offer = null;
 
     public function __construct(Campaign $campaign, Creator $creator, string $message)

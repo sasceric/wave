@@ -258,8 +258,9 @@ final class MarketplaceWorkflowController
         if (AccountDeletion::sharedHistoryDeleted($application->getCreator(), $application->getCampaign()->getCompany())) {
             return new JsonResponse(['error' => ApiMessages::get('account_deleted_history', $locale)], 409);
         }
-        if ($application->getCampaign()->getStatus() === 'finished') {
-            return new JsonResponse(['error' => ApiMessages::get('campaign_finished', $locale)], 409);
+        if ($application->getCampaign()->getStatus() !== 'open') {
+            $status = $application->getCampaign()->getStatus();
+            return new JsonResponse(['error' => ApiMessages::get($status === 'cancelled' ? 'campaign_cancelled' : ($status === 'finished' ? 'campaign_finished' : 'campaign_chat_closed'), $locale)], 409);
         }
         if ($application->getStatus() !== 'pending') {
             return new JsonResponse(['error' => ApiMessages::get('application_not_pending', $locale)], 409);
@@ -328,8 +329,9 @@ final class MarketplaceWorkflowController
         if (AccountDeletion::sharedHistoryDeleted($application->getCreator(), $application->getCampaign()->getCompany())) {
             return new JsonResponse(['error' => ApiMessages::get('account_deleted_history', $locale)], 409);
         }
-        if ($application->getCampaign()->getStatus() === 'finished') {
-            return new JsonResponse(['error' => ApiMessages::get('campaign_finished', $locale)], 409);
+        if ($application->getCampaign()->getStatus() !== 'open') {
+            $status = $application->getCampaign()->getStatus();
+            return new JsonResponse(['error' => ApiMessages::get($status === 'cancelled' ? 'campaign_cancelled' : ($status === 'finished' ? 'campaign_finished' : 'campaign_chat_closed'), $locale)], 409);
         }
         if ($application->getStatus() !== 'pending') {
             return new JsonResponse(['error' => ApiMessages::get('application_not_pending', $locale)], 409);
@@ -358,7 +360,12 @@ final class MarketplaceWorkflowController
         if (!is_int($amount) || $amount < 1 || $amount > 10000000 || mb_strlen($message) < 10 || mb_strlen($message) > 1500) {
             return new JsonResponse(['error' => ApiMessages::get('invalid_offer', $locale)], 400);
         }
-        $result = $entityManager->wrapInTransaction(function () use ($id, $request, $entityManager, $user, $locale, $amount, $message, $timeline, $blocks): array|JsonResponse {
+        $dueDateValue = $data['dueDate'] ?? null;
+        $dueDate = is_string($dueDateValue) && preg_match('/^\d{4}-\d{2}-\d{2}$/D', $dueDateValue) === 1 ? \DateTimeImmutable::createFromFormat('!Y-m-d', $dueDateValue) : false;
+        if (!$dueDate || $dueDate->format('Y-m-d') !== $dueDateValue || $dueDate < new \DateTimeImmutable('today')) {
+            return new JsonResponse(['error' => ApiMessages::get('invalid_offer_due_date', $locale)], 400);
+        }
+        $result = $entityManager->wrapInTransaction(function () use ($id, $request, $entityManager, $user, $locale, $amount, $message, $dueDate, $timeline, $blocks): array|JsonResponse {
             $company = $user->getCompany();
             $fromChat = str_starts_with($request->getPathInfo(), '/api/company/conversations/');
             $conversation = $fromChat ? $entityManager->find(CampaignConversation::class, $id) : null;
@@ -378,19 +385,18 @@ final class MarketplaceWorkflowController
                     $application = new Application($campaign, $conversation->getCreator(), $invitation->getMessage());
                     $application->setStatus('shortlisted');
                 }
-            } else {
-                $entityManager->refresh($application);
             }
             if (!$application instanceof Application) return new JsonResponse(['error' => ApiMessages::get('application_not_found', $locale)], 404);
+            if ($application->getId() !== null) $entityManager->refresh($application);
             if (AccountDeletion::sharedHistoryDeleted($application->getCreator(), $campaign->getCompany())) return new JsonResponse(['error' => ApiMessages::get('account_deleted_history', $locale)], 409);
             if ($blocks->pair($user->getId(), $application->getCreator()->getOwner()?->getId())) return new JsonResponse(['error' => ApiMessages::get('blocked_history', $locale)], 409);
             if ($campaign->getStatus() === 'cancelled') return new JsonResponse(['error' => ApiMessages::get('campaign_cancelled', $locale)], 409);
             if ($campaign->getStatus() === 'finished') return new JsonResponse(['error' => ApiMessages::get('campaign_finished', $locale)], 409);
-            if ($fromChat && $campaign->getStatus() === 'closed') return new JsonResponse(['error' => ApiMessages::get('campaign_chat_closed', $locale)], 409);
+            if ($campaign->getStatus() === 'closed') return new JsonResponse(['error' => ApiMessages::get('campaign_chat_closed', $locale)], 409);
             if (CampaignHiredCounts::forCampaign($entityManager, $campaign) >= $campaign->getCreatorCount()) return new JsonResponse(['error' => ApiMessages::get('campaign_full', $locale)], 409);
-            if ($application->getStatus() !== 'shortlisted') return new JsonResponse(['error' => ApiMessages::get('application_not_pending', $locale)], 409);
-            if ($application->getOffer() instanceof Offer) return new JsonResponse(['error' => ApiMessages::get('offer_exists', $locale)], 409);
-            $offer = new Offer($application, $amount, $message);
+            if (!in_array($application->getStatus(), ['shortlisted', 'offer_declined'], true)) return new JsonResponse(['error' => ApiMessages::get('application_not_pending', $locale)], 409);
+            if ($application->getOffer() instanceof Offer && $application->getOffer()->getStatus() !== 'rejected') return new JsonResponse(['error' => ApiMessages::get('offer_exists', $locale)], 409);
+            $offer = new Offer($application, $amount, $message, $dueDate);
             $application->setStatus('offered');
             $entityManager->persist($application);
             $entityManager->persist($offer);
@@ -426,6 +432,7 @@ final class MarketplaceWorkflowController
             ->from(Offer::class, 'offer')
             ->join('offer.application', 'application')
             ->where('application.creator = :creator')
+            ->andWhere('application.offer = offer')
             ->setParameter('creator', $creator)
             ->orderBy('offer.createdAt', SortDirection::Descending)
             ->getQuery()
@@ -483,8 +490,11 @@ final class MarketplaceWorkflowController
             $entityManager->refresh($offer);
             if ($campaign->getStatus() === 'cancelled') return new JsonResponse(['error' => ApiMessages::get('campaign_cancelled', $locale)], 409);
             if ($campaign->getStatus() === 'finished') return new JsonResponse(['error' => ApiMessages::get('campaign_finished', $locale)], 409);
+            $entityManager->refresh($offer->getApplication());
+            if ($offer->getApplication()->getOffer()?->getId() !== $offer->getId()) return new JsonResponse(['error' => ApiMessages::get('offer_not_pending', $locale)], 409);
             if ($offer->getStatus() !== 'pending') return new JsonResponse(['error' => ApiMessages::get('offer_not_pending', $locale)], 409);
             if ($decision === 'accept') {
+                if ($offer->getDueDate() && $offer->getDueDate() < new \DateTimeImmutable('today')) return new JsonResponse(['error' => ApiMessages::get('invalid_offer_due_date', $locale)], 409);
                 $acceptedCount = (int) $entityManager->createQueryBuilder()->select('COUNT(existing.id)')->from(Offer::class, 'existing')
                     ->join('existing.application', 'application')->where('application.campaign = :campaign')->andWhere('existing.status = :status')
                     ->setParameter('campaign', $campaign)->setParameter('status', 'accepted')->getQuery()->getSingleScalarResult();

@@ -58,7 +58,8 @@ final class CampaignController
                 throw new \InvalidArgumentException();
             }
             $cursorMode = $cursor->enabled($request);
-            $positionTypes = $sort === 'recommended' ? ['featured' => 'bool', 'date' => 'date', 'id' => 'int'] : ['date' => 'date', 'id' => 'int'];
+            // A distinct key rejects old closing-date cursors after the ordering change.
+            $positionTypes = $sort === 'recommended' ? ['featured' => 'bool', 'published' => 'date', 'id' => 'int'] : ['date' => 'date', 'id' => 'int'];
             $position = $cursorMode ? $cursor->decode($request, 'campaign', $positionTypes) : null;
         } catch (\InvalidArgumentException) {
             return new JsonResponse(['error' => ApiMessages::get('invalid_request', $locale)], 400);
@@ -143,7 +144,7 @@ final class CampaignController
             $sql .= match ($sort) {
                 'newest' => ' AND (c.published_at < :date OR (c.published_at = :date AND c.id < :id))',
                 'closing' => ' AND (c.closes_at > :date OR (c.closes_at = :date AND c.id > :id))',
-                default => ' AND (c.featured < :featured OR (c.featured = :featured AND (c.closes_at > :date OR (c.closes_at = :date AND c.id > :id))))',
+                default => ' AND (c.featured < :featured OR (c.featured = :featured AND (c.published_at < :published OR (c.published_at = :published AND c.id < :id))))',
             };
             $params += $position;
             if ($sort === 'recommended') {
@@ -153,7 +154,7 @@ final class CampaignController
         $sql .= ' ORDER BY ' . match ($sort) {
             'newest' => 'c.published_at DESC, c.id DESC',
             'closing' => 'c.closes_at ASC, c.id ASC',
-            default => 'c.featured DESC, c.closes_at ASC, c.id ASC',
+            default => 'c.featured DESC, c.published_at DESC, c.id DESC',
         } . ' LIMIT :limit OFFSET :offset';
         $params += ['limit' => $limit + ($cursorMode ? 1 : 0), 'offset' => $cursorMode ? 0 : $offset];
         $types += ['limit' => \Doctrine\DBAL\ParameterType::INTEGER, 'offset' => \Doctrine\DBAL\ParameterType::INTEGER];
@@ -179,7 +180,7 @@ final class CampaignController
             $meta['nextCursor'] = !$hasMore || $last === null ? null : $cursor->encode($request, 'campaign', match ($sort) {
                 'newest' => ['date' => $last->getPublishedAt()->format('Y-m-d H:i:s'), 'id' => $last->getId()],
                 'closing' => ['date' => $last->getClosesAt()->format('Y-m-d H:i:s'), 'id' => $last->getId()],
-                default => ['featured' => $last->isFeatured(), 'date' => $last->getClosesAt()->format('Y-m-d H:i:s'), 'id' => $last->getId()],
+                default => ['featured' => $last->isFeatured(), 'published' => $last->getPublishedAt()->format('Y-m-d H:i:s'), 'id' => $last->getId()],
             });
         } else {
             $meta['offset'] = $offset;

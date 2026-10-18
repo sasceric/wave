@@ -10,6 +10,9 @@ export function notificationDestination(notification) {
   if (notification.conversationId) {
     return { name: 'messages', query: { conversation: notification.conversationId } }
   }
+  if (notification.type === 'application_received' && notification.campaign?.slug) {
+    return { name: 'account-campaign-detail', params: { slug: notification.campaign.slug } }
+  }
   const destinations = {
     application_received: 'account-campaigns',
     application_shortlisted: 'account-applications',

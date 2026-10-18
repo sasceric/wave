@@ -24,7 +24,7 @@ import LoadingSkeleton from '../components/shared/LoadingSkeleton.vue'
 import StatusMessage from '../components/shared/StatusMessage.vue'
 import { useMarketplaceCatalog } from '../composables/useMarketplaceCatalog'
 import { apiGet, apiRequest, formatDate, formatMoney } from '../lib/api'
-import { CREATOR_PLACEHOLDER, CURRENCIES } from '../lib/marketplace'
+import { CREATOR_PLACEHOLDER } from '../lib/marketplace'
 import { getSeoOrigin, updateSeo } from '../lib/seo'
 import { localizedPath } from '../routePaths'
 
@@ -43,8 +43,6 @@ let profileGeneration = 0
 const requestForm = ref({
   packageIds: [],
   other: false,
-  proposedAmount: '',
-  currency: 'BAM',
   message: '',
 })
 const requestBusy = ref(false)
@@ -157,7 +155,7 @@ async function loadCreator() {
     const response = await apiGet(`/creators/${encodeURIComponent(route.params.slug)}`)
     if (generation !== profileGeneration) return
     creator.value = response.data
-    requestForm.value = { packageIds: [], other: false, proposedAmount: '', currency: 'BAM', message: '' }
+    requestForm.value = { packageIds: [], other: false, message: '' }
     const session = await apiGet('/auth/session')
     if (generation !== profileGeneration) return
     viewer.value = session.data
@@ -239,8 +237,6 @@ function openRequestForm(packageItem = null, preselectOther = false) {
   requestForm.value = {
     packageIds: packageItem ? [packageItem.id] : [],
     other: preselectOther,
-    proposedAmount: '',
-    currency: packageItem?.currency || 'BAM',
     message: '',
   }
   requestError.value = ''
@@ -373,8 +369,6 @@ async function submitRequest() {
         packageIds: requestForm.value.packageIds,
         servicePackage: false,
         other: requestForm.value.other,
-        proposedAmount: requestForm.value.proposedAmount === '' ? null : Number(requestForm.value.proposedAmount),
-        currency: requestForm.value.currency,
         message,
       },
     })
@@ -549,17 +543,6 @@ onBeforeUnmount(() => { ++profileGeneration; packageDescriptionObserver?.disconn
               </p>
             </article>
           </fieldset>
-          <div class="form-grid">
-            <label class="form-field">
-              <span>{{ t('creatorProfile.proposedAmount') }}</span>
-              <input v-model="requestForm.proposedAmount" type="number" min="1" max="10000000" />
-            </label>
-            <SingleSelect
-              v-model="requestForm.currency"
-              :label="t('account.currency')"
-              :options="CURRENCIES.map(value => ({ value, label: value }))"
-            />
-          </div>
           <label class="form-field">
             <span>{{ t('creatorProfile.requestMessage') }}</span>
             <textarea v-model.trim="requestForm.message" required minlength="10" maxlength="2000"></textarea>

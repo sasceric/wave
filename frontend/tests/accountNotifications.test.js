@@ -3,8 +3,25 @@ import { test } from 'node:test'
 import { readFile } from 'node:fs/promises'
 import * as vue from 'vue'
 import { setupView } from './setupView.js'
+import { notificationDestination } from '../src/lib/notificationNavigation.js'
 
 const head = (start, remaining) => ({ data: Array.from({ length: 5 }, (_, n) => ({ id: start - n, readAt: null })), meta: { remaining, nextCursor: remaining ? start - 4 : null }, unreadCount: start })
+
+test('opening an application notification supplies its campaign slug when resolving the private page', async () => {
+  const routes = []
+  const params = []
+  const notification = { id: 24, type: 'application_received', campaign: { slug: 'test-kampanja' }, readAt: null }
+  const { state } = await setupView('../src/App.vue', {
+    'vue-router': { isNavigationFailure: () => false, NavigationFailureType: { duplicated: 16 }, RouterView: {}, useRoute: () => ({ query: {}, params: {}, meta: {}, fullPath: '/racun' }), useRouter: () => ({ push: async target => { routes.push(target) } }) },
+    './lib/api': { apiGet: async () => ({ data: [], meta: {} }), apiRequest: async () => ({ data: { ...notification, readAt: '2026-10-18T12:00:00Z' } }) },
+    './lib/notificationNavigation': { notificationDestination, startNotificationNavigation: () => {} },
+    './routePaths': { localizedPath: (name, locale, values) => { params.push([name, locale, values]); return `/racun/kampanje/${values.slug}` } },
+  })
+  state.notifications.value = [notification]
+  await state.openNotification(notification)
+  assert.deepEqual(JSON.parse(JSON.stringify(params.at(-1))), ['account-campaign-detail', 'bs', { slug: 'test-kampanja' }])
+  assert.equal(routes.at(-1).path, '/racun/kampanje/test-kampanja')
+})
 
 test('notification pages append five at a time and a refreshed head preserves a contiguous history', async () => {
   let response = head(20, 15)

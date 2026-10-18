@@ -2362,8 +2362,8 @@
   },
   "hiring": {
     "hire": "Engagieren",
-    "confirmTitle": "Vereinbarten Betrag bestätigen",
-    "confirmHint": "Gib den im Chat vereinbarten endgültigen Betrag ein. Der Creator muss das Angebot annehmen, bevor das Engagement bestätigt ist.",
+    "confirmTitle": "Auftragsbedingungen bestätigen",
+    "confirmHint": "Gib den im Chat vereinbarten Betrag und Liefertermin ein. Der Creator bestätigt das Angebot vor der Beauftragung.",
     "defaultMessage": "Wir bestätigen die vereinbarten Kooperationsbedingungen für diese Kampagne.",
     "sendOffer": "Angebot senden",
     "invited": "Eingeladen",
@@ -2397,7 +2397,21 @@
     "applied": "Beworben",
     "discussing": "Im Gespräch",
     "compensation": "Vergütung",
-    "activityDate": "Datum"
+    "activityDate": "Datum",
+    "acceptApplication": "Annehmen und Chat öffnen",
+    "acceptApplicationHint": "Die Annahme öffnet den Chat. Vereinbart Betrag und Frist und sende anschließend ein Angebot im Chat.",
+    "dueDate": "Liefertermin",
+    "deliveryDue": "Liefertermin: {date}.",
+    "declineHint": "Der Chat bleibt offen. Ihr könnt neue Bedingungen vereinbaren und ein weiteres Angebot senden.",
+    "cancellationReason": "Grund der Stornierung",
+    "cancellationReasonHint": "Beschreibe den Grund (10–1000 Zeichen). Die andere Seite kann ihn sehen.",
+    "directReviewAmount": "Vereinbarter Betrag: {amount}.",
+    "directTimeline": {
+      "offer_sent": "Ein Angebot zur Zusammenarbeit wurde gesendet: {amount}.",
+      "hired": "Der Auftrag ist bestätigt: {amount}.",
+      "offer_declined": "Das Angebot zur Zusammenarbeit wurde abgelehnt: {amount}.",
+      "cancelled": "Zusammenarbeit bei {campaign} abgesagt. Vereinbarter Betrag: {amount} (wird nicht als Einnahme oder Ausgabe berücksichtigt)."
+    }
   },
   "overview": {
     "title": "Plattformaktivität",
@@ -2657,7 +2671,8 @@
       "Unboxing"
     ],
     "unspecified": "Verfügbarkeit nicht angegeben",
-    "workTitle": "Projekttitel"
+    "workTitle": "Projekttitel",
+    "editPackage": "Paket bearbeiten"
   },
   "activation": {
     "signupHint": "Für den Anfang brauchen wir nur die wichtigsten Angaben. Den Rest ergänzt du in deinem Konto.",

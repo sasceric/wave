@@ -31,7 +31,7 @@ final class PersonalOverview
             $counts['applications'] = (int) $this->db->fetchOne("SELECT COUNT(*) FROM campaign_application a $join WHERE $scope", $params);
             $counts['applications'] += (int) $this->db->fetchOne("SELECT COUNT(*) FROM campaign_invitation a $join WHERE $scope AND NOT EXISTS (SELECT 1 FROM campaign_application app WHERE app.campaign_id = a.campaign_id AND app.creator_id = a.creator_id)", $params);
             $counts['invitations'] = (int) $this->db->fetchOne("SELECT COUNT(*) FROM campaign_invitation a $join WHERE $scope AND a.status = 'pending' AND c.status = 'open' AND c.closes_at >= :today", [...$params, 'today' => $today]);
-            $rows = $this->db->fetchAllAssociative("SELECT a.id, 'application' AS source, a.status, a.created_at, c.id AS campaign_id, c.slug, c.title, c.status AS campaign_status, p.name AS company_name, o.status AS offer_status, o.amount, c.currency, c.closes_at FROM campaign_application a $join LEFT JOIN campaign_offer o ON o.application_id = a.id WHERE $scope
+            $rows = $this->db->fetchAllAssociative("SELECT a.id, 'application' AS source, a.status, a.created_at, c.id AS campaign_id, c.slug, c.title, c.status AS campaign_status, p.name AS company_name, o.status AS offer_status, o.amount, c.currency, c.closes_at FROM campaign_application a $join LEFT JOIN campaign_offer o ON o.id = a.offer_id WHERE $scope
                 UNION ALL SELECT a.id, 'invitation' AS source, a.status, a.created_at, c.id AS campaign_id, c.slug, c.title, c.status AS campaign_status, p.name AS company_name, NULL AS offer_status, NULL AS amount, c.currency, c.closes_at FROM campaign_invitation a $join WHERE $scope AND NOT EXISTS (SELECT 1 FROM campaign_application app WHERE app.campaign_id = a.campaign_id AND app.creator_id = a.creator_id)
                 ORDER BY created_at DESC, campaign_id DESC LIMIT 5", $params);
         } else {
@@ -44,6 +44,18 @@ final class PersonalOverview
         }
         $counts['offers'] = (int) $this->db->fetchOne("SELECT COUNT(*) FROM campaign_offer o JOIN campaign_application a ON a.id = o.application_id $join WHERE $scope AND o.status = 'pending' AND c.status = 'open' AND c.closes_at >= :today", [...$params, 'today' => $today]);
         $counts['active'] = (int) $this->db->fetchOne("SELECT COUNT(*) FROM campaign_offer o JOIN campaign_application a ON a.id = o.application_id $join WHERE $scope AND o.status = 'accepted' AND c.status NOT IN ('finished', 'cancelled')", $params);
+        // Direct inquiries have their own confirmed terms; revisions count only once.
+        $direct = $this->db->fetchAssociative("SELECT
+            SUM(CASE WHEN o.status = 'pending' THEN 1 ELSE 0 END) AS offers,
+            SUM(CASE WHEN o.status = 'accepted' THEN 1 ELSE 0 END) AS active
+            FROM creator_inquiry i JOIN inquiry_offer o ON o.id = i.offer_id
+            JOIN creator r ON r.id = i.creator_id JOIN company p ON p.id = i.company_id
+            JOIN wave_user provider ON provider.id = r.owner_id JOIN wave_user client ON client.id = p.owner_id
+            WHERE (r.owner_id = :owner OR p.owner_id = :owner) AND i.status = 'accepted'
+            AND provider.deleted_at IS NULL AND client.deleted_at IS NULL
+            AND ".$this->blocks->visible('r.owner_id')." AND ".$this->blocks->visible('p.owner_id'), $params);
+        $counts['offers'] += (int) ($direct['offers'] ?? 0);
+        $counts['active'] += (int) ($direct['active'] ?? 0);
         foreach ($rows as &$row) {
             $row['campaign_id'] = (int) $row['campaign_id'];
             if (isset($row['amount'])) $row['amount'] = (int) $row['amount'];
@@ -55,7 +67,7 @@ final class PersonalOverview
                 SUM(CASE WHEN o.status = 'pending' AND c.status = 'open' THEN 1 ELSE 0 END) AS offers,
                 SUM(CASE WHEN o.status = 'accepted' AND c.status NOT IN ('finished', 'cancelled') THEN 1 ELSE 0 END) AS active
                 FROM campaign_application a JOIN creator p ON p.id = a.creator_id JOIN campaign c ON c.id = a.campaign_id
-                LEFT JOIN campaign_offer o ON o.application_id = a.id WHERE p.owner_id = ?", [$user->getId()]);
+                LEFT JOIN campaign_offer o ON o.id = a.offer_id WHERE p.owner_id = ?", [$user->getId()]);
             $result['serviceCounts'] = array_map('intval', $service);
             $result['serviceCounts']['invitations'] = (int) $this->db->fetchOne("SELECT COUNT(*) FROM campaign_invitation i JOIN creator p ON p.id = i.creator_id JOIN campaign c ON c.id = i.campaign_id WHERE p.owner_id = ? AND i.status = 'pending' AND c.status = 'open' AND c.closes_at >= ?", [$user->getId(), $today]);
         }

@@ -2363,8 +2363,8 @@
   },
   "hiring": {
     "hire": "Angažiraj",
-    "confirmTitle": "Potvrdi dogovoreni iznos",
-    "confirmHint": "Unesi konačni iznos dogovoren u razgovoru. Kreator potvrđuje ponudu prije angažmana.",
+    "confirmTitle": "Potvrdi uvjete angažmana",
+    "confirmHint": "Unesi iznos i rok isporuke dogovorene u razgovoru. Kreator potvrđuje ponudu prije angažmana.",
     "defaultMessage": "Potvrđujemo dogovorene uvjete suradnje za ovu kampanju.",
     "sendOffer": "Pošalji ponudu",
     "invited": "Pozvan",
@@ -2398,7 +2398,21 @@
     "applied": "Prijavljen",
     "discussing": "U razgovoru",
     "compensation": "Naknada",
-    "activityDate": "Datum"
+    "activityDate": "Datum",
+    "acceptApplication": "Prihvati i otvori razgovor",
+    "acceptApplicationHint": "Prihvaćanje otvara razgovor. Dogovorite iznos i rok, pa pošalji ponudu za angažman iz razgovora.",
+    "dueDate": "Rok isporuke",
+    "deliveryDue": "Rok isporuke: {date}.",
+    "declineHint": "Razgovor ostaje otvoren. Možete dogovoriti nove uvjete i poslati novu ponudu.",
+    "cancellationReason": "Razlog otkazivanja",
+    "cancellationReasonHint": "Napiši razlog (10–1000 znakova). Razlog će vidjeti druga strana.",
+    "directReviewAmount": "Dogovoreni iznos: {amount}.",
+    "directTimeline": {
+      "offer_sent": "Poslana je ponuda za suradnju: {amount}.",
+      "hired": "Angažman je potvrđen: {amount}.",
+      "offer_declined": "Ponuda za suradnju je odbijena: {amount}.",
+      "cancelled": "Angažman za kampanju {campaign} je otkazan. Dogovoreni iznos: {amount} (ne računa se u zaradu ili potrošnju)."
+    }
   },
   "overview": {
     "title": "Aktivnost platforme",
@@ -2658,7 +2672,8 @@
       "Otvaranje proizvoda"
     ],
     "unspecified": "Dostupnost nije navedena",
-    "workTitle": "Naslov rada"
+    "workTitle": "Naslov rada",
+    "editPackage": "Uredi paket"
   },
   "activation": {
     "signupHint": "Za početak trebamo samo osnovne podatke. Ostalo popunjavaš na svom računu.",

@@ -345,6 +345,7 @@ final class CreatorInquiryController
             'data' => array_map(static fn (InquiryMessage $message): array => self::messageResource($message, $inquiry), $page['messages']),
             'meta' => $page['meta'],
             'readReceipt' => $page['readReceipt'],
+            'inquiry' => CreatorInquiryResource::fromEntity($inquiry, $user, locale: $locale),
         ]);
     }
 
@@ -418,6 +419,9 @@ final class CreatorInquiryController
         if (AccountDeletion::sharedHistoryDeleted($inquiry->getCreator(), $inquiry->getCompany())) {
             return new JsonResponse(['error' => ApiMessages::get('account_deleted_history', $locale)], 409);
         }
+        if ($inquiry->getOffer()?->getStatus() === 'cancelled') {
+            return new JsonResponse(['error' => ApiMessages::get('collaboration_cancelled', $locale)], 409);
+        }
         if ($inquiry->getStatus() !== 'accepted') {
             return new JsonResponse(['error' => ApiMessages::get('invalid_request', $locale)], 409);
         }
@@ -452,7 +456,7 @@ final class CreatorInquiryController
             || $inquiry->getCompany()->getOwner()?->getId() === $user->getId();
     }
 
-    private static function messageResource(InquiryMessage $message, CreatorInquiry $inquiry): array
+    public static function messageResource(InquiryMessage $message, CreatorInquiry $inquiry): array
     {
         $sender = $message->getSender();
         $creatorOwnerId = $inquiry->getCreator()->getOwner()?->getId();
@@ -463,6 +467,7 @@ final class CreatorInquiryController
             'readAt' => $message->getReadAt()?->format(\DateTimeInterface::ATOM),
             'senderRole' => $sender->getId() === $creatorOwnerId ? 'creator' : 'company',
             'body' => $message->getBody(),
+            'event' => $message->getEvent(),
             'createdAt' => $message->getCreatedAt()->format(\DateTimeInterface::ATOM),
         ];
     }

@@ -855,7 +855,7 @@ async function openNotification(notification) {
     notificationsMenuOpen.value = false
     void loadNotifications()
     const destination = notificationDestination(notification)
-    await router.push({ path: localizedPath(destination.name, locale.value), query: destination.query })
+    await router.push({ path: localizedPath(destination.name, locale.value, destination.params || {}), query: destination.query })
   } catch (cause) {
     notificationsError.value = cause.message
   }

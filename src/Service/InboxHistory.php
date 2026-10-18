@@ -63,10 +63,11 @@ final class InboxHistory
                     COALESCE(agency.logo_url, creator.avatar_url) AS avatar_url, COALESCE(agency.logo_media_id, creator.avatar_media_id) AS avatar_media_id,
                     company.id AS company_id, company.slug AS company_slug, company.name AS company_name,
                     company.logo_url, company.logo_media_id,
-                    (creator_owner.deleted_at IS NOT NULL) AS creator_deleted, (company_owner.deleted_at IS NOT NULL) AS company_deleted, FALSE AS cancelled,
+                    (creator_owner.deleted_at IS NOT NULL) AS creator_deleted, (company_owner.deleted_at IS NOT NULL) AS company_deleted, COALESCE(inquiry_terms.status = 'cancelled', FALSE) AS cancelled,
                     (SELECT COUNT(*) FROM inquiry_message message WHERE message.inquiry_id = thread.id
                         AND message.sender_id <> :viewer AND message.read_at IS NULL AND NOT EXISTS (SELECT 1 FROM user_block b WHERE b.cleared_at IS NULL AND ((b.blocker_id = :viewer AND b.blocked_id = message.sender_id) OR (b.blocked_id = :viewer AND b.blocker_id = message.sender_id)))) AS unread_count
                 FROM creator_inquiry thread
+                LEFT JOIN inquiry_offer inquiry_terms ON inquiry_terms.id = thread.offer_id
                 JOIN creator ON creator.id = thread.creator_id
                 LEFT JOIN company agency ON agency.owner_id = creator.owner_id AND creator.agency_profile = TRUE
                 JOIN company ON company.id = thread.company_id

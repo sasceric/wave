@@ -7,6 +7,7 @@ use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity]
 #[ORM\Index(name: 'idx_campaign_directory_order', columns: ['status', 'featured', 'closes_at', 'id'])]
+#[ORM\Index(name: 'idx_campaign_directory_latest', columns: ['status', 'featured', 'published_at', 'id'])]
 #[ORM\Index(name: 'idx_campaign_company_available', columns: ['company_id', 'status', 'closes_at'])]
 #[ORM\Table(name: 'campaign')]
 #[ORM\UniqueConstraint(name: 'uniq_campaign_slug', columns: ['slug'])]
@@ -156,6 +157,13 @@ class Campaign
         $this->translations = $translations;
         $this->coverMedia = $coverMedia;
     }
+
+    #[ORM\Column(type: 'text', nullable: true)]
+    private ?string $cancellationReason = null;
+
+    public function getCancellationReason(): ?string { return $this->cancellationReason; }
+
+    public function setCancellationReason(string $reason): void { $this->cancellationReason = $reason; }
 
     public function getId(): ?int
     {

@@ -57,6 +57,13 @@ class CreatorInquiry
     #[ORM\Column(nullable: true)]
     private ?DateTimeImmutable $respondedAt = null;
 
+    #[ORM\OneToOne(targetEntity: InquiryOffer::class, cascade: ['persist'])]
+    #[ORM\JoinColumn(nullable: true, unique: true, onDelete: 'SET NULL')]
+    private ?InquiryOffer $offer = null;
+
+    public function getOffer(): ?InquiryOffer { return $this->offer; }
+    public function setOffer(InquiryOffer $offer): void { $this->offer = $offer; }
+
     public function __construct(
         Creator $creator,
         Company $company,

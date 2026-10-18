@@ -8,6 +8,7 @@ export function mergeCampaignActivity(applications, invitations, offers) {
   for (const offer of offers) {
     const key = offer.campaign.id ?? offer.campaign.slug
     const application = rows.get(key)
+    if (application?.offer && application.offer.id > offer.id) continue
     rows.set(key, {
       ...(application || { id: offer.applicationId, status: offer.status, createdAt: offer.createdAt, campaign: offer.campaign, readOnly: offer.readOnly }),
       source: 'application', offer,
@@ -32,7 +33,7 @@ export function campaignActivityStage(item) {
   if (offer?.status === 'accepted' || (item.source !== 'invitation' && item.status === 'accepted')) {
     return item.campaign?.status === 'finished' ? 'finished' : 'hired'
   }
-  if (['rejected', 'offer_declined', 'declined'].includes(item.status) || offer?.status === 'rejected') return 'rejected'
+  if (['rejected', 'declined'].includes(item.status)) return 'rejected'
   if (['closed', 'finished'].includes(item.campaign?.status)) return 'closed'
   if (offer?.status === 'pending') return 'offered'
   if (item.source === 'invitation') {
@@ -41,6 +42,6 @@ export function campaignActivityStage(item) {
     if (item.status === 'pending' && new Date(item.campaign.closesAt).getTime() < today.getTime()) return 'closed'
     return 'invited'
   }
-  if (item.status === 'shortlisted') return 'discussing'
+  if (['shortlisted', 'offer_declined'].includes(item.status) || offer?.status === 'rejected') return 'discussing'
   return 'applied'
 }

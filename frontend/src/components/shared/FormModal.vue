@@ -68,7 +68,8 @@ onBeforeUnmount(() => { disposed = true; dialog.value?.close(); restore() })
   &__intro { font-size: 12px; color: var(--muted); line-height: 1.6; margin: 10px 0 20px; }
   &__fields { display: grid; gap: 16px; margin-top: 18px; }
   &__fields :deep(label) { display: grid; gap: 6px; font-size: 12px; }
-  &__fields :deep(input), &__fields :deep(textarea) { box-sizing: border-box; width: 100%; border: 1px solid #dce2d9; border-radius: 8px; padding: 12px; background: white; color: var(--ink); font: inherit; font-size: 14px; }
+  &__fields :deep(.form-field > label) { display: block; }
+  &__fields :deep(input:not(.dp--input)), &__fields :deep(textarea) { box-sizing: border-box; width: 100%; border: 1px solid #dce2d9; border-radius: 8px; padding: 12px; background: white; color: var(--ink); font: inherit; font-size: 14px; }
   &__fields :deep(textarea) { min-height: 120px; resize: vertical; }
   footer { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
   footer :deep(.button) { min-height: 40px; font-size: 12px; padding: 10px 16px; border-radius: 8px; gap: 8px; }

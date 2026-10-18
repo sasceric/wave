@@ -895,6 +895,7 @@ final class MarketplaceWorkflowTest extends WebTestCase
         self::assertSame('shortlisted', $this->payload()['data']['status']);
         $conversationId = $this->payload()['conversationId'];
         $this->jsonRequest('POST', '/api/company/applications/'.$applicationId.'/offer', [
+            'dueDate' => (new DateTimeImmutable('+14 days'))->format('Y-m-d'),
             'amount' => 500,
             'message' => 'We would love to work with you on this campaign.',
         ], $csrf);
@@ -1256,6 +1257,7 @@ final class MarketplaceWorkflowTest extends WebTestCase
         $this->jsonRequest('POST', '/api/company/applications/'.$applicationIds['pending'].'/shortlist', [], $this->csrfToken());
         self::assertResponseStatusCodeSame(409);
         $this->jsonRequest('POST', '/api/company/applications/'.$applicationIds['shortlisted'].'/offer', [
+            'dueDate' => (new DateTimeImmutable('+14 days'))->format('Y-m-d'),
             'amount' => 500, 'message' => 'This campaign cannot hire anyone else.',
         ], $this->csrfToken());
         self::assertResponseStatusCodeSame(409);
@@ -1447,6 +1449,7 @@ final class MarketplaceWorkflowTest extends WebTestCase
         $this->client->request('GET', '/api/me/notifications?locale=bs');
         self::assertResponseIsSuccessful();
         self::assertSame('application_received', $this->payload()['data'][0]['type']);
+        self::assertSame('chat-campaign-one', $this->payload()['data'][0]['campaign']['slug']);
 
         $this->jsonRequest('POST', '/api/company/campaigns/chat-campaign-one/conversations', [
             'creatorId' => $creator->getId(),
@@ -1562,6 +1565,7 @@ final class MarketplaceWorkflowTest extends WebTestCase
 
         $this->client->loginUser($companyUser, 'main');
         $this->jsonRequest('POST', '/api/company/applications/'.$application['id'].'/offer', [
+            'dueDate' => (new DateTimeImmutable('+14 days'))->format('Y-m-d'),
             'amount' => 500,
             'message' => 'We would like to work together on this campaign.',
         ], $this->csrfToken());

@@ -554,7 +554,7 @@ watch(locale, language => { const names = new Intl.DisplayNames([language === 'c
           <div class="creator-studio__row-actions">
             <button class="button button--outline" type="button" @click="selectedPackage = index">
               <Pencil :size="15" />
-              {{ t('account.editProfile') }}
+              {{ t('studio.editPackage') }}
             </button>
             <button class="creator-studio__icon" type="button" :aria-label="t('account.remove')" @click="removePackage(index)">
               <Trash2 :size="16" />

@@ -2363,8 +2363,8 @@
   },
   "hiring": {
     "hire": "Najemi",
-    "confirmTitle": "Potrdi dogovorjeni znesek",
-    "confirmHint": "Vnesi končni znesek, dogovorjen v pogovoru. Kreator mora pred angažmajem sprejeti ponudbo.",
+    "confirmTitle": "Potrdi pogoje sodelovanja",
+    "confirmHint": "Vnesi znesek in rok dobave, dogovorjena v pogovoru. Ustvarjalec potrdi ponudbo pred začetkom sodelovanja.",
     "defaultMessage": "Potrjujemo dogovorjene pogoje sodelovanja za to kampanjo.",
     "sendOffer": "Pošlji ponudbo",
     "invited": "Povabljen",
@@ -2398,7 +2398,21 @@
     "applied": "Prijavljen",
     "discussing": "V pogovoru",
     "compensation": "Plačilo",
-    "activityDate": "Datum"
+    "activityDate": "Datum",
+    "acceptApplication": "Sprejmi in odpri pogovor",
+    "acceptApplicationHint": "Sprejem odpre pogovor. Dogovorite se o znesku in roku, nato v pogovoru pošlji ponudbo za sodelovanje.",
+    "dueDate": "Rok dobave",
+    "deliveryDue": "Rok dobave: {date}.",
+    "declineHint": "Pogovor ostane odprt. Dogovorite se lahko o novih pogojih in pošljete novo ponudbo.",
+    "cancellationReason": "Razlog odpovedi",
+    "cancellationReasonHint": "Napiši razlog (10–1000 znakov). Razlog bo videla druga stran.",
+    "directReviewAmount": "Dogovorjeni znesek: {amount}.",
+    "directTimeline": {
+      "offer_sent": "Poslana je ponudba za sodelovanje: {amount}.",
+      "hired": "Sodelovanje je potrjeno: {amount}.",
+      "offer_declined": "Ponudba za sodelovanje je zavrnjena: {amount}.",
+      "cancelled": "Sodelovanje pri kampanji {campaign} je preklicano. Dogovorjeni znesek: {amount} (ni vključen v zaslužek ali porabo)."
+    }
   },
   "overview": {
     "title": "Aktivnost platforme",
@@ -2658,7 +2672,8 @@
       "Odpiranje izdelka"
     ],
     "unspecified": "Razpoložljivost ni navedena",
-    "workTitle": "Naslov dela"
+    "workTitle": "Naslov dela",
+    "editPackage": "Uredi paket"
   },
   "activation": {
     "signupHint": "Za začetek potrebujemo le osnovne podatke. Ostalo izpolniš v svojem računu.",

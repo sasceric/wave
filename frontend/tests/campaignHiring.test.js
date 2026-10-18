@@ -15,6 +15,7 @@ test('hiring confirms a negotiated amount outside the advertised budget and reta
   }, { conversationId: 9, campaign, creatorName: 'Amina', disabled: false })
   state.start()
   state.amount.value = 50
+  state.dueDate.value = '2099-01-20'
   state.message.value = 'Our negotiated campaign terms.'
   await state.submit()
   assert.equal(state.open.value, true)
@@ -24,6 +25,7 @@ test('hiring confirms a negotiated amount outside the advertised budget and reta
   await state.submit()
   assert.equal(calls[1].path, '/company/conversations/9/hire')
   assert.equal(calls[1].body.amount, 50)
+  assert.equal(calls[1].body.dueDate, '2099-01-20')
   assert.equal(emitted[0][0], 'offered')
   assert.equal(emitted[0][1].status, 'pending')
   assert.equal(state.open.value, false)
@@ -57,4 +59,39 @@ test('campaign creator rows distinguish invitations and confirmed hires', async 
   }, { campaign, applications: [] })
   assert.equal(state.statusLabel({ status: 'invited' }), 'hiring.invited')
   assert.equal(state.statusLabel({ status: 'accepted' }), 'hiring.hired')
+})
+
+
+test('hiring starts without assumed terms and requires a delivery deadline', async () => {
+  const calls = []
+  const { state } = await setupView('../src/components/account/CampaignHireAction.vue', {
+    '../../lib/api': { apiRequest: async (...args) => { calls.push(args) } },
+  }, { conversationId: 9, campaign, disabled: false })
+  state.start()
+  assert.equal(state.amount.value, '')
+  assert.equal(state.dueDate.value, '')
+  state.amount.value = 300
+  state.message.value = 'The agreed campaign scope.'
+  await state.submit()
+  assert.equal(calls.length, 0)
+  state.dueDate.value = '2000-01-01'
+  await state.submit()
+  assert.equal(calls.length, 0)
+})
+
+
+test('the shared hire form sends direct-inquiry terms to its own endpoint', async () => {
+  const requests = []
+  const { state } = await setupView('../src/components/account/CampaignHireAction.vue', {
+    '../../lib/api': { apiRequest: async (path, options) => { requests.push({ path, ...options }); return { data: { id: 42, status: 'pending' } } } },
+  }, { inquiryId: 12, campaign: { title: 'Direct collaboration', currency: 'BAM' }, disabled: false })
+  state.start()
+  state.amount.value = 400
+  state.currency.value = 'EUR'
+  state.dueDate.value = '2099-01-20'
+  state.message.value = 'Our agreed direct collaboration terms.'
+  await state.submit()
+  assert.equal(requests[0].path, '/company/inquiries/12/hire')
+  assert.equal(requests[0].body.currency, 'EUR')
+  assert.equal(requests[0].body.dueDate, '2099-01-20')
 })

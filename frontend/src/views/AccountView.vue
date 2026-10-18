@@ -4,10 +4,10 @@ import { registrationReturn } from '../lib/registrationIntent'
 import { companyTypeOptions } from '../lib/companyTypes'
 import { mergeCampaignActivity } from '../lib/campaignActivity'
 import CampaignCancellationAction from '../components/account/CampaignCancellationAction.vue'
-import CampaignHireAction from '../components/account/CampaignHireAction.vue'
 import CreditActionNotice from '../components/account/CreditActionNotice.vue'
 import { refreshCredits } from '../composables/useCredits'
 import ConfirmationModal from '../components/shared/ConfirmationModal.vue'
+import FormModal from '../components/shared/FormModal.vue'
 import ReviewAction from '../components/reviews/ReviewAction.vue'
 import RichTextContent from '../components/shared/RichTextContent.vue'
 import AccountPage from '../components/account/AccountPage.vue'
@@ -124,6 +124,9 @@ const tags = ref([])
 const creatorStudio = ref(null)
 const campaigns = ref([])
 const statusChange = ref(null)
+const cancellationReason = ref('')
+const statusError = ref('')
+watch(statusChange, value => { if (value) { cancellationReason.value = ''; statusError.value = '' } })
 const reviewId = computed(() => {
   const value = Number(route.query.review)
   return Number.isSafeInteger(value) && value > 0 ? value : null
@@ -138,10 +141,13 @@ async function changeCampaignStatus() {
   busy.value = true
   error.value = ''
   try {
-    await apiRequest(`/company/campaigns/${statusChange.value.campaign.id}/status`, { method: 'PUT', body: { status: statusChange.value.status } })
+    await apiRequest(`/company/campaigns/${statusChange.value.campaign.id}/status`, { method: 'PUT', body: { status: statusChange.value.status, ...(statusChange.value.status === 'cancelled' ? { reason: cancellationReason.value.trim() } : {}) } })
     statusChange.value = null
     await loadDashboard()
-  } catch (cause) { error.value = cause.message; statusChange.value = null }
+  } catch (cause) {
+    if (statusChange.value?.status === 'cancelled') statusError.value = cause.message
+    else { error.value = cause.message; statusChange.value = null }
+  }
   finally { busy.value = false }
 }
 const applications = ref([])
@@ -153,7 +159,6 @@ const inquiries = ref([])
 const editingCampaignId = ref(null)
 const editingCampaign = computed(() => campaigns.value.find(campaign => campaign.id === editingCampaignId.value))
 const campaignForm = ref(emptyCampaign())
-const offerForms = ref({})
 const applicantDialog = ref(null)
 const selectedApplication = ref(null)
 let noticeTimeout = null
@@ -456,10 +461,6 @@ async function loadDashboard(authenticatedUser = null, { sectionOnly = false } =
             (application) => application.id === selectedApplication.value.id,
           ) ?? selectedApplication.value
         }
-        offerForms.value = Object.fromEntries(companyApplications.value.map((application) => [
-          application.id,
-          { amount: application.campaign.budgetMin, message: '' },
-        ]))
       } else if (!canAccessMarketplace) {
         campaigns.value = []
         companyApplications.value = []
@@ -791,7 +792,16 @@ async function saveCampaign() {
 }
 
 async function shortlistApplication(application) {
-  await runAction(`/company/applications/${application.id}/shortlist`, {})
+  if (busy.value) return
+  busy.value = true
+  error.value = ''
+  try {
+    const response = await apiRequest(`/company/applications/${application.id}/shortlist`, { method: 'POST', body: {} })
+    closeApplicant()
+    await router.push({ name: localizedRouteName('messages', locale.value), query: { conversation: response.conversationId } })
+  } catch (cause) {
+    error.value = cause.message
+  } finally { busy.value = false }
 }
 
 async function editListedCampaign(campaign) {
@@ -808,13 +818,6 @@ function openApplicant(application) {
 function closeApplicant() {
   applicantDialog.value?.close()
   selectedApplication.value = null
-}
-
-async function sendOffer(application) {
-  await runAction(`/company/applications/${application.id}/offer`, {
-    amount: Number(offerForms.value[application.id].amount),
-    message: offerForms.value[application.id].message,
-  })
 }
 
 async function respondToCampaignActivity(item, decision) {
@@ -1473,18 +1476,17 @@ onMounted(loadDashboard)
           <StatusMessage v-if="selectedApplication.readOnly" variant="info">{{ t(selectedApplication.blocked ? 'safety.blockedHistory' : 'campaignChat.deletedAccountNotice') }}</StatusMessage>
           <div class="company-applicant-dialog__actions">
             <CampaignCancellationAction v-if="selectedApplication.offer?.status === 'accepted' && selectedApplication.campaign.status !== 'finished' && !selectedApplication.readOnly" :offer-id="selectedApplication.offer.id" @cancelled="closeApplicant(); loadDashboard()" />
-            <CampaignHireAction v-if="selectedApplication.status === 'invited' && selectedApplication.conversationId && !selectedApplication.readOnly && selectedApplication.campaign.status === 'open'" :conversation-id="selectedApplication.conversationId" :campaign="selectedApplication.campaign" :creator-name="selectedApplication.creator.displayName" @offered="closeApplicant(); loadDashboard()" />
             <button
-              v-if="selectedApplication.status === 'pending' && !selectedApplication.readOnly"
+              v-if="selectedApplication.status === 'pending' && !selectedApplication.readOnly && selectedApplication.campaign.status === 'open'"
               class="button button--dark"
               type="button"
-              :disabled="!user.emailVerified || !user.approved"
+              :disabled="busy || !user.emailVerified || !user.approved"
               @click="shortlistApplication(selectedApplication)"
             >
-              {{ t('account.accept') }}
+              {{ t('hiring.acceptApplication') }}
             </button>
             <RouterLink
-              v-if="!selectedApplication.readOnly && (['shortlisted', 'offered', 'accepted'].includes(selectedApplication.status) || selectedApplication.status === 'invited' && selectedApplication.conversationId)"
+              v-if="!selectedApplication.readOnly && (['shortlisted', 'offer_declined', 'offered', 'accepted'].includes(selectedApplication.status) || selectedApplication.status === 'invited' && selectedApplication.conversationId)"
               class="button button--outline"
               :to="{
                 name: localizedRouteName('messages', locale),
@@ -1507,31 +1509,10 @@ onMounted(loadDashboard)
               {{ t('account.viewPublicProfile') }} ↗
             </RouterLink>
           </div>
-          <form v-if="selectedApplication.status === 'shortlisted' && !selectedApplication.readOnly" v-form-validation class="form-stack company-applicant-card__offer" @submit.prevent="sendOffer(selectedApplication)">
-            <label class="form-field">
-              <span>{{ t('account.offerAmount') }} ({{ selectedApplication.campaign.currency }})</span>
-              <input
-                v-model.number="offerForms[selectedApplication.id].amount"
-                type="number"
-                :min="1"
-                :max="10000000"
-                required
-              />
-            </label>
-            <label class="form-field">
-              <span>{{ t('account.offerMessage') }}</span>
-              <textarea v-model.trim="offerForms[selectedApplication.id].message" required minlength="10" maxlength="1500"></textarea>
-            </label>
-            <button
-              class="button button--dark"
-              type="submit"
-              :disabled="!user.emailVerified || !user.approved"
-            >
-              {{ t('account.sendOffer') }}
-            </button>
-          </form>
-          <div v-else-if="selectedApplication.offer" class="offer-summary">
+          <p v-if="selectedApplication.status === 'pending'" class="muted">{{ t('hiring.acceptApplicationHint') }}</p>
+          <div v-if="selectedApplication.offer" class="offer-summary">
             <strong>{{ formatMoney(selectedApplication.offer.amount, selectedApplication.campaign.currency) }}</strong>
+            <p v-if="selectedApplication.offer.dueDate">{{ t('hiring.deliveryDue', { date: formatDate(selectedApplication.offer.dueDate) }) }}</p>
             <p>{{ selectedApplication.offer.message }}</p>
           </div>
         </div>
@@ -1549,7 +1530,12 @@ onMounted(loadDashboard)
       </main>
     </div>
     <ReviewAction v-if="reviewId && user.approved && user.emailVerified" :key="reviewId" :application-id="reviewId" auto-open hide-trigger @closed="closeReviewLink" />
-    <ConfirmationModal :open="Boolean(statusChange)" :title="t(statusChange?.status === 'cancelled' ? 'hiring.cancelCampaign' : statusChange?.status === 'finished' ? 'reviews.finishCampaign' : 'reviews.closeCampaign')" :message="t(statusChange?.status === 'cancelled' ? 'hiring.cancelCampaignHint' : statusChange?.status === 'finished' ? 'reviews.finishHint' : 'reviews.closeCampaignHint')" :confirm-label="t(statusChange?.status === 'cancelled' ? 'hiring.cancelCampaign' : statusChange?.status === 'finished' ? 'reviews.finishCampaign' : 'reviews.closeCampaign')" :cancel-label="t('credits.cancel')" :loading="busy" @update:open="!$event && (statusChange = null)" @confirm="changeCampaignStatus" />
+    <ConfirmationModal :open="Boolean(statusChange) && statusChange.status !== 'cancelled'" :title="t(statusChange?.status === 'cancelled' ? 'hiring.cancelCampaign' : statusChange?.status === 'finished' ? 'reviews.finishCampaign' : 'reviews.closeCampaign')" :message="t(statusChange?.status === 'cancelled' ? 'hiring.cancelCampaignHint' : statusChange?.status === 'finished' ? 'reviews.finishHint' : 'reviews.closeCampaignHint')" :confirm-label="t(statusChange?.status === 'cancelled' ? 'hiring.cancelCampaign' : statusChange?.status === 'finished' ? 'reviews.finishCampaign' : 'reviews.closeCampaign')" :cancel-label="t('credits.cancel')" :loading="busy" @update:open="!$event && (statusChange = null)" @confirm="changeCampaignStatus" />
+    <FormModal :open="statusChange?.status === 'cancelled'" :title="t('hiring.cancelCampaign')" :description="t('hiring.cancelCampaignHint')" :busy="busy" @update:open="!$event && (statusChange = null)" @submit="changeCampaignStatus">
+      <label class="form-field"><span>{{ t('hiring.cancellationReason') }}</span><textarea v-model.trim="cancellationReason" required minlength="10" maxlength="1000" :placeholder="t('hiring.cancellationReasonHint')" /><small>{{ t('hiring.cancellationReasonHint') }}</small></label>
+      <StatusMessage v-if="statusError" variant="error">{{ statusError }}</StatusMessage>
+      <template #actions="{ close }"><button type="button" class="button button--outline" :disabled="busy" @click="close">{{ t('safety.cancel') }}</button><button type="submit" class="button button--dark" :disabled="busy">{{ t('hiring.cancelCampaign') }}</button></template>
+    </FormModal>
     <RequiredProfileModal
       v-if="profile && !user.profileComplete"
       :user="user"

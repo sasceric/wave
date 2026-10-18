@@ -36,11 +36,17 @@ class InquiryMessage
     #[ORM\Column(nullable: true)]
     private ?DateTimeImmutable $readAt = null;
 
-    public function __construct(CreatorInquiry $inquiry, User $sender, string $body)
+    #[ORM\Column(type: 'json', nullable: true)]
+    private ?array $event = null;
+
+    public function getEvent(): ?array { return $this->event; }
+
+    public function __construct(CreatorInquiry $inquiry, User $sender, string $body, ?array $event = null)
     {
         $this->inquiry = $inquiry;
         $this->sender = $sender;
         $this->body = $body;
+        $this->event = $event;
         $this->createdAt = new DateTimeImmutable();
     }
 

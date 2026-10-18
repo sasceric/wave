@@ -82,3 +82,10 @@ test('creator decisions open company pages and incoming events open creator page
   assert.equal(notificationDestination({ type: 'application_rejected' }).name, 'account-applications')
   assert.deepEqual(notificationDestination({ type: 'invitation_accepted', conversationId: 42 }), { name: 'messages', query: { conversation: 42 } })
 })
+
+test('new application notifications open the owning campaign applicant page and old notifications retain a fallback', () => {
+  assert.deepEqual(notificationDestination({ type: 'application_received', campaign: { slug: 'test-kampanja' } }), {
+    name: 'account-campaign-detail', params: { slug: 'test-kampanja' },
+  })
+  assert.deepEqual(notificationDestination({ type: 'application_received', campaign: null }), { name: 'account-campaigns' })
+})

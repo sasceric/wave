@@ -88,7 +88,9 @@
     "contact_failed": "Deine Nachricht konnte nicht gesendet werden. Bitte versuche es später erneut.",
     "contact_invalid": "Prüfe Name, E-Mail, Rolle und Thema. Die Nachricht muss 20–4.000 Zeichen enthalten.",
     "newsletter_subscribed": "Du bist für Wave-Neuigkeiten angemeldet.",
-    "newsletter_email_failed": "Die Bestätigungs-E-Mail konnte nicht gesendet werden. Bitte versuche es später erneut."
+    "newsletter_email_failed": "Die Bestätigungs-E-Mail konnte nicht gesendet werden. Bitte versuche es später erneut.",
+    "invalid_offer_due_date": "Wähle einen gültigen Liefertermin: heute oder ein späteres Datum.",
+    "invalid_cancellation_reason": "Beschreibe den Grund (10–1000 Zeichen). Die andere Seite kann ihn sehen."
   },
   "account": {
     "verify": {

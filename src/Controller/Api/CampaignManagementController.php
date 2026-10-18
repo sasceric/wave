@@ -245,7 +245,8 @@ final class CampaignManagementController
             return new JsonResponse(['error' => ApiMessages::get('campaign_financial_history_locked', $locale)], 409);
         }
         if ($status === 'cancelled') {
-            try { $cancellation->campaign($campaign, $user); }
+            $reason = is_string($data['reason'] ?? null) ? trim($data['reason']) : '';
+            try { $cancellation->campaign($campaign, $user, $reason); }
             catch (HttpException $error) { return new JsonResponse(['error' => ApiMessages::get($error->getMessage(), $locale)], $error->getStatusCode()); }
             return new JsonResponse(['data' => CampaignResource::fromEntity($campaign, $locale, hiredCount: CampaignHiredCounts::forCampaign($entityManager, $campaign))]);
         }

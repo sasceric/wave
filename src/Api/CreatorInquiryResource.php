@@ -20,7 +20,14 @@ final class CreatorInquiryResource
 
         return [
             'id' => $inquiry->getId(),
-            'readOnly' => AccountDeletion::sharedHistoryDeleted($inquiry->getCreator(), $inquiry->getCompany()),
+            'cancelled' => $inquiry->getOffer()?->getStatus() === 'cancelled',
+            'engagement' => [
+                'canHire' => !$isCreator && $inquiry->getStatus() === 'accepted'
+                    && !AccountDeletion::sharedHistoryDeleted($inquiry->getCreator(), $inquiry->getCompany())
+                    && ($inquiry->getOffer() === null || $inquiry->getOffer()->getStatus() === 'rejected'),
+                'offer' => $inquiry->getOffer() ? InquiryOfferResource::fromEntity($inquiry->getOffer()) : null,
+            ],
+            'readOnly' => $inquiry->getOffer()?->getStatus() === 'cancelled' || AccountDeletion::sharedHistoryDeleted($inquiry->getCreator(), $inquiry->getCompany()),
             'role' => $isCreator ? 'creator' : 'company',
             'creator' => CreatorResource::fromEntity($inquiry->getCreator(), $locale),
             'viewerRole' => $isCreator ? 'provider' : 'client',

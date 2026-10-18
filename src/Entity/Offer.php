@@ -14,8 +14,8 @@ class Offer
     #[ORM\Column]
     private ?int $id = null;
 
-    #[ORM\OneToOne(inversedBy: 'offer', targetEntity: Application::class)]
-    #[ORM\JoinColumn(nullable: false, unique: true, onDelete: 'CASCADE')]
+    #[ORM\ManyToOne(targetEntity: Application::class)]
+    #[ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')]
     private Application $application;
 
     #[ORM\Column]
@@ -33,14 +33,23 @@ class Offer
     #[ORM\Column(nullable: true)]
     private ?DateTimeImmutable $respondedAt = null;
 
-    public function __construct(Application $application, int $amount, string $message)
+    #[ORM\Column(type: 'date_immutable', nullable: true)]
+    private ?DateTimeImmutable $dueDate = null;
+
+    public function __construct(Application $application, int $amount, string $message, ?DateTimeImmutable $dueDate = null)
     {
         $this->application = $application;
         $this->amount = $amount;
         $this->message = $message;
+        $this->dueDate = $dueDate;
         $this->createdAt = new DateTimeImmutable();
         $application->setOffer($this);
     }
+
+    #[ORM\Column(type: 'text', nullable: true)]
+    private ?string $cancellationReason = null;
+
+    public function getCancellationReason(): ?string { return $this->cancellationReason; }
 
     public function getId(): ?int
     {
@@ -55,6 +64,11 @@ class Offer
     public function getAmount(): int
     {
         return $this->amount;
+    }
+
+    public function getDueDate(): ?DateTimeImmutable
+    {
+        return $this->dueDate;
     }
 
     public function getMessage(): string
@@ -77,8 +91,9 @@ class Offer
         return $this->respondedAt;
     }
 
-    public function cancel(): void
+    public function cancel(?string $reason = null): void
     {
+        $this->cancellationReason = $reason;
         $this->status = 'cancelled';
         $this->respondedAt = new DateTimeImmutable();
         $this->application->setStatus('cancelled');
@@ -88,6 +103,6 @@ class Offer
     {
         $this->status = $status;
         $this->respondedAt = new DateTimeImmutable();
-        $this->application->setStatus($status === 'accepted' ? 'accepted' : 'offer_declined');
+        $this->application->setStatus($status === 'accepted' ? 'accepted' : 'shortlisted');
     }
 }

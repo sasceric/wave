@@ -6,6 +6,8 @@ final class ApiMessages
 {
     private const MESSAGES = [
         'bs' => [
+            'invalid_cancellation_reason' => 'Napiši razlog (10–1000 znakova). Razlog će vidjeti druga strana.',
+            'invalid_offer_due_date' => 'Odaberi važeći rok isporuke: danas ili kasniji datum.',
             'hiring_cancelled' => 'Angažman je otkazan:',
             'campaign_cancelled' => 'Kampanja je otkazana. Više nije moguće mijenjati prijave, ponude ili pozive.',
             'collaboration_cancelled' => 'Angažman je otkazan. Historija ostaje dostupna, ali slanje poruka nije moguće.',
@@ -97,6 +99,8 @@ final class ApiMessages
             'newsletter_email_failed' => 'Potvrdni e-mail nije poslan. Pokušaj ponovo kasnije.',
         ],
         'hr' => [
+            'invalid_cancellation_reason' => 'Napiši razlog (10–1000 znakova). Razlog će vidjeti druga strana.',
+            'invalid_offer_due_date' => 'Odaberi valjan rok isporuke: danas ili kasniji datum.',
             'hiring_cancelled' => 'Suradnja je otkazana:',
             'campaign_cancelled' => 'Kampanja je otkazana. Više nije moguće mijenjati prijave, ponude ili pozive.',
             'collaboration_cancelled' => 'Suradnja je otkazana. Povijest ostaje dostupna, ali slanje poruka nije moguće.',
@@ -188,6 +192,8 @@ final class ApiMessages
             'newsletter_email_failed' => 'Potvrdna e-pošta nije poslana. Pokušaj ponovno kasnije.',
         ],
         'sr' => [
+            'invalid_cancellation_reason' => 'Napiši razlog (10–1000 znakova). Razlog će videti druga strana.',
+            'invalid_offer_due_date' => 'Izaberi važeći rok isporuke: danas ili kasniji datum.',
             'hiring_cancelled' => 'Angažman je otkazan:',
             'campaign_cancelled' => 'Kampanja je otkazana. Više nije moguće menjati prijave, ponude ili pozive.',
             'collaboration_cancelled' => 'Angažman je otkazan. Istorija ostaje dostupna, ali slanje poruka nije moguće.',
@@ -279,6 +285,8 @@ final class ApiMessages
             'newsletter_email_failed' => 'Potvrdni e-mail nije poslat. Pokušaj ponovo kasnije.',
         ],
         'cnr' => [
+            'invalid_cancellation_reason' => 'Napiši razlog (10–1000 znakova). Razlog će vidjeti druga strana.',
+            'invalid_offer_due_date' => 'Odaberi važeći rok isporuke: danas ili kasniji datum.',
             'hiring_cancelled' => 'Angažman je otkazan:',
             'campaign_cancelled' => 'Kampanja je otkazana. Više nije moguće mijenjati prijave, ponude ili pozive.',
             'collaboration_cancelled' => 'Angažman je otkazan. Istorija ostaje dostupna, ali slanje poruka nije moguće.',
@@ -370,6 +378,8 @@ final class ApiMessages
             'newsletter_email_failed' => 'Potvrdni e-mail nije poslat. Pokušaj ponovo kasnije.',
         ],
         'sl' => [
+            'invalid_cancellation_reason' => 'Napiši razlog (10–1000 znakov). Razlog bo videla druga stran.',
+            'invalid_offer_due_date' => 'Izberi veljaven rok dobave: danes ali pozneje.',
             'hiring_cancelled' => 'Sodelovanje je preklicano:',
             'campaign_cancelled' => 'Kampanja je preklicana. Prijav, ponudb ali povabil ni več mogoče spreminjati.',
             'collaboration_cancelled' => 'Sodelovanje je preklicano. Zgodovina ostane na voljo, pošiljanje sporočil pa ni mogoče.',
@@ -461,6 +471,8 @@ final class ApiMessages
             'newsletter_email_failed' => 'Potrditvenega e-poštnega sporočila ni bilo mogoče poslati. Poskusi znova pozneje.',
         ],
         'en' => [
+            'invalid_cancellation_reason' => 'Explain why you are canceling (10–1000 characters). The other participant will see this reason.',
+            'invalid_offer_due_date' => 'Choose a valid delivery deadline: today or a later date.',
             'hiring_cancelled' => 'Collaboration canceled:',
             'campaign_cancelled' => 'The campaign was canceled. Applications, offers and invitations can no longer be changed.',
             'collaboration_cancelled' => 'The collaboration was canceled. History remains available, but messages cannot be sent.',

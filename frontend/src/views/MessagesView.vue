@@ -45,14 +45,14 @@ const offerBusy = ref(false)
 const offerError = ref('')
 async function refreshEngagement() {
   const thread = selectedThread.value
-  if (thread) await loadMessages({ ...thread, threadType: 'campaign' }, true)
+  if (thread) await loadMessages({ ...thread, threadType: selectedInquiry.value ? 'inquiry' : 'campaign' }, true)
   window.dispatchEvent(new Event('wave:conversations-updated'))
 }
 function confirmOffer(decision) {
-  const offer = selectedConversation.value?.engagement?.offer
+  const offer = selectedThread.value?.engagement?.offer
   if (offer?.status !== 'pending' || !selectedProvider.value) return
   offerError.value = ''
-  offerDecision.value = { ...offer, decision, conversationId: selectedConversation.value.id }
+  offerDecision.value = { ...offer, decision, threadKey: selectedThreadKey.value, inquiryId: selectedInquiry.value?.id, campaign: selectedCampaign.value }
 }
 async function respondInChat() {
   const choice = offerDecision.value
@@ -61,8 +61,8 @@ async function respondInChat() {
   offerBusy.value = true
   offerError.value = ''
   try {
-    await apiRequest(`/me/offers/${choice.id}/respond`, { method: 'POST', body: { decision: choice.decision } })
-    if (currentUser.value?.id !== userId || selectedConversation.value?.id !== choice.conversationId) return
+    await apiRequest(`/me/${choice.inquiryId ? 'inquiry-offers' : 'offers'}/${choice.id}/respond`, { method: 'POST', body: { decision: choice.decision } })
+    if (currentUser.value?.id !== userId || selectedThreadKey.value !== choice.threadKey) return
     offerDecision.value = null
     await refreshEngagement()
   } catch (cause) {
@@ -159,7 +159,7 @@ const selectedInquiry = computed(() => (selectedDetails.value?.threadType === 'i
   && selectedDetails.value.id === selectedInquiryId.value ? selectedDetails.value : null) || inquiries.value.find(
   (inquiry) => inquiry.id === selectedInquiryId.value,
 ) || null)
-watch(() => [currentUser.value?.id, selectedConversationId.value], () => { offerDecision.value = null; offerError.value = '' })
+watch(() => [currentUser.value?.id, selectedConversationId.value, selectedInquiryId.value], () => { offerDecision.value = null; offerError.value = '' })
 const selectedThread = computed(() => selectedConversation.value || selectedInquiry.value)
 const selectedThreadKey = computed(() => (
   selectedConversation.value
@@ -260,7 +260,7 @@ const currentDisplayName = computed(() => (
   || currentUser.value?.email
   || ''
 ))
-const collaborationCancelled = computed(() => selectedCampaign.value?.status === 'cancelled' || selectedConversation.value?.cancelled || selectedConversation.value?.engagement?.offer?.status === 'cancelled')
+const collaborationCancelled = computed(() => selectedCampaign.value?.status === 'cancelled' || selectedConversation.value?.cancelled || selectedThread.value?.engagement?.offer?.status === 'cancelled')
 const campaignChatClosed = computed(() => collaborationCancelled.value || selectedThread.value?.readOnly || ['closed', 'finished'].includes(selectedCampaign.value?.status))
 const campaignChatNotice = computed(() => collaborationCancelled.value ? 'hiring.cancelledNotice' : selectedThread.value?.blocked ? 'safety.blockedHistory' : selectedThread.value?.readOnly ? 'campaignChat.deletedAccountNotice' : selectedCampaign.value?.status === 'finished' ? 'campaignChat.finishedNotice' : 'campaignChat.closedNotice')
 const canSend = computed(() => Boolean(
@@ -477,7 +477,7 @@ function handleRealtimeUpdate(event) {
     lastMessageSenderId: message.senderId,
     unreadCount: (thread.unreadCount || 0) + (isIncoming ? 1 : 0),
   })
-  if (!isInquiry && message.event?.type === 'cancelled') Object.assign(thread, { cancelled: true, readOnly: true })
+  if (message.event?.type === 'cancelled') Object.assign(thread, { cancelled: true, readOnly: true })
   if (isSelected) {
     if (selectedDetails.value) Object.assign(selectedDetails.value, thread)
     if (isIncoming && !atLatestMessage.value) rememberUnreadBoundary([message])
@@ -490,7 +490,7 @@ function handleRealtimeUpdate(event) {
   } else if (isIncoming && !isInquiry) {
     window.dispatchEvent(new Event('wave:conversations-updated'))
   }
-  if (!isInquiry && message.event) void refreshInbox()
+  if (message.event) void refreshInbox()
 }
 
 function refreshInboxWhenVisible() {
@@ -734,6 +734,7 @@ async function loadMessages(thread, forceScroll = false, startWithLatestPage = f
       mergeMessages(response.data)
       if (initial) hasOlderMessages.value = Boolean(response.meta?.hasMoreOlder)
       if (response.conversation) upsertConversation(response.conversation)
+      if (response.inquiry) upsertInquiry(response.inquiry)
       hasMore = Boolean(response.meta?.hasMoreNewer)
       const nextCursor = response.data.at(-1)?.id
       if (!nextCursor || nextCursor === cursor) break
@@ -1276,7 +1277,13 @@ function messageTimeDescription(value) {
                     class="campaign-messages__message"
                     :class="{ 'campaign-messages__message--mine': isMessageMine(message) }"
                   >
-                    <template v-if="message.event"><p>{{ t(`hiring.timeline.${message.event.type}`, { campaign: message.event.campaignTitle, amount: formatMoney(message.event.amount, message.event.currency) }) }}</p><LocalizedLink v-if="message.event.campaignSlug && !selectedThread?.readOnly" class="campaign-messages__event-link" :to="{ name: !selectedProvider ? 'account-campaign-detail' : 'campaign-detail', params: { slug: message.event.campaignSlug } }">{{ t('campaignChat.viewCampaign') }} →</LocalizedLink></template>
+                    <template v-if="message.event">
+                      <p>{{ t(`hiring.${message.event.context === 'inquiry' ? 'directTimeline' : 'timeline'}.${message.event.type}`, { campaign: message.event.campaignTitle, amount: formatMoney(message.event.amount, message.event.currency) }) }}</p>
+                      <p v-if="message.event.dueDate">{{ t('hiring.deliveryDue', { date: formatDate(message.event.dueDate) }) }}</p>
+                      <p v-if="message.event.cancellationReason">{{ t('hiring.cancellationReason') }}: {{ message.event.cancellationReason }}</p>
+                      <p v-if="message.event.message">{{ message.event.message }}</p>
+                      <LocalizedLink v-if="message.event.campaignSlug && !selectedThread?.readOnly" class="campaign-messages__event-link" :to="{ name: !selectedProvider ? 'account-campaign-detail' : 'campaign-detail', params: { slug: message.event.campaignSlug } }">{{ t('campaignChat.viewCampaign') }} →</LocalizedLink>
+                    </template>
                     <p v-else>{{ message.body }}</p>
                     <div class="campaign-messages__message-meta">
                       <time
@@ -1353,8 +1360,9 @@ function messageTimeDescription(value) {
 
         <button v-if="selectedThread && unseenNewMessages" type="button" class="campaign-messages__new-messages" @click="scrollToLatestMessage">{{ t('campaignChat.newMessages', { count: unseenNewMessages }) }}</button>
         <form v-form-validation v-if="selectedThread || (pendingStart && pendingDetails && currentUser?.accountType === 'company')" class="campaign-messages__composer" @submit.prevent="sendMessage">
-          <div v-if="selectedConversation?.engagement?.offer?.status === 'pending' && selectedProvider && !campaignChatClosed" class="campaign-messages__offer-confirmation">
-            <p>{{ t('hiring.pendingOffer', { amount: formatMoney(selectedConversation.engagement.offer.amount, selectedCampaign.currency) }) }}</p>
+          <div v-if="selectedThread?.engagement?.offer?.status === 'pending' && selectedProvider && !campaignChatClosed" class="campaign-messages__offer-confirmation">
+            <p>{{ t('hiring.pendingOffer', { amount: formatMoney(selectedThread.engagement.offer.amount, selectedThread.engagement.offer.currency || selectedCampaign?.currency) }) }}</p>
+            <p v-if="selectedThread.engagement.offer.dueDate">{{ t('hiring.deliveryDue', { date: formatDate(selectedThread.engagement.offer.dueDate) }) }}</p>
             <button type="button" class="campaign-messages__offer-action campaign-messages__offer-action--accept" @click="confirmOffer('accept')"><Check :size="14" aria-hidden="true" />{{ t('hiring.acceptOffer') }}</button>
             <button type="button" class="campaign-messages__offer-action" @click="confirmOffer('reject')"><X :size="14" aria-hidden="true" />{{ t('hiring.declineOffer') }}</button>
           </div>
@@ -1500,8 +1508,9 @@ function messageTimeDescription(value) {
                 {{ t('campaignChat.viewCampaign') }}
                 <ArrowRight :size="16" aria-hidden="true" />
               </LocalizedLink>
+              <p v-if="selectedConversation?.engagement?.canHire && selectedConversation.engagement.offer?.status === 'rejected'" class="campaign-messages__summary">{{ t('hiring.declineHint') }}</p>
               <CampaignHireAction button-class="campaign-messages__campaign-link" show-arrow v-if="selectedConversation?.engagement?.canHire && !selectedThread?.readOnly" :conversation-id="selectedConversation.id" :campaign="selectedCampaign" :creator-name="selectedConversation.creator.displayName" @offered="refreshEngagement" />
-              <CampaignCancellationAction v-if="selectedConversation?.engagement?.offer?.status === 'accepted' && !selectedThread?.readOnly && selectedCampaign.status !== 'finished'" :offer-id="selectedConversation.engagement.offer.id" @cancelled="refreshEngagement" />
+              <CampaignCancellationAction full-width v-if="selectedConversation?.engagement?.offer?.status === 'accepted' && !selectedThread?.readOnly && selectedCampaign.status !== 'finished'" :offer-id="selectedConversation.engagement.offer.id" @cancelled="refreshEngagement" />
             </div>
           </article>
         </div>
@@ -1534,6 +1543,12 @@ function messageTimeDescription(value) {
                   selectedInquiry.proposedAmount ? selectedInquiry.currency : selectedInquiry.listedPriceCurrency,
                 ) }}
               </p>
+              <dl v-if="selectedInquiry.engagement?.offer" class="campaign-messages__facts">
+                <div><dt>{{ t('hiring.compensation') }}</dt><dd>{{ formatMoney(selectedInquiry.engagement.offer.amount, selectedInquiry.engagement.offer.currency) }}</dd></div>
+                <div><dt>{{ t('hiring.dueDate') }}</dt><dd>{{ formatDate(selectedInquiry.engagement.offer.dueDate) }}</dd></div>
+              </dl>
+              <CampaignHireAction v-if="selectedInquiry.engagement?.canHire && !selectedInquiry.readOnly" :inquiry-id="selectedInquiry.id" :campaign="{ title: selectedInquiry.packageTitle || t('campaignChat.directInquiry'), currency: selectedInquiry.currency || 'BAM' }" :creator-name="selectedInquiry.creator.displayName" button-class="campaign-messages__campaign-link" show-arrow @offered="refreshEngagement" />
+              <CampaignCancellationAction v-if="selectedInquiry.engagement?.offer?.status === 'accepted' && !selectedInquiry.readOnly" full-width inquiry :offer-id="selectedInquiry.engagement.offer.id" @cancelled="refreshEngagement" />
             </div>
           </article>
         </div>
@@ -1545,7 +1560,9 @@ function messageTimeDescription(value) {
     </div>
   </section>
   <FormModal :open="Boolean(offerDecision)" :title="t(offerDecision?.decision === 'accept' ? 'hiring.acceptOffer' : 'hiring.declineOffer')" :busy="offerBusy" @update:open="!$event && (offerDecision = null)" @submit="respondInChat">
-    <p v-if="offerDecision">{{ t('hiring.reviewAmount', { campaign: offerDecision.campaign.title, amount: formatMoney(offerDecision.amount, offerDecision.campaign.currency) }) }}</p>
+    <p v-if="offerDecision">{{ t(offerDecision.inquiryId ? 'hiring.directReviewAmount' : 'hiring.reviewAmount', { campaign: offerDecision.campaign?.title, amount: formatMoney(offerDecision.amount, offerDecision.currency || offerDecision.campaign?.currency) }) }}</p>
+    <p v-if="offerDecision?.dueDate">{{ t('hiring.deliveryDue', { date: formatDate(offerDecision.dueDate) }) }}</p>
+    <p v-if="offerDecision?.decision === 'reject'">{{ t('hiring.declineHint') }}</p>
     <StatusMessage v-if="offerError" variant="error">{{ offerError }}</StatusMessage>
     <template #actions="{ close }"><button type="button" class="button button--outline" :disabled="offerBusy" @click="close">{{ t('safety.cancel') }}</button><button type="submit" class="button button--dark" :disabled="offerBusy">{{ t('hiring.confirm') }}</button></template>
   </FormModal>

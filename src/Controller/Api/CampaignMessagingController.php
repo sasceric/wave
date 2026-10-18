@@ -111,7 +111,7 @@ final class CampaignMessagingController
             || !$creator->getOwner() instanceof User
             || !$creator->getOwner()->isApproved()
             || !$application instanceof Application
-            || !in_array($application->getStatus(), ['shortlisted', 'offered', 'accepted'], true)
+            || !in_array($application->getStatus(), ['shortlisted', 'offer_declined', 'offered', 'accepted'], true)
         ) {
             return new JsonResponse(['error' => ApiMessages::get('creator_not_found', $locale)], 404);
         }
@@ -162,7 +162,7 @@ final class CampaignMessagingController
                 && $conversation->getCampaign()->getStatus() === 'open'
                 && CampaignHiredCounts::forCampaign($entityManager, $conversation->getCampaign()) < $conversation->getCampaign()->getCreatorCount()
                 && !AccountDeletion::sharedHistoryDeleted($conversation->getCreator(), $conversation->getCampaign()->getCompany())
-                && ($application ? $application->getStatus() === 'shortlisted' && $application->getOffer() === null : $invitation !== null),
+                && ($application ? in_array($application->getStatus(), ['shortlisted', 'offer_declined'], true) && ($application->getOffer() === null || $application->getOffer()->getStatus() === 'rejected') : $invitation !== null),
             'offer' => $application?->getOffer() ? \App\Api\OfferResource::fromEntity($application->getOffer(), $locale, CampaignHiredCounts::forCampaign($entityManager, $conversation->getCampaign())) : null,
         ];
 
@@ -272,7 +272,7 @@ final class CampaignMessagingController
             ]);
             if (!$companyOwner instanceof User
                 || (!$application instanceof Application
-                    || !in_array($application->getStatus(), ['shortlisted', 'offered', 'accepted'], true))
+                    || !in_array($application->getStatus(), ['shortlisted', 'offer_declined', 'offered', 'accepted'], true))
                     && !$acceptedInvitation instanceof CampaignInvitation
             ) {
                 return new JsonResponse(['error' => ApiMessages::get('forbidden', $locale)], 403);

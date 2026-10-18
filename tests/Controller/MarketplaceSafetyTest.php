@@ -237,6 +237,185 @@ final class MarketplaceSafetyTest extends WebTestCase
         self::assertResponseStatusCodeSame(400);
     }
 
+    public function testDirectInquiryNegotiatesHiresAndCancelsWithAReason(): void
+    {
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $inquiry = new \App\Entity\CreatorInquiry($this->creatorUser->getCreator(), $this->companyUser->getCompany(), null, null, null, null, 'Let us discuss a direct content collaboration.');
+        $inquiry->respond('accepted');
+        $em->persist($inquiry);
+        $em->flush();
+        $id = $inquiry->getId();
+        $terms = ['amount' => 300, 'currency' => 'BAM', 'dueDate' => (new DateTimeImmutable('+14 days'))->format('Y-m-d'), 'message' => 'One short video and five photographs, as agreed.'];
+        $this->client->loginUser($this->creatorUser);
+        $this->write('POST', '/api/company/inquiries/'.$id.'/hire', $terms);
+        self::assertResponseStatusCodeSame(403);
+        $this->client->loginUser($this->companyUser);
+        $this->write('POST', '/api/company/inquiries/'.$id.'/hire', [...$terms, 'dueDate' => null]);
+        self::assertResponseStatusCodeSame(400);
+        $this->write('POST', '/api/company/inquiries/'.$id.'/hire', $terms);
+        self::assertResponseStatusCodeSame(201);
+        $first = $this->payload()['data']['id'];
+        $this->write('POST', '/api/company/inquiries/'.$id.'/hire', $terms);
+        self::assertResponseStatusCodeSame(409);
+        $this->write('POST', '/api/me/inquiry-offers/'.$first.'/respond', ['decision' => 'accept']);
+        self::assertResponseStatusCodeSame(404);
+        $this->client->loginUser($this->stranger);
+        $this->write('POST', '/api/me/inquiry-offers/'.$first.'/respond', ['decision' => 'accept']);
+        self::assertResponseStatusCodeSame(404);
+        $this->client->loginUser($this->creatorUser);
+        $this->write('POST', '/api/me/inquiry-offers/'.$first.'/respond', ['decision' => 'reject']);
+        self::assertResponseIsSuccessful();
+        $this->write('POST', '/api/me/inquiries/'.$id.'/messages', ['body' => 'Can we agree on 400 KM instead?', 'event' => ['type' => 'hired']]);
+        self::assertResponseStatusCodeSame(201);
+        self::assertNull($this->payload()['data']['event']);
+        $this->client->loginUser($this->companyUser);
+        $this->client->request('GET', '/api/me/inquiries/'.$id.'/messages');
+        self::assertTrue($this->payload()['inquiry']['engagement']['canHire']);
+        $this->write('POST', '/api/company/inquiries/'.$id.'/hire', [...$terms, 'amount' => 400]);
+        self::assertResponseStatusCodeSame(201);
+        $current = $this->payload()['data']['id'];
+        self::assertNotSame($first, $current);
+        $this->client->loginUser($this->creatorUser);
+        $this->write('POST', '/api/me/inquiry-offers/'.$first.'/respond', ['decision' => 'accept']);
+        self::assertResponseStatusCodeSame(409);
+        $this->write('POST', '/api/me/inquiry-offers/'.$current.'/respond', ['decision' => 'accept']);
+        self::assertResponseIsSuccessful();
+        self::assertSame('accepted', $this->payload()['data']['status']);
+        self::assertSame(400, $this->payload()['data']['amount']);
+        $this->write('POST', '/api/me/inquiry-offers/'.$current.'/cancel', ['reason' => '']);
+        self::assertResponseStatusCodeSame(400);
+        $this->client->loginUser($this->companyUser);
+        $this->write('POST', '/api/me/inquiry-offers/'.$current.'/cancel', ['reason' => 'The agreed delivery schedule is no longer possible.']);
+        self::assertResponseIsSuccessful();
+        self::assertSame('The agreed delivery schedule is no longer possible.', $this->payload()['data']['cancellationReason']);
+        $this->write('POST', '/api/me/inquiry-offers/'.$current.'/cancel', []);
+        self::assertResponseIsSuccessful();
+        foreach ([$this->creatorUser, $this->companyUser] as $participant) {
+            $this->client->loginUser($participant);
+            $this->client->request('GET', '/api/me/inquiries/'.$id.'/messages');
+            self::assertResponseIsSuccessful();
+            self::assertTrue($this->payload()['inquiry']['readOnly']);
+            self::assertFalse($this->payload()['inquiry']['engagement']['canHire']);
+            $events = array_values(array_filter(array_column($this->payload()['data'], 'event')));
+            self::assertSame(['offer_sent', 'offer_declined', 'offer_sent', 'hired', 'cancelled'], array_column($events, 'type'));
+            self::assertSame([300, 300, 400, 400, 400], array_column($events, 'amount'));
+            self::assertSame($terms['dueDate'], $events[2]['dueDate']);
+            self::assertSame('The agreed delivery schedule is no longer possible.', $events[4]['cancellationReason']);
+            $this->write('POST', '/api/me/inquiries/'.$id.'/messages', ['body' => 'This chat is now read only.']);
+            self::assertResponseStatusCodeSame(409);
+            $this->client->request('GET', '/api/me/inbox');
+            $rows = array_values(array_filter($this->payload()['data'], static fn (array $row): bool => $row['threadType'] === 'inquiry' && $row['id'] === $id));
+            self::assertTrue($rows[0]['readOnly']);
+        }
+        self::assertSame(2, (int) $this->db()->fetchOne('SELECT COUNT(*) FROM inquiry_offer WHERE inquiry_id = ?', [$id]));
+        self::assertSame('rejected', $this->db()->fetchOne('SELECT status FROM inquiry_offer WHERE id = ?', [$first]));
+    }
+
+    public function testAcceptedApplicationNegotiatesAndCanBeHiredAgainAfterDecliningAnOffer(): void
+    {
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $this->creatorUser->setPhone('+38761123456');
+        $this->creatorUser->setCity('Sarajevo');
+        $this->creatorUser->setCountryCode('BA');
+        $campaign = $this->campaign($this->companyUser->getCompany(), 'open');
+        $application = new Application($campaign, $this->creatorUser->getCreator(), 'I would like to discuss this campaign.');
+        $em->persist($campaign);
+        $em->persist($application);
+        $em->flush();
+        $applicationId = $application->getId();
+        $slug = $campaign->getSlug();
+        $dueDate = (new DateTimeImmutable('+14 days'))->format('Y-m-d');
+        $terms = ['amount' => 300, 'dueDate' => $dueDate, 'message' => 'The negotiated scope is one video and five photos.'];
+
+        $this->client->loginUser($this->companyUser);
+        $this->write('POST', '/api/company/applications/'.$applicationId.'/shortlist', []);
+        self::assertResponseIsSuccessful();
+        $conversationId = $this->payload()['conversationId'];
+        self::assertSame('shortlisted', $this->payload()['data']['status']);
+        self::assertNull($this->payload()['data']['offer']);
+        self::assertSame(0, $this->payload()['data']['campaign']['hiredCount']);
+        $this->client->request('GET', '/api/me/conversations/'.$conversationId.'/messages');
+        self::assertTrue($this->payload()['conversation']['engagement']['canHire']);
+        self::assertSame([], $this->payload()['data']);
+        $this->client->loginUser($this->creatorUser);
+        $this->write('POST', '/api/me/conversations/'.$conversationId.'/messages', ['body' => 'Can we discuss the scope and deadline?']);
+        self::assertResponseStatusCodeSame(201);
+        $this->write('POST', '/api/company/conversations/'.$conversationId.'/hire', $terms);
+        self::assertResponseStatusCodeSame(403);
+
+        $this->client->loginUser($this->companyUser);
+        foreach ([null, 'not-a-date', '2099-02-30', (new DateTimeImmutable('-1 day'))->format('Y-m-d')] as $invalidDate) {
+            $this->write('POST', '/api/company/conversations/'.$conversationId.'/hire', [...$terms, 'dueDate' => $invalidDate]);
+            self::assertResponseStatusCodeSame(400);
+        }
+        $this->write('POST', '/api/company/conversations/'.$conversationId.'/hire', $terms);
+        self::assertResponseStatusCodeSame(201);
+        $oldOfferId = $this->payload()['data']['id'];
+        self::assertSame($dueDate, $this->payload()['data']['dueDate']);
+        self::assertSame(0, $this->payload()['data']['campaign']['hiredCount']);
+        $this->client->request('GET', '/api/me/conversations/'.$conversationId.'/messages');
+        self::assertFalse($this->payload()['conversation']['engagement']['canHire']);
+        $messages = $this->payload()['data'];
+        self::assertSame($dueDate, end($messages)['event']['dueDate']);
+        self::assertSame($terms['message'], end($messages)['event']['message']);
+
+        $this->client->loginUser($this->stranger);
+        $this->write('POST', '/api/me/offers/'.$oldOfferId.'/respond', ['decision' => 'accept']);
+        self::assertResponseStatusCodeSame(404);
+        $this->write('POST', '/api/me/conversations/'.$conversationId.'/messages', ['body' => 'Unauthorised message']);
+        self::assertResponseStatusCodeSame(404);
+        $this->client->loginUser($this->creatorUser);
+        $this->write('POST', '/api/me/offers/'.$oldOfferId.'/respond', ['decision' => 'reject']);
+        self::assertResponseIsSuccessful();
+        self::assertSame('rejected', $this->payload()['data']['status']);
+        $this->client->request('GET', '/api/me/applications');
+        $rows = array_values(array_filter($this->payload()['data'], static fn (array $row): bool => $row['id'] === $applicationId));
+        self::assertSame('shortlisted', $rows[0]['status']);
+        $this->write('POST', '/api/me/conversations/'.$conversationId.'/messages', ['body' => 'Could you offer 400 KM for that scope?']);
+        self::assertResponseStatusCodeSame(201);
+        // Older declined applications must also remain writable before/after deployment.
+        $this->db()->executeStatement("UPDATE campaign_application SET status = 'offer_declined' WHERE id = ?", [$applicationId]);
+        $this->write('POST', '/api/me/conversations/'.$conversationId.'/messages', ['body' => 'We can keep negotiating in this conversation.']);
+        self::assertResponseStatusCodeSame(201);
+
+        $this->client->loginUser($this->companyUser);
+        $this->write('POST', '/api/me/conversations/'.$conversationId.'/messages', ['body' => 'Agreed. I will send revised terms.']);
+        self::assertResponseStatusCodeSame(201);
+        $this->client->request('GET', '/api/me/conversations/'.$conversationId.'/messages');
+        self::assertTrue($this->payload()['conversation']['engagement']['canHire']);
+        $this->write('POST', '/api/company/conversations/'.$conversationId.'/hire', [...$terms, 'amount' => 400]);
+        self::assertResponseStatusCodeSame(201);
+        $newOfferId = $this->payload()['data']['id'];
+        self::assertNotSame($oldOfferId, $newOfferId);
+        self::assertSame(400, $this->payload()['data']['amount']);
+        $this->write('POST', '/api/company/conversations/'.$conversationId.'/hire', $terms);
+        self::assertResponseStatusCodeSame(409);
+        self::assertSame('rejected', $this->db()->fetchOne('SELECT status FROM campaign_offer WHERE id = ?', [$oldOfferId]));
+        self::assertSame(300, (int) $this->db()->fetchOne('SELECT amount FROM campaign_offer WHERE id = ?', [$oldOfferId]));
+        self::assertSame(2, (int) $this->db()->fetchOne('SELECT COUNT(*) FROM campaign_offer WHERE application_id = ?', [$applicationId]));
+
+        $this->client->loginUser($this->creatorUser);
+        $this->write('POST', '/api/me/offers/'.$oldOfferId.'/respond', ['decision' => 'accept']);
+        self::assertResponseStatusCodeSame(409);
+        $this->client->request('GET', '/api/me/offers');
+        self::assertSame([$newOfferId], array_values(array_column(array_filter($this->payload()['data'], static fn (array $row): bool => $row['applicationId'] === $applicationId), 'id')));
+        $this->client->request('GET', '/api/me/dashboard');
+        self::assertResponseIsSuccessful();
+        $dashboard = $this->payload()['data'];
+        self::assertSame(1, $dashboard['counts']['offers']);
+        self::assertCount(1, array_filter($dashboard['recent'], static fn (array $row): bool => $row['campaign_id'] === $campaign->getId()));
+        $this->write('POST', '/api/me/offers/'.$newOfferId.'/respond', ['decision' => 'accept']);
+        self::assertResponseIsSuccessful();
+        self::assertSame(1, $this->payload()['data']['campaign']['hiredCount']);
+        self::assertSame($dueDate, $this->payload()['data']['dueDate']);
+        $this->client->request('GET', '/api/me/conversations/'.$conversationId.'/messages');
+        $events = array_values(array_filter(array_column($this->payload()['data'], 'event')));
+        self::assertSame(['offer_sent', 'offer_declined', 'offer_sent', 'hired'], array_column($events, 'type'));
+        self::assertSame([300, 300, 400, 400], array_column($events, 'amount'));
+        $this->write('POST', '/api/me/conversations/'.$conversationId.'/messages', ['body' => 'Thank you, the agreed work can begin.']);
+        self::assertResponseStatusCodeSame(201);
+    }
+
     public function testInvitedCreatorsAppearInCampaignAndConfirmNegotiatedHireAmounts(): void
     {
         foreach ([50, 1500] as $amount) {
@@ -262,15 +441,15 @@ final class MarketplaceSafetyTest extends WebTestCase
             $this->client->loginUser($this->companyUser);
             $this->client->request('GET', '/api/me/conversations/'.$conversationId.'/messages');
             self::assertTrue($this->payload()['conversation']['engagement']['canHire']);
-            $this->client->jsonRequest('POST', '/api/company/conversations/'.$conversationId.'/hire', ['amount' => $amount, 'message' => 'The negotiated amount is confirmed.']);
+            $this->client->jsonRequest('POST', '/api/company/conversations/'.$conversationId.'/hire', ['dueDate' => (new DateTimeImmutable('+14 days'))->format('Y-m-d'), 'amount' => $amount, 'message' => 'The negotiated amount is confirmed.']);
             self::assertResponseStatusCodeSame(403);
-            $this->write('POST', '/api/company/conversations/'.$conversationId.'/hire', ['amount' => $amount, 'message' => 'The negotiated amount is confirmed.']);
+            $this->write('POST', '/api/company/conversations/'.$conversationId.'/hire', ['dueDate' => (new DateTimeImmutable('+14 days'))->format('Y-m-d'), 'amount' => $amount, 'message' => 'The negotiated amount is confirmed.']);
             self::assertResponseStatusCodeSame(201);
             $offer = $this->payload()['data'];
             self::assertSame($amount, $offer['amount']);
             self::assertSame('pending', $offer['status']);
             self::assertSame(0, $offer['campaign']['hiredCount']);
-            $this->write('POST', '/api/company/conversations/'.$conversationId.'/hire', ['amount' => $amount, 'message' => 'Duplicate offers are not permitted.']);
+            $this->write('POST', '/api/company/conversations/'.$conversationId.'/hire', ['dueDate' => (new DateTimeImmutable('+14 days'))->format('Y-m-d'), 'amount' => $amount, 'message' => 'Duplicate offers are not permitted.']);
             self::assertResponseStatusCodeSame(409);
             $this->client->request('GET', '/api/company/campaigns/'.$slug.'/applications');
             self::assertCount(1, $this->payload()['data']);
@@ -314,8 +493,16 @@ final class MarketplaceSafetyTest extends WebTestCase
             $this->client->loginUser($actor);
             $this->client->jsonRequest('POST', '/api/me/offers/'.$id.'/cancel', []);
             self::assertResponseStatusCodeSame(403);
-            $this->write('POST', '/api/me/offers/'.$id.'/cancel', []);
+            foreach (['', 'short', str_repeat('x', 1001)] as $reason) {
+                $this->write('POST', '/api/me/offers/'.$id.'/cancel', ['reason' => $reason]);
+                self::assertResponseStatusCodeSame(400);
+                self::assertSame('accepted', $this->db()->fetchOne('SELECT status FROM campaign_offer WHERE id = ?', [$id]));
+            }
+            $reason = 'The agreed delivery schedule no longer works for us.';
+            $this->write('POST', '/api/me/offers/'.$id.'/cancel', ['reason' => $reason]);
             self::assertResponseIsSuccessful();
+            self::assertSame($reason, $this->payload()['data']['cancellationReason']);
+            self::assertSame($reason, $this->db()->fetchOne('SELECT cancellation_reason FROM campaign_offer WHERE id = ?', [$id]));
             self::assertSame('cancelled', $this->payload()['data']['status']);
             self::assertSame(900, $this->payload()['data']['amount']);
             self::assertSame(0, $this->payload()['data']['campaign']['hiredCount']);
@@ -332,6 +519,7 @@ final class MarketplaceSafetyTest extends WebTestCase
                 self::assertTrue($this->payload()['conversation']['readOnly']);
                 self::assertFalse($this->payload()['conversation']['engagement']['canHire']);
                 self::assertSame('cancelled', $this->payload()['data'][0]['event']['type']);
+                self::assertSame($reason, $this->payload()['data'][0]['event']['cancellationReason']);
                 $this->write('POST', '/api/me/conversations/'.$conversationId.'/messages', ['body' => 'Not allowed after cancellation.']);
                 self::assertResponseStatusCodeSame(409);
                 $this->client->request('GET', '/api/me/inbox');
@@ -371,17 +559,17 @@ final class MarketplaceSafetyTest extends WebTestCase
         $em->flush();
         $campaignId = $campaign->getId(); $slug = $campaign->getSlug(); $pendingId = $pendingOffer->getId();
         $this->client->loginUser($this->creatorUser);
-        $this->write('PUT', '/api/company/campaigns/'.$campaignId.'/status', ['status' => 'cancelled']);
+        $this->write('PUT', '/api/company/campaigns/'.$campaignId.'/status', ['status' => 'cancelled', 'reason' => 'The company has canceled this campaign and its delivery plan.']);
         self::assertResponseStatusCodeSame(403);
         $this->client->loginUser($this->companyUser);
-        $this->write('PUT', '/api/company/campaigns/'.$campaignId.'/status', ['status' => 'cancelled']);
+        $this->write('PUT', '/api/company/campaigns/'.$campaignId.'/status', ['status' => 'cancelled', 'reason' => 'The company has canceled this campaign and its delivery plan.']);
         self::assertResponseIsSuccessful();
         self::assertSame('cancelled', $this->payload()['data']['status']);
         self::assertSame(0, $this->payload()['data']['hiredCount']);
         self::assertSame(['cancelled', 'cancelled'], $this->db()->fetchFirstColumn('SELECT status FROM campaign_offer WHERE application_id IN (?, ?) ORDER BY id', [$application->getId(), $pendingApplication->getId()]));
         self::assertSame('cancelled', $this->db()->fetchOne('SELECT status FROM campaign_invitation WHERE id = ?', [$invitation->getId()]));
         $messageCount = (int) $this->db()->fetchOne('SELECT COUNT(*) FROM campaign_message');
-        $this->write('PUT', '/api/company/campaigns/'.$campaignId.'/status', ['status' => 'cancelled']);
+        $this->write('PUT', '/api/company/campaigns/'.$campaignId.'/status', ['status' => 'cancelled', 'reason' => 'The company has canceled this campaign and its delivery plan.']);
         self::assertResponseIsSuccessful();
         self::assertSame($messageCount, (int) $this->db()->fetchOne('SELECT COUNT(*) FROM campaign_message'));
         $this->write('PUT', '/api/company/campaigns/'.$campaignId.'/status', ['status' => 'finished']);
@@ -404,7 +592,7 @@ final class MarketplaceSafetyTest extends WebTestCase
         foreach ([$campaign, $application, $offer] as $entity) $em->persist($entity);
         $em->flush();
         $this->client->loginUser($this->companyUser);
-        $this->write('PUT', '/api/company/campaigns/'.$this->application->getCampaign()->getId().'/status', ['status' => 'cancelled']);
+        $this->write('PUT', '/api/company/campaigns/'.$this->application->getCampaign()->getId().'/status', ['status' => 'cancelled', 'reason' => 'The company has canceled this campaign and its delivery plan.']);
         self::assertResponseStatusCodeSame(409);
         $this->client->loginUser($this->creatorUser);
         $this->write('POST', '/api/me/offers/'.$this->application->getOffer()->getId().'/cancel', []);

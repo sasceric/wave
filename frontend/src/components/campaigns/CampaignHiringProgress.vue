@@ -12,3 +12,17 @@ const { t } = useI18n()
     <template v-else>{{ t('campaignCard.hiringProgress', { hired: campaign.hiredCount ?? 0, total: campaign.creatorCount }) }}</template>
   </span>
 </template>
+
+<style scoped lang="scss">
+.campaign-hiring-progress {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.5;
+
+  svg { flex-shrink: 0; }
+}
+</style>

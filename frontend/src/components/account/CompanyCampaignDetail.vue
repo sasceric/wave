@@ -51,11 +51,12 @@ watch(page, async () => {
 
 function statusGroup(application) {
   if (application.status === 'accepted') return 'accepted'
-  if (['rejected', 'offer_declined', 'invitation_declined', 'cancelled'].includes(application.status)) return 'rejected'
+  if (['rejected', 'invitation_declined', 'cancelled'].includes(application.status)) return 'rejected'
   return 'pending'
 }
 
 function statusLabel(application) {
+  if (['shortlisted', 'offer_declined'].includes(application.status)) return t('hiring.discussing')
   if (application.status === 'invited') return t('hiring.invited')
   if (application.status === 'invitation_declined') return t('hiring.invitationDeclined')
   if (application.status === 'accepted') return t(props.campaign.status === 'finished' ? 'account.finished' : 'hiring.hired')

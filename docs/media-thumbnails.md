@@ -13,6 +13,14 @@ browser selects an appropriate 96/320/480px thumbnail for its pixel density.
 These variants remain useful; restoring the grid requires no thumbnail deletion
 or regeneration.
 
+Campaign directory default sorting (`recommended`) matches the homepage:
+featured campaigns first, then publication date descending and ID descending
+within each group. Explicit `newest` and `closing` selections retain their own
+orders. Offset and cursor pagination share this ordering; the recommended cursor
+uses a `published` position key to reject cursors issued with the former
+closing-date order. Migration `Version20261018180000` adds the matching campaign
+index without changing records or existing images.
+
 Campaign cards share the compact layout across directories, home and profile
 campaign rows: the original warm white background and content panel, proposal
 ranges above the company name, and a date/hiring icon row below. One native

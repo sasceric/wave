@@ -1,5 +1,13 @@
 # Server notification checklist
 
+Application-received notifications open the company's private campaign detail
+page with its applicant list (`/racun/kampanje/{slug}` in Bosnian), rather than
+the general campaign overview. The bell resolves the campaign route parameters;
+device push uses the recipient's localized campaign-detail path. Existing bell
+notifications also use this destination when they retain a campaign association.
+Notifications without a campaign retain the overview fallback. Ownership and
+account access checks remain enforced by the private campaign page and API.
+
 Use this checklist for the existing `wave.ba` server. The [Mercure installation guide](mercure-server-setup.md) contains the complete Caddyfile, systemd unit and Nginx proxy. Application releases follow [Production deployment](deployment.md).
 
 Notifications now use durable background delivery: separate `realtime`, `push`
