@@ -1,4 +1,5 @@
 @use '../breakpoints';
+@use '../public-profile-layout';
 
 .company-profile__hero {
   position: relative;
@@ -120,9 +121,23 @@
 
 .company-profile__overview-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1.4fr) minmax(270px, .75fr) minmax(210px, .52fr);
-  gap: 14px;
-  align-items: stretch;
+  @include public-profile-layout.columns;
+  align-items: start;
+}
+
+.company-profile__main,
+.company-profile__sidebar {
+  display: grid;
+  min-width: 0;
+  gap: 24px;
+}
+
+.company-profile__main .profile-reviews {
+  margin: 0;
+}
+
+.company-profile__sidebar {
+  gap: 16px;
 }
 
 .company-profile__card {
@@ -214,11 +229,8 @@
   padding-top: 68px;
 
   .section-heading h2 { font-size: 34px; }
-}
 
-@include breakpoints.down(1000px) {
-  .company-profile__overview-grid { grid-template-columns: minmax(0, 1.2fr) minmax(260px, .8fr); }
-  .company-profile__social-card { grid-column: 1 / -1; }
+  .company-profile__campaign-grid { @include public-profile-layout.campaigns; }
 }
 
 @include breakpoints.down(760px) {
@@ -239,8 +251,7 @@
   .company-profile__stats > span { padding: 8px 11px; font-size: 11px; }
   .company-profile__hero-action { margin-top: 24px; }
   .company-profile__body { padding-top: 28px; padding-bottom: 70px; }
-  .company-profile__overview-grid { grid-template-columns: 1fr; gap: 12px; }
-  .company-profile__social-card { grid-column: auto; }
+  .company-profile__overview-grid { grid-template-columns: minmax(0, 1fr); gap: 24px; }
   .company-profile__card { padding: 24px 21px; }
   .company-profile__card h2 { font-size: 25px; }
   .company-profile__campaigns { padding-top: 48px; }

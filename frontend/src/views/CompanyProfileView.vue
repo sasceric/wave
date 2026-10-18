@@ -15,7 +15,7 @@ import CampaignCard from '../components/campaigns/CampaignCard.vue'
 import LoadingSkeleton from '../components/shared/LoadingSkeleton.vue'
 import StatusMessage from '../components/shared/StatusMessage.vue'
 import WaveLogo from '../components/shared/WaveLogo.vue'
-import { DIRECTORY_IMAGE_SIZES } from '../lib/listingImage'
+import { PROFILE_CAMPAIGN_IMAGE_SIZES } from '../lib/listingImage'
 import { apiGet } from '../lib/api'
 import { getSeoOrigin, updateSeo } from '../lib/seo'
 import { localizedPath } from '../routePaths'
@@ -141,44 +141,48 @@ onBeforeUnmount(() => { ++profileGeneration })
     </section>
 
     <main class="page-width company-profile__body">
-      <div id="company-about" class="company-profile__overview-grid">
-        <article class="company-profile__card company-profile__about-card">
-          <p class="eyebrow">{{ t('companyProfile.aboutEyebrow') }}</p>
-          <h2>{{ t('companyProfile.aboutTitle', { company: company.name }) }}</h2>
-          <div v-if="aboutHtml" class="company-profile__rich-text" v-html="aboutHtml"></div>
-          <p v-else class="company-profile__muted">{{ t('companyProfile.profileLabel') }}</p>
-          <div v-if="industries.length" class="company-profile__tags">
-            <span v-for="industry in industries" :key="industry">{{ industry }}</span>
-          </div>
-        </article>
+      <div class="company-profile__overview-grid">
+        <div class="company-profile__main">
+          <article id="company-about" class="company-profile__card company-profile__about-card">
+            <p class="eyebrow">{{ t('companyProfile.aboutEyebrow') }}</p>
+            <h2>{{ t('companyProfile.aboutTitle', { company: company.name }) }}</h2>
+            <div v-if="aboutHtml" class="company-profile__rich-text" v-html="aboutHtml"></div>
+            <p v-else class="company-profile__muted">{{ t('companyProfile.profileLabel') }}</p>
+            <div v-if="industries.length" class="company-profile__tags">
+              <span v-for="industry in industries" :key="industry">{{ industry }}</span>
+            </div>
+          </article>
+          <section id="company-reviews">
+            <ProfileReviews kind="companies" :slug="company.slug" />
+          </section>
+        </div>
 
-        <article class="company-profile__card company-profile__details-card">
-          <div v-if="locationLabel" class="company-profile__detail"><MapPin :size="19" aria-hidden="true" /><span>{{ t('auth.city') }}</span><strong>{{ locationLabel }}</strong></div>
-          <div v-if="industries.length" class="company-profile__detail"><Globe :size="19" aria-hidden="true" /><span>{{ t('companyProfile.areas') }}</span><strong>{{ industries.join(', ') }}</strong></div>
-          <div class="company-profile__detail"><Megaphone :size="19" aria-hidden="true" /><span>{{ t('companyProfile.openCalls') }}</span><strong>{{ campaigns.length }}</strong></div>
-        </article>
+        <aside class="company-profile__sidebar">
+          <article class="company-profile__card company-profile__details-card">
+            <div v-if="locationLabel" class="company-profile__detail"><MapPin :size="19" aria-hidden="true" /><span>{{ t('auth.city') }}</span><strong>{{ locationLabel }}</strong></div>
+            <div v-if="industries.length" class="company-profile__detail"><Globe :size="19" aria-hidden="true" /><span>{{ t('companyProfile.areas') }}</span><strong>{{ industries.join(', ') }}</strong></div>
+            <div class="company-profile__detail"><Megaphone :size="19" aria-hidden="true" /><span>{{ t('companyProfile.openCalls') }}</span><strong>{{ campaigns.length }}</strong></div>
+          </article>
 
-        <article v-if="socialLinks.length" class="company-profile__card company-profile__social-card">
-          <h2>{{ t('companyProfile.followUs') }}</h2>
-          <a v-for="link in socialLinks" :key="link.platform" :href="link.url" target="_blank" rel="noopener noreferrer">
-            <SocialPlatformIcon :platform="link.platform" :size="20" />
-            <span>{{ link.platform }}</span>
-            <ExternalLink :size="15" aria-hidden="true" />
-          </a>
-        </article>
+          <article v-if="socialLinks.length" class="company-profile__card company-profile__social-card">
+            <h2>{{ t('companyProfile.followUs') }}</h2>
+            <a v-for="link in socialLinks" :key="link.platform" :href="link.url" target="_blank" rel="noopener noreferrer">
+              <SocialPlatformIcon :platform="link.platform" :size="20" />
+              <span>{{ link.platform }}</span>
+              <ExternalLink :size="15" aria-hidden="true" />
+            </a>
+          </article>
+        </aside>
       </div>
 
       <MarketplaceSafetyActions kind="company" :slug="company.slug" />
-      <section id="company-reviews">
-        <ProfileReviews kind="companies" :slug="company.slug" />
-      </section>
       <section id="company-campaigns" class="company-profile__campaigns">
         <div class="section-heading">
           <div><p class="eyebrow">{{ t('companyProfile.openCalls') }}</p><h2>{{ t('companyProfile.campaignsFrom', { company: company.name }) }}</h2></div>
           <RouterLink class="text-link" to="/campaigns">{{ t('companyProfile.allBriefs') }} <span aria-hidden="true">↗</span></RouterLink>
         </div>
-        <CardGrid v-if="campaigns.length" kind="campaign" layout="directory">
-          <CampaignCard v-for="campaign in campaigns" :key="campaign.id" :campaign="campaign" :image-sizes="DIRECTORY_IMAGE_SIZES" />
+        <CardGrid v-if="campaigns.length" class="company-profile__campaign-grid" kind="campaign" layout="directory">
+          <CampaignCard v-for="campaign in campaigns" :key="campaign.id" :campaign="campaign" :image-sizes="PROFILE_CAMPAIGN_IMAGE_SIZES" />
         </CardGrid>
         <StatusMessage v-else variant="empty">{{ t('companyProfile.empty') }}</StatusMessage>
       </section>

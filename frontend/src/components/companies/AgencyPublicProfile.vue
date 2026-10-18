@@ -15,8 +15,9 @@ import WaveLogo from '../shared/WaveLogo.vue'
 import RatingSummary from '../reviews/RatingSummary.vue'
 import ProfileReviews from '../reviews/ProfileReviews.vue'
 import CampaignCard from '../campaigns/CampaignCard.vue'
+import CardGrid from '../shared/CardGrid.vue'
 import { formatDate } from '../../lib/api'
-import { DIRECTORY_IMAGE_SIZES } from '../../lib/listingImage'
+import { PROFILE_CAMPAIGN_IMAGE_SIZES } from '../../lib/listingImage'
 import { sanitizeRichText } from '../../lib/richText'
 const props = defineProps({ company: { type: Object, required: true }, campaigns: { type: Array, default: () => [] } })
 const { t, locale } = useI18n()
@@ -61,13 +62,20 @@ const reviewTabs = computed(() => ['provider', 'client'].map(key => ({ key, labe
       <template #reviews>
         <ProfileReviews id="company-reviews" kind="companies" :slug="company.slug" :review-role="reviewRole" :title="t('agency.publicReviewsTitle')" :description="t('agency.publicReviewsHint')"><template #filters><ProfileTabs v-model="reviewRole" :items="reviewTabs" :label="t('reviews.title')" id-prefix="agency-review" /></template></ProfileReviews>
       </template>
-      <template #campaigns>
-        <section id="company-campaigns" class="agency-public-profile__campaigns"><header class="agency-public-profile__section-heading"><h2>{{ t('agency.campaignsTitle', { company: company.name }) }}</h2><LocalizedLink class="text-link" :to="{ name: 'campaigns' }">{{ t('companyProfile.allBriefs') }}<ExternalLink :size="14" aria-hidden="true" /></LocalizedLink></header><div v-if="campaigns.length" class="agency-public-profile__campaign-grid"><CampaignCard v-for="campaign in campaigns" :key="campaign.id" :campaign="campaign" :image-sizes="DIRECTORY_IMAGE_SIZES" /></div><StatusMessage v-else variant="empty">{{ t('agency.emptyCampaigns') }}</StatusMessage></section>
-      </template>
       <template #about>
         <section id="company-about" class="agency-public-profile__about"><h2>{{ t('agency.about') }}</h2><RichTextContent v-if="company.about" :html="company.about" /><div class="agency-public-profile__tags"><span v-for="industry in industries" :key="industry">{{ industry }}</span></div><dl class="agency-public-profile__facts"><div v-if="location"><MapPin :size="16" aria-hidden="true" /><div><dt>{{ t('auth.city') }}</dt><dd>{{ location }}</dd></div></div><div v-if="company.presentation?.languages?.length"><Languages :size="16" aria-hidden="true" /><div><dt>{{ t('studio.languages') }}</dt><dd>{{ company.presentation.languages.map(value => t(`studio.contentLanguages.${value}`)).join(', ') }}</dd></div></div><div v-if="availability"><CalendarCheck2 :size="16" aria-hidden="true" /><div><dt>{{ t('studio.availability') }}</dt><dd>{{ availability }}<template v-if="company.presentation.availability === 'from' && company.presentation.availableFrom"> · {{ formatDate(company.presentation.availableFrom) }}</template></dd></div></div></dl><div v-if="social.length" class="agency-public-profile__social" :aria-label="t('companyProfile.followUs')"><a v-for="link in social" :key="link.platform" :href="link.url" :aria-label="`${company.name} · ${link.platform}`" target="_blank" rel="noopener noreferrer"><SocialPlatformIcon :platform="link.platform" :size="17" /></a></div><a v-if="company.presentation?.introVideoUrl" class="text-link agency-public-profile__video" :href="company.presentation.introVideoUrl" target="_blank" rel="noopener noreferrer"><CirclePlay :size="17" aria-hidden="true" />{{ t('studio.introVideo') }}</a></section>
       </template>
     </AgencyProfileSections>
+    <section id="company-campaigns" class="agency-public-profile__campaigns">
+      <header class="agency-public-profile__section-heading">
+        <h2>{{ t('agency.campaignsTitle', { company: company.name }) }}</h2>
+        <LocalizedLink class="text-link" :to="{ name: 'campaigns' }">{{ t('companyProfile.allBriefs') }}<ExternalLink :size="14" aria-hidden="true" /></LocalizedLink>
+      </header>
+      <CardGrid v-if="campaigns.length" class="agency-public-profile__campaign-grid" kind="campaign" layout="directory">
+        <CampaignCard v-for="campaign in campaigns" :key="campaign.id" :campaign="campaign" :image-sizes="PROFILE_CAMPAIGN_IMAGE_SIZES" />
+      </CardGrid>
+      <StatusMessage v-else variant="empty">{{ t('agency.emptyCampaigns') }}</StatusMessage>
+    </section>
     <MarketplaceSafetyActions kind="company" :slug="company.slug" />
   </main>
 </template>

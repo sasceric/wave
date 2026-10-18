@@ -1,6 +1,9 @@
 // Match directory page widths, gaps and the four-column desktop / two-column mobile grid.
 export const DIRECTORY_IMAGE_SIZES = '(max-width: 420px) calc((100vw - 44px) / 2), (max-width: 600px) calc((100vw - 52px) / 2), (max-width: 760px) 274px, (max-width: 1224px) calc((100vw - 106px) / 4), 280px'
 
+// Full-width campaign rows below public brand and agency profiles.
+export const PROFILE_CAMPAIGN_IMAGE_SIZES = '(max-width: 420px) calc((100vw - 44px) / 2), (max-width: 600px) calc((100vw - 52px) / 2), (max-width: 760px) 274px, (max-width: 1000px) calc((100vw - 100px) / 3), (max-width: 1464px) calc((100vw - 136px) / 5), 266px'
+
 // Home cards scroll horizontally on phones and use four columns on desktop.
 export const HOME_IMAGE_SIZES = '(max-width: 420px) calc((100vw - 32px) * .88), (max-width: 760px) min(calc((100vw - 40px) * .84), 471px), (max-width: 1464px) calc((100vw - 106px) / 4), 340px'
 

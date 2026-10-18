@@ -23,7 +23,6 @@ const packages = computed(() => [...props.company.packages, { profileKey: 'negot
   <CreatorWorks v-if="company.portfolio.length" id="company-works" :items="company.portfolio" :name="company.name" layout="grid" />
   <slot name="reviews" />
   <ProfileFaqs v-if="company.faqs.length" id="company-faqs" :items="company.faqs" />
-  <slot name="campaigns" />
   </div>
   <aside class="agency-profile-layout__sidebar">
   <ProfilePackages id="company-packages" :items="packages" :title="t('agency.offeringTitle')" :can-request="canRequest" agency @request="emit('request', $event.isNegotiationOption ? null : $event.id)" />
