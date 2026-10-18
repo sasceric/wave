@@ -106,10 +106,13 @@ final class AdminCatalog
             $media = $kind === 'creators' ? 'avatarMedia' : 'logoMedia';
             $builder->leftJoin('item.' . $media, 'media')->addSelect('media')
                 ->leftJoin('item.owner', 'owner')->addSelect('owner')->andWhere('owner.id IS NULL OR owner.approved = :approved')->setParameter('approved', true);
+            if ($kind === 'companies') $builder->leftJoin('owner.creator', 'studio')->leftJoin('item.coverMedia', 'cover')->addSelect('studio', 'cover');
         } elseif ($kind === 'campaigns') {
             $builder->join('item.company', 'company')->addSelect('company');
         } else {
             $builder->leftJoin('item.creator', 'creator')->leftJoin('item.company', 'company')->addSelect('creator', 'company')
+                ->leftJoin('creator.avatarMedia', 'avatar')->leftJoin('company.logoMedia', 'logo')->addSelect('avatar', 'logo')
+                ->leftJoin('company.coverMedia', 'cover')->addSelect('cover')
                 ->andWhere('item.role IN (:roles)')->andWhere('item.admin = false')->andWhere('item.moderator = false')->andWhere('item.approved = false')
                 ->setParameter('roles', ['ROLE_CREATOR', 'ROLE_COMPANY']);
         }
@@ -120,7 +123,7 @@ final class AdminCatalog
     private function resource(object $item, string $locale, array $categoryLabels = []): array
     {
         if ($item instanceof Creator) {
-            return [
+            return AdminProfileResource::summary($item) + [
                 'id' => $item->getId(),
                 'slug' => $item->getSlug(),
                 'displayName' => $item->getDisplayName(),
@@ -132,9 +135,7 @@ final class AdminCatalog
         }
         if ($item instanceof Company) {
             $resource = CompanyResource::fromEntity($item, $locale, card: true, categoryLabels: $categoryLabels);
-            unset($resource['logoImage']);
-
-            return $resource;
+            return AdminProfileResource::summary($item) + $resource;
         }
         if ($item instanceof Campaign) {
             return [
@@ -150,7 +151,7 @@ final class AdminCatalog
             throw new \LogicException('Unsupported catalog entity.');
         }
 
-        return [
+        return AdminProfileResource::summary($item) + [
             'id' => $item->getId(),
             'email' => $item->getEmail(),
             'accountType' => $item->hasRole('ROLE_CREATOR') ? 'creator' : 'company',

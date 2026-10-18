@@ -23,6 +23,28 @@ The six localized email copies use `templates/emails/campaign_alert.html`, inclu
 
 ## Admin account funnel
 
+The Creators, Companies and Approvals tables also show each profile's current
+saved sections, with counts for networks, services, portfolio work, packages and
+FAQs where applicable. Required contact/identity, description and image fields
+are marked separately. These describe saved data, not approval eligibility or
+verification of self-reported metrics. A shared 96px thumbnail appears beside the
+name, with the existing image placeholder when absent or unavailable.
+
+The row action menu includes **Review submitted data**, public-profile preview,
+hide/show, approval where applicable, and deletion. Review fetches one private,
+admin-only detail response on demand, reusing the account serializers with private
+portfolio items included; passwords/tokens are never returned. The dialog clears
+on close/account change and ignores stale requests. Ownerless imports can be
+reviewed but cannot use account visibility controls. Agency participants remain
+excluded from the creator list.
+
+Admin visibility writes require the existing session, admin role and CSRF token.
+Hiding/showing changes only the account's existing visibility preference, so the
+usual indexing/visibility listeners apply. Showing requires approval, verified
+email and the required profile fields; it cannot approve an account implicitly.
+New approval still publishes the profile as documented above. No migration,
+new tracking writes or background service is required for these admin controls.
+
 The admin overview adds an account-type filter and a registration-cohort funnel for the selected 7/30/90-day period. A Doctrine flush listener records each reached milestone once: registered, email verified, required profile complete, approved, first creator application/company campaign. The display uses nested completed stages, so percentages always represent conversion from the previous stage in the same cohort.
 
 The filter includes All, Creators, Companies, Brands and Agencies. Companies

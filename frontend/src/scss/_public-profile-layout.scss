@@ -1,0 +1,4 @@
+@mixin columns {
+  grid-template-columns: minmax(0, 1fr) minmax(285px, .45fr);
+  gap: 24px;
+}

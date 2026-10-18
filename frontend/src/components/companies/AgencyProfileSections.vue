@@ -26,7 +26,7 @@ const packages = computed(() => [...props.company.packages, { profileKey: 'negot
   <slot name="campaigns" />
   </div>
   <aside class="agency-profile-layout__sidebar">
-  <ProfilePackages id="company-packages" :items="packages" :title="t('agency.offeringTitle')" :can-request="canRequest" agency compact @request="emit('request', $event.isNegotiationOption ? null : $event.id)" />
+  <ProfilePackages id="company-packages" :items="packages" :title="t('agency.offeringTitle')" :can-request="canRequest" agency @request="emit('request', $event.isNegotiationOption ? null : $event.id)" />
   <slot name="about" />
   </aside>
   </div>

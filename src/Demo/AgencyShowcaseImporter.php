@@ -40,7 +40,7 @@ final class AgencyShowcaseImporter
                 throw new \RuntimeException('The showcase identity was deleted or changed: '.$spec['key']);
             }
         }
-        foreach (['luma-logo', 'luma-cover', 'cosmetics', 'coffee', 'bag', 'amina', 'dn-logo'] as $asset) {
+        foreach (['luma-logo', 'luma-cover-v2', 'cosmetics', 'coffee', 'bag', 'amina', 'dn-logo'] as $asset) {
             if (!is_file($this->projectDir.'/resources/presentation-demo/'.$asset.'.webp')) throw new \RuntimeException('Missing showcase image: '.$asset);
         }
         return $this->data['accounts'];
@@ -87,7 +87,7 @@ final class AgencyShowcaseImporter
         $company->setServices($this->data['services']);
         $company->setSocialLinks($this->data['socialLinks']);
         $company->setLogoMedia(($this->media)($owner, 'company-logo', 'luma-logo'));
-        $company->setCoverMedia(($this->media)($owner, 'company-cover', 'luma-cover'));
+        $company->setCoverMedia(($this->media)($owner, 'company-cover', 'luma-cover-v2'));
         $this->em->flush();
         $studio = AgencyProfiles::ensure($owner, $this->em);
         $campaigns = [];

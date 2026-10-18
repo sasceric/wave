@@ -106,7 +106,7 @@ final class HomepageController
             return $admin;
         }
         try {
-            return new JsonResponse($catalog->page($request, $kind, $locale));
+            return new JsonResponse($catalog->page($request, $kind, $locale), headers: ['Cache-Control' => 'private, no-store']);
         } catch (\InvalidArgumentException) {
             return new JsonResponse(['error' => ApiMessages::get('invalid_request', $locale)], 400);
         }

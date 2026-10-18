@@ -6,7 +6,7 @@ namespace App\Tests\Command;
 
 use App\Api\CompanyResource;
 use App\Demo\PresentationDemoSeeder;
-use App\Entity\{Application as CampaignApplication, Campaign, CampaignReview, Creator, Media, User};
+use App\Entity\{Application as CampaignApplication, Campaign, CampaignReview, Creator, Media, MediaFolder, User};
 use App\Reviews\CollaborationFeedback;
 use App\Service\MediaStorage;
 use Doctrine\ORM\EntityManagerInterface;
@@ -14,6 +14,7 @@ use Doctrine\ORM\Tools\SchemaTool;
 use Symfony\Bundle\FrameworkBundle\Console\Application;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 use Symfony\Component\Console\Tester\CommandTester;
+use Symfony\Component\HttpFoundation\File\UploadedFile;
 
 final class SeedAgencyShowcaseCommandTest extends KernelTestCase
 {
@@ -98,5 +99,41 @@ final class SeedAgencyShowcaseCommandTest extends KernelTestCase
         self::assertSame(1, $em->getRepository(User::class)->count([]));
         self::assertSame(0, $em->getRepository(Media::class)->count([]));
         self::assertSame('real-password-untouched', $real->getPassword());
+    }
+
+    public function testCoverOnlyRefreshPreservesSavedContentAndCleansOnlyUnusedOldMedia(): void
+    {
+        $em = self::getContainer()->get(EntityManagerInterface::class);
+        $seeder = self::getContainer()->get(PresentationDemoSeeder::class);
+        $seeder->seedAgencyShowcase('LumaCoverTest123!');
+        $owner = $em->getRepository(User::class)->findOneBy(['presentationDemoKey' => 'wave-agency-luma']);
+        $company = $owner->getCompany();
+        $company->updateProfile('Custom Luma name', 'Marketing', null, '<p>Preserve this edited description.</p>');
+        $owner->setHideMyAccount(true);
+        $password = $owner->getPassword();
+        $portfolio = $owner->getCreator()->getPortfolio();
+        $storage = self::getContainer()->get(MediaStorage::class);
+        $folder = $em->getRepository(MediaFolder::class)->findOneBy(['slug' => 'company-cover']);
+        $stored = $storage->store(new UploadedFile(dirname(__DIR__, 2).'/resources/presentation-demo/luma-cover.webp', 'old-cover.webp', 'image/webp', null, true), $folder, $owner);
+        $old = new Media($folder, $owner, 'old-cover.webp', $stored['path'], $stored['mimeType'], $stored['fileSize']);
+        $old->setDimensions($stored['width'], $stored['height']);
+        $em->persist($old); $company->setCoverMedia($old); $em->flush();
+        $oldPath = $storage->absolutePath($old->getStoragePath());
+        $oldId = $old->getId();
+        $thumb = self::getContainer()->get(\App\Service\MediaThumbnails::class)->path($old, 480);
+        self::assertFileExists($thumb);
+        $seeder->refreshAgencyShowcaseCover(true);
+        self::assertSame($oldId, $company->getCoverMedia()->getId()); self::assertFileExists($oldPath);
+        $seeder->refreshAgencyShowcaseCover();
+        self::assertNotSame($oldId, $company->getCoverMedia()->getId());
+        self::assertSame(1920, $company->getCoverMedia()->getWidth()); self::assertSame(640, $company->getCoverMedia()->getHeight());
+        self::assertSame(160, CompanyResource::fromEntity($company, 'bs')['coverImage']['height']);
+        self::assertSame('Custom Luma name', $company->getName()); self::assertSame('<p>Preserve this edited description.</p>', $company->getAbout());
+        self::assertSame($portfolio, $owner->getCreator()->getPortfolio()); self::assertSame($password, $owner->getPassword()); self::assertTrue($owner->isHideMyAccount());
+        self::assertFalse($em->getConnection()->fetchOne('SELECT id FROM media WHERE id = ?', [$oldId]));
+        self::assertFileDoesNotExist($oldPath); self::assertFileDoesNotExist($thumb);
+        $id = $company->getCoverMedia()->getId(); $count = $em->getRepository(Media::class)->count([]);
+        $seeder->refreshAgencyShowcaseCover();
+        self::assertSame($id, $company->getCoverMedia()->getId()); self::assertSame($count, $em->getRepository(Media::class)->count([]));
     }
 }

@@ -2784,5 +2784,33 @@
     "publicServicesHint": "A clear scope, from preparation to delivery.",
     "publicReviewsTitle": "Collaborations and reviews",
     "publicReviewsHint": "Experiences from both sides of a collaboration."
+  },
+  "adminProfiles": {
+    "filledData": "Saved profile data",
+    "review": "Review submitted data",
+    "reviewHint": "Saved profile details, including items that are not publicly displayed.",
+    "visibility": "Visibility",
+    "visible": "Public",
+    "hidden": "Hidden",
+    "show": "Show profile",
+    "hide": "Hide profile",
+    "visibilitySaved": "Profile visibility updated.",
+    "showRequirements": "Publishing requires approval, verified email and the required profile details.",
+    "noAccount": "This profile has no manageable account.",
+    "filled": "Filled in",
+    "missing": "Not filled in",
+    "privateWorksHint": "All saved work is included, including private items.",
+    "sections": {
+      "contact": "Contact",
+      "identity": "Basics",
+      "image": "Photo / logo",
+      "description": "Description",
+      "networks": "Networks",
+      "cover": "Cover",
+      "services": "Services",
+      "works": "Work",
+      "packages": "Packages",
+      "faqs": "FAQ"
+    }
   }
 }

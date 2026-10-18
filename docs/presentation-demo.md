@@ -96,3 +96,20 @@ run; no password is logged. Ordinary deployment never runs this seed. For an
 intentional production run through GitHub Actions, manually dispatch **Deploy
 production** with `seed_agency_showcase` enabled. It deploys, runs preflight and
 imports the showcase using the existing production SSH credentials.
+
+To refresh only the existing Studio Luma cover, preserving all other saved data:
+
+```sh
+php8.4 bin/console app:seed-agency-showcase --env=prod --cover-only --dry-run
+php8.4 bin/console app:seed-agency-showcase --env=prod --cover-only
+```
+
+The versioned source is 1920×640, so the existing 96/320/480px thumbnail pipeline
+does not enlarge a very short panoramic thumbnail inside the listing card.
+Listing card dimensions and thumbnail configuration are unchanged. The agency
+profile displays a 340px-high cover and shares the creator sidebar grid sizing
+and package component styling. Cover-only refresh requires the existing marked
+demo agency, changes only its cover association, and schedules unused previous
+media/variants for deletion through the normal post-commit cleanup. Repeating it
+reuses the versioned media. The manual deployment input `refresh_agency_cover`
+runs only this operation; it defaults to false.

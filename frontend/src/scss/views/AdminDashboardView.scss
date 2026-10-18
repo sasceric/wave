@@ -408,3 +408,4 @@
 }
 
 .admin-financial-total { display: block; white-space: nowrap; }
+.admin-profile-visibility { display: inline-flex; padding: 4px 8px; border-radius: 20px; background: #f1eee8; color: var(--muted); font-size: 11px; white-space: nowrap; &.is-visible { color: var(--forest); background: #e4eee5; } }

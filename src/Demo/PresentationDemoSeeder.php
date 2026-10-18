@@ -57,12 +57,41 @@ final class PresentationDemoSeeder
         }
     }
 
+    /** Replace only the marked demo agency's cover; preserve all account/profile content. */
+    public function refreshAgencyShowcaseCover(bool $dryRun = false): array
+    {
+        $owner = $this->em->getRepository(User::class)->findOneBy(['presentationDemoKey' => 'wave-agency-luma']);
+        $company = $owner?->getCompany();
+        if ($owner === null || $company === null || $owner->isDeleted() || !$owner->isAgency() || $owner->hasRole('ROLE_ADMIN') || $owner->hasRole('ROLE_MODERATOR')) {
+            throw new \RuntimeException('The marked Studio Luma agency must already exist. No account was changed.');
+        }
+        if (!is_file($this->projectDir.'/resources/presentation-demo/luma-cover-v2.webp')) throw new \RuntimeException('Missing Studio Luma cover asset.');
+        $result = ['path' => '/kompanije/'.$company->getSlug(), 'width' => 1920, 'height' => 640];
+        if ($dryRun) return $result;
+        $this->createdPaths = [];
+        try {
+            $this->em->wrapInTransaction(function () use ($owner, $company): void {
+                $oldId = $company->getCoverMedia()?->getId();
+                $company->setCoverMedia($this->media($owner, 'company-cover', 'luma-cover-v2'));
+                $this->em->flush();
+                $this->unusedMedia->remove([$oldId]);
+            });
+        } catch (\Throwable $error) {
+            $this->cleanupCreatedMedia();
+            throw $error;
+        }
+        $this->storedFiles->run();
+        return $result;
+    }
+
     public function __construct(
         private readonly EntityManagerInterface $em,
         private readonly UserPasswordHasherInterface $hasher,
         private readonly PublicUrlSlugs $slugs,
         private readonly MediaStorage $storage,
         private readonly \App\Service\CampaignApplicationCounter $applicationCounter,
+        private readonly \App\Service\UnusedMediaCleanup $unusedMedia,
+        private readonly \App\Service\StoredFileCleanup $storedFiles,
         #[Autowire('%kernel.project_dir%')] private readonly string $projectDir,
     ) {}
 

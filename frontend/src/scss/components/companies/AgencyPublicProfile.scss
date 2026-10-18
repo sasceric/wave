@@ -1,8 +1,9 @@
 @use '../../breakpoints';
+@use '../../public-profile-layout';
 .agency-public-profile {
   padding-top: 24px; padding-bottom: 70px;
   &__breadcrumb { display: flex; flex-wrap: wrap; align-items: center; gap: 9px; margin-bottom: 18px; font-size: 12px; color: var(--muted); a { text-decoration: none; } .presentation-demo-badge { margin-left: auto; } }
-  &__cover { height: 150px; overflow: hidden; border-radius: 18px; background: var(--forest); img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: center; } }
+  &__cover { height: 340px; overflow: hidden; border-radius: 18px; background: var(--forest); img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: center; } }
   &__hero { display: grid; grid-template-columns: 104px minmax(0, 1fr) auto; gap: 23px; align-items: start; padding: 24px 0 27px; }
   &__logo { position: relative; width: 104px; height: 104px; margin-top: -49px; border: 5px solid var(--paper); border-radius: 22px; background: var(--paper); overflow: hidden; img, .wave-logo { width: 100%; height: 100%; object-fit: cover; } }
   &__identity { min-width: 0; .eyebrow { font-size: 11px; margin: 0 0 7px; color: var(--muted); } h1 { display: flex; align-items: center; gap: 8px; margin: 0; font-size: 40px; line-height: 1.12; } }
@@ -12,7 +13,7 @@
   &__availability { display: flex; justify-content: center; align-items: center; gap: 6px; font-size: 11px; color: var(--muted); &.is-available::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: #3f7758; } }
   > .profile-section-nav { margin-bottom: 26px; }
   [id^='company-'] { scroll-margin-top: 100px; }
-  .agency-profile-layout { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 26px; align-items: start; margin: 0; &__main { display: grid; min-width: 0; gap: 30px; } &__sidebar { display: grid; min-width: 0; gap: 19px; } }
+  .agency-profile-layout { display: grid; @include public-profile-layout.columns; align-items: start; margin: 0; &__main { display: grid; min-width: 0; gap: 30px; } &__sidebar { display: grid; min-width: 0; gap: 16px; } }
   &__section-heading { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 9px; margin-bottom: 14px; h2 { font-size: 28px; margin: 0; color: var(--forest); } p { flex-basis: 100%; margin: 0; font-size: 12px; color: var(--muted); } .text-link { font-size: 12px; } }
   .agency-services__grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; gap: 13px; }
   .profile-reviews { margin: 0; }
@@ -25,10 +26,10 @@
   &__campaign-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
   > .marketplace-safety-actions { justify-content: flex-end; margin-top: 25px; }
 }
-@include breakpoints.down(1000px) { .agency-public-profile { .agency-profile-layout { grid-template-columns: minmax(0, 1fr) 260px; gap: 20px; } &__hero { grid-template-columns: 85px minmax(0, 1fr); gap: 17px; } &__logo { width: 85px; height: 85px; } &__actions { grid-column: 2; justify-self: start; min-width: 0; .agency-contact-actions { display: flex; flex-wrap: wrap; } } &__availability { justify-content: start; } } }
+@include breakpoints.down(1000px) { .agency-public-profile { &__hero { grid-template-columns: 85px minmax(0, 1fr); gap: 17px; } &__logo { width: 85px; height: 85px; } &__actions { grid-column: 2; justify-self: start; min-width: 0; .agency-contact-actions { display: flex; flex-wrap: wrap; } } &__availability { justify-content: start; } } }
 @include breakpoints.down(760px) {
   .agency-public-profile {
-    padding-top: 18px; &__cover { height: 100px; border-radius: 14px; } &__hero { grid-template-columns: 65px minmax(0, 1fr); gap: 12px; padding: 20px 0; } &__logo { width: 65px; height: 65px; margin-top: -39px; border-width: 4px; border-radius: 16px; } &__identity h1 { font-size: 32px; } &__identity .eyebrow { font-size: 10px; } &__intro { font-size: 12px; margin: 8px 0 11px; } &__inline { font-size: 11px; gap: 7px 12px; } &__actions { grid-column: 1/-1; width: 100%; justify-self: stretch; margin-top: 6px; .agency-contact-actions { display: grid; grid-template-columns: 1fr 1fr; .button { min-height: 44px; padding: 9px 7px; font-size: 11px; flex: initial; } } } &__availability { justify-content: center; }
+    padding-top: 18px; &__cover { border-radius: 14px; } &__hero { grid-template-columns: 65px minmax(0, 1fr); gap: 12px; padding: 20px 0; } &__logo { width: 65px; height: 65px; margin-top: -39px; border-width: 4px; border-radius: 16px; } &__identity h1 { font-size: 32px; } &__identity .eyebrow { font-size: 10px; } &__intro { font-size: 12px; margin: 8px 0 11px; } &__inline { font-size: 11px; gap: 7px 12px; } &__actions { grid-column: 1/-1; width: 100%; justify-self: stretch; margin-top: 6px; .agency-contact-actions { display: grid; grid-template-columns: 1fr 1fr; .button { min-height: 44px; padding: 9px 7px; font-size: 11px; flex: initial; } } } &__availability { justify-content: center; }
     > .profile-section-nav { gap: 15px; justify-content: space-between; margin-bottom: 23px; a { font-size: 11px; } }
     .agency-profile-layout { display: flex; flex-direction: column; gap: 27px; &__main, &__sidebar { display: contents; } &__main > *, &__sidebar > * { width: 100%; min-width: 0; } #company-services { order: 0; } #company-works { order: 1; } #company-packages { order: 2; } #company-reviews { order: 3; } #company-faqs { order: 4; } #company-campaigns { order: 5; } #company-about { order: 6; } }
     .agency-services__grid { grid-template-columns: minmax(0, 1fr); }

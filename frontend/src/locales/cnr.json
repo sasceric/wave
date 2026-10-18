@@ -2785,5 +2785,33 @@
     "publicServicesHint": "Jasan obim usluge, od pripreme do isporuke.",
     "publicReviewsTitle": "Saradnje i recenzije",
     "publicReviewsHint": "Iskustva s obje strane saradnje."
+  },
+  "adminProfiles": {
+    "filledData": "Popunjeni podaci",
+    "review": "Pregledaj podatke",
+    "reviewHint": "Sačuvani podaci profila, uključujući stavke koje nijesu javno prikazane.",
+    "visibility": "Vidljivost",
+    "visible": "Javan",
+    "hidden": "Skriven",
+    "show": "Prikaži profil",
+    "hide": "Sakrij profil",
+    "visibilitySaved": "Vidljivost profila je promijenjena.",
+    "showRequirements": "Za javni prikaz potrebni su odobrenje, potvrđen e-mail i obavezni podaci.",
+    "noAccount": "Profil nema nalog kojim se može upravljati.",
+    "filled": "Popunjeno",
+    "missing": "Nije popunjeno",
+    "privateWorksHint": "Prikazani su svi sačuvani radovi, uključujući privatne.",
+    "sections": {
+      "contact": "Kontakt",
+      "identity": "Osnovno",
+      "image": "Slika / logo",
+      "description": "Opis",
+      "networks": "Mreže",
+      "cover": "Naslovna",
+      "services": "Usluge",
+      "works": "Radovi",
+      "packages": "Paketi",
+      "faqs": "FAQ"
+    }
   }
 }

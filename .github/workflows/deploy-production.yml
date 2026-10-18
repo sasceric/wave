@@ -10,6 +10,10 @@ on:
         description: 'After deployment, upsert the clearly marked Studio Luma agency showcase'
         type: boolean
         default: false
+      refresh_agency_cover:
+        description: 'Refresh only the existing Studio Luma demo cover'
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -28,8 +32,9 @@ jobs:
         uses: appleboy/ssh-action@v1.2.2
         env:
           WAVE_SEED_AGENCY: ${{ inputs.seed_agency_showcase && '1' || '0' }}
+          WAVE_REFRESH_AGENCY_COVER: ${{ inputs.refresh_agency_cover && '1' || '0' }}
         with:
-          envs: WAVE_SEED_AGENCY
+          envs: WAVE_SEED_AGENCY,WAVE_REFRESH_AGENCY_COVER
           host: ${{ secrets.PRODUCTION_SSH_HOST }}
           username: ${{ secrets.PRODUCTION_SSH_USER }}
           key: ${{ secrets.PRODUCTION_SSH_PRIVATE_KEY }}
@@ -107,4 +112,8 @@ jobs:
             if [ "$WAVE_SEED_AGENCY" = "1" ]; then
               as_web env APP_ENV=prod APP_DEBUG=0 "$deploy_php" bin/console app:seed-agency-showcase --dry-run --no-interaction
               as_web env APP_ENV=prod APP_DEBUG=0 "$deploy_php" bin/console app:seed-agency-showcase --no-interaction
+            fi
+            if [ "$WAVE_REFRESH_AGENCY_COVER" = "1" ]; then
+              as_web env APP_ENV=prod APP_DEBUG=0 "$deploy_php" bin/console app:seed-agency-showcase --cover-only --dry-run --no-interaction
+              as_web env APP_ENV=prod APP_DEBUG=0 "$deploy_php" bin/console app:seed-agency-showcase --cover-only --no-interaction
             fi

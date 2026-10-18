@@ -6,6 +6,8 @@ import {
   Check,
   Building2,
   Eye,
+  EyeOff,
+  ClipboardList,
   Megaphone,
   Trash2,
   Users,
@@ -16,6 +18,9 @@ import AdminMultiSelect from '../components/admin/AdminMultiSelect.vue'
 import AdminDataTable from '../components/admin/AdminDataTable.vue'
 import AdminEmailTemplates from '../components/admin/AdminEmailTemplates.vue'
 import AdminRowActions from '../components/admin/AdminRowActions.vue'
+import AdminProfileIdentity from '../components/admin/AdminProfileIdentity.vue'
+import AdminProfileCompletion from '../components/admin/AdminProfileCompletion.vue'
+import AdminProfileReview from '../components/admin/AdminProfileReview.vue'
 import AccountSidebar from '../components/account/AccountSidebar.vue'
 import ConfirmationModal from '../components/shared/ConfirmationModal.vue'
 import LocalizedLink from '../components/shared/LocalizedLink.vue'
@@ -35,6 +40,8 @@ const deleting = ref(false)
 const approving = ref(false)
 const error = ref('')
 const notice = ref('')
+const reviewRequest = ref(null)
+const visibilitySaving = ref(false)
 const deleteRequest = ref(null)
 const bulkApprovalRequest = ref(null)
 const query = ref(typeof route.query?.q === 'string' ? route.query.q : '')
@@ -116,6 +123,26 @@ const bulkApprovalConfirmationMessage = computed(() => {
 
 
 const currentRows = computed(() => listRows.value)
+const isProfileList = computed(() => ['creators', 'companies', 'registrations'].includes(section.value))
+function reviewProfile(row) { reviewRequest.value = { kind: section.value, id: row.id } }
+function profileRoute(row) {
+  const slug = row.profileSlug || row.slug
+  if (!slug) return null
+  return { name: section.value === 'campaigns' ? 'campaign-detail' : row.accountType === 'company' ? 'company-profile' : 'creator-profile', params: { slug } }
+}
+async function changeVisibility(row) {
+  if (visibilitySaving.value || !row.canChangeVisibility || (!row.publicVisible && !row.canShowProfile)) return
+  const kind = section.value
+  visibilitySaving.value = true; error.value = ''; notice.value = ''
+  try {
+    const { data } = await apiRequest(`/admin/catalog/${kind}/${row.id}/visibility`, { method: 'PUT', body: { hideMyAccount: row.publicVisible } })
+    if (disposed || section.value !== kind) return
+    const current = listRows.value.find(item => item.id === row.id)
+    if (current) Object.assign(current, data)
+    notice.value = t('adminProfiles.visibilitySaved')
+  } catch (cause) { if (!disposed && section.value === kind) error.value = cause.message || t('adminDashboard.saveError') }
+  finally { visibilitySaving.value = false }
+}
 
 const tableColumns = computed(() => {
   const columns = {
@@ -125,10 +152,14 @@ const tableColumns = computed(() => {
       { key: 'email', label: t('adminDashboard.email'), sortable: true },
       { key: 'accountType', label: t('adminDashboard.accountType'), sortable: true },
       { key: 'emailVerified', label: t('adminDashboard.emailVerification'), sortable: true },
+      { key: 'completion', label: t('adminProfiles.filledData') },
+      { key: 'publicVisible', label: t('adminProfiles.visibility') },
     ],
     creators: [
       { key: 'displayName', label: t('adminDashboard.creator'), sortable: true },
       { key: 'category', label: t('adminDashboard.category'), sortable: true },
+      { key: 'completion', label: t('adminProfiles.filledData') },
+      { key: 'publicVisible', label: t('adminProfiles.visibility') },
       { key: 'city', label: t('auth.city'), sortable: true },
       { key: 'rating', label: t('reviews.rating') },
       { key: 'financialTotals', label: t('reviews.earnings') },
@@ -136,6 +167,8 @@ const tableColumns = computed(() => {
     companies: [
       { key: 'name', label: t('adminDashboard.company'), sortable: true },
       { key: 'industry', label: t('adminDashboard.industry'), sortable: true },
+      { key: 'completion', label: t('adminProfiles.filledData') },
+      { key: 'publicVisible', label: t('adminProfiles.visibility') },
       { key: 'verified', label: t('adminDashboard.verification'), sortable: true },
       { key: 'rating', label: t('reviews.rating') },
       { key: 'financialTotals', label: t('reviews.spending') },
@@ -323,6 +356,8 @@ async function confirmDelete() {
 }
 
 async function approveRegistration(registration) {
+  if (approving.value) return
+  approving.value = true
   error.value = ''
   notice.value = ''
   try {
@@ -331,6 +366,8 @@ async function approveRegistration(registration) {
     notice.value = t('adminDashboard.registrationApproved')
   } catch (cause) {
     error.value = cause.message || t('adminDashboard.saveError')
+  } finally {
+    approving.value = false
   }
 }
 
@@ -381,6 +418,7 @@ async function confirmBulkApproval() {
 }
 
 watch([locale, section], () => {
+  reviewRequest.value = null
   query.value = typeof route.query?.q === 'string' ? route.query.q : ''
   statusFilter.value = 'all'
   listVersion++
@@ -559,6 +597,10 @@ onMounted(loadDashboard)
                 </select>
               </label>
             </template>
+            <template #cell-displayName="{ row }"><AdminProfileIdentity :row="row" /></template>
+            <template #cell-name="{ row }"><AdminProfileIdentity :row="row" /></template>
+            <template #cell-completion="{ row }"><AdminProfileCompletion :row="row" @review="reviewProfile(row)" /></template>
+            <template #cell-publicVisible="{ row }"><span class="admin-profile-visibility" :class="{ 'is-visible': row.publicVisible }">{{ t(row.publicVisible ? 'adminProfiles.visible' : row.accountId && !row.approved ? 'adminDashboard.pending' : 'adminProfiles.hidden') }}</span></template>
             <template #cell-rating="{ value }"><RatingSummary :rating="value" /></template>
             <template #cell-financialTotals="{ value }"><span v-for="total in value" :key="total.currency" class="admin-financial-total">{{ formatMoney(total.amount, total.currency) }}</span><span v-if="!value?.length">0</span></template>
             <template #cell-emailVerified="{ value }">
@@ -570,62 +612,18 @@ onMounted(loadDashboard)
             <template #cell-verified="{ value }">{{ value ? t('adminDashboard.verified') : t('adminDashboard.unverified') }}</template>
             <template #actions="{ row }">
               <AdminRowActions :label="t('adminDashboard.rowActions', { name: row.displayName ?? row.name ?? row.title ?? row.email })">
-                <LocalizedLink
-                  v-if="section === 'registrations' && row.profileSlug"
-                  class="admin-row-actions__item"
-                  role="menuitem"
-                  :to="{
-                    name: row.accountType === 'creator' ? 'creator-profile' : 'company-profile',
-                    params: { slug: row.profileSlug },
-                  }"
-                >
-                  <Eye :size="15" aria-hidden="true" />
-                  {{ t('adminDashboard.previewProfile') }}
-                </LocalizedLink>
-                <LocalizedLink
-                  v-if="section === 'creators'"
-                  class="admin-row-actions__item"
-                  role="menuitem"
-                  :to="{ name: 'creator-profile', params: { slug: row.slug } }"
-                >
-                  <Eye :size="15" aria-hidden="true" />
-                  {{ t('adminDashboard.view') }}
-                </LocalizedLink>
-                <LocalizedLink
-                  v-else-if="section === 'companies'"
-                  class="admin-row-actions__item"
-                  role="menuitem"
-                  :to="{ name: 'company-profile', params: { slug: row.slug } }"
-                >
-                  <Eye :size="15" aria-hidden="true" />
-                  {{ t('adminDashboard.view') }}
-                </LocalizedLink>
-                <LocalizedLink
-                  v-else-if="section === 'campaigns'"
-                  class="admin-row-actions__item"
-                  role="menuitem"
-                  :to="{ name: 'campaign-detail', params: { slug: row.slug } }"
-                >
-                  <Eye :size="15" aria-hidden="true" />
-                  {{ t('adminDashboard.view') }}
-                </LocalizedLink>
-                <button
-                  v-else-if="section === 'registrations' && !row.approved && row.emailVerified && row.profileComplete"
-                  class="admin-row-actions__item"
-                  type="button"
-                  role="menuitem"
-                  @click="approveRegistration(row)"
-                >
-                  <Check :size="15" aria-hidden="true" />
-                  {{ t('adminDashboard.approve') }}
+                <button v-if="isProfileList" class="admin-row-actions__item" type="button" role="menuitem" @click="reviewProfile(row)">
+                  <ClipboardList :size="15" aria-hidden="true" />{{ t('adminProfiles.review') }}
                 </button>
-                <span
-                  v-else-if="section === 'registrations' && !row.approved && !row.profileComplete"
-                  class="admin-row-actions__item"
-                  aria-disabled="true"
-                >
-                  {{ t('account.profileIncomplete') }}
-                </span>
+                <LocalizedLink v-if="profileRoute(row)" class="admin-row-actions__item" role="menuitem" :to="profileRoute(row)">
+                  <Eye :size="15" aria-hidden="true" />{{ t(section === 'registrations' ? 'adminDashboard.previewProfile' : 'adminDashboard.view') }}
+                </LocalizedLink>
+                <button v-if="section === 'registrations' && !row.approved" class="admin-row-actions__item" type="button" role="menuitem" :disabled="approving || !row.emailVerified || !row.profileComplete" :title="!row.emailVerified || !row.profileComplete ? t('adminProfiles.showRequirements') : undefined" @click="approveRegistration(row)">
+                  <Check :size="15" aria-hidden="true" />{{ t('adminDashboard.approve') }}
+                </button>
+                <button v-if="isProfileList" class="admin-row-actions__item" type="button" role="menuitem" :disabled="visibilitySaving || !row.canChangeVisibility || (!row.publicVisible && !row.canShowProfile)" :title="!row.canChangeVisibility ? t('adminProfiles.noAccount') : !row.publicVisible && !row.canShowProfile ? t('adminProfiles.showRequirements') : undefined" @click="changeVisibility(row)">
+                  <EyeOff v-if="row.publicVisible" :size="15" aria-hidden="true" /><Eye v-else :size="15" aria-hidden="true" />{{ t(row.publicVisible ? 'adminProfiles.hide' : 'adminProfiles.show') }}
+                </button>
                 <button
                   class="admin-row-actions__item admin-row-actions__item--danger"
                   type="button"
@@ -641,6 +639,7 @@ onMounted(loadDashboard)
         </section>
       </main>
     </div>
+    <AdminProfileReview :open="reviewRequest !== null" :kind="reviewRequest?.kind || section" :id="reviewRequest?.id || null" @update:open="!$event && (reviewRequest = null)" />
     <ConfirmationModal
       :open="deleteRequest !== null"
       :title="t('adminDashboard.confirmDeleteTitle')"

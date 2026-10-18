@@ -19,12 +19,19 @@ final class SeedAgencyShowcaseCommand extends Command
     protected function configure(): void
     {
         $this->addOption('dry-run', null, InputOption::VALUE_NONE, 'Check identities and assets without changing data.');
+        $this->addOption('cover-only', null, InputOption::VALUE_NONE, 'Refresh only the existing Studio Luma cover and remove its unused previous image.');
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $io = new SymfonyStyle($input, $output);
         try {
+            if ($input->getOption('cover-only')) {
+                $result = $this->seeder->refreshAgencyShowcaseCover((bool) $input->getOption('dry-run'));
+                $io->table(['Public path', 'Width', 'Height'], [[$result['path'], $result['width'], $result['height']]]);
+                $io->success($input->getOption('dry-run') ? 'Cover preflight passed. No data changed.' : 'Studio Luma cover refreshed. Other profile and account data preserved.');
+                return Command::SUCCESS;
+            }
             $accounts = $this->seeder->preflightAgencyShowcase();
             if ($input->getOption('dry-run')) {
                 $io->table(['Identity', 'Name', 'Kind'], array_map(static fn (array $row): array => [$row['key'], $row['name'], $row['type']], $accounts));

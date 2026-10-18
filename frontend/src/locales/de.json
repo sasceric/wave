@@ -2784,5 +2784,33 @@
     "publicServicesHint": "Ein klarer Leistungsumfang, von der Vorbereitung bis zur Lieferung.",
     "publicReviewsTitle": "Zusammenarbeit und Bewertungen",
     "publicReviewsHint": "Erfahrungen von beiden Seiten der Zusammenarbeit."
+  },
+  "adminProfiles": {
+    "filledData": "Ausgefüllte Profildaten",
+    "review": "Profildaten prüfen",
+    "reviewHint": "Gespeicherte Profildaten, einschließlich nicht öffentlich angezeigter Inhalte.",
+    "visibility": "Sichtbarkeit",
+    "visible": "Öffentlich",
+    "hidden": "Verborgen",
+    "show": "Profil anzeigen",
+    "hide": "Profil verbergen",
+    "visibilitySaved": "Sichtbarkeit des Profils geändert.",
+    "showRequirements": "Für die Veröffentlichung sind Freigabe, bestätigte E-Mail und die Pflichtangaben erforderlich.",
+    "noAccount": "Dieses Profil hat kein verwaltbares Konto.",
+    "filled": "Ausgefüllt",
+    "missing": "Nicht ausgefüllt",
+    "privateWorksHint": "Alle gespeicherten Arbeiten werden angezeigt, auch private Inhalte.",
+    "sections": {
+      "contact": "Kontakt",
+      "identity": "Grunddaten",
+      "image": "Foto / Logo",
+      "description": "Beschreibung",
+      "networks": "Netzwerke",
+      "cover": "Titelbild",
+      "services": "Leistungen",
+      "works": "Arbeiten",
+      "packages": "Pakete",
+      "faqs": "FAQ"
+    }
   }
 }
