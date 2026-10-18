@@ -1,5 +1,4 @@
 <script setup>
-import PublicUrlAction from './PublicUrlAction.vue'
 import ReviewAction from '../reviews/ReviewAction.vue'
 import { computed, nextTick, ref, watch } from 'vue'
 import { ArrowRight, CalendarDays, MapPin, Megaphone, MessageCircle, Users } from '@lucide/vue'
@@ -20,7 +19,7 @@ const props = defineProps({
   campaign: { type: Object, required: true },
   applications: { type: Array, default: () => [] },
 })
-const emit = defineEmits(['edit', 'view-application', 'url-changed'])
+const emit = defineEmits(['edit', 'view-application'])
 const { t, locale } = useI18n()
 const query = ref('')
 const page = ref(1)
@@ -59,6 +58,7 @@ function statusLabel(application) {
   if (['shortlisted', 'offer_declined'].includes(application.status)) return t('hiring.discussing')
   if (application.status === 'invited') return t('hiring.invited')
   if (application.status === 'invitation_declined') return t('hiring.invitationDeclined')
+  if (application.offer?.workStatus && application.status === 'accepted' && props.campaign.status !== 'finished') return t(`work.${application.offer.workStatus}`)
   if (application.status === 'accepted') return t(props.campaign.status === 'finished' ? 'account.finished' : 'hiring.hired')
   return t(`account.${application.status === 'offer_declined' ? 'offerDeclined' : application.status}`)
 }
@@ -76,7 +76,6 @@ function chatRoute(application) {
         <div class="company-campaign-detail__content">
           <p class="company-campaign-detail__category">{{ campaignAreas.join(', ') }}</p>
           <h1>{{ campaign.title }}</h1>
-          <PublicUrlAction :profile="campaign" kind="campaign" @changed="emit('url-changed', $event)" />
           <p class="company-campaign-detail__summary">{{ campaign.summary }}</p>
           <RichTextContent :html="campaign.description" />
           <dl class="company-campaign-detail__meta">
@@ -123,7 +122,7 @@ function chatRoute(application) {
               <td><span class="creator-offers__mobile-label">{{ t('safety.date') }}</span><span v-if="application.createdAt" class="creator-offers__deadline"><CalendarDays :size="17" aria-hidden="true" /><time :datetime="application.createdAt">{{ formatDate(application.createdAt) }}</time></span><small v-if="application.createdAt" class="company-campaign-applicants__time">{{ timeFormatter.ago(application.createdAt, Date.now()) }}</small></td>
               <td><span class="creator-offer__status" :class="`creator-offer__status--${statusGroup(application)}`"><i :class="`activity-dot activity-dot--${statusGroup(application)}`" aria-hidden="true"></i>{{ statusLabel(application) }}</span></td>
               <td class="creator-offers__action-cell"><div class="creator-offers__actions">
-                <ReviewAction v-if="campaign.status === 'finished' && application.offer?.status === 'accepted' && !application.readOnly" :application-id="application.id" />
+                <ReviewAction v-if="(campaign.status === 'finished' || application.offer?.workCompletedAt) && application.offer?.status === 'accepted' && !application.readOnly" :application-id="application.id" />
                 <LocalizedLink v-if="application.conversationId" class="button button--outline" :to="chatRoute(application)"><MessageCircle :size="16" aria-hidden="true" />{{ t('account.activityChat') }}</LocalizedLink>
                 <button class="button button--dark" type="button" :aria-label="`${t('account.viewApplication')}: ${application.creator.displayName}`" @click="emit('view-application', application)">{{ t(application.source === 'invitation' ? 'hiring.viewCreator' : 'account.viewApplication') }}<ArrowRight :size="16" aria-hidden="true" /></button>
               </div></td>

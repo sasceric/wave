@@ -24,7 +24,7 @@ final class CampaignCancellation
             $this->em->lock($campaign, LockMode::PESSIMISTIC_WRITE);
             $this->em->refresh($campaign);
             $this->em->refresh($offer);
-            if ($campaign->getStatus() === 'finished') throw new HttpException(409, 'campaign_financial_history_locked');
+            if ($campaign->getStatus() === 'finished' || $offer->getWorkCompletedAt() !== null) throw new HttpException(409, 'campaign_financial_history_locked');
             if ($offer->getStatus() === 'cancelled') return [];
             if ($offer->getStatus() !== 'accepted') throw new HttpException(409, 'collaboration_not_active');
             $this->validateReason($reason);
@@ -40,6 +40,9 @@ final class CampaignCancellation
             $this->em->refresh($campaign);
             if ($campaign->getStatus() === 'finished') throw new HttpException(409, 'campaign_financial_history_locked');
             if ($campaign->getStatus() === 'cancelled') return [];
+            foreach ($this->em->getRepository(Application::class)->findBy(['campaign' => $campaign]) as $application) {
+                if ($application->getOffer()?->getWorkCompletedAt() !== null) throw new HttpException(409, 'campaign_financial_history_locked');
+            }
             $this->validateReason($reason);
             $reason = trim($reason);
             $events = [];

@@ -16,11 +16,12 @@ final class CampaignConversationResource
 
         return [
             'id' => $conversation->getId(),
+            'reopening' => $conversation->getReopening(),
             'readOnly' => $campaign->getStatus() === 'cancelled' || AccountDeletion::sharedHistoryDeleted($creator, $company),
             'campaign' => CampaignResource::fromEntity($campaign, $locale, hiredCount: $hiredCount),
             'creator' => CreatorResource::fromEntity($creator, $locale),
             'company' => CompanyResource::fromEntity($company, $locale),
-            'lastMessage' => '' === $conversation->getLastMessagePreview() ? null : $conversation->getLastMessagePreview(),
+            'lastMessage' => '' === $conversation->getLastMessagePreview() ? null : \App\Localization\DisplayDate::text($conversation->getLastMessagePreview()),
             'lastMessageAt' => $conversation->getUpdatedAt()->format(DATE_ATOM),
             'lastMessageSenderId' => '' === $conversation->getLastMessagePreview()
                 ? null

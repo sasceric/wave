@@ -41,7 +41,7 @@ Legacy offers with no deadline remain readable and can still be answered.
 Declining an offer returns the application to discussion (`shortlisted`) and leaves both
 participants able to message. The company may send another offer. Each revision has its
 own ID, amount, deadline, response and message; old declined offers cannot be accepted or
-changed. Pending, accepted and canceled offers cannot be replaced. Only the current offer
+changed. Pending and accepted offers cannot be replaced. Cancelled offers require the reopening consent flow below before a new offer can be sent. Only the current offer
 is returned in the account offer list and application resource; historical snapshots remain
 in the chat. Financial totals continue counting accepted offers only.
 
@@ -154,3 +154,89 @@ and revised offers, stale-offer rejection, confirmed hiring totals, mandatory ca
 reasons and read-only history. It repeats negotiation/hiring/cancellation for a direct
 inquiry through the same shared UI, and checks calendar text/required-marker spacing and
 sidebar count sizing. This is Chrome plus the Safari engine, not automation of native Safari.
+
+
+## Work review and completion (2026-10-19)
+
+Closing a campaign stops new applications and offers. Existing accepted hires, including
+agency providers, continue to chat, submit work and receive change requests while it is
+closed. Unhired conversations remain read-only. Finished/cancelled campaigns and cancelled
+engagements retain read-only chat history.
+
+The shared `CampaignWorkAction` sidebar reuses `FormModal`, `StatusMessage` and
+`ReviewAction`. Work progress is separate from the accepted financial offer:
+
+- The provider submits work for review: `in_progress` / `changes_requested` → `submitted`.
+- The company requests changes with a required 10–2,000 character explanation. The
+  explanation is stored on the current work state and snapshotted in the chat timeline.
+  Resubmission clears the current explanation, preserving the old event.
+- The company confirms completion only after the provider submits (or resubmits) work. Completion is permanent and opens the existing rating form. The provider
+  can also rate the completed engagement. These are distinct from the work approval step.
+- Each action creates a private bell/push notification and trusted chat event for the
+  other side, linked to the existing conversation. Message bodies/previews display dates
+  as `31.12.2026`; API date fields remain ISO. Older stored previews are formatted on read,
+  and already queued push bodies are formatted after account-isolation checks.
+- Once every accepted hire is completed or individually cancelled, the company can finish
+  the campaign from the sidebar or existing campaign actions. Both the status endpoint
+  and full campaign editor reject premature finalization. This is an explicit company
+  action, not automatic completion when a provider submits work.
+
+POST `/api/me/offers/{id}/work` accepts `action=submit|changes|complete` and a `reason` for
+changes. Provider/client ownership, verified email, approval, blocks, deleted participants,
+latest-offer identity and terminal states are checked. Campaign locks serialize this
+against hiring, cancellation and finalization. Duplicate submissions/completions do not
+create extra messages or notifications. Completed work cannot be cancelled; a campaign
+with completed work must resolve its remaining engagements before finalizing it.
+
+Migration `Version20261018230000` adds offer work status, submission/completion timestamps
+and changes reason, and backfills accepted work on already finished campaigns. It has no
+lossy rollback. Apply it before serving the API. It is applied locally; no push or deployment
+was performed. Offer status stays `accepted`, preserving hiring counts and negotiated terms.
+Private totals recognize completed engagements, and active counts exclude them. Company
+completed-campaign counts still require overall campaign completion.
+
+
+Validation includes the full backend suite, a transaction-local PostgreSQL migration
+backfill test, frontend state/permission/draft regressions, PHPStan, ESLint and production
+build. Separate Chrome/WebKit sessions with real Symfony and Mercure verify both sides'
+chat, required change requests, resubmission, completion, actual star-review submissions
+and final campaign completion. The browser test also asserts dotted dates in visible
+message bodies while offer/event API date fields remain ISO.
+
+
+## Direct work completion and inbox order
+
+Direct collaborations reuse `CampaignWorkAction` and the `CollaborationWork` model trait.
+POST `/api/me/inquiry-offers/{id}/work` accepts `submit`, `changes` (required reason), or
+`complete`. A creator or agency must submit first; the client can then confirm or ask
+for revisions. Resubmission is required after revisions. Trusted messages notify the
+other participant through the existing private realtime and push channels. Completed
+work cannot be cancelled and no longer counts as active. Direct collaborations do not
+create campaign rating records. Migration `Version20261019010000` adds their work fields.
+
+Inbox lists and header date groups sort by the latest message descending. Loading direct
+history returns the latest message's preview and timestamp, and delayed responses cannot
+replace a newer live preview with the inquiry creation date.
+
+## Reopening a cancelled campaign discussion
+
+The company sidebar offers **Reopen discussion** on an open campaign with a cancelled
+current hire. POST `/api/me/conversations/{id}/reopen` accepts `action=request` and a
+10–1000 character message. The creator or agency receives a bell notification, push
+notification and trusted timeline message, then chooses `accept` or `reject` with the
+current integer `version`. The company cannot respond for the provider. Pending requests
+cannot be duplicated; stale replies cannot accept a newer request. Declining leaves chat
+read-only; the company may send another request. Blocked/deleted accounts and closed,
+finished or cancelled campaigns cannot reopen discussion. Reopen the campaign first if
+applications were closed and a new hire is needed.
+
+Acceptance clears only the application's current-offer pointer and returns its status
+to `shortlisted`. The cancelled offer, reason, amount and timeline remain historical.
+The reopened discussion counts zero hires and zero new earnings. The company must use
+the usual **Hire** action to send fresh terms, and the provider must accept those terms.
+Historical cancellations do not make a newly reopened chat read-only. Migration
+`Version20261019020000` stores consent state and a request version on the conversation;
+request and response history remains in trusted messages. Campaign row locks serialize
+reopening with hiring, cancellation and status changes.
+
+The campaign detail no longer displays the URL-editing control or raw public URL.

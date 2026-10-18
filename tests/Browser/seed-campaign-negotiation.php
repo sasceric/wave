@@ -6,6 +6,9 @@ use App\Entity\Campaign;
 use App\Entity\Company;
 use App\Entity\Creator;
 use App\Entity\User;
+use App\Entity\Application;
+use App\Entity\Offer;
+use App\Entity\CampaignConversation;
 use App\Kernel;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Tools\SchemaTool;
@@ -57,6 +60,12 @@ $campaign = new Campaign(
     new DateTimeImmutable('+30 days'), new DateTimeImmutable('-1 day'), $company, countryCode: 'BA',
 );
 $em->persist($campaign);
+$workCampaign = new Campaign('browser-work-review', 'Browser work review', 'A hired creator submits and revises work.', '<p>Deliver the agreed video and photographs.</p>', 'Travel', ['Instagram'], ['Video'], 300, 800, 'Sarajevo', 1, new DateTimeImmutable('+30 days'), new DateTimeImmutable(), $company, countryCode: 'BA');
+$workApplication = new Application($workCampaign, $creator, 'A confirmed collaboration for work review.');
+$workOffer = new Offer($workApplication, 400, 'Agreed work for the browser review test.', new DateTimeImmutable('+14 days'));
+$workOffer->respond('accepted');
+$workConversation = new CampaignConversation($workCampaign, $creator, $companyUser);
+foreach ([$workCampaign, $workApplication, $workOffer, $workConversation] as $entity) $em->persist($entity);
 $em->flush();
-echo json_encode(['campaignSlug' => $campaign->getSlug(), 'companyId' => $companyUser->getId(), 'creatorId' => $creatorUser->getId()], JSON_THROW_ON_ERROR), PHP_EOL;
+echo json_encode(['campaignSlug' => $campaign->getSlug(), 'companyId' => $companyUser->getId(), 'creatorId' => $creatorUser->getId(), 'workCampaignId' => $workCampaign->getId(), 'workConversationId' => $workConversation->getId(), 'workOfferId' => $workOffer->getId()], JSON_THROW_ON_ERROR), PHP_EOL;
 $kernel->shutdown();

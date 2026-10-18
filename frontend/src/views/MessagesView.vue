@@ -1,6 +1,8 @@
 <script setup>
 import { isProviderInThread } from '../lib/collaborationRole'
 import CampaignCancellationAction from '../components/account/CampaignCancellationAction.vue'
+import DiscussionReopeningAction from '../components/account/DiscussionReopeningAction.vue'
+import CampaignWorkAction from '../components/account/CampaignWorkAction.vue'
 import CampaignHireAction from '../components/account/CampaignHireAction.vue'
 import RichTextContent from '../components/shared/RichTextContent.vue'
 import FormModal from '../components/shared/FormModal.vue'
@@ -36,6 +38,7 @@ import { apiGet, apiRequest, formatDate, formatMoney } from '../lib/api'
 import { localizedRouteName } from '../routePaths'
 import { areChatMessagesGrouped, createChatTimeFormatter, groupChatMessages } from '../lib/chatTime'
 import { campaignPlace } from '../lib/marketplace'
+import { compareInboxThreads } from '../lib/inboxGroups'
 
 const route = useRoute()
 const router = useRouter()
@@ -194,8 +197,7 @@ const threads = computed(() => [
       lastMessageAt: inquiry.lastMessageAt || inquiry.createdAt,
       unreadCount: inquiry.unreadCount || 0,
     })),
-].sort((first, second) => new Date(second.lastMessageAt) - new Date(first.lastMessageAt)
-  || first.threadType.localeCompare(second.threadType) || second.id - first.id))
+].sort(compareInboxThreads))
 
 const filteredConversations = computed(() => {
   const query = conversationQuery.value.trim().toLocaleLowerCase()
@@ -261,7 +263,7 @@ const currentDisplayName = computed(() => (
   || ''
 ))
 const collaborationCancelled = computed(() => selectedCampaign.value?.status === 'cancelled' || selectedConversation.value?.cancelled || selectedThread.value?.engagement?.offer?.status === 'cancelled')
-const campaignChatClosed = computed(() => collaborationCancelled.value || selectedThread.value?.readOnly || ['closed', 'finished'].includes(selectedCampaign.value?.status))
+const campaignChatClosed = computed(() => collaborationCancelled.value || selectedThread.value?.readOnly || selectedCampaign.value?.status === 'finished' || (selectedCampaign.value?.status === 'closed' && selectedThread.value?.engagement?.offer?.status !== 'accepted'))
 const campaignChatNotice = computed(() => collaborationCancelled.value ? 'hiring.cancelledNotice' : selectedThread.value?.blocked ? 'safety.blockedHistory' : selectedThread.value?.readOnly ? 'campaignChat.deletedAccountNotice' : selectedCampaign.value?.status === 'finished' ? 'campaignChat.finishedNotice' : 'campaignChat.closedNotice')
 const canSend = computed(() => Boolean(
   !sending.value
@@ -909,6 +911,10 @@ function upsertThread(collection, thread, type) {
     threadType: type,
     campaign: { ...existing?.campaign, ...thread.campaign },
   }
+  // A delayed history response must not replace a more recent live message preview.
+  if (existing && Date.parse(existing.lastMessageAt) > Date.parse(thread.lastMessageAt)) {
+    for (const key of ['lastMessage', 'lastMessageAt', 'lastMessageSenderId']) merged[key] = existing[key]
+  }
   if (existingIndex === -1) {
     collection.value.push(merged)
   } else {
@@ -1278,8 +1284,9 @@ function messageTimeDescription(value) {
                     :class="{ 'campaign-messages__message--mine': isMessageMine(message) }"
                   >
                     <template v-if="message.event">
-                      <p>{{ t(`hiring.${message.event.context === 'inquiry' ? 'directTimeline' : 'timeline'}.${message.event.type}`, { campaign: message.event.campaignTitle, amount: formatMoney(message.event.amount, message.event.currency) }) }}</p>
+                      <p>{{ t(`hiring.${message.event.context === 'inquiry' ? 'directTimeline' : 'timeline'}.${message.event.type}`, { campaign: message.event.campaignTitle, amount: message.event.amount == null ? '' : formatMoney(message.event.amount, message.event.currency) }) }}</p>
                       <p v-if="message.event.dueDate">{{ t('hiring.deliveryDue', { date: formatDate(message.event.dueDate) }) }}</p>
+                      <p v-if="message.event.workChangesReason">{{ t('work.reason') }}: {{ message.event.workChangesReason }}</p>
                       <p v-if="message.event.cancellationReason">{{ t('hiring.cancellationReason') }}: {{ message.event.cancellationReason }}</p>
                       <p v-if="message.event.message">{{ message.event.message }}</p>
                       <LocalizedLink v-if="message.event.campaignSlug && !selectedThread?.readOnly" class="campaign-messages__event-link" :to="{ name: !selectedProvider ? 'account-campaign-detail' : 'campaign-detail', params: { slug: message.event.campaignSlug } }">{{ t('campaignChat.viewCampaign') }} →</LocalizedLink>
@@ -1510,7 +1517,9 @@ function messageTimeDescription(value) {
               </LocalizedLink>
               <p v-if="selectedConversation?.engagement?.canHire && selectedConversation.engagement.offer?.status === 'rejected'" class="campaign-messages__summary">{{ t('hiring.declineHint') }}</p>
               <CampaignHireAction button-class="campaign-messages__campaign-link" show-arrow v-if="selectedConversation?.engagement?.canHire && !selectedThread?.readOnly" :conversation-id="selectedConversation.id" :campaign="selectedCampaign" :creator-name="selectedConversation.creator.displayName" @offered="refreshEngagement" />
-              <CampaignCancellationAction full-width v-if="selectedConversation?.engagement?.offer?.status === 'accepted' && !selectedThread?.readOnly && selectedCampaign.status !== 'finished'" :offer-id="selectedConversation.engagement.offer.id" @cancelled="refreshEngagement" />
+              <DiscussionReopeningAction v-if="selectedConversation?.reopening && selectedCampaign.status === 'open' && !selectedThread?.blocked && (selectedConversation.engagement?.canRequestReopening || selectedConversation.reopening.status === 'pending')" :conversation-id="selectedConversation.id" :reopening="selectedConversation.reopening" :provider="Boolean(selectedProvider)" :can-request="Boolean(selectedConversation.engagement?.canRequestReopening)" @changed="refreshEngagement" />
+              <CampaignWorkAction v-if="selectedConversation?.engagement?.offer?.status === 'accepted'" :offer="selectedConversation.engagement.offer" :campaign-id="selectedCampaign.id" :can-finish-campaign="Boolean(selectedConversation.engagement.canFinishCampaign)" :provider="Boolean(selectedProvider)" :disabled="Boolean(selectedThread?.readOnly)" :campaign-finished="selectedCampaign.status === 'finished'" @changed="refreshEngagement" />
+              <CampaignCancellationAction full-width v-if="selectedConversation?.engagement?.offer?.status === 'accepted' && !selectedThread?.readOnly && selectedCampaign.status !== 'finished' && !selectedConversation.engagement.offer.workCompletedAt" :offer-id="selectedConversation.engagement.offer.id" @cancelled="refreshEngagement" />
             </div>
           </article>
         </div>
@@ -1548,7 +1557,8 @@ function messageTimeDescription(value) {
                 <div><dt>{{ t('hiring.dueDate') }}</dt><dd>{{ formatDate(selectedInquiry.engagement.offer.dueDate) }}</dd></div>
               </dl>
               <CampaignHireAction v-if="selectedInquiry.engagement?.canHire && !selectedInquiry.readOnly" :inquiry-id="selectedInquiry.id" :campaign="{ title: selectedInquiry.packageTitle || t('campaignChat.directInquiry'), currency: selectedInquiry.currency || 'BAM' }" :creator-name="selectedInquiry.creator.displayName" button-class="campaign-messages__campaign-link" show-arrow @offered="refreshEngagement" />
-              <CampaignCancellationAction v-if="selectedInquiry.engagement?.offer?.status === 'accepted' && !selectedInquiry.readOnly" full-width inquiry :offer-id="selectedInquiry.engagement.offer.id" @cancelled="refreshEngagement" />
+              <CampaignWorkAction v-if="selectedInquiry.engagement?.offer?.status === 'accepted'" inquiry :offer="selectedInquiry.engagement.offer" :provider="Boolean(selectedProvider)" :disabled="Boolean(selectedInquiry.readOnly)" @changed="refreshEngagement" />
+              <CampaignCancellationAction v-if="selectedInquiry.engagement?.offer?.status === 'accepted' && !selectedInquiry.readOnly && !selectedInquiry.engagement.offer.workCompletedAt" full-width inquiry :offer-id="selectedInquiry.engagement.offer.id" @cancelled="refreshEngagement" />
             </div>
           </article>
         </div>

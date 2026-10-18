@@ -93,7 +93,7 @@ final class CampaignMessagingController
         if (!$campaign instanceof Campaign) {
             return new JsonResponse(['error' => ApiMessages::get('campaign_not_found', $locale)], 404);
         }
-        if (in_array($campaign->getStatus(), ['closed', 'finished', 'cancelled'], true)) {
+        if (in_array($campaign->getStatus(), ['finished', 'cancelled'], true)) {
             return new JsonResponse(['error' => ApiMessages::get($campaign->getStatus() === 'finished' ? 'campaign_chat_finished' : 'campaign_chat_closed', $locale)], 409);
         }
         $data = JsonPayload::fromRequest($request);
@@ -114,6 +114,10 @@ final class CampaignMessagingController
             || !in_array($application->getStatus(), ['shortlisted', 'offer_declined', 'offered', 'accepted'], true)
         ) {
             return new JsonResponse(['error' => ApiMessages::get('creator_not_found', $locale)], 404);
+        }
+
+        if (!\App\Marketplace\CampaignWork::chatOpen($campaign, $application->getOffer())) {
+            return new JsonResponse(['error' => ApiMessages::get('campaign_chat_closed', $locale)], 409);
         }
 
         return $this->sendCompanyMessage(
@@ -158,6 +162,15 @@ final class CampaignMessagingController
         $application = $entityManager->getRepository(Application::class)->findOneBy(['campaign' => $conversation->getCampaign(), 'creator' => $conversation->getCreator()]);
         $invitation = $entityManager->getRepository(CampaignInvitation::class)->findOneBy(['campaign' => $conversation->getCampaign(), 'creator' => $conversation->getCreator(), 'status' => 'accepted']);
         $engagement = [
+            'canRequestReopening' => $user->getId() === $conversation->getCampaign()->getCompany()->getOwner()?->getId()
+                && $conversation->getCampaign()->getStatus() === 'open'
+                && $application?->getOffer()?->getStatus() === 'cancelled'
+                && $conversation->getReopening()['status'] !== 'pending'
+                && !AccountDeletion::sharedHistoryDeleted($conversation->getCreator(), $conversation->getCampaign()->getCompany()),
+            'canFinishCampaign' => $user->getId() === $conversation->getCampaign()->getCompany()->getOwner()?->getId()
+                && in_array($conversation->getCampaign()->getStatus(), ['open', 'closed'], true)
+                && !\App\Marketplace\CampaignWork::hasUnfinishedHires($entityManager, $conversation->getCampaign())
+                && !AccountDeletion::sharedHistoryDeleted($conversation->getCreator(), $conversation->getCampaign()->getCompany()),
             'canHire' => $user->getCompany()?->getId() === $conversation->getCampaign()->getCompany()->getId()
                 && $conversation->getCampaign()->getStatus() === 'open'
                 && CampaignHiredCounts::forCampaign($entityManager, $conversation->getCampaign()) < $conversation->getCampaign()->getCreatorCount()
@@ -175,7 +188,7 @@ final class CampaignMessagingController
                 $this->unreadCount($entityManager, $conversation, $user),
                 $locale,
                 CampaignHiredCounts::forCampaign($entityManager, $conversation->getCampaign()),
-            ), ['engagement' => $engagement, 'cancelled' => $application?->getOffer()?->getStatus() === 'cancelled' || $conversation->getCampaign()->getStatus() === 'cancelled', 'readOnly' => $application?->getOffer()?->getStatus() === 'cancelled' || $conversation->getCampaign()->getStatus() === 'cancelled' || AccountDeletion::sharedHistoryDeleted($conversation->getCreator(), $conversation->getCampaign()->getCompany())]),
+            ), ['chatOpen' => \App\Marketplace\CampaignWork::chatOpen($conversation->getCampaign(), $application?->getOffer()), 'engagement' => $engagement, 'cancelled' => $application?->getOffer()?->getStatus() === 'cancelled' || $conversation->getCampaign()->getStatus() === 'cancelled', 'readOnly' => $application?->getOffer()?->getStatus() === 'cancelled' || $conversation->getCampaign()->getStatus() === 'cancelled' || AccountDeletion::sharedHistoryDeleted($conversation->getCreator(), $conversation->getCampaign()->getCompany())]),
         ]);
     }
 
@@ -248,10 +261,10 @@ final class CampaignMessagingController
         if (AccountDeletion::sharedHistoryDeleted($conversation->getCreator(), $conversation->getCampaign()->getCompany())) {
             return new JsonResponse(['error' => ApiMessages::get('account_deleted_history', $locale)], 409);
         }
-        if (in_array($conversation->getCampaign()->getStatus(), ['closed', 'finished', 'cancelled'], true)) {
+        $engagement = $entityManager->getRepository(Application::class)->findOneBy(['campaign' => $conversation->getCampaign(), 'creator' => $conversation->getCreator()]);
+        if (!\App\Marketplace\CampaignWork::chatOpen($conversation->getCampaign(), $engagement?->getOffer())) {
             return new JsonResponse(['error' => ApiMessages::get($conversation->getCampaign()->getStatus() === 'cancelled' ? 'campaign_cancelled' : ($conversation->getCampaign()->getStatus() === 'finished' ? 'campaign_chat_finished' : 'campaign_chat_closed'), $locale)], 409);
         }
-        $engagement = $entityManager->getRepository(Application::class)->findOneBy(['campaign' => $conversation->getCampaign(), 'creator' => $conversation->getCreator()]);
         if ($conversation->getCampaign()->getStatus() === 'cancelled' || $engagement?->getOffer()?->getStatus() === 'cancelled') {
             return new JsonResponse(['error' => ApiMessages::get('collaboration_cancelled', $locale)], 409);
         }

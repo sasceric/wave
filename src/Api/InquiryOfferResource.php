@@ -15,6 +15,10 @@ final class InquiryOfferResource
             'status' => $offer->getStatus(), 'createdAt' => $offer->getCreatedAt()->format(DATE_ATOM),
             'respondedAt' => $offer->getRespondedAt()?->format(DATE_ATOM),
             'cancellationReason' => $offer->getCancellationReason(),
+            'workStatus' => $offer->getWorkStatus(),
+            'workSubmittedAt' => $offer->getWorkSubmittedAt()?->format(DATE_ATOM),
+            'workCompletedAt' => $offer->getWorkCompletedAt()?->format(DATE_ATOM),
+            'workChangesReason' => $offer->getWorkChangesReason(),
         ];
     }
 }

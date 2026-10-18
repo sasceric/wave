@@ -1203,6 +1203,7 @@ final class MarketplaceWorkflowTest extends WebTestCase
                 if ($status !== 'offered') {
                     $offer->respond($status === 'accepted' ? 'accepted' : 'rejected');
                 }
+                if ($status === 'accepted') $offer->completeWork();
             }
             $application->setStatus($status);
             $em->persist($user);

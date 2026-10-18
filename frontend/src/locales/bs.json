@@ -371,7 +371,13 @@
       "support_ticket_updated": "{actor} je ažurirao tiket.",
       "review_received": "{actor} je ostavio/la recenziju za {campaign}. Ostavi i svoju recenziju.",
       "review_published": "{actor} je ostavio/la recenziju za {campaign}. Recenzije su sada objavljene.",
-      "campaign_cancelled": "{actor} je otkazao/la kampanju {campaign}."
+      "campaign_cancelled": "{actor} je otkazao/la kampanju {campaign}.",
+      "work_submitted": "Spremno za pregled · {campaign}",
+      "work_changes_requested": "Potrebne su izmjene · {campaign}",
+      "work_completed": "Rad je završen · {campaign}",
+      "discussion_reopening_requested": "{actor}: Zatraženo je ponovno otvaranje razgovora za kampanju {campaign}.",
+      "discussion_reopening_accepted": "{actor}: Razgovor za kampanju {campaign} je ponovo otvoren. Za angažman je potrebna nova ponuda.",
+      "discussion_reopening_rejected": "{actor}: Zahtjev za ponovno otvaranje razgovora za kampanju {campaign} je odbijen."
     },
     "closedNotice": "Kampanja je zatvorena. Više nije moguće slati poruke u ovom razgovoru.",
     "finishedNotice": "Kampanja je završena. Više nije moguće slati poruke u ovom razgovoru.",
@@ -2221,7 +2227,7 @@
   "reviews": {
     "title": "Recenzije",
     "action": "Recenzija saradnje",
-    "policy": "Ocijeni saradnju u roku od 14 dana nakon završetka kampanje. Recenzije su javne kada ih obje strane pošalju ili nakon isteka roka. Poslana recenzija se ne može mijenjati.",
+    "policy": "Ocijeni saradnju u roku od 14 dana nakon potvrđenog završetka svog angažmana. Recenzije su javne kada ih obje strane pošalju ili nakon isteka roka. Poslana recenzija se ne može mijenjati.",
     "rating": "Prosječna ocjena",
     "comment": "Tvoje iskustvo",
     "placeholder": "Opiši saradnju (najmanje 10 znakova)",
@@ -2231,7 +2237,7 @@
     "yours": "Tvoja recenzija",
     "received": "Primljena recenzija",
     "waiting": "Recenzija je sačuvana. Obje recenzije će biti vidljive kada druga strana pošalje svoju ili kada istekne rok.",
-    "unavailable": "Recenziju je moguće poslati samo za završenu kampanju s prihvaćenom ponudom, u roku od 14 dana.",
+    "unavailable": "Recenziju je moguće poslati za završen angažman s prihvaćenom ponudom, u roku od 14 dana.",
     "submit": "Pošalji recenziju",
     "close": "Zatvori",
     "completed": "{count} završenih kampanja",
@@ -2242,12 +2248,12 @@
     "retry": "Pokušaj ponovo",
     "earnings": "Ukupna zarada",
     "spending": "Ukupna potrošnja",
-    "financialHint": "Privatno · ugovoreni iznosi završenih kampanja. Wave ne potvrđuje uplate.",
+    "financialHint": "Privatno · ugovoreni iznosi završenih angažmana. Wave ne potvrđuje uplate.",
     "score": "Tvoja ocjena",
-    "finishHint": "Završetak kampanje je trajan. Učesnici s prihvaćenom ponudom mogu ostaviti recenziju u roku od 14 dana; ugovoreni iznosi se dodaju privatnim ukupnim iznosima.",
+    "finishHint": "Završetak kampanje je trajan i moguć tek kada su svi angažmani završeni ili otkazani. Rokovi za recenzije pojedinačnih angažmana ostaju isti.",
     "closeCampaign": "Zatvori kampanju",
     "finishCampaign": "Završi kampanju",
-    "closeCampaignHint": "Zatvaranjem kampanje zaustavljaš nove prijave. Postojeća historija saradnje ostaje dostupna.",
+    "closeCampaignHint": "Zatvaranjem kampanje zaustavljaš nove prijave. Angažovani kreatori i agencije nastavljaju rad i razgovor.",
     "showing": "Prikazano {from}–{to} od {total} recenzija"
   },
   "passwordChange": {
@@ -2381,7 +2387,13 @@
       "offer_sent": "Poslana je ponuda za kampanju {campaign}: {amount}.",
       "hired": "Angažman za kampanju {campaign} je potvrđen: {amount}.",
       "offer_declined": "Ponuda za kampanju {campaign} je odbijena: {amount}.",
-      "cancelled": "Angažman za kampanju {campaign} je otkazan. Dogovoreni iznos: {amount} (ne računa se u zaradu ili potrošnju)."
+      "cancelled": "Angažman za kampanju {campaign} je otkazan. Dogovoreni iznos: {amount} (ne računa se u zaradu ili potrošnju).",
+      "work_submitted": "Spremno za pregled · {campaign}",
+      "work_changes_requested": "Potrebne su izmjene · {campaign}",
+      "work_completed": "Rad je završen · {campaign}",
+      "discussion_reopening_requested": "Zatraženo je ponovno otvaranje razgovora za kampanju {campaign}.",
+      "discussion_reopening_accepted": "Razgovor za kampanju {campaign} je ponovo otvoren. Za angažman je potrebna nova ponuda.",
+      "discussion_reopening_rejected": "Zahtjev za ponovno otvaranje razgovora za kampanju {campaign} je odbijen."
     },
     "invitationDetails": "Poziv za kampanju",
     "invitationMessage": "Poruka u pozivu",
@@ -2411,7 +2423,10 @@
       "offer_sent": "Poslana je ponuda za saradnju: {amount}.",
       "hired": "Angažman je potvrđen: {amount}.",
       "offer_declined": "Ponuda za saradnju je odbijena: {amount}.",
-      "cancelled": "Angažman za kampanju {campaign} je otkazan. Dogovoreni iznos: {amount} (ne računa se u zaradu ili potrošnju)."
+      "cancelled": "Angažman za kampanju {campaign} je otkazan. Dogovoreni iznos: {amount} (ne računa se u zaradu ili potrošnju).",
+      "work_submitted": "Spremno za pregled",
+      "work_changes_requested": "Potrebne su izmjene",
+      "work_completed": "Rad je završen"
     }
   },
   "overview": {
@@ -2841,5 +2856,33 @@
     "mobilePage": "Stranica · mobitel",
     "desktopCard": "Kartica · računar",
     "mobileCard": "Kartica · mobitel"
+  },
+  "work": {
+    "label": "Status rada",
+    "in_progress": "Rad je u toku",
+    "submitted": "Spremno za pregled",
+    "changes_requested": "Potrebne su izmjene",
+    "completed": "Rad je završen",
+    "submit": "Označi kao završeno",
+    "changes": "Zatraži izmjene",
+    "complete": "Potvrdi završetak",
+    "submitHint": "Obavijesti kompaniju da je dogovoreni rad spreman za pregled.",
+    "changesHint": "Objasni šta treba popraviti. Razlog će biti poslan u razgovor i druga strana će dobiti obavještenje.",
+    "completeHint": "Potvrdi da je dogovoreni rad završen. Nakon potvrde možeš ostaviti recenziju. Završetak se ne može poništiti.",
+    "reason": "Šta treba popraviti?",
+    "reasonHint": "Opiši potrebne izmjene (10–2000 znakova).",
+    "directCompleteHint": "Potvrdi da je dogovoreni rad završen. Potvrda je trajna."
+  },
+  "discussion": {
+    "title": "Ponovno otvaranje razgovora",
+    "request": "Ponovo otvori razgovor",
+    "hint": "Prihvatanje ponovo otvara samo razgovor. Za angažman je potrebna nova ponuda kompanije i tvoje prihvatanje.",
+    "pending": "Zahtjev je poslan. Čekamo odgovor kreatora ili agencije.",
+    "invitation": "Kompanija želi ponovo otvoriti razgovor.",
+    "accept": "Prihvati razgovor",
+    "reject": "Odbij zahtjev",
+    "message": "Poruka",
+    "send": "Pošalji zahtjev",
+    "defaultMessage": "Želimo vam dati novu priliku i ponovo razgovarati o saradnji."
   }
 }

@@ -345,7 +345,8 @@ final class CreatorInquiryController
             'data' => array_map(static fn (InquiryMessage $message): array => self::messageResource($message, $inquiry), $page['messages']),
             'meta' => $page['meta'],
             'readReceipt' => $page['readReceipt'],
-            'inquiry' => CreatorInquiryResource::fromEntity($inquiry, $user, locale: $locale),
+            'inquiry' => CreatorInquiryResource::fromEntity($inquiry, $user,
+                $entityManager->getRepository(InquiryMessage::class)->findOneBy(['inquiry' => $inquiry], ['createdAt' => 'DESC', 'id' => 'DESC']), $locale),
         ]);
     }
 
@@ -466,7 +467,7 @@ final class CreatorInquiryController
             'senderId' => $sender->getId(),
             'readAt' => $message->getReadAt()?->format(\DateTimeInterface::ATOM),
             'senderRole' => $sender->getId() === $creatorOwnerId ? 'creator' : 'company',
-            'body' => $message->getBody(),
+            'body' => \App\Localization\DisplayDate::text($message->getBody()),
             'event' => $message->getEvent(),
             'createdAt' => $message->getCreatedAt()->format(\DateTimeInterface::ATOM),
         ];

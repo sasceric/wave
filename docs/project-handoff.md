@@ -534,10 +534,12 @@ remain accessible. The shared details dialog and three-dot menu retain access to
 the brief. Saved campaigns use the existing cards in a four-column desktop grid,
 two columns on tablets and one on mobile, inside the matching account card.
 
-Closed campaigns disable the messages composer and display a localized notice.
-The campaign messaging API also rejects POST messages and company conversation
-starts with HTTP 409 while retaining readable chat history. Explicit campaign
-`status=closed` or `status=finished` blocks chat; passing the application deadline does not end an
+Closed campaigns disable chat only for participants without an accepted hire.
+Hired creators/agencies and the client company continue chatting and reviewing work.
+Finished/cancelled campaigns remain read-only. `CampaignWorkAction` shares the account
+modals and rating form; see `docs/campaign-hiring.md` for individual submission, required
+change requests, completion and the overall campaign finalization gate. Explicit campaign
+`status=finished` or `status=cancelled` blocks chat; closing applications does not stop accepted hires. Passing the application deadline does not end an
 existing collaboration. No database migration or additional configuration is needed.
 
 ### Finished campaigns and creator declines
@@ -725,3 +727,10 @@ suggestions (10 per category, exact totals) and the localized `SearchView` (25 p
 page, including All); SQL directory filtering remains for normal directory pages.
 New search and legacy directory `?q=` URLs are noindex/follow. MEILISEARCH_ENABLED=false uses database search by default; true selects the indexed
 backend after service, scoped keys, migration and initial import are configured.
+
+Direct inquiry work uses the same `CollaborationWork` entity trait and
+`CampaignWorkAction` as campaign hires (`InquiryHiringController::work`). Providers must
+submit before client review. Campaign discussion reopening lives in
+`CampaignDiscussionController` and `DiscussionReopeningAction`: explicit provider
+consent restores discussion, never the cancelled hire. See `docs/campaign-hiring.md`.
+Migrations `20261019010000` and `20261019020000` must run before serving these changes.

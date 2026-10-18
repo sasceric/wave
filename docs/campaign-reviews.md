@@ -1,11 +1,14 @@
 # Campaign reviews and private collaboration totals
 
 Creators and companies can leave one review per accepted campaign collaboration
-when the company marks the campaign `finished`. Shortlisting or accepting an
+when the company confirms that individual engagement is completed. Legacy accepted work
+on finished campaigns remains eligible. Shortlisting or accepting an
 invitation does not qualify: the application must have an accepted offer.
 
 Feedback consists of 1–5 whole stars and 10–2,000 characters of plain text.
-The window lasts 14 days from `Campaign.finishedAt`. Reviews are immutable and
+The window lasts 14 days from `Offer.workCompletedAt`, falling back to
+`Campaign.finishedAt` for legacy finished work. Finishing the overall campaign later does
+not restart an individual review window. Reviews are immutable and
 remain hidden until both participants submit or the window expires. Both the
 public list and average use the same publication condition, so an unpublished
 score cannot be inferred from the average or review count. Publication is evaluated
@@ -28,7 +31,7 @@ job-success score, feedback revision, or payment processing.
 - The private account summary shows creator earnings or company spending. The
   admin creator/company tables also show ratings and financial totals. Public
   profile and directory responses never contain financial totals.
-- Totals are sums of accepted offer amounts on finished campaigns, grouped by
+- Totals are sums of accepted offer amounts on completed engagements (or legacy finished campaigns), grouped by
   currency. They are agreed amounts, not proof of payment or a payment ledger;
   no currency conversion is performed. Wave does not collect or verify payments.
 - The account summary includes a password-change modal requiring current password,
@@ -83,4 +86,4 @@ reset token revocation and session continuity. Migration tests execute on both
 SQLite and isolated PostgreSQL. Frontend tests cover draft handling, duplicate
 submissions, stale account responses and password field cleanup.
 
-Review submission creates a private notification for the other participant. The notification opens the exact collaboration’s review dialog from the company campaign detail or creator applications page; it does not include the hidden score or comment. Once the counterpart has already reviewed, the notification explains that both reviews are public. Migration `Version20261013120000` adds this collaboration link. Company campaign actions offer Close and Finish with confirmation; closing stops applications, while finishing starts the review deadline permanently. Applicant biographies use the shared sanitized rich-text renderer.
+Review submission creates a private notification for the other participant. The notification opens the exact collaboration’s review dialog from the company campaign detail or creator applications page; it does not include the hidden score or comment. Once the counterpart has already reviewed, the notification explains that both reviews are public. Migration `Version20261013120000` adds this collaboration link. Company campaign actions offer Close and Finish with confirmation; closing stops applications but preserves work/chat for hired participants. Confirming an individual engagement starts its review deadline; finishing the overall campaign requires all hires to be completed or cancelled. Applicant biographies use the shared sanitized rich-text renderer.

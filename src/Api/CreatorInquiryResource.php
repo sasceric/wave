@@ -50,7 +50,7 @@ final class CreatorInquiryResource
             'status' => $inquiry->getStatus(),
             'createdAt' => $inquiry->getCreatedAt()->format(\DateTimeInterface::ATOM),
             'respondedAt' => $inquiry->getRespondedAt()?->format(\DateTimeInterface::ATOM),
-            'lastMessage' => $lastMessage?->getBody() ?? $inquiry->getMessage(),
+            'lastMessage' => \App\Localization\DisplayDate::text($lastMessage?->getBody() ?? $inquiry->getMessage()),
             'lastMessageAt' => $lastMessage?->getCreatedAt()->format(\DateTimeInterface::ATOM)
                 ?? $inquiry->getCreatedAt()->format(\DateTimeInterface::ATOM),
             'canChat' => $inquiry->getStatus() === 'accepted',

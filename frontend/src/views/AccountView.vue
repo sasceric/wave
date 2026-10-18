@@ -1429,7 +1429,6 @@ onMounted(loadDashboard)
           :applications="selectedCampaignApplications"
           @edit="setCampaignForm"
           @view-application="openApplicant"
-          @url-changed="result => router.replace({ name: localizedRouteName('account-campaign-detail', locale), params: { slug: result.slug } })"
         />
         <StatusMessage v-else-if="campaignPage === 'detail'" variant="empty">
           {{ t('account.noCampaigns') }}

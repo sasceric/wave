@@ -55,7 +55,7 @@ function activityLabel(thread, group) {
 }
 function refreshFromRealtime(event) {
   const update = event.detail
-  if (update?.type === 'chat_message' || update?.type === 'chat_read' || update?.notificationType === 'chat_message') void loadThreads()
+  if (update?.type === 'chat_message' || update?.type === 'chat_read' || ['chat_message', 'work_submitted', 'work_changes_requested', 'work_completed'].includes(update?.notificationType)) void loadThreads()
 }
 watch(() => [props.user.id, locale.value], () => {
   threads.value = []

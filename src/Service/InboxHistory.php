@@ -42,7 +42,7 @@ final class InboxHistory
                     company.id AS company_id, company.slug AS company_slug, company.name AS company_name,
                     company.logo_url, company.logo_media_id,
                     (creator_owner.deleted_at IS NOT NULL) AS creator_deleted, (company_owner.deleted_at IS NOT NULL) AS company_deleted,
-                    (campaign.status = 'cancelled' OR EXISTS (SELECT 1 FROM campaign_offer co JOIN campaign_application ca ON ca.id = co.application_id WHERE ca.campaign_id = campaign.id AND ca.creator_id = creator.id AND co.status = 'cancelled')) AS cancelled,
+                    (campaign.status = 'cancelled' OR EXISTS (SELECT 1 FROM campaign_offer co JOIN campaign_application ca ON ca.id = co.application_id WHERE ca.campaign_id = campaign.id AND ca.creator_id = creator.id AND co.id = ca.offer_id AND co.status = 'cancelled')) AS cancelled,
                     (SELECT COUNT(*) FROM campaign_message message WHERE message.conversation_id = thread.id
                         AND message.sender_id <> :viewer AND message.read_at IS NULL AND NOT EXISTS (SELECT 1 FROM user_block b WHERE b.cleared_at IS NULL AND ((b.blocker_id = :viewer AND b.blocked_id = message.sender_id) OR (b.blocked_id = :viewer AND b.blocker_id = message.sender_id)))) AS unread_count
                 FROM campaign_conversation thread
@@ -133,7 +133,7 @@ final class InboxHistory
             ],
             'packageTitle' => $type === 'inquiry' ? $row['title'] : null,
             'canChat' => true,
-            'lastMessage' => $row['preview'],
+            'lastMessage' => \App\Localization\DisplayDate::text($row['preview']),
             'lastMessageAt' => (new \DateTimeImmutable($row['activity_at']))->format(DATE_ATOM),
             'lastMessageSenderId' => $row['sender_id'] === null ? null : (int) $row['sender_id'],
             'unreadCount' => (int) $row['unread_count'],

@@ -18,12 +18,12 @@ final class CollaborationFeedback
 
     public function deadline(Application $application): ?DateTimeImmutable
     {
-        return $application->getCampaign()->getFinishedAt()?->modify('+14 days');
+        return ($application->getOffer()?->getWorkCompletedAt() ?? $application->getCampaign()->getFinishedAt())?->modify('+14 days');
     }
 
     public function eligible(Application $application): bool
     {
-        return $application->getCampaign()->getStatus() === 'finished'
+        return ($application->getOffer()?->getWorkCompletedAt() !== null || $application->getCampaign()->getStatus() === 'finished')
             && $application->getOffer()?->getStatus() === 'accepted'
             && $application->getCreator()->getOwner() !== null
             && $application->getCampaign()->getCompany()->getOwner() !== null
@@ -41,8 +41,8 @@ final class CollaborationFeedback
             'client' => ' AND EXISTS (SELECT 1 FROM company client WHERE client.id = c.company_id AND client.owner_id = r.recipient_id)',
             default => '',
         };
-        return "c.status = 'finished' AND o.status = 'accepted' AND c.finished_at IS NOT NULL
-            AND (c.finished_at <= :cutoff OR EXISTS (SELECT 1 FROM campaign_review pair WHERE pair.application_id = r.application_id AND pair.author_id = r.recipient_id AND pair.recipient_id = r.author_id))".$scope;
+        return "(o.work_completed_at IS NOT NULL OR c.status = 'finished') AND o.status = 'accepted' AND COALESCE(o.work_completed_at, c.finished_at) IS NOT NULL
+            AND (COALESCE(o.work_completed_at, c.finished_at) <= :cutoff OR EXISTS (SELECT 1 FROM campaign_review pair WHERE pair.application_id = r.application_id AND pair.author_id = r.recipient_id AND pair.recipient_id = r.author_id))".$scope;
     }
 
     /** @param list<int> $ids
@@ -61,7 +61,7 @@ final class CollaborationFeedback
         }
         $rows = $db->fetchAllAssociative('SELECT r.recipient_id, AVG(r.rating) AS average, COUNT(*) AS count FROM campaign_review r
             JOIN campaign_application a ON a.id = r.application_id JOIN campaign c ON c.id = a.campaign_id
-            JOIN campaign_offer o ON o.application_id = a.id WHERE r.recipient_id IN (:ids) AND '.$this->publicCondition($role).' GROUP BY r.recipient_id',
+            JOIN campaign_offer o ON o.id = a.offer_id WHERE r.recipient_id IN (:ids) AND '.$this->publicCondition($role).' GROUP BY r.recipient_id',
             ['ids' => $ids, 'cutoff' => (new DateTimeImmutable('-14 days'))->format('Y-m-d H:i:s')], ['ids' => ArrayParameterType::INTEGER]);
         foreach ($rows as $row) {
             $result[(int) $row['recipient_id']]['average'] = round((float) $row['average'], 1);
@@ -69,9 +69,10 @@ final class CollaborationFeedback
         }
         foreach (['creator' => 'JOIN creator p ON p.id = a.creator_id', 'company' => 'JOIN company p ON p.id = c.company_id'] as $side => $join) {
             if ($role !== null && $side !== ($role === 'provider' ? 'creator' : 'company')) continue;
+            $completed = $side === 'company' ? "c.status = 'finished'" : "(o.work_completed_at IS NOT NULL OR c.status = 'finished')";
             $rows = $db->fetchAllAssociative("SELECT p.owner_id, COUNT(DISTINCT c.id) AS count FROM campaign_offer o
                 JOIN campaign_application a ON a.id = o.application_id JOIN campaign c ON c.id = a.campaign_id $join
-                WHERE p.owner_id IN (:ids) AND c.status = 'finished' AND o.status = 'accepted' GROUP BY p.owner_id",
+                WHERE p.owner_id IN (:ids) AND $completed AND o.status = 'accepted' GROUP BY p.owner_id",
                 ['ids' => $ids], ['ids' => ArrayParameterType::INTEGER]);
             foreach ($rows as $row) {
                 $result[(int) $row['owner_id']]['completedCampaigns'] += (int) $row['count'];
@@ -133,7 +134,7 @@ final class CollaborationFeedback
         $page = min(max(1, $page), max(1, (int) ceil($summary['reviewCount'] / 10)));
         $ids = $db->fetchFirstColumn('SELECT r.id FROM campaign_review r
             JOIN campaign_application a ON a.id = r.application_id JOIN campaign c ON c.id = a.campaign_id
-            JOIN campaign_offer o ON o.application_id = a.id WHERE r.recipient_id = :user AND '.$this->publicCondition($role)
+            JOIN campaign_offer o ON o.id = a.offer_id WHERE r.recipient_id = :user AND '.$this->publicCondition($role)
             .($before > 0 ? ' AND r.id < :before' : '').' ORDER BY r.id DESC LIMIT 11 OFFSET '.($before > 0 ? 0 : ($page - 1) * 10),
             ['user' => $user->getId(), 'cutoff' => (new DateTimeImmutable('-14 days'))->format('Y-m-d H:i:s')] + ($before > 0 ? ['before' => $before] : []));
         $hasMore = count($ids) > 10;
@@ -148,7 +149,7 @@ final class CollaborationFeedback
         if ($forSchema && !$hasDemoReviews && $summary['reviewCount'] > 0) {
             $hasDemoReviews = (bool) $db->fetchOne('SELECT 1 FROM campaign_review r JOIN wave_user author ON author.id = r.author_id
                 JOIN campaign_application a ON a.id = r.application_id JOIN campaign c ON c.id = a.campaign_id
-                JOIN campaign_offer o ON o.application_id = a.id WHERE r.recipient_id = :user AND author.presentation_demo_key IS NOT NULL AND '.$this->publicCondition($role).' LIMIT 1',
+                JOIN campaign_offer o ON o.id = a.offer_id WHERE r.recipient_id = :user AND author.presentation_demo_key IS NOT NULL AND '.$this->publicCondition($role).' LIMIT 1',
                 ['user' => $user->getId(), 'cutoff' => (new DateTimeImmutable('-14 days'))->format('Y-m-d H:i:s')]);
         }
         return ($forSchema ? ['hasDemoReviews' => $hasDemoReviews] : []) + ['data' => array_map(fn (CampaignReview $review): array => $this->resource($review, $locale), $reviews),
@@ -166,7 +167,7 @@ final class CollaborationFeedback
         $join = $creator ? 'JOIN creator p ON p.id = a.creator_id' : 'JOIN company p ON p.id = c.company_id';
         $rows = $this->entityManager->getConnection()->fetchAllAssociative("SELECT p.owner_id, c.currency, SUM(o.amount) AS amount FROM campaign_offer o
             JOIN campaign_application a ON a.id = o.application_id JOIN campaign c ON c.id = a.campaign_id $join
-            WHERE p.owner_id IN (:ids) AND c.status = 'finished' AND o.status = 'accepted' GROUP BY p.owner_id, c.currency ORDER BY c.currency", ['ids' => $ids], ['ids' => ArrayParameterType::INTEGER]);
+            WHERE p.owner_id IN (:ids) AND (o.work_completed_at IS NOT NULL OR c.status = 'finished') AND o.status = 'accepted' GROUP BY p.owner_id, c.currency ORDER BY c.currency", ['ids' => $ids], ['ids' => ArrayParameterType::INTEGER]);
         $totals = [];
         foreach ($rows as $row) {
             $totals[(int) $row['owner_id']][] = ['currency' => $row['currency'], 'amount' => (int) $row['amount']];

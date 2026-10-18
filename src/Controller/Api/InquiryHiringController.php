@@ -97,6 +97,7 @@ final class InquiryHiringController
             if ($cancelling) {
                 if ($offer->getStatus() === 'cancelled') return ['offer' => $offer, 'message' => null];
                 if ($offer->getStatus() !== 'accepted') return $this->error('collaboration_not_active', $locale, 409);
+                if ($offer->getWorkCompletedAt() !== null) return $this->error('work_unavailable', $locale, 409);
                 if (mb_strlen($reason) < 10 || mb_strlen($reason) > 1000) return $this->error('invalid_cancellation_reason', $locale, 400);
                 $offer->cancel($reason);
                 $type = 'cancelled';
@@ -109,6 +110,45 @@ final class InquiryHiringController
             return ['offer' => $offer, 'message' => $this->record($offer, $user, $type, $locale)];
         });
         return $this->finish($result, $user);
+    }
+
+    #[Route('/api/me/inquiry-offers/{id}/work', methods: ['POST'], requirements: ['id' => '\d+'])]
+    public function work(int $id, Request $request): JsonResponse
+    {
+        $locale = LocaleContext::fromRequest($request);
+        if ($locale === null) return $this->error('unsupported_language', 'bs', 400);
+        if ($error = ApiAccess::requireCsrf($request, $this->csrf, $locale)) return $error;
+        $actor = ApiAccess::requireParticipant($this->security, $locale, true);
+        if ($actor instanceof JsonResponse) return $actor;
+        $offer = $this->em->find(InquiryOffer::class, $id);
+        if (!$offer) return $this->error('offer_not_found', $locale, 404);
+        $inquiry = $offer->getInquiry();
+        $provider = $inquiry->getCreator()->getOwner()?->getId();
+        $client = $inquiry->getCompany()->getOwner()?->getId();
+        if (!in_array($actor->getId(), [$provider, $client], true)) return $this->error('offer_not_found', $locale, 404);
+        if ($error = $this->access($inquiry, $locale)) return $error;
+        $data = JsonPayload::fromRequest($request);
+        $action = $data['action'] ?? null;
+        $reason = is_string($data['reason'] ?? null) ? trim($data['reason']) : '';
+        if (!in_array($action, ['submit', 'changes', 'complete'], true)) return $this->error('invalid_request', $locale, 400);
+        if ($actor->getId() !== ($action === 'submit' ? $provider : $client)) return $this->error('forbidden', $locale, 403);
+        $result = $this->em->wrapInTransaction(function () use ($inquiry, $offer, $actor, $action, $reason, $locale): array|JsonResponse {
+            $this->lock($inquiry);
+            $this->em->refresh($offer);
+            if ($error = $this->access($inquiry, $locale)) return $error;
+            if ($inquiry->getOffer()?->getId() !== $offer->getId() || $inquiry->getStatus() !== 'accepted' || $offer->getStatus() !== 'accepted') return $this->error('work_unavailable', $locale, 409);
+            if (($action === 'submit' && $offer->getWorkStatus() === 'submitted') || ($action === 'complete' && $offer->getWorkCompletedAt() !== null)) return ['offer' => $offer, 'message' => null];
+            if ($offer->getWorkCompletedAt() !== null || ($action !== 'submit' && $offer->getWorkStatus() !== 'submitted')) return $this->error('work_unavailable', $locale, 409);
+            if ($action === 'changes' && (mb_strlen($reason) < 10 || mb_strlen($reason) > 2000)) return $this->error('invalid_work_reason', $locale, 400);
+            match ($action) {
+                'submit' => $offer->submitWork(),
+                'changes' => $offer->requestWorkChanges($reason),
+                'complete' => $offer->completeWork(),
+            };
+            $type = match ($action) { 'submit' => 'work_submitted', 'changes' => 'work_changes_requested', 'complete' => 'work_completed' };
+            return ['offer' => $offer, 'message' => $this->record($offer, $actor, $type, $locale)];
+        });
+        return $this->finish($result, $actor);
     }
 
     private function access(CreatorInquiry $inquiry, string $locale): ?JsonResponse
@@ -126,14 +166,17 @@ final class InquiryHiringController
 
     private function record(InquiryOffer $offer, User $actor, string $type, string $locale): InquiryMessage
     {
-        $body = ApiMessages::get('hiring_'.$type, $locale).' '.$offer->getAmount().' '.$offer->getCurrency().' · '.$offer->getDueDate()->format('Y-m-d');
+        $body = ApiMessages::get('hiring_'.$type, $locale).' '.$offer->getAmount().' '.$offer->getCurrency().' · '.$offer->getDueDate()->format('d.m.Y');
         $body .= $type === 'offer_sent' ? "\n".$offer->getMessage() : ($offer->getCancellationReason() ? "\n".$offer->getCancellationReason() : '');
+        if ($type === 'work_changes_requested') $body .= "\n".$offer->getWorkChangesReason();
         $message = new InquiryMessage($offer->getInquiry(), $actor, $body, [
             'context' => 'inquiry', 'type' => $type, 'offerId' => $offer->getId(),
             'amount' => $offer->getAmount(), 'currency' => $offer->getCurrency(),
             'dueDate' => $offer->getDueDate()->format('Y-m-d'),
             'message' => $type === 'offer_sent' ? $offer->getMessage() : null,
             'cancellationReason' => $offer->getCancellationReason(),
+            'workStatus' => $offer->getWorkStatus(),
+            'workChangesReason' => $type === 'work_changes_requested' ? $offer->getWorkChangesReason() : null,
         ]);
         $this->em->persist($message);
         return $message;

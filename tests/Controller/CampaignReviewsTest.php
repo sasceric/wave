@@ -415,6 +415,18 @@ final class CampaignReviewsTest extends WebTestCase
         self::assertResponseIsSuccessful();
         self::assertSame('closed', $this->payload()['data']['status']);
         $this->client->jsonRequest('PUT', $url, ['status' => 'finished'], ['HTTP_X_CSRF_TOKEN' => $csrf]);
+        self::assertResponseStatusCodeSame(409);
+        $this->client->loginUser($this->creatorUser);
+        $this->client->request('GET', '/api/auth/csrf');
+        $creatorCsrf = $this->payload()['csrfToken'];
+        $this->client->jsonRequest('POST', '/api/me/offers/'.$this->application->getOffer()->getId().'/work', ['action' => 'submit'], ['HTTP_X_CSRF_TOKEN' => $creatorCsrf]);
+        self::assertResponseIsSuccessful();
+        $this->client->loginUser($this->companyUser);
+        $this->client->request('GET', '/api/auth/csrf');
+        $csrf = $this->payload()['csrfToken'];
+        $this->client->jsonRequest('POST', '/api/me/offers/'.$this->application->getOffer()->getId().'/work', ['action' => 'complete'], ['HTTP_X_CSRF_TOKEN' => $csrf]);
+        self::assertResponseIsSuccessful();
+        $this->client->jsonRequest('PUT', $url, ['status' => 'finished'], ['HTTP_X_CSRF_TOKEN' => $csrf]);
         self::assertResponseIsSuccessful();
         self::assertSame('finished', $this->payload()['data']['status']);
         $db = static::getContainer()->get(EntityManagerInterface::class)->getConnection();

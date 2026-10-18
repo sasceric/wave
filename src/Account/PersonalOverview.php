@@ -43,11 +43,11 @@ final class PersonalOverview
             $rows = $this->db->fetchAllAssociative("SELECT c.id AS campaign_id, c.slug, c.title, c.status AS campaign_status, p.name AS company_name, c.published_at AS created_at FROM campaign c JOIN company p ON p.id = c.company_id WHERE p.owner_id = :owner ORDER BY c.published_at DESC, c.id DESC LIMIT 5", $params);
         }
         $counts['offers'] = (int) $this->db->fetchOne("SELECT COUNT(*) FROM campaign_offer o JOIN campaign_application a ON a.id = o.application_id $join WHERE $scope AND o.status = 'pending' AND c.status = 'open' AND c.closes_at >= :today", [...$params, 'today' => $today]);
-        $counts['active'] = (int) $this->db->fetchOne("SELECT COUNT(*) FROM campaign_offer o JOIN campaign_application a ON a.id = o.application_id $join WHERE $scope AND o.status = 'accepted' AND c.status NOT IN ('finished', 'cancelled')", $params);
+        $counts['active'] = (int) $this->db->fetchOne("SELECT COUNT(*) FROM campaign_offer o JOIN campaign_application a ON a.id = o.application_id $join WHERE $scope AND o.status = 'accepted' AND o.work_completed_at IS NULL AND c.status NOT IN ('finished', 'cancelled')", $params);
         // Direct inquiries have their own confirmed terms; revisions count only once.
         $direct = $this->db->fetchAssociative("SELECT
             SUM(CASE WHEN o.status = 'pending' THEN 1 ELSE 0 END) AS offers,
-            SUM(CASE WHEN o.status = 'accepted' THEN 1 ELSE 0 END) AS active
+            SUM(CASE WHEN o.status = 'accepted' AND o.work_completed_at IS NULL THEN 1 ELSE 0 END) AS active
             FROM creator_inquiry i JOIN inquiry_offer o ON o.id = i.offer_id
             JOIN creator r ON r.id = i.creator_id JOIN company p ON p.id = i.company_id
             JOIN wave_user provider ON provider.id = r.owner_id JOIN wave_user client ON client.id = p.owner_id
@@ -65,7 +65,7 @@ final class PersonalOverview
         if ($user->getCreator()?->isAgencyProfile()) {
             $service = $this->db->fetchAssociative("SELECT COUNT(*) AS applications,
                 SUM(CASE WHEN o.status = 'pending' AND c.status = 'open' THEN 1 ELSE 0 END) AS offers,
-                SUM(CASE WHEN o.status = 'accepted' AND c.status NOT IN ('finished', 'cancelled') THEN 1 ELSE 0 END) AS active
+                SUM(CASE WHEN o.status = 'accepted' AND o.work_completed_at IS NULL AND c.status NOT IN ('finished', 'cancelled') THEN 1 ELSE 0 END) AS active
                 FROM campaign_application a JOIN creator p ON p.id = a.creator_id JOIN campaign c ON c.id = a.campaign_id
                 LEFT JOIN campaign_offer o ON o.id = a.offer_id WHERE p.owner_id = ?", [$user->getId()]);
             $result['serviceCounts'] = array_map('intval', $service);

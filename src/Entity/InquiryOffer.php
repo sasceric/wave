@@ -10,6 +10,8 @@ use Doctrine\ORM\Mapping as ORM;
 #[ORM\Index(name: 'idx_inquiry_offer_history', columns: ['inquiry_id', 'id'])]
 class InquiryOffer
 {
+    use CollaborationWork;
+
     #[ORM\Id, ORM\GeneratedValue, ORM\Column]
     private ?int $id = null;
 

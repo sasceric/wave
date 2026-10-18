@@ -370,7 +370,13 @@
       "support_ticket_updated": "{actor} hat ein Support-Ticket aktualisiert.",
       "review_received": "{actor} hat eure Zusammenarbeit bei {campaign} bewertet. Gib auch deine Bewertung ab.",
       "review_published": "{actor} hat eure Zusammenarbeit bei {campaign} bewertet. Beide Bewertungen sind jetzt öffentlich.",
-      "campaign_cancelled": "{actor} hat {campaign} abgesagt."
+      "campaign_cancelled": "{actor} hat {campaign} abgesagt.",
+      "work_submitted": "Bereit zur Prüfung · {campaign}",
+      "work_changes_requested": "Änderungen angefordert · {campaign}",
+      "work_completed": "Arbeit abgeschlossen · {campaign}",
+      "discussion_reopening_requested": "{actor}: Erneute Gesprächseröffnung für {campaign} angefragt.",
+      "discussion_reopening_accepted": "{actor}: Gespräch für {campaign} erneut geöffnet. Die Beauftragung benötigt ein neues Angebot.",
+      "discussion_reopening_rejected": "{actor}: Erneute Gesprächseröffnung für {campaign} abgelehnt."
     },
     "closedNotice": "Diese Kampagne ist geschlossen. In diesem Gespräch können keine Nachrichten mehr gesendet werden.",
     "finishedNotice": "Diese Kampagne ist abgeschlossen. In diesem Gespräch können keine Nachrichten mehr gesendet werden.",
@@ -2220,7 +2226,7 @@
   "reviews": {
     "title": "Bewertungen",
     "action": "Zusammenarbeit bewerten",
-    "policy": "Gib deine Bewertung innerhalb von 14 Tagen nach Kampagnenabschluss ab. Bewertungen werden öffentlich, sobald beide Seiten ihre Bewertung abgegeben haben oder die Frist abläuft. Abgegebene Bewertungen können nicht bearbeitet werden.",
+    "policy": "Bewerte die Zusammenarbeit innerhalb von 14 Tagen nach dem bestätigten Abschluss deines Auftrags. Bewertungen werden öffentlich, sobald beide Seiten sie abgegeben haben oder die Frist abläuft. Abgegebene Bewertungen können nicht bearbeitet werden.",
     "rating": "Durchschnittliche Bewertung",
     "comment": "Deine Erfahrung",
     "placeholder": "Beschreibe die Zusammenarbeit (mindestens 10 Zeichen)",
@@ -2230,7 +2236,7 @@
     "yours": "Deine Bewertung",
     "received": "Erhaltene Bewertung",
     "waiting": "Deine Bewertung ist gespeichert. Beide Bewertungen erscheinen, sobald die andere Seite ihre Bewertung abgibt oder die Frist abläuft.",
-    "unavailable": "Bewertungen sind nur für abgeschlossene Kampagnen mit angenommenem Angebot und innerhalb von 14 Tagen verfügbar.",
+    "unavailable": "Bewertungen sind für abgeschlossene Aufträge mit angenommenem Angebot innerhalb von 14 Tagen verfügbar.",
     "submit": "Bewertung abgeben",
     "close": "Schließen",
     "completed": "{count} abgeschlossene Kampagnen",
@@ -2241,12 +2247,12 @@
     "retry": "Erneut versuchen",
     "earnings": "Gesamteinnahmen",
     "spending": "Gesamtausgaben",
-    "financialHint": "Privat · vereinbarte Beträge abgeschlossener Kampagnen. Wave überprüft keine Zahlungen.",
+    "financialHint": "Privat · vereinbarte Beträge abgeschlossener Aufträge. Wave überprüft keine Zahlungen.",
     "score": "Deine Bewertung",
-    "finishHint": "Der Abschluss einer Kampagne ist endgültig. Teilnehmer mit angenommenem Angebot können 14 Tage lang bewerten. Vereinbarte Beträge werden zu den privaten Gesamtbeträgen addiert.",
+    "finishHint": "Der Kampagnenabschluss ist endgültig und setzt voraus, dass alle Aufträge abgeschlossen oder storniert sind. Einzelne Bewertungsfristen bleiben unverändert.",
     "closeCampaign": "Kampagne schließen",
     "finishCampaign": "Kampagne abschließen",
-    "closeCampaignHint": "Das Schließen einer Kampagne stoppt neue Bewerbungen. Der bisherige Kooperationsverlauf bleibt verfügbar.",
+    "closeCampaignHint": "Das Schließen stoppt neue Bewerbungen. Bereits beauftragte Kreative und Agenturen arbeiten und chatten weiter.",
     "showing": "Bewertungen {from}–{to} von {total}"
   },
   "passwordChange": {
@@ -2380,7 +2386,13 @@
       "offer_sent": "Angebot für Kampagne {campaign} gesendet: {amount}.",
       "hired": "Engagement für Kampagne {campaign} bestätigt: {amount}.",
       "offer_declined": "Angebot für Kampagne {campaign} abgelehnt: {amount}.",
-      "cancelled": "Zusammenarbeit bei {campaign} abgesagt. Vereinbarter Betrag: {amount} (wird nicht als Einnahme oder Ausgabe berücksichtigt)."
+      "cancelled": "Zusammenarbeit bei {campaign} abgesagt. Vereinbarter Betrag: {amount} (wird nicht als Einnahme oder Ausgabe berücksichtigt).",
+      "work_submitted": "Bereit zur Prüfung · {campaign}",
+      "work_changes_requested": "Änderungen angefordert · {campaign}",
+      "work_completed": "Arbeit abgeschlossen · {campaign}",
+      "discussion_reopening_requested": "Erneute Gesprächseröffnung für {campaign} angefragt.",
+      "discussion_reopening_accepted": "Gespräch für {campaign} erneut geöffnet. Die Beauftragung benötigt ein neues Angebot.",
+      "discussion_reopening_rejected": "Erneute Gesprächseröffnung für {campaign} abgelehnt."
     },
     "invitationDetails": "Kampagneneinladung",
     "invitationMessage": "Einladungsnachricht",
@@ -2410,7 +2422,10 @@
       "offer_sent": "Ein Angebot zur Zusammenarbeit wurde gesendet: {amount}.",
       "hired": "Der Auftrag ist bestätigt: {amount}.",
       "offer_declined": "Das Angebot zur Zusammenarbeit wurde abgelehnt: {amount}.",
-      "cancelled": "Zusammenarbeit bei {campaign} abgesagt. Vereinbarter Betrag: {amount} (wird nicht als Einnahme oder Ausgabe berücksichtigt)."
+      "cancelled": "Zusammenarbeit bei {campaign} abgesagt. Vereinbarter Betrag: {amount} (wird nicht als Einnahme oder Ausgabe berücksichtigt).",
+      "work_submitted": "Bereit zur Prüfung",
+      "work_changes_requested": "Änderungen angefordert",
+      "work_completed": "Arbeit abgeschlossen"
     }
   },
   "overview": {
@@ -2840,5 +2855,33 @@
     "mobilePage": "Seite · Mobil",
     "desktopCard": "Karte · Desktop",
     "mobileCard": "Karte · Mobil"
+  },
+  "work": {
+    "label": "Arbeitsstatus",
+    "in_progress": "In Bearbeitung",
+    "submitted": "Bereit zur Prüfung",
+    "changes_requested": "Änderungen angefordert",
+    "completed": "Arbeit abgeschlossen",
+    "submit": "Als erledigt melden",
+    "changes": "Änderungen anfordern",
+    "complete": "Abschluss bestätigen",
+    "submitHint": "Benachrichtige das Unternehmen, dass die vereinbarte Arbeit zur Prüfung bereit ist.",
+    "changesHint": "Erkläre, was verbessert werden muss. Die Begründung erscheint im Chat und die andere Seite wird benachrichtigt.",
+    "completeHint": "Bestätige, dass die vereinbarte Arbeit abgeschlossen ist. Danach kannst du eine Bewertung abgeben. Der Abschluss kann nicht rückgängig gemacht werden.",
+    "reason": "Was muss verbessert werden?",
+    "reasonHint": "Beschreibe die nötigen Änderungen (10–2000 Zeichen).",
+    "directCompleteHint": "Bestätige, dass die vereinbarte Arbeit abgeschlossen ist. Die Bestätigung ist endgültig."
+  },
+  "discussion": {
+    "title": "Gespräch erneut öffnen",
+    "request": "Gespräch erneut öffnen",
+    "hint": "Die Zustimmung öffnet nur das Gespräch. Für die Beauftragung sind ein neues Angebot des Unternehmens und deine Annahme nötig.",
+    "pending": "Anfrage gesendet. Wir warten auf die Antwort des Creators oder der Agentur.",
+    "invitation": "Das Unternehmen möchte das Gespräch erneut öffnen.",
+    "accept": "Gespräch annehmen",
+    "reject": "Anfrage ablehnen",
+    "message": "Nachricht",
+    "send": "Anfrage senden",
+    "defaultMessage": "Wir möchten Ihnen eine neue Chance geben und erneut über eine Zusammenarbeit sprechen."
   }
 }

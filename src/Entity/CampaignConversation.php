@@ -12,6 +12,32 @@ use Doctrine\ORM\Mapping as ORM;
 #[ORM\UniqueConstraint(name: 'uniq_campaign_conversation_campaign_creator', columns: ['campaign_id', 'creator_id'])]
 class CampaignConversation
 {
+    #[ORM\Column(length: 16, nullable: true)]
+    private ?string $reopeningStatus = null;
+
+    #[ORM\Column(options: ['default' => 0])]
+    private int $reopeningVersion = 0;
+
+    #[ORM\Column(type: 'text', nullable: true)]
+    private ?string $reopeningMessage = null;
+
+    public function getReopening(): array
+    {
+        return ['status' => $this->reopeningStatus, 'version' => $this->reopeningVersion, 'message' => $this->reopeningMessage];
+    }
+
+    public function requestReopening(string $message): void
+    {
+        $this->reopeningStatus = 'pending';
+        ++$this->reopeningVersion;
+        $this->reopeningMessage = $message;
+    }
+
+    public function respondReopening(bool $accepted): void
+    {
+        $this->reopeningStatus = $accepted ? 'accepted' : 'rejected';
+    }
+
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]

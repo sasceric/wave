@@ -22,12 +22,15 @@ final class CampaignOfferTimeline
             $this->em->persist($conversation);
         }
         $body = ApiMessages::get('hiring_'.$type, $locale).' '.$campaign->getTitle().' · '.$offer->getAmount().' '.($campaign->getCurrency() === 'BAM' ? 'KM' : $campaign->getCurrency());
-        $body .= $offer->getDueDate() ? ' · '.$offer->getDueDate()->format('Y-m-d') : '';
+        $body .= $offer->getDueDate() ? ' · '.$offer->getDueDate()->format('d.m.Y') : '';
+        if ($type === 'work_changes_requested') $body .= "\n".$offer->getWorkChangesReason();
         if ($type === 'cancelled' && $offer->getCancellationReason()) $body .= "\n".$offer->getCancellationReason();
         if ($type === 'offer_sent') $body .= "\n".$offer->getMessage();
         $message = new CampaignMessage($conversation, $sender, $body, [
             'type' => $type, 'offerId' => $offer->getId(), 'amount' => $offer->getAmount(),
             'dueDate' => $offer->getDueDate()?->format('Y-m-d'),
+            'workStatus' => $offer->getWorkStatus(),
+            'workChangesReason' => $type === 'work_changes_requested' ? $offer->getWorkChangesReason() : null,
             'cancellationReason' => $type === 'cancelled' ? $offer->getCancellationReason() : null,
             'message' => $type === 'offer_sent' ? $offer->getMessage() : null,
             'currency' => $campaign->getCurrency(), 'campaignTitle' => $campaign->getTitle(), 'campaignSlug' => $campaign->getSlug(),

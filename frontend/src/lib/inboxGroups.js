@@ -1,5 +1,13 @@
 import { chatDayKey } from './chatTime.js'
 
+export function compareInboxThreads(first, second) {
+  const firstDate = Date.parse(first.lastMessageAt)
+  const secondDate = Date.parse(second.lastMessageAt)
+  if (!Number.isFinite(firstDate) && !Number.isFinite(secondDate)) return 0
+  return (secondDate || 0) - (firstDate || 0)
+    || (first.threadType || '').localeCompare(second.threadType || '') || second.id - first.id
+}
+
 export function groupInboxThreads(threads, now = Date.now()) {
   const today = new Date(now)
   const yesterday = new Date(now)
@@ -8,7 +16,7 @@ export function groupInboxThreads(threads, now = Date.now()) {
   weekStart.setHours(0, 0, 0, 0)
   weekStart.setDate(weekStart.getDate() - (weekStart.getDay() + 6) % 7)
   const groups = new Map()
-  for (const thread of threads) {
+  for (const thread of [...threads].sort(compareInboxThreads)) {
     const date = new Date(thread.lastMessageAt)
     const day = chatDayKey(thread.lastMessageAt)
     const key = day && day === chatDayKey(today) ? 'today'

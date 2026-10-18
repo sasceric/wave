@@ -159,8 +159,8 @@ function confirmResponse() {
   pendingResponse.value = null
   if (response) emit('respond', response.item, response.decision)
 }
-function canCancel(item) { return activeOffer(item)?.status === 'accepted' && item.campaign?.status !== 'finished' && !item.readOnly }
-function canReview(item) { return item.campaign?.status === 'finished' && activeOffer(item)?.status === 'accepted' && !item.readOnly }
+function canCancel(item) { return activeOffer(item)?.status === 'accepted' && item.campaign?.status !== 'finished' && !activeOffer(item)?.workCompletedAt && !item.readOnly }
+function canReview(item) { return (item.campaign?.status === 'finished' || activeOffer(item)?.workCompletedAt) && activeOffer(item)?.status === 'accepted' && !item.readOnly }
 function applicationId(item) { return isOffers.value ? item.applicationId : item.id }
 
 function invitationExpired(item) {

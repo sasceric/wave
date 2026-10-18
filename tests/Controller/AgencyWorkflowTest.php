@@ -112,6 +112,12 @@ final class AgencyWorkflowTest extends WebTestCase
         $this->client->loginUser($brand, 'main');
         $this->request('POST', '/api/me/conversations/'.$conversation.'/messages', ['body' => 'Thank you for the update.']);
         self::assertResponseStatusCodeSame(201);
+        $this->client->loginUser($agency, 'main');
+        $this->request('POST', '/api/me/offers/'.$offer.'/work', ['action' => 'submit']);
+        self::assertResponseIsSuccessful();
+        $this->client->loginUser($brand, 'main');
+        $this->request('POST', '/api/me/offers/'.$offer.'/work', ['action' => 'complete']);
+        self::assertResponseIsSuccessful();
         $this->request('PUT', '/api/company/campaigns/'.$campaign->getId().'/status', ['status' => 'finished']);
         self::assertResponseIsSuccessful();
         $this->request('POST', '/api/me/applications/'.$application['id'].'/review', ['rating' => 5, 'comment' => 'Excellent agency delivery and communication.']);

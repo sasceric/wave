@@ -145,7 +145,7 @@ final class WebPushNotificationSender
             throw new \Symfony\Component\Messenger\Exception\UnrecoverableMessageHandlingException('Web Push credentials are not configured.');
         }
         $webPush = $this->createWebPush();
-        $report = $webPush->sendOneNotification(Subscription::create(['endpoint' => $subscription->getEndpoint(), 'keys' => ['p256dh' => $subscription->getPublicKey(), 'auth' => $subscription->getAuthToken()], 'contentEncoding' => 'aes128gcm']), json_encode(['userId' => (int) $payload['userId'], 'title' => $payload['title'], 'body' => $payload['body'], 'url' => $payload['url'], 'badgeCount' => $this->unreadInboxCounter->total($subscription->getUser())], JSON_THROW_ON_ERROR), ['TTL' => 86400]);
+        $report = $webPush->sendOneNotification(Subscription::create(['endpoint' => $subscription->getEndpoint(), 'keys' => ['p256dh' => $subscription->getPublicKey(), 'auth' => $subscription->getAuthToken()], 'contentEncoding' => 'aes128gcm']), json_encode(['userId' => (int) $payload['userId'], 'title' => $payload['title'], 'body' => \App\Localization\DisplayDate::text($payload['body']), 'url' => $payload['url'], 'badgeCount' => $this->unreadInboxCounter->total($subscription->getUser())], JSON_THROW_ON_ERROR), ['TTL' => 86400]);
         if ($report->isSubscriptionExpired()) {
             $this->entityManager->remove($subscription);
             $this->entityManager->flush();
@@ -208,6 +208,7 @@ final class WebPushNotificationSender
 
     private function trimPreview(string $message): string
     {
+        $message = \App\Localization\DisplayDate::text($message);
         $preview = trim(preg_replace('/\s+/u', ' ', $message) ?? $message);
         if (mb_strlen($preview) <= 160) {
             return $preview;

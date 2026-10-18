@@ -183,39 +183,44 @@ final class CampaignManagementController
                 'fields' => array_values(array_unique($invalidFields)),
             ], 400);
         }
-        if ((in_array($campaign->getStatus(), ['finished', 'cancelled'], true) && $fields['status'] !== $campaign->getStatus())
-            || ($fields['currency'] !== $campaign->getCurrency() && CampaignHiredCounts::forCampaign($entityManager, $campaign) > 0)) {
-            return new JsonResponse(['error' => ApiMessages::get('campaign_financial_history_locked', $locale)], 409);
-        }
-        if ($fields['status'] === 'cancelled' && $campaign->getStatus() !== 'cancelled') {
-            return new JsonResponse(['error' => ApiMessages::get('invalid_request', $locale)], 400);
-        }
-        $campaign->update(
-            $fields['title'],
-            $fields['summary'],
-            $fields['description'],
-            $fields['category'],
-            $fields['channels'],
-            $fields['deliverables'],
-            $fields['budgetMin'],
-            $fields['budgetMax'],
-            $fields['city'],
-            $fields['creatorCount'],
-            $fields['closesAt'],
-            $fields['status'],
-            $fields['currency'],
-            $fields['countryCode'],
-            $fields['categories'],
-        );
-        $previousCoverId = $campaign->getCoverMedia()?->getId();
-        $campaign->setCoverMedia($coverMedia);
-        $this->finishApplications($campaign, $entityManager);
-        $entityManager->wrapInTransaction(static function (EntityManagerInterface $manager) use ($unusedMedia, $previousCoverId): void {
-            $manager->flush();
+        return $entityManager->wrapInTransaction(function () use ($entityManager, $campaign, $fields, $coverMedia, $unusedMedia, $locale): JsonResponse {
+            $entityManager->lock($campaign, \Doctrine\DBAL\LockMode::PESSIMISTIC_WRITE);
+            $entityManager->refresh($campaign);
+            if ($fields['status'] === 'finished' && $campaign->getStatus() !== 'finished' && \App\Marketplace\CampaignWork::hasUnfinishedHires($entityManager, $campaign)) {
+                return new JsonResponse(['error' => ApiMessages::get('campaign_work_unfinished', $locale)], 409);
+            }
+            if ((in_array($campaign->getStatus(), ['finished', 'cancelled'], true) && $fields['status'] !== $campaign->getStatus())
+                || ($fields['currency'] !== $campaign->getCurrency() && CampaignHiredCounts::forCampaign($entityManager, $campaign) > 0)) {
+                return new JsonResponse(['error' => ApiMessages::get('campaign_financial_history_locked', $locale)], 409);
+            }
+            if ($fields['status'] === 'cancelled' && $campaign->getStatus() !== 'cancelled') {
+                return new JsonResponse(['error' => ApiMessages::get('invalid_request', $locale)], 400);
+            }
+            $campaign->update(
+                $fields['title'],
+                $fields['summary'],
+                $fields['description'],
+                $fields['category'],
+                $fields['channels'],
+                $fields['deliverables'],
+                $fields['budgetMin'],
+                $fields['budgetMax'],
+                $fields['city'],
+                $fields['creatorCount'],
+                $fields['closesAt'],
+                $fields['status'],
+                $fields['currency'],
+                $fields['countryCode'],
+                $fields['categories'],
+            );
+            $previousCoverId = $campaign->getCoverMedia()?->getId();
+            $campaign->setCoverMedia($coverMedia);
+            $this->finishApplications($campaign, $entityManager);
+            $entityManager->flush();
             $unusedMedia->remove([$previousCoverId]);
-        });
 
-        return new JsonResponse(['data' => CampaignResource::fromEntity($campaign, $locale, categoryLabels: MarketplaceCategoryLabels::forLocale($entityManager, $locale), hiredCount: CampaignHiredCounts::forCampaign($entityManager, $campaign))]);
+            return new JsonResponse(['data' => CampaignResource::fromEntity($campaign, $locale, categoryLabels: MarketplaceCategoryLabels::forLocale($entityManager, $locale), hiredCount: CampaignHiredCounts::forCampaign($entityManager, $campaign))]);
+        });
     }
 
     #[Route('/api/company/campaigns/{id}/status', name: 'api_company_campaign_status', methods: ['PUT'], requirements: ['id' => '\\d+'])]
@@ -250,10 +255,20 @@ final class CampaignManagementController
             catch (HttpException $error) { return new JsonResponse(['error' => ApiMessages::get($error->getMessage(), $locale)], $error->getStatusCode()); }
             return new JsonResponse(['data' => CampaignResource::fromEntity($campaign, $locale, hiredCount: CampaignHiredCounts::forCampaign($entityManager, $campaign))]);
         }
-        $campaign->setStatus($status);
-        $this->finishApplications($campaign, $entityManager);
-        $entityManager->flush();
-        return new JsonResponse(['data' => CampaignResource::fromEntity($campaign, $locale, hiredCount: CampaignHiredCounts::forCampaign($entityManager, $campaign))]);
+        return $entityManager->wrapInTransaction(function () use ($campaign, $status, $entityManager, $locale): JsonResponse {
+            $entityManager->lock($campaign, \Doctrine\DBAL\LockMode::PESSIMISTIC_WRITE);
+            $entityManager->refresh($campaign);
+            if (in_array($campaign->getStatus(), ['finished', 'cancelled'], true) && $status !== $campaign->getStatus()) {
+                return new JsonResponse(['error' => ApiMessages::get('campaign_financial_history_locked', $locale)], 409);
+            }
+            if ($status === 'finished' && $campaign->getStatus() !== 'finished' && \App\Marketplace\CampaignWork::hasUnfinishedHires($entityManager, $campaign)) {
+                return new JsonResponse(['error' => ApiMessages::get('campaign_work_unfinished', $locale)], 409);
+            }
+            $campaign->setStatus($status);
+            $this->finishApplications($campaign, $entityManager);
+            $entityManager->flush();
+            return new JsonResponse(['data' => CampaignResource::fromEntity($campaign, $locale, hiredCount: CampaignHiredCounts::forCampaign($entityManager, $campaign))]);
+        });
     }
 
     /** @param class-string<Application>|class-string<CampaignInvitation> $entityClass */

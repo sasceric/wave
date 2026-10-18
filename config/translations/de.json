@@ -90,7 +90,18 @@
     "newsletter_subscribed": "Du bist für Wave-Neuigkeiten angemeldet.",
     "newsletter_email_failed": "Die Bestätigungs-E-Mail konnte nicht gesendet werden. Bitte versuche es später erneut.",
     "invalid_offer_due_date": "Wähle einen gültigen Liefertermin: heute oder ein späteres Datum.",
-    "invalid_cancellation_reason": "Beschreibe den Grund (10–1000 Zeichen). Die andere Seite kann ihn sehen."
+    "invalid_cancellation_reason": "Beschreibe den Grund (10–1000 Zeichen). Die andere Seite kann ihn sehen.",
+    "hiring_work_submitted": "Bereit zur Prüfung:",
+    "hiring_work_changes_requested": "Änderungen angefordert:",
+    "hiring_work_completed": "Arbeit abgeschlossen:",
+    "work_unavailable": "Diese Arbeit kann gerade nicht geändert werden. Aktualisiere den Chat.",
+    "invalid_work_reason": "Beschreibe die nötigen Änderungen mit 10–2000 Zeichen.",
+    "campaign_work_unfinished": "Bestätige zuerst den Abschluss oder storniere jede verbleibende Zusammenarbeit.",
+    "discussion_reopening_requested": "Erneute Gesprächseröffnung für  angefragt:",
+    "discussion_reopening_accepted": "Gespräch für  erneut geöffnet. Die Beauftragung benötigt ein neues Angebot:",
+    "discussion_reopening_rejected": "Erneute Gesprächseröffnung für  abgelehnt:",
+    "invalid_reopening_message": "Schreibe eine Nachricht mit 10–1000 Zeichen.",
+    "reopening_unavailable": "Das Gespräch kann derzeit nicht erneut geöffnet werden. Lade es neu. Die Kampagne muss offen sein."
   },
   "account": {
     "verify": {

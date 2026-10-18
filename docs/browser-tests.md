@@ -37,7 +37,7 @@ Safari is a separate manual check. It never uses production or regular local acc
 The test starts and stops its own backend on `127.0.0.1:8027` and Mercure on
 `127.0.0.1:8028`; occupied ports cause it to stop before resetting fixtures. Override
 with `WAVE_E2E_PORT` and `WAVE_E2E_HUB_PORT` if needed. It clears only the `browser`
-environment cache. Mail, queued deliveries and external resource requests are disabled;
+environment cache and its rate-limiter pool, so repeated fixture logins remain repeatable. Mail, queued deliveries and external resource requests are disabled;
 temporary credentials and Mercure signing keys are generated for the run. Normal local
 backend, frontend and Mercure processes are not stopped or reconfigured.
 
@@ -45,3 +45,16 @@ The result prints an artifact directory with screenshots, a JSON result and serv
 Use `WAVE_E2E_ARTIFACTS` to select a private output directory. `WAVE_E2E_CHROME_PATH`
 can select a nonstandard Chrome installation; `PLAYWRIGHT_BROWSERS_PATH` can select a
 custom WebKit cache. Keep generated logs and credentials out of commits.
+
+
+The browser regression also checks an accepted hire on a closed campaign: both sides keep
+chatting; the provider submits work; the company requests changes with a required reason;
+the provider resubmits; the company completes the engagement and opens the shared review
+form, submits ratings from both separate sessions, then explicitly finishes the campaign. API regression coverage runs the same work
+flow for both an individual creator and an agency and blocks premature finishing through
+both campaign mutation endpoints.
+
+The same regression covers direct work submission, required revisions, resubmission,
+client confirmation and latest-message ordering. Cancelled campaign discussions are
+reopened through the sidebar: decline keeps them read-only; a subsequent accepted
+request restores chat without a hire, followed by a fresh offer and confirmation.

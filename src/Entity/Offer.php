@@ -9,6 +9,8 @@ use Doctrine\ORM\Mapping as ORM;
 #[ORM\Table(name: 'campaign_offer')]
 class Offer
 {
+    use CollaborationWork;
+
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]

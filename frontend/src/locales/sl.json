@@ -371,7 +371,13 @@
       "support_ticket_updated": "{actor} je posodobil zahtevek.",
       "review_received": "{actor} je oddal/a oceno za {campaign}. Oddaj tudi svojo oceno.",
       "review_published": "{actor} je oddal/a oceno za {campaign}. Ocene so zdaj objavljene.",
-      "campaign_cancelled": "{actor} je preklical/a kampanjo {campaign}."
+      "campaign_cancelled": "{actor} je preklical/a kampanjo {campaign}.",
+      "work_submitted": "Pripravljeno za pregled · {campaign}",
+      "work_changes_requested": "Potrebni so popravki · {campaign}",
+      "work_completed": "Delo je zaključeno · {campaign}",
+      "discussion_reopening_requested": "{actor}: Zahtevano je ponovno odprtje pogovora za kampanjo {campaign}.",
+      "discussion_reopening_accepted": "{actor}: Pogovor za kampanjo {campaign} je ponovno odprt. Za sodelovanje je potrebna nova ponudba.",
+      "discussion_reopening_rejected": "{actor}: Ponovno odprtje pogovora za kampanjo {campaign} je zavrnjeno."
     },
     "closedNotice": "Kampanja je zaprta. V tem pogovoru ni več mogoče pošiljati sporočil.",
     "finishedNotice": "Kampanja je končana. V tem pogovoru ni več mogoče pošiljati sporočil.",
@@ -2221,7 +2227,7 @@
   "reviews": {
     "title": "Ocene",
     "action": "Ocena sodelovanja",
-    "policy": "Oceni sodelovanje v 14 dneh po zaključku kampanje. Ocene postanejo javne, ko jih oddasta obe strani ali po izteku roka. Oddane ocene ni mogoče spremeniti.",
+    "policy": "Oceni sodelovanje v 14 dneh po potrjenem zaključku svojega dela. Ocene postanejo javne, ko jih oddasta obe strani ali ko poteče rok. Oddane ocene ni mogoče urejati.",
     "rating": "Povprečna ocena",
     "comment": "Tvoja izkušnja",
     "placeholder": "Opiši sodelovanje (najmanj 10 znakov)",
@@ -2231,7 +2237,7 @@
     "yours": "Tvoja ocena",
     "received": "Prejeta ocena",
     "waiting": "Ocena je shranjena. Obe oceni bosta vidni, ko druga stran odda svojo ali ko se rok izteče.",
-    "unavailable": "Oceno lahko oddaš le za zaključeno kampanjo s sprejeto ponudbo v roku 14 dni.",
+    "unavailable": "Ocene so na voljo za zaključeno sodelovanje s sprejeto ponudbo v 14 dneh.",
     "submit": "Oddaj oceno",
     "close": "Zapri",
     "completed": "{count} zaključenih kampanj",
@@ -2242,12 +2248,12 @@
     "retry": "Poskusi znova",
     "earnings": "Skupni zaslužek",
     "spending": "Skupna poraba",
-    "financialHint": "Zasebno · dogovorjeni zneski zaključenih kampanj. Wave ne potrjuje plačil.",
+    "financialHint": "Zasebno · dogovorjeni zneski zaključenih sodelovanj. Wave ne preverja plačil.",
     "score": "Tvoja ocena",
-    "finishHint": "Zaključek kampanje je dokončen. Izbrani sodelavci lahko oddajo oceno v 14 dneh; dogovorjeni zneski se dodajo zasebnim skupnim zneskom.",
+    "finishHint": "Zaključek kampanje je trajen in mogoč šele, ko so vsa sodelovanja zaključena ali preklicana. Roki za posamezne ocene ostanejo nespremenjeni.",
     "closeCampaign": "Zapri kampanjo",
     "finishCampaign": "Zaključi kampanjo",
-    "closeCampaignHint": "Z zaprtjem kampanje ustaviš nove prijave. Obstoječa zgodovina sodelovanja ostane na voljo.",
+    "closeCampaignHint": "Zaprtje kampanje ustavi nove prijave. Angažirani ustvarjalci in agencije nadaljujejo delo in pogovor.",
     "showing": "Prikazanih {from}–{to} od {total} ocen"
   },
   "passwordChange": {
@@ -2381,7 +2387,13 @@
       "offer_sent": "Ponudba za kampanjo {campaign} je poslana: {amount}.",
       "hired": "Angažma za kampanjo {campaign} je potrjen: {amount}.",
       "offer_declined": "Ponudba za kampanjo {campaign} je zavrnjena: {amount}.",
-      "cancelled": "Sodelovanje pri kampanji {campaign} je preklicano. Dogovorjeni znesek: {amount} (ni vključen v zaslužek ali porabo)."
+      "cancelled": "Sodelovanje pri kampanji {campaign} je preklicano. Dogovorjeni znesek: {amount} (ni vključen v zaslužek ali porabo).",
+      "work_submitted": "Pripravljeno za pregled · {campaign}",
+      "work_changes_requested": "Potrebni so popravki · {campaign}",
+      "work_completed": "Delo je zaključeno · {campaign}",
+      "discussion_reopening_requested": "Zahtevano je ponovno odprtje pogovora za kampanjo {campaign}.",
+      "discussion_reopening_accepted": "Pogovor za kampanjo {campaign} je ponovno odprt. Za sodelovanje je potrebna nova ponudba.",
+      "discussion_reopening_rejected": "Ponovno odprtje pogovora za kampanjo {campaign} je zavrnjeno."
     },
     "invitationDetails": "Povabilo k kampanji",
     "invitationMessage": "Sporočilo v povabilu",
@@ -2411,7 +2423,10 @@
       "offer_sent": "Poslana je ponudba za sodelovanje: {amount}.",
       "hired": "Sodelovanje je potrjeno: {amount}.",
       "offer_declined": "Ponudba za sodelovanje je zavrnjena: {amount}.",
-      "cancelled": "Sodelovanje pri kampanji {campaign} je preklicano. Dogovorjeni znesek: {amount} (ni vključen v zaslužek ali porabo)."
+      "cancelled": "Sodelovanje pri kampanji {campaign} je preklicano. Dogovorjeni znesek: {amount} (ni vključen v zaslužek ali porabo).",
+      "work_submitted": "Pripravljeno za pregled",
+      "work_changes_requested": "Potrebni so popravki",
+      "work_completed": "Delo je zaključeno"
     }
   },
   "overview": {
@@ -2841,5 +2856,33 @@
     "mobilePage": "Stran · telefon",
     "desktopCard": "Kartica · računalnik",
     "mobileCard": "Kartica · telefon"
+  },
+  "work": {
+    "label": "Stanje dela",
+    "in_progress": "Delo poteka",
+    "submitted": "Pripravljeno za pregled",
+    "changes_requested": "Potrebni so popravki",
+    "completed": "Delo je zaključeno",
+    "submit": "Označi kot dokončano",
+    "changes": "Zahtevaj popravke",
+    "complete": "Potrdi zaključek",
+    "submitHint": "Obvesti podjetje, da je dogovorjeno delo pripravljeno za pregled.",
+    "changesHint": "Pojasni, kaj je treba popraviti. Razlog bo poslan v pogovor in druga stran bo obveščena.",
+    "completeHint": "Potrdi, da je dogovorjeno delo zaključeno. Nato lahko oddaš oceno. Zaključka ni mogoče razveljaviti.",
+    "reason": "Kaj je treba popraviti?",
+    "reasonHint": "Opiši potrebne popravke (10–2000 znakov).",
+    "directCompleteHint": "Potrdi, da je dogovorjeno delo zaključeno. Potrditev je trajna."
+  },
+  "discussion": {
+    "title": "Ponovno odprtje pogovora",
+    "request": "Ponovno odpri pogovor",
+    "hint": "Sprejem ponovno odpre samo pogovor. Za sodelovanje sta potrebna nova ponudba podjetja in tvoj sprejem.",
+    "pending": "Zahteva je poslana. Čakamo odgovor ustvarjalca ali agencije.",
+    "invitation": "Podjetje želi ponovno odpreti pogovor.",
+    "accept": "Sprejmi pogovor",
+    "reject": "Zavrni zahtevo",
+    "message": "Sporočilo",
+    "send": "Pošlji zahtevo",
+    "defaultMessage": "Želimo vam dati novo priložnost in se ponovno pogovoriti o sodelovanju."
   }
 }

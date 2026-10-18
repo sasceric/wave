@@ -26,3 +26,13 @@ test('yesterday stays distinct across the Monday week boundary and missing dates
     ['yesterday', [1]], ['earlier', [2, 3]],
   ])
 })
+
+test('mixed campaign and direct chats are ordered by latest message rather than input or creation order', () => {
+  const threads = [
+    { id: 9, threadType: 'campaign', lastMessageAt: '2026-10-18T10:00:00Z' },
+    { id: 1, threadType: 'inquiry', createdAt: '2026-01-01T10:00:00Z', lastMessageAt: '2026-10-19T12:00:00Z' },
+    { id: 8, threadType: 'campaign', lastMessageAt: '2026-10-19T11:00:00Z' },
+  ]
+  assert.deepEqual(groupInboxThreads(threads, new Date('2026-10-19T13:00:00Z')).flatMap(group => group.threads.map(thread => thread.id)), [1, 8, 9])
+  assert.deepEqual(threads.map(thread => thread.id), [9, 1, 8])
+})

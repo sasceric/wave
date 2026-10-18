@@ -31,7 +31,7 @@ export function campaignActivityStage(item) {
   const offer = item.offer
   if (item.campaign?.status === 'cancelled' || item.status === 'cancelled' || offer?.status === 'cancelled') return 'cancelled'
   if (offer?.status === 'accepted' || (item.source !== 'invitation' && item.status === 'accepted')) {
-    return item.campaign?.status === 'finished' ? 'finished' : 'hired'
+    return offer?.workCompletedAt || item.campaign?.status === 'finished' ? 'finished' : 'hired'
   }
   if (['rejected', 'declined'].includes(item.status)) return 'rejected'
   if (['closed', 'finished'].includes(item.campaign?.status)) return 'closed'

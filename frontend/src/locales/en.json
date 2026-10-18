@@ -370,7 +370,13 @@
       "support_ticket_updated": "{actor} updated a support ticket.",
       "review_received": "{actor} reviewed your collaboration on {campaign}. Leave your review too.",
       "review_published": "{actor} reviewed your collaboration on {campaign}. Both reviews are now public.",
-      "campaign_cancelled": "{actor} canceled {campaign}."
+      "campaign_cancelled": "{actor} canceled {campaign}.",
+      "work_submitted": "Ready for review · {campaign}",
+      "work_changes_requested": "Changes requested · {campaign}",
+      "work_completed": "Work completed · {campaign}",
+      "discussion_reopening_requested": "{actor}: Reopening discussion requested for {campaign}.",
+      "discussion_reopening_accepted": "{actor}: Discussion for {campaign} reopened. Hiring requires a new offer.",
+      "discussion_reopening_rejected": "{actor}: Reopening discussion declined for {campaign}."
     },
     "closedNotice": "This campaign is closed. You can no longer send messages in this conversation.",
     "finishedNotice": "This campaign is finished. You can no longer send messages in this conversation.",
@@ -2220,7 +2226,7 @@
   "reviews": {
     "title": "Reviews",
     "action": "Review collaboration",
-    "policy": "Leave feedback within 14 days of campaign completion. Reviews become public when both sides submit or the deadline passes. Submitted reviews cannot be edited.",
+    "policy": "Leave feedback within 14 days of confirmed completion of your engagement. Reviews become public when both sides submit or the deadline passes. Submitted reviews cannot be edited.",
     "rating": "Average rating",
     "comment": "Your experience",
     "placeholder": "Describe the collaboration (at least 10 characters)",
@@ -2230,7 +2236,7 @@
     "yours": "Your review",
     "received": "Received review",
     "waiting": "Your review is saved. Both reviews will appear when the other side submits or the deadline passes.",
-    "unavailable": "Reviews are available only for completed campaigns with an accepted offer, within 14 days.",
+    "unavailable": "Reviews are available for completed engagements with an accepted offer, within 14 days.",
     "submit": "Submit review",
     "close": "Close",
     "completed": "{count} completed campaigns",
@@ -2241,12 +2247,12 @@
     "retry": "Try again",
     "earnings": "Total earnings",
     "spending": "Total spending",
-    "financialHint": "Private · agreed amounts from completed campaigns. Wave does not verify payments.",
+    "financialHint": "Private · agreed amounts from completed engagements. Wave does not verify payments.",
     "score": "Your rating",
-    "finishHint": "Completing a campaign is permanent. Accepted collaborators can leave reviews for 14 days; agreed amounts are added to private totals.",
+    "finishHint": "Finishing a campaign is permanent and requires all engagements to be completed or cancelled. Individual review deadlines stay unchanged.",
     "closeCampaign": "Close campaign",
     "finishCampaign": "Finish campaign",
-    "closeCampaignHint": "Closing a campaign stops new applications. Existing collaboration history remains available.",
+    "closeCampaignHint": "Closing a campaign stops new applications. Hired creators and agencies continue working and chatting.",
     "showing": "Showing {from}–{to} of {total} reviews"
   },
   "passwordChange": {
@@ -2380,7 +2386,13 @@
       "offer_sent": "Offer sent for campaign {campaign}: {amount}.",
       "hired": "Hiring confirmed for campaign {campaign}: {amount}.",
       "offer_declined": "Offer declined for campaign {campaign}: {amount}.",
-      "cancelled": "Collaboration on {campaign} was canceled. Agreed amount: {amount} (excluded from earnings and spending)."
+      "cancelled": "Collaboration on {campaign} was canceled. Agreed amount: {amount} (excluded from earnings and spending).",
+      "work_submitted": "Ready for review · {campaign}",
+      "work_changes_requested": "Changes requested · {campaign}",
+      "work_completed": "Work completed · {campaign}",
+      "discussion_reopening_requested": "Reopening discussion requested for {campaign}.",
+      "discussion_reopening_accepted": "Discussion for {campaign} reopened. Hiring requires a new offer.",
+      "discussion_reopening_rejected": "Reopening discussion declined for {campaign}."
     },
     "invitationDetails": "Campaign invitation",
     "invitationMessage": "Invitation message",
@@ -2410,7 +2422,10 @@
       "offer_sent": "A collaboration offer was sent: {amount}.",
       "hired": "The engagement is confirmed: {amount}.",
       "offer_declined": "The collaboration offer was declined: {amount}.",
-      "cancelled": "Collaboration on {campaign} was canceled. Agreed amount: {amount} (excluded from earnings and spending)."
+      "cancelled": "Collaboration on {campaign} was canceled. Agreed amount: {amount} (excluded from earnings and spending).",
+      "work_submitted": "Ready for review",
+      "work_changes_requested": "Changes requested",
+      "work_completed": "Work completed"
     }
   },
   "overview": {
@@ -2840,5 +2855,33 @@
     "mobilePage": "Page · mobile",
     "desktopCard": "Card · desktop",
     "mobileCard": "Card · mobile"
+  },
+  "work": {
+    "label": "Work status",
+    "in_progress": "Work in progress",
+    "submitted": "Ready for review",
+    "changes_requested": "Changes requested",
+    "completed": "Work completed",
+    "submit": "Mark work as done",
+    "changes": "Request changes",
+    "complete": "Confirm completion",
+    "submitHint": "Notify the company that the agreed work is ready for review.",
+    "changesHint": "Explain what needs fixing. Your reason will appear in the chat and notify the other participant.",
+    "completeHint": "Confirm that the agreed work is complete. You can then leave a review. Completion cannot be undone.",
+    "reason": "What needs fixing?",
+    "reasonHint": "Describe the required changes (10–2000 characters).",
+    "directCompleteHint": "Confirm that the agreed work is complete. Confirmation is permanent."
+  },
+  "discussion": {
+    "title": "Reopen discussion",
+    "request": "Reopen discussion",
+    "hint": "Accepting only reopens discussion. Hiring requires a new company offer and your acceptance.",
+    "pending": "Request sent. Waiting for the creator or agency to respond.",
+    "invitation": "The company would like to reopen discussion.",
+    "accept": "Accept discussion",
+    "reject": "Decline request",
+    "message": "Message",
+    "send": "Send request",
+    "defaultMessage": "We would like to give you another chance and discuss working together again."
   }
 }
