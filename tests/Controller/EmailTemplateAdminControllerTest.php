@@ -47,6 +47,12 @@ final class EmailTemplateAdminControllerTest extends WebTestCase
         $this->client->loginUser($admin, 'main');
         $this->client->request('GET', '/api/admin/email-templates?locale=en');
         self::assertResponseIsSuccessful();
+        foreach ($this->payload()['data']['templates'] as $template) {
+            self::assertStringContainsString('/images/email/wave-icon-v1.png', $template['htmlBody']);
+            self::assertStringContainsString('/images/email/wave-logo-v1.png', $template['htmlBody']);
+            self::assertContains('recipientName', $template['variables']);
+            self::assertArrayHasKey('recipientName', $template['preview']);
+        }
         self::assertSame(
             [
                 'verify',
@@ -190,7 +196,7 @@ final class EmailTemplateAdminControllerTest extends WebTestCase
             self::assertSame($locale, $templates[10]['locale']);
         }
 
-        $htmlBody = '<html><body><h1>{{heading}}</h1><a href="{{actionUrl}}">{{buttonLabel}}</a></body></html>';
+        $htmlBody = '<html><body><h1>{{heading}}</h1><p>{{recipientName}}</p><a href="{{actionUrl}}">{{buttonLabel}}</a></body></html>';
         $this->jsonRequest('PUT', '/api/admin/email-templates/verify?locale=en', [
             'subject' => 'A custom verification subject',
             'htmlBody' => $htmlBody,
@@ -255,6 +261,37 @@ final class EmailTemplateAdminControllerTest extends WebTestCase
         self::assertEmailSubjectContains($applicationEmail, 'A custom application email');
         self::assertEmailHtmlBodyContains($applicationEmail, 'Avery &lt;Creator&gt;');
         self::assertEmailHtmlBodyContains($applicationEmail, 'Hello &lt;script&gt;');
+    }
+
+    public function testSavedStockBrandingIsUpgradedForPreviewAndSendingWithoutRewritingTheTemplate(): void
+    {
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $admin = new User('brand-admin@example.test', 'ROLE_COMPANY');
+        $admin->setPassword('unused-test-hash');
+        $admin->setAdmin(true);
+        $source = '<html><body><table role="presentation" cellspacing="0" cellpadding="0" border="0"><tr><td style="background-color:#e7967c">w</td><td>wave</td></tr></table><h1>{{heading}}</h1><p>Saved custom copy.</p></body></html>';
+        $em->persist($admin);
+        $em->persist(new EmailTemplate('verify', 'en', 'Saved subject', $source));
+        $em->flush();
+        $this->client->loginUser($admin, 'main');
+        $this->client->request('GET', '/api/admin/email-templates?locale=en');
+        self::assertResponseIsSuccessful();
+        $preview = $this->payload()['data']['templates'][0]['htmlBody'];
+        self::assertStringContainsString('/images/email/wave-icon-v1.png', $preview);
+        self::assertStringContainsString('Saved custom copy.', $preview);
+        self::assertStringContainsString('{{heading}}', $preview);
+
+        static::getContainer()->get(AccountEmailSender::class)->sendVerification(
+            new User('brand-recipient@example.test', 'ROLE_CREATOR'), str_repeat('b', 64), 'en',
+        );
+        self::assertEmailCount(1);
+        $email = self::getMailerMessage();
+        self::assertInstanceOf(Email::class, $email);
+        self::assertEmailSubjectContains($email, 'Saved subject');
+        self::assertEmailHtmlBodyContains($email, '/images/email/wave-logo-v1.png');
+        self::assertEmailHtmlBodyContains($email, 'Saved custom copy.');
+        $saved = static::getContainer()->get(EntityManagerInterface::class)->getRepository(EmailTemplate::class)->findOneBy(['templateKey' => 'verify', 'locale' => 'en']);
+        self::assertSame($source, $saved->getHtmlBody());
     }
 
     private function csrfToken(): string

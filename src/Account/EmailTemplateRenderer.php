@@ -2,11 +2,16 @@
 
 namespace App\Account;
 
+use App\Service\SiteOrigin;
 use InvalidArgumentException;
 use RuntimeException;
 
 final class EmailTemplateRenderer
 {
+    public function __construct(private readonly SiteOrigin $origin)
+    {
+    }
+
     private const TEMPLATES = [
         'campaign_alert' => 'campaign_alert.html',
         'credit_code_assigned' => 'credit_code_assigned.html',
@@ -217,6 +222,8 @@ final class EmailTemplateRenderer
      */
     public function render(string $template, array $variables, ?string $source = null): string
     {
+        // Optional for older/custom callers that only know an email address.
+        $variables += ['recipientName' => ''];
         if (!isset(self::TEMPLATES[$template])) {
             throw new InvalidArgumentException(sprintf('Unknown email template "%s".', $template));
         }
@@ -226,7 +233,7 @@ final class EmailTemplateRenderer
             }
         }
 
-        $source ??= $this->getDefaultHtml($template);
+        $source = $source === null ? $this->getDefaultHtml($template) : $this->prepareHtml($source);
         $html = preg_replace_callback(
             '/\{\{\s*([A-Za-z][A-Za-z0-9_]*)\s*\}\}/',
             static function (array $matches) use ($variables): string {
@@ -246,6 +253,28 @@ final class EmailTemplateRenderer
         return $html;
     }
 
+    /** Upgrade only the original stock header; preserve custom copy and layouts. */
+    public function prepareHtml(string $source): string
+    {
+        $pattern = '~<!-- wave:brand -->|<table role="presentation" cellspacing="0" cellpadding="0" border="0">\s*<tr>\s*<td[^>]*background-color:\s*#e7967c[^>]*>w</td>\s*<td[^>]*>wave</td>\s*</tr>\s*</table>~';
+        $html = preg_replace_callback($pattern, function (): string {
+            $header = file_get_contents(dirname(__DIR__, 2).'/templates/emails/_brand.html');
+            if (!is_string($header)) {
+                throw new RuntimeException('Could not read the email brand header.');
+            }
+
+            return strtr($header, [
+                '{{brandIconUrl}}' => htmlspecialchars($this->origin->url('/images/email/wave-icon-v1.png'), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'),
+                '{{brandLogoUrl}}' => htmlspecialchars($this->origin->url('/images/email/wave-logo-v1.png'), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'),
+            ]);
+        }, $source);
+        if (!is_string($html)) {
+            throw new RuntimeException('Could not prepare the email brand header.');
+        }
+
+        return $html;
+    }
+
     public function getDefaultHtml(string $template): string
     {
         if (!isset(self::TEMPLATES[$template])) {
@@ -258,7 +287,7 @@ final class EmailTemplateRenderer
             throw new RuntimeException(sprintf('Could not read email template "%s".', $template));
         }
 
-        return $html;
+        return $this->prepareHtml($html);
     }
 
     /**
@@ -270,7 +299,7 @@ final class EmailTemplateRenderer
             throw new InvalidArgumentException(sprintf('Unknown email template "%s".', $template));
         }
 
-        return self::REQUIRED_VARIABLES[$template];
+        return array_values(array_unique([...self::REQUIRED_VARIABLES[$template], 'recipientName']));
     }
 
     /**

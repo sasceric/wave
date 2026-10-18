@@ -176,6 +176,7 @@ final class ContactEmailCopy
             'messageLabel' => $copy['messageLabel'],
             'role' => $copy['roles']['creator'],
             'name' => 'Alex Creator',
+            'recipientName' => '',
             'email' => 'alex@example.test',
             'interest' => $copy['interests']['collaboration'],
             'message' => $sampleMessages[$locale] ?? $sampleMessages['bs'],

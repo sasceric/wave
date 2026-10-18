@@ -57,6 +57,9 @@ final class SupportTicketControllerTest extends WebTestCase
         $email = self::getMailerMessage();
         self::assertInstanceOf(Email::class, $email);
         self::assertSame('alex@example.test', $email->getTo()[0]->getAddress());
+        self::assertSame($data['name'], $email->getTo()[0]->getName());
+        self::assertEmailTextBodyContains($email, 'Hello, '.$data['name'].'!');
+        self::assertEmailHtmlBodyContains($email, 'Hello, '.$data['name'].'!');
         self::assertEmailTextBodyContains($email, $created['trackingUrl']);
         self::assertEmailHtmlBodyContains($email, 'Track ticket');
         self::assertStringNotContainsString($data['description'], $email->getTextBody());

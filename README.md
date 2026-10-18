@@ -361,6 +361,25 @@ Symfony Mailer builds its SMTP DSN from `MAIL_MAILER`, `MAIL_HOST`, `MAIL_PORT`,
 
 Verification, social-registration pending, account-approval, and password-reset emails share the editable HTML layout in `templates/emails/account_action.html`; contact notifications use `templates/emails/contact.html`. `EmailTemplateRenderer` replaces `{{variable}}` placeholders with HTML-escaped values. The admin editor lists the variables for each template and saves locale-specific subject and HTML overrides in the `email_template` table. The account language selected at registration is retained for approval mail. No Twig or Vue rendering is involved in email delivery.
 
+All default email layouts share `templates/emails/_brand.html`, using PNG exports
+of the existing Wave icon and wordmark from `frontend/public/images/email/`.
+The icon has transparent circular corners baked into its pixels, so it stays
+circular even in mail clients that ignore CSS `border-radius`. Images use the
+configured `APP_BASE_URL` and explicit dimensions, with `Wave` alternative text.
+Deploy the frontend assets together with the email templates. Saved overrides
+containing the original stock letter-based header are upgraded for admin previews
+and sending, without changing their custom copy or database rows. Fully custom
+headers are preserved. Bump the versioned image filenames when replacing artwork.
+
+Email templates expose `{{recipientName}}` in the editor and preview variables.
+It uses the recipient's saved creator display name or company name (company takes
+priority for agencies), or the supplied name for a guest support ticket. Unknown
+names stay empty; names are never guessed from email addresses. `{{greeting}}`
+contains the complete localized greeting with a name when known, and a neutral
+greeting otherwise. Both HTML and plain-text messages use it, and the `To` header
+includes the known name. Values remain HTML-escaped. Newsletter confirmations
+look up the account matching the exact recipient email, excluding deleted users.
+
 For local email testing, install Mailpit and run it in its own terminal:
 
 ```sh

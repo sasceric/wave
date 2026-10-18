@@ -252,6 +252,46 @@ final class EmailAccountFlowTest extends WebTestCase
         self::assertSame('Potvrdi svoju e-mail adresu prije ove radnje.', $this->payload()['error']);
     }
 
+    public function testEmailsPersonalizeKnownRecipientsAcrossAllLanguagesAndBothAccountTypes(): void
+    {
+        $sender = static::getContainer()->get(\App\Account\AccountEmailSender::class);
+        $creator = new User('personalized@example.test', 'ROLE_CREATOR');
+        $creator->setCreator(new Creator('personalized', 'Amina <Studio> & Co.', '', '', '', []));
+        foreach (['bs' => 'Zdravo', 'hr' => 'Pozdrav', 'sr' => 'Zdravo', 'cnr' => 'Zdravo', 'sl' => 'Pozdravljeni', 'en' => 'Hello', 'de' => 'Hallo'] as $locale => $base) {
+            $sender->sendVerification($creator, str_repeat('a', 64), $locale);
+            $email = self::getMailerMessage(count(self::getMailerMessages()) - 1);
+            self::assertInstanceOf(Email::class, $email);
+            self::assertSame('Amina <Studio> & Co.', $email->getTo()[0]->getName());
+            self::assertEmailTextBodyContains($email, $base.', Amina <Studio> & Co.!');
+            self::assertEmailHtmlBodyContains($email, $base.', Amina &lt;Studio&gt; &amp; Co.!');
+            self::assertEmailHtmlBodyNotContains($email, '<Studio>');
+        }
+
+        $agency = new User('personalized-agency@example.test', 'ROLE_COMPANY');
+        $agency->setPreferredLocale('en');
+        $agency->setCompany(new Company('agency-personalized', 'Studio & Co.', 'Marketing'));
+        $agency->getCompany()->setCompanyType('agency');
+        $agency->setCreator(new Creator('agency-studio', 'Different studio label', '', '', '', []));
+        $sender->sendCreatorHired($agency, 'Client Brand', 'A campaign');
+        $email = self::getMailerMessage(count(self::getMailerMessages()) - 1);
+        self::assertSame('Studio & Co.', $email->getTo()[0]->getName());
+        self::assertEmailTextBodyContains($email, 'Hello, Studio & Co.!');
+        self::assertEmailHtmlBodyContains($email, 'Hello, Studio &amp; Co.!');
+
+        $sender->sendPasswordReset(new User('no-name@example.test', 'ROLE_CREATOR'), str_repeat('b', 64), 'en');
+        $email = self::getMailerMessage(count(self::getMailerMessages()) - 1);
+        self::assertSame('', $email->getTo()[0]->getName());
+        self::assertEmailTextBodyContains($email, 'Hello!');
+        self::assertEmailTextBodyNotContains($email, 'Hello, no-name');
+
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $em->persist(new \App\Entity\EmailTemplate('verify', 'en', 'Personalized template', '<html><body><h1>{{recipientName}}</h1><p>{{greeting}}</p></body></html>'));
+        $em->flush();
+        $sender->sendVerification($creator, str_repeat('c', 64), 'en');
+        $email = self::getMailerMessage(count(self::getMailerMessages()) - 1);
+        self::assertEmailHtmlBodyContains($email, '<h1>Amina &lt;Studio&gt; &amp; Co.</h1>');
+    }
+
     public function testEmailTemplateEscapesInjectedVariables(): void
     {
         $html = static::getContainer()->get(EmailTemplateRenderer::class)->render('account_action', [

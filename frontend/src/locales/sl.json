@@ -2100,6 +2100,7 @@
     "invalidFiles": "Izberi največ 3 datoteke PNG, JPG, WebP, GIF, MP4 ali PDF, vsako do 10 MB.",
     "saveFailed": "Zahtevek ni shranjen. Poskusi znova.",
     "notFound": "Zahtevek ni najden. Odpri zasebno povezavo iz potrditve.",
+    "emailGreeting": "Pozdravljeni!",
     "emailSubject": "Prejeli smo tvoj zahtevek",
     "emailMessage": "Hvala za sporočilo. Naša ekipa bo pregledala tvoj zahtevek in te kontaktirala.",
     "emailFallback": "Če gumb ne deluje, odpri to povezavo:",

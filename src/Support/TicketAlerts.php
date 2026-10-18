@@ -3,6 +3,7 @@
 namespace App\Support;
 
 use App\Account\EmailTemplateRenderer;
+use App\Account\EmailRecipient;
 use App\Entity\Notification;
 use App\Entity\SupportTicket;
 use App\Entity\User;
@@ -51,7 +52,8 @@ final class TicketAlerts
                 } catch (\Throwable $error) {
                     $this->logger->error('support.ticket.notification_failed', ['ticket_id' => $ticket->getId(), 'exception' => $error]);
                 }
-                $this->email($ticket, $recipient->getEmail(), $recipient->getPreferredLocale(), $toStaff);
+                $name = EmailRecipient::name($recipient) ?: ($toStaff ? '' : $ticket->getName());
+                $this->email($ticket, $recipient->getEmail(), $recipient->getPreferredLocale(), $toStaff, $name);
             } catch (\Throwable $error) {
                 // A saved reply remains successful even if an alert provider fails.
                 $this->logger->error('support.ticket.alert_failed', ['ticket_id' => $ticket->getId(), 'exception' => $error]);
@@ -59,25 +61,28 @@ final class TicketAlerts
         }
         if (!$toStaff && !$ticket->getOwner()) {
             try {
-                $this->email($ticket, $ticket->getEmail(), $ticket->getLocale(), false);
+                $this->email($ticket, $ticket->getEmail(), $ticket->getLocale(), false, $ticket->getName());
             } catch (\Throwable $error) {
                 $this->logger->error('support.ticket.alert_failed', ['ticket_id' => $ticket->getId(), 'exception' => $error]);
             }
         }
     }
 
-    private function email(SupportTicket $ticket, string $email, string $locale, bool $staff): void
+    private function email(SupportTicket $ticket, string $email, string $locale, bool $staff, string $name): void
     {
         $url = $ticket->getOwner() || $staff
             ? $this->origin->url($this->routes->localizedPath($staff ? 'admin-support' : 'account-support', $locale)).'?ticket='.$ticket->getId()
             : $this->origin->url($this->routes->localizedPath('support-track', $locale)).'#token='.$ticket->getTrackingToken();
         $heading = $this->copy->get($locale, 'ticketUpdated').' #'.$ticket->getNumber();
         $message = $this->copy->get($locale, 'replyEmail');
-        $this->mailer->send((new Email())->from(new Address($this->fromAddress, $this->fromName))->to($email)
-            ->subject($heading)->text($heading."\n\n".$message."\n\n".$url)
+        $name = EmailRecipient::cleanName($name);
+        $greeting = EmailRecipient::greeting($this->copy->get($locale, 'emailGreeting'), $name);
+        $this->mailer->send((new Email())->from(new Address($this->fromAddress, $this->fromName))->to(new Address($email, $name))
+            ->subject($heading)->text($greeting."\n\n".$heading."\n\n".$message."\n\n".$url)
             ->html($this->templates->render('account_action', [
                 'locale' => $locale, 'preheader' => $message, 'eyebrow' => 'WAVE', 'heading' => $heading,
-                'greeting' => '', 'message' => $message, 'buttonLabel' => $this->copy->get($locale, 'view'),
+                'greeting' => $greeting, 'message' => $message, 'buttonLabel' => $this->copy->get($locale, 'view'),
+                'recipientName' => $name,
                 'actionUrl' => $url, 'expiration' => '', 'security' => $this->copy->get($locale, 'keepLink'),
                 'fallback' => $this->copy->get($locale, 'emailFallback'), 'footer' => $this->copy->get($locale, 'emailFooter'),
             ])));

@@ -2100,6 +2100,7 @@
     "invalidFiles": "Odaberi najviše 3 PNG, JPG, WebP, GIF, MP4 ili PDF datoteke, svaku do 10 MB.",
     "saveFailed": "Tiket nije sačuvan. Pokušaj ponovo.",
     "notFound": "Tiket nije pronađen. Otvori privatni link iz potvrde.",
+    "emailGreeting": "Zdravo!",
     "emailSubject": "Primili smo tvoj tiket",
     "emailMessage": "Hvala što si nam se javio/la. Naš tim će pregledati tvoj zahtev i kontaktirati te.",
     "emailFallback": "Ako dugme ne radi, otvori ovaj link:",

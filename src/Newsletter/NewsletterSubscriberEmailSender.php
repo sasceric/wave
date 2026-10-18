@@ -3,7 +3,9 @@
 namespace App\Newsletter;
 
 use App\Account\EmailTemplateRenderer;
+use App\Account\EmailRecipient;
 use App\Entity\EmailTemplate;
+use App\Entity\User;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\Mailer\MailerInterface;
@@ -26,13 +28,17 @@ final class NewsletterSubscriberEmailSender
         $copy = NewsletterSubscriberEmailCopy::forLocale($locale);
         $customization = $this->customization($locale);
         $variables = $copy + ['locale' => NewsletterSubscriberEmailCopy::languageTag($locale)];
+        $user = $this->entityManager->getRepository(User::class)->findOneBy(['email' => mb_strtolower(trim($email)), 'deletedAt' => null]);
+        $name = EmailRecipient::name($user);
+        $variables['recipientName'] = $name;
+        $variables['greeting'] = EmailRecipient::greeting($copy['greeting'], $name);
 
         $message = new Email()
             ->from(new Address($this->fromAddress, $this->fromName))
-            ->to($email)
+            ->to(new Address($email, $name))
             ->subject($customization instanceof EmailTemplate ? $customization->getSubject() : $copy['subject'])
             ->text(implode("\n\n", [
-                $copy['greeting'],
+                $variables['greeting'],
                 $copy['message'],
                 $copy['footer'],
             ]))
@@ -55,8 +61,12 @@ final class NewsletterSubscriberEmailSender
      */
     public function previewVariables(string $locale): array
     {
-        return NewsletterSubscriberEmailCopy::forLocale($locale)
+        $variables = NewsletterSubscriberEmailCopy::forLocale($locale)
             + ['locale' => NewsletterSubscriberEmailCopy::languageTag($locale)];
+        $variables['recipientName'] = 'Amina Kovač';
+        $variables['greeting'] = EmailRecipient::greeting($variables['greeting'], $variables['recipientName']);
+
+        return $variables;
     }
 
     private function customization(string $locale): ?EmailTemplate

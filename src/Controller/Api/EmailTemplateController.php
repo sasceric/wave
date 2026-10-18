@@ -66,7 +66,7 @@ final class EmailTemplateController
                     ? $customization->getSubject()
                     : $this->defaultSubject($key, $locale, $accountEmailSender, $subscriberEmailSender),
                 'htmlBody' => $customization instanceof EmailTemplate
-                    ? $customization->getHtmlBody()
+                    ? $renderer->prepareHtml($customization->getHtmlBody())
                     : $renderer->getDefaultHtml($key),
                 'variables' => $renderer->variables($key),
                 'preview' => $key === 'contact'

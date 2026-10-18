@@ -33,7 +33,7 @@ final class CampaignAlertDelivery
             $lock = $this->db->getDatabasePlatform() instanceof \Doctrine\DBAL\Platforms\SQLitePlatform ? '' : ' FOR UPDATE';
             $preference = $this->db->fetchAssociative('SELECT * FROM campaign_alert_preference WHERE user_id = ?'.$lock, [$id]);
             if (!$preference || !filter_var($preference['enabled'], FILTER_VALIDATE_BOOLEAN) || $preference['checked_at'] !== $since) return;
-            $user = $this->db->fetchAssociative("SELECT u.*, r.display_name FROM wave_user u JOIN creator r ON r.owner_id = u.id WHERE u.id = ? AND u.deleted_at IS NULL AND u.email_verified = TRUE AND u.approved = TRUE AND u.phone IS NOT NULL AND u.phone <> '' AND u.city IS NOT NULL AND u.city <> '' AND u.country_code IS NOT NULL AND u.country_code <> '' AND r.category <> ''", [$id]);
+            $user = $this->db->fetchAssociative("SELECT u.*, COALESCE(NULLIF(TRIM(p.name), ''), r.display_name) AS recipient_name FROM wave_user u JOIN creator r ON r.owner_id = u.id LEFT JOIN company p ON p.owner_id = u.id WHERE u.id = ? AND u.deleted_at IS NULL AND u.email_verified = TRUE AND u.approved = TRUE AND u.phone IS NOT NULL AND u.phone <> '' AND u.city IS NOT NULL AND u.city <> '' AND u.country_code IS NOT NULL AND u.country_code <> '' AND r.category <> ''", [$id]);
             if (!$user) {
                 $this->db->executeStatement('UPDATE campaign_alert_preference SET checked_at = ? WHERE user_id = ?', [gmdate('Y-m-d H:i:s'), $id]);
                 return;
@@ -51,11 +51,12 @@ final class CampaignAlertDelivery
                 $url = rtrim($this->baseUrl, '/').'/kampanje/'.$rows[0]['slug'];
                 $variables = [
                     'locale' => $locale, 'preheader' => $copy['message'], 'eyebrow' => 'WAVE', 'heading' => $copy['subject'],
-                    'greeting' => $copy['greeting'].' '.$user['display_name'].'!', 'message' => $copy['message'],
+                    'greeting' => EmailRecipient::greeting($copy['greeting'], $user['recipient_name']), 'message' => $copy['message'],
+                    'recipientName' => EmailRecipient::cleanName($user['recipient_name']),
                     'campaignsLabel' => $copy['campaigns'], 'campaigns' => $details, 'buttonLabel' => $copy['view'], 'actionUrl' => $url,
                     'footer' => $copy['footer'], 'settingsUrl' => $settingsUrl, 'settingsLabel' => $copy['settings'],
                 ];
-                $email = new Email()->from(new Address($this->fromAddress, $this->fromName))->to($user['email'])->subject($copy['subject'])
+                $email = new Email()->from(new Address($this->fromAddress, $this->fromName))->to(new Address($user['email'], EmailRecipient::cleanName($user['recipient_name'])))->subject($copy['subject'])
                     ->text($variables['greeting']."\n\n".$copy['message']."\n\n".$details."\n\n".$variables['footer'].' '.$settingsUrl)
                     ->html($this->templates->render('campaign_alert', $variables));
                 $this->transport->send($email);

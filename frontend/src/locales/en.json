@@ -2099,6 +2099,7 @@
     "invalidFiles": "Choose up to 3 PNG, JPG, WebP, GIF, MP4 or PDF files, each no larger than 10 MB.",
     "saveFailed": "Your ticket was not saved. Please try again.",
     "notFound": "Ticket not found. Open the private link from your confirmation.",
+    "emailGreeting": "Hello!",
     "emailSubject": "We received your ticket",
     "emailMessage": "Thanks for contacting us. Our team will review your request and get back to you.",
     "emailFallback": "If the button does not work, open this link:",

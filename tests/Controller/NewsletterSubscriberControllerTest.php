@@ -59,6 +59,25 @@ final class NewsletterSubscriberControllerTest extends WebTestCase
         self::assertEmailSubjectContains($email, 'You’re on the Wave updates list');
         self::assertEmailHtmlBodyContains($email, '<html lang="en">');
         self::assertEmailHtmlBodyContains($email, 'Glad you’re here.');
+        self::assertEmailHtmlBodyContains($email, 'Hello!');
+    }
+
+    public function testSignupUsesTheNameOfTheAccountMatchingTheRecipientEmail(): void
+    {
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $user = new User('known-newsletter@example.test', 'ROLE_CREATOR');
+        $user->setPassword('unused-test-hash');
+        $user->setCreator(new \App\Entity\Creator('newsletter-known', 'Amina Kovač', '', '', '', []));
+        $em->persist($user);
+        $em->flush();
+        $this->jsonRequest('POST', '/api/newsletter/subscribers?locale=en', ['email' => $user->getEmail(), 'website' => ''], $this->csrfToken());
+        self::assertResponseIsSuccessful();
+        self::assertEmailCount(1);
+        $email = self::getMailerMessage();
+        self::assertInstanceOf(Email::class, $email);
+        self::assertSame('Amina Kovač', $email->getTo()[0]->getName());
+        self::assertEmailHtmlBodyContains($email, 'Hello, Amina Kovač!');
+        self::assertEmailTextBodyContains($email, 'Hello, Amina Kovač!');
     }
 
     public function testSignupHoneypotIsSilentlyAccepted(): void

@@ -2099,6 +2099,7 @@
     "invalidFiles": "Wähle höchstens 3 PNG-, JPG-, WebP-, GIF-, MP4- oder PDF-Dateien mit jeweils maximal 10 MB aus.",
     "saveFailed": "Dein Ticket wurde nicht gespeichert. Bitte versuche es erneut.",
     "notFound": "Ticket nicht gefunden. Öffne den privaten Link aus deiner Bestätigung.",
+    "emailGreeting": "Hallo!",
     "emailSubject": "Wir haben dein Ticket erhalten",
     "emailMessage": "Danke für deine Nachricht. Unser Team prüft dein Anliegen und meldet sich bei dir.",
     "emailFallback": "Falls der Button nicht funktioniert, öffne diesen Link:",

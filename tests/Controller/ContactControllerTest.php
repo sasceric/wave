@@ -52,7 +52,8 @@ final class ContactControllerTest extends WebTestCase
         self::assertStringContainsString('Interest: Collaboration', $email->getTextBody());
         self::assertStringContainsString('Alex Creator', $email->getTextBody());
         self::assertStringContainsString('working with Wave', $email->getTextBody());
-        self::assertEmailHtmlBodyContains($email, '<td style="padding-left:10px;color:#173c35;');
+        self::assertEmailHtmlBodyContains($email, '/images/email/wave-icon-v1.png');
+        self::assertEmailHtmlBodyContains($email, '/images/email/wave-logo-v1.png');
         self::assertEmailHtmlBodyContains($email, 'border-top:4px solid #e7967c');
         self::assertEmailHtmlBodyContains($email, 'CONTACT FORM MESSAGE');
         self::assertEmailHtmlBodyContains($email, 'Reply directly to the sender using the Reply button.');

@@ -3,6 +3,7 @@
 namespace App\Controller\Api;
 
 use App\Account\EmailTemplateRenderer;
+use App\Account\EmailRecipient;
 use App\Api\ApiAccess;
 use App\Api\JsonPayload;
 use App\Entity\SupportTicket;
@@ -104,13 +105,16 @@ final class SupportTicketController
         $trackingUrl = $this->trackingUrl($ticket);
         $heading = $this->copy->get($locale, 'successTitle');
         $message = $this->copy->get($locale, 'emailMessage').' #'.$ticket->getNumber();
+        $recipientName = EmailRecipient::name($ticket->getOwner()) ?: EmailRecipient::cleanName($ticket->getName());
+        $greeting = EmailRecipient::greeting($this->copy->get($locale, 'emailGreeting'), $recipientName);
         try {
-            $email = (new Email())->from(new Address($fromAddress, $fromName))->to(new Address($ticket->getEmail(), $ticket->getName()))
+            $email = (new Email())->from(new Address($fromAddress, $fromName))->to(new Address($ticket->getEmail(), $recipientName))
                 ->subject($this->copy->get($locale, 'emailSubject').' #'.$ticket->getNumber())
-                ->text($heading."\n\n".$message."\n\n".$trackingUrl)
+                ->text($greeting."\n\n".$heading."\n\n".$message."\n\n".$trackingUrl)
                 ->html($templates->render('account_action', [
                     'locale' => $locale, 'preheader' => $message, 'eyebrow' => 'WAVE', 'heading' => $heading,
-                    'greeting' => $ticket->getName(), 'message' => $message, 'buttonLabel' => $this->copy->get($locale, 'track'),
+                    'greeting' => $greeting, 'message' => $message, 'buttonLabel' => $this->copy->get($locale, 'track'),
+                    'recipientName' => $recipientName,
                     'actionUrl' => $trackingUrl, 'expiration' => '', 'security' => $this->copy->get($locale, 'keepLink'),
                     'fallback' => $this->copy->get($locale, 'emailFallback'), 'footer' => $this->copy->get($locale, 'emailFooter'),
                 ]));

@@ -514,10 +514,9 @@ final class AccountEmailSender
     public function sendCreditCodeAssigned(User $user, string $code, int $amount): void
     {
         $copy = CreditCodeEmailCopy::forLocale($user->getPreferredLocale());
-        $name = $user->getCreator()?->getDisplayName() ?? $user->getCompany()?->getName() ?? '';
+        $name = EmailRecipient::name($user);
         $this->sendMarketplaceEmail($user, 'credit_code_assigned', 'account-credits', [
             'name' => $name, 'amount' => (string) $amount, 'code' => $code,
-            'greeting' => $copy['greeting'].', '.$name.'!',
             'message' => sprintf($copy['message'], $amount),
             'firstValue' => $code, 'secondValue' => (string) $amount,
         ]);
@@ -544,7 +543,6 @@ final class AccountEmailSender
         $variables['actionUrl'] = 'https://wave.ba/example-action';
         if ($template === 'credit_code_assigned') {
             $variables += ['name' => 'Amina Kovač', 'amount' => '100', 'code' => 'WAVE2345', 'firstValue' => 'WAVE2345', 'secondValue' => '100'];
-            $variables['greeting'] .= ', Amina Kovač!';
             $variables['message'] = sprintf($variables['message'], 100);
         } elseif ($template === 'credits_activated') {
             $variables += ['firstValue' => '2026-10-07', 'secondValue' => '50', 'details' => $variables['applicationLabel'] . ': 10' . "\n" . $variables['campaignLabel'] . ': 30'];
@@ -580,6 +578,9 @@ final class AccountEmailSender
                 'details' => 'We would love to collaborate on your next campaign.',
             ];
         }
+
+        $variables['recipientName'] = in_array($template, ['application_received', 'creator_inquiry_accepted'], true) ? 'Wave Studio' : 'Amina Kovač';
+        $variables['greeting'] = EmailRecipient::greeting($variables['greeting'], $variables['recipientName']);
 
         return $variables;
     }
@@ -642,6 +643,9 @@ final class AccountEmailSender
         string $url,
         array $variables,
     ): void {
+        $recipientName = EmailRecipient::name($user);
+        $variables['recipientName'] = $recipientName;
+        $variables['greeting'] = EmailRecipient::greeting($variables['greeting'], $recipientName);
         $customization = $this->entityManager->getRepository(EmailTemplate::class)->findOneBy([
             'templateKey' => $type,
             'locale' => $locale,
@@ -669,7 +673,7 @@ final class AccountEmailSender
 
         $message = new Email()
             ->from(new Address($this->fromAddress, $this->fromName))
-            ->to($user->getEmail())
+            ->to(new Address($user->getEmail(), $recipientName))
             ->subject($customization instanceof EmailTemplate ? $customization->getSubject() : $subject)
             ->text(implode("\n\n", $text))
             ->html($this->templates->render(
