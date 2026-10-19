@@ -624,11 +624,19 @@
     display: flex;
     align-items: center;
     gap: 11px;
-    margin: -18px 8px 0;
+    margin: 0 8px;
     position: relative;
   }
 
+  &__company-heading > div {
+    min-width: 0;
+    flex: 1;
+    padding-top: 8px;
+  }
+
   &__avatar--company {
+    align-self: flex-start;
+    margin-top: -18px;
     width: 62px;
     height: 62px;
     background: #fffefa;
@@ -636,6 +644,7 @@
   }
 
   &__company-heading h2 {
+    overflow-wrap: anywhere;
     margin: 0 0 4px;
     color: var(--ink);
     font-family: var(--serif);
@@ -733,6 +742,10 @@
     line-height: 1.5;
   }
 
+  &__hiring-progress {
+    margin-bottom: 5px;
+  }
+
   &__facts {
     display: grid;
     gap: 0;
@@ -809,25 +822,34 @@
     white-space: pre-line;
   }
 
-  &__campaign-link {
-    width: 100%;
-    cursor: pointer;
-    font-family: inherit;
-    min-height: 43px;
+  // Shared geometry for every sidebar action, including child-component triggers.
+  // Modal actions are teleported outside this panel and retain their usual sizing.
+  &__details &__campaign-card-body :is(.button, .campaign-cancel-action, .campaign-messages__campaign-link) {
+    box-sizing: border-box;
     display: flex;
     align-items: center;
     justify-content: center;
+    width: 100%;
+    min-height: 43px;
     gap: 8px;
-    margin-top: 12px;
-    padding: 0 12px;
-    border: 1px solid var(--forest);
+    padding: 10px 12px;
     border-radius: 8px;
-    color: #fffefa;
-    background: var(--forest);
-    font-size: 10px;
+    font-family: inherit;
+    font-size: 14px;
     font-weight: 600;
+    line-height: 21px;
     text-align: center;
     text-decoration: none;
+
+    > svg { flex: 0 0 16px; width: 16px; height: 16px; }
+  }
+
+  &__campaign-link {
+    margin-top: 12px;
+    border: 1px solid var(--forest);
+    color: #fffefa;
+    background: var(--forest);
+    cursor: pointer;
   }
 
   &__campaign-link:disabled { opacity: .55; cursor: not-allowed; }

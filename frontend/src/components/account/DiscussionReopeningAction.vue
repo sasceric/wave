@@ -61,6 +61,5 @@ watch([() => props.conversationId, () => currentUser.value?.id], () => { open.va
   gap: 10px;
   margin-top: 16px;
   p, small { margin: 0; font-size: 12px; line-height: 1.6; overflow-wrap: anywhere; white-space: pre-wrap; }
-  > .button { width: 100%; min-height: 40px; padding: 10px 12px; font-size: 12px; justify-content: center; }
 }
 </style>

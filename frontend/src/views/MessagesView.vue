@@ -1476,7 +1476,7 @@ function messageTimeDescription(value) {
                 </span>
               </div>
               <p class="campaign-messages__summary">{{ selectedCampaign.summary }}</p>
-              <CampaignHiringProgress :campaign="selectedCampaign" />
+              <CampaignHiringProgress :campaign="selectedCampaign" show-icon class="campaign-messages__hiring-progress" />
               <dl class="campaign-messages__facts">
                 <div>
                   <dt><Wallet :size="16" aria-hidden="true" />{{ t('campaignChat.budget') }}</dt>

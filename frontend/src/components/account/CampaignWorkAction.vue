@@ -73,6 +73,5 @@ watch([() => props.offer.id, () => props.inquiry, () => currentUser.value?.id], 
   &__status, &__reason { margin: 0; font-size: 12px; line-height: 1.6; }
   &__status { color: var(--forest); font-weight: 600; }
   &__reason { color: var(--muted); white-space: pre-wrap; overflow-wrap: anywhere; }
-  > .button { width: 100%; min-height: 40px; padding: 10px 12px; font-size: 12px; justify-content: center; }
 }
 </style>

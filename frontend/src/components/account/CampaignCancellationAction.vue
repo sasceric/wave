@@ -63,14 +63,7 @@ watch(() => [currentUser.value?.id, props.offerId, props.inquiry], () => { open.
   &:focus-visible { outline: 2px solid #a84232; outline-offset: 2px; }
 
   &--full-width {
-    display: flex;
-    box-sizing: border-box;
-    width: 100%;
-    min-height: 43px;
     margin-top: 12px;
-    padding: 10px 16px;
-    border-radius: 8px;
-    font-size: 12px;
   }
 }
 </style>
