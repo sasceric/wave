@@ -44,7 +44,7 @@
     "openCookieSettings": "Postavke kolačića",
     "cookieBannerEyebrow": "Kratka napomena",
     "cookieBannerTitle": "Vaša privatnost nam je važna",
-    "cookieBannerDescription": "Nužna pohrana omogućuje rad Wavea. Google Analytics nije obvezan i učitava se samo ako ga dopustite. Svoj izbor možete promijeniti u bilo kojem trenutku.",
+    "cookieBannerDescription": "Neophodna pohrana omogućava rad Wavea. Analitika i marketing su odvojeni, opcionalni izbori i uključuju se samo uz tvoju dozvolu.",
     "cookieBannerDismiss": "U redu",
     "essentialStorage": "Nužna pohrana",
     "essentialStorageDescription": "Potrebna je za prijavu, sigurnost, jezik i spremanje vašeg izbora privatnosti.",
@@ -120,7 +120,8 @@
           "heading": "Vanjske usluge",
           "paragraphs": [
             "Wave poslužuje fontove lokalno i može prikazati YouTube videozapise dodane na profile. Ti pružatelji mogu primiti tehničke podatke zahtjeva kada se vaš preglednik poveže s njihovim uslugama.",
-            "Ako odaberete prijavu putem Googlea ili Applea, odabrani pružatelj obrađuje podatke za prijavu prema vlastitim pravilima privatnosti. Google Analytics može obrađivati podatke o korištenju samo ako ga dopustite."
+            "Ako odaberete prijavu putem Googlea ili Applea, odabrani pružatelj obrađuje podatke za prijavu prema vlastitim pravilima privatnosti. Google Analytics može obrađivati podatke o korištenju samo ako ga dopustite.",
+            "Uz odvojeni pristanak za Marketing, Meta Pixel može obrađivati tehničke podatke o pregledniku, URL-u i registraciji radi mjerenja oglasa. Podatke obrađuje Meta prema svojoj politici privatnosti. Pristanak je moguće povući u postavkama kolačića."
           ],
           "links": [
             {
@@ -130,6 +131,10 @@
             {
               "label": "Appleova pravila privatnosti",
               "url": "https://www.apple.com/legal/privacy/"
+            },
+            {
+              "label": "Meta",
+              "url": "https://www.facebook.com/privacy/policy/"
             }
           ]
         }
@@ -137,7 +142,7 @@
     },
     "cookies": {
       "title": "Pravila o kolačićima",
-      "intro": "Wave koristi nužnu pohranu za osnovne funkcije. Google Analytics nije obvezan i učitava se samo nakon vašeg pristanka; Wave ne koristi oglašivačke kolačiće.",
+      "intro": "Wave koristi neophodnu pohranu za osnovne funkcije. Google Analytics i Meta Pixel su opcionalni i uključuju se samo uz odvojeni pristanak za analitiku ili marketing.",
       "sections": [
         {
           "heading": "Nužni kolačić sesije",
@@ -160,7 +165,7 @@
         {
           "heading": "Upravljanje podacima preglednika",
           "paragraphs": [
-            "Odabir analitike možete promijeniti ili povući u bilo kojem trenutku putem Postavki kolačića u podnožju. Wave čuva taj odabir u lokalnoj pohrani preglednika. Brisanje podataka stranice može vas odjaviti, poništiti jezik ili ponovno prikazati ovu obavijest."
+            "Pristanak za analitiku ili marketing možeš promijeniti ili povući u postavkama kolačića u podnožju. Izbor se čuva u pregledniku. Brisanje podataka stranice može te odjaviti i ponovo prikazati ovu obavijest."
           ]
         },
         {
@@ -177,6 +182,20 @@
           ]
         },
         {
+          "heading": "Marketinški kolačići (Meta Pixel)",
+          "paragraphs": [
+            "Ako je konfigurisan i dozvoliš Marketing, Meta Pixel mjeri posjete javnim stranicama i uspješne registracije radi procjene oglasa na Facebooku i Instagramu. Može koristiti kolačiće _fbp i _fbc. Meta može primiti tehničke podatke poput IP adrese, podataka o pregledniku, URL-a i prethodne stranice.",
+            "Wave šalje samo kategoriju računa, poznati tip kompanije i način registracije. Ne dodajemo ime, e-mail, telefon, poruke ili dogovorene iznose u marketinške događaje. Automatsko napredno povezivanje podataka nije uključeno.",
+            "Pristanak možeš povući u postavkama kolačića. Wave tada zaustavlja svoje marketinške događaje i briše Meta kolačiće koje može ukloniti na ovoj domeni. Registracija i sve osnovne funkcije rade i bez marketinga."
+          ],
+          "links": [
+            {
+              "label": "Meta – Privatnost",
+              "url": "https://www.facebook.com/privacy/policy/"
+            }
+          ]
+        },
+        {
           "heading": "Vanjski fontovi i videozapisi",
           "paragraphs": [
             "Fontovi sučelja poslužuju se lokalno s Wavea. Kada se prikaže video s profila, preglednik se može povezati s youtube-nocookie.com, uslugom Googlea. Ti pružatelji mogu obrađivati tehničke podatke ili koristiti vlastitu pohranu preglednika; Wave ne upravlja tom pohranom."
@@ -189,7 +208,9 @@
           ]
         }
       ]
-    }
+    },
+    "marketingStorage": "Marketing",
+    "marketingStorageDescription": "Dozvoli Meta Pixel za mjerenje oglasa na Facebooku i Instagramu i uspješnih registracija. Učitava se samo nakon tvog pristanka."
   },
   "app": {
     "loading": "Učitavanje…",

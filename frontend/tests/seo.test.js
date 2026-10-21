@@ -38,6 +38,8 @@ async function seoFixture() {
   const title = new vm.SourceTextModule(await readFile(new URL('../src/lib/pageTitle.js', import.meta.url), 'utf8'), { context })
   await title.link(() => {})
   const pageViews = []
+  const metaViews = []
+  const metaMetrics = new vm.SyntheticModule(['trackMetaPageView'], function () { this.setExport('trackMetaPageView', (path, options) => metaViews.push({ path, ...options })) }, { context })
   const metrics = new vm.SyntheticModule(['trackPageView'], function () {
     this.setExport('trackPageView', (path, options) => pageViews.push({ path, ...options, documentTitle: document.title }))
   }, { context })
@@ -45,9 +47,9 @@ async function seoFixture() {
   const breadcrumbs = new vm.SyntheticModule(['default'], function () { this.setExport('default', breadcrumbConfig) }, { context })
   const catalog = JSON.parse(await readFile(new URL('../src/locales/bs.json', import.meta.url), 'utf8'))
   const i18n = new vm.SyntheticModule(['default'], function () { this.setExport('default', { global: { t: key => key.split('.').reduce((value, part) => value[part], catalog) } }) }, { context })
-  await seo.link(path => path.includes('seo_breadcrumbs') ? breadcrumbs : path.includes('i18n') ? i18n : path.includes('privacyMetrics') ? metrics : path.includes('regionalSeo') ? regional : path.includes('pageTitle') ? title : paths)
+  await seo.link(path => path.includes('metaTracking') ? metaMetrics : path.includes('seo_breadcrumbs') ? breadcrumbs : path.includes('i18n') ? i18n : path.includes('privacyMetrics') ? metrics : path.includes('regionalSeo') ? regional : path.includes('pageTitle') ? title : paths)
   await seo.evaluate()
-  return { updateSeo: seo.namespace.updateSeo, regionalMetadata: regional.namespace.regionalMetadata, document, nodes, pageViews, updateProfileReviewSchema: seo.namespace.updateProfileReviewSchema }
+  return { updateSeo: seo.namespace.updateSeo, regionalMetadata: regional.namespace.regionalMetadata, document, nodes, pageViews, metaViews, updateProfileReviewSchema: seo.namespace.updateProfileReviewSchema }
 }
 
 test('page views receive the new title after SEO commits it, keep private pages excluded and retain real 404s', async () => {
@@ -178,4 +180,13 @@ test('profile reviews follow pagination, omit prototypes and leave the aggregate
   assert.equal(service.review, undefined)
   const nodes = JSON.parse(document.getElementById('wave-schema').textContent)['@graph']
   assert.equal(nodes.find(node => node['@type'] === 'BreadcrumbList').itemListElement[1].item, 'https://wave.ba/de/kreative')
+})
+
+
+test('Meta page views allow resolved public routes and exclude account, messages, token, search and missing pages', async () => {
+  const { updateSeo, metaViews } = await seoFixture()
+  for (const name of ['home', 'creators', 'account', 'messages', 'verify-email', 'search', 'not-found']) {
+    updateSeo({ route: { meta: { routeName: name }, params: {}, path: '/' }, locale: 'bs', title: 'Wave', description: '' })
+    assert.equal(Boolean(metaViews.at(-1).allowed), ['home', 'creators'].includes(name), name)
+  }
 })

@@ -1,3 +1,4 @@
+import { trackMetaPageView } from './metaTracking'
 import i18n from '../i18n'
 import breadcrumbParents from '../../../config/seo_breadcrumbs.json'
 import { localizedPath, routeSegments, isSharedRoute } from '../routePaths'
@@ -80,6 +81,7 @@ export function updateSeo({
   // Publish the page and its final title together. Never sample document.title
   // from a separate route watcher before this metadata update has run.
   trackPageView(route.path, { title, allowed: analyticsReady && !privatePage })
+  trackMetaPageView(route.path, { allowed: analyticsReady && !privatePage && knownRoute && !noindex && routeName !== 'search' })
   setMeta('name', 'description', description)
   setMeta('name', 'robots', robots || (noindex || !knownRoute ? 'noindex, nofollow' : 'index, follow'))
   setMeta('property', 'og:type', 'website')

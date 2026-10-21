@@ -44,7 +44,7 @@
     "openCookieSettings": "Cookie preferences",
     "cookieBannerEyebrow": "A quick note",
     "cookieBannerTitle": "Your privacy matters",
-    "cookieBannerDescription": "Essential storage keeps Wave working. Google Analytics is optional and loads only after you allow it. You can change your choice at any time.",
+    "cookieBannerDescription": "Essential storage keeps Wave working. Analytics and marketing are separate, optional choices and load only with your permission.",
     "essentialStorage": "Essential storage",
     "essentialStorageDescription": "Needed for sign-in, security, language, and saving your privacy choice.",
     "analyticsStorage": "Analytics",
@@ -119,7 +119,8 @@
           "heading": "External services",
           "paragraphs": [
             "Wave serves fonts locally and may display privacy-enhanced YouTube videos added to profiles. Those providers may receive technical request data when your browser connects to their services. Google Analytics may process usage data only if you opt in.",
-            "If you choose Google or Apple sign-in, the selected provider processes authentication information under its own privacy terms."
+            "If you choose Google or Apple sign-in, the selected provider processes authentication information under its own privacy terms.",
+            "With separate Marketing consent, Meta Pixel may process technical browser, URL and registration data to measure advertising. Meta processes that data under its privacy policy. You can withdraw consent using Cookie preferences."
           ],
           "links": [
             {
@@ -129,6 +130,10 @@
             {
               "label": "Apple Privacy Policy",
               "url": "https://www.apple.com/legal/privacy/"
+            },
+            {
+              "label": "Meta",
+              "url": "https://www.facebook.com/privacy/policy/"
             }
           ]
         }
@@ -136,7 +141,7 @@
     },
     "cookies": {
       "title": "Cookie policy",
-      "intro": "Wave uses essential storage for core features. Google Analytics is optional and is loaded only after you enable analytics; Wave does not use advertising cookies.",
+      "intro": "Wave uses essential storage for core features. Google Analytics and Meta Pixel are optional and load only with separate analytics or marketing consent.",
       "sections": [
         {
           "heading": "Essential session cookie",
@@ -159,7 +164,7 @@
         {
           "heading": "Manage browser data",
           "paragraphs": [
-            "You can change or withdraw your analytics choice at any time using Cookie preferences in the footer. Wave stores this choice in local browser storage. Clearing Wave's site data may sign you out, reset your language, or show this notice again."
+            "Change or withdraw analytics or marketing consent using Cookie preferences in the footer. Your choice is saved in your browser. Clearing site data may sign you out and show this notice again."
           ]
         },
         {
@@ -176,6 +181,20 @@
           ]
         },
         {
+          "heading": "Marketing cookies (Meta Pixel)",
+          "paragraphs": [
+            "When configured and Marketing is allowed, Meta Pixel measures public-page visits and successful registrations to assess Facebook and Instagram ads. It may use _fbp and _fbc cookies. Meta may receive technical information including your IP address, browser information, URL and referring page.",
+            "Wave adds only the account category, known company type and registration method to registration events. We do not add names, email addresses, phone numbers, messages or negotiated amounts to marketing events. Automatic advanced matching is disabled.",
+            "Withdraw consent using Cookie preferences. Wave then stops its marketing events and deletes Meta cookies it can remove on this domain. Registration and all core features work without marketing."
+          ],
+          "links": [
+            {
+              "label": "Meta Privacy Policy",
+              "url": "https://www.facebook.com/privacy/policy/"
+            }
+          ]
+        },
+        {
           "heading": "External fonts and video",
           "paragraphs": [
             "Interface fonts are served locally by Wave. When a profile video is displayed, your browser may connect to youtube-nocookie.com, operated by Google. These providers may process technical data or use their own browser storage; Wave does not control that storage."
@@ -188,7 +207,9 @@
           ]
         }
       ]
-    }
+    },
+    "marketingStorage": "Marketing",
+    "marketingStorageDescription": "Allow Meta Pixel to measure Facebook and Instagram ads and successful registrations. It loads only after you opt in."
   },
   "app": {
     "loading": "Loading…",

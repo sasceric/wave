@@ -466,3 +466,11 @@ Global search supports database and Meilisearch backends through
 `MEILISEARCH_ENABLED=false/true`. See [Meilisearch setup](docs/meilisearch.md)
 for local coexistence with other projects, private environment keys, the ARM64
 server installer, manual indexing and the daily batched queue reconciliation.
+
+
+### Meta advertising tracking
+
+Meta Pixel uses separate **Marketing** consent. See [Meta tracking setup](docs/meta-tracking.md)
+for the server-side Vite environment configuration, event rules and Events Manager
+verification. Defaults and public build variables are in `frontend/.env.example`.
+Analytics consent alone never enables advertising tracking.

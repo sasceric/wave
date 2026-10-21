@@ -18,6 +18,7 @@ import LanguageSwitcher from '../shared/LanguageSwitcher.vue'
 import StatusMessage from '../shared/StatusMessage.vue'
 import WaveWordmark from '../shared/WaveWordmark.vue'
 import { apiRequest } from '../../lib/api'
+import { trackRegistration } from '../../lib/metaTracking'
 
 const emit = defineEmits(['authenticated'])
 const route = useRoute()
@@ -88,6 +89,7 @@ function startOAuth(provider) {
 }
 
 async function submit() {
+  if (busy.value) return
   error.value = ''
   notice.value = ''
 
@@ -126,6 +128,7 @@ async function submit() {
       method: 'POST',
       body,
     })
+    if (isRegistration) trackRegistration(response.data, isSocialRegistration ? 'social' : 'email')
     emit('authenticated', response.data)
   } catch (cause) {
     error.value = cause.message

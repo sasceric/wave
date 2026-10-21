@@ -15,8 +15,10 @@ function account(id, emailVerified) {
 
 test('password registration passes its unverified account to the account screen', async () => {
   const registered = account(2, false)
+  const tracked = []
   const requests = []
   const view = await setupView('../src/components/account/AccountAccessPanel.vue', {
+    '../../lib/metaTracking': { trackRegistration: (...args) => tracked.push(args) },
     '../../composables/useMarketplaceCatalog': { useMarketplaceCatalog: () => ({ categories: ref([]), industries: ref([]), error: ref('') }) },
     '../../lib/phoneNumbers': { formatInternationalPhoneNumber: (phone) => phone },
     '../../lib/api': { apiRequest: async (path, options) => { requests.push({ path, body: options.body }); return { data: registered } } },
@@ -29,6 +31,9 @@ test('password registration passes its unverified account to the account screen'
   })
   await view.state.submit()
   assert.equal(requests[0].path, '/auth/register')
+  assert.equal(tracked.length, 1)
+  assert.equal(tracked[0][0], registered)
+  assert.equal(tracked[0][1], 'email')
   assert.equal(requests[0].body.name, 'Test Creator')
   assert.equal('firstName' in requests[0].body, false)
   assert.equal('lastName' in requests[0].body, false)
@@ -177,3 +182,19 @@ for (const [requested, expected] of [['creator', 'creator'], ['company', 'compan
     assert.equal(view.state.form.accountType, expected)
   })
 }
+
+
+test('only successful registrations trigger marketing conversions, including social completion', async () => {
+  for (const scenario of ['login', 'failed-registration', 'social']) {
+    const tracked = [], registered = account(29, true)
+    const view = await setupView('../src/components/account/AccountAccessPanel.vue', {
+      '../../lib/metaTracking': { trackRegistration: (...args) => tracked.push(args) },
+      '../../lib/api': { apiRequest: async () => { if (scenario === 'failed-registration') throw new Error('Invalid registration'); return { data: registered } } },
+    })
+    view.state.mode.value = scenario === 'login' ? 'login' : 'register'
+    view.state.socialPending.value = scenario === 'social'
+    await view.state.submit()
+    assert.equal(tracked.length, scenario === 'social' ? 1 : 0)
+    if (scenario === 'social') assert.equal(tracked[0][1], 'social')
+  }
+})

@@ -44,7 +44,7 @@
     "openCookieSettings": "Nastavitve piškotkov",
     "cookieBannerEyebrow": "Kratko obvestilo",
     "cookieBannerTitle": "Vaša zasebnost nam je pomembna",
-    "cookieBannerDescription": "Nujna shramba omogoča delovanje Wavea. Google Analytics je neobvezen in se naloži le, če ga dovolite. Svojo izbiro lahko kadar koli spremenite.",
+    "cookieBannerDescription": "Nujna shramba omogoča delovanje Wave. Analitika in trženje sta ločeni, neobvezni izbiri in se vključita samo z dovoljenjem.",
     "cookieBannerDismiss": "Razumem",
     "essentialStorage": "Nujna shramba",
     "essentialStorageDescription": "Potrebna je za prijavo, varnost, jezik in shranjevanje vaše izbire zasebnosti.",
@@ -120,7 +120,8 @@
           "heading": "Zunanje storitve",
           "paragraphs": [
             "Wave naloži pisave lokalno in lahko prikaže videoposnetke YouTube, dodane v profile. Ti ponudniki lahko prejmejo tehnične podatke zahteve, ko se vaš brskalnik poveže z njihovimi storitvami.",
-            "Če izberete prijavo z Googlom ali Applom, izbrani ponudnik obdeluje podatke za prijavo v skladu s svojimi pravili zasebnosti. Google Analytics lahko obdeluje podatke o uporabi le, če ga dovolite."
+            "Če izberete prijavo z Googlom ali Applom, izbrani ponudnik obdeluje podatke za prijavo v skladu s svojimi pravili zasebnosti. Google Analytics lahko obdeluje podatke o uporabi le, če ga dovolite.",
+            "Z ločeno privolitvijo za Trženje lahko Meta Pixel obdeluje tehnične podatke o brskalniku, URL-ju in registraciji za merjenje oglasov. Meta podatke obdeluje skladno s svojo politiko zasebnosti. Privolitev lahko umakneš v nastavitvah piškotkov."
           ],
           "links": [
             {
@@ -130,6 +131,10 @@
             {
               "label": "Applova politika zasebnosti",
               "url": "https://www.apple.com/legal/privacy/"
+            },
+            {
+              "label": "Meta",
+              "url": "https://www.facebook.com/privacy/policy/"
             }
           ]
         }
@@ -137,7 +142,7 @@
     },
     "cookies": {
       "title": "Politika piškotkov",
-      "intro": "Wave za osnovne funkcije uporablja nujno shrambo. Google Analytics je neobvezen in se naloži le po vaši privolitvi; Wave ne uporablja oglaševalskih piškotkov.",
+      "intro": "Wave uporablja nujno shrambo za osnovne funkcije. Google Analytics in Meta Pixel sta neobvezna ter se naložita samo z ločeno privolitvijo za analitiko ali trženje.",
       "sections": [
         {
           "heading": "Nujni sejni piškotek",
@@ -160,7 +165,7 @@
         {
           "heading": "Upravljanje podatkov brskalnika",
           "paragraphs": [
-            "Izbiro analitike lahko kadar koli spremenite ali prekličete v Nastavitvah piškotkov v nogi strani. Wave to izbiro shrani v lokalni shrambi brskalnika. Brisanje podatkov spletnega mesta vas lahko odjavi, ponastavi jezik ali znova prikaže to obvestilo."
+            "Privolitev za analitiko ali trženje lahko spremeniš ali umakneš v nastavitvah piškotkov v nogi. Izbira se shrani v brskalniku. Izbris podatkov strani te lahko odjavi in ponovno prikaže obvestilo."
           ]
         },
         {
@@ -177,6 +182,20 @@
           ]
         },
         {
+          "heading": "Trženjski piškotki (Meta Pixel)",
+          "paragraphs": [
+            "Ko je nastavljen in dovoliš Trženje, Meta Pixel meri obiske javnih strani in uspešne registracije za ocenjevanje oglasov na Facebooku in Instagramu. Uporablja lahko piškotke _fbp in _fbc. Meta lahko prejme tehnične podatke, kot so IP naslov, podatki o brskalniku, URL in prejšnja stran.",
+            "Wave dogodkom dodaja samo kategorijo računa, znano vrsto podjetja in način registracije. Imen, e-poštnih naslovov, telefonskih številk, sporočil ali dogovorjenih zneskov ne dodajamo trženjskim dogodkom. Samodejno napredno ujemanje je izključeno.",
+            "Privolitev lahko umakneš v nastavitvah piškotkov. Wave nato ustavi svoje trženjske dogodke in izbriše piškotke Meta, ki jih lahko odstrani na tej domeni. Registracija in osnovne funkcije delujejo tudi brez trženja."
+          ],
+          "links": [
+            {
+              "label": "Meta – Zasebnost",
+              "url": "https://www.facebook.com/privacy/policy/"
+            }
+          ]
+        },
+        {
           "heading": "Zunanje pisave in videoposnetki",
           "paragraphs": [
             "Pisave vmesnika se naložijo lokalno s storitve Wave. Ko se prikaže videoposnetek iz profila, se lahko brskalnik poveže z youtube-nocookie.com, ki ga upravlja Google. Ti ponudniki lahko obdelujejo tehnične podatke ali uporabljajo lastno shrambo brskalnika; Wave te shrambe ne upravlja."
@@ -189,7 +208,9 @@
           ]
         }
       ]
-    }
+    },
+    "marketingStorage": "Trženje",
+    "marketingStorageDescription": "Dovoli Meta Pixel za merjenje oglasov na Facebooku in Instagramu ter uspešnih registracij. Naloži se samo s privolitvijo."
   },
   "app": {
     "loading": "Nalaganje…",

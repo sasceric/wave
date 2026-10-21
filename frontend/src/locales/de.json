@@ -44,7 +44,7 @@
     "openCookieSettings": "Cookie-Einstellungen",
     "cookieBannerEyebrow": "Ein kurzer Hinweis",
     "cookieBannerTitle": "Deine Privatsphäre ist uns wichtig",
-    "cookieBannerDescription": "Notwendiger Speicher sorgt dafür, dass Wave funktioniert. Google Analytics ist optional und wird erst mit deiner Zustimmung geladen. Du kannst deine Auswahl jederzeit ändern.",
+    "cookieBannerDescription": "Notwendige Speicherung hält Wave funktionsfähig. Analyse und Marketing sind getrennte, freiwillige Optionen und werden nur mit deiner Einwilligung geladen.",
     "essentialStorage": "Notwendiger Speicher",
     "essentialStorageDescription": "Erforderlich für Anmeldung, Sicherheit, Sprache und das Speichern deiner Datenschutzauswahl.",
     "analyticsStorage": "Analyse",
@@ -119,7 +119,8 @@
           "heading": "Externe Dienste",
           "paragraphs": [
             "Wave stellt Schriftarten lokal bereit und kann auf Profilen eingebundene YouTube-Videos im erweiterten Datenschutzmodus anzeigen. Wenn dein Browser diese Dienste aufruft, können deren Anbieter technische Anfragedaten erhalten. Google Analytics verarbeitet Nutzungsdaten nur mit deiner Zustimmung.",
-            "Wenn du dich mit Google oder Apple anmeldest, verarbeitet der gewählte Anbieter die Anmeldedaten gemäß seinen eigenen Datenschutzbestimmungen."
+            "Wenn du dich mit Google oder Apple anmeldest, verarbeitet der gewählte Anbieter die Anmeldedaten gemäß seinen eigenen Datenschutzbestimmungen.",
+            "Mit gesonderter Marketingeinwilligung kann Meta Pixel technische Browser-, URL- und Registrierungsdaten zur Werbemessung verarbeiten. Meta verarbeitet diese Daten nach seiner Datenschutzrichtlinie. Du kannst deine Einwilligung in den Cookie-Einstellungen widerrufen."
           ],
           "links": [
             {
@@ -129,6 +130,10 @@
             {
               "label": "Apple-Datenschutzerklärung",
               "url": "https://www.apple.com/legal/privacy/"
+            },
+            {
+              "label": "Meta",
+              "url": "https://www.facebook.com/privacy/policy/"
             }
           ]
         }
@@ -136,7 +141,7 @@
     },
     "cookies": {
       "title": "Cookie-Richtlinie",
-      "intro": "Wave verwendet notwendigen Speicher für grundlegende Funktionen. Google Analytics ist optional und wird erst geladen, wenn du Analyse aktivierst. Wave verwendet keine Werbe-Cookies.",
+      "intro": "Wave verwendet notwendige Speicherung für Grundfunktionen. Google Analytics und Meta Pixel sind freiwillig und werden nur mit getrennter Analyse- oder Marketingeinwilligung geladen.",
       "sections": [
         {
           "heading": "Notwendiges Sitzungscookie",
@@ -159,7 +164,7 @@
         {
           "heading": "Browserdaten verwalten",
           "paragraphs": [
-            "Du kannst deine Analyse-Auswahl jederzeit über die Cookie-Einstellungen im Footer ändern oder widerrufen. Wave speichert diese Auswahl im lokalen Browserspeicher. Wenn du die Websitedaten von Wave löschst, wirst du möglicherweise abgemeldet, deine Sprache wird zurückgesetzt oder dieser Hinweis erneut angezeigt."
+            "Du kannst deine Analyse- oder Marketingeinwilligung über die Cookie-Einstellungen im Footer ändern oder widerrufen. Deine Wahl wird im Browser gespeichert. Das Löschen von Websitedaten kann dich abmelden und diesen Hinweis erneut anzeigen."
           ]
         },
         {
@@ -176,6 +181,20 @@
           ]
         },
         {
+          "heading": "Marketing-Cookies (Meta Pixel)",
+          "paragraphs": [
+            "Wenn konfiguriert und Marketing erlaubt ist, misst Meta Pixel öffentliche Seitenbesuche und erfolgreiche Registrierungen zur Bewertung von Facebook- und Instagram-Werbung. Es kann _fbp- und _fbc-Cookies verwenden. Meta kann technische Daten wie IP-Adresse, Browserdaten, URL und verweisende Seite erhalten.",
+            "Wave ergänzt Registrierungsereignisse nur um Kontokategorie, bekannten Unternehmenstyp und Registrierungsart. Namen, E-Mail-Adressen, Telefonnummern, Nachrichten oder vereinbarte Beträge werden Marketingereignissen nicht hinzugefügt. Der automatische erweiterte Abgleich ist deaktiviert.",
+            "Widerrufe deine Einwilligung über die Cookie-Einstellungen. Wave stoppt dann seine Marketingereignisse und löscht Meta-Cookies, die es auf dieser Domain entfernen kann. Registrierung und Grundfunktionen funktionieren auch ohne Marketing."
+          ],
+          "links": [
+            {
+              "label": "Meta – Datenschutz",
+              "url": "https://www.facebook.com/privacy/policy/"
+            }
+          ]
+        },
+        {
           "heading": "Externe Schriftarten und Videos",
           "paragraphs": [
             "Die Schriftarten der Oberfläche werden lokal von Wave bereitgestellt. Wenn ein Profilvideo angezeigt wird, kann dein Browser eine Verbindung zu youtube-nocookie.com von Google herstellen. Diese Anbieter können technische Daten verarbeiten oder eigenen Browserspeicher verwenden, den Wave nicht kontrolliert."
@@ -188,7 +207,9 @@
           ]
         }
       ]
-    }
+    },
+    "marketingStorage": "Marketing",
+    "marketingStorageDescription": "Erlaube Meta Pixel zur Messung von Facebook- und Instagram-Werbung und erfolgreichen Registrierungen. Es wird erst nach deiner Einwilligung geladen."
   },
   "app": {
     "loading": "Wird geladen…",

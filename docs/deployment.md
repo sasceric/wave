@@ -556,3 +556,11 @@ migration `Version20261018010000`, an initial `app:search:index --sync`, restart
 queue consumers and normal scheduled-task registration. The new daily task uses
 the existing dispatcher and background transport. The repository does not install
 Meilisearch on the server automatically during deployment.
+
+## Meta Pixel configuration
+
+Set `VITE_META_PIXEL_ENABLED`, `VITE_META_PIXEL_ID` and `VITE_META_PIXEL_HOSTS` in
+`frontend/.env.production` on the server before the frontend build. That ignored
+file is not included in Git deployments. See [Meta tracking](meta-tracking.md).
+The public Pixel ID is allowed in browser code; CAPI secrets are not. Marketing
+consent is separate from Analytics and is required before Wave loads Meta.

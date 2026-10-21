@@ -734,3 +734,10 @@ submit before client review. Campaign discussion reopening lives in
 `CampaignDiscussionController` and `DiscussionReopeningAction`: explicit provider
 consent restores discussion, never the cancelled hire. See `docs/campaign-hiring.md`.
 Migrations `20261019010000` and `20261019020000` must run before serving these changes.
+
+Meta browser tracking is in `frontend/src/lib/metaTracking.js`, called by the existing
+SEO page-view path and successful `AccountAccessPanel` signup responses. Cookie consent
+v3 keeps Marketing independent of Analytics and never upgrades old analytics consent to
+marketing. Pixel code is host-gated and disabled by default without explicit Vite config.
+See `docs/meta-tracking.md` for the Wave Pixel ID, server build settings and validation.
+No CAPI token or server forwarding is part of this integration.
