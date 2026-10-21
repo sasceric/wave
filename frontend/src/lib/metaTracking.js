@@ -41,7 +41,8 @@ function initialize() {
     window.fbq = fbq
     window._fbq = fbq
   }
-  window.fbq('consent', 'revoke')
+  // Loading is already gated on marketing consent. A queued revoke would lock
+  // Meta's initial queue drain before it can reach the following grant.
   window.fbq('set', 'autoConfig', false, pixelId)
   window.fbq('init', pixelId)
   window.fbq('consent', 'grant')
@@ -77,15 +78,26 @@ function updateMarketingConsent(allowed) {
     if (initialized && window.fbq) {
       // Revoke before the SDK finishes loading too: discard pending events/grants.
       if (!window.fbq.callMethod && Array.isArray(window.fbq.queue)) {
-        window.fbq.queue = window.fbq.queue.filter(args => !['track', 'trackSingle', 'trackCustom', 'trackSingleCustom'].includes(args[0]) && !(args[0] === 'consent' && args[1] === 'grant'))
+        window.fbq.queue = window.fbq.queue.filter(args => !['track', 'trackSingle', 'trackCustom', 'trackSingleCustom', 'consent'].includes(args[0]))
+        window.fbq('consent', 'revoke')
+        // Lock before processing init if consent changes while the SDK loads.
+        window.fbq.queue.unshift(window.fbq.queue.pop())
+      } else {
+        window.fbq('consent', 'revoke')
       }
-      window.fbq('consent', 'revoke')
     }
     clearCookies()
     lastPage = null
     return
   }
-  if (initialized && permittedLocation()) window.fbq('consent', 'grant')
+  if (initialized && permittedLocation()) {
+    // Before SDK startup, replace obsolete consent commands instead of leaving
+    // a revoke ahead of the grant in Meta's lock-sensitive queue.
+    if (!window.fbq.callMethod && Array.isArray(window.fbq.queue)) {
+      window.fbq.queue = window.fbq.queue.filter(args => args[0] !== 'consent')
+    }
+    window.fbq('consent', 'grant')
+  }
   sendPageView()
 }
 

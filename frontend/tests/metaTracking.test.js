@@ -16,6 +16,28 @@ async function tracking({ enabled = 'true', id = '123456789012345', href = 'http
 }
 const creator = { id: 8, accountType: 'creator', email: 'private@example.test', phone: 'secret', profile: { displayName: 'Private Name' } }
 
+// Meta stops draining its startup queue when consent is revoked; a later
+// queued grant cannot unlock it. Model that behavior rather than just recording.
+function loadSdk(window) {
+  let locked = false
+  const processed = []
+  function drain() {
+    while (window.fbq.queue.length && !locked) window.fbq.callMethod(...window.fbq.queue.shift())
+  }
+  window.fbq.callMethod = function (...args) {
+    if (args[0] === 'consent') {
+      locked = args[1] === 'revoke'
+      if (!locked) drain()
+    } else if (locked) {
+      window.fbq.queue.push(args)
+    } else {
+      processed.push(args)
+    }
+  }
+  drain()
+  return processed
+}
+
 test('Meta stays completely unloaded without marketing consent, a valid ID, explicit enablement and a production host', async () => {
   for (const config of [{ enabled: 'false' }, { id: '' }, { id: 'invalid' }, { href: 'http://127.0.0.1:5173/kreatori' }]) {
     const { api, scripts, window } = await tracking(config)
@@ -34,13 +56,41 @@ test('consented public page views use one loader, disable automatic events, targ
   api.trackMetaPageView('/kreatori')
   assert.equal(scripts.length, 1)
   assert.equal(scripts[0].src, 'https://connect.facebook.net/en_US/fbevents.js')
-  assert.deepEqual(Array.from(commands()[1]), ['set', 'autoConfig', false, '123456789012345'])
+  assert.deepEqual(Array.from(commands()[0]), ['set', 'autoConfig', false, '123456789012345'])
   api.trackMetaPageView('/kreatori')
   assert.equal(commands().filter(row => row[2] === 'PageView').length, 1)
   window.location = new URL('https://wave.ba/kompanije')
   api.trackMetaPageView('/kompanije')
   assert.equal(scripts.length, 1)
   assert.equal(commands().filter(row => row[2] === 'PageView').length, 2)
+})
+
+test('fresh SDK startup drains initialization and a real signup without getting stuck behind consent revoke', async () => {
+  const { api, window, commands } = await tracking()
+  api.trackMetaPageView('/kreatori'); api.setMarketingConsent(true); api.trackRegistration(creator)
+  const processed = loadSdk(window)
+  assert.ok(processed.some(args => args[0] === 'init'))
+  assert.equal(processed.filter(args => args[2] === 'PageView').length, 1)
+  assert.equal(processed.filter(args => args[2] === 'CompleteRegistration').length, 1)
+  assert.equal(commands().length, 0)
+})
+
+test('withdrawal before SDK startup blocks initialization until consent is restored, without replaying a signup', async () => {
+  for (const restoreBeforeLoad of [false, true]) {
+    const { api, window, commands } = await tracking()
+    api.trackMetaPageView('/kreatori'); api.setMarketingConsent(true); api.trackRegistration(creator)
+    api.setMarketingConsent(false)
+    if (restoreBeforeLoad) api.setMarketingConsent(true)
+    const processed = loadSdk(window)
+    if (!restoreBeforeLoad) {
+      assert.equal(processed.length, 0, 'No init or event runs after withdrawal.')
+      api.setMarketingConsent(true)
+    }
+    assert.ok(processed.some(args => args[0] === 'init'))
+    assert.equal(processed.filter(args => args[2] === 'PageView').length, 1)
+    assert.equal(processed.filter(args => args[2] === 'CompleteRegistration').length, 0)
+    assert.equal(commands().length, 0)
+  }
 })
 
 test('the Meta loader uses the standard Arguments queue and SDK receiver contract', async () => {
@@ -107,7 +157,7 @@ test('withdrawal removes pending events, revokes SDK consent, deletes only Meta 
   api.setMarketingConsent(false)
   assert.equal(commands().some(row => row[0] === 'trackSingle'), false)
   assert.equal(commands().some(row => row[0] === 'consent' && row[1] === 'grant'), false)
-  assert.equal(commands().at(-1)[1], 'revoke')
+  assert.equal(commands()[0][1], 'revoke')
   const count = commands().length
   api.trackMetaPageView('/kreatori'); api.trackRegistration({ ...creator, id: 9 })
   assert.equal(commands().length, count)
