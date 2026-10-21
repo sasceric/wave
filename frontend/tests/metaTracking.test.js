@@ -43,6 +43,22 @@ test('consented public page views use one loader, disable automatic events, targ
   assert.equal(commands().filter(row => row[2] === 'PageView').length, 2)
 })
 
+test('the Meta loader uses the standard Arguments queue and SDK receiver contract', async () => {
+  const { api, commands, window } = await tracking()
+  api.trackMetaPageView('/kreatori')
+  api.setMarketingConsent(true)
+  assert.ok(commands().length > 0)
+  assert.ok(commands().every(command => Object.prototype.toString.call(command) === '[object Arguments]'))
+
+  const calls = []
+  window.fbq.callMethod = function (...args) { calls.push({ receiver: this, args }) }
+  window.location = new URL('https://wave.ba/kompanije')
+  api.trackMetaPageView('/kompanije')
+  assert.equal(calls.length, 1)
+  assert.equal(calls[0].receiver, window.fbq)
+  assert.deepEqual(calls[0].args.slice(0, 3), ['trackSingle', '123456789012345', 'PageView'])
+})
+
 test('private/search pages and unsafe URLs do not initialize or send queued public views', async () => {
   for (const href of ['https://wave.ba/racun?token=secret', 'https://wave.ba/?email=private@example.test', 'https://wave.ba/#secret', 'https://wave.ba/?return=/poruke', 'https://wave.ba/?utm_campaign=private%40example.test']) {
     const { api, scripts } = await tracking({ href })

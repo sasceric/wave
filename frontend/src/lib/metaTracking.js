@@ -30,9 +30,9 @@ function initialize() {
   if (initialized) return true
   // Standard Meta loader queue. No automatic advanced matching or auto events.
   if (!window.fbq) {
-    const fbq = function (...args) {
-      if (fbq.callMethod) fbq.callMethod(...args)
-      else fbq.queue.push(args)
+    const fbq = function () {
+      if (fbq.callMethod) fbq.callMethod.apply(fbq, arguments)
+      else fbq.queue.push(arguments)
     }
     fbq.queue = []
     fbq.push = fbq
