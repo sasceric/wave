@@ -36,6 +36,30 @@ test('registration reminders require confirmation, guard repeat sends and report
   assert.equal(state.reminderRequest.value, null)
 })
 
+for (const section of ['creators', 'companies']) {
+  test(`${section} profile tips target the linked account and skip profiles without a recipient`, async () => {
+    const requests = []
+    const { state } = await setupView('../src/views/AdminDashboardView.vue', {
+      'vue-router': { useRoute: () => ({ meta: { adminSection: section }, query: {} }) },
+      '../lib/api': { apiGet: async () => ({}), formatMoney: String, apiRequest: async (path, options) => { requests.push({ path, options }); return {} } },
+    })
+    state.requestReminder({ id: 5, accountId: null, email: null }, 'profile')
+    await state.confirmReminder()
+    state.requestReminder({ id: 5, accountId: 42, email: null }, 'profile')
+    await state.confirmReminder()
+    assert.equal(requests.length, 0)
+    state.requestReminder({ id: 5, accountId: 42, email: 'owner@example.test', approved: true }, 'profile')
+    assert.equal(state.reminderRequest.value.id, 42)
+    assert.equal(state.reminderRequest.value.email, 'owner@example.test')
+    assert.equal(requests.length, 0)
+    await state.confirmReminder()
+    assert.equal(requests.length, 1)
+    assert.equal(requests[0].path, '/admin/registrations/42/reminder')
+    assert.equal(requests[0].options.body.kind, 'profile')
+    assert.equal(state.notice.value, 'adminProfiles.reminderQueued')
+  })
+}
+
 test('admin visibility updates the selected row only after success and cannot publish an ineligible account', async () => {
   const requests = []
   const route = reactive({ meta: { adminSection: 'companies' }, query: {} })

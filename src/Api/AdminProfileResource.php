@@ -45,6 +45,7 @@ final class AdminProfileResource
 
         return [
             'accountId' => $owner?->getId(),
+            'email' => $owner?->getEmail(),
             'accountType' => $company !== null || $owner?->hasRole('ROLE_COMPANY') ? 'company' : 'creator',
             'approved' => $owner?->isApproved() ?? false,
             'emailVerified' => $owner?->isEmailVerified() ?? false,

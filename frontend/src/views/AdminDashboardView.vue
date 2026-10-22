@@ -54,7 +54,8 @@ const reminderConfirmation = computed(() => reminderRequest.value ? t('adminProf
 }) : '')
 
 function requestReminder(row, kind) {
-  if (!sendingReminder.value) reminderRequest.value = { id: row.id, email: row.email, kind }
+  const accountId = section.value === 'registrations' ? row.id : row.accountId
+  if (!sendingReminder.value && accountId && row.email) reminderRequest.value = { id: accountId, email: row.email, kind }
 }
 
 async function confirmReminder() {
@@ -652,14 +653,12 @@ onMounted(loadDashboard)
                 <button v-if="section === 'registrations' && !row.approved" class="admin-row-actions__item" type="button" role="menuitem" :disabled="approving || !row.emailVerified || !row.profileComplete" :title="!row.emailVerified || !row.profileComplete ? t('adminProfiles.showRequirements') : undefined" @click="approveRegistration(row)">
                   <Check :size="15" aria-hidden="true" />{{ t('adminDashboard.approve') }}
                 </button>
-                <template v-if="section === 'registrations' && !row.approved">
-                  <button v-if="!row.emailVerified" class="admin-row-actions__item" type="button" role="menuitem" :disabled="sendingReminder" @click="requestReminder(row, 'verification')">
-                    <Mail :size="15" aria-hidden="true" />{{ t('adminProfiles.verificationReminder') }}
-                  </button>
-                  <button class="admin-row-actions__item" type="button" role="menuitem" :disabled="sendingReminder" @click="requestReminder(row, 'profile')">
-                    <ClipboardList :size="15" aria-hidden="true" />{{ t('adminProfiles.profileTip') }}
-                  </button>
-                </template>
+                <button v-if="section === 'registrations' && !row.approved && !row.emailVerified" class="admin-row-actions__item" type="button" role="menuitem" :disabled="sendingReminder" @click="requestReminder(row, 'verification')">
+                  <Mail :size="15" aria-hidden="true" />{{ t('adminProfiles.verificationReminder') }}
+                </button>
+                <button v-if="isProfileList && (section !== 'registrations' || !row.approved)" class="admin-row-actions__item" type="button" role="menuitem" :disabled="sendingReminder || !row.accountId || !row.email || !row.canChangeVisibility" :title="!row.accountId ? t('adminProfiles.noAccount') : undefined" @click="requestReminder(row, 'profile')">
+                  <ClipboardList :size="15" aria-hidden="true" />{{ t('adminProfiles.profileTip') }}
+                </button>
                 <button v-if="isProfileList" class="admin-row-actions__item" type="button" role="menuitem" :disabled="visibilitySaving || !row.canChangeVisibility || (!row.publicVisible && !row.canShowProfile)" :title="!row.canChangeVisibility ? t('adminProfiles.noAccount') : !row.publicVisible && !row.canShowProfile ? t('adminProfiles.showRequirements') : undefined" @click="changeVisibility(row)">
                   <EyeOff v-if="row.publicVisible" :size="15" aria-hidden="true" /><Eye v-else :size="15" aria-hidden="true" />{{ t(row.publicVisible ? 'adminProfiles.hide' : 'adminProfiles.show') }}
                 </button>

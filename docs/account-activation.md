@@ -24,13 +24,17 @@ email app. The activation checklist shares the same resend composable, which
 coalesces simultaneous sends and discards responses after an account switch.
 
 Approvals row actions include **Remind to verify email** for unverified accounts
-and **Send profile tip** for any pending account. Both use the existing confirmation
-modal, showing the destination before sending. The modal links to the corresponding
+and **Send profile tip** for any pending account. Creator and company lists also
+offer **Send profile tip** for their linked account owners, including approved
+accounts. Profiles without an account cannot receive a reminder. Both use the
+existing confirmation modal, showing the destination before sending. The modal links to the corresponding
 editable email template. These are manual actions, not an automated email campaign.
 
 `POST /api/admin/registrations/{id}/reminder` accepts `kind=verification|profile`,
-requires an administrator session and CSRF, and rejects deleted, staff, approved,
-or otherwise ineligible recipients. Each recipient/type is limited to one send
+requires an administrator session and CSRF, and rejects deleted, staff,
+or otherwise ineligible recipients. Verification reminders additionally reject
+approved or already verified accounts; profile tips also support approved accounts.
+Each recipient/type is limited to one send
 per 24 hours through `wave_registration_reminder`. Verification also shares the
 normal per-address resend limiter. A verification reminder issues a new single-use
 verification token without an expiry, preserving registration and resend links.

@@ -51,7 +51,7 @@ final class RegistrationReminderController
             || !in_array($user->getRoles()[0] ?? null, ['ROLE_CREATOR', 'ROLE_COMPANY'], true)) {
             return new JsonResponse(['error' => ApiMessages::get('invalid_request', $locale)], 404);
         }
-        if ($user->isApproved() || ($kind === 'verification' && $user->isEmailVerified())) {
+        if ($kind === 'verification' && ($user->isApproved() || $user->isEmailVerified())) {
             return new JsonResponse(['error' => ApiMessages::get('invalid_request', $locale)], 400);
         }
 

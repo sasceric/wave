@@ -6,11 +6,13 @@ use App\Account\AccountEmailSender;
 use App\Account\EmailTemplateRenderer;
 use App\Account\UserActionTokenManager;
 use App\Entity\Creator;
+use App\Entity\Company;
 use App\Entity\EmailTemplate;
 use App\Entity\User;
 use DateTimeImmutable;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Tools\SchemaTool;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Bundle\FrameworkBundle\Test\MailerAssertionsTrait;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
@@ -70,9 +72,57 @@ final class RegistrationReminderTest extends WebTestCase
         $this->pending = $this->em->find(User::class, $this->pending->getId());
         $this->pending->setApproved(true);
         $this->em->flush();
-        $this->send('profile');
+        $this->send('verification');
         self::assertResponseStatusCodeSame(400);
         self::assertEmailCount(0);
+    }
+
+    #[DataProvider('approvedAccountTypes')]
+    public function testApprovedProfileListsCanSendEditableProfileTipsToTheirAccountOwners(string $type): void
+    {
+        $owner = new User($type.'-owner@example.test', $type === 'creators' ? 'ROLE_CREATOR' : 'ROLE_COMPANY');
+        $owner->setPassword('unused');
+        $owner->setApproved(true);
+        $owner->setEmailVerified(true);
+        $owner->setPreferredLocale('en');
+        if ($type === 'creators') {
+            $owner->setCreator(new Creator('approved-creator', 'Approved Creator', 'Beauty', 'Sarajevo', '', []));
+        } else {
+            $owner->setCompany(new Company('approved-company', 'Approved Company', 'Beauty'));
+        }
+        $this->em->persist($owner);
+        $this->em->persist(new EmailTemplate('profile_tip', 'en', 'Complete your profile', '<html><body>Hi {{recipientName}}. <a href="{{actionUrl}}">Edit your profile</a></body></html>'));
+        $this->em->flush();
+        $this->client->loginUser($this->admin);
+        $this->client->request('GET', '/api/admin/catalog/'.$type);
+        self::assertResponseIsSuccessful();
+        $rows = json_decode((string) $this->client->getResponse()->getContent(), true, 512, JSON_THROW_ON_ERROR)['data'];
+        $row = current(array_filter($rows, static fn (array $row): bool => $row['accountId'] === $owner->getId()));
+        self::assertIsArray($row);
+        self::assertNotSame($row['id'], $row['accountId']);
+        self::assertSame($owner->getEmail(), $row['email']);
+        $this->client->request('GET', '/api/auth/csrf');
+        $csrf = json_decode((string) $this->client->getResponse()->getContent(), true, 512, JSON_THROW_ON_ERROR)['csrfToken'];
+        $url = '/api/admin/registrations/'.$row['accountId'].'/reminder';
+        $this->client->jsonRequest('POST', $url, ['kind' => 'profile'], ['HTTP_X_CSRF_TOKEN' => $csrf]);
+        self::assertResponseIsSuccessful();
+        self::assertEmailCount(1);
+        $message = self::getMailerMessage();
+        self::assertInstanceOf(Email::class, $message);
+        self::assertSame($owner->getEmail(), $message->getTo()[0]->getAddress());
+        self::assertEmailSubjectContains($message, 'Complete your profile');
+        self::assertEmailHtmlBodyContains($message, $type === 'creators' ? 'Approved Creator' : 'Approved Company');
+        self::assertEmailHtmlBodyContains($message, '/en/');
+        self::assertSame(0, (int) $this->em->getConnection()->fetchOne('SELECT COUNT(*) FROM user_action_token'));
+        $this->client->jsonRequest('POST', $url, ['kind' => 'profile'], ['HTTP_X_CSRF_TOKEN' => $csrf]);
+        self::assertResponseStatusCodeSame(429);
+        self::assertEmailCount(0);
+    }
+
+    public static function approvedAccountTypes(): iterable
+    {
+        yield 'creator' => ['creators'];
+        yield 'company' => ['companies'];
     }
 
     public function testVerificationUsesEditedRecipientLanguageTemplateAndFreshSingleUseToken(): void
