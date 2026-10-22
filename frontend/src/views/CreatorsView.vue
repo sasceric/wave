@@ -13,6 +13,7 @@ import DirectoryHero from '../components/shared/DirectoryHero.vue'
 import DirectoryHeroCollage from '../components/shared/DirectoryHeroCollage.vue'
 import MultiSelect from '../components/shared/MultiSelect.vue'
 import SingleSelect from '../components/shared/SingleSelect.vue'
+import RangeSlider from '../components/shared/RangeSlider.vue'
 import DirectoryLoadMore from '../components/shared/DirectoryLoadMore.vue'
 import DirectorySkeletonCard from '../components/shared/DirectorySkeletonCard.vue'
 import StatusMessage from '../components/shared/StatusMessage.vue'
@@ -43,6 +44,10 @@ const platforms = computed(() => encodeSelection(selectedPlatforms.value))
 const countries = computed(() => encodeSelection(props.countryCode ? [props.countryCode] : selectedCountries.value))
 const city = ref('')
 const audience = ref('')
+const ageRange = ref([18, 70])
+const ageFiltered = computed(() => ageRange.value[0] !== 18 || ageRange.value[1] !== 70)
+const ageMin = computed(() => ageFiltered.value ? String(ageRange.value[0]) : '')
+const ageMax = computed(() => ageFiltered.value ? String(ageRange.value[1]) : '')
 const sort = ref('recommended')
 const layout = ref('grid')
 const filtersOpen = ref(false)
@@ -52,7 +57,7 @@ const facetError = ref('')
 let facetVersion = 0
 let disposed = false
 const catalog = useMarketplaceCatalog(locale)
-const { items: creators, total, loading, error, hasMore, loadMore } = useInfiniteDirectory('/creators', locale, { q: search, categories, creatorTypes, platforms, countries, city, audience, sort }, props.countryCode ? 24 : 30)
+const { items: creators, total, loading, error, hasMore, loadMore } = useInfiniteDirectory('/creators', locale, { q: search, categories, creatorTypes, platforms, countries, city, audience, ageMin, ageMax, sort }, props.countryCode ? 24 : 30)
 const platformOptions = SOCIAL_PLATFORMS.map((value) => ({ value, label: value }))
 const countryOptions = computed(() => {
   const names = new Intl.DisplayNames([locale.value === 'cnr' ? 'bs' : locale.value === 'sr' ? 'sr-Latn' : locale.value], { type: 'region' })
@@ -70,7 +75,7 @@ const sortOptions = computed(() => [
   { value: 'followers', label: t('creatorDirectory.sortFollowers') },
   { value: 'name', label: t('companyDirectory.sortName') },
 ])
-const activeFilterCount = computed(() => selectedCategories.value.length + selectedCreatorTypes.value.length + selectedPlatforms.value.length + selectedCountries.value.length + [city.value, audience.value].filter(Boolean).length)
+const activeFilterCount = computed(() => selectedCategories.value.length + selectedCreatorTypes.value.length + selectedPlatforms.value.length + selectedCountries.value.length + [city.value, audience.value].filter(Boolean).length + Number(ageFiltered.value))
 const imageSizes = '(max-width: 420px) calc((100vw - 44px) / 2), (max-width: 760px) calc((min(100vw - 40px, 560px) - 12px) / 2), (max-width: 1224px) calc((100vw - 336px) / 4), 210px'
 watch(() => route.query.q, (value) => { search.value = queryString(value) })
 watch(() => route.query.platform, (value) => { selectedPlatforms.value = normalizePlatform(value) })
@@ -114,6 +119,7 @@ function clearFilters() {
   selectedCountries.value = []
   city.value = ''
   audience.value = ''
+  ageRange.value = [18, 70]
 }
 watch([creators, locale], () => {
   if (route.meta.routeName !== 'creators') return
@@ -161,6 +167,10 @@ watch([creators, locale], () => {
           <fieldset>
             <SingleSelect v-model="audience" :options="audienceOptions" :label="t('creatorDirectory.audienceLabel')" />
             <p class="creator-directory__hint">{{ t('creatorDirectory.audienceHint') }}</p>
+          </fieldset>
+          <fieldset>
+            <legend>{{ t('creatorDirectory.ageLabel') }}</legend>
+            <RangeSlider v-model="ageRange" :min="18" :max="70" :step="1" :label="t('creatorDirectory.ageLabel')" :from-label="t('creatorDirectory.ageFrom')" :to-label="t('creatorDirectory.ageTo')" />
           </fieldset>
           <RegistrationPrompt audience="creator" variant="sidebar" />
           <template #mobile><fieldset><SingleSelect v-model="sort" :options="sortOptions" :label="t('creatorDirectory.sortLabel')" /></fieldset></template>

@@ -398,6 +398,13 @@ Only the currently supported TikTok, Instagram, and YouTube platforms are offere
 Audience bands use the largest channel: small is 1–9,999, medium 10,000–49,999,
 and large 50,000+. Missing follower counts do not match an audience band.
 
+The age filter reuses `RangeSlider.vue` with limits/defaults of 18–70 and one-year
+steps, on both the main and country creator directories. The default full range
+is neutral; narrowing it sends inclusive `ageMin`/`ageMax` bounds to the API.
+Filtered results require a saved birthday, which remains private. Age is evaluated
+against the current UTC date using birthday cutoffs (including leap-year handling),
+before counting/pagination; both bounds are part of the signed cursor scope.
+
 `GET /api/creators/filters` supplies country counts for visible, approved creators.
 `GET /api/creators` accepts JSON arrays in `categories`, `countries`, and `platforms`,
 plus `city`, `audience`, and `sort` (`newest`, `followers`, or `name`). Legacy single

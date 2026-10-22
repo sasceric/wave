@@ -12,6 +12,7 @@ use App\Localization\LocaleContext;
 use App\Reviews\CollaborationFeedback;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\SecurityBundle\Security;
+use Symfony\Component\Clock\Clock;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Attribute\Route;
@@ -74,6 +75,17 @@ final class CreatorController
             $countries = array_map(strtoupper(...), $countries);
             $sort = $request->query->getString('sort', 'name');
             $audience = $request->query->getString('audience');
+            $ageMin = $ageMax = null;
+            if ($request->query->has('ageMin') || $request->query->has('ageMax')) {
+                $minimum = $request->query->getString('ageMin', '18');
+                $maximum = $request->query->getString('ageMax', '70');
+                if (!preg_match('/^[0-9]{2}$/D', $minimum) || !preg_match('/^[0-9]{2}$/D', $maximum)
+                    || (int) $minimum < 18 || (int) $maximum > 70 || (int) $minimum > (int) $maximum) {
+                    throw new \InvalidArgumentException();
+                }
+                $ageMin = (int) $minimum;
+                $ageMax = (int) $maximum;
+            }
             if (!in_array($sort, ['recommended', 'name', 'newest', 'followers'], true) || !in_array($audience, ['', 'small', 'medium', 'large'], true)) {
                 throw new \InvalidArgumentException();
             }
@@ -99,6 +111,12 @@ final class CreatorController
         $params = [];
         $types = [];
         $conditions = [];
+        if ($ageMin !== null && $ageMax !== null) {
+            $today = Clock::get()->now()->setTimezone(new \DateTimeZone('UTC'));
+            $conditions[] = 'birthday > :birthdayAfter AND birthday <= :birthdayOnOrBefore';
+            $params['birthdayAfter'] = self::birthdayCutoff($today, $ageMax + 1);
+            $params['birthdayOnOrBefore'] = self::birthdayCutoff($today, $ageMin);
+        }
         $query = trim($request->query->getString('q'));
         if ($query !== '') {
             $conditions[] = "(COALESCE(search_text, LOWER(display_name || ' ' || bio || ' ' || COALESCE(city, '') || ' ' || category)) LIKE :query OR COALESCE(tag_text, LOWER(CAST(tags AS TEXT))) LIKE :query)";
@@ -151,7 +169,7 @@ final class CreatorController
             };
         }
         $metric = ($sort === 'followers' || $audience !== '') ? self::followersSql('c.social_profiles') : '0';
-        $base = "SELECT c.id, c.featured, c.display_name, c.created_at, c.category, c.categories, c.creator_types, c.bio, c.tags, c.social_profiles,
+        $base = "SELECT c.id, c.featured, c.display_name, c.created_at, c.category, c.categories, c.creator_types, c.bio, c.tags, c.social_profiles, c.birthday,
             COALESCE(u.city, c.city) AS city, u.country_code, i.search_text, i.tag_text, i.platform_keys, $metric AS followers
             FROM creator c LEFT JOIN wave_user u ON u.id = c.owner_id
             LEFT JOIN directory_index i ON i.kind = 'creator' AND i.entity_id = c.id
@@ -215,6 +233,14 @@ final class CreatorController
                 ->where('creator IN (:creators)')->setParameter('creators', $creators)->getQuery()->getResult();
         }
         return new JsonResponse(['data' => array_map(static fn (Creator $creator): array => CreatorResource::fromEntity($creator, $locale, $categoryLabels[$creator->getCategory()] ?? null, $categoryLabels, $card) + ['rating' => $ratings[$creator->getOwner()?->getId()] ?? ['average' => null, 'reviewCount' => 0, 'completedCampaigns' => 0]], $creators), 'meta' => $meta]);
+    }
+
+    private static function birthdayCutoff(\DateTimeImmutable $today, int $years): string
+    {
+        // Clamp leap day to February's last day instead of overflowing into March.
+        $month = $today->modify('first day of this month')->modify('-'.$years.' years');
+
+        return $month->setDate((int) $month->format('Y'), (int) $month->format('m'), min((int) $today->format('d'), (int) $month->format('t')))->format('Y-m-d');
     }
 
     private function selectedValues(Request $request, string $key, int $maxLength): array

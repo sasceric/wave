@@ -32,3 +32,29 @@ test('creator platform links retain their filter and reject unsupported platform
   assert.deepEqual([...state.normalizePlatform('spotify')], ['Spotify'])
   assert.equal(state.normalizePlatform('unsupported').length, 0)
 })
+
+test('creator age range filters use inclusive bounds, reset to 18–70, and count as one filter', async () => {
+  let filters
+  const { state } = await setupView('../src/views/CreatorsView.vue', {
+    ...modules,
+    '../composables/useInfiniteDirectory': { useInfiniteDirectory: (_path, _locale, values) => {
+      filters = values
+      return modules['../composables/useInfiniteDirectory'].useInfiniteDirectory()
+    } },
+  })
+  assert.deepEqual([...state.ageRange.value], [18, 70])
+  assert.equal(filters.ageMin.value, '')
+  assert.equal(filters.ageMax.value, '')
+  state.ageRange.value = [25, 40]
+  assert.equal(filters.ageMin.value, '25')
+  assert.equal(filters.ageMax.value, '40')
+  assert.equal(state.activeFilterCount.value, 1)
+  state.ageRange.value = [18, 18]
+  assert.equal(filters.ageMin.value, '18')
+  assert.equal(filters.ageMax.value, '18')
+  state.clearFilters()
+  assert.deepEqual([...state.ageRange.value], [18, 70])
+  assert.equal(filters.ageMin.value, '')
+  assert.equal(filters.ageMax.value, '')
+  assert.equal(state.activeFilterCount.value, 0)
+})

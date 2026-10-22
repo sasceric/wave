@@ -1566,6 +1566,9 @@
     }
   },
   "creatorDirectory": {
+    "ageLabel": "Starost (leta)",
+    "ageFrom": "Od",
+    "ageTo": "Do",
     "heroBadge": "Pristni ustvarjalci z različnih področij",
     "categoryLabel": "Področja",
     "searchCategories": "Poišči področja…",

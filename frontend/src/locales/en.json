@@ -1565,6 +1565,9 @@
     }
   },
   "creatorDirectory": {
+    "ageLabel": "Age (years)",
+    "ageFrom": "From",
+    "ageTo": "To",
     "heroBadge": "Authentic creators from different fields",
     "categoryLabel": "Categories",
     "searchCategories": "Search categories…",

@@ -1565,6 +1565,9 @@
     }
   },
   "creatorDirectory": {
+    "ageLabel": "Alter (Jahre)",
+    "ageFrom": "Von",
+    "ageTo": "Bis",
     "heroBadge": "Authentische Creator aus verschiedenen Bereichen",
     "categoryLabel": "Themenbereiche",
     "searchCategories": "Themenbereiche suchen…",

@@ -1566,6 +1566,9 @@
     }
   },
   "creatorDirectory": {
+    "ageLabel": "Uzrast (godine)",
+    "ageFrom": "Od",
+    "ageTo": "Do",
     "heroBadge": "Autentični kreatori iz različitih oblasti",
     "categoryLabel": "Oblasti",
     "searchCategories": "Pretraži oblasti…",
