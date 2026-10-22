@@ -103,9 +103,16 @@ final class JobExecutor
 
     private function logSkippedEmail(array $payload, string $reason): void
     {
-        $raw = base64_decode($payload['raw'], true);
-        if ($raw === false) return;
-        $this->mailLog->record(new RawMessage($raw), new Envelope(new Address($payload['sender']), array_map(static fn (string $email): Address => new Address($email), $payload['recipients'])), 'skipped', ['reason' => $reason]);
+        // Obsolete jobs are skipped before delivery validation; old/discarded payloads may be incomplete.
+        if (!is_string($payload['raw'] ?? null) || !is_string($payload['sender'] ?? null) || !is_array($payload['recipients'] ?? null)) return;
+        try {
+            $raw = base64_decode($payload['raw'], true);
+            if ($raw === false) return;
+            $envelope = new Envelope(new Address($payload['sender']), array_map(static fn (string $email): Address => new Address($email), $payload['recipients']));
+            $this->mailLog->record(new RawMessage($raw), $envelope, 'skipped', ['reason' => $reason]);
+        } catch (\Throwable) {
+            // Audit metadata must never turn a skipped email into a failed/retried job.
+        }
     }
 
     private function isCurrentReminder(array $reminder): bool

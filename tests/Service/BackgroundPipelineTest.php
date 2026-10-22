@@ -180,6 +180,31 @@ final class BackgroundPipelineTest extends KernelTestCase
         self::assertSame('completed', $this->db->fetchOne('SELECT status FROM background_job WHERE id = ?', [$job['id']]));
     }
 
+    public function testSkippedSecurityEmailIgnoresMissingOrMalformedDeliveryMetadata(): void
+    {
+        $transport = $this->createMock(\Symfony\Component\Mailer\Transport\TransportInterface::class);
+        $transport->expects(self::never())->method('send');
+        self::getContainer()->set('mailer.transports', $transport);
+        $executor = self::getContainer()->get(\App\Background\JobExecutor::class);
+        $valid = ['raw' => base64_encode("Subject: Old email\r\n\r\nOld body"), 'sender' => 'sender@example.test', 'recipients' => ['recipient@example.test']];
+        foreach ([
+            [],
+            ['raw' => 'invalid base64 that must never reach the mail transport'],
+            array_replace($valid, ['raw' => null]),
+            array_replace($valid, ['raw' => []]),
+            array_replace($valid, ['sender' => null]),
+            array_replace($valid, ['sender' => 'invalid sender']),
+            array_replace($valid, ['recipients' => null]),
+            array_replace($valid, ['recipients' => []]),
+            array_replace($valid, ['recipients' => [null]]),
+            array_replace($valid, ['recipients' => ['invalid recipient']]),
+            $valid,
+        ] as $payload) {
+            // The absent token has already made the job obsolete; it must not reach delivery.
+            $executor->execute('SendEmailMessage', $payload + ['tokenHash' => str_repeat('f', 64)], 'obsolete-mail');
+        }
+    }
+
     public function testVerificationSurvivesCleanupAndQueuedMailStopsAfterConfirmation(): void
     {
         if (!$this->db->getDatabasePlatform() instanceof \Doctrine\DBAL\Platforms\PostgreSQLPlatform) {
