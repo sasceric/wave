@@ -267,3 +267,18 @@ test('accepting an application only opens its chat and sends no financial terms'
   assert.equal(navigation[0].query.conversation, 88)
   assert.equal(state.selectedApplication.value, null)
 })
+
+test('voluntary campaign saves zero budgets, keeps its type on edit and resets new campaigns to paid', async () => {
+  const { state, requests } = await setupAccount()
+  state.campaignForm.value.compensationType = 'voluntary'
+  state.campaignForm.value.channels = ['Facebook']
+  await state.saveCampaign()
+  assert.equal(requests[0].body.compensationType, 'voluntary')
+  assert.equal(requests[0].body.budgetMin, 0)
+  assert.equal(requests[0].body.budgetMax, 0)
+  assert.deepEqual(Array.from(requests[0].body.channels), ['Facebook'])
+  state.setCampaignForm({ id: 42, compensationType: 'voluntary', budgetMin: 0, budgetMax: 0, channels: ['Facebook'], deliverables: ['One video'], closesAt: '2099-11-12', status: 'open' })
+  assert.equal(state.campaignForm.value.compensationType, 'voluntary')
+  state.cancelCampaignEditing()
+  assert.equal(state.campaignForm.value.compensationType, 'paid')
+})

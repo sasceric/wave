@@ -1,4 +1,5 @@
 <script setup>
+import CampaignCompensation from '../components/campaigns/CampaignCompensation.vue'
 import { accountLanding } from '../lib/accountAccess'
 import { registrationReturn } from '../lib/registrationIntent'
 import { companyTypeOptions } from '../lib/companyTypes'
@@ -51,7 +52,7 @@ import { apiGet, apiRequest, formatMoney } from '../lib/api'
 import { useMarketplaceCatalog } from '../composables/useMarketplaceCatalog'
 import { currentUser, setCurrentUser } from '../composables/useCurrentUser'
 import { useCampaignBookmarks } from '../composables/useCampaignBookmarks'
-import { COMPANY_SOCIAL_PLATFORMS, CURRENCIES, SOCIAL_PLATFORMS } from '../lib/marketplace'
+import { COMPANY_SOCIAL_PLATFORMS, CURRENCIES, CAMPAIGN_PLATFORMS } from '../lib/marketplace'
 import { creatorTypeOptions } from '../lib/creatorTypes'
 import { formatInternationalPhoneNumber } from '../lib/phoneNumbers'
 import { localizedPath, localizedRouteName } from '../routePaths'
@@ -99,7 +100,6 @@ const accountSection = computed(() => route.meta.accountSection ?? 'profile')
 const busy = ref(false)
 const error = ref('')
 const notice = ref('')
-const resendingVerification = ref(false)
 const visibilitySaving = ref(false)
 const notificationsSaving = ref(false)
 const profile = ref(null)
@@ -225,6 +225,7 @@ function emptyCampaign() {
     channels: ['Instagram', 'TikTok'],
     deliverables: [''],
     budgetMin: 300,
+    compensationType: 'paid',
     budgetMax: 800,
     currency: 'BAM',
     city: '',
@@ -545,20 +546,6 @@ async function completePendingBookmark(account) {
     || { name: localizedRouteName('account-bookmarks', locale.value) }
 }
 
-async function resendVerification() {
-  resendingVerification.value = true
-  error.value = ''
-  notice.value = ''
-  try {
-    const response = await apiRequest('/auth/verification-email', { method: 'POST', body: {} })
-    notice.value = response.message
-  } catch (cause) {
-    error.value = cause.message
-  } finally {
-    resendingVerification.value = false
-  }
-}
-
 async function updateAccountVisibility(value) {
   if (!user.value || !user.value.approved || !user.value.emailVerified || user.value.profileComplete === false || visibilitySaving.value) {
     return
@@ -728,6 +715,7 @@ function setCampaignForm(campaign = null) {
     channels: [...campaign.channels],
     deliverables: [...campaign.deliverables],
     budgetMin: campaign.budgetMin,
+    compensationType: campaign.compensationType || 'paid',
     budgetMax: campaign.budgetMax,
     currency: campaign.currency || 'BAM',
     city: campaign.city || '',
@@ -755,8 +743,9 @@ async function saveCampaign() {
     categories: campaignForm.value.categories,
     channels: [...campaignForm.value.channels],
     deliverables: campaignForm.value.deliverables.map((item) => item.trim()),
-    budgetMin: Number(campaignForm.value.budgetMin),
-    budgetMax: Number(campaignForm.value.budgetMax),
+    compensationType: campaignForm.value.compensationType,
+    budgetMin: campaignForm.value.compensationType === 'voluntary' ? 0 : Number(campaignForm.value.budgetMin),
+    budgetMax: campaignForm.value.compensationType === 'voluntary' ? 0 : Number(campaignForm.value.budgetMax),
     currency: campaignForm.value.currency,
     city: campaignForm.value.city,
     countryCode: campaignForm.value.countryCode,
@@ -980,14 +969,10 @@ onMounted(loadDashboard)
     <AccountProfileSummary v-if="profile && !editingProfile && accountSection === 'profile'" :user="user" :profile="profile" :country-options="countryOptions" :visibility-saving="visibilitySaving" :notifications-saving="notificationsSaving" @url-changed="loadDashboard()" @notifications="updateNotificationPreference" @edit="startProfileEdit('about')" @select-tab="selectAccountTab" @visibility="updateAccountVisibility" />
     <StatusMessage v-if="error" variant="error">{{ error }}</StatusMessage>
     <StatusMessage v-else-if="notice">{{ notice }}</StatusMessage>
-    <div v-if="!user.emailVerified" class="verification-banner">
-      <p>{{ t('account.emailUnverified') }}</p>
-      <button class="button button--outline" type="button" :disabled="resendingVerification" @click="resendVerification">{{ t('account.resendVerification') }}</button>
-    </div>
-    <div v-else-if="!user.approved" class="verification-banner" role="status">
+    <div v-if="user.emailVerified && !user.approved" class="verification-banner" role="status">
       <p>{{ user.profileComplete ? t('account.approvalPendingNotice') : t('account.profileIncomplete') }}</p>
     </div>
-    <div v-else-if="user.hide_my_account" class="verification-banner" role="status">
+    <div v-else-if="user.emailVerified && user.hide_my_account" class="verification-banner" role="status">
       <p>{{ t('account.profileApprovedHiddenNotice') }}</p>
     </div>
 
@@ -1375,7 +1360,7 @@ onMounted(loadDashboard)
             </div>
             <MultiSelect
               v-model="campaignForm.channels"
-              :options="SOCIAL_PLATFORMS.map(value => ({ value, label: value }))"
+              :options="CAMPAIGN_PLATFORMS.map(value => ({ value, label: value }))"
               :label="t('account.channels')"
               :placeholder="t('account.selectChannels')"
               :search-placeholder="t('creatorDirectory.searchPlatforms')"
@@ -1404,10 +1389,13 @@ onMounted(loadDashboard)
                 <button class="profile-editor__add" type="button" :disabled="campaignForm.deliverables.length >= 10" @click="campaignForm.deliverables.push('')"><Plus :size="16" aria-hidden="true" />{{ t('account.addDeliverable') }}</button>
               </div>
             </AccountProfileCard>
+            <SingleSelect v-model="campaignForm.compensationType" :disabled="Boolean(editingCampaign?.appliedCreatorIds?.length || editingCampaign?.invitedCreatorIds?.length || ['finished', 'cancelled'].includes(editingCampaign?.status))" :label="t('compensation.type')" :options="[{ value: 'paid', label: t('compensation.paid') }, { value: 'voluntary', label: t('compensation.voluntaryLabel') }]" required />
+            <StatusMessage v-if="campaignForm.compensationType === 'voluntary'">{{ t('compensation.voluntaryHint') }}</StatusMessage>
+            <p v-if="editingCampaign?.appliedCreatorIds?.length || editingCampaign?.invitedCreatorIds?.length" class="muted">{{ t('compensation.locked') }}</p>
             <div class="form-grid">
-              <label class="form-field"><span>{{ t('account.budgetMin') }}</span><input v-model.number="campaignForm.budgetMin" type="number" min="1" max="10000000" required /></label>
-              <label class="form-field"><span>{{ t('account.budgetMax') }}</span><input v-model.number="campaignForm.budgetMax" type="number" min="1" max="10000000" required /></label>
-              <SingleSelect :disabled="Boolean(editingCampaign?.hiredCount)" v-model="campaignForm.currency" :label="t('account.currency')" :options="CURRENCIES.map(value => ({ value, label: value }))" />
+              <label v-if="campaignForm.compensationType !== 'voluntary'" class="form-field"><span>{{ t('account.budgetMin') }}</span><input v-model.number="campaignForm.budgetMin" type="number" min="1" max="10000000" required /></label>
+              <label v-if="campaignForm.compensationType !== 'voluntary'" class="form-field"><span>{{ t('account.budgetMax') }}</span><input v-model.number="campaignForm.budgetMax" type="number" min="1" max="10000000" required /></label>
+              <SingleSelect v-if="campaignForm.compensationType !== 'voluntary'" :disabled="Boolean(editingCampaign?.hiredCount)" v-model="campaignForm.currency" :label="t('account.currency')" :options="CURRENCIES.map(value => ({ value, label: value }))" />
               <label class="form-field"><span>{{ t('account.creatorCount') }}</span><input v-model.number="campaignForm.creatorCount" type="number" min="1" max="100" required /></label>
               <DatePicker v-model="campaignForm.closesAt" :label="t('account.closesAt')" required />
             </div>
@@ -1510,7 +1498,7 @@ onMounted(loadDashboard)
           </div>
           <p v-if="selectedApplication.status === 'pending'" class="muted">{{ t('hiring.acceptApplicationHint') }}</p>
           <div v-if="selectedApplication.offer" class="offer-summary">
-            <strong>{{ formatMoney(selectedApplication.offer.amount, selectedApplication.campaign.currency) }}</strong>
+            <strong><CampaignCompensation :campaign="selectedApplication.campaign" :amount="selectedApplication.offer.amount" /></strong>
             <p v-if="selectedApplication.offer.dueDate">{{ t('hiring.deliveryDue', { date: formatDate(selectedApplication.offer.dueDate) }) }}</p>
             <p>{{ selectedApplication.offer.message }}</p>
           </div>

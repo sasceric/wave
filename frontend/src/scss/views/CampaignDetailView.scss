@@ -531,6 +531,15 @@
   .brief-hero {
     padding: 14px 0 28px;
 
+    &__navigation {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 16px;
+
+      .back-link { margin-bottom: 0; }
+    }
+
     &::after {
       left: auto;
       right: -90px;

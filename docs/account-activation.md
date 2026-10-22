@@ -13,6 +13,48 @@ panel refreshes the session on the existing inbox-resume event, triggered when
 the app regains focus, reconnects or receives a push. It removes its listener on
 unmount; there is no polling timer or additional submission action.
 
+### Verification notice and manual reminders
+
+Signed-in accounts with `emailVerified=false` see a persistent, non-dismissible
+notice above the page content on every route. It shows their address, reminds
+them to check Other/Promotions/Spam, and offers the existing CSRF-protected resend
+action. Sending another email does not hide the notice. It disappears only when
+the session endpoint confirms verification, including after returning from the
+email app. The activation checklist shares the same resend composable, which
+coalesces simultaneous sends and discards responses after an account switch.
+
+Approvals row actions include **Remind to verify email** for unverified accounts
+and **Send profile tip** for any pending account. Both use the existing confirmation
+modal, showing the destination before sending. The modal links to the corresponding
+editable email template. These are manual actions, not an automated email campaign.
+
+`POST /api/admin/registrations/{id}/reminder` accepts `kind=verification|profile`,
+requires an administrator session and CSRF, and rejects deleted, staff, approved,
+or otherwise ineligible recipients. Each recipient/type is limited to one send
+per 24 hours through `wave_registration_reminder`. Verification also shares the
+normal per-address resend limiter. A verification reminder issues a new single-use
+verification token without an expiry, preserving registration and resend links.
+Using any one invalidates all verification links for that account. Password resets
+still expire after one hour and replace earlier reset links. Security-token
+metadata suppresses queued emails once their link is invalidated by successful
+verification. Token cleanup retains verification links. A profile tip cannot
+verify or approve an account and does not issue a token.
+
+The `verification_reminder` and `profile_tip` templates appear in the existing
+email editor. They reuse `account_action.html`, Wave branding, escaped variables,
+`recipientName`, and the recipient's saved language. The tip explains that extra
+profile content is optional; the existing approval prerequisites stay intact.
+Sending uses the existing mail queue. Migration `Version20261022140000` makes
+token expiry nullable and removes the expiry from retained verification links
+for unverified, active accounts. Already
+deleted tokens cannot be recovered. Password-reset rows retain their expiry.
+Apply the migration and restart existing workers with the normal deployment; no
+additional worker, scheduler or SMTP credential is required. Existing custom
+verification templates should be checked for hardcoded 24-hour expiry wording.
+
+See [email delivery](email-delivery.md) for Focused/Other sorting and authentication
+checks. Neither reminder delivery nor inbox placement is guaranteed by queueing.
+
 ## Opt-in campaign emails
 
 `GET/PUT /api/me/campaign-alerts` is creator-only, owner-scoped and non-cacheable. PUT requires CSRF and validates category values, country codes, daily/weekly frequency and an explicit boolean opt-in. No preference row means disabled. These emails are independently opted into, separate from device notifications.

@@ -1,4 +1,5 @@
 <script setup>
+import CampaignCompensation from '../campaigns/CampaignCompensation.vue'
 import ReviewAction from '../reviews/ReviewAction.vue'
 import { computed, nextTick, ref, watch } from 'vue'
 import { ArrowRight, CalendarDays, MapPin, Megaphone, MessageCircle, Users } from '@lucide/vue'
@@ -11,7 +12,7 @@ import DirectorySearch from '../shared/DirectorySearch.vue'
 import LocalizedLink from '../shared/LocalizedLink.vue'
 import RichTextContent from '../shared/RichTextContent.vue'
 import StatusMessage from '../shared/StatusMessage.vue'
-import { formatDate, formatMoney } from '../../lib/api'
+import { formatDate } from '../../lib/api'
 import { createChatTimeFormatter } from '../../lib/chatTime'
 import { campaignPlace, CAMPAIGN_PLACEHOLDER, CREATOR_PLACEHOLDER } from '../../lib/marketplace'
 
@@ -85,7 +86,7 @@ function chatRoute(application) {
           </dl>
         </div>
         <dl class="company-campaign-detail__facts">
-          <div><dt>{{ t('account.budgetMin') }} – {{ t('account.budgetMax') }}</dt><dd>{{ formatMoney(campaign.budgetMin, campaign.currency) }} – {{ formatMoney(campaign.budgetMax, campaign.currency) }}</dd></div>
+          <div><dt>{{ t('account.budgetMin') }} – {{ t('account.budgetMax') }}</dt><dd><CampaignCompensation :campaign="campaign" /></dd></div>
           <div><dt>{{ t('campaignDetail.channels') }}</dt><dd>{{ campaign.channels.join(', ') }}</dd></div>
           <div><dt>{{ t('account.deliverables') }}</dt><dd><ul><li v-for="(item, index) in campaign.deliverables" :key="index">{{ item }}</li></ul></dd></div>
         </dl>

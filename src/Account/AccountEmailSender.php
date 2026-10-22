@@ -22,7 +22,7 @@ final class AccountEmailSender
                 'greeting' => 'Zdravo!',
                 'message' => 'Tvoja registracija je zaprimljena. Potvrdi e-mail adresu. Nakon potvrde, račun će čekati odobrenje našeg tima, a obavijestit ćemo te čim bude odobren.',
                 'buttonLabel' => 'Potvrdi e-mail adresu',
-                'expiration' => 'Sigurna veza važi 24 sata.',
+                'expiration' => 'Veza važi dok ne potvrdiš svoju e-mail adresu.',
                 'security' => 'Ako nisi otvorio/la Wave račun, zanemari ovu poruku.',
                 'fallback' => 'Ako se dugme ne otvori, kopiraj ovu adresu u preglednik:',
                 'footer' => 'Automatska poruka od Wavea. Molimo ne odgovaraj na ovu e-poruku.',
@@ -50,7 +50,7 @@ final class AccountEmailSender
                 'greeting' => 'Zdravo!',
                 'message' => 'Tvoja registracija je primljena. Potvrdi e-mail adresu. Nakon potvrde, nalog će čekati odobrenje našeg tima, a obavijestićemo te čim bude odobren.',
                 'buttonLabel' => 'Potvrdi e-mail adresu',
-                'expiration' => 'Sigurna veza važi 24 sata.',
+                'expiration' => 'Veza važi dok ne potvrdiš svoju e-mail adresu.',
                 'security' => 'Ako nijesi otvorio/la Wave nalog, zanemari ovu poruku.',
                 'fallback' => 'Ako se dugme ne otvori, kopiraj ovu adresu u pregledač:',
                 'footer' => 'Automatska poruka od Wavea. Molimo te, ne odgovaraj na ovu e-poruku.',
@@ -78,7 +78,7 @@ final class AccountEmailSender
                 'greeting' => 'Pozdrav!',
                 'message' => 'Tvoja je registracija zaprimljena. Potvrdi adresu e-pošte. Nakon potvrde, račun će čekati odobrenje našeg tima, a obavijestit ćemo te čim bude odobren.',
                 'buttonLabel' => 'Potvrdi adresu e-pošte',
-                'expiration' => 'Sigurna poveznica vrijedi 24 sata.',
+                'expiration' => 'Poveznica vrijedi dok ne potvrdiš svoju adresu e-pošte.',
                 'security' => 'Ako nisi otvorio/la Wave račun, zanemari ovu poruku.',
                 'fallback' => 'Ako se gumb ne otvori, kopiraj ovu adresu u preglednik:',
                 'footer' => 'Automatska poruka od Wavea. Molimo ne odgovaraj na ovu poruku.',
@@ -106,7 +106,7 @@ final class AccountEmailSender
                 'greeting' => 'Zdravo!',
                 'message' => 'Tvoja registracija je primljena. Potvrdi e-mail adresu. Nakon potvrde, nalog će čekati odobrenje našeg tima, a obavestićemo te čim bude odobren.',
                 'buttonLabel' => 'Potvrdi e-mail adresu',
-                'expiration' => 'Sigurna veza važi 24 sata.',
+                'expiration' => 'Veza važi dok ne potvrdiš svoju e-mail adresu.',
                 'security' => 'Ako nisi otvorio/la Wave nalog, zanemari ovu poruku.',
                 'fallback' => 'Ako se dugme ne otvori, kopiraj ovu adresu u pregledač:',
                 'footer' => 'Automatska poruka od Wavea. Molimo te, ne odgovaraj na ovu e-poruku.',
@@ -134,7 +134,7 @@ final class AccountEmailSender
                 'greeting' => 'Pozdravljeni!',
                 'message' => 'Tvoja registracija je prejeta. Potrdi svoj e-poštni naslov. Po potrditvi bo račun čakal na odobritev naše ekipe, o odobritvi pa te bomo obvestili po e-pošti.',
                 'buttonLabel' => 'Potrdi e-poštni naslov',
-                'expiration' => 'Varna povezava velja 24 ur.',
+                'expiration' => 'Povezava velja, dokler ne potrdiš svojega e-poštnega naslova.',
                 'security' => 'Če računa Wave nisi ustvaril/a, lahko to sporočilo prezreš.',
                 'fallback' => 'Če se gumb ne odpre, kopiraj ta naslov v brskalnik:',
                 'footer' => 'To je samodejno sporočilo Wave. Prosimo, ne odgovarjaj nanj.',
@@ -162,7 +162,7 @@ final class AccountEmailSender
                 'greeting' => 'Hello!',
                 'message' => 'Your registration has been received. Confirm your email address. Once confirmed, your account will wait for our team to approve it, and we will email you as soon as it is approved.',
                 'buttonLabel' => 'Verify email address',
-                'expiration' => 'This secure link expires in 24 hours.',
+                'expiration' => 'This link remains valid until you confirm your email address.',
                 'security' => 'If you did not create a Wave account, you can ignore this message.',
                 'fallback' => 'If the button does not work, copy this address into your browser:',
                 'footer' => 'This is an automated message from Wave. Please do not reply.',
@@ -373,6 +373,16 @@ final class AccountEmailSender
     public function sendPasswordReset(User $user, string $token, string $locale): void
     {
         $this->send($user, $token, $locale, 'reset', 'reset-password');
+    }
+
+    public function sendVerificationReminder(User $user, string $token): void
+    {
+        $this->send($user, $token, $user->getPreferredLocale(), 'verification_reminder', 'verify-email');
+    }
+
+    public function sendProfileTip(User $user): void
+    {
+        $this->send($user, null, $user->getPreferredLocale(), 'profile_tip', 'account');
     }
 
     public function sendRegistrationReceived(User $user, string $locale): void
@@ -682,7 +692,7 @@ final class AccountEmailSender
                 $customization instanceof EmailTemplate ? $customization->getHtmlBody() : null,
             ));
 
-        if (in_array($type, ['verify', 'reset'], true)) {
+        if (in_array($type, ['verify', 'verification_reminder', 'reset'], true)) {
             $token = parse_url($url, PHP_URL_FRAGMENT);
             if (is_string($token) && $token !== '') {
                 $message->getHeaders()->addTextHeader(\App\Background\QueuedMailer::SECURITY_TOKEN_HEADER, hash('sha256', rawurldecode($token)));
@@ -697,6 +707,12 @@ final class AccountEmailSender
     private function copyFor(string $template, string $locale): array
     {
         $locale = $this->normalizedLocale($locale);
+        if (in_array($template, ['verification_reminder', 'profile_tip'], true)) {
+            return array_replace(
+                $this->copyFor($template === 'verification_reminder' ? 'verify' : 'registered', $locale),
+                RegistrationReminderEmailCopy::forLocale($template, $locale),
+            );
+        }
         if ($template === 'credit_code_assigned') {
             return CreditCodeEmailCopy::forLocale($locale);
         }

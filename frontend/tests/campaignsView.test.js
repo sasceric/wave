@@ -10,7 +10,7 @@ function modules(capture = () => {}) {
       return { items: ref([]), total: ref(0), loading: ref(false), error: ref(''), hasMore: ref(false), loadMore: async () => {} }
     } },
     '../composables/useMarketplaceCatalog': { useMarketplaceCatalog: () => ({ categories: ref([]), error: ref(''), refresh: async () => {} }) },
-    '../lib/marketplace': { SOCIAL_PLATFORMS: ['TikTok', 'Instagram', 'YouTube'], CURRENCIES: ['BAM', 'EUR', 'RSD'] },
+    '../lib/marketplace': { CAMPAIGN_PLATFORMS: ['TikTok', 'Instagram', 'YouTube', 'Facebook'], CURRENCIES: ['BAM', 'EUR', 'RSD'] },
   }
 }
 

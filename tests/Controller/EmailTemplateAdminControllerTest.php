@@ -68,6 +68,8 @@ final class EmailTemplateAdminControllerTest extends WebTestCase
                 'unread_message_reminder',
                 'credits_activated',
                 'credit_code_assigned',
+                'verification_reminder',
+                'profile_tip',
             ],
             array_column($this->payload()['data']['templates'], 'key'),
         );

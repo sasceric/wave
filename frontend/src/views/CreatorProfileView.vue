@@ -1,5 +1,6 @@
 <script setup>
 import RegistrationPrompt from '../components/shared/RegistrationPrompt.vue'
+import PublicShareButton from '../components/shared/PublicShareButton.vue'
 import PresentationDemoBadge from '../components/shared/PresentationDemoBadge.vue'
 import { useCreatorProfileVisit } from '../composables/useCreatorProfileVisit'
 import MarketplaceSafetyActions from '../components/shared/MarketplaceSafetyActions.vue'
@@ -623,6 +624,7 @@ onBeforeUnmount(() => { ++profileGeneration; packageDescriptionObserver?.disconn
           <ChevronRight :size="14" aria-hidden="true" />
           <span aria-current="page">{{ creator.displayName }}</span>
           <PresentationDemoBadge v-if="creator.isPresentationDemo" />
+          <PublicShareButton route-name="creator-profile" :slug="creator.slug" :title="creator.displayName" />
         </nav>
         <header class="profile-heading">
           <div class="profile-heading__identity">

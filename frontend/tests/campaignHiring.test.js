@@ -5,6 +5,36 @@ import { setupView } from './setupView.js'
 
 const campaign = { slug: 'spring', title: 'Spring campaign', budgetMin: 300, budgetMax: 800, currency: 'BAM', company: { slug: 'brand', name: 'Brand' } }
 
+test('voluntary campaign hiring confirms no fee but still requires a deadline and creator response', async () => {
+  const calls = []
+  const { state, emitted } = await setupView('../src/components/account/CampaignHireAction.vue', {
+    '../../lib/api': { apiRequest: async (path, options) => { calls.push({ path, body: options.body }); return { data: { id: 99, amount: 0, status: 'pending' } } } },
+  }, { conversationId: 9, campaign: { ...campaign, compensationType: 'voluntary' }, disabled: false })
+  state.start()
+  assert.equal(state.amount.value, 0)
+  assert.equal(state.message.value, 'compensation.defaultHireMessage')
+  await state.submit()
+  assert.equal(calls.length, 0)
+  state.dueDate.value = '2099-01-20'
+  state.message.value = 'Our agreed voluntary collaboration without a fee.'
+  state.amount.value = 300
+  await state.submit()
+  assert.equal(calls[0].body.amount, 0)
+  assert.equal(emitted[0][1].status, 'pending')
+})
+
+test('no-fee labels are explicit and never inferred just from a missing or zero budget', async () => {
+  const formatter = amount => `${amount} KM`
+  const { state } = await setupView('../src/components/campaigns/CampaignCompensation.vue', {
+    '../../lib/api': { formatMoney: formatter },
+  }, { campaign: { ...campaign, compensationType: 'voluntary' }, amount: 0 })
+  assert.equal(state.label.value, 'compensation.noFee')
+  const paid = await setupView('../src/components/campaigns/CampaignCompensation.vue', {
+    '../../lib/api': { formatMoney: formatter },
+  }, { campaign: { budgetMin: 0, budgetMax: 0, currency: 'BAM' }, amount: null })
+  assert.equal(paid.state.label.value, '0 KM – 0 KM')
+})
+
 test('hiring confirms a negotiated amount outside the advertised budget and retains failed drafts', async () => {
   const currentUser = ref({ id: 10, accountType: 'company' })
   const calls = []

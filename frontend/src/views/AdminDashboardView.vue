@@ -9,6 +9,7 @@ import {
   EyeOff,
   ClipboardList,
   Megaphone,
+  Mail,
   Trash2,
   Users,
 } from '@lucide/vue'
@@ -44,6 +45,35 @@ const reviewRequest = ref(null)
 const visibilitySaving = ref(false)
 const deleteRequest = ref(null)
 const bulkApprovalRequest = ref(null)
+const reminderRequest = ref(null)
+const sendingReminder = ref(false)
+const reminderLabel = kind => t(kind === 'verification' ? 'adminProfiles.verificationReminder' : 'adminProfiles.profileTip')
+const reminderConfirmation = computed(() => reminderRequest.value ? t('adminProfiles.reminderConfirm', {
+  email: reminderRequest.value.email,
+  type: reminderLabel(reminderRequest.value.kind),
+}) : '')
+
+function requestReminder(row, kind) {
+  if (!sendingReminder.value) reminderRequest.value = { id: row.id, email: row.email, kind }
+}
+
+async function confirmReminder() {
+  const request = reminderRequest.value
+  if (!request || sendingReminder.value) return
+  const adminId = currentUser.value?.id
+  sendingReminder.value = true
+  error.value = ''
+  notice.value = ''
+  try {
+    await apiRequest(`/admin/registrations/${request.id}/reminder`, { method: 'POST', body: { kind: request.kind } })
+    if (adminId === currentUser.value?.id) notice.value = t('adminProfiles.reminderQueued', { email: request.email })
+  } catch (cause) {
+    if (adminId === currentUser.value?.id) error.value = cause.message || t('adminDashboard.saveError')
+  } finally {
+    sendingReminder.value = false
+    reminderRequest.value = null
+  }
+}
 const query = ref(typeof route.query?.q === 'string' ? route.query.q : '')
 watch(() => route.query?.q, value => { query.value = typeof value === 'string' ? value : '' })
 const statusFilter = ref('all')
@@ -419,6 +449,7 @@ async function confirmBulkApproval() {
 
 watch([locale, section], () => {
   reviewRequest.value = null
+  reminderRequest.value = null
   query.value = typeof route.query?.q === 'string' ? route.query.q : ''
   statusFilter.value = 'all'
   listVersion++
@@ -621,6 +652,14 @@ onMounted(loadDashboard)
                 <button v-if="section === 'registrations' && !row.approved" class="admin-row-actions__item" type="button" role="menuitem" :disabled="approving || !row.emailVerified || !row.profileComplete" :title="!row.emailVerified || !row.profileComplete ? t('adminProfiles.showRequirements') : undefined" @click="approveRegistration(row)">
                   <Check :size="15" aria-hidden="true" />{{ t('adminDashboard.approve') }}
                 </button>
+                <template v-if="section === 'registrations' && !row.approved">
+                  <button v-if="!row.emailVerified" class="admin-row-actions__item" type="button" role="menuitem" :disabled="sendingReminder" @click="requestReminder(row, 'verification')">
+                    <Mail :size="15" aria-hidden="true" />{{ t('adminProfiles.verificationReminder') }}
+                  </button>
+                  <button class="admin-row-actions__item" type="button" role="menuitem" :disabled="sendingReminder" @click="requestReminder(row, 'profile')">
+                    <ClipboardList :size="15" aria-hidden="true" />{{ t('adminProfiles.profileTip') }}
+                  </button>
+                </template>
                 <button v-if="isProfileList" class="admin-row-actions__item" type="button" role="menuitem" :disabled="visibilitySaving || !row.canChangeVisibility || (!row.publicVisible && !row.canShowProfile)" :title="!row.canChangeVisibility ? t('adminProfiles.noAccount') : !row.publicVisible && !row.canShowProfile ? t('adminProfiles.showRequirements') : undefined" @click="changeVisibility(row)">
                   <EyeOff v-if="row.publicVisible" :size="15" aria-hidden="true" /><Eye v-else :size="15" aria-hidden="true" />{{ t(row.publicVisible ? 'adminProfiles.hide' : 'adminProfiles.show') }}
                 </button>
@@ -640,6 +679,19 @@ onMounted(loadDashboard)
       </main>
     </div>
     <AdminProfileReview :open="reviewRequest !== null" :kind="reviewRequest?.kind || section" :id="reviewRequest?.id || null" @update:open="!$event && (reviewRequest = null)" />
+    <ConfirmationModal
+      :open="reminderRequest !== null"
+      :title="t('adminProfiles.reminderConfirmTitle')"
+      :message="reminderConfirmation"
+      :confirm-label="t('adminProfiles.reminderSend')"
+      :cancel-label="t('adminDashboard.cancelAction')"
+      :loading="sendingReminder"
+      @update:open="!$event && !sendingReminder && (reminderRequest = null)"
+      @confirm="confirmReminder"
+    >
+      <p>{{ t('adminProfiles.reminderLimit') }}</p>
+      <LocalizedLink :to="{ name: 'admin-email-templates', query: { template: reminderRequest?.kind === 'verification' ? 'verification_reminder' : 'profile_tip' } }">{{ t('adminProfiles.editReminderTemplates') }}</LocalizedLink>
+    </ConfirmationModal>
     <ConfirmationModal
       :open="deleteRequest !== null"
       :title="t('adminDashboard.confirmDeleteTitle')"

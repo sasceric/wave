@@ -24,6 +24,7 @@ final class CampaignResource
             'channels' => $campaign->getChannels(),
             'deliverables' => $translation['deliverables'] ?? $campaign->getDeliverables(),
             'budgetMin' => $campaign->getBudgetMin(),
+            'compensationType' => $campaign->getCompensationType(),
             'budgetMax' => $campaign->getBudgetMax(),
             'currency' => $campaign->getCurrency(),
             'city' => $campaign->getCity(),

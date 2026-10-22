@@ -100,6 +100,9 @@ final class MarketplaceWorkflowController
 
         $application = new Application($campaign, $creator, $message);
         if ($user->isAgency() && array_key_exists('proposal', $data)) {
+            if ($campaign->isVoluntary() && ($data['proposal']['amount'] ?? null) !== null) {
+                return new JsonResponse(['error' => ApiMessages::get('invalid_application', $locale)], 400);
+            }
             try { $application->setProposal(\App\Account\AgencyProposal::parse($data['proposal'])); }
             catch (\InvalidArgumentException) { return new JsonResponse(['error' => ApiMessages::get('invalid_application', $locale)], 400); }
         }
@@ -357,7 +360,7 @@ final class MarketplaceWorkflowController
         $data = JsonPayload::fromRequest($request);
         $amount = $data['amount'] ?? null;
         $message = is_string($data['message'] ?? null) ? trim($data['message']) : '';
-        if (!is_int($amount) || $amount < 1 || $amount > 10000000 || mb_strlen($message) < 10 || mb_strlen($message) > 1500) {
+        if (!is_int($amount) || $amount < 0 || $amount > 10000000 || mb_strlen($message) < 10 || mb_strlen($message) > 1500) {
             return new JsonResponse(['error' => ApiMessages::get('invalid_offer', $locale)], 400);
         }
         $dueDateValue = $data['dueDate'] ?? null;
@@ -377,6 +380,9 @@ final class MarketplaceWorkflowController
             // Serialize offers and acceptance for this campaign, including invited creators without an application yet.
             $entityManager->lock($campaign, LockMode::PESSIMISTIC_WRITE);
             $entityManager->refresh($campaign);
+            if ($campaign->isVoluntary() ? $amount !== 0 : $amount < 1) {
+                return new JsonResponse(['error' => ApiMessages::get('invalid_offer', $locale)], 400);
+            }
             if ($fromChat) {
                 $application = $entityManager->getRepository(Application::class)->findOneBy(['campaign' => $campaign, 'creator' => $conversation->getCreator()]);
                 if (!$application instanceof Application) {

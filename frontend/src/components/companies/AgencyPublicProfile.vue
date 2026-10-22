@@ -5,6 +5,7 @@ import { CalendarCheck2, CirclePlay, ExternalLink, Languages, MapPin } from '@lu
 import AgencyContactActions from './AgencyContactActions.vue'
 import AgencyProfileSections from './AgencyProfileSections.vue'
 import ProfileTabs from '../shared/ProfileTabs.vue'
+import PublicShareButton from '../shared/PublicShareButton.vue'
 import PresentationDemoBadge from '../shared/PresentationDemoBadge.vue'
 import SocialPlatformIcon from '../shared/SocialPlatformIcon.vue'
 import RichTextContent from '../shared/RichTextContent.vue'
@@ -50,7 +51,7 @@ const reviewTabs = computed(() => ['provider', 'client'].map(key => ({ key, labe
 </script>
 <template>
   <main class="page-width agency-public-profile">
-    <div class="agency-public-profile__breadcrumb"><LocalizedLink :to="{ name: 'companies' }">{{ t('app.companies') }}</LocalizedLink><span aria-hidden="true">›</span><span>{{ company.name }}</span><PresentationDemoBadge v-if="company.isPresentationDemo" /></div>
+    <div class="agency-public-profile__breadcrumb"><LocalizedLink :to="{ name: 'companies' }">{{ t('app.companies') }}</LocalizedLink><span aria-hidden="true">›</span><span>{{ company.name }}</span><PresentationDemoBadge v-if="company.isPresentationDemo" /><PublicShareButton route-name="company-profile" :slug="company.slug" :title="company.name" /></div>
     <div class="agency-public-profile__cover"><img :src="company.coverUrl || '/images/company-cover.webp'" :alt="t('account.companyCover')" /></div>
     <header class="agency-public-profile__hero">
       <div class="agency-public-profile__logo"><img v-if="company.logoUrl" :src="company.logoUrl" :alt="company.name" /><WaveLogo v-else mark /></div>

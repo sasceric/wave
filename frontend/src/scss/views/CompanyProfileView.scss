@@ -234,6 +234,7 @@
 }
 
 @include breakpoints.down(760px) {
+  .company-profile__share { position: absolute; z-index: 2; top: 14px; right: 20px; }
   .company-profile__hero { min-height: 490px; }
   .company-profile__hero-inner {
     min-height: 490px;

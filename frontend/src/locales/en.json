@@ -2862,7 +2862,19 @@
       "works": "Work",
       "packages": "Packages",
       "faqs": "FAQ"
-    }
+    },
+    "verificationReminder": "Remind to verify email",
+    "profileTip": "Send profile tip",
+    "reminderConfirmTitle": "Send a reminder?",
+    "reminderConfirm": "Send “{type}” to {email}? The recipient’s saved language and the corresponding editable email template will be used.",
+    "reminderSend": "Send email",
+    "reminderQueued": "Email for {email} has been queued for sending.",
+    "reminderLimit": "Each reminder type can be sent to the same account once every 24 hours.",
+    "editReminderTemplates": "Review and edit email templates",
+    "verificationTemplateTitle": "Email verification reminder",
+    "verificationTemplateHint": "Manual reminder from Approvals with a fresh verification link.",
+    "profileTipTemplateTitle": "Profile improvement tip",
+    "profileTipTemplateHint": "Manual tip from Approvals to help showcase work or a company."
   },
   "imageUpload": {
     "creator": "Recommended: 600 × 600 px (1:1). Center your face and leave some space around it.",
@@ -2904,5 +2916,29 @@
     "message": "Message",
     "send": "Send request",
     "defaultMessage": "We would like to give you another chance and discuss working together again."
+  },
+  "verificationNotice": {
+    "title": "Please confirm your email address",
+    "message": "Open the message sent to {email} and confirm your address so we can approve your account.",
+    "inboxHint": "Can’t find it? Check Other, Promotions and Spam / Junk.",
+    "sending": "Sending…"
+  },
+  "sharing": {
+    "share": "Share",
+    "shareTitle": "Share: {title}",
+    "link": "Link",
+    "copyLink": "Copy link",
+    "copied": "Link copied.",
+    "copyManually": "Automatic copying is unavailable. Select and copy the link from the field above."
+  },
+  "compensation": {
+    "type": "Collaboration type",
+    "paid": "Paid collaboration",
+    "voluntaryLabel": "Voluntary collaboration — no fee",
+    "noFee": "No fee",
+    "voluntaryHint": "Participation is voluntary, with no monetary compensation. Agree on the scope and delivery date in chat before accepting.",
+    "locked": "The collaboration type cannot change after the first application or invitation.",
+    "hireHint": "Confirm the scope and delivery date agreed in chat. The creator accepts a voluntary collaboration without a monetary fee.",
+    "defaultHireMessage": "We confirm the agreed voluntary collaboration with no monetary compensation."
   }
 }

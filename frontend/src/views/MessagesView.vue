@@ -1,4 +1,6 @@
 <script setup>
+import { campaignCompensationLabel } from '../lib/campaignCompensation'
+import CampaignCompensation from '../components/campaigns/CampaignCompensation.vue'
 import { isProviderInThread } from '../lib/collaborationRole'
 import CampaignCancellationAction from '../components/account/CampaignCancellationAction.vue'
 import DiscussionReopeningAction from '../components/account/DiscussionReopeningAction.vue'
@@ -1284,7 +1286,7 @@ function messageTimeDescription(value) {
                     :class="{ 'campaign-messages__message--mine': isMessageMine(message) }"
                   >
                     <template v-if="message.event">
-                      <p>{{ t(`hiring.${message.event.context === 'inquiry' ? 'directTimeline' : 'timeline'}.${message.event.type}`, { campaign: message.event.campaignTitle, amount: message.event.amount == null ? '' : formatMoney(message.event.amount, message.event.currency) }) }}</p>
+                      <p>{{ t(`hiring.${message.event.context === 'inquiry' ? 'directTimeline' : 'timeline'}.${message.event.type}`, { campaign: message.event.campaignTitle, amount: message.event.amount == null ? '' : campaignCompensationLabel(message.event, t, message.event.amount) }) }}</p>
                       <p v-if="message.event.dueDate">{{ t('hiring.deliveryDue', { date: formatDate(message.event.dueDate) }) }}</p>
                       <p v-if="message.event.workChangesReason">{{ t('work.reason') }}: {{ message.event.workChangesReason }}</p>
                       <p v-if="message.event.cancellationReason">{{ t('hiring.cancellationReason') }}: {{ message.event.cancellationReason }}</p>
@@ -1368,7 +1370,7 @@ function messageTimeDescription(value) {
         <button v-if="selectedThread && unseenNewMessages" type="button" class="campaign-messages__new-messages" @click="scrollToLatestMessage">{{ t('campaignChat.newMessages', { count: unseenNewMessages }) }}</button>
         <form v-form-validation v-if="selectedThread || (pendingStart && pendingDetails && currentUser?.accountType === 'company')" class="campaign-messages__composer" @submit.prevent="sendMessage">
           <div v-if="selectedThread?.engagement?.offer?.status === 'pending' && selectedProvider && !campaignChatClosed" class="campaign-messages__offer-confirmation">
-            <p>{{ t('hiring.pendingOffer', { amount: formatMoney(selectedThread.engagement.offer.amount, selectedThread.engagement.offer.currency || selectedCampaign?.currency) }) }}</p>
+            <p>{{ t('hiring.pendingOffer', { amount: campaignCompensationLabel({ ...selectedThread.engagement.offer, currency: selectedThread.engagement.offer.currency || selectedCampaign?.currency }, t, selectedThread.engagement.offer.amount) }) }}</p>
             <p v-if="selectedThread.engagement.offer.dueDate">{{ t('hiring.deliveryDue', { date: formatDate(selectedThread.engagement.offer.dueDate) }) }}</p>
             <button type="button" class="campaign-messages__offer-action campaign-messages__offer-action--accept" @click="confirmOffer('accept')"><Check :size="14" aria-hidden="true" />{{ t('hiring.acceptOffer') }}</button>
             <button type="button" class="campaign-messages__offer-action" @click="confirmOffer('reject')"><X :size="14" aria-hidden="true" />{{ t('hiring.declineOffer') }}</button>
@@ -1481,9 +1483,7 @@ function messageTimeDescription(value) {
                 <div>
                   <dt><Wallet :size="16" aria-hidden="true" />{{ t('campaignChat.budget') }}</dt>
                   <dd>
-                    {{ formatMoney(selectedCampaign.budgetMin, selectedCampaign.currency) }}
-                    –
-                    {{ formatMoney(selectedCampaign.budgetMax, selectedCampaign.currency) }}
+                    <CampaignCompensation :campaign="selectedCampaign" />
                   </dd>
                 </div>
                 <div>
@@ -1570,7 +1570,7 @@ function messageTimeDescription(value) {
     </div>
   </section>
   <FormModal :open="Boolean(offerDecision)" :title="t(offerDecision?.decision === 'accept' ? 'hiring.acceptOffer' : 'hiring.declineOffer')" :busy="offerBusy" @update:open="!$event && (offerDecision = null)" @submit="respondInChat">
-    <p v-if="offerDecision">{{ t(offerDecision.inquiryId ? 'hiring.directReviewAmount' : 'hiring.reviewAmount', { campaign: offerDecision.campaign?.title, amount: formatMoney(offerDecision.amount, offerDecision.currency || offerDecision.campaign?.currency) }) }}</p>
+    <p v-if="offerDecision">{{ t(offerDecision.inquiryId ? 'hiring.directReviewAmount' : 'hiring.reviewAmount', { campaign: offerDecision.campaign?.title, amount: campaignCompensationLabel({ ...offerDecision.campaign, compensationType: offerDecision.compensationType || offerDecision.campaign?.compensationType, currency: offerDecision.currency || offerDecision.campaign?.currency }, t, offerDecision.amount) }) }}</p>
     <p v-if="offerDecision?.dueDate">{{ t('hiring.deliveryDue', { date: formatDate(offerDecision.dueDate) }) }}</p>
     <p v-if="offerDecision?.decision === 'reject'">{{ t('hiring.declineHint') }}</p>
     <StatusMessage v-if="offerError" variant="error">{{ offerError }}</StatusMessage>

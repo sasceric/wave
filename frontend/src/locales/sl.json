@@ -2863,7 +2863,19 @@
       "works": "Dela",
       "packages": "Paketi",
       "faqs": "FAQ"
-    }
+    },
+    "verificationReminder": "Pošlji opomnik za potrditev e-pošte",
+    "profileTip": "Pošlji nasvet za profil",
+    "reminderConfirmTitle": "Pošljem opomnik?",
+    "reminderConfirm": "Pošljem »{type}« na {email}? Uporabljena bosta shranjeni jezik prejemnika in ustrezna e-poštna predloga.",
+    "reminderSend": "Pošlji e-pošto",
+    "reminderQueued": "Sporočilo za {email} je oddano v pošiljanje.",
+    "reminderLimit": "Vsako vrsto opomnika je mogoče istemu računu poslati enkrat v 24 urah.",
+    "editReminderTemplates": "Preglej in uredi e-poštne predloge",
+    "verificationTemplateTitle": "Opomnik za potrditev e-pošte",
+    "verificationTemplateHint": "Ročni opomnik iz Odobritev z novo potrditveno povezavo.",
+    "profileTipTemplateTitle": "Nasvet za popolnejši profil",
+    "profileTipTemplateHint": "Ročni nasvet iz Odobritev za boljšo predstavitev dela ali podjetja."
   },
   "imageUpload": {
     "creator": "Priporočeno: 600 × 600 px (1:1). Obraz postavi na sredino in okoli njega pusti nekaj prostora.",
@@ -2905,5 +2917,29 @@
     "message": "Sporočilo",
     "send": "Pošlji zahtevo",
     "defaultMessage": "Želimo vam dati novo priložnost in se ponovno pogovoriti o sodelovanju."
+  },
+  "verificationNotice": {
+    "title": "Potrdi svoj e-poštni naslov",
+    "message": "Odpri sporočilo, poslano na {email}, in potrdi naslov, da lahko odobrimo tvoj račun.",
+    "inboxHint": "Če sporočila ne vidiš, preveri Other / Drugo, Promocije in Neželeno pošto.",
+    "sending": "Pošiljanje…"
+  },
+  "sharing": {
+    "share": "Deli",
+    "shareTitle": "Deli: {title}",
+    "link": "Povezava",
+    "copyLink": "Kopiraj povezavo",
+    "copied": "Povezava je kopirana.",
+    "copyManually": "Samodejno kopiranje ni na voljo. Označi in kopiraj povezavo iz zgornjega polja."
+  },
+  "compensation": {
+    "type": "Vrsta sodelovanja",
+    "paid": "Plačano sodelovanje",
+    "voluntaryLabel": "Prostovoljno sodelovanje — brez plačila",
+    "noFee": "Brez plačila",
+    "voluntaryHint": "Sodelovanje je prostovoljno, brez denarnega plačila. Pred sprejemom se v klepetu dogovorite o obsegu dela in roku.",
+    "locked": "Vrste sodelovanja po prvi prijavi ali povabilu ni mogoče spremeniti.",
+    "hireHint": "Potrdi obseg dela in rok oddaje, dogovorjena v pogovoru. Ustvarjalec sprejme prostovoljno sodelovanje brez plačila.",
+    "defaultHireMessage": "Potrjujemo dogovorjeno prostovoljno sodelovanje brez denarnega plačila."
   }
 }

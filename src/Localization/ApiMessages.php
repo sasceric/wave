@@ -6,6 +6,8 @@ final class ApiMessages
 {
     private const MESSAGES = [
         'bs' => [
+            'campaign_voluntary' => 'Dobrovoljna saradnja — bez naknade',
+            'campaign_compensation_locked' => 'Vrstu saradnje nije moguće promijeniti nakon prve prijave ili poziva.',
             'discussion_reopening_requested' => 'Zatraženo je ponovno otvaranje razgovora za kampanju:',
             'discussion_reopening_accepted' => 'Razgovor za kampanju  je ponovo otvoren. Za angažman je potrebna nova ponuda:',
             'discussion_reopening_rejected' => 'Zahtjev za ponovno otvaranje razgovora za kampanju  je odbijen:',
@@ -110,6 +112,8 @@ final class ApiMessages
             'newsletter_email_failed' => 'Potvrdni e-mail nije poslan. Pokušaj ponovo kasnije.',
         ],
         'hr' => [
+            'campaign_voluntary' => 'Dobrovoljna suradnja — bez naknade',
+            'campaign_compensation_locked' => 'Vrstu suradnje nije moguće promijeniti nakon prve prijave ili poziva.',
             'discussion_reopening_requested' => 'Zatraženo je ponovno otvaranje razgovora za kampanju:',
             'discussion_reopening_accepted' => 'Razgovor za kampanju  je ponovo otvoren. Za angažman je potrebna nova ponuda:',
             'discussion_reopening_rejected' => 'Zahtjev za ponovno otvaranje razgovora za kampanju  je odbijen:',
@@ -214,6 +218,8 @@ final class ApiMessages
             'newsletter_email_failed' => 'Potvrdna e-pošta nije poslana. Pokušaj ponovno kasnije.',
         ],
         'sr' => [
+            'campaign_voluntary' => 'Dobrovoljna saradnja — bez naknade',
+            'campaign_compensation_locked' => 'Vrstu saradnje nije moguće promeniti nakon prve prijave ili poziva.',
             'discussion_reopening_requested' => 'Zatraženo je ponovno otvaranje razgovora za kampanju:',
             'discussion_reopening_accepted' => 'Razgovor za kampanju  je ponovo otvoren. Za angažman je potrebna nova ponuda:',
             'discussion_reopening_rejected' => 'Zahtjev za ponovno otvaranje razgovora za kampanju  je odbijen:',
@@ -318,6 +324,8 @@ final class ApiMessages
             'newsletter_email_failed' => 'Potvrdni e-mail nije poslat. Pokušaj ponovo kasnije.',
         ],
         'cnr' => [
+            'campaign_voluntary' => 'Dobrovoljna saradnja — bez naknade',
+            'campaign_compensation_locked' => 'Vrstu saradnje nije moguće promijeniti nakon prve prijave ili poziva.',
             'discussion_reopening_requested' => 'Zatraženo je ponovno otvaranje razgovora za kampanju:',
             'discussion_reopening_accepted' => 'Razgovor za kampanju  je ponovo otvoren. Za angažman je potrebna nova ponuda:',
             'discussion_reopening_rejected' => 'Zahtjev za ponovno otvaranje razgovora za kampanju  je odbijen:',
@@ -422,6 +430,8 @@ final class ApiMessages
             'newsletter_email_failed' => 'Potvrdni e-mail nije poslat. Pokušaj ponovo kasnije.',
         ],
         'sl' => [
+            'campaign_voluntary' => 'Prostovoljno sodelovanje — brez plačila',
+            'campaign_compensation_locked' => 'Vrste sodelovanja po prvi prijavi ali povabilu ni mogoče spremeniti.',
             'discussion_reopening_requested' => 'Zahtevano je ponovno odprtje pogovora za kampanjo:',
             'discussion_reopening_accepted' => 'Pogovor za kampanjo  je ponovno odprt. Za sodelovanje je potrebna nova ponudba:',
             'discussion_reopening_rejected' => 'Ponovno odprtje pogovora za kampanjo  je zavrnjeno:',
@@ -526,6 +536,8 @@ final class ApiMessages
             'newsletter_email_failed' => 'Potrditvenega e-poštnega sporočila ni bilo mogoče poslati. Poskusi znova pozneje.',
         ],
         'en' => [
+            'campaign_voluntary' => 'Voluntary collaboration — no fee',
+            'campaign_compensation_locked' => 'The collaboration type cannot change after the first application or invitation.',
             'discussion_reopening_requested' => 'Reopening discussion requested for:',
             'discussion_reopening_accepted' => 'Discussion for  reopened. Hiring requires a new offer:',
             'discussion_reopening_rejected' => 'Reopening discussion declined for:',

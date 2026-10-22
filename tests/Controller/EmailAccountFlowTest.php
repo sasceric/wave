@@ -75,12 +75,12 @@ final class EmailAccountFlowTest extends WebTestCase
         self::assertNotSame($originalToken, $token);
 
         $this->jsonRequest('POST', '/api/auth/verify-email', ['token' => $originalToken], $registration['csrfToken']);
-        self::assertResponseStatusCodeSame(400);
-        $this->jsonRequest('POST', '/api/auth/verify-email', ['token' => $token], $registration['csrfToken']);
         self::assertResponseIsSuccessful();
         $verification = $this->payload();
         self::assertTrue($verification['data']['emailVerified']);
         self::assertStringContainsString('Tvoj račun sada čeka odobrenje administratora.', $verification['message']);
+        $this->jsonRequest('POST', '/api/auth/verify-email', ['token' => $originalToken], $registration['csrfToken']);
+        self::assertResponseStatusCodeSame(400);
         $this->jsonRequest('POST', '/api/auth/verify-email', ['token' => $token], $registration['csrfToken']);
         self::assertResponseStatusCodeSame(400);
         $verifiedUser = static::getContainer()->get(EntityManagerInterface::class)

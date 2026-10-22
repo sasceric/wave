@@ -2862,7 +2862,19 @@
       "works": "Arbeiten",
       "packages": "Pakete",
       "faqs": "FAQ"
-    }
+    },
+    "verificationReminder": "An E-Mail-Bestätigung erinnern",
+    "profileTip": "Profiltipp senden",
+    "reminderConfirmTitle": "Erinnerung senden?",
+    "reminderConfirm": "„{type}“ an {email} senden? Die gespeicherte Sprache des Empfängers und die passende bearbeitbare E-Mail-Vorlage werden verwendet.",
+    "reminderSend": "E-Mail senden",
+    "reminderQueued": "Die E-Mail für {email} wurde zum Versand eingereiht.",
+    "reminderLimit": "Jede Erinnerungsart kann pro Konto einmal innerhalb von 24 Stunden gesendet werden.",
+    "editReminderTemplates": "E-Mail-Vorlagen prüfen und bearbeiten",
+    "verificationTemplateTitle": "Erinnerung zur E-Mail-Bestätigung",
+    "verificationTemplateHint": "Manuelle Erinnerung aus Freigaben mit einem neuen Bestätigungslink.",
+    "profileTipTemplateTitle": "Tipp zur Profilverbesserung",
+    "profileTipTemplateHint": "Manueller Tipp aus Freigaben zur Präsentation der Arbeit oder des Unternehmens."
   },
   "imageUpload": {
     "creator": "Empfohlen: 600 × 600 px (1:1). Platziere dein Gesicht mittig und lasse etwas Platz darum.",
@@ -2904,5 +2916,29 @@
     "message": "Nachricht",
     "send": "Anfrage senden",
     "defaultMessage": "Wir möchten Ihnen eine neue Chance geben und erneut über eine Zusammenarbeit sprechen."
+  },
+  "verificationNotice": {
+    "title": "Bitte bestätige deine E-Mail-Adresse",
+    "message": "Öffne die Nachricht an {email} und bestätige deine Adresse, damit wir dein Konto freigeben können.",
+    "inboxHint": "Keine Nachricht gefunden? Prüfe Andere, Werbung und Spam / Junk.",
+    "sending": "Wird gesendet…"
+  },
+  "sharing": {
+    "share": "Teilen",
+    "shareTitle": "Teilen: {title}",
+    "link": "Link",
+    "copyLink": "Link kopieren",
+    "copied": "Link kopiert.",
+    "copyManually": "Automatisches Kopieren ist nicht verfügbar. Markiere und kopiere den Link aus dem Feld oben."
+  },
+  "compensation": {
+    "type": "Art der Zusammenarbeit",
+    "paid": "Bezahlte Zusammenarbeit",
+    "voluntaryLabel": "Freiwillige Zusammenarbeit — ohne Vergütung",
+    "noFee": "Ohne Vergütung",
+    "voluntaryHint": "Die Teilnahme ist freiwillig und ohne finanzielle Vergütung. Vereinbart Umfang und Termin vor der Annahme im Chat.",
+    "locked": "Die Art der Zusammenarbeit kann nach der ersten Bewerbung oder Einladung nicht geändert werden.",
+    "hireHint": "Bestätige den im Chat vereinbarten Umfang und Liefertermin. Der Creator nimmt die freiwillige Zusammenarbeit ohne Vergütung an.",
+    "defaultHireMessage": "Wir bestätigen die vereinbarte freiwillige Zusammenarbeit ohne finanzielle Vergütung."
   }
 }

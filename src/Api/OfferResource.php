@@ -14,6 +14,7 @@ final class OfferResource
             'id' => $offer->getId(),
             'readOnly' => $offer->getStatus() === 'cancelled' || $offer->getApplication()->getCampaign()->getStatus() === 'cancelled' || AccountDeletion::sharedHistoryDeleted($offer->getApplication()->getCreator(), $offer->getApplication()->getCampaign()->getCompany()),
             'amount' => $offer->getAmount(),
+            'compensationType' => $offer->getApplication()->getCampaign()->getCompensationType(),
             'dueDate' => $offer->getDueDate()?->format('Y-m-d'),
             'cancellationReason' => $offer->getCancellationReason(),
             'message' => $offer->getMessage(),

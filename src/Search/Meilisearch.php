@@ -53,7 +53,7 @@ final class Meilisearch
         // Updating settings creates a missing index; the first document batch supplies its primary key.
         $this->wait($this->request('PATCH', '/indexes/'.$this->index().'/settings', [
             'searchableAttributes' => ['title', 'categories', 'subtitle', 'location', 'text'],
-            'displayedAttributes' => ['id', 'entityKey', 'kind', 'slug', 'title', 'subtitle', 'summary', 'location', 'image', 'imageUrl', 'isPresentationDemo', 'budgetMin', 'budgetMax', 'currency'],
+            'displayedAttributes' => ['id', 'entityKey', 'kind', 'slug', 'title', 'subtitle', 'summary', 'location', 'image', 'imageUrl', 'isPresentationDemo', 'compensationType', 'budgetMin', 'budgetMax', 'currency'],
             'filterableAttributes' => ['locale', 'kind', 'ownerId', 'entityKey', 'expiresAt', 'entityId'],
             'sortableAttributes' => ['entityId'],
             'pagination' => ['maxTotalHits' => 1_000_000_000],

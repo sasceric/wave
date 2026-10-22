@@ -31,7 +31,7 @@ final class DatabaseSearch
                 $kind = array_search($row['kind'], SearchDocuments::TYPES, true);
                 if ($kind === false) continue;
                 $documents = $this->documents->build($kind, (int) $row['id'], $labels, $locale);
-                if ($documents) $hits[] = array_intersect_key($documents[0], array_flip(['id', 'entityKey', 'kind', 'slug', 'title', 'subtitle', 'summary', 'location', 'image', 'imageUrl', 'isPresentationDemo', 'budgetMin', 'budgetMax', 'currency']));
+                if ($documents) $hits[] = array_intersect_key($documents[0], array_flip(['id', 'entityKey', 'kind', 'slug', 'title', 'subtitle', 'summary', 'location', 'image', 'imageUrl', 'isPresentationDemo', 'compensationType', 'budgetMin', 'budgetMax', 'currency']));
             }
             return $hits;
         };

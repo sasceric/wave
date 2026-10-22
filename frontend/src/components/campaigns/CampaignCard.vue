@@ -1,4 +1,5 @@
 <script setup>
+import CampaignCompensation from './CampaignCompensation.vue'
 import PresentationDemoBadge from '../shared/PresentationDemoBadge.vue'
 import CampaignHiringProgress from './CampaignHiringProgress.vue'
 import CampaignApplicationRange from './CampaignApplicationRange.vue'
@@ -8,7 +9,7 @@ import { BadgeCheck, Bookmark, CalendarDays, MapPin } from '@lucide/vue'
 import { useRoute, useRouter } from 'vue-router'
 import RouterLink from '../shared/LocalizedLink.vue'
 import { useI18n } from 'vue-i18n'
-import { formatDate, formatMoney } from '../../lib/api'
+import { formatDate } from '../../lib/api'
 import { currentUser } from '../../composables/useCurrentUser'
 import { useCampaignBookmarks } from '../../composables/useCampaignBookmarks'
 import { localizedRouteName } from '../../routePaths'
@@ -150,7 +151,7 @@ async function confirmRemoveBookmark() {
       </div>
 
       <div class="campaign-card__details">
-        <strong>{{ formatMoney(campaign.budgetMin, campaign.currency) }}–{{ formatMoney(campaign.budgetMax, campaign.currency) }}</strong>
+        <strong><CampaignCompensation :campaign="campaign" /></strong>
         <span class="campaign-card__location"><MapPin :size="14" aria-hidden="true" /><span>{{ campaignPlace(campaign, locale) }}</span></span>
       </div>
     </div>

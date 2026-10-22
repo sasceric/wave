@@ -1,6 +1,7 @@
 <script setup>
 import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { useRoute } from 'vue-router'
 import LoadingSkeleton from '../shared/LoadingSkeleton.vue'
 import StatusMessage from '../shared/StatusMessage.vue'
 import { apiGet, apiRequest } from '../../lib/api'
@@ -9,7 +10,8 @@ import { localeNames } from '../../i18n'
 const { locale, t } = useI18n()
 const templateLocale = ref(locale.value)
 const templates = ref([])
-const selectedKey = ref('verify')
+const route = useRoute()
+const selectedKey = ref(typeof route.query.template === 'string' ? route.query.template : 'verify')
 const loading = ref(false)
 const saving = ref(false)
 const error = ref('')
@@ -18,6 +20,8 @@ const previewDialog = ref(null)
 const htmlEditor = ref(null)
 
 const templateLabels = computed(() => ({
+  verification_reminder: { title: t('adminProfiles.verificationTemplateTitle'), description: t('adminProfiles.verificationTemplateHint') },
+  profile_tip: { title: t('adminProfiles.profileTipTemplateTitle'), description: t('adminProfiles.profileTipTemplateHint') },
   credit_code_assigned: { title: t('credits.assignmentEmailTitle'), description: t('credits.assignmentEmailHint') },
   credits_activated: { title: t('credits.emailTitle'), description: t('credits.emailHint') },
   verify: {

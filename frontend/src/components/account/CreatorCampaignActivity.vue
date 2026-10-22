@@ -1,5 +1,7 @@
 <script setup>
+import CampaignCompensation from '../campaigns/CampaignCompensation.vue'
 import { currentUser } from '../../composables/useCurrentUser'
+import { campaignCompensationLabel } from '../../lib/campaignCompensation'
 import { campaignActivityStage } from '../../lib/campaignActivity'
 import ConfirmationModal from '../shared/ConfirmationModal.vue'
 import CampaignCancellationAction from './CampaignCancellationAction.vue'
@@ -59,8 +61,8 @@ function itemSummary(item) {
   return isInquiries.value ? item.message : item.campaign.summary
 }
 function itemBudget(item) {
-  if (isActivity.value && item.offer) return formatMoney(item.offer.amount, item.campaign.currency)
-  if (!isInquiries.value) return `${formatMoney(item.campaign.budgetMin, item.campaign.currency)} – ${formatMoney(item.campaign.budgetMax, item.campaign.currency)}`
+  if (isActivity.value && item.offer) return campaignCompensationLabel(item.campaign, t, item.offer.amount)
+  if (!isInquiries.value) return campaignCompensationLabel(item.campaign, t)
   const amount = item.proposedAmount ?? item.listedPrice
   return amount === null || amount === undefined ? t('creatorProfile.priceByAgreement') : formatMoney(amount, item.proposedAmount !== null && item.proposedAmount !== undefined ? item.currency : item.listedPriceCurrency)
 }
@@ -141,7 +143,7 @@ function statusLabel(offer) {
 
 function responseSummary(item) {
   const offer = activeOffer(item)
-  const amount = t('hiring.reviewAmount', { campaign: item.campaign.title, amount: formatMoney(offer.amount, item.campaign.currency) })
+  const amount = t('hiring.reviewAmount', { campaign: item.campaign.title, amount: campaignCompensationLabel(item.campaign, t, offer.amount) })
   return offer.dueDate ? `${amount} ${t('hiring.deliveryDue', { date: formatDate(offer.dueDate) })}` : amount
 }
 
@@ -357,14 +359,14 @@ onBeforeUnmount(() => {
             <RichTextContent :html="campaign.description" />
           </section>
           <dl class="offer-campaign-modal__facts">
-            <div><Wallet :size="23" aria-hidden="true" /><dt>{{ t('campaignDetail.budget') }}</dt><dd>{{ formatMoney(campaign.budgetMin, campaign.currency) }} – {{ formatMoney(campaign.budgetMax, campaign.currency) }}</dd></div>
+            <div><Wallet :size="23" aria-hidden="true" /><dt>{{ t('campaignDetail.budget') }}</dt><dd><CampaignCompensation :campaign="campaign" /></dd></div>
             <div v-if="campaign.closesAt"><CalendarDays :size="23" aria-hidden="true" /><dt>{{ t('account.offerDeadline') }}</dt><dd>{{ formatDate(campaign.closesAt) }}</dd></div>
             <div v-if="campaignPlace(campaign, locale)"><MapPin :size="23" aria-hidden="true" /><dt>{{ t('campaignDetail.location') }}</dt><dd>{{ campaignPlace(campaign, locale) }}</dd></div>
             <div v-if="campaign.deliverables?.length"><Camera :size="23" aria-hidden="true" /><dt>{{ t('account.deliverables') }}</dt><dd><ul><li v-for="(deliverable, index) in campaign.deliverables" :key="index">{{ deliverable }}</li></ul></dd></div>
           </dl>
           <section v-if="isOffers || activeOffer(selectedItem)" class="offer-campaign-modal__offer">
             <h3>{{ t('account.offerDetails') }}</h3>
-            <strong>{{ formatMoney(activeOffer(selectedItem).amount, campaign.currency) }}</strong>
+            <strong><CampaignCompensation :campaign="campaign" :amount="activeOffer(selectedItem).amount" /></strong>
             <p v-if="activeOffer(selectedItem).dueDate">{{ t('hiring.deliveryDue', { date: formatDate(activeOffer(selectedItem).dueDate) }) }}</p>
             <p v-if="activeOffer(selectedItem).message">{{ activeOffer(selectedItem).message }}</p>
             <span class="creator-offer__status" :class="`creator-offer__status--${statusGroup(selectedItem)}`">{{ statusLabel(selectedItem) }}</span>

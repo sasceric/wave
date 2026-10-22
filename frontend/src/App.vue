@@ -13,6 +13,7 @@ import FooterNewsletterSignup from './components/shared/FooterNewsletterSignup.v
 import SkeletonBlock from './components/shared/SkeletonBlock.vue'
 import CookieConsentBanner from './components/shared/CookieConsentBanner.vue'
 import PullToRefresh from './components/shared/PullToRefresh.vue'
+import EmailVerificationNotice from './components/shared/EmailVerificationNotice.vue'
 import { logoutAccount } from './lib/pushSession'
 import { currentUser, loadCurrentUser, setCurrentUser } from './composables/useCurrentUser'
 import { useAdminWorker } from './composables/useAdminWorker'
@@ -1167,6 +1168,7 @@ async function signOut() {
     />
 
     <main>
+      <EmailVerificationNotice v-if="currentUser?.emailVerified === false" />
       <RouterView v-slot="{ Component }">
         <component :is="Component" v-if="Component" :key="`${currentUser?.id || 'guest'}-${safetyRevision}`" />
         <div v-else class="page-width site-shell__loading" role="status" aria-busy="true">

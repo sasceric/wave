@@ -1,0 +1,40 @@
+.email-verification-notice {
+  margin-block: 18px;
+  padding: 16px 18px;
+  border: 1px solid #e7d9be;
+  border-radius: 12px;
+  color: #594c38;
+  background: #fbf5e9;
+
+  &__body {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 14px;
+  }
+
+  &__copy {
+    min-width: 0;
+    overflow-wrap: anywhere;
+    font-size: 14px;
+    line-height: 1.5;
+    p { margin: 4px 0 0; }
+  }
+
+  .button { flex-shrink: 0; font-size: 14px; }
+  .notice { margin: 12px 0 0; padding: 10px 12px; }
+
+  @media (max-width: 1100px) {
+    &__body { grid-template-columns: auto minmax(0, 1fr); align-items: start; gap: 10px; }
+    .button { grid-column: 2; justify-self: start; max-width: 100%; white-space: normal; }
+  }
+}
+
+// Match the existing account content column beside the fixed 260px sidebar.
+@media (min-width: 761px) {
+  .site-shell--account .email-verification-notice {
+    width: min(1200px, calc(100% - 320px));
+    margin-left: calc(260px + max(30px, (100vw - 1490px) / 2));
+    margin-right: auto;
+  }
+}

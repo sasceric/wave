@@ -5,6 +5,37 @@ import { setupView } from './setupView.js'
 
 const settle = () => new Promise(resolve => setImmediate(resolve))
 
+test('registration reminders require confirmation, guard repeat sends and report failures truthfully', async () => {
+  const requests = []
+  const route = reactive({ meta: { adminSection: 'registrations' }, query: {} })
+  const { state } = await setupView('../src/views/AdminDashboardView.vue', {
+    'vue-router': { useRoute: () => route },
+    '../lib/api': { apiGet: async () => ({}), formatMoney: String, apiRequest: (path, options) => new Promise((resolve, reject) => requests.push({ path, options, resolve, reject })) },
+  })
+  state.requestReminder({ id: 5, email: 'pending@example.test' }, 'verification')
+  assert.equal(requests.length, 0)
+  const sending = state.confirmReminder()
+  await state.confirmReminder()
+  assert.equal(requests.length, 1)
+  assert.equal(requests[0].path, '/admin/registrations/5/reminder')
+  assert.equal(requests[0].options.body.kind, 'verification')
+  requests[0].reject(new Error('Please wait'))
+  await sending
+  assert.equal(state.error.value, 'Please wait')
+  assert.equal(state.notice.value, '')
+  state.requestReminder({ id: 5, email: 'pending@example.test' }, 'profile')
+  const profile = state.confirmReminder()
+  assert.equal(requests[1].options.body.kind, 'profile')
+  requests[1].resolve({ data: { id: 5, kind: 'profile' } })
+  await profile
+  assert.equal(state.notice.value, 'adminProfiles.reminderQueued')
+  assert.equal(state.reminderRequest.value, null)
+  state.requestReminder({ id: 5, email: 'pending@example.test' }, 'verification')
+  route.meta.adminSection = 'email-templates'
+  await nextTick()
+  assert.equal(state.reminderRequest.value, null)
+})
+
 test('admin visibility updates the selected row only after success and cannot publish an ineligible account', async () => {
   const requests = []
   const route = reactive({ meta: { adminSection: 'companies' }, query: {} })

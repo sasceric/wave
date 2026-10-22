@@ -1,4 +1,5 @@
 <script setup>
+import CampaignCompensation from '../campaigns/CampaignCompensation.vue'
 import { computed, nextTick, ref, watch } from 'vue'
 import { CalendarDays, Camera, CheckCheck, CirclePlay, Eye, LockKeyhole, FileText, MapPin, Megaphone, Music2, Pencil, Plus, Ban } from '@lucide/vue'
 import { useI18n } from 'vue-i18n'
@@ -9,7 +10,7 @@ import DirectoryPagination from '../shared/DirectoryPagination.vue'
 import DirectorySearch from '../shared/DirectorySearch.vue'
 import LocalizedLink from '../shared/LocalizedLink.vue'
 import StatusMessage from '../shared/StatusMessage.vue'
-import { formatDate, formatMoney } from '../../lib/api'
+import { formatDate } from '../../lib/api'
 import { campaignPlace, CAMPAIGN_PLACEHOLDER } from '../../lib/marketplace'
 
 const props = defineProps({ campaigns: { type: Array, default: () => [] }, initialStatus: { type: String, default: 'all' } })
@@ -98,7 +99,7 @@ function deadlineLabel(campaign) {
               </div>
             </td>
             <td><span class="creator-offers__mobile-label">{{ t('auth.category') }}</span>{{ areas(campaign) }}</td>
-            <td class="creator-offers__budget"><span class="creator-offers__mobile-label">{{ t('campaignDetail.budget') }}</span><strong>{{ formatMoney(campaign.budgetMin, campaign.currency) }} – {{ formatMoney(campaign.budgetMax, campaign.currency) }}</strong></td>
+            <td class="creator-offers__budget"><span class="creator-offers__mobile-label">{{ t('campaignDetail.budget') }}</span><strong><CampaignCompensation :campaign="campaign" /></strong></td>
             <td><span class="creator-offers__mobile-label">{{ t('account.closesAt') }}</span><span v-if="campaign.closesAt" class="creator-offers__deadline"><CalendarDays :size="17" aria-hidden="true" /><time :datetime="campaign.closesAt">{{ formatDate(campaign.closesAt) }}</time></span><small class="company-campaign-list__deadline">{{ deadlineLabel(campaign) }}</small></td>
             <td class="company-campaign-list__hired"><span class="creator-offers__mobile-label">{{ t('account.hiredCreators') }}</span><CampaignHiringProgress :campaign="campaign" /></td>
             <td><span class="creator-offer__status" :class="`company-campaign-list__status--${campaign.status}`">{{ t(`account.${campaign.status}`) }}</span></td>

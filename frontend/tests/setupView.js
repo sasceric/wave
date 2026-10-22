@@ -41,7 +41,7 @@ export async function setupView(path, extraModules = {}, props = {}, globals = {
   const module = new vm.SourceTextModule(script.content, {
     context, initializeImportMeta: (meta) => { meta.env = { DEV: true } },
   })
-  await module.link((specifier, referencingModule) => {
+  await module.link(async (specifier, referencingModule) => {
     const requested = referencingModule.dependencySpecifiers.includes(specifier)
     assert.ok(requested)
     const values = modules[specifier]
@@ -49,6 +49,26 @@ export async function setupView(path, extraModules = {}, props = {}, globals = {
       return new vm.SyntheticModule(Object.keys(values), function () {
         for (const [key, value] of Object.entries(values)) this.setExport(key, value)
       }, { context })
+    }
+    if (specifier.endsWith('/useEmailVerification')) {
+      const verification = new vm.SourceTextModule(await readFile(new URL('../src/composables/useEmailVerification.js', import.meta.url), 'utf8'), { context })
+      await verification.link(dependency => {
+        const exports = dependency === 'vue' ? vue : (modules['../../lib/api'] || modules['../lib/api'] || { apiRequest: async () => ({ message: 'Sent' }) })
+        return new vm.SyntheticModule(Object.keys(exports), function () {
+          for (const [key, value] of Object.entries(exports)) this.setExport(key, value)
+        }, { context })
+      })
+      return verification
+    }
+    if (specifier.endsWith('/campaignCompensation')) {
+      const compensation = new vm.SourceTextModule(await readFile(new URL('../src/lib/campaignCompensation.js', import.meta.url), 'utf8'), { context })
+      await compensation.link(() => {
+        const exports = { formatMoney: String, ...(modules['../../lib/api'] || modules['../lib/api'] || {}) }
+        return new vm.SyntheticModule(Object.keys(exports), function () {
+          for (const [key, value] of Object.entries(exports)) this.setExport(key, value)
+        }, { context })
+      })
+      return compensation
     }
     // Components, icons, and formatting are unrelated to the inbox state tests.
     const importedNames = [...script.content.matchAll(/import\s*\{([^}]+)\}\s*from\s*['"]([^'"]+)['"]/g)]

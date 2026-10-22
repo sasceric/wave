@@ -125,6 +125,7 @@ final class CampaignManagementController
             currency: $fields['currency'],
             countryCode: $fields['countryCode'],
             categories: $fields['categories'],
+            compensationType: $fields['compensationType'],
         );
         $entityManager->persist($campaign);
         try {
@@ -167,6 +168,7 @@ final class CampaignManagementController
         }
         $data = JsonPayload::fromRequest($request);
         $invalidFields = [];
+        if ($data !== null && !array_key_exists('compensationType', $data)) $data['compensationType'] = $campaign->getCompensationType();
         $fields = $data === null ? null : $this->campaignFields($data, true, $invalidFields);
         $coverMedia = $data === null
             ? false
@@ -186,6 +188,12 @@ final class CampaignManagementController
         return $entityManager->wrapInTransaction(function () use ($entityManager, $campaign, $fields, $coverMedia, $unusedMedia, $locale): JsonResponse {
             $entityManager->lock($campaign, \Doctrine\DBAL\LockMode::PESSIMISTIC_WRITE);
             $entityManager->refresh($campaign);
+            if ($fields['compensationType'] !== $campaign->getCompensationType()
+                && (in_array($campaign->getStatus(), ['finished', 'cancelled'], true)
+                    || $entityManager->getRepository(Application::class)->count(['campaign' => $campaign]) > 0
+                    || $entityManager->getRepository(CampaignInvitation::class)->count(['campaign' => $campaign]) > 0)) {
+                return new JsonResponse(['error' => ApiMessages::get('campaign_compensation_locked', $locale)], 409);
+            }
             if ($fields['status'] === 'finished' && $campaign->getStatus() !== 'finished' && \App\Marketplace\CampaignWork::hasUnfinishedHires($entityManager, $campaign)) {
                 return new JsonResponse(['error' => ApiMessages::get('campaign_work_unfinished', $locale)], 409);
             }
@@ -212,6 +220,7 @@ final class CampaignManagementController
                 $fields['currency'],
                 $fields['countryCode'],
                 $fields['categories'],
+                $fields['compensationType'],
             );
             $previousCoverId = $campaign->getCoverMedia()?->getId();
             $campaign->setCoverMedia($coverMedia);
@@ -331,8 +340,13 @@ final class CampaignManagementController
         }
         $channels = $this->stringList($data['channels'] ?? null, 6, 40);
         $deliverables = $this->stringList($data['deliverables'] ?? null, 10, 180);
-        $budgetMin = $data['budgetMin'] ?? null;
-        $budgetMax = $data['budgetMax'] ?? null;
+        $compensationType = $data['compensationType'] ?? Campaign::COMPENSATION_PAID;
+        $voluntary = $compensationType === Campaign::COMPENSATION_VOLUNTARY;
+        if (!in_array($compensationType, [Campaign::COMPENSATION_PAID, Campaign::COMPENSATION_VOLUNTARY], true)) {
+            $invalidFields[] = 'compensationType';
+        }
+        $budgetMin = $data['budgetMin'] ?? ($voluntary ? 0 : null);
+        $budgetMax = $data['budgetMax'] ?? ($voluntary ? 0 : null);
         $currency = $data['currency'] ?? 'BAM';
         $creatorCount = $data['creatorCount'] ?? null;
         $closesAtInput = $data['closesAt'] ?? null;
@@ -361,11 +375,11 @@ final class CampaignManagementController
         if ($deliverables === null || $deliverables === []) {
             $invalidFields[] = 'deliverables';
         }
-        if (!is_int($budgetMin) || $budgetMin < 1 || $budgetMin > 10_000_000) {
+        if (!is_int($budgetMin) || ($voluntary ? $budgetMin !== 0 : ($budgetMin < 1 || $budgetMin > 10_000_000))) {
             $invalidFields[] = 'budgetMin';
         }
-        if (!is_int($budgetMax) || $budgetMax < 1 || $budgetMax > 10_000_000
-            || (is_int($budgetMin) && $budgetMin >= 1 && $budgetMax < $budgetMin)
+        if (!is_int($budgetMax) || ($voluntary ? $budgetMax !== 0 : ($budgetMax < 1 || $budgetMax > 10_000_000))
+            || (is_int($budgetMin) && $budgetMax < $budgetMin)
         ) {
             $invalidFields[] = 'budgetMax';
         }
@@ -400,7 +414,7 @@ final class CampaignManagementController
             return null;
         }
 
-        return compact('title', 'summary', 'description', 'category', 'categories', 'city', 'countryCode', 'channels', 'deliverables', 'budgetMin', 'budgetMax', 'currency', 'creatorCount', 'closesAt', 'status');
+        return compact('title', 'summary', 'description', 'category', 'categories', 'city', 'countryCode', 'channels', 'deliverables', 'budgetMin', 'budgetMax', 'compensationType', 'currency', 'creatorCount', 'closesAt', 'status');
     }
 
     private function text(array $data, string $key, int $minimum, int $maximum): ?string

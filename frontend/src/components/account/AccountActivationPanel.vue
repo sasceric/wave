@@ -5,11 +5,11 @@ import { ArrowRight, Check, Circle, Mail, ShieldCheck } from '@lucide/vue'
 import LocalizedLink from '../shared/LocalizedLink.vue'
 import StatusMessage from '../shared/StatusMessage.vue'
 import { loadCurrentUser } from '../../composables/useCurrentUser'
-import { apiRequest } from '../../lib/api'
+import { useEmailVerification } from '../../composables/useEmailVerification'
 const props = defineProps({ user: { type: Object, required: true } })
 const { t } = useI18n()
 const refreshing = ref(false)
-const sending = ref(false), notice = ref(''), error = ref('')
+const { sending, notice, error, resend } = useEmailVerification(() => props.user)
 const creator = computed(() => props.user.accountType === 'creator')
 const profile = computed(() => props.user.profile || {})
 const steps = computed(() => [
@@ -33,16 +33,6 @@ async function refreshStatus() {
 }
 onMounted(() => window.addEventListener('wave:inbox-refresh', refreshStatus))
 onBeforeUnmount(() => window.removeEventListener('wave:inbox-refresh', refreshStatus))
-async function resend() {
-  if (sending.value) return
-  const id = props.user.id
-  sending.value = true; error.value = ''; notice.value = ''
-  try {
-    const response = await apiRequest('/auth/verification-email', { method: 'POST', body: {} })
-    if (id === props.user.id) notice.value = response.message
-  } catch (cause) { if (id === props.user.id) error.value = cause.message }
-  finally { sending.value = false }
-}
 </script>
 <template>
   <section class="activation-panel">
@@ -57,7 +47,7 @@ async function resend() {
         <LocalizedLink v-else class="button button--outline" :to="{ name: 'account', query: { tab: step.tab, edit: '1' } }">{{ t('activation.complete') }}<ArrowRight :size="14" aria-hidden="true" /></LocalizedLink>
       </li>
     </ol>
-    <StatusMessage v-if="error" variant="error">{{ error }}</StatusMessage><StatusMessage v-if="notice" variant="success">{{ notice }}</StatusMessage>
+    <StatusMessage v-if="error" variant="error">{{ error }}</StatusMessage><StatusMessage v-if="notice">{{ notice }}</StatusMessage>
     <div class="activation-panel__review"><ShieldCheck :size="23" aria-hidden="true" /><div><strong>{{ t(complete === 3 ? 'activation.reviewTitle' : 'activation.lockedTitle') }}</strong><p>{{ t(complete === 3 ? 'activation.reviewHint' : 'activation.lockedHint') }}</p></div></div>
     <div class="activation-panel__optional"><h3>{{ t('activation.optional') }}</h3><p>{{ t('activation.optionalHint') }}</p><LocalizedLink v-for="item in optional" :key="item.key" :to="{ name: 'account', query: { tab: item.tab, edit: '1' } }"><Check v-if="item.done" :size="16" aria-hidden="true" /><Circle v-else :size="16" aria-hidden="true" /><span>{{ t(`activation.optional_${item.key}`) }}</span><ArrowRight :size="15" aria-hidden="true" /></LocalizedLink></div>
   </section>

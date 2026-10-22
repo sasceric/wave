@@ -1,5 +1,5 @@
 <script setup>
-import { ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { ArrowRight, UserRoundCheck } from '@lucide/vue'
 import FormModal from '../shared/FormModal.vue'
@@ -24,23 +24,25 @@ function today() {
 }
 const message = ref('')
 const error = ref('')
+const voluntary = computed(() => !props.inquiryId && props.campaign.compensationType === 'voluntary')
 function start() {
-  amount.value = ''
+  amount.value = voluntary.value ? 0 : ''
   dueDate.value = ''
   currency.value = props.campaign.currency || 'BAM'
-  message.value = t('hiring.defaultMessage')
+  message.value = t(voluntary.value ? 'compensation.defaultHireMessage' : 'hiring.defaultMessage')
   error.value = ''
   open.value = true
 }
 async function submit() {
-  if (busy.value || props.disabled || !Number.isInteger(amount.value) || amount.value < 1 || amount.value > 10000000 || !dueDate.value || dueDate.value < today()) return
+  const hireAmount = voluntary.value ? 0 : amount.value
+  if (busy.value || props.disabled || !Number.isInteger(hireAmount) || (!voluntary.value && hireAmount < 1) || hireAmount > 10000000 || !dueDate.value || dueDate.value < today()) return
   const userId = currentUser.value?.id
   const conversationId = props.conversationId
   const inquiryId = props.inquiryId
   busy.value = true
   error.value = ''
   try {
-    const response = await apiRequest(inquiryId ? `/company/inquiries/${inquiryId}/hire` : `/company/conversations/${conversationId}/hire`, { method: 'POST', body: { ...(inquiryId ? { currency: currency.value } : {}), amount: amount.value, dueDate: dueDate.value, message: message.value } })
+    const response = await apiRequest(inquiryId ? `/company/inquiries/${inquiryId}/hire` : `/company/conversations/${conversationId}/hire`, { method: 'POST', body: { ...(inquiryId ? { currency: currency.value } : {}), amount: hireAmount, dueDate: dueDate.value, message: message.value } })
     if (currentUser.value?.id !== userId || props.conversationId !== conversationId || props.inquiryId !== inquiryId) return
     open.value = false
     emit('offered', response.data)
@@ -52,9 +54,10 @@ watch(() => [props.conversationId, props.inquiryId, currentUser.value?.id], () =
 </script>
 <template>
   <button type="button" :class="buttonClass" :disabled="disabled || busy" @click="start"><UserRoundCheck v-if="!showArrow" :size="16" aria-hidden="true" />{{ t('hiring.hire') }}<ArrowRight v-if="showArrow" :size="16" aria-hidden="true" /></button>
-  <FormModal v-model:open="open" :title="t('hiring.confirmTitle')" :description="t('hiring.confirmHint')" :busy="busy" @submit="submit">
+  <FormModal v-model:open="open" :title="t('hiring.confirmTitle')" :description="t(voluntary ? 'compensation.hireHint' : 'hiring.confirmHint')" :busy="busy" @submit="submit">
     <p><strong>{{ creatorName }}</strong> · {{ campaign.title }}</p>
-    <label class="form-field"><span>{{ t('account.offerAmount') }} ({{ currency === 'BAM' ? 'KM' : currency }})</span><input v-model.number="amount" type="number" min="1" max="10000000" step="1" required /></label>
+    <StatusMessage v-if="voluntary">{{ t('compensation.voluntaryHint') }}</StatusMessage>
+    <label v-else class="form-field"><span>{{ t('account.offerAmount') }} ({{ currency === 'BAM' ? 'KM' : currency }})</span><input v-model.number="amount" type="number" min="1" max="10000000" step="1" required /></label>
     <SingleSelect v-if="inquiryId" v-model="currency" :label="t('account.currency')" :options="CURRENCIES.map(value => ({ value, label: value }))" required />
     <DatePicker v-model="dueDate" :label="t('hiring.dueDate')" :min="today()" required />
     <label class="form-field"><span>{{ t('account.offerMessage') }}</span><textarea v-model.trim="message" minlength="10" maxlength="1500" required /></label>

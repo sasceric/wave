@@ -26,14 +26,17 @@ class UserActionToken
     #[ORM\Column(length: 64)]
     private string $tokenHash;
 
-    #[ORM\Column]
-    private \DateTimeImmutable $expiresAt;
+    #[ORM\Column(nullable: true)]
+    private ?\DateTimeImmutable $expiresAt;
 
     #[ORM\Column]
     private \DateTimeImmutable $createdAt;
 
-    public function __construct(User $user, string $purpose, string $tokenHash, \DateTimeImmutable $expiresAt)
+    public function __construct(User $user, string $purpose, string $tokenHash, ?\DateTimeImmutable $expiresAt)
     {
+        if ($expiresAt === null && $purpose !== 'verify_email') {
+            throw new \InvalidArgumentException('Only email verification tokens may have no expiry.');
+        }
         $this->user = $user;
         $this->purpose = $purpose;
         $this->tokenHash = $tokenHash;

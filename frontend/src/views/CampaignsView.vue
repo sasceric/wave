@@ -22,7 +22,7 @@ import StatusMessage from '../components/shared/StatusMessage.vue'
 import { useInfiniteDirectory } from '../composables/useInfiniteDirectory'
 import { useMarketplaceCatalog } from '../composables/useMarketplaceCatalog'
 import { apiGet } from '../lib/api'
-import { CURRENCIES, SOCIAL_PLATFORMS } from '../lib/marketplace'
+import { CURRENCIES, CAMPAIGN_PLATFORMS } from '../lib/marketplace'
 
 const { t, locale } = useI18n()
 const route = useRoute()
@@ -53,7 +53,7 @@ const layout = ref('grid')
 const filtersOpen = ref(false)
 const catalog = useMarketplaceCatalog(locale)
 const { items: campaigns, total, loading, error, hasMore, loadMore } = useInfiniteDirectory('/campaigns', locale, { q: search, categories, channels, countries, city, currency, budgetMin: budgetLower, budgetMax: budgetUpper, sort })
-const channelOptions = SOCIAL_PLATFORMS.map((value) => ({ value, label: value }))
+const channelOptions = CAMPAIGN_PLATFORMS.map((value) => ({ value, label: value }))
 const currencyOptions = computed(() => [{ value: '', label: t('campaignDirectory.allCurrencies') }, ...CURRENCIES.map((value) => ({ value, label: value }))])
 const sortOptions = computed(() => [
   { value: 'recommended', label: t('companyDirectory.sortRecommended') },

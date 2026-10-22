@@ -180,6 +180,39 @@ final class BackgroundPipelineTest extends KernelTestCase
         self::assertSame('completed', $this->db->fetchOne('SELECT status FROM background_job WHERE id = ?', [$job['id']]));
     }
 
+    public function testVerificationSurvivesCleanupAndQueuedMailStopsAfterConfirmation(): void
+    {
+        if (!$this->db->getDatabasePlatform() instanceof \Doctrine\DBAL\Platforms\PostgreSQLPlatform) {
+            self::markTestSkipped('The queue worker requires PostgreSQL advisory locks.');
+        }
+        $transport = $this->createMock(\Symfony\Component\Mailer\Transport\TransportInterface::class);
+        $transport->expects(self::once())->method('send');
+        self::getContainer()->set('mailer.transports', $transport);
+        $em = self::getContainer()->get(EntityManagerInterface::class);
+        $user = new User('verification-queue@example.test', 'ROLE_CREATOR');
+        $user->setPassword('unused');
+        $user->setEmailVerified(false);
+        $em->persist($user);
+        $em->flush();
+        $tokens = self::getContainer()->get(\App\Account\UserActionTokenManager::class);
+        $token = $tokens->issue($user, 'verify_email');
+        $tokens->issue($user, 'reset_password', new \DateTimeImmutable('-1 hour'));
+        $this->db->executeStatement("UPDATE user_action_token SET created_at = '2020-01-01 00:00:00'");
+        $this->jobs->enqueue('ExpiredTokenCleanupTask');
+        $this->work('background');
+        self::assertSame(['verify_email'], $this->db->fetchFirstColumn('SELECT purpose FROM user_action_token'));
+        $email = (new \Symfony\Component\Mime\Email())->from('sender@example.test')->to('verification-queue@example.test')->subject('Verification')->text('Confirm your email.');
+        $email->getHeaders()->addTextHeader(\App\Background\QueuedMailer::SECURITY_TOKEN_HEADER, hash('sha256', $token));
+        $inner = $this->createMock(\Symfony\Component\Mailer\MailerInterface::class);
+        $inner->expects(self::never())->method('send');
+        $mailer = new \App\Background\QueuedMailer($this->jobs, $inner, true);
+        $mailer->send($email);
+        $this->work('mail');
+        self::assertTrue($tokens->consume($token, 'verify_email', static function (User $user): void { $user->setEmailVerified(true); }));
+        $mailer->send($email);
+        $this->work('mail');
+    }
+
     public function testCityAndSecondaryIndustryChangesInvalidateAndRefreshSearchIndexes(): void
     {
         $em = self::getContainer()->get(EntityManagerInterface::class);

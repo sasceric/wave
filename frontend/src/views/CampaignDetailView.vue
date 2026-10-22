@@ -1,5 +1,7 @@
 <script setup>
+import CampaignCompensation from '../components/campaigns/CampaignCompensation.vue'
 import RegistrationPrompt from '../components/shared/RegistrationPrompt.vue'
+import PublicShareButton from '../components/shared/PublicShareButton.vue'
 import { rememberRegistrationIntent } from '../lib/registrationIntent'
 import PresentationDemoBadge from '../components/shared/PresentationDemoBadge.vue'
 import MarketplaceSafetyActions from '../components/shared/MarketplaceSafetyActions.vue'
@@ -19,7 +21,7 @@ import LoadingSkeleton from '../components/shared/LoadingSkeleton.vue'
 import StatusMessage from '../components/shared/StatusMessage.vue'
 import WaveLogo from '../components/shared/WaveLogo.vue'
 import RichTextContent from '../components/shared/RichTextContent.vue'
-import { apiGet, apiRequest, formatDate, formatMoney } from '../lib/api'
+import { apiGet, apiRequest, formatDate } from '../lib/api'
 import { getSeoOrigin, updateSeo } from '../lib/seo'
 import { localizedPath } from '../routePaths'
 
@@ -111,7 +113,7 @@ async function applyToCampaign() {
   try {
     const response = await apiRequest(`/campaigns/${encodeURIComponent(route.params.slug)}/applications`, {
       method: 'POST',
-      body: { message: applicationMessage.value, ...(user.value?.profile?.companyType === 'agency' ? { proposal: { ...agencyProposal.value, amount: agencyProposal.value.amount === '' ? null : agencyProposal.value.amount } } : {}) },
+      body: { message: applicationMessage.value, ...(user.value?.profile?.companyType === 'agency' ? { proposal: { ...agencyProposal.value, amount: campaign.value.compensationType === 'voluntary' || agencyProposal.value.amount === '' ? null : agencyProposal.value.amount } } : {}) },
     })
     const updatedCampaign = response?.data?.campaign
     if (updatedCampaign?.applicationRange && updatedCampaign.slug === campaign.value?.slug) {
@@ -177,7 +179,10 @@ onMounted(loadCampaign)
         <img :src="campaign.coverImageUrl || campaign.company.coverUrl" alt="" fetchpriority="high" decoding="async">
       </div>
       <div class="page-width brief-hero__inner">
-        <RouterLink class="back-link" to="/campaigns">{{ t('campaignDetail.back') }}</RouterLink>
+        <div class="brief-hero__navigation">
+          <RouterLink class="back-link" to="/campaigns">{{ t('campaignDetail.back') }}</RouterLink>
+          <PublicShareButton route-name="campaign-detail" :slug="campaign.slug" :title="campaign.title" />
+        </div>
         <div class="brief-hero__grid">
           <div class="brief-hero__copy">
             <p class="eyebrow">
@@ -189,6 +194,7 @@ onMounted(loadCampaign)
             <h1>{{ campaign.title }}</h1>
             <MarketplaceSafetyActions kind="campaign" :slug="campaign.slug" :owner-slug="campaign.company.slug" />
             <p class="brief-hero__summary">{{ campaign.summary }}</p>
+            <StatusMessage v-if="campaign.compensationType === 'voluntary'">{{ t('compensation.voluntaryHint') }}</StatusMessage>
             <RouterLink
               class="brief-hero__brand brief-hero__brand-link"
               v-if="!campaign.company.deleted"
@@ -219,7 +225,7 @@ onMounted(loadCampaign)
             <div class="brief-hero-fact">
               <DollarSign :size="18" aria-hidden="true" />
               <span>{{ t('campaignDetail.budget') }}</span>
-              <strong>{{ formatMoney(campaign.budgetMin, campaign.currency) }}–{{ formatMoney(campaign.budgetMax, campaign.currency) }}</strong>
+              <strong><CampaignCompensation :campaign="campaign" /></strong>
             </div>
             <div class="brief-hero-fact">
               <UsersRound :size="18" aria-hidden="true" />
@@ -278,7 +284,7 @@ onMounted(loadCampaign)
                   <legend>{{ t('agency.proposal') }}</legend>
                   <SingleSelect v-if="offerings.length" v-model="selectedOffering" :options="offeringOptions" :label="t('agency.chooseOffering')" />
                   <p v-if="offerings.length" class="creator-studio__hint">{{ t('agency.chooseOfferingHint') }}</p>
-                  <label class="form-field"><span>{{ t('agency.amount') }} ({{ campaign.currency }})</span><input v-model.number="agencyProposal.amount" type="number" min="1" max="10000000" /></label>
+                  <label v-if="campaign.compensationType !== 'voluntary'" class="form-field"><span>{{ t('agency.amount') }} ({{ campaign.currency }})</span><input v-model.number="agencyProposal.amount" type="number" min="1" max="10000000" /></label>
                   <label class="form-field"><span>{{ t('agency.scope') }}</span><textarea v-model.trim="agencyProposal.scope" maxlength="2000"></textarea></label>
                   <label class="form-field"><span>{{ t('agency.timeline') }}</span><input v-model.trim="agencyProposal.timeline" maxlength="240" /></label>
                   <label class="form-field"><span>{{ t('agency.team') }}</span><input v-model.trim="agencyProposal.team" maxlength="500" /></label>
@@ -373,7 +379,7 @@ onMounted(loadCampaign)
           <div class="brief-fact">
             <DollarSign :size="18" aria-hidden="true" />
             <span>{{ t('campaignDetail.budget') }}</span>
-            <strong>{{ formatMoney(campaign.budgetMin, campaign.currency) }}–{{ formatMoney(campaign.budgetMax, campaign.currency) }}</strong>
+            <strong><CampaignCompensation :campaign="campaign" /></strong>
           </div>
           <div class="brief-fact">
             <UsersRound :size="18" aria-hidden="true" />

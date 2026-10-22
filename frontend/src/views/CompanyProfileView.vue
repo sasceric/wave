@@ -1,5 +1,6 @@
 <script setup>
 import AgencyPublicProfile from '../components/companies/AgencyPublicProfile.vue'
+import PublicShareButton from '../components/shared/PublicShareButton.vue'
 import PresentationDemoBadge from '../components/shared/PresentationDemoBadge.vue'
 import MarketplaceSafetyActions from '../components/shared/MarketplaceSafetyActions.vue'
 import ProfileReviews from '../components/reviews/ProfileReviews.vue'
@@ -114,6 +115,7 @@ onBeforeUnmount(() => { ++profileGeneration })
   <template v-else>
     <section class="company-profile__hero">
       <div class="company-profile__hero-image" :style="{ backgroundImage: `url(${coverUrl})` }" aria-hidden="true" />
+      <PublicShareButton class="company-profile__share" route-name="company-profile" :slug="company.slug" :title="company.name" />
       <div class="page-width company-profile__hero-inner">
         <div class="company-profile__hero-content">
           <PresentationDemoBadge v-if="company.isPresentationDemo" class="company-profile__demo" />

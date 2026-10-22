@@ -101,7 +101,9 @@
     "discussion_reopening_accepted": "Gespräch für  erneut geöffnet. Die Beauftragung benötigt ein neues Angebot:",
     "discussion_reopening_rejected": "Erneute Gesprächseröffnung für  abgelehnt:",
     "invalid_reopening_message": "Schreibe eine Nachricht mit 10–1000 Zeichen.",
-    "reopening_unavailable": "Das Gespräch kann derzeit nicht erneut geöffnet werden. Lade es neu. Die Kampagne muss offen sein."
+    "reopening_unavailable": "Das Gespräch kann derzeit nicht erneut geöffnet werden. Lade es neu. Die Kampagne muss offen sein.",
+    "campaign_voluntary": "Freiwillige Zusammenarbeit — ohne Vergütung",
+    "campaign_compensation_locked": "Die Art der Zusammenarbeit kann nach der ersten Bewerbung oder Einladung nicht geändert werden."
   },
   "account": {
     "verify": {
@@ -112,7 +114,7 @@
       "greeting": "Hallo!",
       "message": "Deine Registrierung ist eingegangen. Bestätige deine E-Mail-Adresse. Anschließend prüft unser Team dein Konto und benachrichtigt dich per E-Mail, sobald es genehmigt wurde.",
       "buttonLabel": "E-Mail-Adresse bestätigen",
-      "expiration": "Dieser sichere Link läuft nach 24 Stunden ab.",
+      "expiration": "Dieser Link bleibt gültig, bis du deine E-Mail-Adresse bestätigst.",
       "security": "Falls du kein Wave-Konto erstellt hast, kannst du diese Nachricht ignorieren.",
       "fallback": "Falls der Button nicht funktioniert, kopiere diese Adresse in deinen Browser:",
       "footer": "Dies ist eine automatische Nachricht von Wave. Bitte antworte nicht darauf."

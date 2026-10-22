@@ -1,4 +1,5 @@
 export const SOCIAL_PLATFORMS = ['TikTok', 'Instagram', 'YouTube']
+export const CAMPAIGN_PLATFORMS = [...SOCIAL_PLATFORMS, 'Facebook']
 export const COMPANY_SOCIAL_PLATFORMS = ['Instagram', 'TikTok', 'YouTube', 'Facebook', 'LinkedIn', 'Website']
 export const CURRENCIES = ['BAM', 'EUR', 'RSD']
 export const CREATOR_PLACEHOLDER = '/images/creator-placeholder.webp'

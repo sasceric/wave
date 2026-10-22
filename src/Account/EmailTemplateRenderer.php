@@ -18,6 +18,8 @@ final class EmailTemplateRenderer
         'credits_activated' => 'marketplace_notification.html',
         'account_action' => 'account_action.html',
         'verify' => 'account_action.html',
+        'verification_reminder' => 'account_action.html',
+        'profile_tip' => 'account_action.html',
         'reset' => 'account_action.html',
         'registered' => 'account_action.html',
         'approval' => 'account_action.html',
@@ -31,6 +33,8 @@ final class EmailTemplateRenderer
     ];
 
     private const REQUIRED_VARIABLES = [
+        'verification_reminder' => ['locale', 'preheader', 'eyebrow', 'heading', 'greeting', 'message', 'buttonLabel', 'actionUrl', 'expiration', 'security', 'fallback', 'footer'],
+        'profile_tip' => ['locale', 'preheader', 'eyebrow', 'heading', 'greeting', 'message', 'buttonLabel', 'actionUrl', 'expiration', 'security', 'fallback', 'footer'],
         'campaign_alert' => ['locale', 'preheader', 'eyebrow', 'heading', 'greeting', 'message', 'campaignsLabel', 'campaigns', 'buttonLabel', 'actionUrl', 'footer', 'settingsLabel', 'settingsUrl'],
         'credit_code_assigned' => ['locale', 'preheader', 'eyebrow', 'heading', 'greeting', 'message', 'name', 'amount', 'code', 'firstLabel', 'firstValue', 'secondLabel', 'secondValue', 'detailsLabel', 'details', 'buttonLabel', 'actionUrl', 'footer'],
         'credits_activated' => ['locale', 'preheader', 'eyebrow', 'heading', 'greeting', 'message', 'firstLabel', 'firstValue', 'secondLabel', 'secondValue', 'detailsLabel', 'details', 'applicationLabel', 'campaignLabel', 'buttonLabel', 'actionUrl', 'footer'],

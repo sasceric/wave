@@ -14,6 +14,20 @@ backups, supervised consumers and scheduled-task setup, see
 [server services, jobs and queues](server-operations.md). The deploy workflow
 does not provision those host services or schedules.
 
+## Verification reminders and links
+
+Migration `Version20261022140000` removes expiry from email-verification links
+while retaining the existing one-hour password-reset expiry. Run the normal
+deployment migration and restart existing queue workers so token validation,
+queued emails and token cleanup use the same policy. Retained original links
+for active, unverified accounts are preserved; tokens already deleted by earlier
+cleanup cannot be recovered and need a new verification email.
+
+Approvals gains manual verification reminders and profile tips with localized,
+editable branded templates. Review any custom verification template for hardcoded
+24-hour expiry wording. No new service, worker or schedule is required. See
+[account activation](account-activation.md) and [email delivery](email-delivery.md).
+
 ## Confirmed legacy creator redirect
 
 Migration `Version20261016170000` restores the owner-confirmed
@@ -564,3 +578,7 @@ Set `VITE_META_PIXEL_ENABLED`, `VITE_META_PIXEL_ID` and `VITE_META_PIXEL_HOSTS` 
 file is not included in Git deployments. See [Meta tracking](meta-tracking.md).
 The public Pixel ID is allowed in browser code; CAPI secrets are not. Marketing
 consent is separate from Analytics and is required before Wave loads Meta.
+
+### Voluntary campaign support
+
+Deploy migration `Version20261022150000` with the application and frontend build. Existing campaigns remain paid. When Meilisearch is enabled, run `APP_ENV=prod php8.4 bin/console app:search:index --sync` once to refresh displayed attributes and documents. See [voluntary campaigns](voluntary-campaigns.md) for validation and workflow rules.

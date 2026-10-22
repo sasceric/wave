@@ -1,10 +1,11 @@
 <script setup>
+import CampaignCompensation from '../campaigns/CampaignCompensation.vue'
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, useId, watch } from 'vue'
 import { ArrowRight, MapPin, Coins, Search, X } from '@lucide/vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { currentUser } from '../../composables/useCurrentUser'
-import { apiGet, apiRequest, formatMoney } from '../../lib/api'
+import { apiGet, apiRequest } from '../../lib/api'
 import { localizedRouteName } from '../../routePaths'
 import { isSearchableQuery, SEARCH_MIN_LENGTH } from '../../lib/searchQuery'
 import CardImage from './CardImage.vue'
@@ -215,7 +216,7 @@ onBeforeUnmount(() => {
             <CardImage :image="image(item)" :src="imageUrl(item) || ''" :alt="title(item)" sizes="76px" />
             <span class="global-search-panel__identity"><strong>{{ title(item) }}</strong><span>{{ subtitle(item) }}</span></span>
             <span v-if="item.location" class="global-search-panel__location"><MapPin :size="16" aria-hidden="true" />{{ item.location }}</span>
-            <span v-if="type === 'campaigns'" class="global-search-panel__budget"><Coins :size="18" aria-hidden="true" />{{ formatMoney(item.budgetMin, item.currency) }} – {{ formatMoney(item.budgetMax, item.currency) }}</span>
+            <span v-if="type === 'campaigns'" class="global-search-panel__budget"><Coins :size="18" aria-hidden="true" /><CampaignCompensation :campaign="item" /></span>
           </LocalizedLink>
         </div>
         <button v-if="canSearch" class="global-search-panel__all" type="button" @click="seeAll"><Search :size="19" aria-hidden="true" /><span>{{ t('globalSearch.seeAll', { query: query.trim() }) }}</span><ArrowRight :size="19" aria-hidden="true" /></button>

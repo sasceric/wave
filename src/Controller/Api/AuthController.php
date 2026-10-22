@@ -192,7 +192,7 @@ final class AuthController extends AbstractController
 
         $entityManager->persist($user);
         $entityManager->flush();
-        $verificationToken = $actionTokens->issue($user, 'verify_email', new DateTimeImmutable('+24 hours'));
+        $verificationToken = $actionTokens->issue($user, 'verify_email');
         $emailSender->sendVerification($user, $verificationToken, $locale);
         $security->login($user, SessionAuthenticator::class, 'main');
 
@@ -256,7 +256,7 @@ final class AuthController extends AbstractController
             return $ipLimit ?? $identityLimit;
         }
         if (!$user->isEmailVerified()) {
-            $token = $actionTokens->issue($user, 'verify_email', new DateTimeImmutable('+24 hours'));
+            $token = $actionTokens->issue($user, 'verify_email');
             $emailSender->sendVerification($user, $token, $locale);
         }
 

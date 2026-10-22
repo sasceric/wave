@@ -2863,7 +2863,19 @@
       "works": "Radovi",
       "packages": "Paketi",
       "faqs": "FAQ"
-    }
+    },
+    "verificationReminder": "Podsjeti na potvrdu e-pošte",
+    "profileTip": "Pošalji savjet za profil",
+    "reminderConfirmTitle": "Poslati podsjetnik?",
+    "reminderConfirm": "Poslati „{type}” na {email}? Koristit će se spremljeni jezik primatelja i odgovarajući predložak e-pošte.",
+    "reminderSend": "Pošalji e-poštu",
+    "reminderQueued": "Poruka za {email} predana je na slanje.",
+    "reminderLimit": "Svaki tip podsjetnika može se poslati istom računu jednom u 24 sata.",
+    "editReminderTemplates": "Pregledaj i uredi predloške e-pošte",
+    "verificationTemplateTitle": "Podsjetnik za potvrdu e-pošte",
+    "verificationTemplateHint": "Ručni podsjetnik iz Odobrenja s novom poveznicom za potvrdu.",
+    "profileTipTemplateTitle": "Savjet za potpuniji profil",
+    "profileTipTemplateHint": "Ručni savjet iz Odobrenja za bolje predstavljanje rada ili tvrtke."
   },
   "imageUpload": {
     "creator": "Preporučeno: 600 × 600 px (1:1). Lice postavi u sredinu i ostavi malo prostora oko njega.",
@@ -2905,5 +2917,29 @@
     "message": "Poruka",
     "send": "Pošalji zahtjev",
     "defaultMessage": "Želimo vam dati novu priliku i ponovo razgovarati o saradnji."
+  },
+  "verificationNotice": {
+    "title": "Potvrdi svoju adresu e-pošte",
+    "message": "Otvori poruku poslanu na {email} i potvrdi adresu kako bismo mogli odobriti tvoj račun.",
+    "inboxHint": "Ako ne vidiš poruku, provjeri Other / Ostalo, Promocije i Neželjenu poštu.",
+    "sending": "Slanje…"
+  },
+  "sharing": {
+    "share": "Podijeli",
+    "shareTitle": "Podijeli: {title}",
+    "link": "Poveznica",
+    "copyLink": "Kopiraj poveznicu",
+    "copied": "Poveznica je kopirana.",
+    "copyManually": "Automatsko kopiranje nije dostupno. Označi i kopiraj poveznicu iz polja iznad."
+  },
+  "compensation": {
+    "type": "Vrsta suradnje",
+    "paid": "Plaćena suradnja",
+    "voluntaryLabel": "Dobrovoljna suradnja — bez naknade",
+    "noFee": "Bez naknade",
+    "voluntaryHint": "Sudjelovanje je dobrovoljno, bez novčane naknade. Prije prihvaćanja dogovorite opseg posla i rok u razgovoru.",
+    "locked": "Vrstu suradnje nije moguće promijeniti nakon prve prijave ili poziva.",
+    "hireHint": "Potvrdi opseg posla i rok isporuke dogovorene u razgovoru. Kreator prihvaća dobrovoljni angažman bez novčane naknade.",
+    "defaultHireMessage": "Potvrđujemo dogovorenu dobrovoljnu suradnju bez novčane naknade."
   }
 }

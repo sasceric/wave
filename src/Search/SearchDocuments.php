@@ -50,7 +50,7 @@ final class SearchDocuments
                 'imageUrl' => $row['avatarUrl'] ?? $row['logoUrl'] ?? $row['coverImageUrl'] ?? null,
                 'image' => $row['avatarImage'] ?? $row['logoImage'] ?? $row['coverImage'] ?? null,
                 'isPresentationDemo' => $row['isPresentationDemo'],
-                'budgetMin' => $row['budgetMin'] ?? null, 'budgetMax' => $row['budgetMax'] ?? null, 'currency' => $row['currency'] ?? null,
+                'compensationType' => $row['compensationType'] ?? null, 'budgetMin' => $row['budgetMin'] ?? null, 'budgetMax' => $row['budgetMax'] ?? null, 'currency' => $row['currency'] ?? null,
             ];
         }
         return $documents;

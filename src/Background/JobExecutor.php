@@ -80,7 +80,7 @@ final class JobExecutor
 
     private function email(array $payload): void
     {
-        if (($payload['tokenHash'] ?? null) !== null && !$this->connection->fetchOne('SELECT id FROM user_action_token WHERE token_hash = ? AND expires_at > ?', [$payload['tokenHash'], (new \DateTimeImmutable())->format('Y-m-d H:i:s')])) {
+        if (($payload['tokenHash'] ?? null) !== null && !$this->connection->fetchOne("SELECT t.id FROM user_action_token t JOIN wave_user u ON u.id = t.user_id WHERE t.token_hash = ? AND u.deleted_at IS NULL AND (t.expires_at > ? OR (t.purpose = 'verify_email' AND t.expires_at IS NULL)) AND (t.purpose != 'verify_email' OR u.email_verified = FALSE)", [$payload['tokenHash'], (new \DateTimeImmutable())->format('Y-m-d H:i:s')])) {
             $this->logger->info('mail.skipped', ['reason' => 'security_token_no_longer_valid']);
 
             return;

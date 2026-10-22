@@ -14,6 +14,21 @@ use Doctrine\ORM\Mapping as ORM;
 #[ORM\UniqueConstraint(name: 'uniq_campaign_presentation_demo_key', columns: ['presentation_demo_key'])]
 class Campaign
 {
+    public const COMPENSATION_PAID = 'paid';
+    public const COMPENSATION_VOLUNTARY = 'voluntary';
+
+    #[ORM\Column(length: 16, options: ['default' => 'paid'])]
+    private string $compensationType = self::COMPENSATION_PAID;
+
+    public function getCompensationType(): string { return $this->compensationType; }
+    public function isVoluntary(): bool { return $this->compensationType === self::COMPENSATION_VOLUNTARY; }
+    public function setCompensationType(string $type): void
+    {
+        if (!in_array($type, [self::COMPENSATION_PAID, self::COMPENSATION_VOLUNTARY], true)) {
+            throw new \InvalidArgumentException('Invalid campaign compensation type.');
+        }
+        $this->compensationType = $type;
+    }
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
@@ -131,7 +146,9 @@ class Campaign
         string $currency = 'BAM',
         ?string $countryCode = null,
         array $categories = [],
+        string $compensationType = self::COMPENSATION_PAID,
     ) {
+        $this->setCompensationType($compensationType);
         $this->slug = $slug;
         $this->countryCode = $countryCode;
         $this->categories = $categories !== [] ? array_values(array_unique($categories)) : [$category];
@@ -328,7 +345,9 @@ class Campaign
         ?string $currency = null,
         ?string $countryCode = null,
         array $categories = [],
+        ?string $compensationType = null,
     ): void {
+        if ($compensationType !== null) $this->setCompensationType($compensationType);
         $this->countryCode = $countryCode;
         $this->categories = $categories !== [] ? array_values(array_unique($categories)) : [$category];
         $this->title = $title;
