@@ -10,7 +10,7 @@ class CampaignAlertPreference
 {
     #[ORM\Id]
     #[ORM\OneToOne(targetEntity: User::class)]
-    #[ORM\JoinColumn(name: 'user_id', nullable: false, onDelete: 'CASCADE')]
+    #[ORM\JoinColumn(name: 'user_id', onDelete: 'CASCADE')]
     private User $user;
     #[ORM\Column]
     private bool $enabled = false;

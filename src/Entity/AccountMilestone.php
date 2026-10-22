@@ -12,7 +12,7 @@ class AccountMilestone
 {
     #[ORM\Id]
     #[ORM\ManyToOne(targetEntity: User::class)]
-    #[ORM\JoinColumn(name: 'user_id', nullable: false, onDelete: 'CASCADE')]
+    #[ORM\JoinColumn(name: 'user_id', onDelete: 'CASCADE')]
     private User $user;
     #[ORM\Id]
     #[ORM\Column(length: 20)]

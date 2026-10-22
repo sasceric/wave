@@ -13,7 +13,7 @@ class CreditWallet
 {
     #[ORM\Id]
     #[ORM\OneToOne(targetEntity: User::class)]
-    #[ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')]
+    #[ORM\JoinColumn(onDelete: 'CASCADE')]
     private User $user;
 
     #[ORM\Column]

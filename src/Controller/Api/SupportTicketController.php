@@ -85,7 +85,7 @@ final class SupportTicketController
         if ($existing instanceof SupportTicket) return $this->created($existing);
         $ticket = new SupportTicket($data, $locale, $data['submissionKey']);
         $user = $this->security->getUser();
-        $owner = $user instanceof User ? $user : $this->em->getRepository(User::class)->createQueryBuilder('u')->where('LOWER(u.email) = :email')->setParameter('email', strtolower($data['email']))->orderBy('u.id', 'ASC')->setMaxResults(1)->getQuery()->getOneOrNullResult();
+        $owner = $user instanceof User ? $user : $this->em->getRepository(User::class)->createQueryBuilder('u')->where('LOWER(u.email) = :email')->setParameter('email', strtolower($data['email']))->orderBy('u.id', \SortDirection::Ascending)->setMaxResults(1)->getQuery()->getOneOrNullResult();
         $ticket->setOwner($owner instanceof User ? $owner : null);
         try {
             $stored = $this->attachments->store($ticket, $files);
@@ -148,7 +148,7 @@ final class SupportTicketController
         if (!is_int($before) || $before < 0) return $this->response(['error' => $this->copy->get($locale, 'invalid')], 400);
         $qb = $this->em->getRepository(SupportTicketMessage::class)->createQueryBuilder('m')->where('m.ticket = :ticket AND m.internal = false')->setParameter('ticket', $ticket);
         if ($before) $qb->andWhere('m.id < :before')->setParameter('before', $before);
-        $rows = $qb->orderBy('m.id', 'DESC')->setMaxResults(31)->getQuery()->getResult();
+        $rows = $qb->orderBy('m.id', \SortDirection::Descending)->setMaxResults(31)->getQuery()->getResult();
         $more = count($rows) > 30;
         if ($more) array_pop($rows);
         $last = end($rows);

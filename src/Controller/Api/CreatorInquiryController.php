@@ -214,7 +214,7 @@ final class CreatorInquiryController
         $inquiries = $entityManager->createQueryBuilder()->select('inquiry')
             ->from(CreatorInquiry::class, 'inquiry')->join('inquiry.creator', 'provider')->join('inquiry.company', 'client')
             ->where('provider.owner = :user OR client.owner = :user')->setParameter('user', $user)
-            ->orderBy('inquiry.createdAt', 'DESC')->getQuery()->getResult();
+            ->orderBy('inquiry.createdAt', \SortDirection::Descending)->getQuery()->getResult();
 
         $unread = $counter->inquiries($user);
 

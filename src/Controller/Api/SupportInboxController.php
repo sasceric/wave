@@ -73,7 +73,7 @@ final class SupportInboxController
             $qb->andWhere('(t.updatedAt < :at OR (t.updatedAt = :at AND t.id < :id))')->setParameter('at', $at)->setParameter('id', $decoded['id']);
         }
         $qb->leftJoin('t.owner', 'owner')->leftJoin('owner.creator', 'creator')->leftJoin('creator.avatarMedia', 'avatar')->leftJoin('owner.company', 'company')->leftJoin('company.logoMedia', 'logo')->addSelect('owner', 'creator', 'avatar', 'company', 'logo');
-        $rows = $qb->orderBy('t.updatedAt', 'DESC')->addOrderBy('t.id', 'DESC')->setMaxResults($limit + 1)->getQuery()->getResult();
+        $rows = $qb->orderBy('t.updatedAt', \SortDirection::Descending)->addOrderBy('t.id', \SortDirection::Descending)->setMaxResults($limit + 1)->getQuery()->getResult();
         $more = count($rows) > $limit;
         if ($more) array_pop($rows);
         $last = end($rows);
@@ -124,7 +124,7 @@ final class SupportInboxController
         if ($scope === 'me') $qb->andWhere('m.internal = false');
         if ($before) $qb->andWhere('m.id < :before')->setParameter('before', $before);
         $qb->leftJoin('m.sender', 'sender')->leftJoin('sender.creator', 'creator')->leftJoin('creator.avatarMedia', 'avatar')->leftJoin('sender.company', 'company')->leftJoin('company.logoMedia', 'logo')->addSelect('sender', 'creator', 'avatar', 'company', 'logo');
-        $rows = $qb->orderBy('m.id', 'DESC')->setMaxResults($limit + 1)->getQuery()->getResult();
+        $rows = $qb->orderBy('m.id', \SortDirection::Descending)->setMaxResults($limit + 1)->getQuery()->getResult();
         $more = count($rows) > $limit;
         if ($more) array_pop($rows);
         $last = end($rows);

@@ -4,7 +4,9 @@ namespace App\Tests\Migration;
 
 use Doctrine\DBAL\DriverManager;
 use Doctrine\DBAL\Platforms\PostgreSQLPlatform;
+use Doctrine\DBAL\Schema\Column;
 use Doctrine\DBAL\Schema\Schema;
+use Doctrine\DBAL\Schema\Table;
 use Psr\Log\NullLogger;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 
@@ -27,23 +29,25 @@ final class VerificationTokenExpiryMigrationTest extends KernelTestCase
                     $db->executeStatement('CREATE SCHEMA verification_expiry_migration_test');
                     $db->executeStatement('SET LOCAL search_path TO verification_expiry_migration_test');
                 }
-                $schema = new Schema();
-                $users = $schema->createTable('wave_user');
-                $users->addColumn('id', 'integer');
+                $users = Table::editor()->setUnquotedName('wave_user')->setColumns(
+                    Column::editor()->setUnquotedName('id')->setTypeName('integer')->create(),
+                    Column::editor()->setUnquotedName('email_verified')->setTypeName('boolean')->create(),
+                    Column::editor()->setUnquotedName('deleted_at')->setTypeName('datetime_immutable')->setNotNull(false)->create(),
+                )->create();
                 $users->setPrimaryKey(['id']);
-                $users->addColumn('email_verified', 'boolean');
-                $users->addColumn('deleted_at', 'datetime_immutable', ['notnull' => false]);
-                $tokens = $schema->createTable('user_action_token');
-                $tokens->addColumn('id', 'integer');
+                $tokens = Table::editor()->setUnquotedName('user_action_token')->setColumns(
+                    Column::editor()->setUnquotedName('id')->setTypeName('integer')->create(),
+                    Column::editor()->setUnquotedName('user_id')->setTypeName('integer')->create(),
+                    Column::editor()->setUnquotedName('purpose')->setTypeName('string')->setLength(20)->create(),
+                    Column::editor()->setUnquotedName('token_hash')->setTypeName('string')->setLength(64)->create(),
+                    Column::editor()->setUnquotedName('expires_at')->setTypeName('datetime_immutable')->create(),
+                    Column::editor()->setUnquotedName('created_at')->setTypeName('datetime_immutable')->create(),
+                )->create();
                 $tokens->setPrimaryKey(['id']);
-                $tokens->addColumn('user_id', 'integer');
-                $tokens->addColumn('purpose', 'string', ['length' => 20]);
-                $tokens->addColumn('token_hash', 'string', ['length' => 64]);
-                $tokens->addColumn('expires_at', 'datetime_immutable');
-                $tokens->addColumn('created_at', 'datetime_immutable');
                 $tokens->addUniqueIndex(['token_hash'], 'uniq_user_action_token_hash');
                 $tokens->addIndex(['expires_at'], 'idx_action_token_expiry');
                 $tokens->addForeignKeyConstraint('wave_user', ['user_id'], ['id'], ['onDelete' => 'CASCADE']);
+                $schema = new Schema([$users, $tokens]);
                 foreach ($schema->toSql($db->getDatabasePlatform()) as $sql) {
                     $db->executeStatement($sql);
                 }
@@ -63,6 +67,7 @@ final class VerificationTokenExpiryMigrationTest extends KernelTestCase
                 $table = $db->createSchemaManager()->introspectTable('user_action_token');
                 self::assertFalse($table->getColumn('expires_at')->getNotnull());
                 self::assertTrue($table->hasIndex('uniq_user_action_token_hash'));
+                self::assertTrue($table->hasIndex('idx_action_token_expiry'));
                 self::assertCount(1, $table->getForeignKeys());
             } finally {
                 $db->rollBack();

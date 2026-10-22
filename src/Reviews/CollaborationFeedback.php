@@ -143,7 +143,7 @@ final class CollaborationFeedback
             ->from(CampaignReview::class, 'r')->join('r.author', 'author')
             ->leftJoin('author.creator', 'creator')->leftJoin('author.company', 'company')
             ->join('r.application', 'a')->join('a.campaign', 'c')
-            ->where('r.id IN (:ids)')->setParameter('ids', $ids)->orderBy('r.id', 'DESC')->getQuery()->getResult();
+            ->where('r.id IN (:ids)')->setParameter('ids', $ids)->orderBy('r.id', \SortDirection::Descending)->getQuery()->getResult();
 
         $hasDemoReviews = $user->isPresentationDemo();
         if ($forSchema && !$hasDemoReviews && $summary['reviewCount'] > 0) {

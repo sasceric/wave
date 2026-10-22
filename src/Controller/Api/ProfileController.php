@@ -63,7 +63,7 @@ final class ProfileController
             ->leftJoin('p.owner', 'owner')->andWhere($blocks->visible('owner.id'))
             ->andWhere('(owner.id IS NULL OR owner.deletedAt IS NULL)')
             ->where('a.creator = :creator')->andWhere("c.status = 'finished'")->andWhere("o.status = 'accepted'")
-            ->setParameter('creator', $user->getCreator())->orderBy('c.id', 'DESC')->setMaxResults(21);
+            ->setParameter('creator', $user->getCreator())->orderBy('c.id', \SortDirection::Descending)->setMaxResults(21);
         if ($before) $query->andWhere('c.id < :before')->setParameter('before', $before);
         $rows = $query->getQuery()->getResult();
         $more = count($rows) > 20;

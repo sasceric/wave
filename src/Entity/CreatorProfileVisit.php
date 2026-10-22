@@ -11,7 +11,7 @@ class CreatorProfileVisit
 {
     #[ORM\Id]
     #[ORM\ManyToOne(targetEntity: Creator::class)]
-    #[ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')]
+    #[ORM\JoinColumn(onDelete: 'CASCADE')]
     private Creator $creator;
 
     #[ORM\Id]
