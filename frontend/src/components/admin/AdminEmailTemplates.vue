@@ -1,4 +1,5 @@
 <script setup>
+import EmailPreviewFrame from '../shared/EmailPreviewFrame.vue'
 import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute } from 'vue-router'
@@ -288,12 +289,12 @@ onMounted(loadTemplates)
           </button>
         </header>
         <p class="email-template-preview__hint">{{ t('adminDashboard.emailTemplatePreviewHint') }}</p>
-        <iframe
+        <EmailPreviewFrame
           class="email-template-preview__frame"
-          :srcdoc="previewHtml"
-          sandbox=""
+          :html="previewHtml"
+          allow-brand-images
           :title="t('adminDashboard.emailTemplatePreviewTitle')"
-        ></iframe>
+        />
       </section>
     </dialog>
   </section>

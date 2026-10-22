@@ -77,6 +77,16 @@ final class AdminToolsController
         }
     }
 
+    #[Route('/email-preview/{id}', requirements: ['id' => '[a-f0-9]{32}'], methods: ['GET'])]
+    public function emailPreview(string $id, Request $request, Security $security, \App\Mail\MailLog $logs): JsonResponse
+    {
+        $locale = $this->authorize($request, $security);
+        if ($locale instanceof JsonResponse) return $locale;
+        try { return $this->response(['data' => $logs->preview($id)]); }
+        catch (\InvalidArgumentException) { return $this->response(['error' => ApiMessages::get('invalid_request', $locale)], 404); }
+        catch (\Throwable) { return $this->response(['error' => ApiMessages::get('invalid_request', $locale)], 422); }
+    }
+
     #[Route('/tasks/register', methods: ['POST'])]
     #[Route('/tasks/{name}/{action}', methods: ['POST'])]
     public function taskAction(Request $request, Security $security, CsrfTokenManagerInterface $csrf, TaskRegistry $tasks, ?string $name = null, ?string $action = null): JsonResponse

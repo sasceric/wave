@@ -22,14 +22,16 @@ replies notify by email and bell, with no live conversation subscription. See
 and support access rules.
 
 Creator profiles support optional multiple creator types (influencer, UGC creator,
-photographer, videographer and model), independently of topics and social platforms.
+photographer, videographer, model, actor, streaming and podcasts), independently
+of topics and social platforms.
 The shared catalog is `config/creator_types.json`; `Account/CreatorTypes.php` validates
 profile writes and directory filters. `creatorTypes` is exposed by full/card creator
 resources and accepts a JSON array in GET `/api/creators`. Selected types match any
 of those types, combined with the other filters, and are part of the signed cursor
 scope. Migration `Version20261008150000` adds an empty JSON list for existing profiles;
 omitted profile fields preserve the stored types. The account editor and public
-profile labels use all six locale catalogs.
+profile labels use all seven locale catalogs. New types reuse the shared catalog
+without a schema migration.
 
 The guides index map uses local Natural Earth v5.1.2 country boundaries in
 `frontend/src/assets/creator-region-map.svg`, with a shared Mercator projection.
@@ -741,3 +743,7 @@ v3 keeps Marketing independent of Analytics and never upgrades old analytics con
 marketing. Pixel code is host-gated and disabled by default without explicit Vite config.
 See `docs/meta-tracking.md` for the Wave Pixel ID, server build settings and validation.
 No CAPI token or server forwarding is part of this integration.
+
+### Email attempt history
+
+`src/Mail/MailLog.php` writes JSON audit rows and encrypted rendered-content snapshots to files under `var/log`; there is no database log table. `LoggedMailTransport` decorates `mailer.transports`, covering synchronous and queued sends; `QueuedMailer` captures content before enqueue and `JobExecutor` logs obsolete-token/reminder skips. Tools → Logs selects daily `*.mail-*.log` files and opens private HTML/text previews through the existing admin authorization. The shared `EmailPreviewFrame` blocks active content. See [email logs](email-logs.md) for retention and deployment.

@@ -1559,6 +1559,7 @@
       "photographer": "Fotograf",
       "videographer": "Videograf",
       "model": "Model",
+      "actor": "Schauspieler",
       "streaming": "Streaming",
       "podcasts": "Podcasts"
     }
@@ -2940,5 +2941,34 @@
     "locked": "Die Art der Zusammenarbeit kann nach der ersten Bewerbung oder Einladung nicht geändert werden.",
     "hireHint": "Bestätige den im Chat vereinbarten Umfang und Liefertermin. Der Creator nimmt die freiwillige Zusammenarbeit ohne Vergütung an.",
     "defaultHireMessage": "Wir bestätigen die vereinbarte freiwillige Zusammenarbeit ohne finanzielle Vergütung."
+  }
+,
+  "emailLogs": {
+    "open": "Vorschau",
+    "columns": {
+      "recipient": "Empfänger",
+      "subject": "Betreff",
+      "mailStatus": "Versandstatus",
+      "responseCode": "Serverantwort"
+    },
+    "sender": "Absender",
+    "preview": "E-Mail-Vorschau",
+    "text": "Text",
+    "attachments": "Anhänge",
+    "emailId": "E-Mail-ID",
+    "status": {
+      "accepted": "Zum Versand angenommen",
+      "failed": "Fehlgeschlagen",
+      "queue_failed": "Warteschlangenfehler",
+      "skipped": "Übersprungen",
+      "not_sent": "Nicht gesendet"
+    },
+    "acceptedHint": "Der Server hat die Nachricht zum Versand angenommen; dies bestätigt keine Zustellung im Posteingang.",
+    "previewHint": "Dies ist der gespeicherte Inhalt. Sicherheitslinks sind verborgen; externe Inhalte und Links sind deaktiviert.",
+    "previewUnavailable": "Vorschau nicht verfügbar: Der Inhalt ist abgelaufen, wurde nicht gespeichert oder kann nicht geöffnet werden.",
+    "reason": {
+      "security_token_no_longer_valid": "Der Sicherheitslink ist nicht mehr gültig oder die Adresse ist bereits bestätigt.",
+      "reminder_no_longer_current": "Die Erinnerung ist nicht mehr erforderlich."
+    }
   }
 }

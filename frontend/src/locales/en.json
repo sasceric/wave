@@ -1559,6 +1559,7 @@
       "photographer": "Photographer",
       "videographer": "Videographer",
       "model": "Model",
+      "actor": "Actor",
       "streaming": "Streaming",
       "podcasts": "Podcasts"
     }
@@ -2940,5 +2941,34 @@
     "locked": "The collaboration type cannot change after the first application or invitation.",
     "hireHint": "Confirm the scope and delivery date agreed in chat. The creator accepts a voluntary collaboration without a monetary fee.",
     "defaultHireMessage": "We confirm the agreed voluntary collaboration with no monetary compensation."
+  }
+,
+  "emailLogs": {
+    "open": "Preview",
+    "columns": {
+      "recipient": "Recipient",
+      "subject": "Subject",
+      "mailStatus": "Send status",
+      "responseCode": "Server response"
+    },
+    "sender": "Sender",
+    "preview": "Email preview",
+    "text": "Text",
+    "attachments": "Attachments",
+    "emailId": "Email ID",
+    "status": {
+      "accepted": "Accepted for sending",
+      "failed": "Failed",
+      "queue_failed": "Queue failure",
+      "skipped": "Skipped",
+      "not_sent": "Not sent"
+    },
+    "acceptedHint": "The server accepted the message for sending; this does not confirm inbox delivery.",
+    "previewHint": "This is the captured content. Security links are hidden; external content and links are disabled.",
+    "previewUnavailable": "Preview unavailable: the content has expired, was not captured or cannot be opened.",
+    "reason": {
+      "security_token_no_longer_valid": "The security link is no longer valid or the address is already verified.",
+      "reminder_no_longer_current": "The reminder is no longer needed."
+    }
   }
 }

@@ -406,7 +406,15 @@ final class AdminLogReader
             $message = $json['message'];
         }
 
+        $mail = null;
+        if (preg_match('/^[a-zA-Z0-9_-]+\.mail-\d{4}-\d{2}-\d{2}\.log$/D', $name)
+            && is_array($json) && ($json['channel'] ?? null) === 'mail' && is_array($json['mail'] ?? null)
+            && in_array($json['mail']['status'] ?? null, ['accepted', 'failed', 'queue_failed', 'skipped', 'not_sent'], true)) {
+            $mail = array_intersect_key($json['mail'], array_flip(['id', 'emailId', 'status', 'sender', 'recipients', 'subject', 'protocol', 'responseCode', 'response', 'responseTruncated', 'error', 'errorTruncated', 'reason', 'durationMs']));
+        }
+
         return [
+            'mail' => $mail,
             'id' => $name . ':' . $start,
             'file' => $name,
             'time' => $time?->format(DATE_ATOM),

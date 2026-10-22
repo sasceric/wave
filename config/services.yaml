@@ -48,6 +48,9 @@ services:
         arguments:
             $storagePath: '%kernel.project_dir%/var/media'
 
+    App\Mail\LoggedMailTransport:
+        decorates: 'mailer.transports'
+
     App\Background\QueuedMailer:
         decorates: 'mailer'
 

@@ -165,7 +165,7 @@ final class BackgroundPipelineTest extends KernelTestCase
     {
         $inner = $this->createMock(\Symfony\Component\Mailer\MailerInterface::class);
         $inner->expects(self::never())->method('send');
-        $mailer = new \App\Background\QueuedMailer($this->jobs, $inner, true);
+        $mailer = new \App\Background\QueuedMailer($this->jobs, $inner, true, self::getContainer()->get(\App\Mail\MailLog::class));
         $token = str_repeat('a', 64);
         $email = (new \Symfony\Component\Mime\Email())->from('sender@example.test')->to('recipient@example.test')->subject('Verification')->html('<a href="https://wave.example/verify#' . $token . '">Verify</a>');
         $email->getHeaders()->addTextHeader(\App\Background\QueuedMailer::SECURITY_TOKEN_HEADER, hash('sha256', $token));
@@ -205,7 +205,7 @@ final class BackgroundPipelineTest extends KernelTestCase
         $email->getHeaders()->addTextHeader(\App\Background\QueuedMailer::SECURITY_TOKEN_HEADER, hash('sha256', $token));
         $inner = $this->createMock(\Symfony\Component\Mailer\MailerInterface::class);
         $inner->expects(self::never())->method('send');
-        $mailer = new \App\Background\QueuedMailer($this->jobs, $inner, true);
+        $mailer = new \App\Background\QueuedMailer($this->jobs, $inner, true, self::getContainer()->get(\App\Mail\MailLog::class));
         $mailer->send($email);
         $this->work('mail');
         self::assertTrue($tokens->consume($token, 'verify_email', static function (User $user): void { $user->setEmailVerified(true); }));
@@ -298,7 +298,7 @@ final class BackgroundPipelineTest extends KernelTestCase
         $events->addListener(\Symfony\Component\Mailer\Event\SentMessageEvent::class, static function ($event) use (&$sent): void { $sent[] = $event->getMessage()->getOriginalMessage()->toString(); });
         $inner = $this->createMock(\Symfony\Component\Mailer\MailerInterface::class);
         $inner->expects(self::never())->method('send');
-        $mailer = new \App\Background\QueuedMailer($this->jobs, $inner, true);
+        $mailer = new \App\Background\QueuedMailer($this->jobs, $inner, true, self::getContainer()->get(\App\Mail\MailLog::class));
         // Customer text containing a token-looking fragment is ordinary mail.
         $mailer->send((new \Symfony\Component\Mime\Email())->from('sender@example.test')->to('recipient@example.test')->subject('Pipeline mail')->text('Exact captured content')->html('<a href="https://example.test/#' . str_repeat('a', 64) . '">A customer link</a>'));
         $this->work('mail');

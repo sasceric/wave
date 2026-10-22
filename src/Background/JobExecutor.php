@@ -41,6 +41,7 @@ final class JobExecutor
         #[Autowire('%env(int:LOG_RETENTION_DAYS)%')] private readonly int $logRetention,
         private readonly \App\Safety\BlockPolicy $blocks,
         private readonly \App\Search\SearchIndexer $searchIndexer,
+        private readonly \App\Mail\MailLog $mailLog,
     ) {
     }
 
@@ -82,12 +83,14 @@ final class JobExecutor
     {
         if (($payload['tokenHash'] ?? null) !== null && !$this->connection->fetchOne("SELECT t.id FROM user_action_token t JOIN wave_user u ON u.id = t.user_id WHERE t.token_hash = ? AND u.deleted_at IS NULL AND (t.expires_at > ? OR (t.purpose = 'verify_email' AND t.expires_at IS NULL)) AND (t.purpose != 'verify_email' OR u.email_verified = FALSE)", [$payload['tokenHash'], (new \DateTimeImmutable())->format('Y-m-d H:i:s')])) {
             $this->logger->info('mail.skipped', ['reason' => 'security_token_no_longer_valid']);
+            $this->logSkippedEmail($payload, 'security_token_no_longer_valid');
 
             return;
         }
         $reminder = $payload['reminder'] ?? null;
         if ($reminder !== null && !$this->isCurrentReminder($reminder)) {
             $this->logger->info('mail.skipped', ['reason' => 'reminder_no_longer_current']);
+            $this->logSkippedEmail($payload, 'reminder_no_longer_current');
 
             return;
         }
@@ -96,6 +99,13 @@ final class JobExecutor
             throw new \Symfony\Component\Messenger\Exception\UnrecoverableMessageHandlingException('Invalid mail payload.');
         }
         $this->mailTransport->send(new RawMessage($raw), new Envelope(new Address($payload['sender']), array_map(static fn (string $email): Address => new Address($email), $payload['recipients'])));
+    }
+
+    private function logSkippedEmail(array $payload, string $reason): void
+    {
+        $raw = base64_decode($payload['raw'], true);
+        if ($raw === false) return;
+        $this->mailLog->record(new RawMessage($raw), new Envelope(new Address($payload['sender']), array_map(static fn (string $email): Address => new Address($email), $payload['recipients'])), 'skipped', ['reason' => $reason]);
     }
 
     private function isCurrentReminder(array $reminder): bool
@@ -185,6 +195,7 @@ final class JobExecutor
 
     private function cleanupLogs(): void
     {
+        if ($this->mailLog->cleanup($this->logRetention) === 100) $this->jobs->enqueue('LogCleanupTask');
         if (!is_dir($this->logsDirectory)) {
             return;
         }

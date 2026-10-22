@@ -582,3 +582,7 @@ consent is separate from Analytics and is required before Wave loads Meta.
 ### Voluntary campaign support
 
 Deploy migration `Version20261022150000` with the application and frontend build. Existing campaigns remain paid. When Meilisearch is enabled, run `APP_ENV=prod php8.4 bin/console app:search:index --sync` once to refresh displayed attributes and documents. See [voluntary campaigns](voluntary-campaigns.md) for validation and workflow rules.
+
+### File-based email history
+
+Email attempts are logged to `var/log/<environment>.mail-YYYY-MM-DD.log` and encrypted content snapshots to `var/log/email-previews/<environment>/`. No schema migration is needed. Restart existing mail workers with the normal deployment, preserve `APP_SECRET`, and give the PHP/web/worker service user write access to the retained log directory. The existing `LOG_RETENTION_DAYS` / `LogCleanupTask` clean up both. See [email logs](email-logs.md) for status semantics, privacy and the admin log selector.

@@ -1,4 +1,5 @@
 <script setup>
+import EmailPreviewFrame from '../components/shared/EmailPreviewFrame.vue'
 import AdminPage from '../components/admin/AdminPage.vue'
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { RefreshCw } from '@lucide/vue'
@@ -10,7 +11,7 @@ import LocalizedLink from '../components/shared/LocalizedLink.vue'
 import LoadingSkeleton from '../components/shared/LoadingSkeleton.vue'
 import StatusMessage from '../components/shared/StatusMessage.vue'
 import { currentUser } from '../composables/useCurrentUser'
-import { apiGet, apiRequest } from '../lib/api'
+import { apiGet, apiRequest, formatDate } from '../lib/api'
 
 const { locale, t } = useI18n()
 const tabs = ['tasks', 'queues', 'logs']
@@ -32,13 +33,19 @@ const workers = ref([])
 const workerMode = ref('cli')
 const logDialog = ref(null)
 const selectedLog = ref(null)
+const emailPreview = ref(null)
+const previewLoading = ref(false)
+const previewError = ref('')
+const previewTab = ref('html')
+let previewRequestId = 0
+const mailFile = computed(() => /\.mail-\d{4}-\d{2}-\d{2}\.log$/.test(file.value))
 let requestId = 0
 
 const columns = computed(() => ({
   tasks: ['name', 'schedule', 'lastStartedAt', 'lastFinishedAt', 'nextExpectedAt', 'status', 'actions'],
   queues: showFailed.value ? ['type', 'attempts', 'error_code', 'actions'] : ['id', 'kind', 'count', 'delayed', 'inFlight'],
-  logs: ['time', 'channel', 'level', 'message'],
-}[tab.value].map((key) => ({ key, label: t(`adminTools.columns.${key}`) }))))
+  logs: mailFile.value ? ['time', 'recipient', 'subject', 'mailStatus', 'responseCode', 'message'] : ['time', 'channel', 'level', 'message'],
+}[tab.value].map((key) => ({ key, label: t(`${['recipient', 'subject', 'mailStatus', 'responseCode'].includes(key) ? 'emailLogs' : 'adminTools'}.columns.${key}`) }))))
 const labels = computed(() => ({
   caption: t(`adminTools.${tab.value}`),
   empty: t('adminTools.empty'),
@@ -51,7 +58,7 @@ const labels = computed(() => ({
 function date(value) {
   if (!value) return '—'
   const language = locale.value === 'sr' ? 'sr-Latn' : locale.value === 'cnr' ? 'sr-Latn-ME' : locale.value
-  return new Intl.DateTimeFormat(language, { dateStyle: 'short', timeStyle: 'medium' }).format(new Date(value))
+  return `${formatDate(value)} ${new Intl.DateTimeFormat(language, { timeStyle: 'medium' }).format(new Date(value))}`
 }
 
 function taskStatus(row) {
@@ -99,6 +106,7 @@ async function load() {
     rows.value = []
     meta.value = {}
     files.value = []
+    closeLog()
     if (cause.status === 401) access.value = 'anonymous'
     else if (cause.status === 403) access.value = 'forbidden'
     else {
@@ -124,9 +132,36 @@ async function action(path) {
   }
 }
 
-function openLog(row) {
+async function openLog(row) {
+  const ticket = ++previewRequestId
+  const userId = currentUser.value?.id
   selectedLog.value = row
+  emailPreview.value = null
+  previewError.value = ''
+  previewTab.value = 'html'
+  previewLoading.value = Boolean(row.mail?.emailId)
   logDialog.value?.showModal()
+  if (!row.mail?.emailId) return
+  try {
+    const result = await apiGet(`/admin/tools/email-preview/${encodeURIComponent(row.mail.emailId)}`)
+    if (ticket !== previewRequestId || currentUser.value?.id !== userId) return
+    if (!result.data.html && !result.data.text) { previewError.value = t('emailLogs.previewUnavailable'); return }
+    emailPreview.value = result.data
+    if (!result.data.html) previewTab.value = 'text'
+  } catch (cause) {
+    if (ticket !== previewRequestId || currentUser.value?.id !== userId) return
+    previewError.value = t('emailLogs.previewUnavailable')
+    if ([401, 403].includes(cause.status)) closeLog()
+  } finally { if (ticket === previewRequestId) previewLoading.value = false }
+}
+
+function closeLog() {
+  previewRequestId++
+  selectedLog.value = null
+  emailPreview.value = null
+  previewLoading.value = false
+  previewError.value = ''
+  logDialog.value?.close()
 }
 
 function refresh() {
@@ -158,12 +193,13 @@ function tabKeydown(event, index) {
 }
 
 watch([tab, locale, pageSize, file, showFailed], refresh)
-watch(() => currentUser.value?.id, () => {
+watch(() => [currentUser.value?.id, Boolean(currentUser.value?.isAdmin)], () => {
+  closeLog()
   access.value = 'loading'
   refresh()
 })
 onMounted(load)
-onBeforeUnmount(() => { requestId++ })
+onBeforeUnmount(() => { requestId++; previewRequestId++ })
 </script>
 
 <template>
@@ -227,14 +263,46 @@ onBeforeUnmount(() => { requestId++ })
             <template #cell-nextExpectedAt="{ value }">{{ date(value) }}</template>
             <template #cell-status="{ row }"><span class="admin-tools__status" :class="`admin-tools__status--${taskStatus(row)}`">{{ t(`adminTools.statuses.${taskStatus(row)}`) }}</span></template>
             <template #cell-time="{ value }">{{ date(value) }}</template>
+            <template #cell-recipient="{ row }"><span class="admin-tools__mail-address">{{ row.mail?.recipients?.join(', ') || '—' }}</span></template>
+            <template #cell-subject="{ row }"><span class="admin-tools__mail-subject">{{ row.mail?.subject || '—' }}</span></template>
+            <template #cell-mailStatus="{ row }"><span v-if="row.mail" class="admin-tools__status" :class="`admin-tools__status--${row.mail.status === 'accepted' ? 'success' : ['failed', 'queue_failed'].includes(row.mail.status) ? 'failed' : 'queued'}`">{{ t(`emailLogs.status.${row.mail.status}`) }}</span></template>
+            <template #cell-responseCode="{ row }">{{ row.mail?.protocol }} {{ row.mail?.responseCode ?? '—' }}</template>
             <template #cell-file="{ value }"><code>{{ value }}</code></template>
-            <template #cell-message="{ row, value }"><button type="button" class="admin-tools__log-preview" @click="openLog(row)">{{ value }}</button><small v-if="row.truncated">{{ t('adminTools.truncated') }}</small></template>
+            <template #cell-message="{ row, value }"><button type="button" class="admin-tools__log-preview" @click="openLog(row)">{{ row.mail ? t('emailLogs.open') : value }}</button><small v-if="row.truncated">{{ t('adminTools.truncated') }}</small></template>
           </AdminReadOnlyTable>
-          <dialog ref="logDialog" class="admin-tools__dialog" aria-labelledby="log-detail-title" @click="($event.target === logDialog) && logDialog.close()">
+          <dialog ref="logDialog" class="admin-tools__dialog" aria-labelledby="log-detail-title" @click="($event.target === logDialog) && closeLog()" @cancel="closeLog">
             <h2 id="log-detail-title">{{ t('adminTools.logDetail') }}</h2>
             <p>{{ date(selectedLog?.time) }} · {{ selectedLog?.channel }} · {{ selectedLog?.level }}</p>
-            <pre class="admin-tools__log">{{ selectedLog?.detail ?? selectedLog?.message }}</pre>
-            <button type="button" class="button button--outline" @click="logDialog.close()">{{ t('adminTools.close') }}</button>
+            <template v-if="selectedLog?.mail">
+              <dl class="admin-tools__mail-meta">
+                <dt>{{ t('emailLogs.columns.subject') }}</dt><dd>{{ selectedLog.mail.subject }}</dd>
+                <dt>{{ t('emailLogs.sender') }}</dt><dd>{{ selectedLog.mail.sender }}</dd>
+                <dt>{{ t('emailLogs.columns.recipient') }}</dt><dd>{{ selectedLog.mail.recipients?.join(', ') }}</dd>
+                <dt>{{ t('emailLogs.columns.mailStatus') }}</dt><dd>{{ t(`emailLogs.status.${selectedLog.mail.status}`) }}</dd>
+                <dt>{{ t('emailLogs.columns.responseCode') }}</dt><dd>{{ selectedLog.mail.protocol }} {{ selectedLog.mail.responseCode ?? '—' }}</dd>
+                <dt>{{ t('emailLogs.emailId') }}</dt><dd>{{ selectedLog.mail.emailId || '—' }}</dd>
+              </dl>
+              <p v-if="selectedLog.mail.status === 'accepted'" class="admin-tools__hint">{{ t('emailLogs.acceptedHint') }}</p>
+              <pre v-if="selectedLog.mail.response" class="admin-tools__log">{{ selectedLog.mail.response }}</pre>
+              <StatusMessage v-if="selectedLog.mail.error" variant="error"><span class="admin-tools__mail-error">{{ selectedLog.mail.error }}</span></StatusMessage>
+              <p v-if="selectedLog.mail.errorTruncated || selectedLog.mail.responseTruncated">{{ t('adminTools.truncated') }}</p>
+              <p v-if="selectedLog.mail.reason">{{ t(`emailLogs.reason.${selectedLog.mail.reason}`) }}</p>
+              <p v-if="previewLoading" role="status">{{ t('adminTools.loading') }}</p>
+              <StatusMessage v-if="previewError" variant="error">{{ previewError }}</StatusMessage>
+              <template v-if="emailPreview">
+                <p class="admin-tools__hint">{{ t('emailLogs.previewHint') }}</p>
+                <div class="button-row">
+                  <button v-if="emailPreview.html" type="button" class="button button--outline" :aria-pressed="previewTab === 'html'" @click="previewTab = 'html'">HTML</button>
+                  <button type="button" class="button button--outline" :aria-pressed="previewTab === 'text'" @click="previewTab = 'text'">{{ t('emailLogs.text') }}</button>
+                </div>
+                <EmailPreviewFrame v-if="previewTab === 'html'" class="admin-tools__email-frame" :html="emailPreview.html" :title="t('emailLogs.preview')" />
+                <pre v-else class="admin-tools__log">{{ emailPreview.text || '—' }}</pre>
+                <p v-if="emailPreview.attachments?.length">{{ t('emailLogs.attachments') }}: {{ emailPreview.attachments.join(', ') }}</p>
+              </template>
+              <p v-else-if="!previewLoading && !previewError">{{ t('emailLogs.previewUnavailable') }}</p>
+            </template>
+            <pre v-else class="admin-tools__log">{{ selectedLog?.detail ?? selectedLog?.message }}</pre>
+            <button type="button" class="button button--outline" @click="closeLog">{{ t('adminTools.close') }}</button>
           </dialog>
         </section>
       </main>

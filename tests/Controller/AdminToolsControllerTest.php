@@ -38,7 +38,7 @@ final class AdminToolsControllerTest extends WebTestCase
 
     public function testEveryEndpointRequiresAdminIncludingForModerators(): void
     {
-        foreach (['tasks', 'queues', 'failed', 'worker/config', 'log-files', 'logs'] as $endpoint) {
+        foreach (['tasks', 'queues', 'failed', 'worker/config', 'log-files', 'logs', 'email-preview/'.str_repeat('a',32)] as $endpoint) {
             $this->client->request('GET', '/api/admin/tools/' . $endpoint . '?locale=en');
             self::assertResponseStatusCodeSame(401);
         }
@@ -46,7 +46,7 @@ final class AdminToolsControllerTest extends WebTestCase
         $moderator->setModerator(true);
         static::getContainer()->get(EntityManagerInterface::class)->flush();
         $this->client->loginUser($moderator, 'main');
-        foreach (['tasks', 'queues', 'failed', 'worker/config', 'log-files', 'logs'] as $endpoint) {
+        foreach (['tasks', 'queues', 'failed', 'worker/config', 'log-files', 'logs', 'email-preview/'.str_repeat('a',32)] as $endpoint) {
             $this->client->request('GET', '/api/admin/tools/' . $endpoint . '?locale=en');
             self::assertResponseStatusCodeSame(403);
         }
@@ -91,6 +91,34 @@ final class AdminToolsControllerTest extends WebTestCase
         self::assertCount(6, $this->payload()['data']);
         self::assertSame('line 6', $this->payload()['data'][0]['message']);
         self::assertSame(4, $this->payload()['meta']['page']);
+    }
+
+    public function testAdminPreviewUsesCapturedFilesAndKeepsContentOutOfTheDatabase(): void
+    {
+        $logs = new \App\Mail\MailLog($this->directory, 'test', new \App\Background\PayloadCipher('test-email-key'), new \Psr\Log\NullLogger());
+        static::getContainer()->set(\App\Mail\MailLog::class, $logs);
+        $email = (new \Symfony\Component\Mime\Email())->from('sender@example.test')->to('recipient@example.test')->subject('Captured subject')->html('<p>Original captured email</p>')->text('Original captured text');
+        $envelope = \Symfony\Component\Mailer\Envelope::create($email);
+        $prepared = $logs->prepare($email, $envelope);
+        $logs->record($prepared, $envelope, 'failed', ['protocol' => 'SMTP', 'responseCode' => 550, 'error' => '550 Mailbox unavailable']);
+        $this->client->loginUser($this->user(true), 'main');
+        $this->client->request('GET', '/api/admin/tools/log-files?locale=en');
+        self::assertResponseIsSuccessful();
+        $file = $this->payload()['data']['files'][0]['name'];
+        $this->client->request('GET', '/api/admin/tools/logs?locale=en&page=1&file='.urlencode($file));
+        self::assertResponseIsSuccessful();
+        $mail = $this->payload()['data'][0]['mail'];
+        self::assertSame(['recipient@example.test'], $mail['recipients']);
+        self::assertSame('Captured subject', $mail['subject']);
+        self::assertSame(550, $mail['responseCode']);
+        self::assertSame('550 Mailbox unavailable', $mail['error']);
+        self::assertStringNotContainsString('Original captured email', $this->client->getResponse()->getContent());
+        $this->client->request('GET', '/api/admin/tools/email-preview/'.$mail['emailId'].'?locale=en');
+        self::assertResponseIsSuccessful();
+        self::assertSame('<p>Original captured email</p>', $this->payload()['data']['html']);
+        self::assertStringContainsString('no-store', $this->client->getResponse()->headers->get('Cache-Control'));
+        $this->client->request('GET', '/api/admin/tools/email-preview/'.str_repeat('b',32).'?locale=en');
+        self::assertResponseStatusCodeSame(404);
     }
 
     public function testInvalidPaginationCursorsAndPathsAreRejected(): void

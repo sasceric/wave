@@ -28,6 +28,7 @@ final class QueuedMailer implements MailerInterface
         private readonly JobDispatcher $jobs,
         #[Autowire(service: 'App\\Background\\QueuedMailer.inner')] private readonly MailerInterface $inner,
         #[Autowire('%wave.queue.enabled%')] private readonly bool $enabled,
+        private readonly \App\Mail\MailLog $mailLog,
     ) {
     }
 
@@ -42,17 +43,23 @@ final class QueuedMailer implements MailerInterface
                 throw new \InvalidArgumentException('Invalid security email token metadata.');
             }
         }
+        $envelope ??= Envelope::create($message);
+        $message = $this->mailLog->prepare($message, $envelope);
         if (!$this->enabled) {
             $this->inner->send($message, $envelope);
 
             return;
         }
-        $envelope ??= Envelope::create($message);
         $raw = $message->toString();
-        $this->jobs->enqueue('SendEmailMessage', [
-            'raw' => base64_encode($raw), 'sender' => $envelope->getSender()->getAddress(),
-            'recipients' => array_map(static fn ($address): string => $address->getAddress(), $envelope->getRecipients()),
-            'tokenHash' => $tokenHash, 'reminder' => $this->reminder,
-        ], $this->reminder === null ? null : 'reminder:' . implode(':', $this->reminder));
+        try {
+            $this->jobs->enqueue('SendEmailMessage', [
+                'raw' => base64_encode($raw), 'sender' => $envelope->getSender()->getAddress(),
+                'recipients' => array_map(static fn ($address): string => $address->getAddress(), $envelope->getRecipients()),
+                'tokenHash' => $tokenHash, 'reminder' => $this->reminder,
+            ], $this->reminder === null ? null : 'reminder:' . implode(':', $this->reminder));
+        } catch (\Throwable $error) {
+            $this->mailLog->record($message, $envelope, 'queue_failed', ['error' => \App\Mail\MailLog::redactSecrets($error->getMessage())]);
+            throw $error;
+        }
     }
 }

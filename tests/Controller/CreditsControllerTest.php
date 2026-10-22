@@ -426,7 +426,7 @@ final class CreditsControllerTest extends WebTestCase
     {
         $inner = $this->createMock(\Symfony\Component\Mailer\MailerInterface::class);
         $inner->expects(self::never())->method('send');
-        $queued = new \App\Background\QueuedMailer(self::getContainer()->get(\App\Background\JobDispatcher::class), $inner, true);
+        $queued = new \App\Background\QueuedMailer(self::getContainer()->get(\App\Background\JobDispatcher::class), $inner, true, self::getContainer()->get(\App\Mail\MailLog::class));
         $service = $this->creditsWithMailer($queued);
         $voucher = $service->issue($this->user($this->adminId), 50);
         $service->assign($voucher['id'], $this->companyId, 'company');

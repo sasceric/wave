@@ -1560,6 +1560,7 @@
       "photographer": "Fotograf",
       "videographer": "Videograf",
       "model": "Model",
+      "actor": "Igralec",
       "streaming": "Pretakanje vsebin",
       "podcasts": "Podkasti"
     }
@@ -2941,5 +2942,34 @@
     "locked": "Vrste sodelovanja po prvi prijavi ali povabilu ni mogoče spremeniti.",
     "hireHint": "Potrdi obseg dela in rok oddaje, dogovorjena v pogovoru. Ustvarjalec sprejme prostovoljno sodelovanje brez plačila.",
     "defaultHireMessage": "Potrjujemo dogovorjeno prostovoljno sodelovanje brez denarnega plačila."
+  }
+,
+  "emailLogs": {
+    "open": "Predogled",
+    "columns": {
+      "recipient": "Prejemnik",
+      "subject": "Zadeva",
+      "mailStatus": "Stanje pošiljanja",
+      "responseCode": "Odgovor strežnika"
+    },
+    "sender": "Pošiljatelj",
+    "preview": "Predogled e-pošte",
+    "text": "Besedilo",
+    "attachments": "Priloge",
+    "emailId": "ID e-pošte",
+    "status": {
+      "accepted": "Sprejeto za pošiljanje",
+      "failed": "Neuspešno",
+      "queue_failed": "Napaka v čakalni vrsti",
+      "skipped": "Preskočeno",
+      "not_sent": "Ni poslano"
+    },
+    "acceptedHint": "Strežnik je sprejel sporočilo za pošiljanje; to ne potrjuje dostave v prejemnikov nabiralnik.",
+    "previewHint": "Prikazana je shranjena vsebina. Varnostne povezave so skrite, zunanja vsebina in povezave pa onemogočene.",
+    "previewUnavailable": "Predogled ni na voljo: vsebina je potekla, ni shranjena ali je ni mogoče odpreti.",
+    "reason": {
+      "security_token_no_longer_valid": "Varnostna povezava ni več veljavna ali pa je naslov že potrjen.",
+      "reminder_no_longer_current": "Opomnik ni več potreben."
+    }
   }
 }

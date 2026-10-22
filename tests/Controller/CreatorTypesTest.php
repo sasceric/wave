@@ -45,18 +45,18 @@ final class CreatorTypesTest extends WebTestCase
             ], content: json_encode($body + $change, JSON_THROW_ON_ERROR));
             self::assertResponseStatusCodeSame($status);
         };
-        $update(['creatorTypes' => ['photographer', 'videographer', 'photographer']]);
-        self::assertSame(['photographer', 'videographer'], $this->response()['data']['creatorTypes']);
+        $update(['creatorTypes' => ['photographer', 'videographer', 'actor', 'photographer']]);
+        self::assertSame(['photographer', 'videographer', 'actor'], $this->response()['data']['creatorTypes']);
         $update([]);
-        self::assertSame(['photographer', 'videographer'], $this->response()['data']['creatorTypes']);
+        self::assertSame(['photographer', 'videographer', 'actor'], $this->response()['data']['creatorTypes']);
         foreach ([['unknown'], ['Instagram'], 'photographer', null, [1], ['type' => 'model']] as $invalid) {
             $update(['creatorTypes' => $invalid], 400);
             self::assertSame(['creatorTypes'], $this->response()['fields']);
             $this->client->request('GET', '/api/auth/me?locale=en');
-            self::assertSame(['photographer', 'videographer'], $this->response()['data']['profile']['creatorTypes']);
+            self::assertSame(['photographer', 'videographer', 'actor'], $this->response()['data']['profile']['creatorTypes']);
         }
         $this->client->request('GET', '/api/creators/types-creator?locale=en');
-        self::assertSame(['photographer', 'videographer'], $this->response()['data']['creatorTypes']);
+        self::assertSame(['photographer', 'videographer', 'actor'], $this->response()['data']['creatorTypes']);
         $update(['creatorTypes' => ['streaming', 'podcasts']]);
         self::assertSame(['streaming', 'podcasts'], $this->response()['data']['creatorTypes']);
         $update(['creatorTypes' => []]);
@@ -67,11 +67,11 @@ final class CreatorTypesTest extends WebTestCase
     {
         $em = self::getContainer()->get(EntityManagerInterface::class);
         foreach ([
-            ['alpha', ['photographer'], 'Travel', false],
+            ['alpha', ['photographer', 'actor'], 'Travel', false],
             ['beta', ['influencer', 'videographer'], 'Travel', false],
             ['gamma', ['model'], 'Beauty', false],
             ['legacy', [], 'Travel', false],
-            ['hidden', ['photographer'], 'Travel', true],
+            ['hidden', ['photographer', 'actor'], 'Travel', true],
         ] as [$name, $types, $category, $hidden]) {
             $creator = new Creator($name, $name, $category, 'Sarajevo', '', []);
             $creator->setCreatorTypes($types);
@@ -92,7 +92,7 @@ final class CreatorTypesTest extends WebTestCase
         $first = $this->response();
         self::assertSame(2, $first['meta']['total']);
         self::assertSame('alpha', $first['data'][0]['slug']);
-        self::assertSame(['photographer'], $first['data'][0]['creatorTypes']);
+        self::assertSame(['photographer', 'actor'], $first['data'][0]['creatorTypes']);
         self::assertTrue($first['meta']['hasMore']);
         $this->client->request('GET', '/api/creators?' . http_build_query($params + ['cursor' => $first['meta']['nextCursor']]));
         self::assertResponseIsSuccessful();
@@ -104,6 +104,10 @@ final class CreatorTypesTest extends WebTestCase
             $this->client->request('GET', '/api/creators?' . http_build_query(['creatorTypes' => $invalid]));
             self::assertResponseStatusCodeSame(400);
         }
+        $this->client->request('GET', '/api/creators?' . http_build_query(['locale' => 'en', 'creatorTypes' => '["actor"]', 'categories' => '["Travel"]']));
+        self::assertResponseIsSuccessful();
+        self::assertSame(1, $this->response()['meta']['total']);
+        self::assertSame('alpha', $this->response()['data'][0]['slug']);
         $this->client->request('GET', '/api/creators?locale=en&sort=name');
         self::assertSame(4, $this->response()['meta']['total']);
     }

@@ -1560,6 +1560,7 @@
       "photographer": "Fotograf",
       "videographer": "Videograf",
       "model": "Model",
+      "actor": "Glumac",
       "streaming": "Streaming",
       "podcasts": "Podcasti"
     }
@@ -2941,5 +2942,34 @@
     "locked": "Vrstu suradnje nije moguće promijeniti nakon prve prijave ili poziva.",
     "hireHint": "Potvrdi opseg posla i rok isporuke dogovorene u razgovoru. Kreator prihvaća dobrovoljni angažman bez novčane naknade.",
     "defaultHireMessage": "Potvrđujemo dogovorenu dobrovoljnu suradnju bez novčane naknade."
+  }
+,
+  "emailLogs": {
+    "open": "Pregled",
+    "columns": {
+      "recipient": "Primatelj",
+      "subject": "Predmet",
+      "mailStatus": "Status slanja",
+      "responseCode": "Odgovor poslužitelja"
+    },
+    "sender": "Pošiljatelj",
+    "preview": "Pregled e-pošte",
+    "text": "Tekst",
+    "attachments": "Privitci",
+    "emailId": "ID e-pošte",
+    "status": {
+      "accepted": "Prihvaćeno za slanje",
+      "failed": "Neuspjelo",
+      "queue_failed": "Pogreška u redu",
+      "skipped": "Preskočeno",
+      "not_sent": "Nije poslano"
+    },
+    "acceptedHint": "Poslužitelj je prihvatio poruku za slanje; ovo ne potvrđuje isporuku u pretinac primatelja.",
+    "previewHint": "Prikazan je spremljeni sadržaj. Sigurnosne poveznice su skrivene, a vanjski sadržaj i poveznice onemogućeni.",
+    "previewUnavailable": "Pregled nije dostupan: sadržaj je istekao, nije spremljen ili se ne može otvoriti.",
+    "reason": {
+      "security_token_no_longer_valid": "Sigurnosna poveznica više nije valjana ili je adresa već potvrđena.",
+      "reminder_no_longer_current": "Podsjetnik više nije potreban."
+    }
   }
 }
