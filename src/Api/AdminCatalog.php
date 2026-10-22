@@ -3,6 +3,7 @@
 namespace App\Api;
 
 use App\Entity\Campaign;
+use App\Entity\AccountMilestone;
 use App\Entity\Company;
 use App\Entity\Creator;
 use App\Entity\User;
@@ -35,23 +36,27 @@ final class AdminCatalog
             throw new \InvalidArgumentException('Invalid admin page.');
         }
         $columns = match ($kind) {
-            'creators' => ['displayName' => 'item.displayName', 'category' => 'item.category', 'city' => 'COALESCE(owner.city, item.city)'],
-            'companies' => ['name' => 'item.name', 'industry' => 'item.industry', 'verified' => 'item.verified'],
-            'campaigns' => ['title' => 'item.title', 'company.name' => 'company.name', 'status' => 'item.status'],
-            'registrations' => ['approved' => 'item.approved', 'name' => 'COALESCE(creator.displayName, company.name, item.email)', 'email' => 'item.email', 'accountType' => 'item.role', 'emailVerified' => 'item.emailVerified'],
+            'creators' => ['displayName' => 'item.displayName', 'category' => 'item.category', 'city' => 'COALESCE(owner.city, item.city)', 'createdAt' => 'item.createdAt'],
+            'companies' => ['name' => 'item.name', 'industry' => 'item.industry', 'verified' => 'item.verified', 'createdAt' => 'registration.occurredAt'],
+            'campaigns' => ['title' => 'item.title', 'company.name' => 'company.name', 'status' => 'item.status', 'createdAt' => 'item.publishedAt'],
+            'registrations' => ['approved' => 'item.approved', 'name' => 'COALESCE(creator.displayName, company.name, item.email)', 'email' => 'item.email', 'accountType' => 'item.role', 'emailVerified' => 'item.emailVerified', 'createdAt' => 'registration.occurredAt'],
             default => throw new \InvalidArgumentException('Unknown catalog.'),
         };
-        $sort = $request->query->getString('sort', array_key_first($columns));
-        $direction = strtoupper($request->query->getString('direction', 'asc'));
+        $sort = $request->query->getString('sort', 'createdAt');
+        $direction = strtoupper($request->query->getString('direction', $sort === 'createdAt' ? 'desc' : 'asc'));
         if (!isset($columns[$sort]) || !in_array($direction, ['ASC', 'DESC'], true)) {
             throw new \InvalidArgumentException('Invalid admin sort.');
+        }
+        if ($sort === 'createdAt' && in_array($kind, ['companies', 'registrations'], true)) {
+            $builder->leftJoin(AccountMilestone::class, 'registration', 'WITH', "registration.user = ".($kind === 'registrations' ? 'item' : 'owner')." AND registration.stage = 'registered'");
+            $builder->addSelect('CASE WHEN registration.occurredAt IS NULL THEN 1 ELSE 0 END AS HIDDEN creationTimeMissing');
         }
         $query = trim($request->query->getString('q'));
         if (mb_strlen($query) > 200) {
             throw new \InvalidArgumentException('Search is too long.');
         }
         if ($query !== '') {
-            $searchColumns = array_filter($columns, static fn (string $column): bool => !in_array($column, ['item.verified', 'item.approved', 'item.emailVerified'], true));
+            $searchColumns = array_diff_key($columns, array_flip(['verified', 'approved', 'emailVerified', 'createdAt']));
             $builder->andWhere(implode(' OR ', array_map(static fn (string $column): string => "LOWER(" . $column . ") LIKE :search ESCAPE '!'", $searchColumns)))
                 ->setParameter('search', '%' . str_replace(['!', '%', '_'], ['!!', '!%', '!_'], mb_strtolower($query)) . '%');
         }
@@ -65,8 +70,11 @@ final class AdminCatalog
         $total = (int) (clone $builder)->select('COUNT(item.id)')->getQuery()->getSingleScalarResult();
         $page = min($page, max(1, (int) ceil($total / $limit)));
         $sortDirection = $direction === 'ASC' ? \SortDirection::Ascending : \SortDirection::Descending;
-        $items = $builder->orderBy($columns[$sort], $sortDirection)->addOrderBy('item.id', $sortDirection)
-            ->setFirstResult(($page - 1) * $limit)->setMaxResults($limit)->getQuery()->getResult();
+        $builder->orderBy($columns[$sort], $sortDirection)->addOrderBy('item.id', $sortDirection);
+        if ($sort === 'createdAt' && in_array($kind, ['companies', 'registrations'], true)) {
+            $builder->orderBy('creationTimeMissing', \SortDirection::Ascending)->addOrderBy($columns[$sort], $sortDirection)->addOrderBy('item.id', $sortDirection);
+        }
+        $items = $builder->setFirstResult(($page - 1) * $limit)->setMaxResults($limit)->getQuery()->getResult();
 
         $categoryLabels = $kind === 'companies' ? MarketplaceCategoryLabels::forLocale($this->entityManager, $locale) : [];
 
@@ -74,7 +82,21 @@ final class AdminCatalog
         $ratings = $this->feedback->summaries($ids);
         $totals = $this->feedback->financialTotals($ids, $kind === 'creators');
         $rows = array_map(fn (object $item): array => $this->resource($item, $locale, $categoryLabels), $items);
+        $accountIds = $kind === 'registrations' ? array_map(static fn (User $user): ?int => $user->getId(), $items) : ($kind === 'companies' ? $ids : []);
+        $registeredAt = $accountIds === [] ? [] : $this->entityManager->getConnection()->fetchAllKeyValue(
+            "SELECT user_id, occurred_at FROM account_milestone WHERE stage = 'registered' AND user_id IN (?)",
+            [$accountIds], [\Doctrine\DBAL\ArrayParameterType::INTEGER],
+        );
         foreach ($items as $index => $item) {
+            if ($item instanceof Creator) {
+                $rows[$index]['createdAt'] = $item->getCreatedAt()->format(DATE_ATOM);
+            } elseif ($item instanceof Campaign) {
+                $rows[$index]['createdAt'] = $item->getPublishedAt()->format(DATE_ATOM);
+            } elseif ($item instanceof Company || $item instanceof User) {
+                $ownerId = $item instanceof User ? $item->getId() : $item->getOwner()?->getId();
+                $date = $registeredAt[$ownerId] ?? null;
+                $rows[$index]['createdAt'] = $date === null ? null : (new \DateTimeImmutable($date, new \DateTimeZone('UTC')))->format(DATE_ATOM);
+            }
             if ($item instanceof Creator || $item instanceof Company) {
                 $ownerId = $item->getOwner()?->getId();
                 $rows[$index]['rating'] = $ratings[$ownerId] ?? $this->feedback->summary(null);

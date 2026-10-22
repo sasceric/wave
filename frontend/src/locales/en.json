@@ -2841,6 +2841,9 @@
     "publicReviewsHint": "Experiences from both sides of a collaboration."
   },
   "adminProfiles": {
+    "createdAt": "Created",
+    "createdAtFormat": "{date} at {time}",
+    "createdAtUnknown": "Creation time was not recorded.",
     "filledData": "Saved profile data",
     "review": "Review submitted data",
     "reviewHint": "Saved profile details, including items that are not publicly displayed.",

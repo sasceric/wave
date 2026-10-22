@@ -71,6 +71,57 @@ final class AdminDashboardTest extends WebTestCase
         self::assertCount(25, $this->payload()['data']['creators']);
     }
 
+    public function testCreationTimesDefaultToNewestFirstAndRemainSortableAndSearchableInAllFourLists(): void
+    {
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $admin = new User('creation-admin@example.test', 'ROLE_COMPANY');
+        $admin->setPassword('unused');
+        $admin->setAdmin(true);
+        $em->persist($admin);
+        $owners = [];
+        foreach (['old' => '2026-10-22 12:13:00', 'new' => '2026-10-23 12:13:00'] as $key => $time) {
+            $em->persist(new Creator('timestamp-'.$key, 'Timestamp '.$key, 'Travel', 'Sarajevo', '', [], createdAt: new \DateTimeImmutable($time, new \DateTimeZone('UTC'))));
+            $company = new User('timestamp-company-'.$key.'@example.test', 'ROLE_COMPANY');
+            $company->setPassword('unused');
+            $company->setCompany(new Company('timestamp-company-'.$key, 'Timestamp '.$key, 'Travel'));
+            $em->persist(new Campaign('timestamp-campaign-'.$key, 'Timestamp '.$key, 'Summary', 'Description', 'Travel', ['Instagram'], ['Post'], 100, 200, 'Sarajevo', 1, new \DateTimeImmutable('2026-12-31'), new \DateTimeImmutable($time, new \DateTimeZone('UTC')), $company->getCompany()));
+            $pending = new User('timestamp-pending-'.$key.'@example.test', 'ROLE_CREATOR');
+            $pending->setPassword('unused');
+            $pending->setApproved(false);
+            $pending->setCreator(new Creator('timestamp-pending-'.$key, 'Timestamp '.$key, 'Travel', 'Sarajevo', '', []));
+            $em->persist($company);
+            $em->persist($pending);
+            $owners[$time] = [$company, $pending];
+        }
+        $em->persist(new Company('legacy-company', 'Legacy company', 'Travel'));
+        $em->flush();
+        foreach ($owners as $time => $users) {
+            foreach ($users as $user) {
+                $em->getConnection()->executeStatement("UPDATE account_milestone SET occurred_at = ? WHERE user_id = ? AND stage = 'registered'", [$time, $user->getId()]);
+            }
+        }
+        $this->client->loginUser($admin);
+        foreach (['creators', 'companies', 'registrations', 'campaigns'] as $kind) {
+            $this->client->request('GET', '/api/admin/catalog/'.$kind.'?q=Timestamp');
+            self::assertResponseIsSuccessful();
+            self::assertSame(['2026-10-23T12:13:00+00:00', '2026-10-22T12:13:00+00:00'], array_column($this->payload()['data'], 'createdAt'));
+            foreach (['asc', 'desc'] as $direction) {
+                $this->client->request('GET', '/api/admin/catalog/'.$kind.'?q=Timestamp&sort=createdAt&direction='.$direction);
+                self::assertResponseIsSuccessful();
+                $data = $this->payload()['data'];
+                self::assertCount(2, $data);
+                self::assertSame($direction === 'asc' ? ['2026-10-22T12:13:00+00:00', '2026-10-23T12:13:00+00:00'] : ['2026-10-23T12:13:00+00:00', '2026-10-22T12:13:00+00:00'], array_column($data, 'createdAt'));
+            }
+        }
+        $this->client->request('GET', '/api/admin/catalog/companies?q=Legacy');
+        self::assertResponseIsSuccessful();
+        self::assertNull($this->payload()['data'][0]['createdAt']);
+        $this->client->request('GET', '/api/admin/catalog/companies');
+        self::assertResponseIsSuccessful();
+        $data = $this->payload()['data'];
+        self::assertNull($data[array_key_last($data)]['createdAt']);
+    }
+
     public function testAdminCanCurateHomepageAndNonAdminCannotAccessDashboard(): void
     {
         $entityManager = static::getContainer()->get(EntityManagerInterface::class);

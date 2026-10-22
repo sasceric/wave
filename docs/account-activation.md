@@ -15,6 +15,15 @@ unmount; there is no polling timer or additional submission action.
 
 ### Verification notice and manual reminders
 
+Creator, company, campaign and approval admin lists include a sortable Created
+column, with newest-first sorting by default and unknown dates at the end.
+It shows full relative time for records less than 24 hours old, then the local
+date and 24-hour time (`22.10.2026 u 14:13` in Bosnian). Creator dates use their
+stored creation timestamp, campaigns use their publication timestamp, and
+company/approval dates use the recorded `registered`
+account milestone. Historic records without a recorded timestamp show a dash.
+No dates are inferred from IDs or replaced with deployment time.
+
 Signed-in accounts with `emailVerified=false` see a persistent, non-dismissible
 notice above the page content on every route. It shows their address, reminds
 them to check Other/Promotions/Spam, and offers the existing CSRF-protected resend

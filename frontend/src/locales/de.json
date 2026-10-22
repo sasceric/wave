@@ -2841,6 +2841,9 @@
     "publicReviewsHint": "Erfahrungen von beiden Seiten der Zusammenarbeit."
   },
   "adminProfiles": {
+    "createdAt": "Erstellt",
+    "createdAtFormat": "{date} um {time}",
+    "createdAtUnknown": "Der Erstellungszeitpunkt wurde nicht erfasst.",
     "filledData": "Ausgefüllte Profildaten",
     "review": "Profildaten prüfen",
     "reviewHint": "Gespeicherte Profildaten, einschließlich nicht öffentlich angezeigter Inhalte.",

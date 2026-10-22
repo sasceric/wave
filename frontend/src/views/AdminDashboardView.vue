@@ -20,6 +20,7 @@ import AdminDataTable from '../components/admin/AdminDataTable.vue'
 import AdminEmailTemplates from '../components/admin/AdminEmailTemplates.vue'
 import AdminRowActions from '../components/admin/AdminRowActions.vue'
 import AdminProfileIdentity from '../components/admin/AdminProfileIdentity.vue'
+import AdminCreatedAt from '../components/admin/AdminCreatedAt.vue'
 import AdminProfileCompletion from '../components/admin/AdminProfileCompletion.vue'
 import AdminProfileReview from '../components/admin/AdminProfileReview.vue'
 import AccountSidebar from '../components/account/AccountSidebar.vue'
@@ -47,6 +48,12 @@ const deleteRequest = ref(null)
 const bulkApprovalRequest = ref(null)
 const reminderRequest = ref(null)
 const sendingReminder = ref(false)
+const createdAtNow = ref(Date.now())
+let createdAtTimer
+function updateCreatedAtClock() {
+  createdAtNow.value = Date.now()
+  createdAtTimer = window.setTimeout(updateCreatedAtClock, 60_000 - Date.now() % 60_000)
+}
 const reminderLabel = kind => t(kind === 'verification' ? 'adminProfiles.verificationReminder' : 'adminProfiles.profileTip')
 const reminderConfirmation = computed(() => reminderRequest.value ? t('adminProfiles.reminderConfirm', {
   email: reminderRequest.value.email,
@@ -91,7 +98,7 @@ let listVersion = 0
 let dashboardVersion = 0
 let searchTimer
 let disposed = false
-const listOptions = ref({ page: 1, limit: 25, sort: '', direction: 'asc' })
+const listOptions = ref({ page: 1, limit: 25, sort: 'createdAt', direction: 'desc' })
 const candidates = reactive(Object.fromEntries(
   ['creators', 'companies', 'campaigns'].map((kind) => [kind, {
     rows: [], total: 0, page: 0, loading: false, error: false, q: '', version: 0, timer: null,
@@ -176,10 +183,12 @@ async function changeVisibility(row) {
 }
 
 const tableColumns = computed(() => {
+  const createdColumn = { key: 'createdAt', label: t('adminProfiles.createdAt'), sortable: true, defaultSort: true }
   const columns = {
     registrations: [
-      { key: 'approved', label: t('adminDashboard.approvalStatus'), sortable: true, defaultSort: true },
+      { key: 'approved', label: t('adminDashboard.approvalStatus'), sortable: true },
       { key: 'name', label: t('adminDashboard.name'), sortable: true },
+      createdColumn,
       { key: 'email', label: t('adminDashboard.email'), sortable: true },
       { key: 'accountType', label: t('adminDashboard.accountType'), sortable: true },
       { key: 'emailVerified', label: t('adminDashboard.emailVerification'), sortable: true },
@@ -188,6 +197,7 @@ const tableColumns = computed(() => {
     ],
     creators: [
       { key: 'displayName', label: t('adminDashboard.creator'), sortable: true },
+      createdColumn,
       { key: 'category', label: t('adminDashboard.category'), sortable: true },
       { key: 'completion', label: t('adminProfiles.filledData') },
       { key: 'publicVisible', label: t('adminProfiles.visibility') },
@@ -197,6 +207,7 @@ const tableColumns = computed(() => {
     ],
     companies: [
       { key: 'name', label: t('adminDashboard.company'), sortable: true },
+      createdColumn,
       { key: 'industry', label: t('adminDashboard.industry'), sortable: true },
       { key: 'completion', label: t('adminProfiles.filledData') },
       { key: 'publicVisible', label: t('adminProfiles.visibility') },
@@ -206,6 +217,7 @@ const tableColumns = computed(() => {
     ],
     campaigns: [
       { key: 'title', label: t('adminDashboard.campaign'), sortable: true },
+      createdColumn,
       { key: 'company.name', label: t('adminDashboard.company'), sortable: true },
       { key: 'status', label: t('adminDashboard.status'), sortable: true },
     ],
@@ -457,7 +469,7 @@ watch([locale, section], () => {
   listRows.value = []
   listTotal.value = 0
   listPage.value = 1
-  listOptions.value = { page: 1, limit: 25, sort: '', direction: 'asc' }
+  listOptions.value = { page: 1, limit: 25, sort: 'createdAt', direction: 'desc' }
   loadDashboard()
 })
 watch([query, statusFilter], () => {
@@ -467,10 +479,12 @@ watch([query, statusFilter], () => {
 })
 onBeforeUnmount(() => {
   disposed = true
+  window.clearTimeout(createdAtTimer)
   clearTimeout(searchTimer)
   Object.values(candidates).forEach((state) => clearTimeout(state.timer))
 })
 onMounted(loadDashboard)
+onMounted(updateCreatedAtClock)
 </script>
 
 <template>
@@ -598,6 +612,7 @@ onMounted(loadDashboard)
             :columns="tableColumns"
             :total="listTotal"
             :current-page="listPage"
+            initial-sort-direction="desc"
             :loading="listLoading"
             @change="loadList"
             :rows="currentRows"
@@ -631,6 +646,7 @@ onMounted(loadDashboard)
             </template>
             <template #cell-displayName="{ row }"><AdminProfileIdentity :row="row" /></template>
             <template #cell-name="{ row }"><AdminProfileIdentity :row="row" /></template>
+            <template #cell-createdAt="{ value }"><AdminCreatedAt :value="value" :now="createdAtNow" /></template>
             <template #cell-completion="{ row }"><AdminProfileCompletion :row="row" @review="reviewProfile(row)" /></template>
             <template #cell-publicVisible="{ row }"><span class="admin-profile-visibility" :class="{ 'is-visible': row.publicVisible }">{{ t(row.publicVisible ? 'adminProfiles.visible' : row.accountId && !row.approved ? 'adminDashboard.pending' : 'adminProfiles.hidden') }}</span></template>
             <template #cell-rating="{ value }"><RatingSummary :rating="value" /></template>

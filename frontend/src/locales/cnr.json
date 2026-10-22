@@ -2842,6 +2842,9 @@
     "publicReviewsHint": "Iskustva s obje strane saradnje."
   },
   "adminProfiles": {
+    "createdAt": "Kreirano",
+    "createdAtFormat": "{date} u {time}",
+    "createdAtUnknown": "Vrijeme kreiranja nije zabilježeno.",
     "filledData": "Popunjeni podaci",
     "review": "Pregledaj podatke",
     "reviewHint": "Sačuvani podaci profila, uključujući stavke koje nijesu javno prikazane.",

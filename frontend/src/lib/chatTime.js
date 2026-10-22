@@ -36,12 +36,12 @@ export function areChatMessagesGrouped(previous, message) {
   return sameSender && elapsed >= 0 && elapsed <= 5 * 60_000
 }
 
-export function createChatTimeFormatter(locale, t) {
+export function createChatTimeFormatter(locale, t, { relativeStyle = 'short' } = {}) {
   // Intl does not support bs/cnr consistently; Croatian shares their relative-time forms.
   const intlLocale = { bs: 'hr', cnr: 'hr', sr: 'sr-Latn' }[locale] || locale
   const clock = new Intl.DateTimeFormat(intlLocale, { hour: '2-digit', minute: '2-digit', hourCycle: 'h23' })
   const weekday = new Intl.DateTimeFormat(intlLocale, { weekday: 'long' })
-  const relative = new Intl.RelativeTimeFormat(intlLocale, { numeric: 'always', style: 'short' })
+  const relative = new Intl.RelativeTimeFormat(intlLocale, { numeric: 'always', style: relativeStyle })
   const formatClock = (value) => {
     const date = parseDate(value)
     return date ? clock.format(date) : ''
@@ -51,6 +51,7 @@ export function createChatTimeFormatter(locale, t) {
     return date ? `${String(date.getDate()).padStart(2, '0')}.${String(date.getMonth() + 1).padStart(2, '0')}.${date.getFullYear()}` : ''
   }
   return {
+    date: formatDate,
     clock: formatClock,
     full: (value) => [formatDate(value), formatClock(value)].filter(Boolean).join(' '),
     dayLabel(value, now) {
