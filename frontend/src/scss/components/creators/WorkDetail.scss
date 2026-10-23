@@ -39,7 +39,7 @@
   &__results > div { display: grid; gap: 3px; min-width: 0; padding: 14px; border-radius: 14px; background: #f6f5f0; overflow-wrap: anywhere; }
   &__results strong { color: var(--forest); font-size: 24px; font-weight: 650; line-height: 1.2; }
   &__results span, &__results small { color: var(--muted-text); font-size: 12px; }
-  &__note { margin: 10px 0 0; color: var(--muted-text); font-size: 11px; }
+  &__note { margin: 10px 0 0; color: var(--muted-text); font-size: 12px; }
 
-  @media (max-width: 760px) { gap: 16px; &__meta { font-size: 11px; gap: 8px 12px; } }
+  @media (max-width: 760px) { gap: 16px; &__meta { font-size: 12px; gap: 8px 12px; } }
 }

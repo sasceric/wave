@@ -48,10 +48,10 @@ onBeforeUnmount(() => { disposed = true; window.removeEventListener('resize', up
   <div v-if="modelValue" class="directory-filter-panel__backdrop" aria-hidden="true" @click="closeFilters"></div>
   <aside :id="id" ref="filterPanel" class="directory-filter-panel" :class="{ 'is-open': modelValue }" :role="mobile ? 'dialog' : undefined" :aria-modal="mobile && modelValue ? true : undefined" :aria-hidden="mobile && !modelValue ? true : undefined" :aria-labelledby="`${id}-title`" tabindex="-1" @keydown="trapFocus">
     <div class="directory-filter-panel__handle" aria-hidden="true"></div>
-    <button class="directory-filter-panel__close" type="button" :aria-label="t('app.closeMenu')" @click="closeFilters"><X :size="24" aria-hidden="true" /></button>
     <div class="directory-filter-panel__head">
       <h2 :id="`${id}-title`">{{ title }}</h2>
       <button class="directory-filter-panel__clear" type="button" @click="emit('clear')">{{ clearLabel }}</button>
+      <button class="directory-filter-panel__close" type="button" :aria-label="t('app.closeMenu')" @click="closeFilters"><X :size="20" aria-hidden="true" /></button>
     </div>
     <slot />
     <div class="directory-filter-panel__mobile"><slot name="mobile" /></div>

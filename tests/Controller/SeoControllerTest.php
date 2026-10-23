@@ -399,8 +399,7 @@ final class SeoControllerTest extends WebTestCase
         self::assertResponseIsSuccessful();
         $html = $this->client->getResponse()->getContent();
         self::assertStringContainsString('<html lang="en">', $html);
-        self::assertStringContainsString('imagesrcset="/images/banner-girl-360.webp 360w', $html);
-        self::assertStringContainsString('fetchpriority="high"', $html);
+        self::assertStringNotContainsString('rel="preload" as="image"', $html);
         self::assertStringContainsString('rel="canonical" href="http://127.0.0.1:8000/en/"', $html);
         self::assertStringContainsString('property="og:image" content="http://127.0.0.1:8000/images/share.webp"', $html);
         self::assertStringContainsString('hreflang="x-default" href="http://127.0.0.1:8000/"', $html);

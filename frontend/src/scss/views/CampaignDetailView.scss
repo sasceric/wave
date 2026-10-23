@@ -1,4 +1,5 @@
 @use '../breakpoints';
+@use '../glass';
 
 .brief-hero {
   position: relative;
@@ -127,7 +128,7 @@
     display: block;
     margin-top: 3px;
     color: #76857d;
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 400;
   }
 
@@ -175,13 +176,21 @@
   }
 }
 
-.brief-application-card,
 .brief-aside,
 .brief-company-card {
-  border: 1px solid rgba(218, 223, 214, .94);
-  border-radius: 13px;
-  background: rgba(255, 254, 250, .96);
-  box-shadow: 0 12px 35px rgba(31, 51, 43, .07);
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-card);
+  background: var(--card);
+}
+
+// The application card floats over the hero image, so it uses the glass surface.
+.brief-application-card {
+  @include glass.surface;
+
+  & {
+    border-radius: 24px;
+    background: var(--glass-fill-strong);
+  }
 }
 
 .brief-application-card {
@@ -212,7 +221,7 @@
   align-items: center;
   gap: 6px;
   color: #557d62;
-  font-size: 11px;
+  font-size: 12px;
   white-space: nowrap;
 
   i {
@@ -254,7 +263,7 @@
     min-height: 76px;
     margin-bottom: 10px;
     padding: 10px 12px;
-    border: 1px solid #dfe4dc;
+    border: 1px solid var(--hairline);
     border-radius: 8px;
     color: var(--ink);
     background: #fff;
@@ -476,7 +485,7 @@
   &__heading p {
     margin: 4px 0 0;
     color: #839087;
-    font-size: 11px;
+    font-size: 12px;
   }
 
   &__link {
@@ -488,7 +497,7 @@
     border: 1px solid #c9d4ca;
     border-radius: 7px;
     color: var(--forest);
-    font-size: 11px;
+    font-size: 12px;
     text-decoration: none;
 
     &:hover {
@@ -611,7 +620,7 @@
 
 @include breakpoints.down(520px) {
   .brief-hero__copy > .eyebrow {
-    font-size: 9px;
+    font-size: 12px;
   }
 
   .brief-application-card,
@@ -623,7 +632,7 @@
   .brief-hero-fact {
     grid-template-columns: 20px minmax(0, 1fr) auto;
     gap: 8px;
-    font-size: 11px;
+    font-size: 12px;
 
     strong {
       font-size: 12px;
@@ -645,10 +654,10 @@
 
   .brief-fact {
     grid-template-columns: 19px minmax(76px, .8fr) minmax(0, 1fr);
-    font-size: 11px;
+    font-size: 12px;
 
     strong {
-      font-size: 11px;
+      font-size: 12px;
     }
   }
 }

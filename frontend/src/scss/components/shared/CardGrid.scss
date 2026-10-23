@@ -1,29 +1,40 @@
 @use '../../breakpoints';
 
-.creator-grid {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 14px;
-}
-
+.creator-grid,
 .campaign-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 18px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 28px 20px;
 }
 
 .account-bookmarks-grid {
   grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
-.campaign-grid {
-  &--home {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 14px;
+// Homepage rows: horizontal rails with four cards visible on desktop and a peek on phones.
+.creator-grid--home,
+.campaign-grid--home {
+  grid-template-columns: none;
+  grid-auto-flow: column;
+  grid-auto-columns: calc((100% - 3 * 20px) / 4);
+  gap: 20px;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
+  scrollbar-width: none;
+  touch-action: pan-x pan-y;
+  -webkit-overflow-scrolling: touch;
+  padding: 4px;
+  margin: -4px;
+
+  &::-webkit-scrollbar {
+    display: none;
   }
 
-  &--directory {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+  > * {
+    min-width: 0;
+    scroll-snap-align: start;
   }
 }
 
@@ -31,16 +42,13 @@
   &__grid {
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 16px;
+    gap: 20px;
   }
 }
 
-@include breakpoints.down(520px) {
-  .company-directory {
-    &__grid {
-      grid-template-columns: 1fr;
-    }
-  }
+.creator-grid--directory > .creator-card,
+.campaign-grid--directory > .campaign-card {
+  min-width: 0;
 }
 
 @include breakpoints.down(1000px) {
@@ -48,8 +56,10 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .creator-grid {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+  .creator-grid--home,
+  .campaign-grid--home {
+    grid-auto-columns: calc((100% - 2 * 16px) / 3);
+    gap: 16px;
   }
 
   .company-directory {
@@ -58,10 +68,8 @@
     }
   }
 
-  .campaign-grid {
-    &--directory {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
+  .campaign-grid--directory {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
@@ -72,150 +80,20 @@
     }
   }
 
-  .creator-grid {
-    grid-template-columns: none;
-    grid-auto-flow: column;
-    grid-auto-columns: 84%;
-    gap: 12px;
-    overflow-x: auto;
-    direction: ltr;
-    touch-action: pan-x pan-y;
-    scroll-snap-type: x proximity;
-    scroll-behavior: smooth;
-    scrollbar-width: none;
-    -webkit-overflow-scrolling: touch;
-
-    &::-webkit-scrollbar {
-      display: none;
-    }
-
-    > .creator-card {
-      scroll-snap-align: start;
-    }
-  }
-
-  .campaign-grid {
-    &,
-    &--directory {
-      grid-template-columns: 1fr;
-    }
-
-    &--home {
-      grid-template-columns: none;
-      grid-auto-flow: column;
-      grid-auto-columns: 84%;
-      gap: 13px;
-      overflow-x: auto;
-      direction: ltr;
-      touch-action: pan-x pan-y;
-      scroll-snap-type: x proximity;
-      scroll-behavior: smooth;
-      padding-bottom: 8px;
-      scrollbar-width: none;
-      -webkit-overflow-scrolling: touch;
-    }
-
-    &--home::-webkit-scrollbar {
-      display: none;
-    }
-
-    &--home > .campaign-card {
-      scroll-snap-align: start;
-    }
-  }
-}
-
-@include breakpoints.down(420px) {
-  .creator-grid {
-    grid-auto-columns: 88%;
-    gap: 10px;
-  }
-}
-
-@include breakpoints.down(420px) {
-  .campaign-grid {
-    &--home {
-      grid-auto-columns: 88%;
-      gap: 10px;
-    }
-  }
-}
-
-.creator-grid--directory,
-.campaign-grid--directory {
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  grid-auto-flow: row;
-  grid-auto-columns: auto;
-  overflow: visible;
-  scroll-snap-type: none;
-}
-
-.creator-grid {
-  &--directory > .creator-card {
-    min-width: 0;
-    scroll-snap-align: none;
-  }
-}
-
-.campaign-grid {
-  &--directory > .campaign-card {
-    min-width: 0;
-  }
-}
-
-@include breakpoints.down(760px) {
   .creator-grid--directory,
   .campaign-grid--directory {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 22px 12px;
+  }
+
+  .creator-grid--home,
+  .campaign-grid--home {
+    grid-auto-columns: 44%;
     gap: 12px;
-  }
-
-  .creator-grid {
-    &--directory .creator-card__heading {
-      align-items: flex-start;
-      flex-direction: column;
-      gap: 3px;
-    }
-
-    &--directory .creator-card__details {
-      right: 9px;
-      left: 9px;
-    }
-
-    &--directory .creator-card__heading h3 {
-      font-size: 13px;
-    }
-
-    &--directory .creator-card__price {
-      font-size: 11px;
-    }
-  }
-
-  .campaign-grid {
-    &--directory .campaign-card__panel {
-      padding: 10px 8px;
-      margin-right: 5px;
-      margin-left: 5px;
-    }
-
-    &--directory .campaign-card h3 {
-      font-size: 14px;
-      overflow-wrap: anywhere;
-    }
-
-    &--directory .campaign-card__company {
-      font-size: 11px;
-      overflow-wrap: anywhere;
-    }
-
-    &--directory .campaign-card__details {
-      gap: 7px;
-    }
-
-    &--directory .campaign-card__details strong {
-      font-size: 12px;
-    }
-
+    // Let the rail run to the screen edge while the first card lines up with the page gutter.
+    padding: 4px var(--rail-bleed, 4px);
+    margin: -4px calc(-1 * var(--rail-bleed, 4px));
+    scroll-padding-inline: var(--rail-bleed, 4px);
   }
 }
 

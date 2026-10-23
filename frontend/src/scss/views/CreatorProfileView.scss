@@ -72,7 +72,7 @@
   align-self: start;
   margin-top: 0;
   padding: 22px;
-  border: 1px solid #dfe4dc;
+  border: 1px solid var(--hairline);
   border-radius: 7px;
   background: rgba(238, 241, 233, .94);
 
@@ -184,13 +184,13 @@
 .profile-section-heading {
   > span {
     color: #829087;
-    font-size: 10px;
+    font-size: 12px;
   }
 }
 
 .profile-stat-pills {
   display: flex; flex-wrap: wrap; gap: 8px; margin: 14px 0 0;
-  span { display: inline-flex; align-items: center; gap: 7px; padding: 8px 13px; border: 1px solid #e5e9e0; border-radius: 24px; color: #61776b; background: #fffefa; font-size: 12px; }
+  span { display: inline-flex; align-items: center; gap: 7px; padding: 8px 13px; border: 1px solid #e5e9e0; border-radius: 24px; color: #61776b; background: var(--card); font-size: 12px; }
   strong { color: var(--forest); font-size: 13px; }
   svg { flex: 0 0 auto; color: var(--forest); }
 }
@@ -277,7 +277,7 @@
   &__packages > p {
     margin: 0 0 4px;
     color: #718078;
-    font-size: 11px;
+    font-size: 12px;
     line-height: 1.55;
   }
 }
@@ -410,7 +410,7 @@
 
   &__login p {
     color: #718078;
-    font-size: 11px;
+    font-size: 12px;
   }
 }
 
@@ -418,7 +418,7 @@
   &__note {
     margin: 13px 0 0;
     color: #839087;
-    font-size: 9px;
+    font-size: 12px;
     line-height: 1.6;
   }
 }
@@ -441,7 +441,7 @@
   > p {
     margin: 0;
     color: #718078;
-    font-size: 10px;
+    font-size: 12px;
     line-height: 1.6;
   }
 
@@ -464,7 +464,7 @@
     &__backdrop span:nth-child(3) { right: -310px; top: 10px; opacity: .12; }
   }
   .profile-tagline { font-size: 17px; }
-  .profile-heading .eyebrow { font-size: 9px; }
+  .profile-heading .eyebrow { font-size: 12px; }
   .profile-sidebar-details { padding-top: 22px; }
   .profile-sidebar { display: block; }
   .profile-faqs {
@@ -541,7 +541,7 @@
 
     span {
       padding: 7px 10px;
-      font-size: 11px;
+      font-size: 12px;
     }
   }
 
@@ -651,15 +651,15 @@
     }
 
     &__description {
-      font-size: 11px;
+      font-size: 12px;
     }
 
     &__description--full {
-      font-size: 11px;
+      font-size: 12px;
     }
 
     &__more {
-      font-size: 10px;
+      font-size: 12px;
     }
   }
 
@@ -676,7 +676,7 @@
   .profile-heading h1 { font-size:36px; overflow-wrap:anywhere; }
   .profile-heading .eyebrow { margin:0 0 6px; font-size:11px; }
   .profile-heading__meta { display:flex; flex-wrap:wrap; gap:8px 14px; margin-top:10px; color:var(--forest); font-size:12px; >span { display:inline-flex; align-items:center; gap:5px; } }
-  .profile-heading__actions { display:grid; gap:8px; min-width:190px; .button { width:100%; min-height:40px; margin:0; padding:10px 14px; gap:8px; font-size:12px; border-radius:9px; white-space:normal; } }
+  .profile-heading__actions { display:grid; gap:8px; min-width:190px; .button { width:100%; min-height:40px; margin:0; padding:10px 14px; gap:8px; font-size: 14px; border-radius: var(--radius-pill); white-space:normal; } }
   .profile-heading__availability {
     display:inline-flex; align-items:center; justify-content:center; justify-self:center; gap:8px; max-width:100%; min-height:32px; padding:7px 12px; border:1px solid #c7d2c7; border-radius:30px; background:var(--sage); color:var(--forest); text-align:center; font-size:12px; font-weight:600; line-height:1.5;
     &-dot { flex:0 0 7px; width:7px; height:7px; border-radius:50%; background:var(--forest); }

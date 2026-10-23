@@ -1,21 +1,26 @@
+// Tabs read as an iOS segmented control; in-page section links as a quiet pill row.
 .profile-tabs {
-  display: flex; flex-wrap: wrap; gap: 6px; min-width: 0; max-width: 100%; margin-bottom: 18px; padding: 0; border: 0; border-radius: 0; background: transparent;
-  button { display: inline-flex; align-items: center; gap: 6px; flex: 0 0 auto; min-height: 36px; padding: 7px 11px; border: 1px solid #dce2d9; border-radius: 8px; color: var(--muted); background: #fffefa; font: inherit; font-size: 12px; font-weight: 500; white-space: nowrap; cursor: pointer;
-    &:hover { background: var(--sage); color: var(--forest); }
-    &[aria-selected='true'] { border-color: var(--forest); color: #fffefa; background: var(--forest); }
-    span { min-width: 18px; padding: 1px 4px; border-radius: 20px; font-size: 10px; line-height: 1.5; background: #173d360a; }
-    &[aria-selected='true'] span { background: #ffffff1a; }
+  display: inline-flex; flex-wrap: wrap; gap: 2px; min-width: 0; max-width: 100%; margin-bottom: 18px; padding: 3px; border: 0; border-radius: var(--radius-pill); background: var(--surface);
+  button { display: inline-flex; align-items: center; gap: 6px; flex: 0 0 auto; min-height: 34px; padding: 0 14px; border: 0; border-radius: var(--radius-pill); color: var(--muted-text); background: transparent; font: inherit; font-size: 14px; font-weight: 500; white-space: nowrap; cursor: pointer; transition: background .2s var(--ease-standard), color .2s var(--ease-standard);
+    &:hover { color: var(--ink); }
+    &[aria-selected='true'] { color: var(--ink); background: var(--card); box-shadow: 0 1px 3px rgba(23, 61, 54, .12), 0 1px 1px rgba(23, 61, 54, .04); font-weight: 600; }
+    span { min-width: 20px; padding: 1px 6px; border-radius: 20px; color: var(--muted-text); font-size: 12px; line-height: 1.5; background: rgba(31, 42, 40, .06); text-align: center; }
   }
 }
 .profile-section-nav {
-  grid-column: 1 / -1; display: flex; gap: 26px; min-width: 0; max-width: 100%; border-bottom: 1px solid #dce2d9; overflow-x: auto; overscroll-behavior-x: contain; -webkit-overflow-scrolling: touch; scrollbar-width: thin; scrollbar-color: #bdcac1 transparent;
-  a { flex-shrink: 0; padding: 10px 0 11px; border-bottom: 2px solid transparent; color: var(--muted); font-size: 12px; text-decoration: none;
-    &[aria-current='location'] { border-bottom-color: var(--forest); color: var(--forest); }
-    span { margin-left: 6px; }
+  grid-column: 1 / -1; display: flex; gap: 4px; min-width: 0; max-width: 100%; padding-bottom: 8px; border-bottom: 1px solid var(--hairline); overflow-x: auto; overscroll-behavior-x: contain; -webkit-overflow-scrolling: touch; scrollbar-width: none;
+  &::-webkit-scrollbar { display: none; }
+  a { flex-shrink: 0; display: inline-flex; align-items: center; min-height: 36px; padding: 0 14px; border-radius: var(--radius-pill); color: var(--muted-text); font-size: 14px; font-weight: 500; text-decoration: none; transition: background .2s ease, color .2s ease;
+    &:hover { color: var(--ink); background: rgba(31, 42, 40, .05); }
+    &[aria-current='location'] { color: var(--forest); background: rgba(23, 61, 54, .09); font-weight: 600; }
+    span { margin-left: 6px; color: var(--muted-text); font-size: 12px; }
   }
 }
-.profile-tabs button:focus-visible, .profile-section-nav a:focus-visible { outline: 2px solid var(--forest); outline-offset: -2px; }
+.profile-tabs button:focus-visible, .profile-section-nav a:focus-visible { outline: 2px solid var(--forest); outline-offset: 1px; }
 @media (max-width: 760px) {
-  .profile-tabs { flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: thin; overscroll-behavior-x: contain; button { min-height: 44px; } }
-  .profile-section-nav { gap: 22px; a { min-height: 44px; display: flex; align-items: center; } }
+  .profile-tabs { display: flex; flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; overscroll-behavior-x: contain; button { min-height: 38px; } }
+  .profile-section-nav { a { min-height: 40px; } }
+}
+@media (prefers-reduced-motion: reduce) {
+  .profile-tabs button, .profile-section-nav a { transition: none; }
 }

@@ -149,7 +149,7 @@
     gap: 20px;
     margin-bottom: 16px;
     padding: 24px;
-    border: 1px solid #e2e6df;
+    border: 1px solid var(--hairline);
     border-radius: 18px;
     background: rgba(255,255,255,.65);
   }
@@ -189,7 +189,7 @@
 
   > .profile-tab-panel:not([role="tabpanel"]) {
     padding: 24px;
-    border: 1px solid #e2e6df;
+    border: 1px solid var(--hairline);
     border-radius: 17px;
     background: rgba(255,255,255,.65);
   }
@@ -283,7 +283,7 @@
     display: block;
     margin-top: 5px;
     color: #87928a;
-    font-size: 10px;
+    font-size: 12px;
     font-weight: 400;
     line-height: 1.5;
   }
@@ -301,7 +301,7 @@
     color: var(--forest);
     background: #f0f5ef;
     font: inherit;
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 600;
     cursor: pointer;
     transition: border-color .18s ease, background .18s ease, transform .18s ease;
@@ -330,7 +330,7 @@
     color: #986255;
     background: #fff9f6;
     font: inherit;
-    font-size: 10px;
+    font-size: 12px;
     font-weight: 600;
     cursor: pointer;
   }
@@ -364,8 +364,8 @@
   margin: 12px 0 0;
   padding: 18px;
   border: 1px solid #e5e9e1;
-  border-radius: 10px;
-  background: #fffefa;
+  border-radius: var(--radius-card);
+  background: var(--card);
 }
 
 .portfolio-editor {
@@ -459,9 +459,9 @@
   gap: 9px;
   margin-top: 18px;
   padding: 18px;
-  border: 1px solid #e2e6df;
+  border: 1px solid var(--hairline);
   border-radius: 10px;
-  background: #fffefa;
+  background: var(--card);
 
   &__top {
     grid-column: 1 / -1;
@@ -486,9 +486,9 @@
 .dashboard-card {
   margin-top: 13px;
   padding: 15px;
-  border: 1px solid #e4e7e0;
+  border: 1px solid var(--hairline);
   border-radius: 3px;
-  background: #fffefa;
+  background: var(--card);
 
   &__heading > a {
     color: var(--forest);
@@ -505,7 +505,7 @@
 .dashboard-card > p,
 .offer-summary > p {
   color: #77847c;
-  font-size: 11px;
+  font-size: 12px;
   line-height: 1.7;
 }
 
@@ -513,7 +513,7 @@
   &__subheading {
     margin: 8px 0 0;
     color: #859087;
-    font-size: 10px;
+    font-size: 12px;
   }
 }
 
@@ -521,7 +521,7 @@
   margin-top: 12px;
   padding: 12px;
   background: #f2f4ed;
-  font-size: 11px;
+  font-size: 12px;
 
   > p {
     margin-bottom: 0;
@@ -531,9 +531,9 @@
 .application-list {
   display: grid;
   overflow: hidden;
-  border: 1px solid #e4e8e1;
+  border: 1px solid var(--hairline);
   border-radius: 6px;
-  background: #fffefa;
+  background: var(--card);
 }
 
 .application-row {
@@ -579,7 +579,7 @@
     gap: 5px 12px;
     margin-top: 3px;
     color: #859087;
-    font-size: 10px;
+    font-size: 12px;
   }
 
   &__message {
@@ -587,7 +587,7 @@
     overflow: hidden;
     margin: 7px 0 0;
     color: #77847c;
-    font-size: 11px;
+    font-size: 12px;
     line-height: 1.5;
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 2;
@@ -600,7 +600,7 @@
     gap: 4px 10px;
     margin-top: 7px;
     color: #77847c;
-    font-size: 10px;
+    font-size: 12px;
   }
 
   &__offer strong {
@@ -621,7 +621,7 @@
     gap: 7px;
     min-height: 34px;
     padding: 7px 10px;
-    font-size: 10px;
+    font-size: 12px;
     white-space: nowrap;
   }
 }
@@ -700,7 +700,7 @@
     justify-content: flex-end;
     margin-top: 8px;
     padding-top: 20px;
-    border-top: 1px solid #e2e6df;
+    border-top: 1px solid var(--hairline);
   }
 }
 
@@ -738,7 +738,7 @@
     max-width: 520px;
     margin-top: 18px;
     padding-top: 16px;
-    border-top: 1px solid #e6e9e2;
+    border-top: 1px solid var(--hairline);
   }
 }
 
@@ -785,8 +785,8 @@
     align-items: center;
     gap: 13px;
     padding: 14px 0;
-    border-top: 1px solid #e5e9e2;
-    border-bottom: 1px solid #e5e9e2;
+    border-top: 1px solid var(--hairline);
+    border-bottom: 1px solid var(--hairline);
   }
 
   &__profile > img {
@@ -800,7 +800,7 @@
     display: grid;
     gap: 5px;
     color: #52665b;
-    font-size: 11px;
+    font-size: 12px;
   }
 
   &__profile > div span {
@@ -823,13 +823,13 @@
 
   &__message strong {
     color: var(--forest);
-    font-size: 10px;
+    font-size: 12px;
   }
 
   &__message p {
     margin: 7px 0 0;
     color: #64746b;
-    font-size: 11px;
+    font-size: 12px;
     line-height: 1.7;
     white-space: pre-line;
   }
@@ -873,7 +873,7 @@
   margin: 13px 0;
   padding: 15px;
   border: 1px solid #e5e8e1;
-  background: #fffefa;
+  background: var(--card);
 }
 
 .inquiry-card {
@@ -890,7 +890,7 @@
   min-height: 34px;
   margin-top: 10px;
   padding: 7px 10px;
-  font-size: 10px;
+  font-size: 12px;
 }
 
 @include breakpoints.down(760px) {
@@ -1035,7 +1035,7 @@
       display: inline-flex;
       max-width: 58%;
       padding: 9px 12px;
-      font-size: 11px;
+      font-size: 12px;
 
       svg:last-child {
         display: none;
@@ -1060,7 +1060,7 @@
     }
 
     &__header .eyebrow {
-      font-size: 11px;
+      font-size: 12px;
       letter-spacing: .15em;
     }
 
@@ -1154,7 +1154,7 @@
 
 .account-bookmarks {
   padding: 24px;
-  border: 1px solid #e2e6df;
+  border: 1px solid var(--hairline);
   border-radius: 17px;
   background: rgba(255, 255, 255, .65);
 
@@ -1175,15 +1175,15 @@
 
 // Shared compact controls from the approved account prototype.
 .account-page .profile-form {
-  .button { min-height: 36px; gap: 8px; padding: 8px 12px; border-radius: 8px; font-size: 12px; box-shadow: none; &:hover { transform: none; } }
+  .button { min-height: 36px; gap: 8px; padding: 8px 12px; border-radius: var(--radius-pill); font-size: 14px; box-shadow: none; &:hover { transform: none; } }
   .button--dark { background: var(--forest); border-color: var(--forest); color: #fffefa; }
-  .button--outline { border-color: #bfcbbf; background: #fffefa; color: var(--forest); }
-  .profile-editor__add { background: #fffefa; border-color: #bfcbbf; }
+  .button--outline { border-color: #bfcbbf; background: var(--card); color: var(--forest); }
+  .profile-editor__add { background: var(--card); border-color: #bfcbbf; }
 
   .profile-edit-layout .form-grid { gap: 14px 16px; }
   .profile-edit-basics { margin-bottom: 14px; }
   .profile-edit-basics > :last-child { grid-column: auto; }
-  .profile-edit-layout .account-profile-card { background: #fffefa; border-radius: 13px; }
+  .profile-edit-layout .account-profile-card { background: var(--card); border-radius: 13px; }
   .profile-edit-layout .account-profile-card__heading h3 { font-size: 14px; gap: 9px; }
   .profile-edit-layout .account-profile-card__heading svg { width: 18px; height: 18px; }
   @media (max-width: 760px) {

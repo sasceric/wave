@@ -4,7 +4,7 @@ import RatingSummary from '../reviews/RatingSummary.vue'
 import '../../scss/components/creators/CreatorCard.scss'
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { Camera, CirclePlay, Music2, UsersRound } from '@lucide/vue'
+import { Camera, CirclePlay, MapPin, Music2, UsersRound } from '@lucide/vue'
 import RouterLink from '../shared/LocalizedLink.vue'
 import { formatFollowers, formatMoney } from '../../lib/api'
 import CardImage from '../shared/CardImage.vue'
@@ -58,7 +58,6 @@ const startingPrice = computed(() => {
         :src="creator.avatarUrl || CREATOR_PLACEHOLDER"
         :alt="creator.displayName"
       />
-      <div class="creator-card__shade"></div>
       <span v-if="creator.featured" class="creator-card__featured">{{ t('campaignCard.featured') }}</span>
       <span
         v-if="primarySocial"
@@ -68,15 +67,16 @@ const startingPrice = computed(() => {
         <component :is="socialIcon" :size="14" stroke-width="2" aria-hidden="true" />
         {{ formatFollowers(primarySocial.followers) }}
       </span>
-      <div class="creator-card__details">
-        <div class="creator-card__heading">
-          <h3>{{ creator.displayName }}</h3>
-          <strong v-if="startingPrice" class="creator-card__price">{{ startingPrice }}</strong>
-        </div>
-      <PresentationDemoBadge v-if="creator.isPresentationDemo" compact />
-        <RatingSummary :rating="creator.rating" compact />
-        <p class="creator-card__categories">{{ categories.join(', ') }}</p>
+    </div>
+    <div class="creator-card__details">
+      <div class="creator-card__heading">
+        <h3>{{ creator.displayName }}</h3>
+        <strong v-if="startingPrice" class="creator-card__price">{{ startingPrice }}</strong>
       </div>
+      <p v-if="creator.city" class="creator-card__place"><MapPin :size="13" aria-hidden="true" /><span>{{ creator.city }}</span></p>
+      <PresentationDemoBadge v-if="creator.isPresentationDemo" compact />
+      <RatingSummary v-if="creator.rating?.reviewCount" class="creator-card__rating" :rating="creator.rating" compact />
+      <p class="creator-card__categories">{{ categories.join(', ') }}</p>
     </div>
   </RouterLink>
 </template>

@@ -251,7 +251,9 @@ final class SeoMetadataProvider
             'canonical' => $canonicalUrl,
             'alternates' => $alternates,
             'image' => $image,
-            'preloadImage' => $name === 'home' ? '/images/banner-girl.webp' : null,
+            // The homepage hero is text and search only; it has no image to preload.
+            'preloadImage' => null,
+            'homepageStyles' => $name === 'home',
             'noindex' => !$indexable,
             'robots' => $searchResults ? 'noindex, follow' : ($indexable ? 'index, follow' : 'noindex, nofollow'),
             'contentHtml' => $contentHtml,
@@ -406,6 +408,7 @@ final class SeoMetadataProvider
             'alternates' => [],
             'image' => null,
             'preloadImage' => null,
+            'homepageStyles' => false,
             'noindex' => true,
             'structuredData' => [],
         ];

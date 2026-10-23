@@ -2,13 +2,8 @@
   pointer-events: none;
   box-shadow: none;
 
-  &--creator {
-    background: #dce3da;
-  }
-
   &--creator .creator-card__details {
-    display: grid;
-    gap: 10px;
+    gap: 0;
   }
 }
 
@@ -43,10 +38,6 @@
 }
 
 .directory-skeleton {
-  &--creator .skeleton-line {
-    background: rgba(255, 255, 255, .55);
-  }
-
   &--campaign .campaign-card__cover::before,
   &--campaign .campaign-card__cover::after {
     display: none;

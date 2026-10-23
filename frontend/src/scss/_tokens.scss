@@ -20,4 +20,18 @@
   --coral-text: #a95e49;
   --gold: #f0c078;
   --serif: 'DM Serif Display', Georgia, serif;
+  // Shared iOS-style surfaces. Glass reads as a lighter layer over the paper background.
+  --card: #fffdf9;
+  --hairline: rgba(31, 42, 40, .09);
+  --radius-card: 20px;
+  --radius-panel: 28px;
+  --radius-pill: 999px;
+  --glass-fill: rgba(255, 253, 249, .62);
+  --glass-fill-strong: rgba(255, 253, 249, .82);
+  --glass-edge: rgba(255, 255, 255, .72);
+  --glass-shadow: 0 1px 1px rgba(23, 61, 54, .04), 0 10px 32px rgba(23, 61, 54, .08);
+  --glass-highlight: inset 0 1px 0 rgba(255, 255, 255, .85), inset 0 -1px 0 rgba(23, 61, 54, .04);
+  --glass-blur: blur(22px) saturate(180%);
+  --shadow-soft: 0 1px 2px rgba(23, 61, 54, .05), 0 8px 24px rgba(23, 61, 54, .06);
+  --ease-standard: cubic-bezier(.25, .1, .25, 1);
 }

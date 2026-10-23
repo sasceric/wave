@@ -958,6 +958,7 @@ async function signOut() {
     :class="{
       'site-shell--mobile-chrome-hidden': mobileChromeHidden,
       'site-shell--account': hideSiteFooter,
+      'site-shell--home': route.meta.routeName === 'home',
       'site-shell--footer-visible': !hideSiteFooter,
       'site-shell--registration': route.meta.accountAccessPage
         && (route.meta.authMode || route.query.mode) === 'register'
@@ -1081,9 +1082,9 @@ async function signOut() {
             </span>
           </div>
           <div
+            v-if="currentUser"
             ref="authMenu"
             class="header-user-menu"
-            :class="{ 'header-user-menu--guest': !currentUser }"
             @keydown.esc.stop.prevent="closeAuthMenuAndRestoreFocus"
           >
             <button
@@ -1097,16 +1098,13 @@ async function signOut() {
               :aria-expanded="authMenuOpen"
               @click="toggleAuthMenu"
             >
-              <template v-if="currentUser">
-                <span class="header-user-menu__avatar">
-                  <img v-if="accountImage && failedAccountImage !== accountImage" :src="accountImage" alt="" @error="failedAccountImage = accountImage" />
-                  <WaveLogo v-else mark />
-                </span>
-                <span class="header-user-menu__name">{{ accountName }}</span>
-              </template>
-              <UserRound v-else :size="19" stroke-width="1.8" aria-hidden="true" />
+              <span class="header-user-menu__avatar">
+                <img v-if="accountImage && failedAccountImage !== accountImage" :src="accountImage" alt="" @error="failedAccountImage = accountImage" />
+                <WaveLogo v-else mark />
+              </span>
+              <span class="header-user-menu__name">{{ accountName }}</span>
             </button>
-            <div v-if="authMenuOpen && currentUser" class="header-user-menu__backdrop" aria-hidden="true" @click="closeAuthMenuAndRestoreFocus"></div>
+            <div v-if="authMenuOpen" class="header-user-menu__backdrop" aria-hidden="true" @click="closeAuthMenuAndRestoreFocus"></div>
             <div v-if="authMenuOpen" id="header-user-menu-panel" class="header-user-menu__panel">
               <template v-if="currentUser">
                 <div class="header-user-menu__identity">
@@ -1130,16 +1128,9 @@ async function signOut() {
                 </button>
                 <p v-if="authMenuError" class="header-user-menu__error" role="alert">{{ authMenuError }}</p>
               </template>
-              <template v-else>
-                <LocalizedLink class="header-user-menu__item" :to="{ name: 'login' }" @click="authMenuOpen = false">
-                  {{ t('auth.signIn') }}
-                </LocalizedLink>
-                <LocalizedLink class="header-user-menu__item" :to="{ name: 'register' }" @click="authMenuOpen = false">
-                  {{ t('auth.register') }}
-                </LocalizedLink>
-              </template>
             </div>
           </div>
+          <LocalizedLink v-if="!currentUser" class="header-login" :to="{ name: 'login' }">{{ t('auth.signIn') }}</LocalizedLink>
           <LocalizedLink v-if="!currentUser" class="button button--dark header-register" :to="{ name: 'register' }">
             {{ t('auth.registerShort') }}
           </LocalizedLink>
@@ -1187,189 +1178,191 @@ async function signOut() {
       class="site-footer"
       :class="{ 'site-footer--admin': route.meta.adminSection }"
     >
-      <div class="site-footer__inner page-width">
-        <div class="site-footer__brand">
-          <LocalizedLink to="/" class="site-footer__wordmark">
-            <WaveWordmark :light="true" :aria-label="t('app.homeAria')" />
-          </LocalizedLink>
-          <p>{{ t('app.footerTagline') }}</p>
-          <span class="site-footer__description">{{ t('app.footerDescription') }}</span>
-          <nav
-            class="site-footer__social"
-            :aria-label="t('app.socialLinks')"
-          >
-            <a
-              class="site-footer__social-icon site-footer__social-icon--instagram"
-              href="https://www.instagram.com/wave.ba.app/"
-              target="_blank"
-              rel="noopener noreferrer"
-              :aria-label="t('app.instagram')"
+      <div class="site-footer__panel page-width">
+        <div class="site-footer__inner">
+          <div class="site-footer__brand">
+            <LocalizedLink to="/" class="site-footer__wordmark">
+              <WaveWordmark :aria-label="t('app.homeAria')" />
+            </LocalizedLink>
+            <p>{{ t('app.footerTagline') }}</p>
+            <span class="site-footer__description">{{ t('app.footerDescription') }}</span>
+            <nav
+              class="site-footer__social"
+              :aria-label="t('app.socialLinks')"
             >
-              <svg viewBox="0 0 24 24" aria-hidden="true">
-                <rect x="3.5" y="3.5" width="17" height="17" rx="5" />
-                <circle cx="12" cy="12" r="4" />
-                <circle class="site-footer__social-dot" cx="17.7" cy="6.7" r="1" />
-              </svg>
-            </a>
-            <a href="https://www.tiktok.com/@waveapp5" target="_blank" rel="noopener noreferrer" :aria-label="t('app.tiktok')" class="site-footer__social-icon site-footer__social-icon--tiktok">
-              <svg viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M19.4 8.2a7.4 7.4 0 0 1-4.3-1.4v7.1a5.6 5.6 0 1 1-5.6-5.6c.4 0 .8 0 1.2.1v3.1a2.6 2.6 0 1 0 1.8 2.5V2h3.1c.3 2 1.9 3.6 3.9 3.8v2.4Z" />
-              </svg>
-            </a>
-            <a
-              class="site-footer__social-icon site-footer__social-icon--facebook"
-              href="https://www.facebook.com/app.wave.ba"
-              target="_blank"
-              rel="noopener noreferrer"
-              :aria-label="t('app.facebook')"
-            >
-              <svg viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M13.5 21v-8h2.7l.4-3.1h-3.1v-2c0-.9.3-1.5 1.6-1.5h1.7V3.6c-.3 0-1.3-.1-2.5-.1-2.5 0-4.2 1.5-4.2 4.3v2.1H7.3V13h2.8v8h3.4Z" />
-              </svg>
-            </a>
-            <a
-              class="site-footer__social-icon site-footer__social-icon--youtube"
-              href="https://www.youtube.com/@wavebaapp"
-              target="_blank"
-              rel="noopener noreferrer"
-              :aria-label="t('app.youtube')"
-            >
-              <svg viewBox="0 0 24 24" aria-hidden="true">
-                <rect x="3" y="5" width="18" height="14" rx="4" />
-                <path class="site-footer__social-dot" d="m10 9 5 3-5 3Z" />
-              </svg>
-            </a>
-          </nav>
-          <span class="site-footer__social-note">{{ t('app.socialFollow') }}</span>
-        </div>
-
-        <FooterNewsletterSignup
-          class="site-footer__newsletter-signup--mobile"
-          input-id="footer-newsletter-email-mobile"
-          v-model="newsletterEmail"
-          :loading="newsletterSubmitting"
-          :error="newsletterError"
-          @submit="openNewsletterSignup"
-        />
-
-        <nav class="site-footer__column" :aria-label="t('app.footerExplore')">
-          <details
-            class="site-footer__accordion"
-            :open="!isMobileFooter || mobileFooterSectionsOpen.explore"
-            @toggle="syncFooterSection('explore', $event)"
-          >
-            <summary>
-              <span class="site-footer__accordion-title">{{ t('app.footerExplore') }}</span>
-              <svg viewBox="0 0 24 24" aria-hidden="true">
-                <path d="m6 9 6 6 6-6" />
-              </svg>
-            </summary>
-            <div class="site-footer__accordion-content">
-              <LocalizedLink to="/creators">{{ t('app.creatorsNav') }}</LocalizedLink>
-              <LocalizedLink to="/companies">{{ t('app.companies') }}</LocalizedLink>
-              <LocalizedLink to="/campaigns">{{ t('app.campaigns') }}</LocalizedLink>
-              <LocalizedLink :to="{ name: 'seo-guides' }">{{ t('regionalSeo.guideTitle') }}</LocalizedLink>
-              <LocalizedLink :to="{ name: 'creator-guides' }">{{ t('regionalSeo.creatorGuides.title') }}</LocalizedLink>
-              <LocalizedLink :to="{ name: 'how-it-works' }">
-                {{ t('home.howItWorks') }}
-              </LocalizedLink>
-            </div>
-          </details>
-        </nav>
-
-        <nav class="site-footer__column" :aria-label="t('app.footerLegal')">
-          <details
-            class="site-footer__accordion"
-            :open="!isMobileFooter || mobileFooterSectionsOpen.legal"
-            @toggle="syncFooterSection('legal', $event)"
-          >
-            <summary>
-              <span class="site-footer__accordion-title">{{ t('app.footerLegal') }}</span>
-              <svg viewBox="0 0 24 24" aria-hidden="true">
-                <path d="m6 9 6 6 6-6" />
-              </svg>
-            </summary>
-            <div class="site-footer__accordion-content">
-              <LocalizedLink :to="{ name: 'imprint' }">{{ t('legal.imprint.title') }}</LocalizedLink>
-              <LocalizedLink :to="{ name: 'privacy-policy' }">{{ t('legal.privacy.title') }}</LocalizedLink>
-              <LocalizedLink :to="{ name: 'cookie-policy' }">{{ t('legal.cookies.title') }}</LocalizedLink>
-              <button type="button" @click="cookieConsentBanner?.open()">
-                {{ t('legal.openCookieSettings') }}
-              </button>
-            </div>
-          </details>
-        </nav>
-
-        <div class="site-footer__column site-footer__contact">
-          <details
-            class="site-footer__accordion"
-            :open="!isMobileFooter || mobileFooterSectionsOpen.contact"
-            @toggle="syncFooterSection('contact', $event)"
-          >
-            <summary>
-              <span class="site-footer__accordion-title">{{ t('app.footerContact') }}</span>
-              <svg viewBox="0 0 24 24" aria-hidden="true">
-                <path d="m6 9 6 6 6-6" />
-              </svg>
-            </summary>
-            <div class="site-footer__accordion-content">
-              <p>{{ t('app.footerContactText') }}</p>
-              <a class="site-footer__email" href="mailto:info@wave.ba">
-                info@wave.ba <ArrowRight class="link-arrow" :size="16" aria-hidden="true" />
+              <a
+                class="site-footer__social-icon site-footer__social-icon--instagram"
+                href="https://www.instagram.com/wave.ba.app/"
+                target="_blank"
+                rel="noopener noreferrer"
+                :aria-label="t('app.instagram')"
+              >
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <rect x="3.5" y="3.5" width="17" height="17" rx="5" />
+                  <circle cx="12" cy="12" r="4" />
+                  <circle class="site-footer__social-dot" cx="17.7" cy="6.7" r="1" />
+                </svg>
               </a>
-              <span class="site-footer__operator">{{ t('app.footerOperator') }}</span>
-            </div>
-          </details>
-        </div>
+              <a href="https://www.tiktok.com/@waveapp5" target="_blank" rel="noopener noreferrer" :aria-label="t('app.tiktok')" class="site-footer__social-icon site-footer__social-icon--tiktok">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M19.4 8.2a7.4 7.4 0 0 1-4.3-1.4v7.1a5.6 5.6 0 1 1-5.6-5.6c.4 0 .8 0 1.2.1v3.1a2.6 2.6 0 1 0 1.8 2.5V2h3.1c.3 2 1.9 3.6 3.9 3.8v2.4Z" />
+                </svg>
+              </a>
+              <a
+                class="site-footer__social-icon site-footer__social-icon--facebook"
+                href="https://www.facebook.com/app.wave.ba"
+                target="_blank"
+                rel="noopener noreferrer"
+                :aria-label="t('app.facebook')"
+              >
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M13.5 21v-8h2.7l.4-3.1h-3.1v-2c0-.9.3-1.5 1.6-1.5h1.7V3.6c-.3 0-1.3-.1-2.5-.1-2.5 0-4.2 1.5-4.2 4.3v2.1H7.3V13h2.8v8h3.4Z" />
+                </svg>
+              </a>
+              <a
+                class="site-footer__social-icon site-footer__social-icon--youtube"
+                href="https://www.youtube.com/@wavebaapp"
+                target="_blank"
+                rel="noopener noreferrer"
+                :aria-label="t('app.youtube')"
+              >
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <rect x="3" y="5" width="18" height="14" rx="4" />
+                  <path class="site-footer__social-dot" d="m10 9 5 3-5 3Z" />
+                </svg>
+              </a>
+            </nav>
+            <span class="site-footer__social-note">{{ t('app.socialFollow') }}</span>
+          </div>
 
-        <div v-if="!isMobileFooter" class="site-footer__column site-footer__newsletter">
-          <details
-            class="site-footer__accordion"
-            :open="!isMobileFooter || mobileFooterSectionsOpen.newsletter"
-            @toggle="syncFooterSection('newsletter', $event)"
-          >
-            <summary>
-              <span class="site-footer__accordion-title">{{ t('app.footerNewsletterTitle') }}</span>
-              <svg viewBox="0 0 24 24" aria-hidden="true">
-                <path d="m6 9 6 6 6-6" />
-              </svg>
-            </summary>
-            <div class="site-footer__accordion-content">
-              <FooterNewsletterSignup
-                class="site-footer__newsletter-signup--desktop"
-                input-id="footer-newsletter-email"
-                v-model="newsletterEmail"
-                :loading="newsletterSubmitting"
-                :error="newsletterError"
-                @submit="openNewsletterSignup"
-              />
-            </div>
-          </details>
+          <FooterNewsletterSignup
+            class="site-footer__newsletter-signup--mobile"
+            input-id="footer-newsletter-email-mobile"
+            v-model="newsletterEmail"
+            :loading="newsletterSubmitting"
+            :error="newsletterError"
+            @submit="openNewsletterSignup"
+          />
+
+          <nav class="site-footer__column" :aria-label="t('app.footerExplore')">
+            <details
+              class="site-footer__accordion"
+              :open="!isMobileFooter || mobileFooterSectionsOpen.explore"
+              @toggle="syncFooterSection('explore', $event)"
+            >
+              <summary>
+                <span class="site-footer__accordion-title">{{ t('app.footerExplore') }}</span>
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="m6 9 6 6 6-6" />
+                </svg>
+              </summary>
+              <div class="site-footer__accordion-content">
+                <LocalizedLink to="/creators">{{ t('app.creatorsNav') }}</LocalizedLink>
+                <LocalizedLink to="/companies">{{ t('app.companies') }}</LocalizedLink>
+                <LocalizedLink to="/campaigns">{{ t('app.campaigns') }}</LocalizedLink>
+                <LocalizedLink :to="{ name: 'seo-guides' }">{{ t('regionalSeo.guideTitle') }}</LocalizedLink>
+                <LocalizedLink :to="{ name: 'creator-guides' }">{{ t('regionalSeo.creatorGuides.title') }}</LocalizedLink>
+                <LocalizedLink :to="{ name: 'how-it-works' }">
+                  {{ t('home.howItWorks') }}
+                </LocalizedLink>
+              </div>
+            </details>
+          </nav>
+
+          <nav class="site-footer__column" :aria-label="t('app.footerLegal')">
+            <details
+              class="site-footer__accordion"
+              :open="!isMobileFooter || mobileFooterSectionsOpen.legal"
+              @toggle="syncFooterSection('legal', $event)"
+            >
+              <summary>
+                <span class="site-footer__accordion-title">{{ t('app.footerLegal') }}</span>
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="m6 9 6 6 6-6" />
+                </svg>
+              </summary>
+              <div class="site-footer__accordion-content">
+                <LocalizedLink :to="{ name: 'imprint' }">{{ t('legal.imprint.title') }}</LocalizedLink>
+                <LocalizedLink :to="{ name: 'privacy-policy' }">{{ t('legal.privacy.title') }}</LocalizedLink>
+                <LocalizedLink :to="{ name: 'cookie-policy' }">{{ t('legal.cookies.title') }}</LocalizedLink>
+                <button type="button" @click="cookieConsentBanner?.open()">
+                  {{ t('legal.openCookieSettings') }}
+                </button>
+              </div>
+            </details>
+          </nav>
+
+          <div class="site-footer__column site-footer__contact">
+            <details
+              class="site-footer__accordion"
+              :open="!isMobileFooter || mobileFooterSectionsOpen.contact"
+              @toggle="syncFooterSection('contact', $event)"
+            >
+              <summary>
+                <span class="site-footer__accordion-title">{{ t('app.footerContact') }}</span>
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="m6 9 6 6 6-6" />
+                </svg>
+              </summary>
+              <div class="site-footer__accordion-content">
+                <p>{{ t('app.footerContactText') }}</p>
+                <a class="site-footer__email" href="mailto:info@wave.ba">
+                  info@wave.ba <ArrowRight class="link-arrow" :size="16" aria-hidden="true" />
+                </a>
+                <span class="site-footer__operator">{{ t('app.footerOperator') }}</span>
+              </div>
+            </details>
+          </div>
+
+          <div v-if="!isMobileFooter" class="site-footer__column site-footer__newsletter">
+            <details
+              class="site-footer__accordion"
+              :open="!isMobileFooter || mobileFooterSectionsOpen.newsletter"
+              @toggle="syncFooterSection('newsletter', $event)"
+            >
+              <summary>
+                <span class="site-footer__accordion-title">{{ t('app.footerNewsletterTitle') }}</span>
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="m6 9 6 6 6-6" />
+                </svg>
+              </summary>
+              <div class="site-footer__accordion-content">
+                <FooterNewsletterSignup
+                  class="site-footer__newsletter-signup--desktop"
+                  input-id="footer-newsletter-email"
+                  v-model="newsletterEmail"
+                  :loading="newsletterSubmitting"
+                  :error="newsletterError"
+                  @submit="openNewsletterSignup"
+                />
+              </div>
+            </details>
+          </div>
         </div>
-      </div>
-      <div class="site-footer__bottom page-width">
-        <span class="site-footer__copyright">{{ t('app.copyright', { year: currentYear }) }}</span>
-        <nav class="site-footer__quick-links" :aria-label="t('app.footerQuickLinks')">
-          <LocalizedLink to="/creators">{{ t('app.footerProfiles') }}</LocalizedLink>
-          <LocalizedLink to="/campaigns">{{ t('app.campaigns') }}</LocalizedLink>
-          <LocalizedLink :to="{ name: 'account-applications' }">
-            {{ t('app.footerApplications') }}
-          </LocalizedLink>
-          <a
-            :href="`mailto:info@wave.ba?subject=${encodeURIComponent(t('app.footerCollaboration'))}`"
-          >{{ t('app.footerCollaboration') }}</a>
-        </nav>
-        <button
-          class="site-footer__back-to-top"
-          type="button"
-          :aria-label="t('app.backToTop')"
-          :title="t('app.backToTop')"
-          @click="scrollToPageTop"
-        >
-          <svg viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M12 19V5M5 12l7-7 7 7" />
-          </svg>
-        </button>
+        <div class="site-footer__bottom">
+          <span class="site-footer__copyright">{{ t('app.copyright', { year: currentYear }) }}</span>
+          <nav class="site-footer__quick-links" :aria-label="t('app.footerQuickLinks')">
+            <LocalizedLink to="/creators">{{ t('app.footerProfiles') }}</LocalizedLink>
+            <LocalizedLink to="/campaigns">{{ t('app.campaigns') }}</LocalizedLink>
+            <LocalizedLink :to="{ name: 'account-applications' }">
+              {{ t('app.footerApplications') }}
+            </LocalizedLink>
+            <a
+              :href="`mailto:info@wave.ba?subject=${encodeURIComponent(t('app.footerCollaboration'))}`"
+            >{{ t('app.footerCollaboration') }}</a>
+          </nav>
+          <button
+            class="site-footer__back-to-top"
+            type="button"
+            :aria-label="t('app.backToTop')"
+            :title="t('app.backToTop')"
+            @click="scrollToPageTop"
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M12 19V5M5 12l7-7 7 7" />
+            </svg>
+          </button>
+        </div>
       </div>
     </footer>
     <ReportNotices v-if="currentUser?.approved && currentUser?.emailVerified" />
@@ -1406,6 +1399,7 @@ async function signOut() {
         :class="{ 'is-active': route.meta.routeName === 'home' }"
       >
         <House :size="21" stroke-width="1.8" aria-hidden="true" />
+        <span class="mobile-bottom-nav__label">{{ t('app.homeTab') }}</span>
       </LocalizedLink>
       <LocalizedLink
         to="/creators"
@@ -1414,6 +1408,7 @@ async function signOut() {
         :class="{ 'is-active': ['creators', 'creator-profile', 'country-creators'].includes(route.meta.routeName) }"
       >
         <UsersRound :size="21" stroke-width="1.8" aria-hidden="true" />
+        <span class="mobile-bottom-nav__label">{{ t('app.creatorsNav') }}</span>
       </LocalizedLink>
       <LocalizedLink
         v-if="currentUser"
@@ -1428,6 +1423,7 @@ async function signOut() {
             {{ unreadMessageCount > 99 ? '99+' : unreadMessageCount }}
           </span>
         </span>
+        <span class="mobile-bottom-nav__label">{{ t('app.messages') }}</span>
       </LocalizedLink>
       <LocalizedLink
         v-else
@@ -1437,6 +1433,7 @@ async function signOut() {
         :class="{ 'is-active': ['companies', 'company-profile'].includes(route.meta.routeName) }"
       >
         <Building2 :size="21" stroke-width="1.8" aria-hidden="true" />
+        <span class="mobile-bottom-nav__label">{{ t('app.companies') }}</span>
       </LocalizedLink>
       <LocalizedLink
         to="/campaigns"
@@ -1445,6 +1442,7 @@ async function signOut() {
         :class="{ 'is-active': ['campaigns', 'campaign-detail'].includes(route.meta.routeName) }"
       >
         <Megaphone :size="21" stroke-width="1.8" aria-hidden="true" />
+        <span class="mobile-bottom-nav__label">{{ t('app.campaigns') }}</span>
       </LocalizedLink>
       <LocalizedLink
         to="/account"
@@ -1455,6 +1453,7 @@ async function signOut() {
         }"
       >
         <UserRound :size="21" stroke-width="1.8" aria-hidden="true" />
+        <span class="mobile-bottom-nav__label">{{ t('app.profileTab') }}</span>
       </LocalizedLink>
     </nav>
   </div>

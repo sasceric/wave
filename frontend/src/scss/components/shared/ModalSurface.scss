@@ -50,7 +50,7 @@ dialog.wave-modal[aria-modal='true'] {
     svg { width: 20px; height: 20px; }
     &--floating { position: absolute; top: 20px; right: 20px; z-index: 2; }
   }
-  .button { min-height: 44px; padding: 11px 18px; border-radius: 12px; font-size: 14px; font-weight: 600; line-height: 1.4; justify-content: center; gap: 8px; }
+  .button { min-height: 44px; padding: 11px 18px; border-radius: var(--radius-pill); font-size: 14px; font-weight: 600; line-height: 1.4; justify-content: center; gap: 8px; }
 
   @media (max-width: 760px) {
     inset: auto 0 0;

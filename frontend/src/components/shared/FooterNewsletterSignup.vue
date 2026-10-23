@@ -1,6 +1,7 @@
 <script setup>
 import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { ArrowRight, Mail } from '@lucide/vue'
 
 const props = defineProps({
   inputId: { type: String, required: true },
@@ -26,10 +27,7 @@ function submitForm() {
         {{ t('app.footerNewsletterPlaceholder') }}
       </label>
       <span class="site-footer__newsletter-icon" aria-hidden="true">
-        <svg viewBox="0 0 24 24">
-          <rect x="3" y="5" width="18" height="14" rx="2" />
-          <path d="m4 7 8 6 8-6" />
-        </svg>
+        <Mail :size="20" />
       </span>
       <input
         :id="inputId"
@@ -48,9 +46,7 @@ function submitForm() {
         :aria-label="t('app.footerNewsletterSubmit')"
         :title="t('app.footerNewsletterSubmit')"
       >
-        <svg viewBox="0 0 24 24" aria-hidden="true">
-          <path d="M4 12h15M13 5l7 7-7 7" />
-        </svg>
+        <ArrowRight :size="20" aria-hidden="true" />
       </button>
       <div class="site-footer__honeypot" aria-hidden="true">
         <label :for="`${props.inputId}-website`">

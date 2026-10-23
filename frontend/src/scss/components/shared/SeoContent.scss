@@ -175,7 +175,7 @@
     border: 1px solid #e7e0d5;
     border-radius: 50%;
     color: var(--coral);
-    background: #fffefa;
+    background: var(--card);
     box-shadow: 0 8px 18px rgba(23, 61, 54, .07);
   }
 
@@ -235,7 +235,7 @@
     flex-direction: column;
     overflow: hidden;
     padding: 10px 10px 20px;
-    border: 1px solid #dfe5dd;
+    border: 1px solid var(--hairline);
     border-radius: 12px;
     background: rgba(255, 254, 251, .74);
     box-shadow: 0 8px 22px rgba(31, 42, 40, .035);
@@ -569,8 +569,8 @@
     width: 240px;
     padding: 20px;
     border: 1px solid var(--line);
-    border-radius: 14px;
-    background: #fffefa;
+    border-radius: var(--radius-card);
+    background: var(--card);
     box-shadow: 0 10px 25px rgba(31, 42, 40, .06);
     transform: rotate(3deg);
   }
@@ -622,9 +622,9 @@
     height: 66px;
     place-items: center;
     border: 1px solid var(--line);
-    border-radius: 14px;
+    border-radius: var(--radius-card);
     color: var(--secondary);
-    background: #fffefa;
+    background: var(--card);
     box-shadow: 0 8px 18px rgba(31, 42, 40, .06);
   }
 
@@ -763,7 +763,7 @@
   a { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border: 1px solid var(--line); border-radius: 10px; background: rgba(255, 255, 255, .75); font-size: 14px; text-decoration: none; }
   a svg { flex: none; }
   a svg:last-child { margin-left: auto; }
-  a:hover { background: #fffefa; }
+  a:hover { background: var(--card); }
   a:focus-visible { outline: 2px solid var(--forest); outline-offset: 3px; }
 }
 

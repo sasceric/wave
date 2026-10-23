@@ -3,9 +3,9 @@
 .form-card {
   min-width: 0;
   padding: 23px;
-  border: 1px solid #e1e5dd;
-  border-radius: 4px;
-  background: #fdfcf8;
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-card);
+  background: var(--card);
 
   h2 {
     margin: 0 0 20px;
@@ -20,13 +20,13 @@
   gap: 7px;
   margin-bottom: 15px;
   color: #61736a;
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 600;
 
   > span,
   > label {
     color: var(--muted);
-    font-size: 12px;
+    font-size: 14px;
     font-weight: 400;
   }
 
@@ -36,14 +36,22 @@
     width: 100%;
     min-height: 44px;
     padding: 10px 13px;
-    border: 1px solid #dfe4dc;
-    border-radius: 8px;
+    border: 1px solid rgba(31, 42, 40, .14);
+    border-radius: 12px;
     outline-color: #789281;
     color: var(--ink);
-    background-color: #fffefa;
+    background-color: var(--card);
     font: inherit;
-    font-size: 13px;
+    font-size: 15px;
     font-weight: 400;
+    transition: border-color .16s ease, box-shadow .16s ease;
+  }
+
+  input:focus,
+  select:focus,
+  textarea:focus {
+    border-color: var(--forest);
+    box-shadow: 0 0 0 4px rgba(23, 61, 54, .12);
   }
 
   select {
@@ -80,7 +88,7 @@
 
   small {
     color: #89958d;
-    font-size: 9px;
+    font-size: 12px;
     font-weight: 400;
   }
 }

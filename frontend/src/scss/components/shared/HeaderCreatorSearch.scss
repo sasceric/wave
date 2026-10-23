@@ -43,7 +43,7 @@
   color: var(--forest);
 
   &__tabs { display: flex; align-items: center; gap: 10px; padding-bottom: 12px; flex-shrink: 0; }
-  &__tabs button { padding: 8px 16px; border: 0; border-radius: 24px; background: #f1efe8; color: #56675e; font-size: 12px; cursor: pointer; }
+  &__tabs button { min-height: 34px; padding: 0 14px; border: 0; border-radius: var(--radius-pill); background: var(--surface); color: var(--muted-text); font-size: 14px; cursor: pointer; }
   &__tabs button.is-active { background: #dfe6df; color: var(--forest); }
   &__tabs button.global-search-panel__close { margin-left: auto; padding: 6px; background: transparent; display: grid; place-items: center; }
   &__rows { min-height: 0; overflow-y: auto; }
@@ -88,4 +88,110 @@
     &__all { font-size: 12px; padding: 17px 0; gap: 10px; }
   }
   .header-creator-search__type { flex-basis: 97px; }
+}
+
+// Homepage variant: type pills above one large rounded field.
+.header-creator-search.header-creator-search--hero {
+  position: relative;
+  width: min(720px, 100%);
+  min-width: 0;
+  height: auto;
+  flex: none;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  justify-items: center;
+  gap: 14px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+
+  > .header-creator-search__field {
+    width: 100%;
+    height: 60px;
+    display: flex;
+    padding: 0 132px 0 22px;
+    border: 1px solid var(--hairline);
+    border-radius: var(--radius-pill);
+    color: var(--muted-text);
+    background: var(--card);
+    box-shadow: var(--shadow-soft);
+    transition: box-shadow .2s var(--ease-standard);
+  }
+
+  > .header-creator-search__field:focus-within {
+    box-shadow: 0 0 0 4px rgba(23, 61, 54, .12), var(--shadow-soft);
+  }
+
+  .header-creator-search__field input {
+    height: 100%;
+    font-size: 17px;
+  }
+
+  .header-creator-search__field input::-webkit-search-cancel-button {
+    -webkit-appearance: none;
+  }
+
+  > .header-creator-search__submit,
+  > .header-creator-search__submit:hover {
+    position: absolute;
+    right: 8px;
+    bottom: 8px;
+    width: auto;
+    height: 44px;
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 20px;
+    border-radius: var(--radius-pill);
+    color: #fffefa;
+    background: var(--forest);
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  > .header-creator-search__submit:hover {
+    background: #0f2d27;
+  }
+
+  > .header-creator-search__submit:focus-visible {
+    outline: 2px solid var(--forest);
+    outline-offset: 2px;
+  }
+}
+
+@include breakpoints.down(700px) {
+  .header-creator-search.header-creator-search--hero {
+    gap: 12px;
+
+    .header-creator-search__pills {
+      display: flex;
+      width: 100%;
+    }
+
+    > .header-creator-search__field {
+      height: 52px;
+      padding: 0 60px 0 16px;
+    }
+
+    .header-creator-search__field input {
+      font-size: 16px;
+    }
+
+    > .header-creator-search__submit,
+    > .header-creator-search__submit:hover {
+      right: 6px;
+      bottom: 6px;
+      width: 40px;
+      height: 40px;
+      justify-content: center;
+      padding: 0;
+    }
+
+    .header-creator-search__submit-label {
+      display: none;
+    }
+  }
 }

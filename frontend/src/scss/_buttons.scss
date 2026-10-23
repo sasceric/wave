@@ -1,22 +1,25 @@
 @use './breakpoints';
+@use './glass';
 
+// One shared action system: 44px height, 14px text, pill shape.
 .button {
-  min-height: 48px;
+  min-height: 44px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 20px;
-  padding: 0 19px;
+  gap: 8px;
+  padding: 0 20px;
   border: 1px solid transparent;
-  border-radius: 3px;
-  font-size: 12px;
+  border-radius: var(--radius-pill);
+  font-size: 14px;
   font-weight: 600;
+  line-height: 1.2;
   text-decoration: none;
-  transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease;
+  transition: background .2s var(--ease-standard), color .2s var(--ease-standard), border-color .2s var(--ease-standard), transform .2s var(--ease-standard);
   cursor: pointer;
 
-  &:hover {
-    transform: translateY(-1px);
+  &:active {
+    transform: scale(.98);
   }
 
   &--dark {
@@ -25,7 +28,7 @@
   }
 
   &--dark:hover {
-    background: #28534a;
+    background: #0f2d27;
   }
 
   &--dark span {
@@ -52,11 +55,62 @@
   &--outline {
     color: var(--forest);
     background: transparent;
-    border-color: #bfc9c1;
+    border-color: rgba(23, 61, 54, .22);
   }
 
   &--outline:hover {
-    background: var(--sage);
+    background: rgba(23, 61, 54, .06);
+  }
+
+  // Quiet secondary action on paper or card surfaces.
+  &--tonal {
+    color: var(--forest);
+    background: rgba(23, 61, 54, .07);
+  }
+
+  &--tonal:hover {
+    background: rgba(23, 61, 54, .12);
+  }
+
+  // Secondary action floating over imagery or the page background.
+  &--glass {
+    @include glass.surface;
+
+    & {
+      color: var(--forest);
+    }
+  }
+
+  &--glass:hover {
+    background: var(--glass-fill-strong);
+  }
+
+  // Primary action on forest surfaces.
+  &--light {
+    color: var(--forest);
+    background: var(--paper);
+  }
+
+  &--light:hover {
+    background: #fff;
+  }
+
+  // Secondary action on forest surfaces.
+  &--glass-dark {
+    @include glass.surface(dark);
+
+    & {
+      color: var(--paper);
+    }
+  }
+
+  &--glass-dark:hover {
+    background: rgba(246, 242, 234, .22);
+  }
+
+  &--small {
+    min-height: 36px;
+    padding: 0 16px;
   }
 
   &--full {
@@ -72,13 +126,20 @@
 
 @include breakpoints.down(420px) {
   .button {
-    min-height: 44px;
-    gap: 12px;
-    padding: 0 14px;
-    font-size: 10px;
+    padding: 0 16px;
 
     &--text {
       padding: 0;
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .button {
+    transition: none;
+
+    &:active {
+      transform: none;
     }
   }
 }

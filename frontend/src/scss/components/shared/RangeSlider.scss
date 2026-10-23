@@ -28,10 +28,10 @@
     &::-webkit-slider-runnable-track { height: 6px; background: transparent; }
     &::-moz-range-track { height: 6px; background: transparent; }
     &::-webkit-slider-thumb {
-      width: 20px; height: 20px; margin-top: -7px; appearance: none; border: 2px solid var(--forest); border-radius: 50%; background: #fffefa; box-shadow: 0 2px 5px #183c3426; pointer-events: auto; cursor: grab; touch-action: none;
+      width: 20px; height: 20px; margin-top: -7px; appearance: none; border: 2px solid var(--forest); border-radius: 50%; background: var(--card); box-shadow: 0 2px 5px #183c3426; pointer-events: auto; cursor: grab; touch-action: none;
     }
     &::-moz-range-thumb {
-      width: 16px; height: 16px; border: 2px solid var(--forest); border-radius: 50%; background: #fffefa; box-shadow: 0 2px 5px #183c3426; pointer-events: auto; cursor: grab; touch-action: none;
+      width: 16px; height: 16px; border: 2px solid var(--forest); border-radius: 50%; background: var(--card); box-shadow: 0 2px 5px #183c3426; pointer-events: auto; cursor: grab; touch-action: none;
     }
     &:focus-visible::-webkit-slider-thumb { outline: 2px solid #789281; outline-offset: 3px; }
     &:focus-visible::-moz-range-thumb { outline: 2px solid #789281; outline-offset: 3px; }

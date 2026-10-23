@@ -1,0 +1,54 @@
+// Liquid-glass surfaces shared by the header, footer, bottom navigation and controls.
+// Mixins emit nothing until a component includes them.
+
+@mixin surface($tone: light) {
+  @if $tone == dark {
+    border: 1px solid rgba(255, 255, 255, .2);
+    background: rgba(246, 242, 234, .14);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .22), 0 8px 24px rgba(0, 0, 0, .12);
+  } @else {
+    border: 1px solid var(--glass-edge);
+    background: var(--glass-fill);
+    box-shadow: var(--glass-highlight), var(--glass-shadow);
+  }
+
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+
+  @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    @if $tone == dark {
+      background: rgba(246, 242, 234, .2);
+    } @else {
+      background: var(--glass-fill-strong);
+    }
+  }
+
+  @media (prefers-reduced-transparency: reduce) {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+
+    @if $tone == dark {
+      background: #2b514a;
+    } @else {
+      background: var(--card);
+    }
+  }
+}
+
+// A bar that spans the viewport (header): no side borders or outer radius.
+@mixin bar {
+  border-bottom: 1px solid var(--hairline);
+  background: rgba(246, 242, 234, .72);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+
+  @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    background: rgba(246, 242, 234, .97);
+  }
+
+  @media (prefers-reduced-transparency: reduce) {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    background: var(--paper);
+  }
+}

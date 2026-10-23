@@ -11,6 +11,12 @@ import { isSearchableQuery, SEARCH_MIN_LENGTH } from '../../lib/searchQuery'
 import CardImage from './CardImage.vue'
 import LocalizedLink from './LocalizedLink.vue'
 import SingleSelect from './SingleSelect.vue'
+import SegmentedControl from './SegmentedControl.vue'
+
+const props = defineProps({
+  // header: compact field in the site header; hero: large homepage field with type pills.
+  variant: { type: String, default: 'header', validator: value => ['header', 'hero'].includes(value) },
+})
 
 const route = useRoute()
 const router = useRouter()
@@ -21,6 +27,7 @@ const query = ref(typeof route.query.q === 'string' ? route.query.q : '')
 const canSearch = computed(() => isSearchableQuery(query.value))
 const expanded = ref(false)
 const mobile = ref(false)
+const collapsible = computed(() => props.variant === 'header' && mobile.value)
 const open = ref(false)
 const loading = ref(false)
 const error = ref(false)
@@ -48,7 +55,7 @@ function positionPanel() {
 }
 function updateViewport() {
   mobile.value = mediaQuery.matches
-  if (!mobile.value) expanded.value = false
+  if (!collapsible.value) expanded.value = false
   nextTick(positionPanel)
 }
 function closeSearch(restoreFocus = false) {
@@ -59,7 +66,7 @@ function closeSearch(restoreFocus = false) {
   loading.value = false
   if (restoreFocus) nextTick(() => {
     restoringFocus = true
-    const target = mobile.value ? form.value?.querySelector('.header-creator-search__submit') : input.value
+    const target = collapsible.value ? form.value?.querySelector('.header-creator-search__submit') : input.value
     target?.focus()
     restoringFocus = false
   })
@@ -70,7 +77,7 @@ function handleInputFocus() {
   if (!restoringFocus && query.value.trim()) scheduleSearch()
 }
 async function openSearch() {
-  if (mobile.value) expanded.value = true
+  if (collapsible.value) expanded.value = true
   await nextTick()
   positionPanel()
   input.value?.focus()
@@ -133,7 +140,7 @@ function recordSearch(source) {
     .catch(() => { if (lastLogged === key) lastLogged = '' })
 }
 async function handleSubmit() {
-  if (mobile.value && !expanded.value) return openSearch()
+  if (collapsible.value && !expanded.value) return openSearch()
   showResults('submit')
 }
 function showResults(source = 'all') {
@@ -174,6 +181,7 @@ onMounted(() => {
   updateViewport()
   mediaQuery.addEventListener('change', updateViewport)
   window.addEventListener('resize', positionPanel)
+  if (props.variant === 'hero') window.addEventListener('scroll', positionPanel, { passive: true })
   document.addEventListener('keydown', handleKey)
   window.addEventListener('wave:safety-changed', resetSuggestions)
   window.addEventListener('focus', resetSuggestions)
@@ -183,6 +191,7 @@ onBeforeUnmount(() => {
   window.clearTimeout(timer)
   mediaQuery?.removeEventListener('change', updateViewport)
   window.removeEventListener('resize', positionPanel)
+  window.removeEventListener('scroll', positionPanel)
   document.removeEventListener('keydown', handleKey)
   window.removeEventListener('wave:safety-changed', resetSuggestions)
   window.removeEventListener('focus', resetSuggestions)
@@ -190,14 +199,18 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <form ref="form" class="header-creator-search" :class="{ 'is-expanded': expanded, 'is-open': open }" role="search" @submit.prevent="handleSubmit">
+  <form ref="form" class="header-creator-search" :class="{ 'is-expanded': expanded, 'is-open': open, 'header-creator-search--hero': variant === 'hero' }" role="search" @submit.prevent="handleSubmit">
+    <SegmentedControl v-if="variant === 'hero'" v-model="type" class="header-creator-search__pills" :options="options" :label="t('globalSearch.type')" />
     <label class="header-creator-search__field">
       <Search :size="17" aria-hidden="true" />
       <input ref="input" v-model="query" type="search" maxlength="200" :placeholder="t('globalSearch.placeholder')" :aria-label="t('globalSearch.placeholder')" :aria-controls="open ? panelId : undefined" @focus="handleInputFocus" @keydown.down.prevent="focusResult" />
     </label>
-    <SingleSelect v-model="type" class="header-creator-search__type" :options="options" :label="t('globalSearch.type')" :show-label="false" />
-    <button class="header-creator-search__submit" type="submit" :aria-label="t('globalSearch.search')" :aria-expanded="open" :aria-controls="open ? panelId : undefined"><Search :size="19" aria-hidden="true" /></button>
-    <button v-if="mobile && expanded" class="header-creator-search__close" type="button" :aria-label="t('app.closeSearch')" @click="closeSearch(true)"><X :size="18" aria-hidden="true" /></button>
+    <SingleSelect v-if="variant === 'header'" v-model="type" class="header-creator-search__type" :options="options" :label="t('globalSearch.type')" :show-label="false" />
+    <button class="header-creator-search__submit" type="submit" :aria-label="t('globalSearch.search')" :aria-expanded="open" :aria-controls="open ? panelId : undefined">
+      <Search v-if="variant === 'header'" :size="19" aria-hidden="true" />
+      <template v-else><ArrowRight :size="17" aria-hidden="true" /><span class="header-creator-search__submit-label">{{ t('globalSearch.search') }}</span></template>
+    </button>
+    <button v-if="collapsible && expanded" class="header-creator-search__close" type="button" :aria-label="t('app.closeSearch')" @click="closeSearch(true)"><X :size="18" aria-hidden="true" /></button>
   </form>
   <Teleport to="body">
     <template v-if="open">

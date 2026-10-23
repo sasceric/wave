@@ -214,3 +214,48 @@ Use the normal deployment workflow. `npm ci` installs Sass from the lockfile and
 Symfony's `public/`. No environment variables, database migrations or worker
 changes are required. Installed PWAs should accept the app's update prompt and
 reload; a cached older app shell may keep using its older CSS until that update.
+
+## Liquid glass and the homepage (2026-10-24)
+
+Shared surfaces live in `scss/_tokens.scss` (`--card`, `--hairline`, `--radius-*`,
+`--glass-*`) and `scss/_glass.scss`. `@include glass.surface` gives a translucent,
+blurred layer with a highlight edge (`surface(dark)` for forest backgrounds);
+`@include glass.bar` is for full-width bars. Both fall back to opaque fills when
+`backdrop-filter` is unsupported or `prefers-reduced-transparency` is set. Declarations
+that follow an include sit in `& { }` so Sass keeps them after the mixin's nested rules.
+Glass is used for the header, the footer panel, the mobile bottom navigation, account
+menus, card badges and bookmark controls, and the `button--glass` variants.
+
+Buttons share one system: 44px height, 14px text, pill radius. Variants: `button--dark`,
+`button--outline`, `button--tonal`, `button--glass`, `button--light` and
+`button--glass-dark` (for forest surfaces), plus `button--small` (36px).
+
+Creator and campaign cards show the image on top with text below and no outer box;
+creator, campaign and company cards are restyled globally, including directories and
+bookmarks. `CardGrid layout="home"` is a horizontal rail (four cards on desktop, about
+two on phones). `CardRow` adds a title, a "see all" link and previous/next controls.
+
+Homepage building blocks: `HeaderCreatorSearch variant="hero"` (the real global search
+with type pills), `AudienceCard` (creator / brand entry points for guests),
+`ShortcutTile` (signed-in shortcuts), `SegmentedControl`, `FaqSection split` with an
+`actions` slot, and `ContactFormModal` (the existing `/contact` form in a `FormModal`).
+The desktop header hides its own search on the homepage because the hero carries it.
+
+Header and side menu: on phones the header is a floating glass capsule (8px gap + 54px
+bar, the same 62px footprint other sticky elements use) matching the bottom navigation.
+The glass is painted on `.site-header::before`, because `backdrop-filter` on the header
+itself would trap the fixed full-screen notification panel inside it. Guests see
+"Prijavi se" and "Registruj se" in the header; the old guest account dropdown is gone.
+Phones move Support into the side menu, which also lists sign-in and registration for
+guests. `AccountSidebar` is a floating glass panel inside the 260px account column on
+desktop and a slide-in panel below the capsule on phones.
+
+Second pass (2026-10-24): notification and message popovers share one glass sheet
+(22px corners, 17px title, 40px avatars, inset hairline separators, pill "show all").
+Form controls (`_forms.scss`, SingleSelect, MultiSelect, SearchableSelect, TagInput,
+DatePicker, SwitchField) use 12px corners, 14–15px text and a forest focus ring.
+Directory toolbars and filter panels are glass; `DirectorySearch` is a pill field.
+`ProfileTabs` tabs read as a segmented control, inbox filters too. Card-like surfaces in
+profile, account and message views use `--card`, `--hairline` and `--radius-card`, and
+text below 12px was raised to 12px. The directory "Lista" view renders true rows
+(image left, details right) for creators and campaigns.

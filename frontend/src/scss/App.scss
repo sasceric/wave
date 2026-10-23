@@ -1,4 +1,5 @@
 @use './breakpoints';
+@use './glass';
 
 .site-shell {
   min-height: 100vh;
@@ -25,8 +26,19 @@
   position: sticky;
   top: 0;
   z-index: 20;
-  background: rgba(246, 242, 234, .94);
-  backdrop-filter: blur(16px);
+  isolation: isolate;
+
+  // The glass lives on a pseudo-element: backdrop-filter on the header itself would
+  // become the containing block for fixed panels inside it (notifications, menus).
+  &::before {
+    position: absolute;
+    z-index: -1;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    content: '';
+    @include glass.bar;
+  }
 
   &__inner {
     width: min(1400px, 100% - 64px);
@@ -37,37 +49,35 @@
     gap: 40px;
     padding: 0;
     margin: 0 auto;
-    border-bottom: 1px solid rgba(32, 61, 56, .1);
   }
 }
 
 .main-nav {
   display: flex;
   align-items: center;
-  gap: 31px;
+  gap: 4px;
 
   a {
     position: relative;
-    color: var(--muted-text);
-    font-size: 12px;
-    font-weight: 400;
+    padding: 8px 14px;
+    border-radius: var(--radius-pill);
+    color: var(--ink);
+    font-size: 14px;
+    font-weight: 500;
     text-decoration: none;
-    transition: color .2s ease;
+    opacity: .8;
+    transition: color .2s ease, background .2s ease, opacity .2s ease;
   }
 
-  a:hover,
+  a:hover {
+    opacity: 1;
+    background: rgba(31, 42, 40, .05);
+  }
+
   a.is-active {
     color: var(--forest);
-  }
-
-  a.is-active::after {
-    position: absolute;
-    right: 0;
-    bottom: -10px;
-    left: 0;
-    height: 2px;
-    background: var(--coral);
-    content: '';
+    opacity: 1;
+    background: rgba(23, 61, 54, .08);
   }
 }
 
@@ -103,7 +113,7 @@
   }
 
   &__trigger:hover, &__trigger[aria-expanded="true"] {
-    background: #edf2eb;
+    background: rgba(31, 42, 40, .06);
   }
 
   &__avatar {
@@ -133,10 +143,13 @@
     width: 260px;
     max-width: calc(100vw - 28px);
     padding: 8px;
-    border: 1px solid #e0e6dd;
-    border-radius: 12px;
-    background: #fffefa;
-    box-shadow: 0 18px 45px rgb(31 42 40 / 18%);
+    @include glass.surface;
+
+    & {
+      border-radius: 18px;
+      background: var(--glass-fill-strong);
+      box-shadow: var(--glass-highlight), 0 18px 45px rgb(31 42 40 / 18%);
+    }
 
 
   }
@@ -161,11 +174,11 @@
     gap: 10px;
     padding: 6px 4px;
     border: 0;
-    border-radius: 6px;
+    border-radius: 10px;
     color: var(--forest);
     background: transparent;
     font: inherit;
-    font-size: 13px;
+    font-size: 14px;
     font-weight: 400;
     text-align: left;
     text-decoration: none;
@@ -173,7 +186,6 @@
     > svg { width: 20px; height: 20px; flex: 0 0 auto; }
     &--sign-out { margin-top: 6px; padding-top: 8px; border-top: 1px solid #e0e6dd; border-radius: 0; color: #db6648; }
   }
-  &:has(&__panel)::after { position: absolute; z-index: 91; top: calc(100% + 6px); right: 15px; width: 12px; height: 12px; transform: rotate(45deg); border-top: 1px solid #e0e6dd; border-left: 1px solid #e0e6dd; background: #fffefa; content: ''; }
   &__language {
     display: grid;
     gap: 4px;
@@ -188,7 +200,7 @@
   }
   &__panel { max-height: calc(100dvh - 95px); overflow-y: auto; }
   &__chevron { margin-left: auto; color: #81908b; }
-  &__item:hover, &__item:focus-visible { background: #edf2eb; }
+  &__item:hover, &__item:focus-visible { background: rgba(31, 42, 40, .06); }
   &__item:disabled { opacity: .6; cursor: wait; }
   &__error { margin: 6px 0 0; color: #9c3935; font-size: 12px; line-height: 1.45; }
 }
@@ -215,9 +227,28 @@
 
   &:hover,
   &.is-active {
-    border-color: #dfe6dd;
+    border-color: transparent;
     color: var(--forest);
-    background: #fffefa;
+    background: rgba(31, 42, 40, .06);
+  }
+}
+
+.header-login {
+  flex: 0 0 auto;
+  min-height: 36px;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 14px;
+  border-radius: var(--radius-pill);
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background .2s ease;
+
+  &:hover {
+    background: rgba(31, 42, 40, .06);
   }
 }
 
@@ -225,9 +256,9 @@
   flex: 0 0 auto;
   min-height: 36px;
   height: 36px;
-  padding: 0 12px;
-  border-radius: 8px;
-  font-size: 12px;
+  padding: 0 16px;
+  border-radius: var(--radius-pill);
+  font-size: 13px;
   line-height: 1;
   white-space: nowrap;
 }
@@ -237,12 +268,11 @@
 }
 
 @include breakpoints.down(760px) {
-  .header-user-menu--guest { display: none; }
-  .header-register.button { min-height: 34px; height: 34px; padding: 0 10px; }
+  .header-register.button { min-height: 34px; height: 34px; padding: 0 14px; }
 }
 
 @include breakpoints.down(360px) {
-  .header-register.button { font-size: 11px; padding: 0 8px; }
+  .header-register.button { font-size: 12px; padding: 0 10px; }
 }
 
 .header-notifications {
@@ -258,16 +288,16 @@
     padding: 0;
     border: 1px solid transparent;
     border-radius: 50%;
-    color: #52685e;
+    color: var(--ink);
     background: transparent;
     cursor: pointer;
   }
 
   &__trigger:hover,
   &__trigger[aria-expanded="true"] {
-    border-color: #dfe6dd;
+    border-color: transparent;
     color: var(--forest);
-    background: #fffefa;
+    background: rgba(31, 42, 40, .06);
   }
 }
 
@@ -285,7 +315,7 @@
     padding: 0;
     border: 1px solid transparent;
     border-radius: 50%;
-    color: #52685e;
+    color: var(--ink);
     background: transparent;
     cursor: pointer;
     text-decoration: none;
@@ -296,22 +326,24 @@
     position: absolute;
     top: -2px;
     right: -3px;
-    min-width: 16px;
-    padding: 2px 4px;
+    min-width: 18px;
+    padding: 2px 5px;
     border-radius: 9px;
     color: #fffefa;
-    background: #a44c42;
-    font-size: 8px;
-    line-height: 1.2;
+    background: var(--coral-text);
+    box-shadow: 0 0 0 2px var(--paper);
+    font-size: 10px;
+    font-weight: 700;
+    line-height: 1.4;
     text-align: center;
   }
 
   &__trigger:hover,
   &__trigger[aria-expanded="true"],
   &__trigger.is-active {
-    border-color: #dfe6dd;
+    border-color: transparent;
     color: var(--forest);
-    background: #fffefa;
+    background: rgba(31, 42, 40, .06);
   }
 }
 
@@ -327,16 +359,16 @@
     padding: 0;
     border: 1px solid transparent;
     border-radius: 50%;
-    color: #52685e;
+    color: var(--ink);
     background: transparent;
     cursor: pointer;
   }
 
   &__trigger:hover,
   &__trigger[aria-expanded="true"] {
-    border-color: #dfe6dd;
+    border-color: transparent;
     color: var(--forest);
-    background: #fffefa;
+    background: rgba(31, 42, 40, .06);
   }
 
   &__tooltip {
@@ -358,7 +390,7 @@
 }
 
 .header-notifications {
-  &__badge { position: absolute; top: 4px; right: 4px; width: 8px; height: 8px; border-radius: 50%; background: #f18a52; box-shadow: 0 0 0 2px #fffefa; }
+  &__badge { position: absolute; top: 4px; right: 4px; width: 8px; height: 8px; border-radius: 50%; background: var(--coral); box-shadow: 0 0 0 2px var(--paper); }
 }
 
 .pwa-update-notice {
@@ -441,7 +473,7 @@
 
 @include breakpoints.down(760px) {
   .site-shell {
-    padding-bottom: calc(76px + env(safe-area-inset-bottom));
+    padding-bottom: calc(84px + env(safe-area-inset-bottom));
 
     &--footer-visible {
       padding-bottom: 0;
@@ -454,7 +486,7 @@
 
   .pwa-update-notice {
     right: 12px;
-    bottom: calc(88px + env(safe-area-inset-bottom));
+    bottom: calc(96px + env(safe-area-inset-bottom));
     left: 12px;
     width: auto;
   }
@@ -536,10 +568,12 @@
       z-index: 25;
       width: min(300px, calc(100vw - 30px));
       padding: 12px;
-      border: 1px solid #e0e6dd;
-      border-radius: 12px;
-      background: #fffefa;
-      box-shadow: 0 16px 40px rgba(31, 42, 40, .16);
+      @include glass.surface;
+
+      & {
+        border-radius: 18px;
+        background: var(--glass-fill-strong);
+      }
     }
 
     &__links {
@@ -595,18 +629,22 @@
     grid-template-columns: repeat(5, minmax(0, 1fr));
     padding: 4px 6px;
     transform: translateX(-50%);
-    border: 1px solid rgba(255, 255, 255, .78);
-    border-radius: 28px;
-    background: #fffefa;
-    box-shadow: 0 10px 32px rgba(31, 42, 40, .15),
-      inset 0 1px 0 rgba(255, 255, 255, .9);
+    @include glass.surface;
+
+    & {
+      border-radius: 30px;
+      box-shadow: var(--glass-highlight), 0 10px 32px rgba(31, 42, 40, .15);
+    }
 
     &__link {
       min-width: 0;
-      min-height: 44px;
+      min-height: 52px;
       display: flex;
+      flex-direction: column;
       align-items: center;
       justify-content: center;
+      gap: 2px;
+      padding: 4px 2px;
       border-radius: 24px;
       color: #7b8982;
       text-decoration: none;
@@ -624,14 +662,30 @@
 
     &__link > svg,
     &__icon > svg {
-      width: 24px;
-      height: 24px;
+      width: 22px;
+      height: 22px;
+    }
+
+    // Labels under the icons, as on iOS tab bars.
+    &__label {
+      max-width: 100%;
+      overflow: hidden;
+      font-size: 10px;
+      font-weight: 600;
+      line-height: 1.2;
+      letter-spacing: .01em;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    &__link.is-active &__label {
+      color: var(--forest);
     }
 
     &__icon {
       position: relative;
-      width: 24px;
-      height: 24px;
+      width: 22px;
+      height: 22px;
       display: block;
     }
 
@@ -643,8 +697,9 @@
       padding: 2px 4px;
       border-radius: 9px;
       color: #fffefa;
-      background: #a44c42;
-      font-size: 8px;
+      background: var(--coral-text);
+      font-size: 10px;
+      font-weight: 700;
       line-height: 1.2;
       text-align: center;
     }
@@ -690,31 +745,76 @@
   }
 }
 
-@include breakpoints.down(760px) {
-  .site-shell--account {
-    .header-install {
-      display: none;
-    }
-  }
-}
-
 .site-header:has(.header-creator-search.is-open),
 .site-header:has(.header-creator-search.is-expanded) { z-index: 120; }
 
+// Support moves into the side menu on phones; the header keeps search, install and alerts.
 @include breakpoints.down(760px) {
   .site-header__actions .header-support {
-    display: grid;
-    width: 30px;
-    height: 34px;
+    display: none;
   }
 }
 
 @include breakpoints.down(360px) {
   .site-header__actions {
     gap: 1px;
-    .header-support { width: 24px; }
     .header-notifications__trigger, .header-install__trigger { width: 28px; }
     .header-user-menu__trigger--signed-in { width: 34px; }
     .header-user-menu__avatar { width: 32px; height: 32px; }
+  }
+}
+
+// The homepage hero carries the search, so the desktop header does not repeat it.
+@include breakpoints.up(901px) {
+  .site-shell--home .site-header .header-creator-search {
+    display: none;
+  }
+}
+
+// Phones: the header is a floating glass capsule that matches the bottom navigation.
+// It keeps the same 62px footprint (8px gap + 54px bar) that sticky toolbars and the side menu use.
+@include breakpoints.down(760px) {
+  .header-login {
+    display: none;
+  }
+
+  .site-header {
+    top: 8px;
+    margin: 8px 12px 0;
+    border-radius: 28px;
+
+    &::before {
+      @include glass.surface;
+
+      & {
+        box-shadow: var(--glass-highlight), 0 10px 32px rgba(31, 42, 40, .12);
+      }
+    }
+
+    &__inner,
+    .site-shell--account &__inner {
+      width: 100%;
+      min-height: 54px;
+      padding: 0 8px 0 6px;
+    }
+  }
+
+  .site-shell--mobile-chrome-hidden .site-header {
+    transform: translateY(calc(-100% - 16px));
+  }
+
+  .site-header__actions {
+    .header-notifications__trigger,
+    .header-install__trigger,
+    .header-creator-search__submit {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+    }
+
+    .header-user-menu__avatar {
+      width: 34px;
+      height: 34px;
+    }
   }
 }

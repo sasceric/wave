@@ -26,31 +26,39 @@
     line-height: 1.04;
   }
 
-  &__intro > p:last-child {
+  &__description {
     max-width: 560px;
     margin: 13px auto 0;
-    color: #718078;
-    font-size: 13px;
-    line-height: 1.7;
+    color: var(--muted-text);
+    font-size: 15px;
+    line-height: 1.6;
+  }
+
+  &__actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 20px;
   }
 
   &__list {
-    border-top: 1px solid #dfe5dd;
+    border-top: 1px solid var(--hairline);
   }
 
   &__item {
-    border-bottom: 1px solid #dfe5dd;
+    border-bottom: 1px solid var(--hairline);
   }
 
   &__item summary {
     display: flex;
-    min-height: 67px;
+    min-height: 62px;
     align-items: center;
     justify-content: space-between;
     gap: 20px;
-    color: var(--forest);
-    font-size: 14px;
-    font-weight: 600;
+    color: var(--ink);
+    font-size: 17px;
+    font-weight: 500;
     line-height: 1.45;
     cursor: pointer;
     list-style: none;
@@ -62,8 +70,8 @@
 
   &__item summary > svg {
     flex: 0 0 auto;
-    color: #8a9b8f;
-    transition: transform .18s ease;
+    color: var(--muted-text);
+    transition: transform .25s var(--ease-standard);
   }
 
   &__item[open] summary > svg {
@@ -73,9 +81,9 @@
   &__answer {
     max-width: 700px;
     padding: 0 34px 20px 0;
-    color: #718078;
-    font-size: 12px;
-    line-height: 1.75;
+    color: var(--muted-text);
+    font-size: 15px;
+    line-height: 1.6;
   }
 }
 
@@ -93,12 +101,49 @@
     }
 
     &__item summary {
-      min-height: 62px;
-      font-size: 13px;
+      min-height: 58px;
+      font-size: 16px;
     }
 
     &__answer {
-      font-size: 11px;
+      font-size: 14px;
     }
+  }
+}
+
+.faq-section--split {
+  width: auto;
+  display: grid;
+  grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr);
+  align-items: start;
+  gap: 48px;
+  padding: 0;
+
+  .faq-section__intro {
+    max-width: none;
+    margin: 0;
+    text-align: left;
+  }
+
+  .faq-section__description {
+    margin-inline: 0;
+  }
+
+  .faq-section__actions {
+    justify-content: flex-start;
+  }
+}
+
+@include breakpoints.down(760px) {
+  .faq-section--split {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 20px;
+    padding: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .faq-section__item summary > svg {
+    transition: none;
   }
 }

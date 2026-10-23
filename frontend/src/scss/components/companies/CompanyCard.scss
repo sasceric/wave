@@ -6,28 +6,31 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  border: 1px solid #e5e7df;
-  border-radius: 13px;
-  background: #fffefa;
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-card);
+  background: var(--card);
+  transition: box-shadow .25s var(--ease-standard), transform .25s var(--ease-standard);
 
-  &__visual { height: 100px; overflow: hidden; background: #dde5da; }
+  &:hover { box-shadow: var(--shadow-soft); transform: translateY(-2px); }
+
+  &__visual { height: 112px; overflow: hidden; background: var(--surface); }
   &__visual .card-image { display: block; width: 100%; height: 100%; object-fit: cover; object-position: center 42%; }
-  &__body { position: relative; flex: 1; display: flex; flex-direction: column; margin-top: -4px; padding: 0 15px 16px; border-radius: 11px 11px 0 0; background: #fffefa; }
+  &__body { position: relative; flex: 1; display: flex; flex-direction: column; margin-top: -4px; padding: 0 15px 16px; border-radius: 11px 11px 0 0; background: var(--card); }
   &__identity { position: relative; min-height: 53px; padding-left: 70px; }
-  &__logo { position: absolute; top: -19px; left: -2px; display: grid; place-items: center; width: 60px; height: 60px; border: 3px solid #fffefa; border-radius: 16px; color: white; background: #164239; }
+  &__logo { position: absolute; top: -19px; left: -2px; display: grid; place-items: center; width: 60px; height: 60px; border: 3px solid var(--card); border-radius: 16px; color: white; background: #164239; }
   &__logo .card-image, &__logo .wave-logo { display: block; width: 100%; height: 100%; border-radius: 12px; object-fit: cover; }
   &__logo .wave-logo { padding: 5px; }
-  &__verified { position: absolute; top: 23px; left: 43px; display: grid; place-items: center; color: #79a68c; border-radius: 50%; background: #fffefa; }
+  &__verified { position: absolute; top: 23px; left: 43px; display: grid; place-items: center; color: #79a68c; border-radius: 50%; background: var(--card); }
   &__heading { min-width: 0; padding-top: 9px; }
-  h2 { margin: 0; color: #172e28; font-family: var(--serif); font-size: 17px; font-weight: 600; line-height: 1.25; overflow-wrap: anywhere; }
-  &__heading p { margin: 3px 0 0; color: #75867d; font-size: 12px; line-height: 1.35; }
-  &__description { min-height: 38px; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; margin: 7px 0 12px; color: #72837a; font-size: 12px; line-height: 1.6; }
+  h2 { margin: 0; color: var(--ink); font-family: var(--sans); font-size: 16px; font-weight: 600; line-height: 1.3; overflow-wrap: anywhere; }
+  &__heading p { margin: 3px 0 0; color: var(--muted-text); font-size: 13px; line-height: 1.35; }
+  &__description { min-height: 38px; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; margin: 7px 0 12px; color: var(--muted-text); font-size: 13px; line-height: 1.55; }
   &__footer { display: flex; flex-wrap: wrap; align-items: center; gap: 13px; margin-top: auto; min-width: 0; }
-  &__meta { min-width: 0; display: flex; align-items: center; gap: 5px; color: #73877d; font-size: 11px; line-height: 1.4; }
+  &__meta { min-width: 0; display: flex; align-items: center; gap: 5px; color: var(--muted-text); font-size: 12px; line-height: 1.4; }
   &__meta:first-child { white-space: nowrap; }
   &__meta svg { flex-shrink: 0; color: #355e50; }
-  &__link { flex-shrink: 0; display: flex; align-items: center; justify-content: center; gap: 9px; min-height: 34px; margin-left: auto; padding: 6px 10px; border: 1px solid #b7c9bf; border-radius: 9px; color: #1d4c3f; text-decoration: none; font-size: 10px; font-weight: 600; }
-  &__link:hover { background: #eef2e9; }
+  &__link { flex-shrink: 0; display: flex; align-items: center; justify-content: center; min-height: 36px; margin-left: auto; padding: 0 14px; gap: 6px; border: 0; border-radius: var(--radius-pill); color: var(--forest); background: rgba(23, 61, 54, .07); text-decoration: none; font-size: 13px; font-weight: 600; }
+  &__link:hover { background: rgba(23, 61, 54, .12); }
   &__link:focus-visible { outline: 2px solid var(--forest); outline-offset: 3px; }
 }
 
@@ -37,10 +40,10 @@
     &__visual { height: 90px; }
     &__body { padding-inline: 16px; padding-bottom: 17px; }
     &__description { min-height: 45px; margin-top: 9px; margin-bottom: 17px; font-size: 13px; }
-    h2 { font-size: 19px; }
+    h2 { font-size: 17px; }
     &__heading p { font-size: 13px; }
     &__meta { font-size: 12px; }
-    &__link { min-height: 36px; padding-inline: 11px; font-size: 11px; }
+    &__link { min-height: 36px; padding-inline: 12px; font-size: 13px; }
   }
 }
 
@@ -49,4 +52,9 @@
     &__footer { gap: 8px; flex-wrap: wrap; }
     &__link { margin-left: auto; }
   }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .company-directory-card { transition: none; }
+  .company-directory-card:hover { transform: none; }
 }

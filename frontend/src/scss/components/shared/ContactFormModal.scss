@@ -1,0 +1,22 @@
+.contact-form-modal {
+  &__honeypot {
+    position: absolute;
+    left: -10000px;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+  }
+
+  &__role {
+    display: grid;
+    gap: 6px;
+    font-size: 14px;
+  }
+
+  &__meta {
+    color: var(--muted-text);
+    font-size: 12px;
+  }
+}

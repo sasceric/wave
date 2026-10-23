@@ -7,8 +7,8 @@
   &__item { position: relative; display: block; min-width: 0; aspect-ratio: 16 / 10; padding: 0; overflow: hidden; border: 1px solid #e0e5dc; border-radius: 5px; background: #e9ede5; scroll-snap-align: start; cursor: zoom-in; }
   &__item:focus-visible { outline: 3px solid var(--forest); outline-offset: -3px; }
   &__type { position: absolute; bottom: 9px; left: 9px; display: grid; place-items: center; width: 30px; height: 30px; border: 1px solid rgba(255,255,255,.65); border-radius: 50%; color: white; background: rgba(19,33,28,.8); pointer-events: none; }
-  &__controls { display: flex; align-items: center; justify-content: center; gap: 12px; margin-top: 8px; color: var(--muted); font-size: 11px; }
-  &__controls button { display: grid; place-items: center; width: 27px; height: 27px; padding: 0; border: 1px solid #dfe4dc; border-radius: 50%; color: var(--forest); background: #fffefa; cursor: pointer; }
+  &__controls { display: flex; align-items: center; justify-content: center; gap: 12px; margin-top: 8px; color: var(--muted); font-size: 12px; }
+  &__controls button { display: grid; place-items: center; width: 27px; height: 27px; padding: 0; border: 1px solid var(--hairline); border-radius: 50%; color: var(--forest); background: var(--card); cursor: pointer; }
   &__controls button:disabled { opacity: .35; cursor: default; }
 
   &--showcase {

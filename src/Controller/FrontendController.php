@@ -67,7 +67,7 @@ final class FrontendController
                 $siteOrigin->base(),
                 $siteOrigin->url('/pwa-512.png'),
                 $this->googleSiteVerification,
-                ($seo['preloadImage'] ?? null) === '/images/banner-girl.webp' ? $frontendAssets->homepageStyles() : [],
+                ($seo['homepageStyles'] ?? false) === true ? $frontendAssets->homepageStyles() : [],
             ),
             $seo['canonical'] === null ? Response::HTTP_NOT_FOUND : Response::HTTP_OK,
             ['Content-Type' => 'text/html; charset=UTF-8'],
@@ -103,10 +103,7 @@ final class FrontendController
         }
         $preloadImage = $seo['preloadImage'] ?? null;
         if (is_string($preloadImage) && $preloadImage !== '') {
-            $responsive = $preloadImage === '/images/banner-girl.webp'
-                ? ' imagesrcset="/images/banner-girl-360.webp 360w, /images/banner-girl-600.webp 600w, /images/banner-girl-900.webp 900w, /images/banner-girl.webp 1086w" imagesizes="(max-width: 420px) 289px, (max-width: 760px) 355px, max(587px, calc((100svh - 164px) * .938))"'
-                : '';
-            $head .= "\n    <link rel=\"preload\" as=\"image\" href=\"".$this->escape($preloadImage).'"'.$responsive." fetchpriority=\"high\" />";
+            $head .= "\n    <link rel=\"preload\" as=\"image\" href=\"".$this->escape($preloadImage)."\" fetchpriority=\"high\" />";
         }
         if ($googleSiteVerification !== '') {
             $head .= "\n    <meta name=\"google-site-verification\" content=\"".$this->escape($googleSiteVerification)."\" />";

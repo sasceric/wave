@@ -17,17 +17,15 @@
   &__results-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 35px; margin-bottom: 14px; }
   &__results-head p { margin: 0; font-size: 13px; }
   &__view-options { display: flex; gap: 8px; }
-  &__view-options button { display: flex; align-items: center; gap: 7px; min-height: 35px; padding: 0 14px; border: 1px solid #e2e6df; border-radius: 12px; color: #5d756b; background: #fffefa; font: inherit; font-size: 12px; cursor: pointer; }
+  &__view-options button { display: flex; align-items: center; gap: 7px; min-height: 35px; padding: 0 14px; border: 1px solid var(--hairline); border-radius: var(--radius-pill); color: #5d756b; background: var(--card); font: inherit; font-size: 13px; cursor: pointer; }
   &__view-options button[aria-pressed='true'] { color: #fffefa; background: var(--forest); border-color: var(--forest); }
   &__hint { margin: -5px 0 0; color: var(--muted); font-size: 11px; line-height: 1.5; }
   .directory-filter-panel legend { padding: 0; color: var(--muted); font-size: 12px; font-weight: 400; }
-  .creator-card { aspect-ratio: 3 / 4; box-shadow: none; }
-  .creator-card__heading { align-items: start; flex-direction: column; gap: 3px; }
-  .creator-card__metric { top: 9px; left: 9px; font-size: 11px; padding: 5px 8px; }
-  .creator-card__details { right: 10px; left: 10px; }
-  &__grid--list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
-@include breakpoints.up(761px) { .creator-directory__sidebar .directory-filter-panel { position: static; } }
+// The creators filter is taller than the screen, so it scrolls with the page and the
+// guide links below it stay in normal flow.
+@include breakpoints.up(761px) { .creator-directory__sidebar .directory-filter-panel { position: static; max-height: none; overflow: visible; } }
+
 @include breakpoints.down(1150px) { .creator-directory__content { grid-template-columns: 220px minmax(0, 1fr); gap: 18px; } }
 @include breakpoints.down(760px) {
   .creator-directory {
@@ -40,8 +38,39 @@
     &__content { display: block; }
     &__sidebar-links { display: none; }
     &__view-options { display: none; }
+  }
+}
+
+// "Lista" view: one row per creator, portrait on the left and details beside it.
+.creator-directory__grid--list.creator-grid--directory {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 10px;
+
+  > .creator-card {
+    display: grid;
+    grid-template-columns: 112px minmax(0, 1fr);
+    align-items: center;
+    gap: 18px;
+    padding: 10px 18px 10px 10px;
+    border: 1px solid var(--hairline);
+    border-radius: var(--radius-card);
+    background: var(--card);
+    transition: box-shadow .2s var(--ease-standard);
+  }
+
+  > .creator-card:hover { box-shadow: var(--shadow-soft); }
+  .creator-card__media { aspect-ratio: 1 / 1; border-radius: 14px; }
+  .creator-card__featured { display: none; }
+  .creator-card__metric { bottom: 6px; left: 6px; min-height: 22px; padding: 2px 7px; font-size: 11px; }
+  .creator-card__heading { flex-direction: row; align-items: baseline; }
+  .creator-card__heading h3 { font-size: 17px; }
+  .creator-card__categories { white-space: normal; }
+}
+
+@include breakpoints.down(760px) {
+  .creator-directory__grid--list.creator-grid--directory {
+    > .creator-card { grid-template-columns: 84px minmax(0, 1fr); gap: 12px; padding: 8px 12px 8px 8px; }
+    .creator-card__heading { flex-direction: column; align-items: flex-start; }
     .creator-card__heading h3 { font-size: 15px; }
-    .creator-card__price { font-size: 14px; }
-    .creator-card__categories { font-size: 11px; }
   }
 }

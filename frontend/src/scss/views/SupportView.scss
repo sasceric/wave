@@ -41,7 +41,7 @@
   border: 1px solid var(--line);
   border-radius: 14px;
   color: var(--forest);
-  background: #fffefa;
+  background: var(--card);
   text-align: center;
   cursor: pointer;
   transition: border-color .15s ease;
@@ -54,7 +54,7 @@
 .support-topics {
   h2 { margin: 0 0 16px; font-size: 20px; }
   > div { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
-  button { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 18px; border: 1px solid var(--line); border-radius: 10px; background: #fffefa; color: var(--forest); text-align: left; cursor: pointer; }
+  button { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 18px; border: 1px solid var(--line); border-radius: var(--radius-card); background: var(--card); color: var(--forest); text-align: left; cursor: pointer; }
   button:hover { border-color: var(--secondary); }
 }
 .support-topbar { display: flex; justify-content: space-between; align-items: center; gap: 24px; max-width: 960px; margin: 0 auto 38px; }
@@ -84,8 +84,8 @@
   margin: 0 auto 24px;
   padding: 28px;
   border: 1px solid var(--line);
-  border-radius: 16px;
-  background: #fffefa;
+  border-radius: var(--radius-card);
+  background: var(--card);
 }
 .support-form {
   &__basic { display: grid; grid-template-columns: 1fr 1fr; gap: 22px 26px; }
@@ -102,8 +102,8 @@
   background: var(--paper);
   h2 { font-size: 15px; margin: 12px 0 8px; }
   p { font-size: 13px; color: var(--muted-text); line-height: 1.5; }
-  > small { display: block; font-size: 11px; color: var(--muted-text); line-height: 1.5; margin-top: 12px; }
-  &__drop { position: relative; display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 25px 12px; border: 1px dashed var(--secondary); border-radius: 9px; text-align: center; font-size: 13px; cursor: pointer; background: #fffefa; }
+  > small { display: block; font-size: 12px; color: var(--muted-text); line-height: 1.5; margin-top: 12px; }
+  &__drop { position: relative; display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 25px 12px; border: 1px dashed var(--secondary); border-radius: 9px; text-align: center; font-size: 13px; cursor: pointer; background: var(--card); }
   &__drop input { position: absolute; inset: 0; opacity: 0; cursor: pointer; height: 100%; }
   &__drop:focus-within { outline: 2px solid var(--forest); outline-offset: 3px; }
   &__drop > span { font-size: 12px; color: var(--muted-text); }
@@ -160,13 +160,13 @@
   .support-choices { gap: 9px; margin: -25px 12px 24px; }
   .support-choice { padding: 18px 9px; gap: 9px; }
   .support-choice strong { font-size: 13px; }
-  .support-choice > span { font-size: 11px; }
+  .support-choice > span { font-size: 12px; }
   .support-choice > svg { width: 28px; height: 28px; }
   .support-topics > div { grid-template-columns: 1fr 1fr; }
   .support-topics button { padding: 14px; font-size: 12px; }
   .support-topbar { align-items: flex-start; gap: 18px; flex-direction: column; margin-bottom: 26px; }
   .support-steps { width: 100%; gap: 12px; justify-content: space-between; }
-  .support-steps li { gap: 5px; font-size: 10px; }
+  .support-steps li { gap: 5px; font-size: 12px; }
   .support-steps li > span { width: 24px; height: 24px; }
   .support-heading__icon { width: 54px; height: 54px; }
   .support-heading__icon > svg { width: 30px; }
@@ -181,4 +181,4 @@
   .support-success .success-modal__content { padding: 30px 22px; }
 }
 
-.support-tracking__reply { margin: 18px 0; padding: 16px; border-radius: 10px; background: #edf1eb; text-align: left; strong { font-size: 13px; } small { margin-left: 12px; color: var(--muted-text); font-size: 11px; } p { white-space: pre-wrap; overflow-wrap: anywhere; font-size: 14px; line-height: 1.6; } }
+.support-tracking__reply { margin: 18px 0; padding: 16px; border-radius: 10px; background: #edf1eb; text-align: left; strong { font-size: 13px; } small { margin-left: 12px; color: var(--muted-text); font-size: 12px; } p { white-space: pre-wrap; overflow-wrap: anywhere; font-size: 14px; line-height: 1.6; } }

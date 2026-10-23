@@ -7,11 +7,11 @@ defineProps({ kind: { type: String, required: true } })
 
 <template>
   <div v-if="kind === 'creator'" class="creator-card directory-skeleton directory-skeleton--creator" aria-hidden="true">
-    <div class="creator-card__media">
-      <div class="creator-card__details">
-        <span class="skeleton-line skeleton-line--wide"></span>
-        <span class="skeleton-line skeleton-line--short"></span>
-      </div>
+    <div class="creator-card__media skeleton-surface"></div>
+    <div class="creator-card__details">
+      <span class="skeleton-line skeleton-line--wide"></span>
+      <span class="skeleton-line skeleton-line--short"></span>
+      <span class="skeleton-line"></span>
     </div>
   </div>
   <div v-else-if="kind === 'campaign'" class="campaign-card directory-skeleton directory-skeleton--campaign" aria-hidden="true">

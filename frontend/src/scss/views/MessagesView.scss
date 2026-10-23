@@ -11,10 +11,10 @@
     height: calc(100vh - 100px);
     min-height: 630px;
     overflow: hidden;
-    border: 1px solid var(--line);
-    border-radius: 10px;
-    background: #fbf8f2;
-    box-shadow: 0 14px 38px rgba(37, 45, 39, .055);
+    border: 1px solid var(--hairline);
+    border-radius: var(--radius-panel);
+    background: var(--card);
+    box-shadow: var(--shadow-soft);
   }
 
   &__inbox,
@@ -29,8 +29,8 @@
     display: flex;
     flex-direction: column;
     padding: 24px 14px 12px;
-    border-right: 1px solid var(--line);
-    background: #fcfaf5;
+    border-right: 1px solid var(--hairline);
+    background: rgba(246, 242, 234, .55);
   }
 
   &__inbox-heading {
@@ -66,7 +66,7 @@
     border-radius: 9px;
     color: #fffefa;
     background: var(--forest);
-    font-size: 10px;
+    font-size: 12px;
     font-weight: 600;
     text-decoration: none;
     white-space: nowrap;
@@ -101,10 +101,10 @@
     height: 45px;
     margin-bottom: 13px;
     padding: 0 13px;
-    border: 1px solid #e5dfd5;
-    border-radius: 10px;
-    color: #394a44;
-    background: #fffefa;
+    border: 1px solid rgba(31, 42, 40, .12);
+    border-radius: var(--radius-pill);
+    color: var(--muted-text);
+    background: var(--card);
   }
 
   &__search input {
@@ -117,44 +117,51 @@
     color: var(--ink);
     background: transparent;
     font: inherit;
-    font-size: 12px;
+    font-size: 15px;
   }
 
   &__search input::placeholder,
   &__composer-field input::placeholder {
     color: #818982;
-    font-size: 11px;
+    font-size: 15px;
   }
 
   &__search:focus-within {
-    border-color: #96a99b;
-    box-shadow: 0 0 0 3px rgba(23, 61, 54, .07);
+    border-color: var(--forest);
+    box-shadow: 0 0 0 4px rgba(23, 61, 54, .12);
   }
 
+  // Inbox filters use the shared segmented-control look.
   &__filters {
     display: flex;
     align-items: center;
-    gap: 25px;
-    margin: 0 4px 9px;
-    border-bottom: 1px solid #e8e2d9;
+    gap: 2px;
+    margin: 0 4px 10px;
+    padding: 3px;
+    border-radius: var(--radius-pill);
+    background: var(--surface);
   }
 
   &__filters button {
-    min-height: 37px;
-    padding: 0 1px;
+    flex: 1 1 0;
+    min-height: 32px;
+    padding: 0 12px;
     border: 0;
-    border-bottom: 2px solid transparent;
-    color: #77817b;
+    border-radius: var(--radius-pill);
+    color: var(--muted-text);
     background: transparent;
     font: inherit;
-    font-size: 11px;
+    font-size: 14px;
+    font-weight: 500;
     cursor: pointer;
+    transition: background .2s var(--ease-standard), color .2s var(--ease-standard);
   }
 
   &__filters button.is-active {
-    border-bottom-color: var(--forest);
-    color: var(--forest);
-    font-weight: 700;
+    color: var(--ink);
+    background: var(--card);
+    box-shadow: 0 1px 3px rgba(23, 61, 54, .12), 0 1px 1px rgba(23, 61, 54, .04);
+    font-weight: 600;
   }
 
   &__conversation-list {
@@ -186,11 +193,11 @@
   }
 
   &__conversation:hover {
-    background: #f4efe7;
+    background: rgba(31, 42, 40, .05);
   }
 
   &__conversation.is-active {
-    background: #f0e9df;
+    background: rgba(23, 61, 54, .09);
   }
 
   &__avatar {
@@ -241,7 +248,7 @@
   &__conversation-top time {
     flex: 0 0 auto;
     color: #7c8680;
-    font-size: 10px;
+    font-size: 12px;
   }
 
   &__unread {
@@ -254,7 +261,7 @@
     border-radius: 50%;
     color: #fffefa;
     background: var(--coral);
-    font-size: 10px;
+    font-size: 12px;
     font-weight: 700;
     text-align: center;
   }
@@ -263,7 +270,7 @@
     display: -webkit-box;
     overflow: hidden;
     color: #839087;
-    font-size: 9px;
+    font-size: 12px;
     line-height: 1.45;
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 3;
@@ -271,19 +278,19 @@
 
   &__conversation-meta .campaign-messages__campaign {
     color: #78837c;
-    font-size: 10px;
+    font-size: 12px;
     font-weight: 600;
   }
 
   &__preview {
     color: #78817c;
-    font-size: 11px;
+    font-size: 12px;
   }
 
   &__no-results {
     margin: 17px 8px;
     color: #78817c;
-    font-size: 11px;
+    font-size: 12px;
     line-height: 1.5;
   }
 
@@ -304,7 +311,7 @@
     align-items: center;
     gap: 13px;
     padding: 13px 1px;
-    border-bottom: 1px solid #e8e2d9;
+    border-bottom: 1px solid var(--hairline);
     background: #fffdf9;
   }
 
@@ -319,7 +326,7 @@
     border: 1px solid #e7e1d7;
     border-radius: 50%;
     color: var(--forest);
-    background: #fffefa;
+    background: var(--card);
     cursor: pointer;
   }
 
@@ -355,7 +362,7 @@
     overflow: hidden;
     margin: 0;
     color: #78867d;
-    font-size: 10px;
+    font-size: 12px;
     text-overflow: ellipsis;
     text-decoration: none;
     white-space: nowrap;
@@ -374,7 +381,7 @@
     border-radius: 20px;
     color: #547064;
     background: #edf2e9;
-    font-size: 9px;
+    font-size: 12px;
     white-space: nowrap;
   }
 
@@ -410,7 +417,7 @@
     gap: 12px;
     margin: 7px 0;
     color: var(--muted);
-    font-size: 11px;
+    font-size: 12px;
     text-align: center;
   }
 
@@ -450,30 +457,30 @@
   &__avatar--message {
     width: 37px;
     height: 37px;
-    font-size: 9px;
+    font-size: 12px;
   }
 
   &__message {
     width: fit-content;
     max-width: min(78%, 540px);
     padding: 12px 16px 8px;
-    border: 1px solid #eee7dc;
-    border-radius: 17px 17px 17px 5px;
-    color: #303b36;
-    background: #f4eee5;
+    border: 0;
+    border-radius: 20px 20px 20px 6px;
+    color: var(--ink);
+    background: var(--surface);
   }
 
   &__message--mine {
     border-color: var(--forest);
-    border-radius: 17px 17px 5px 17px;
+    border-radius: 20px 20px 6px 20px;
     color: #fffefa;
     background: var(--forest);
   }
 
   &__message p {
     margin: 0;
-    font-size: 13px;
-    line-height: 1.55;
+    font-size: 15px;
+    line-height: 1.45;
     white-space: pre-wrap;
     overflow-wrap: anywhere;
   }
@@ -482,7 +489,7 @@
     display: block;
     margin-top: 6px;
     color: #858b85;
-    font-size: 9px;
+    font-size: 12px;
     text-align: right;
   }
 
@@ -499,8 +506,8 @@
     align-items: center;
     gap: 9px;
     padding: 12px 0 1px;
-    border-top: 1px solid #e8e2d9;
-    background: #fffdf9;
+    border-top: 1px solid var(--hairline);
+    background: var(--card);
   }
 
   &__closed-notice {
@@ -526,14 +533,14 @@
 
   &__composer-field input {
     width: 100%;
-    height: 49px;
-    padding: 0 16px;
-    border: 1px solid #e2ddd4;
-    border-radius: 10px;
+    height: 46px;
+    padding: 0 18px;
+    border: 1px solid rgba(31, 42, 40, .12);
+    border-radius: var(--radius-pill);
     color: var(--ink);
-    background: #fffefa;
+    background: var(--card);
     font: inherit;
-    font-size: 13px;
+    font-size: 15px;
   }
 
   &__composer-field input:focus,
@@ -543,12 +550,13 @@
   }
 
   &__send {
-    width: 50px;
-    height: 49px;
+    width: 46px;
+    height: 46px;
     display: grid;
     place-items: center;
+    justify-self: center;
     border: 0;
-    border-radius: 10px;
+    border-radius: 50%;
     color: #fffefa;
     background: var(--forest);
     cursor: pointer;
@@ -639,7 +647,7 @@
     margin-top: -18px;
     width: 62px;
     height: 62px;
-    background: #fffefa;
+    background: var(--card);
     box-shadow: 0 2px 10px rgba(31, 42, 40, .11);
   }
 
@@ -655,7 +663,7 @@
   &__company-heading p {
     margin: 0;
     color: #77827b;
-    font-size: 10px;
+    font-size: 12px;
   }
 
   &__verified {
@@ -673,8 +681,8 @@
   &__campaign-card {
     overflow: hidden;
     border: 1px solid #e9e3d9;
-    border-radius: 11px;
-    background: #fffefa;
+    border-radius: var(--radius-card);
+    background: var(--card);
     box-shadow: 0 5px 16px rgba(31, 42, 40, .035);
   }
 
@@ -693,7 +701,7 @@
   &__campaign-card-body .eyebrow {
     margin: 0 0 5px;
     color: #849088;
-    font-size: 8px;
+    font-size: 12px;
     letter-spacing: .11em;
   }
 
@@ -715,7 +723,7 @@
     border-radius: 20px;
     color: #666f69;
     background: #f0eee9;
-    font-size: 8px;
+    font-size: 12px;
     white-space: nowrap;
   }
 
@@ -738,7 +746,7 @@
   &__summary {
     margin: 0 0 13px;
     color: #707a73;
-    font-size: 11px;
+    font-size: 12px;
     line-height: 1.5;
   }
 
@@ -771,7 +779,7 @@
     align-items: center;
     gap: 9px;
     color: #79827d;
-    font-size: 10px;
+    font-size: 12px;
   }
 
   &__facts dt svg {
@@ -782,7 +790,7 @@
   &__facts dd {
     margin: 0;
     color: #202b28;
-    font-size: 10px;
+    font-size: 12px;
     font-weight: 600;
     text-align: right;
     overflow-wrap: anywhere;
@@ -794,7 +802,7 @@
     gap: 8px;
     margin: 0 0 10px;
     color: #64726b;
-    font-size: 10px;
+    font-size: 12px;
   }
 
   &__channels svg {
@@ -806,7 +814,7 @@
     margin: 10px 0;
     border-top: 1px solid #eee9e1;
     color: #64726b;
-    font-size: 10px;
+    font-size: 12px;
   }
 
   &__brief summary {
@@ -873,7 +881,7 @@
   &__details--empty p {
     max-width: 190px;
     margin: 0;
-    font-size: 11px;
+    font-size: 12px;
     line-height: 1.5;
   }
 
@@ -884,7 +892,7 @@
     padding: 22px;
     border: 1px solid #e3e8df;
     border-radius: 8px;
-    background: #fffefa;
+    background: var(--card);
   }
 
   &__signed-out p {
@@ -954,7 +962,7 @@
       min-height: 39px;
       gap: 5px;
       padding: 0 9px;
-      font-size: 9px;
+      font-size: 12px;
     }
 
     &__refresh {
@@ -1015,7 +1023,7 @@
 
     &__thread-person a,
     &__thread-person p {
-      font-size: 9px;
+      font-size: 12px;
     }
 
     &__thread-kind {
@@ -1101,7 +1109,7 @@
       border: 1px solid #e5dfd5;
       border-radius: 50%;
       color: var(--forest);
-      background: #fffefa;
+      background: var(--card);
     }
 
     &__details-scroll {
@@ -1217,9 +1225,9 @@
     border: 1px solid #d9dfd8;
     border-radius: 20px;
     color: var(--forest);
-    background: #fffefa;
+    background: var(--card);
     font: inherit;
-    font-size: 11px;
+    font-size: 12px;
     cursor: pointer;
   }
 
@@ -1265,7 +1273,7 @@
     gap: 12px;
     margin: 8px 0 3px;
     color: var(--forest);
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 700;
     text-align: center;
   }

@@ -52,7 +52,7 @@
     display: block;
     width: 100%;
     aspect-ratio: 1;
-    border: 1px solid #dfe4dc;
+    border: 1px solid var(--hairline);
     border-radius: 10px;
     background: #f1f2ee;
     object-fit: cover;
@@ -83,9 +83,9 @@
     border: 1px solid #dfe5dc;
     border-radius: 6px;
     color: #53695e;
-    background: #fffefa;
+    background: var(--card);
     font: inherit;
-    font-size: 10px;
+    font-size: 12px;
     cursor: pointer;
   }
 
@@ -130,7 +130,7 @@
     place-items: center;
     padding: 0;
     border-radius: 50%;
-    background: #fffefa;
+    background: var(--card);
     box-shadow: 0 3px 8px #173d3614;
   }
 

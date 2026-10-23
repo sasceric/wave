@@ -2,18 +2,18 @@
 
 .credits-page {
   &__main { max-width: 1300px; width: 100%; }
-  .credit-card { padding: 24px; margin-bottom: 20px; border: 1px solid #e2e6df; border-radius: 14px; background: #fffefa; }
+  .credit-card { padding: 24px; margin-bottom: 20px; border: 1px solid var(--hairline); border-radius: var(--radius-card); background: var(--card); }
   h2 { color: var(--forest); font-family: var(--serif); font-size: 25px; margin: 0; }
   .credit-card > header { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 22px; }
   .credit-card > header h2 { display: flex; align-items: center; gap: 10px; }
   .credit-card > header p { margin: 5px 0 0; color: var(--muted); font-size: 13px; line-height: 1.6; }
   .form-field { font-size: 14px; }
-  .credits-table-wrap { max-width: 100%; overflow-x: auto; border: 1px solid #e2e6df; border-radius: 10px; }
+  .credits-table-wrap { max-width: 100%; overflow-x: auto; border: 1px solid var(--hairline); border-radius: 10px; }
   .credits-table { width: 100%; border-collapse: collapse; text-align: left; font-size: 13px; }
-  .credits-table__actions { position: sticky; right: 0; z-index: 1; width: 68px; min-width: 68px; background: #fffefa; box-shadow: -1px 0 0 #e2e6df, -7px 0 10px -9px rgba(23, 61, 54, .35); }
+  .credits-table__actions { position: sticky; right: 0; z-index: 1; width: 68px; min-width: 68px; background: var(--card); box-shadow: -1px 0 0 #e2e6df, -7px 0 10px -9px rgba(23, 61, 54, .35); }
   th.credits-table__actions { z-index: 2; }
-  th { color: #798981; text-transform: uppercase; font-size: 10px; font-weight: 600; letter-spacing: .06em; }
-  th, td { padding: 13px 12px; border-bottom: 1px solid #e6e9e2; }
+  th { color: #798981; text-transform: uppercase; font-size: 12px; font-weight: 600; letter-spacing: .06em; }
+  th, td { padding: 13px 12px; border-bottom: 1px solid var(--hairline); }
   tr:last-child td { border-bottom: 0; }
   td { vertical-align: middle; }
   td small { display: block; margin-top: 5px; color: #788780; overflow-wrap: anywhere; }
@@ -38,13 +38,13 @@
   &__balance, &__cost { display: flex; align-items: center; gap: 16px; min-width: 0; }
   &__balance h2 { margin: 6px 0 10px; font-size: 30px; line-height: 1.2; }
   &__balance h2 span { font-size: 24px; }
-  &__balance .eyebrow { font-size: 10px; }
+  &__balance .eyebrow { font-size: 12px; }
   &__icon { display: grid; flex: 0 0 auto; width: 48px; height: 48px; place-items: center; border-radius: 50%; color: var(--forest); background: #edf1eb; }
   &__balance > &__icon { width: 60px; height: 60px; }
-  &__cost { align-self: stretch; padding-left: 22px; border-left: 1px solid #e2e6df; }
+  &__cost { align-self: stretch; padding-left: 22px; border-left: 1px solid var(--hairline); }
   &__cost strong { font-family: var(--serif); font-size: 28px; font-weight: 500; line-height: 1.2; color: var(--forest); }
   &__cost p { max-width: 160px; margin: 5px 0 0; color: var(--muted); font-size: 12px; line-height: 1.6; }
-  &__note { grid-column: 1 / -1; margin: 0; padding-top: 16px; border-top: 1px solid #e2e6df; font-size: 12px; line-height: 1.6; color: var(--muted); }
+  &__note { grid-column: 1 / -1; margin: 0; padding-top: 16px; border-top: 1px solid var(--hairline); font-size: 12px; line-height: 1.6; color: var(--muted); }
 }
 .credits-history-link { display: inline-flex; align-items: center; gap: 8px; padding: 0; border: 0; color: var(--forest); background: transparent; font: inherit; font-size: 12px; cursor: pointer; }
 .credits-page .credits-overview--free { grid-template-columns: minmax(0, 1fr); }
@@ -56,7 +56,7 @@
   align-items: flex-start;
   gap: 10px;
   padding: 16px 12px;
-  border: 1px solid #dfe4dc;
+  border: 1px solid var(--hairline);
   border-radius: 10px;
   color: var(--forest);
   cursor: pointer;
@@ -67,12 +67,12 @@
   > span { min-width: 0; }
   strong { display: block; font-size: 14px; font-weight: 600; line-height: 1.5; }
   &__price { display: block; margin: 7px 0 4px; font-size: 16px; font-weight: 500; }
-  small { color: var(--muted); font-size: 11px; line-height: 1.5; }
+  small { color: var(--muted); font-size: 12px; line-height: 1.5; }
 }
 .credits-checkout {
   margin-top: 18px;
 
-  .button { width: 100%; min-height: 42px; font-size: 13px; border-radius: 8px; }
+  .button { width: 100%; min-height: 42px; font-size: 14px; border-radius: var(--radius-pill); }
   .button:disabled { color: #79877f; background: #f2f3ee; border-color: #dfe4dc; opacity: 1; }
   p { margin: 9px 0 0; color: var(--muted); font-size: 12px; line-height: 1.6; }
   &__selection { color: var(--forest) !important; }
@@ -83,7 +83,7 @@
   h2 { font-size: 22px; }
   .credits-redeem { flex-direction: column; align-items: stretch; gap: 10px; margin-bottom: 14px; }
   .credits-redeem > :first-child { max-width: none; }
-  .credits-redeem .button { min-height: 42px; font-size: 13px; border-radius: 8px; }
+  .credits-redeem .button { min-height: 42px; font-size: 14px; border-radius: var(--radius-pill); }
 }
 .credits-code-help {
   font-size: 12px;
@@ -118,7 +118,7 @@
   .credits-page .credit-card { padding: 20px; }
   .credits-overview { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px 12px; }
   .credits-overview__balance { grid-column: 1 / -1; }
-  .credits-overview__cost { gap: 10px; padding: 16px 0 0; border-left: 0; border-top: 1px solid #e2e6df; }
+  .credits-overview__cost { gap: 10px; padding: 16px 0 0; border-left: 0; border-top: 1px solid var(--hairline); }
   .credits-overview__cost strong { font-size: 25px; }
   .credits-overview__icon { width: 38px; height: 38px; }
   .credits-purchase-layout { grid-template-columns: minmax(0, 1fr); gap: 0; }
@@ -135,27 +135,27 @@
 }
 
 .credits-success-modal {
-  border: 1px solid #e2e6df;
+  border: 1px solid var(--hairline);
   border-radius: 18px;
   text-align: center;
   .success-modal__content { padding: 34px 28px 28px; }
   .success-modal__icon { width: 64px; height: 64px; margin: 0 auto; background: #edf1eb; color: var(--forest); }
   .success-modal__content h2 { font-family: var(--serif); font-size: 30px; font-weight: 500; }
   .success-modal__actions { flex-direction: column; gap: 10px; }
-  .success-modal__actions .button { min-height: 42px; font-size: 13px; border-radius: 8px; }
+  .success-modal__actions .button { min-height: 42px; font-size: 14px; border-radius: var(--radius-pill); }
 }
 
 @media (min-width: 761px) and (max-width: 1100px) {
   .credits-purchase-layout { grid-template-columns: minmax(0, 1fr); gap: 0; }
   .credits-overview { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
   .credits-overview__balance { grid-column: 1 / -1; }
-  .credits-overview__cost { border-left: 0; padding: 16px 0 0; border-top: 1px solid #e2e6df; }
+  .credits-overview__cost { border-left: 0; padding: 16px 0 0; border-top: 1px solid var(--hairline); }
 }
 
 .credits-voucher-history {
   h2 { margin: 0 0 18px; color: var(--forest); font-size: 24px; }
   code { font-size: 13px; white-space: nowrap; }
-  &__hint { display: block; margin-top: 4px; font-size: 11px; color: var(--muted); }
+  &__hint { display: block; margin-top: 4px; font-size: 12px; color: var(--muted); }
 }
 .credits-voucher-status {
   display: inline-flex; border-radius: 20px; padding: 5px 10px; font-size: 12px;

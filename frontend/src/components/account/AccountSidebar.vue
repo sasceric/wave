@@ -18,6 +18,8 @@ import {
   QrCode,
   LifeBuoy,
   CornerUpRight,
+  LogIn,
+  UserRoundPlus,
 } from '@lucide/vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
@@ -201,7 +203,12 @@ const navigationItems = computed(() => {
       <div v-if="!user" class="account-sidebar__language">
         <LanguageSwitcher expanded />
       </div>
+      <template v-if="!user">
+        <LocalizedLink class="account-sidebar__link" :to="{ name: 'login' }" @click="closeMobileSidebar"><LogIn :size="20" aria-hidden="true" /><span class="account-sidebar__text">{{ t('auth.signIn') }}</span></LocalizedLink>
+        <LocalizedLink class="account-sidebar__link" :to="{ name: 'register' }" @click="closeMobileSidebar"><UserRoundPlus :size="20" aria-hidden="true" /><span class="account-sidebar__text">{{ t('auth.register') }}</span></LocalizedLink>
+      </template>
       <LocalizedLink v-for="item in exploreItems" :key="item.route" class="account-sidebar__link" :class="{ 'is-active': route.meta.routeName === item.route }" :to="{ name: item.route }" @click="closeMobileSidebar"><component :is="item.icon" :size="20" aria-hidden="true" /><span class="account-sidebar__text">{{ item.label }}</span></LocalizedLink>
+      <LocalizedLink v-if="!user" class="account-sidebar__link" :class="{ 'is-active': route.meta.routeName === 'support' }" :to="{ name: 'support' }" @click="closeMobileSidebar"><LifeBuoy :size="20" aria-hidden="true" /><span class="account-sidebar__text">{{ t('support.label') }}</span></LocalizedLink>
     </div>
     <div v-if="user && primaryItems.length" class="account-sidebar__group">
     <p class="account-sidebar__label">{{ t('account.navigation') }}</p>

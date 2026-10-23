@@ -1,7 +1,7 @@
 .tag-input {
   > label {
     color: var(--muted);
-    font-size: 12px;
+    font-size: 14px;
     font-weight: 400;
   }
 
@@ -12,13 +12,13 @@
     align-items: center;
     gap: 6px;
     padding: 5px 9px;
-    border: 1px solid #dfe4dc;
-    border-radius: 10px;
-    background: #fcfbf7;
+    border: 1px solid rgba(31, 42, 40, .14);
+    border-radius: 12px;
+    background: var(--card);
 
     &:focus-within {
-      border-color: #9aada0;
-      box-shadow: 0 0 0 3px rgba(93, 132, 104, .1);
+      border-color: var(--forest);
+      box-shadow: 0 0 0 4px rgba(23, 61, 54, .12);
     }
 
     &.is-disabled { opacity: .6; }
@@ -42,11 +42,11 @@
     align-items: center;
     gap: 5px;
     padding: 5px 6px 5px 9px;
-    border: 1px solid #dce4db;
-    border-radius: 6px;
+    border: 1px solid rgba(31, 42, 40, .14);
+    border-radius: 10px;
     color: #52685e;
     background: #eff3ed;
-    font-size: 12px;
+    font-size: 14px;
     font-weight: 500;
     line-height: 1.3;
 

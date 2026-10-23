@@ -10,7 +10,7 @@ const classes = computed(() => {
   if (props.kind === 'company') return 'company-directory__grid'
   const base = `${props.kind}-grid`
   if (props.layout === 'bookmarks') return `${base} account-bookmarks-grid`
-  if (props.layout === 'home') return props.kind === 'creator' ? base : `${base} ${base}--home`
+  if (props.layout === 'home') return `${base} ${base}--home`
   return `${base} ${base}--directory`
 })
 </script>

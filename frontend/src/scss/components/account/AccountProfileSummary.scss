@@ -7,7 +7,7 @@
   gap: 22px;
   margin-bottom: 20px;
   padding: 24px 20px;
-  border: 1px solid #e2e6df;
+  border: 1px solid var(--hairline);
   border-radius: 18px;
   background: rgba(255, 255, 255, .72);
 
@@ -57,7 +57,7 @@
       border: 1px solid #dce2d9;
       border-radius: 50%;
       color: var(--forest);
-      background: #fffefa;
+      background: var(--card);
       cursor: pointer;
       box-shadow: 0 2px 8px #173d3614;
     }
@@ -68,7 +68,7 @@
 
     .eyebrow {
       margin: 0 0 8px;
-      font-size: 11px;
+      font-size: 12px;
       letter-spacing: .12em;
     }
 
@@ -120,7 +120,7 @@
       color: var(--muted);
       background: none;
       font: inherit;
-      font-size: 11px;
+      font-size: 12px;
       cursor: pointer;
     }
 
@@ -156,7 +156,7 @@
     }
 
     .switch-field__description {
-      font-size: 11px;
+      font-size: 12px;
       line-height: 1.6;
     }
   }
@@ -169,7 +169,7 @@
     .public-url-action.public-url-action--row {
       margin-top: 0;
       gap: 0;
-      border: 1px solid #e2e6df;
+      border: 1px solid var(--hairline);
       border-radius: 12px;
       overflow: hidden;
 
@@ -249,7 +249,7 @@
       }
 
       .eyebrow {
-        font-size: 9px;
+        font-size: 12px;
         letter-spacing: .12em;
       }
     }
@@ -312,7 +312,7 @@
     min-width: 0;
     max-width: none;
     padding: 12px 14px;
-    border: 1px solid #e2e6df;
+    border: 1px solid var(--hairline);
     border-radius: 12px;
     background: transparent;
   }
@@ -341,7 +341,7 @@
   max-width: 100%;
   padding: 6px;
   gap: 6px;
-  border: 1px solid #e2e6df;
+  border: 1px solid var(--hairline);
   border-radius: 10px;
   background: #eef1eb;
   color: var(--forest);
@@ -359,6 +359,6 @@
   margin-top: 10px;
   font-size: 12px;
   color: var(--forest);
-  small { width: 100%; color: var(--muted); font-size: 10px; line-height: 1.6; }
+  small { width: 100%; color: var(--muted); font-size: 12px; line-height: 1.6; }
 }
 .account-profile-summary__financial-error { font-size: 12px; color: var(--muted); }

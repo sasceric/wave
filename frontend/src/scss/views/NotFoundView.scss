@@ -20,7 +20,7 @@
     flex-wrap: wrap;
     gap: 16px;
     margin-top: 34px;
-    .button { min-height: 56px; gap: 24px; padding: 14px 24px; border-radius: 5px; font-size: 14px; text-align: center; }
+    .button { min-height: 56px; gap: 24px; padding: 14px 24px; border-radius: var(--radius-pill); font-size: 14px; text-align: center; }
     .button--outline { min-width: 190px; border-color: var(--forest); }
     svg { flex-shrink: 0; }
   }
