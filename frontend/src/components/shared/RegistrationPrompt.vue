@@ -25,8 +25,8 @@ const benefitKeys = computed(() => props.variant === 'campaign'
   ? ['campaignSaved', 'campaignRequirements']
   : ['benefitWork', 'benefitCampaign', 'benefitMessages'])
 const registrationRoute = computed(() => ({
-  name: 'account',
-  query: { mode: 'register', accountType: props.audience, ...(destination.value ? { returnTo: destination.value } : {}) },
+  name: 'register',
+  query: { accountType: props.audience, ...(destination.value ? { returnTo: destination.value } : {}) },
 }))
 </script>
 
@@ -51,7 +51,7 @@ const registrationRoute = computed(() => ({
     </ul>
     <p v-if="detail" class="registration-prompt__login">
       {{ t('registrationPrompts.hasAccount') }}
-      <LocalizedLink :to="{ name: 'account', query: { mode: 'login', ...(returnTo ? { returnTo } : {}) } }" @click="rememberRegistrationIntent(returnTo, audience)">{{ t('registrationPrompts.signIn') }}</LocalizedLink>
+      <LocalizedLink :to="{ name: 'login', query: { ...(returnTo ? { returnTo } : {}) } }" @click="rememberRegistrationIntent(returnTo, audience)">{{ t('registrationPrompts.signIn') }}</LocalizedLink>
     </p>
   </section>
 </template>

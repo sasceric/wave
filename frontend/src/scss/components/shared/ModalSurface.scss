@@ -1,0 +1,67 @@
+// Shared chrome for every standard dialog. Feature styles only own its content.
+dialog.wave-modal[aria-modal='true'] {
+  --modal-width: 560px;
+  position: fixed;
+  inset: 0;
+  width: min(var(--modal-width), calc(100vw - 48px));
+  max-width: none;
+  max-height: calc(100dvh - 40px);
+  margin: auto;
+  padding: 0;
+  border: 1px solid rgba(255, 255, 255, .8);
+  border-radius: 28px;
+  color: var(--ink);
+  background: #fffefa;
+  box-shadow: 0 32px 100px #1f2a2833, 0 4px 16px #1f2a2814;
+  font: 14px/1.6 'DM Sans', sans-serif;
+  overflow: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: #8ea39b66 transparent;
+
+  &::backdrop { background: #1f2a2859; backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+  &.wave-modal--compact { --modal-width: 440px; }
+  &.wave-modal--wide { --modal-width: 760px; }
+  &.wave-modal--large { --modal-width: 1100px; }
+  &.wave-modal--padded { padding: 24px; }
+  &.wave-modal--scroll-body { overflow: hidden; }
+
+  .wave-modal__content { position: relative; padding: 24px; }
+  .wave-modal__header { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin: 0 0 18px; }
+  .wave-modal__title { margin: 0; color: var(--forest); font-family: inherit; font-size: 24px; font-weight: 650; letter-spacing: -.035em; line-height: 1.25; overflow-wrap: anywhere; }
+  .wave-modal__close {
+    display: grid;
+    flex: 0 0 36px;
+    place-items: center;
+    width: 36px;
+    min-width: 36px;
+    height: 36px;
+    min-height: 36px;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: #f0f0eb;
+    color: var(--muted-text);
+    cursor: pointer;
+    &:hover { background: var(--surface); }
+    &:focus-visible { outline: 2px solid var(--forest); outline-offset: 3px; }
+    &:disabled { cursor: default; opacity: .5; }
+    svg { width: 20px; height: 20px; }
+    &--floating { position: absolute; top: 20px; right: 20px; z-index: 2; }
+  }
+  .button { min-height: 44px; padding: 11px 18px; border-radius: 12px; font-size: 14px; font-weight: 600; line-height: 1.4; justify-content: center; gap: 8px; }
+
+  @media (max-width: 760px) {
+    inset: auto 0 0;
+    width: 100%;
+    max-height: calc(100dvh - max(16px, env(safe-area-inset-top)));
+    margin: 0;
+    border-radius: 24px 24px 0 0;
+    border-bottom: 0;
+    padding-bottom: env(safe-area-inset-bottom);
+    &.wave-modal--padded, .wave-modal__content { padding: 20px; }
+    &.wave-modal--padded { padding-bottom: max(20px, env(safe-area-inset-bottom)); }
+    .wave-modal__title { font-size: 22px; }
+  }
+}

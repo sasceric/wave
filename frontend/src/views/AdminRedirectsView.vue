@@ -162,8 +162,8 @@ onBeforeUnmount(() => { clearTimeout(searchTimer); ++version })
             </AdminRowActions>
           </template>
         </AdminDataTable>
-        <dialog ref="editor" class="admin-redirects__editor" aria-labelledby="redirect-editor-title" aria-describedby="redirect-editor-hint" @cancel.prevent="closeEditor" @click.self="closeEditor">
-          <header><h2 id="redirect-editor-title">{{ t(`adminRedirects.${editId === null ? 'create' : 'edit'}`) }}</h2><button type="button" :disabled="saving" :aria-label="t('adminRedirects.cancel')" @click="closeEditor"><X :size="20" aria-hidden="true" /></button></header>
+        <dialog ref="editor" class="admin-redirects__editor wave-modal wave-modal--padded" aria-labelledby="redirect-editor-title" aria-describedby="redirect-editor-hint" @cancel.prevent="closeEditor" @click.self="closeEditor" aria-modal="true">
+          <header class="wave-modal__header"><h2 id="redirect-editor-title" class="wave-modal__title">{{ t(`adminRedirects.${editId === null ? 'create' : 'edit'}`) }}</h2><button class="wave-modal__close" type="button" :disabled="saving" :aria-label="t('adminRedirects.cancel')" @click="closeEditor"><X :size="20" aria-hidden="true" /></button></header>
           <p id="redirect-editor-hint">{{ t('adminRedirects.hint') }}</p>
           <form v-form-validation @submit.prevent="save">
             <StatusMessage v-if="formError" variant="error">{{ formError }}</StatusMessage>

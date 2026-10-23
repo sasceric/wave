@@ -20,7 +20,7 @@ const packages = computed(() => [...props.company.packages, { profileKey: 'negot
     <div v-if="company.services.length" class="agency-services__grid"><AgencyServiceCard v-for="(service, index) in company.services" :key="service.id" :service="service" collapsible :initially-open="index === 0" /></div>
     <p v-else>{{ t('account.notProvided') }}</p>
   </section>
-  <CreatorWorks v-if="company.portfolio.length" id="company-works" :items="company.portfolio" :name="company.name" layout="grid" />
+  <CreatorWorks v-if="company.portfolio.length" id="company-works" :items="company.portfolio" :name="company.name" />
   <slot name="reviews" />
   <ProfileFaqs v-if="company.faqs.length" id="company-faqs" :items="company.faqs" />
   </div>

@@ -1425,17 +1425,17 @@ onMounted(loadDashboard)
 
       <dialog
         ref="applicantDialog"
-        class="company-applicant-dialog"
+        class="company-applicant-dialog wave-modal"
         @close="selectedApplication = null"
         @click.self="closeApplicant"
-      >
-        <div v-if="selectedApplication" class="company-applicant-dialog__content">
+       aria-modal="true">
+        <div v-if="selectedApplication" class="company-applicant-dialog__content wave-modal__content">
           <header class="company-applicant-dialog__header">
             <div>
               <p class="eyebrow">{{ t(selectedApplication.source === 'invitation' ? 'hiring.invitationDetails' : 'account.applicantDetails') }}</p>
-              <h2>{{ selectedApplication.creator.displayName }}<span v-if="selectedApplication.creator.isAgency" class="status-badge">{{ t('companyTypes.options.agency') }}</span></h2>
+              <h2 class="wave-modal__title">{{ selectedApplication.creator.displayName }}<span v-if="selectedApplication.creator.isAgency" class="status-badge">{{ t('companyTypes.options.agency') }}</span></h2>
             </div>
-            <button class="company-applicant-dialog__close" type="button" :aria-label="t('account.closeApplicantDetails')" @click="closeApplicant">
+            <button class="company-applicant-dialog__close wave-modal__close" type="button" :aria-label="t('account.closeApplicantDetails')" @click="closeApplicant">
               <X :size="19" aria-hidden="true" />
             </button>
           </header>

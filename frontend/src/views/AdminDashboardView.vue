@@ -495,7 +495,7 @@ onMounted(updateCreatedAtClock)
     </div>
     <div v-else-if="accessState === 'anonymous'" class="admin-dashboard__state">
       <StatusMessage>{{ t('adminDashboard.signIn') }}</StatusMessage>
-      <LocalizedLink class="button button--dark" :to="{ name: 'account', query: { mode: 'login' } }">{{ t('auth.signIn') }}</LocalizedLink>
+      <LocalizedLink class="button button--dark" :to="{ name: 'login' }">{{ t('auth.signIn') }}</LocalizedLink>
     </div>
     <div v-else-if="accessState === 'forbidden'" class="admin-dashboard__state">
       <StatusMessage variant="error">{{ t('adminDashboard.noAccess') }}</StatusMessage>

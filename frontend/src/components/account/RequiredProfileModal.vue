@@ -47,16 +47,16 @@ onBeforeUnmount(() => {
 <template>
   <dialog
     ref="dialog"
-    class="required-profile-modal"
+    class="required-profile-modal wave-modal"
     aria-modal="true"
     aria-labelledby="required-profile-title"
     aria-describedby="required-profile-description"
     @cancel.prevent
     @click.self.prevent
   >
-    <section class="required-profile-modal__content" :aria-busy="busy">
+    <section class="required-profile-modal__content wave-modal__content" :aria-busy="busy">
       <p class="eyebrow">{{ t('activation.start') }}</p>
-      <h2 id="required-profile-title">{{ t('activation.title') }}</h2>
+      <h2 id="required-profile-title" class="wave-modal__title">{{ t('activation.title') }}</h2>
       <p id="required-profile-description">{{ t('activation.lockedHint') }}</p>
       <form v-form-validation class="required-profile-modal__form" @submit.prevent="emit('save')">
         <template v-if="user.accountType === 'creator'">

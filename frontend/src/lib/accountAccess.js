@@ -1,4 +1,4 @@
-const completionRoutes = new Set(['account-dashboard', 'account', 'account-support', 'support', 'support-create', 'support-track', 'verify-email', 'reset-password', 'imprint', 'privacy-policy', 'cookie-policy'])
+const completionRoutes = new Set(['login', 'register', 'forgot-password', 'account-dashboard', 'account', 'account-support', 'support', 'support-create', 'support-track', 'verify-email', 'reset-password', 'imprint', 'privacy-policy', 'cookie-policy'])
 
 export function accountAccessRedirect(route, user) {
   if (!user || user.isAdmin || user.isModerator) return null

@@ -327,7 +327,7 @@ onBeforeUnmount(() => {
       </div>
       <DirectoryPagination v-model:page="page" :page-size="10" :show-page-size="false" :show-single-page="true" :total="filteredItems.length" :status-label="t(isInvitations ? 'account.invitationsShown' : 'account.activityShown', { shown: pageItems.length, total: filteredItems.length })" />
     </template>
-    <dialog ref="dialog" class="offer-campaign-modal" aria-modal="true" :aria-labelledby="`${id}-title`" @cancel.prevent="closeCampaign" @close="closeCampaign" @click.self="closeCampaign">
+    <dialog ref="dialog" class="offer-campaign-modal wave-modal wave-modal--wide wave-modal--scroll-body" aria-modal="true" :aria-labelledby="`${id}-title`" @cancel.prevent="closeCampaign" @close="closeCampaign" @click.self="closeCampaign">
       <div v-if="selectedItem" class="offer-campaign-modal__layout">
         <header v-if="campaign" class="offer-campaign-modal__header">
           <div class="offer-campaign-modal__cover"><CardImage :image="campaign.coverImage" :src="campaign.coverImageUrl || CAMPAIGN_PLACEHOLDER" alt="" sizes="620px" /></div>
@@ -336,19 +336,19 @@ onBeforeUnmount(() => {
             <span class="creator-offer__status" :class="`creator-offer__status--${statusGroup(selectedItem)}`"><i :class="`activity-dot activity-dot--${statusGroup(selectedItem)}`" aria-hidden="true"></i>{{ statusLabel(selectedItem) }}</span>
           </div>
           <p class="creator-offer__company">{{ campaign.company.name }}</p>
-          <h2 :id="`${id}-title`">{{ campaign.title }}</h2>
+          <h2 :id="`${id}-title`" class="wave-modal__title">{{ campaign.title }}</h2>
           <p class="creator-offer__summary">{{ campaign.summary }}</p>
           <div class="offer-campaign-meta">
             <span v-for="channel in campaign.channels" :key="channel"><component :is="platformIcon(channel)" :size="16" aria-hidden="true" />{{ channel }}</span>
             <span v-if="campaignPlace(campaign, locale)"><MapPin :size="16" aria-hidden="true" />{{ campaignPlace(campaign, locale) }}</span>
           </div>
-          <button class="offer-campaign-modal__close" type="button" :aria-label="t('account.closeCampaignModal')" @click="closeCampaign"><X :size="22" aria-hidden="true" /></button>
+          <button class="offer-campaign-modal__close wave-modal__close wave-modal__close--floating" type="button" :aria-label="t('account.closeCampaignModal')" @click="closeCampaign"><X :size="22" aria-hidden="true" /></button>
         </header>
         <header v-else class="offer-campaign-modal__header offer-campaign-modal__header--inquiry">
           <p class="creator-offer__company">{{ counterpart(selectedItem).name }}</p>
-          <h2 :id="`${id}-title`">{{ itemTitle(selectedItem) }}</h2>
+          <h2 :id="`${id}-title`" class="wave-modal__title">{{ itemTitle(selectedItem) }}</h2>
           <span class="creator-offer__status" :class="`creator-offer__status--${statusGroup(selectedItem)}`">{{ statusLabel(selectedItem) }}</span>
-          <button class="offer-campaign-modal__close" type="button" :aria-label="t('creatorProfile.closeRequest')" @click="closeCampaign"><X :size="22" aria-hidden="true" /></button>
+          <button class="offer-campaign-modal__close wave-modal__close wave-modal__close--floating" type="button" :aria-label="t('creatorProfile.closeRequest')" @click="closeCampaign"><X :size="22" aria-hidden="true" /></button>
         </header>
         <div v-if="campaign" class="offer-campaign-modal__content">
           <StatusMessage v-if="selectedItem.readOnly" variant="info">{{ t(selectedItem.blocked ? 'safety.blockedHistory' : statusGroup(selectedItem) === 'cancelled' ? 'hiring.cancelledNotice' : 'campaignChat.deletedAccountNotice') }}</StatusMessage>

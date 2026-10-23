@@ -327,25 +327,6 @@
 }
 
 .offer-campaign-modal {
-  position: fixed;
-  inset: 24px;
-  width: min(620px, calc(100vw - 48px));
-  max-width: none;
-  max-height: calc(100dvh - 48px);
-  margin: auto;
-  padding: 0;
-  overflow: hidden;
-  border: 1px solid #e2e6df;
-  border-radius: 18px;
-  color: var(--forest);
-  background: #fffefa;
-  box-shadow: 0 18px 55px #173d362b;
-
-  &::backdrop {
-    background: #173d361f;
-    backdrop-filter: blur(2px);
-  }
-
   &[open] {
     display: flex;
   }

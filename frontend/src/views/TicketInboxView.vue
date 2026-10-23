@@ -270,7 +270,7 @@ onBeforeUnmount(() => { ++contextVersion; ++listVersion; ++detailVersion; window
             <LocalizedLink class="button button--dark" :to="{ name: 'support-create' }"><Plus :size="17" aria-hidden="true" />{{ t('support.newTicket') }}</LocalizedLink>
           </div>
         </header>
-        <StatusMessage v-if="access === 'anonymous'">{{ t('support.signInTickets') }} <LocalizedLink :to="{ name: 'account', query: { mode: 'login', returnTo: route.fullPath } }">{{ t('auth.signIn') }}</LocalizedLink></StatusMessage>
+        <StatusMessage v-if="access === 'anonymous'">{{ t('support.signInTickets') }} <LocalizedLink :to="{ name: 'login', query: { returnTo: route.fullPath } }">{{ t('auth.signIn') }}</LocalizedLink></StatusMessage>
         <StatusMessage v-else-if="access === 'forbidden'" variant="error">{{ t('adminDashboard.noAccess') }}</StatusMessage>
         <div v-else class="ticket-inbox__grid">
           <section class="ticket-list" :aria-label="t(admin ? 'support.allTickets' : 'support.myTickets')">

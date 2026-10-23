@@ -1083,7 +1083,7 @@ function messageTimeDescription(value) {
     <StatusMessage v-if="error" variant="error">{{ error }}</StatusMessage>
     <div v-if="authRequired" class="campaign-messages__signed-out">
       <p>{{ t('campaignChat.loginRequired') }}</p>
-      <LocalizedLink class="button button--dark" :to="{ name: 'account', query: { mode: 'login' } }">
+      <LocalizedLink class="button button--dark" :to="{ name: 'login' }">
         {{ t('auth.signIn') }}
       </LocalizedLink>
     </div>

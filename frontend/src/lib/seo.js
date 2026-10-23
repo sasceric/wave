@@ -77,7 +77,7 @@ export function updateSeo({
   const privatePage = route.meta?.accountSection || route.meta?.adminSection
     || routeName === 'account' || routeName?.startsWith('account-')
     || routeName === 'admin' || routeName?.startsWith('admin-')
-    || ['messages', 'verify-email', 'reset-password', 'moderation', 'support-create', 'support-track'].includes(routeName)
+    || ['login', 'register', 'forgot-password', 'messages', 'verify-email', 'reset-password', 'moderation', 'support-create', 'support-track'].includes(routeName)
   // Publish the page and its final title together. Never sample document.title
   // from a separate route watcher before this metadata update has run.
   trackPageView(route.path, { title, allowed: analyticsReady && !privatePage })

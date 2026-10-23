@@ -31,6 +31,9 @@ const routeViews = {
   'account-credits': () => import('./views/CreditsView.vue'),
   'admin-credit-settings': () => import('./views/AdminCreditSettingsView.vue'),
   account: accountView,
+  login: accountView,
+  register: accountView,
+  'forgot-password': accountView,
   'account-applications': accountView,
   'account-offers': accountView,
   'account-inquiries': accountView,
@@ -120,6 +123,7 @@ const localizedRoutes = Object.entries(routeSegments).flatMap(([locale, routes])
       locale,
       routeName: name,
       accountAccessPage: routeViews[name] === accountView,
+      authMode: { login: 'login', register: 'register', 'forgot-password': 'reset' }[name],
       adminSection: adminSections[name],
       accountSection: accountSections[name],
       safetySection: { 'account-reviews': 'reviews', 'admin-reports': 'reports', 'account-blocks': 'blocks' }[name],
@@ -130,6 +134,9 @@ const localizedRoutes = Object.entries(routeSegments).flatMap(([locale, routes])
 
 const legacyPaths = [
   ['/account', 'account'],
+  ['/login', 'login'],
+  ['/register', 'register'],
+  ['/forgot-password', 'forgot-password'],
   ['/account/applications', 'account-applications'],
   ['/account/offers', 'account-offers'],
   ['/account/inquiries', 'account-inquiries'],
@@ -219,12 +226,19 @@ router.beforeEach(async (to, from) => {
     await setLocale(to.meta.locale)
   }
   const navigationLocale = to.meta.locale || (to.meta.sharedPublic ? preferredLocale() : defaultLocale)
+  const legacyAuth = ['login', 'register', 'reset'].includes(to.query.mode) ? (to.query.mode === 'reset' ? 'forgot-password' : to.query.mode) : null
+  if ((to.meta.routeName === 'account' || to.meta.authMode) && legacyAuth) {
+    const query = { ...to.query }
+    delete query.mode
+    return { name: localizedRouteName(legacyAuth, navigationLocale), query, hash: to.hash, replace: true }
+  }
   let user
   try { user = await ensureCurrentUser() } catch { /* The page API retains its access/error checks. */ }
-  if (['account', 'account-dashboard'].includes(to.meta.routeName) && !to.query.bookmark) {
+  if (['account', 'account-dashboard', 'login', 'register'].includes(to.meta.routeName) && !to.query.bookmark) {
     const pendingReturn = registrationReturn(user)
     if (pendingReturn) return pendingReturn
   }
+  if (user && to.meta.authMode && !to.query.bookmark && !to.query.returnTo) return { name: localizedRouteName(accountLanding(user), navigationLocale) }
   const gate = accountAccessRedirect(to, user)
   if (gate) return { name: localizedRouteName(gate.name, navigationLocale) }
   if (user && to.meta.routeName === 'account' && !to.query.bookmark && !to.query.returnTo && (['login', 'register'].includes(to.query.mode) || to.query.oauth === 'success') && accountLanding(user) !== 'account') {

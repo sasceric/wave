@@ -1,14 +1,4 @@
 .image-preview-modal {
-  width: min(960px, calc(100vw - 32px));
-  max-width: none;
-  max-height: calc(100dvh - 32px);
-  padding: 0;
-  border: 1px solid #e3e5de;
-  border-radius: 12px;
-  color: var(--forest);
-  background: #fffefa;
-  box-shadow: 0 22px 60px #0f171440;
-  &::backdrop { background: #0f171499; }
   section { padding: 16px; }
   header { display: flex; align-items: center; gap: 16px; margin-bottom: 12px; }
   h2 { flex: 1; margin: 0; overflow-wrap: anywhere; font-family: inherit; font-size: 14px; font-weight: 600; }

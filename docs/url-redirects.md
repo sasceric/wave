@@ -8,6 +8,33 @@ the server across all pages; the fixed HTTP 301 and actions columns are not sort
 Source paths are unique. Redirect loops and private/system paths are rejected.
 Destinations must be local public paths, optionally with query parameters.
 
+## Authentication URLs
+
+Login and registration have dedicated localized routes, shared by links, language
+switching, OAuth callbacks and server metadata:
+
+| Language | Login | Registration |
+| --- | --- | --- |
+| Bosnian | `/prijava` | `/registracija` |
+| Croatian | `/hr/prijava` | `/hr/registracija` |
+| Serbian | `/rs/prijava` | `/rs/registracija` |
+| Montenegrin | `/me/prijava` | `/me/registracija` |
+| Slovenian | `/si/prijava` | `/si/registracija` |
+| English | `/en/login` | `/en/register` |
+| German | `/de/anmelden` | `/de/registrieren` |
+
+Password-reset requests use a separate localized `forgot-password` route (Bosnian
+`/zaboravljena-lozinka`), distinct from the existing token-based reset page.
+Old account URLs with `mode=login`, `mode=register` or `mode=reset` redirect to the
+corresponding page. Symfony sends a 301 for document requests; the SPA performs
+the equivalent replacement. Other query parameters, including account type,
+bookmark intent, OAuth status and return destination, remain intact. These built-in
+aliases require no migration and remain protected from editable public rules.
+Deploy the API and SPA together. All auth pages remain noindex and outside the
+sitemap and public analytics.
+
+## Public profile URLs
+
 Creator, company and campaign details use one shared public path in every language:
 `/kreatori/{slug}`, `/kompanije/{slug}`, `/kampanje/{slug}`. Directory, country and
 editorial pages retain their localized URLs. `config/shared_public_routes.json`

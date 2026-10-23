@@ -98,7 +98,7 @@ onMounted(load)
       <main class="admin-dashboard__main credits-page__main">
         <header class="credits-heading"><p class="eyebrow">Wave</p><h1>{{ t('credits.title') }}</h1><p v-if="!account?.unlimited">{{ t('credits.intro') }}</p></header>
         <StatusMessage v-if="error" variant="error">{{ error }}</StatusMessage>
-        <LocalizedLink v-if="!currentUser && !loading" class="button button--dark" :to="{ name: 'account', query: { mode: 'login' } }">{{ t('auth.signIn') }}</LocalizedLink>
+        <LocalizedLink v-if="!currentUser && !loading" class="button button--dark" :to="{ name: 'login' }">{{ t('auth.signIn') }}</LocalizedLink>
         <LoadingSkeleton v-if="loading && !account" variant="dashboard" :label="t('adminDashboard.loading')" />
         <template v-if="account">
           <section class="credit-card credits-overview" :class="{ 'credits-overview--free': account.unlimited }" :aria-label="t('credits.balance')">

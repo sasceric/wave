@@ -171,7 +171,6 @@
   }
 }
 
-
 .profile-edit-layout {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
@@ -744,22 +743,6 @@
 }
 
 .company-applicant-dialog {
-  width: min(520px, calc(100vw - 28px));
-  max-width: none;
-  max-height: min(700px, calc(100dvh - 28px));
-  padding: 0;
-  overflow: auto;
-  border: 1px solid #e1e6dd;
-  border-radius: 8px;
-  color: var(--ink);
-  background: #fffefa;
-  box-shadow: 0 24px 70px rgba(15, 23, 20, .24);
-
-  &::backdrop {
-    background: rgba(15, 23, 20, .58);
-    backdrop-filter: blur(2px);
-  }
-
   &__content {
     padding: 26px;
   }
@@ -965,7 +948,6 @@
     padding: 16px;
   }
 
-
   .profile-tab-panel {
     min-height: 250px;
     padding: 18px 16px 12px;
@@ -1091,7 +1073,6 @@
     }
   }
 
-
   .profile-edit-layout {
     display: flex;
     flex-direction: column;
@@ -1115,13 +1096,10 @@
     }
   }
 
-
-
   .profile-edit-layout .form-field input, .profile-edit-layout .form-field textarea {
     font-size: 16px;
   }
 }
-
 
 @include breakpoints.down(760px) {
   .account-welcome:not(.account-welcome--editing) .account-welcome__title span {

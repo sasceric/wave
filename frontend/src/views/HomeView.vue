@@ -394,16 +394,16 @@ onMounted(loadHome)
       </form>
       <dialog
         ref="contactFeedbackDialog"
-        class="contact-feedback"
+        class="contact-feedback wave-modal wave-modal--compact"
         aria-modal="true"
         :aria-labelledby="`${contactFeedbackId}-title`"
         :aria-describedby="`${contactFeedbackId}-message`"
         @cancel.prevent="closeContactFeedback"
         @click.self="closeContactFeedback"
       >
-        <section class="contact-feedback__content">
+        <section class="contact-feedback__content wave-modal__content">
           <button
-            class="contact-feedback__close"
+            class="contact-feedback__close wave-modal__close wave-modal__close--floating"
             type="button"
             :aria-label="t('home.contactFeedbackClose')"
             @click="closeContactFeedback"
@@ -418,7 +418,7 @@ onMounted(loadHome)
             {{ contactFeedbackType === 'success' ? '✓' : '!' }}
           </span>
           <p class="eyebrow">{{ t('home.contactEyebrow') }}</p>
-          <h2 :id="`${contactFeedbackId}-title`">
+          <h2 :id="`${contactFeedbackId}-title`" class="wave-modal__title">
             {{
               contactFeedbackType === 'success'
                 ? t('home.contactFeedbackSuccessTitle')

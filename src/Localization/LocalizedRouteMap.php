@@ -155,6 +155,9 @@ final class LocalizedRouteMap
     {
         $legacyRoutes = [
             '/account' => 'account',
+            '/login' => 'login',
+            '/register' => 'register',
+            '/forgot-password' => 'forgot-password',
             '/account/applications' => 'account-applications',
             '/account/offers' => 'account-offers',
             '/account/inquiries' => 'account-inquiries',

@@ -159,14 +159,17 @@ onMounted(load)
         <StatusMessage v-if="error" variant="error">{{ error }}</StatusMessage>
         <dialog
           ref="editor"
-          class="admin-qr__dialog admin-qr__editor"
+          class="admin-qr__dialog admin-qr__editor wave-modal wave-modal--padded"
           aria-labelledby="qr-editor-title"
           aria-describedby="qr-editor-hint"
           @cancel.prevent="dismissEditor"
           @click.self="dismissEditor"
-        >
+         aria-modal="true">
           <form class="admin-qr__form" :aria-busy="saving" @submit.prevent="save">
-            <h2 id="qr-editor-title">{{ t(editId === null ? 'adminQr.create' : 'adminQr.edit') }}</h2>
+            <header class="wave-modal__header">
+              <h2 id="qr-editor-title" class="wave-modal__title">{{ t(editId === null ? 'adminQr.create' : 'adminQr.edit') }}</h2>
+              <button class="wave-modal__close" type="button" :aria-label="t('adminQr.close')" :disabled="saving" @click="dismissEditor"><X :size="20" aria-hidden="true" /></button>
+            </header>
             <StatusMessage v-if="formError" variant="error">{{ formError }}</StatusMessage>
             <label class="form-field" for="qr-label">
               <span>{{ t('adminQr.label') }}</span>
@@ -199,17 +202,17 @@ onMounted(load)
         </AdminReadOnlyTable>
         <dialog
           ref="statisticsDialog"
-          class="admin-qr__dialog admin-qr__statistics"
+          class="admin-qr__dialog admin-qr__statistics wave-modal wave-modal--wide wave-modal--scroll-body"
           aria-labelledby="qr-statistics-title"
           aria-describedby="qr-statistics-hint"
           @click.self="statisticsDialog.close()"
-        >
+         aria-modal="true">
           <header class="admin-qr__statistics-header">
             <div>
-              <h2 id="qr-statistics-title">{{ t('adminQr.statistics') }} · {{ statisticsLink?.label }}</h2>
+              <h2 id="qr-statistics-title" class="wave-modal__title">{{ t('adminQr.statistics') }} · {{ statisticsLink?.label }}</h2>
               <p id="qr-statistics-hint">{{ t('adminQr.statisticsHint') }}</p>
             </div>
-            <button type="button" class="admin-qr__close" :aria-label="t('adminQr.close')" @click="statisticsDialog.close()"><X :size="22" aria-hidden="true" /></button>
+            <button type="button" class="admin-qr__close wave-modal__close" :aria-label="t('adminQr.close')" @click="statisticsDialog.close()"><X :size="22" aria-hidden="true" /></button>
           </header>
           <div class="admin-qr__statistics-body" :aria-busy="statisticsLoading">
             <StatusMessage v-if="statisticsError" variant="error">{{ statisticsError }}</StatusMessage>
@@ -267,8 +270,11 @@ onMounted(load)
             <button type="button" class="button button--outline" @click="statisticsDialog.close()">{{ t('adminQr.close') }}</button>
           </footer>
         </dialog>
-        <dialog ref="dialog" class="admin-qr__dialog" aria-labelledby="qr-preview-title" @click="($event.target === dialog) && dialog.close()">
-          <h2 id="qr-preview-title">{{ selected?.label }}</h2>
+        <dialog ref="dialog" class="admin-qr__dialog wave-modal wave-modal--compact wave-modal--padded" aria-labelledby="qr-preview-title" @click="($event.target === dialog) && dialog.close()" aria-modal="true">
+          <header class="wave-modal__header">
+            <h2 id="qr-preview-title" class="wave-modal__title">{{ selected?.label }}</h2>
+            <button class="wave-modal__close" type="button" :aria-label="t('adminQr.close')" @click="dialog.close()"><X :size="20" aria-hidden="true" /></button>
+          </header>
           <img v-if="image" :src="image.png" :alt="t('adminQr.imageAlt', { label: selected?.label })" width="280" height="280" />
           <p class="admin-qr__url">{{ selected?.url }}</p>
           <p>{{ t('adminQr.permanent') }}</p>

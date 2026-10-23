@@ -103,7 +103,7 @@ onBeforeUnmount(() => { requestId++ })
     </div>
     <div v-else-if="access === 'anonymous'" class="admin-dashboard__state">
       <StatusMessage>{{ t('adminDashboard.signIn') }}</StatusMessage>
-      <LocalizedLink class="button button--dark" :to="{ name: 'account', query: { mode: 'login' } }">
+      <LocalizedLink class="button button--dark" :to="{ name: 'login' }">
         {{ t('auth.signIn') }}
       </LocalizedLink>
     </div>

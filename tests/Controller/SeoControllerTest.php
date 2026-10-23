@@ -40,7 +40,9 @@ final class SeoControllerTest extends WebTestCase
         foreach ($routes->locales() as $locale) {
             $catalog = json_decode(file_get_contents(dirname(__DIR__, 2).'/frontend/src/locales/'.$locale.'.json'), true);
             foreach (['login' => 'loginTitle', 'register' => 'registerTitle', 'reset' => 'forgotPasswordTitle'] as $mode => $key) {
-                $crawler = $this->client->request('GET', $routes->localizedPath('account', $locale).'?mode='.$mode);
+                $this->client->request('GET', $routes->localizedPath('account', $locale).'?mode='.$mode);
+                self::assertResponseRedirects($routes->localizedPath($mode === 'reset' ? 'forgot-password' : $mode, $locale), 301);
+                $crawler = $this->client->followRedirect();
                 self::assertResponseIsSuccessful();
                 self::assertSame($catalog['seo'][$key], $crawler->filter('title')->text());
                 self::assertSame('noindex, nofollow', $crawler->filter('meta[name="robots"]')->attr('content'));
@@ -68,6 +70,26 @@ final class SeoControllerTest extends WebTestCase
         }
         $this->client->request('GET', '/sitemap.xml');
         self::assertStringNotContainsString('/pretraga', $this->client->getResponse()->getContent());
+    }
+
+    public function testLegacyAuthenticationRedirectsPreserveIntentInEveryLocale(): void
+    {
+        $routes = static::getContainer()->get(LocalizedRouteMap::class);
+        foreach ($routes->locales() as $locale) {
+            $remaining = ['accountType' => 'company', 'returnTo' => $routes->localizedPath('account-campaign-create', $locale).'?draft=1', 'bookmark' => 'test-campaign'];
+            $query = http_build_query(['mode' => 'register', ...$remaining], '', '&', PHP_QUERY_RFC3986);
+            $legacy = $routes->localizedPath('account', $locale).'?'.$query;
+            $target = $routes->localizedPath('register', $locale).'?'.http_build_query($remaining, '', '&', PHP_QUERY_RFC3986);
+            $this->client->request('GET', $legacy);
+            self::assertResponseRedirects($target, 301);
+            $this->client->request('GET', '/api/redirects/resolve?'.http_build_query(['path' => $legacy], '', '&', PHP_QUERY_RFC3986));
+            self::assertResponseIsSuccessful();
+            self::assertSame($target, json_decode($this->client->getResponse()->getContent(), true, flags: JSON_THROW_ON_ERROR)['data']['targetPath']);
+        }
+        $this->client->request('GET', '/sr/nalog?mode=login&deleted=1');
+        self::assertResponseRedirects('/rs/prijava?deleted=1', 301);
+        $this->client->request('GET', '/account?mode=register');
+        self::assertResponseRedirects('/registracija', 301);
     }
 
     public function testInitialHtmlUsesAContextBearingGraphForSafari(): void

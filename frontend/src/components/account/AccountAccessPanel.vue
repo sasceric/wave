@@ -19,12 +19,13 @@ import StatusMessage from '../shared/StatusMessage.vue'
 import WaveWordmark from '../shared/WaveWordmark.vue'
 import { apiRequest } from '../../lib/api'
 import { trackRegistration } from '../../lib/metaTracking'
+import { localizedRouteName } from '../../routePaths'
 
 const emit = defineEmits(['authenticated'])
 const route = useRoute()
 const router = useRouter()
 const { t, locale } = useI18n()
-const mode = ref(['register', 'reset'].includes(route.query.mode) ? route.query.mode : 'login')
+const mode = ref(route.meta?.authMode || (['register', 'reset'].includes(route.query.mode) ? route.query.mode : 'login'))
 const busy = ref(false)
 const error = ref('')
 const notice = ref(route.query.deleted === '1' ? t('accountDeletion.success') : '')
@@ -38,8 +39,8 @@ const form = reactive({
   name: '',
 })
 
-watch(() => route.query.mode, (queryMode) => {
-  mode.value = ['register', 'reset'].includes(queryMode) ? queryMode : 'login'
+watch(() => [route.meta?.authMode, route.query.mode], ([authMode, queryMode]) => {
+  mode.value = authMode || (['register', 'reset'].includes(queryMode) ? queryMode : 'login')
 })
 watch(() => route.query.accountType, (accountType) => {
   if (mode.value === 'register' && ['creator', 'company'].includes(accountType)) {
@@ -142,7 +143,9 @@ function changeMode(nextMode) {
   error.value = ''
   notice.value = ''
   showPassword.value = false
-  void router.replace({ query: { ...route.query, mode: nextMode } })
+  const query = { ...route.query }
+  delete query.mode
+  void router.replace({ name: localizedRouteName(nextMode === 'reset' ? 'forgot-password' : nextMode, locale.value), query })
 }
 </script>
 

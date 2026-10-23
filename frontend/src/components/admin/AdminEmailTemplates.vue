@@ -1,5 +1,6 @@
 <script setup>
 import EmailPreviewFrame from '../shared/EmailPreviewFrame.vue'
+import { X } from '@lucide/vue'
 import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute } from 'vue-router'
@@ -272,20 +273,20 @@ onMounted(loadTemplates)
 
     <dialog
       ref="previewDialog"
-      class="email-template-preview"
+      class="email-template-preview wave-modal wave-modal--large wave-modal--scroll-body"
       aria-modal="true"
       aria-labelledby="email-template-preview-title"
       @cancel.prevent="closePreview"
       @click.self="closePreview"
     >
-      <section class="email-template-preview__content">
+      <section class="email-template-preview__content wave-modal__content">
         <header>
           <div>
             <p class="eyebrow">{{ t('adminDashboard.emailTemplatesEyebrow') }}</p>
-            <h2 id="email-template-preview-title">{{ t('adminDashboard.emailTemplatePreviewTitle') }}</h2>
+            <h2 id="email-template-preview-title" class="wave-modal__title">{{ t('adminDashboard.emailTemplatePreviewTitle') }}</h2>
           </div>
-          <button class="email-template-preview__close" type="button" @click="closePreview">
-            {{ t('adminDashboard.closePreview') }}
+          <button class="email-template-preview__close wave-modal__close" type="button" :aria-label="t('adminDashboard.closePreview')" @click="closePreview">
+            <X :size="20" aria-hidden="true" />
           </button>
         </header>
         <p class="email-template-preview__hint">{{ t('adminDashboard.emailTemplatePreviewHint') }}</p>

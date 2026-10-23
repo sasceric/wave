@@ -71,7 +71,7 @@ onBeforeUnmount(() => { ++revision })
       </LocalizedLink>
     </header>
     <StatusMessage v-if="error" variant="error">{{ error }}</StatusMessage>
-    <LocalizedLink v-if="!currentUser" class="button button--dark" :to="{ name: 'account', query: { mode: 'login' } }">{{ t('app.login') }}</LocalizedLink>
+    <LocalizedLink v-if="!currentUser" class="button button--dark" :to="{ name: 'login' }">{{ t('app.login') }}</LocalizedLink>
     <p v-else-if="loading && !snapshot" role="status">{{ t('activation.loading') }}</p>
     <template v-else-if="snapshot">
       <div v-if="!ready" class="activation-layout"><AccountActivationPanel :user="currentUser" /><AccountVisibilityCard /></div>

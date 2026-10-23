@@ -99,6 +99,39 @@ When several views need a layout or control, reuse its component and stylesheet.
 Keep page-specific descendant overrides in that page. Avoid duplicating whole
 style files or adding a global import of every feature.
 
+## Shared modal design
+
+All standard native dialogs use the `wave-modal` surface in
+`scss/components/shared/ModalSurface.scss`, loaded with the shared foundations.
+Use `FormModal` for new forms and detail dialogs; reuse `ConfirmationModal` and
+`SuccessModal` for their respective states. Existing imperative account, campaign,
+profile, QR, redirects, log and email-preview dialogs use the same surface classes
+without changing their access checks, loading guards or dismissal rules.
+
+The shared surface owns the backdrop blur, 28px desktop corners, 24px mobile
+sheet corners, sans-serif headings, 14px action text, 44px action height and
+circular close control. Use `wave-modal__title`, `wave-modal__close`,
+`wave-modal__content` and `wave-modal__header` instead of custom dialog chrome.
+Compact/wide/large modifiers only change width; `wave-modal--scroll-body` allows
+an existing flex layout to keep its header/actions fixed while its body scrolls.
+Feature styles own content only. Full-screen portfolio lightboxes and header
+search/messages/notification popovers retain their dedicated viewing/navigation
+layouts.
+
+Creator and agency work cards share count-based layout: one full-width work;
+two columns for two or four works; with three, the first spans both columns and
+the other two share the second row. Featured status affects ordering and its
+badge, not the number of columns. Public post links use `studio.viewPost`; the
+editor-only optional field label must not appear as public action copy.
+The featured-work badge overlays the image. Every card reserves a client row,
+two title lines and two summary lines, including when the corresponding text is absent. Images use
+the same fixed height within each layout, and detail links align at the bottom.
+
+The guest header uses a compact shared-button registration action on desktop and
+mobile. Its direct localized destination is the `register` route. Mobile replaces
+the guest account-menu icon with this action; signed-in account controls retain
+their existing markup and sizing.
+
 ## Loading and caching
 
 Routes already use dynamic Vue imports. `build.cssCodeSplit: true` keeps feature

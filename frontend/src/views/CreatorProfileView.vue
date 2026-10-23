@@ -437,20 +437,20 @@ onBeforeUnmount(() => { ++profileGeneration; packageDescriptionObserver?.disconn
   <template v-else>
     <dialog
       ref="requestDialog"
-      class="profile-request-dialog"
+      class="profile-request-dialog wave-modal wave-modal--wide"
       aria-labelledby="profile-request-title"
       @click.self="closeRequestForm"
       @cancel="handleRequestDialogCancel"
-    >
-      <div class="profile-request-dialog__content">
+     aria-modal="true">
+      <div class="profile-request-dialog__content wave-modal__content">
         <header class="profile-request-dialog__header">
           <div>
             <p class="eyebrow">{{ t('creatorProfile.requestEyebrow') }}</p>
-            <h2 id="profile-request-title">{{ t('creatorProfile.requestTitle') }}</h2>
+            <h2 id="profile-request-title" class="wave-modal__title">{{ t('creatorProfile.requestTitle') }}</h2>
             <p>{{ t('creatorProfile.requestDescription') }}</p>
           </div>
           <button
-            class="profile-request-dialog__close"
+            class="profile-request-dialog__close wave-modal__close"
             type="button"
             :aria-label="t('creatorProfile.closeRequest')"
             :disabled="requestBusy"
@@ -573,7 +573,7 @@ onBeforeUnmount(() => { ++profileGeneration; packageDescriptionObserver?.disconn
       <StatusMessage v-if="!viewerLoaded">{{ t('app.loading') }}</StatusMessage>
       <template v-else-if="!viewer">
         <p>{{ t('campaignChat.companyOnlyStart') }}</p>
-        <RouterLink class="button button--dark" :to="{ name: 'account', query: { mode: 'login' } }">
+        <RouterLink class="button button--dark" :to="{ name: 'login' }">
           {{ t('creatorProfile.signInAsCompany') }}
         </RouterLink>
       </template>

@@ -87,7 +87,7 @@ async function signOut() {
     await logoutAccount()
     setCurrentUser(null)
     closeMobileSidebar()
-    await router.replace({ path: localizedPath('account', locale.value), query: { mode: 'login' } })
+    await router.replace({ path: localizedPath('login', locale.value) })
   } catch (cause) {
     signOutError.value = cause.message
   } finally {

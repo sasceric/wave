@@ -21,11 +21,11 @@ watch(() => props.open, async (open) => {
 </script>
 
 <template>
-  <dialog ref="dialog" class="image-preview-modal" aria-modal="true" :aria-labelledby="`${id}-title`" @cancel.prevent="emit('update:open', false)" @close="emit('update:open', false)" @click.self="emit('update:open', false)">
+  <dialog ref="dialog" class="image-preview-modal wave-modal wave-modal--large" aria-modal="true" :aria-labelledby="`${id}-title`" @cancel.prevent="emit('update:open', false)" @close="emit('update:open', false)" @click.self="emit('update:open', false)">
     <section>
       <header>
-        <h2 :id="`${id}-title`">{{ title }}</h2>
-        <button type="button" :aria-label="closeLabel" @click="emit('update:open', false)"><X :size="20" aria-hidden="true" /></button>
+        <h2 :id="`${id}-title`" class="wave-modal__title">{{ title }}</h2>
+        <button class="wave-modal__close" type="button" :aria-label="closeLabel" @click="emit('update:open', false)"><X :size="20" aria-hidden="true" /></button>
       </header>
       <div class="image-preview-modal__image"><img v-if="open && src" :src="src" :alt="title" /></div>
     </section>

@@ -1,20 +1,4 @@
 .required-profile-modal {
-  width: min(560px, calc(100vw - 32px));
-  max-width: none;
-  max-height: min(880px, calc(100dvh - 32px));
-  padding: 0;
-  overflow-y: auto;
-  border: 0;
-  border-radius: 16px;
-  color: var(--ink);
-  background: #fffefa;
-  box-shadow: 0 22px 60px rgba(15, 23, 20, .25);
-
-  &::backdrop {
-    background: rgba(15, 23, 20, .62);
-    backdrop-filter: blur(3px);
-  }
-
   &__content {
     padding: 28px;
   }

@@ -26,14 +26,14 @@ final class OAuthControllerTest extends WebTestCase
     {
         $this->client->request('GET', '/api/auth/oauth/google/start?locale=sl&mode=register&accountType=company');
 
-        self::assertResponseRedirects('/si/racun?mode=register&oauth=error');
+        self::assertResponseRedirects('/si/registracija?oauth=error');
     }
 
     public function testCallbackWithoutSessionStateIsRejected(): void
     {
         $this->client->request('GET', '/api/auth/oauth/apple/callback?state=forged&code=unused');
 
-        self::assertResponseRedirects('/racun?mode=login&oauth=error');
+        self::assertResponseRedirects('/prijava?oauth=error');
     }
 
     public function testAppleFormPostCallbackWithoutSessionStateIsRejected(): void
@@ -43,7 +43,7 @@ final class OAuthControllerTest extends WebTestCase
             'code' => 'unused',
         ]);
 
-        self::assertResponseRedirects('/racun?mode=login&oauth=error');
+        self::assertResponseRedirects('/prijava?oauth=error');
     }
 
     private function payload(): array

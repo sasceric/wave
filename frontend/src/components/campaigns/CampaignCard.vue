@@ -44,9 +44,8 @@ async function handleBookmarkClick() {
   bookmarkError.value = ''
   if (!currentUser.value) {
     await router.push({
-      name: localizedRouteName('account', locale.value),
+      name: localizedRouteName('login', locale.value),
       query: {
-        mode: 'login',
         bookmark: props.campaign.slug,
         returnTo: route.fullPath,
       },

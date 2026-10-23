@@ -1,5 +1,8 @@
 {
   "bs": {
+    "login": "prijava",
+    "register": "registracija",
+    "forgot-password": "zaboravljena-lozinka",
     "home": "",
     "account": "racun",
     "account-applications": "racun/prijave",
@@ -54,6 +57,9 @@
     "search": "pretraga"
   },
   "hr": {
+    "login": "prijava",
+    "register": "registracija",
+    "forgot-password": "zaboravljena-lozinka",
     "home": "",
     "account": "racun",
     "account-applications": "racun/prijave",
@@ -108,6 +114,9 @@
     "search": "pretraga"
   },
   "sr": {
+    "login": "prijava",
+    "register": "registracija",
+    "forgot-password": "zaboravljena-lozinka",
     "home": "",
     "account": "nalog",
     "account-applications": "nalog/prijave",
@@ -162,6 +171,9 @@
     "search": "pretraga"
   },
   "cnr": {
+    "login": "prijava",
+    "register": "registracija",
+    "forgot-password": "zaboravljena-lozinka",
     "home": "",
     "account": "nalog",
     "account-applications": "nalog/prijave",
@@ -216,6 +228,9 @@
     "search": "pretraga"
   },
   "sl": {
+    "login": "prijava",
+    "register": "registracija",
+    "forgot-password": "pozabljeno-geslo",
     "home": "",
     "account": "racun",
     "account-applications": "racun/prijave",
@@ -270,6 +285,9 @@
     "search": "iskanje"
   },
   "en": {
+    "login": "login",
+    "register": "register",
+    "forgot-password": "forgot-password",
     "home": "",
     "account": "account",
     "account-applications": "account/applications",
@@ -324,6 +342,9 @@
     "search": "search"
   },
   "de": {
+    "login": "anmelden",
+    "register": "registrieren",
+    "forgot-password": "passwort-vergessen",
     "home": "",
     "account": "konto",
     "account-applications": "konto/bewerbungen",

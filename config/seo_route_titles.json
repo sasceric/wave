@@ -1,4 +1,7 @@
 {
+  "login": "seo.loginTitle",
+  "register": "seo.registerTitle",
+  "forgot-password": "seo.forgotPasswordTitle",
   "support": "seo.supportTitle",
   "support-create": "support.createTitle",
   "support-track": "support.trackingTitle",

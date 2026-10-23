@@ -115,6 +115,21 @@ final class UrlRedirects
     /** Resolve chains in one response; unmatched query parameters are discarded by default. */
     public function resolve(string $path, ?string $query = null): ?string
     {
+        // Authentication URLs are protected from editable public redirect rules.
+        // These built-in legacy aliases still resolve on the first document
+        // request and through the SPA redirect endpoint, without database rows.
+        $route = $this->routes->resolve($path);
+        if ($route !== null && in_array($route['name'], ['account', 'login', 'register', 'forgot-password'], true)) {
+            parse_str($query ?? '', $parameters);
+            $mode = $parameters['mode'] ?? null;
+            $name = is_string($mode) ? (['login' => 'login', 'register' => 'register', 'reset' => 'forgot-password'][$mode] ?? null) : null;
+            if ($name !== null) {
+                unset($parameters['mode']);
+                $target = $this->routes->localizedPath($name, $route['locale']);
+
+                return $target.($parameters !== [] ? '?'.http_build_query($parameters, '', '&', PHP_QUERY_RFC3986) : '');
+            }
+        }
         try {
             $path = $this->path($path);
         } catch (\InvalidArgumentException) {
@@ -153,7 +168,7 @@ final class UrlRedirects
     private function publicPath(string $path, ?string $name): bool
     {
         if ($name !== null && ($name === 'account' || str_starts_with($name, 'account-') || $name === 'admin' || str_starts_with($name, 'admin-')
-            || in_array($name, ['messages', 'verify-email', 'reset-password', 'moderation', 'support-create', 'support-track'], true))) {
+            || in_array($name, ['login', 'register', 'forgot-password', 'messages', 'verify-email', 'reset-password', 'moderation', 'support-create', 'support-track'], true))) {
             return false;
         }
         $unprefixed = preg_replace('~^/(?:hr|rs|me|si|en|de|sr|cnr|sl)(?=/)~', '', $path) ?? $path;

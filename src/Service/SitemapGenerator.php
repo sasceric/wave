@@ -114,6 +114,9 @@ final class SitemapGenerator
         foreach ($this->routeMap->locales() as $locale) {
             foreach ([
                 'account',
+                'login',
+                'register',
+                'forgot-password',
                 'messages',
                 'verify-email',
                 'reset-password',

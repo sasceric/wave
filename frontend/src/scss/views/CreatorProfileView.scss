@@ -1,7 +1,6 @@
 @use '../breakpoints';
 @use '../public-profile-layout';
 
-
 .creator-profile {
   --profile-hero-height: 290px;
   position: relative; isolation: isolate;
@@ -196,24 +195,7 @@
   svg { flex: 0 0 auto; color: var(--forest); }
 }
 
-
 .profile-request-dialog {
-  width: min(640px, calc(100vw - 32px));
-  max-width: none;
-  max-height: min(90dvh, 820px);
-  padding: 0;
-  overflow: auto;
-  border: 1px solid #dfe5dc;
-  border-radius: 8px;
-  color: var(--ink);
-  background: #fdfcf8;
-  box-shadow: 0 24px 80px rgb(18 35 26 / 24%);
-
-  &::backdrop {
-    background: rgb(17 29 22 / 56%);
-    backdrop-filter: blur(3px);
-  }
-
   &__content {
     padding: 26px;
   }

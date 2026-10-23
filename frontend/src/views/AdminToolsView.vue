@@ -2,7 +2,7 @@
 import EmailPreviewFrame from '../components/shared/EmailPreviewFrame.vue'
 import AdminPage from '../components/admin/AdminPage.vue'
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
-import { RefreshCw } from '@lucide/vue'
+import { RefreshCw, X } from '@lucide/vue'
 import { useI18n } from 'vue-i18n'
 import AccountSidebar from '../components/account/AccountSidebar.vue'
 import AdminReadOnlyTable from '../components/admin/AdminReadOnlyTable.vue'
@@ -210,7 +210,7 @@ onBeforeUnmount(() => { requestId++; previewRequestId++ })
     </div>
     <div v-else-if="access === 'anonymous'" class="admin-dashboard__state">
       <StatusMessage>{{ t('adminDashboard.signIn') }}</StatusMessage>
-      <LocalizedLink class="button button--dark" :to="{ name: 'account', query: { mode: 'login' } }">{{ t('auth.signIn') }}</LocalizedLink>
+      <LocalizedLink class="button button--dark" :to="{ name: 'login' }">{{ t('auth.signIn') }}</LocalizedLink>
     </div>
     <div v-else-if="access === 'forbidden'" class="admin-dashboard__state"><StatusMessage variant="error">{{ t('adminDashboard.noAccess') }}</StatusMessage></div>
     <div v-else-if="access === 'error'" class="admin-dashboard__state">
@@ -270,8 +270,11 @@ onBeforeUnmount(() => { requestId++; previewRequestId++ })
             <template #cell-file="{ value }"><code>{{ value }}</code></template>
             <template #cell-message="{ row, value }"><button type="button" class="admin-tools__log-preview" @click="openLog(row)">{{ row.mail ? t('emailLogs.open') : value }}</button><small v-if="row.truncated">{{ t('adminTools.truncated') }}</small></template>
           </AdminReadOnlyTable>
-          <dialog ref="logDialog" class="admin-tools__dialog" aria-labelledby="log-detail-title" @click="($event.target === logDialog) && closeLog()" @cancel="closeLog">
-            <h2 id="log-detail-title">{{ t('adminTools.logDetail') }}</h2>
+          <dialog ref="logDialog" class="admin-tools__dialog wave-modal wave-modal--large wave-modal--padded" aria-labelledby="log-detail-title" @click="($event.target === logDialog) && closeLog()" @cancel="closeLog" aria-modal="true">
+            <header class="wave-modal__header">
+              <h2 id="log-detail-title" class="wave-modal__title">{{ t('adminTools.logDetail') }}</h2>
+              <button class="wave-modal__close" type="button" :aria-label="t('adminTools.close')" @click="closeLog"><X :size="20" aria-hidden="true" /></button>
+            </header>
             <p>{{ date(selectedLog?.time) }} · {{ selectedLog?.channel }} · {{ selectedLog?.level }}</p>
             <template v-if="selectedLog?.mail">
               <dl class="admin-tools__mail-meta">

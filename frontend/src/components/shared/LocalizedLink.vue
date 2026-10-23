@@ -7,6 +7,7 @@ import {
   localizedRouteName,
   localizedRouteNames,
   routeNameFromCanonicalPath,
+  authenticationDestination,
 } from '../../routePaths'
 
 defineOptions({ inheritAttrs: false })
@@ -18,19 +19,20 @@ const props = defineProps({
 const { locale } = useI18n()
 
 const localizedTo = computed(() => {
-  if (typeof props.to === 'string') {
-    const name = routeNameFromCanonicalPath(props.to)
-    return name ? localizedPath(name, locale.value) : props.to
+  const to = authenticationDestination(props.to)
+  if (typeof to === 'string') {
+    const name = routeNameFromCanonicalPath(to)
+    return name ? localizedPath(name, locale.value) : to
   }
 
-  if (localizedRouteNames.has(props.to.name)) {
+  if (localizedRouteNames.has(to.name)) {
     return {
-      ...props.to,
-      name: localizedRouteName(props.to.name, locale.value),
+      ...to,
+      name: localizedRouteName(to.name, locale.value),
     }
   }
 
-  return props.to
+  return to
 })
 </script>
 

@@ -1,6 +1,6 @@
 <script setup>
 import { nextTick, ref, useId, watch } from 'vue'
-import { AlertTriangle } from '@lucide/vue'
+import { AlertTriangle, X } from '@lucide/vue'
 
 const props = defineProps({
   open: { type: Boolean, required: true },
@@ -31,7 +31,7 @@ function dismiss() {
 <template>
   <dialog
     ref="dialog"
-    class="confirmation-modal"
+    class="confirmation-modal wave-modal wave-modal--compact"
     aria-modal="true"
     :aria-labelledby="`${id}-title`"
     :aria-describedby="`${id}-message`"
@@ -39,9 +39,10 @@ function dismiss() {
     @close="emit('update:open', false)"
     @click.self="dismiss"
   >
-    <section class="confirmation-modal__content" :aria-busy="loading">
+    <section class="confirmation-modal__content wave-modal__content" :aria-busy="loading">
+      <button class="wave-modal__close wave-modal__close--floating" type="button" :aria-label="cancelLabel" :disabled="loading" @click="dismiss"><X :size="20" aria-hidden="true" /></button>
       <span class="confirmation-modal__icon"><AlertTriangle :size="19" aria-hidden="true" /></span>
-      <h2 :id="`${id}-title`">{{ title }}</h2>
+      <h2 :id="`${id}-title`" class="wave-modal__title">{{ title }}</h2>
       <p :id="`${id}-message`">{{ message }}</p>
       <slot />
       <footer class="confirmation-modal__actions">

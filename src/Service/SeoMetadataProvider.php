@@ -72,7 +72,7 @@ final class SeoMetadataProvider
             || str_starts_with($name, 'account-')
             || $name === 'admin'
             || str_starts_with($name, 'admin-')
-            || in_array($name, ['support-create', 'support-track', 'messages', 'verify-email', 'reset-password', 'moderation'], true);
+            || in_array($name, ['login', 'register', 'forgot-password', 'support-create', 'support-track', 'messages', 'verify-email', 'reset-password', 'moderation'], true);
         $titleKey = match ($name) {
             'support', 'support-create', 'support-track' => 'supportTitle',
             'home' => 'homeTitle',

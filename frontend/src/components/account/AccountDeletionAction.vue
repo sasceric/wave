@@ -30,7 +30,7 @@ async function deleteAccount() {
     await apiRequest('/me/account', { method: 'DELETE', body: { confirmed: true } })
     open.value = false
     setCurrentUser(null)
-    await router.replace({ path: localizedPath('account', locale.value), query: { mode: 'login', deleted: '1' } })
+    await router.replace({ path: localizedPath('login', locale.value), query: { deleted: '1' } })
   } catch (cause) {
     error.value = cause.message
   } finally {

@@ -66,7 +66,7 @@ defineExpose({ openRequest: (id = null) => open('request', id) })
     <StatusMessage v-if="sent">{{ t(mode === 'invite' ? 'campaignChat.invitationSent' : 'account.actionSaved') }}</StatusMessage>
     <template v-else-if="!canContact">
       <p>{{ t('agency.contactHint') }}</p>
-      <LocalizedLink class="button button--dark" :to="{ name: 'account', query: { mode: currentUser ? undefined : 'register', accountType: 'company', returnTo: route.path } }">{{ t(currentUser ? 'account.title' : 'auth.register') }}<ArrowRight :size="16" /></LocalizedLink>
+      <LocalizedLink class="button button--dark" :to="{ name: currentUser ? 'account' : 'register', query: { accountType: 'company', returnTo: route.path } }">{{ t(currentUser ? 'account.title' : 'auth.register') }}<ArrowRight :size="16" /></LocalizedLink>
     </template>
     <p v-else-if="loading" role="status">{{ t('app.loading') }}</p>
     <template v-else>

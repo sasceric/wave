@@ -941,8 +941,7 @@ async function signOut() {
     setCurrentUser(null)
     authMenuOpen.value = false
     await router.replace({
-      path: localizedPath('account', locale.value),
-      query: { mode: 'login' },
+      path: localizedPath('login', locale.value),
     })
   } catch (cause) {
     authMenuError.value = cause.message
@@ -961,11 +960,11 @@ async function signOut() {
       'site-shell--account': hideSiteFooter,
       'site-shell--footer-visible': !hideSiteFooter,
       'site-shell--registration': route.meta.accountAccessPage
-        && route.query.mode === 'register'
+        && (route.meta.authMode || route.query.mode) === 'register'
         && !currentUser,
       'site-shell--auth-splash': route.meta.accountAccessPage
-        && route.query.mode !== 'register'
-        && route.query.mode !== 'reset'
+        && (route.meta.authMode || route.query.mode) !== 'register'
+        && (route.meta.authMode || route.query.mode) !== 'reset'
         && !currentUser,
     }"
   >
@@ -1084,6 +1083,7 @@ async function signOut() {
           <div
             ref="authMenu"
             class="header-user-menu"
+            :class="{ 'header-user-menu--guest': !currentUser }"
             @keydown.esc.stop.prevent="closeAuthMenuAndRestoreFocus"
           >
             <button
@@ -1131,15 +1131,18 @@ async function signOut() {
                 <p v-if="authMenuError" class="header-user-menu__error" role="alert">{{ authMenuError }}</p>
               </template>
               <template v-else>
-                <LocalizedLink class="header-user-menu__item" :to="{ name: 'account', query: { mode: 'login' } }" @click="authMenuOpen = false">
+                <LocalizedLink class="header-user-menu__item" :to="{ name: 'login' }" @click="authMenuOpen = false">
                   {{ t('auth.signIn') }}
                 </LocalizedLink>
-                <LocalizedLink class="header-user-menu__item" :to="{ name: 'account', query: { mode: 'register' } }" @click="authMenuOpen = false">
+                <LocalizedLink class="header-user-menu__item" :to="{ name: 'register' }" @click="authMenuOpen = false">
                   {{ t('auth.register') }}
                 </LocalizedLink>
               </template>
             </div>
           </div>
+          <LocalizedLink v-if="!currentUser" class="button button--dark header-register" :to="{ name: 'register' }">
+            {{ t('auth.registerShort') }}
+          </LocalizedLink>
           <div v-if="!currentUser" class="desktop-language-switcher">
             <LanguageSwitcher />
           </div>

@@ -30,17 +30,17 @@ function close() {
 <template>
   <dialog
     ref="dialog"
-    class="success-modal"
+    class="success-modal wave-modal wave-modal--compact"
     aria-modal="true"
     :aria-labelledby="`${id}-title`"
     @cancel.prevent="close"
     @close="emit('update:open', false)"
     @click.self="close"
   >
-    <section class="success-modal__content">
-      <button v-if="showClose" class="success-modal__close" type="button" :aria-label="closeLabel" @click="close"><X :size="19" aria-hidden="true" /></button>
+    <section class="success-modal__content wave-modal__content">
+      <button v-if="showClose" class="success-modal__close wave-modal__close wave-modal__close--floating" type="button" :aria-label="closeLabel" @click="close"><X :size="19" aria-hidden="true" /></button>
       <span class="success-modal__icon"><slot name="icon"><Check :size="20" aria-hidden="true" /></slot></span>
-      <h2 :id="`${id}-title`">{{ title }}</h2>
+      <h2 :id="`${id}-title`" class="wave-modal__title">{{ title }}</h2>
       <p>{{ message }}</p>
       <footer class="success-modal__actions">
         <slot name="actions"><button class="button button--dark" type="button" @click="close">{{ closeLabel }}</button></slot>

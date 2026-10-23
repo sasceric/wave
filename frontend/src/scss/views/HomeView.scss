@@ -1184,23 +1184,6 @@
 }
 
 .contact-feedback {
-  width: min(440px, calc(100vw - 32px));
-  max-width: none;
-  max-height: calc(100dvh - 32px);
-  margin: auto;
-  overflow: auto;
-  padding: 0;
-  border: 0;
-  border-radius: 20px;
-  color: var(--ink);
-  background: #fffefa;
-  box-shadow: 0 22px 60px rgba(15, 23, 20, .25);
-
-  &::backdrop {
-    background: rgba(15, 23, 20, .54);
-    backdrop-filter: blur(2px);
-  }
-
   &__content {
     position: relative;
     display: grid;
@@ -1426,8 +1409,6 @@
     }
   }
 
-
-
   .intro-strip {
     &__inner {
       min-height: 80px;
@@ -1454,11 +1435,6 @@
       padding-bottom: 65px;
     }
   }
-
-
-
-
-
 
   .contact-block {
     min-height: auto;

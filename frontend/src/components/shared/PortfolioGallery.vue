@@ -4,7 +4,11 @@ import { useI18n } from 'vue-i18n'
 import { ChevronLeft, ChevronRight, CirclePlay, Image, X } from '@lucide/vue'
 import CardImage from './CardImage.vue'
 
-const props = defineProps({ items: { type: Array, default: () => [] }, name: { type: String, required: true } })
+const props = defineProps({
+  items: { type: Array, default: () => [] },
+  name: { type: String, required: true },
+  showcase: { type: Boolean, default: false },
+})
 const { t } = useI18n()
 const slider = ref(null)
 const dialog = ref(null)
@@ -18,6 +22,7 @@ let previousOverflow = ''
 let disposed = false
 
 function previewUrl(item) {
+  if (item.coverUrl) return item.coverUrl
   if (item.type === 'image') return item.url || ''
   try {
     const url = new URL(item.embedUrl)
@@ -71,11 +76,11 @@ onBeforeUnmount(() => { disposed = true; window.removeEventListener('resize', up
 </script>
 
 <template>
-  <section class="portfolio-gallery" :aria-label="t('creatorProfile.portfolio')">
+  <section class="portfolio-gallery" :class="{ 'portfolio-gallery--showcase': showcase }" :aria-label="t('creatorProfile.portfolio')">
     <div ref="slider" class="portfolio-gallery__slider" role="region" :aria-label="t('creatorProfile.portfolio')" :aria-description="t('creatorProfile.galleryHint')" tabindex="0" @scroll.passive="updateActiveSlide" @keydown.left.prevent="scrollToSlide(activeSlide - 1)" @keydown.right.prevent="scrollToSlide(activeSlide + 1)">
       <button v-for="(item, index) in items" :key="item.id" class="portfolio-gallery__item" type="button" :aria-label="t('creatorProfile.openPortfolioItem', { title: item.title || name, index: index + 1 })" @click="openLightbox(index)">
-        <CardImage :src="previewUrl(item)" :alt="item.title || name" sizes="(max-width: 760px) 80vw, (max-width: 1224px) 25vw, 250px" />
-        <span class="portfolio-gallery__type" aria-hidden="true"><CirclePlay v-if="item.type !== 'image'" :size="23" /><Image v-else :size="19" /></span>
+        <CardImage :src="previewUrl(item)" :alt="item.title || name" :sizes="showcase ? '(max-width: 760px) calc(100vw - 40px), 672px' : '(max-width: 760px) 80vw, (max-width: 1224px) 25vw, 250px'" />
+        <span class="portfolio-gallery__type" :class="{ 'portfolio-gallery__type--play': item.type !== 'image' }" aria-hidden="true"><CirclePlay v-if="item.type !== 'image'" :size="showcase ? 32 : 23" /><Image v-else :size="19" /></span>
       </button>
     </div>
     <div v-if="items.length > 1" class="portfolio-gallery__controls">

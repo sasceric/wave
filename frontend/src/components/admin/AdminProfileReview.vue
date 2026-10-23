@@ -74,7 +74,7 @@ onBeforeUnmount(() => { ++generation })
       <section v-if="profile.portfolio?.length">
         <p class="admin-profile-review__note">{{ t('adminProfiles.privateWorksHint') }}</p>
         <ul><li v-for="(work, index) in profile.portfolio" :key="work.id || index">{{ work.title }} · {{ t(work.publicPermission === false ? 'adminProfiles.hidden' : 'adminProfiles.visible') }}</li></ul>
-        <CreatorWorks :items="profile.portfolio" :name="name" layout="grid" />
+        <CreatorWorks :items="profile.portfolio" :name="name" />
       </section>
       <ProfilePackages v-if="profile.packages?.length" :items="profile.packages" :agency="data.accountType === 'company'" />
       <ProfileFaqs v-if="profile.faqs?.length" :items="profile.faqs" />

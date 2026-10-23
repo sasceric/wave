@@ -8,9 +8,6 @@
   &__status { display: inline-block; border-radius: 20px; padding: 4px 9px; font-size: 12px; background: #e5f0e9; color: var(--forest); }
   &__status.is-disabled { background: var(--paper); color: var(--muted); }
   &__editor {
-    width: min(520px, calc(100vw - 32px)); padding: 24px; max-height: calc(100dvh - 32px); overflow-y: auto;
-    border: 1px solid var(--line); border-radius: 12px; background: #fffefa; color: var(--forest); box-shadow: 0 22px 60px rgba(15, 23, 20, .25);
-    &::backdrop { background: rgba(15, 23, 20, .54); }
     header { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
     h2 { margin: 0; font-size: 24px; }
     header button { display: grid; place-items: center; padding: 6px; border: 0; background: transparent; color: var(--muted); cursor: pointer; }

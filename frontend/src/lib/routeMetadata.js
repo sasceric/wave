@@ -5,7 +5,7 @@ export function routeMetadata(route, locale, t, authenticated = false) {
   const name = route.meta.routeName
   const known = routeSegments[locale]?.[name] !== undefined
   const account = name === 'account' || name?.startsWith('account-')
-  const privatePage = account || name === 'admin' || name?.startsWith('admin-')
+  const privatePage = ['login', 'register', 'forgot-password'].includes(name) || account || name === 'admin' || name?.startsWith('admin-')
     || ['messages', 'verify-email', 'reset-password', 'moderation', 'support-create', 'support-track'].includes(name)
   let key = titles[name] || (known ? 'seo.privateTitle' : 'seo.notFoundTitle')
   if (account && !authenticated) {

@@ -317,7 +317,7 @@ onMounted(loadCampaign)
               {{ t('account.applicationSent') }}
             </div>
             <div v-else-if="!user" class="brief-application-card__guest">
-              <RouterLink class="button button--dark button--full" :to="{ name: 'account', query: { mode: 'register', accountType: 'creator', returnTo: route.path } }" @click="rememberRegistrationIntent(route.path, 'creator')">
+              <RouterLink class="button button--dark button--full" :to="{ name: 'register', query: { accountType: 'creator', returnTo: route.path } }" @click="rememberRegistrationIntent(route.path, 'creator')">
                 {{ t('registrationPrompts.campaignCreator.action') }} <ArrowRight :size="17" aria-hidden="true" />
               </RouterLink>
               <p>{{ t('account.signInToApply') }}</p>

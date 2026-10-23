@@ -28,6 +28,8 @@ export function routeNameFromCanonicalPath(path) {
   const staticRoutes = {
     '/': 'home',
     '/account': 'account',
+    '/login': 'login',
+    '/register': 'register',
     '/account/credits': 'account-credits',
     '/admin/credit-settings': 'admin-credit-settings',
     '/account/applications': 'account-applications',
@@ -55,6 +57,17 @@ export function routeNameFromCanonicalPath(path) {
   }
 
   return staticRoutes[path]
+}
+
+// Keep old component destinations compatible while emitting clean auth links.
+export function authenticationDestination(to) {
+  if (!to || typeof to !== 'object' || to.name !== 'account') return to
+  const mode = to.query?.mode
+  const name = ['login', 'register', 'reset'].includes(mode) ? (mode === 'reset' ? 'forgot-password' : mode) : null
+  if (!name) return to
+  const query = { ...to.query }
+  delete query.mode
+  return { ...to, name, query }
 }
 
 export function legacyLocalizedDetailPath(name, locale) {

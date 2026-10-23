@@ -381,13 +381,14 @@ final class OAuthController extends AbstractController
     private function accountRedirect(string $localizedRoutesFile, string $locale, string $mode, string $status): RedirectResponse
     {
         $routes = json_decode((string) file_get_contents($localizedRoutesFile), true, 32, JSON_THROW_ON_ERROR);
-        $segment = is_array($routes) && is_array($routes[$locale] ?? null) && is_string($routes[$locale]['account'] ?? null)
-            ? $routes[$locale]['account']
-            : 'account';
+        $route = $mode === 'register' ? 'register' : 'login';
+        $segment = is_array($routes) && is_array($routes[$locale] ?? null) && is_string($routes[$locale][$route] ?? null)
+            ? $routes[$locale][$route]
+            : ($route === 'register' ? 'registracija' : 'prijava');
         $prefixes = json_decode((string) file_get_contents(dirname($localizedRoutesFile).'/localized_route_prefixes.json'), true, 32, JSON_THROW_ON_ERROR);
         $prefix = $locale === 'bs' ? '' : '/'.$prefixes[$locale];
 
-        return new RedirectResponse($prefix.'/'.$segment.'?'.http_build_query(['mode' => $mode, 'oauth' => $status]));
+        return new RedirectResponse($prefix.'/'.$segment.'?'.http_build_query(['oauth' => $status]));
     }
 
     private function flowLocale(mixed $flow): string
