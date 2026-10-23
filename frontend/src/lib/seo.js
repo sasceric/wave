@@ -243,7 +243,7 @@ export function updateSeo({
   setStructuredData([website, organization, page, ...nodes])
 }
 
-// Update the review nodes after pagination without emitting another page view.
+// Update eligible company review nodes after pagination without another page view.
 export function updateProfileReviewSchema(kind, slug, rows) {
   const element = document.getElementById('wave-schema')
   if (!element || !['creators', 'companies'].includes(kind)) return
@@ -256,11 +256,22 @@ export function updateProfileReviewSchema(kind, slug, rows) {
   if (!Array.isArray(nodes)) return
   const url = new URL(localizedPath(kind === 'creators' ? 'creator-profile' : 'company-profile', 'bs', { slug }), getSeoOrigin()).href
   const entity = nodes.find(node => node['@type'] === 'ProfilePage' && node.url === url)?.mainEntity
-  const target = kind === 'creators' ? entity?.makesOffer?.itemOffered : entity
-  if (!target || entity.url !== url) return
+  if (!entity || entity.url !== url) return
+  if (kind === 'creators') {
+    // Also clean older server markup during deployment; Google rejects Person/Service ratings.
+    for (const target of [entity, entity.makesOffer?.itemOffered]) {
+      if (!target) continue
+      delete target.aggregateRating
+      delete target.review
+    }
+    setStructuredData(nodes)
+    return
+  }
+  const target = entity
+  if (target['@type'] !== 'Organization') return
   const reviews = rows.filter(row => !row.isPresentationDemo && row.comment && row.authorName).map(row => ({
     '@type': 'Review', '@id': `${url}#review-${row.id}`,
-    author: { '@type': row.authorType || (kind === 'creators' ? 'Organization' : 'Person'), name: row.authorName },
+    author: { '@type': row.authorType || 'Person', name: row.authorName },
     reviewBody: row.comment, datePublished: row.createdAt,
     reviewRating: { '@type': 'Rating', ratingValue: row.rating, bestRating: 5, worstRating: 1 },
   }))

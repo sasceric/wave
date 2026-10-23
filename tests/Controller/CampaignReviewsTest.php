@@ -108,9 +108,10 @@ final class CampaignReviewsTest extends WebTestCase
         self::assertArrayNotHasKey('review', $person);
         $service = $person['makesOffer']['itemOffered'];
         self::assertSame('Service', $service['@type']);
-        self::assertSame(4.0, (float) $service['aggregateRating']['ratingValue']);
-        self::assertSame(1, $service['aggregateRating']['reviewCount']);
-        self::assertSame('Organization', $service['review'][0]['author']['@type']);
+        self::assertArrayNotHasKey('aggregateRating', $service);
+        self::assertArrayNotHasKey('review', $service);
+        self::assertSame(4.0, (float) $this->payload()['data']['rating']['average']);
+        self::assertSame(1, $this->payload()['data']['rating']['reviewCount']);
         self::assertSame($person['@id'], $service['provider']['@id']);
         $crawler = $this->client->request('GET', '/kreatori/review-creator');
         self::assertResponseIsSuccessful();

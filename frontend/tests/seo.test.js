@@ -158,28 +158,52 @@ test('JSON-LD uses a context-bearing graph compatible with Safari metadata parsi
   }
 })
 
-test('profile reviews follow pagination, omit prototypes and leave the aggregate intact', async () => {
+test('company reviews follow pagination, omit prototypes and leave the aggregate intact', async () => {
   const { updateSeo, updateProfileReviewSchema, document } = await seoFixture()
-  const url = 'https://wave.ba/kreatori/amina'
-  updateSeo({ route: { meta: { routeName: 'creator-profile' }, params: { slug: 'amina' } }, locale: 'de', title: 'Amina', description: 'Creator',
-    mainEntity: { '@type': 'Person', url, makesOffer: { '@type': 'Offer', itemOffered: { '@type': 'Service', aggregateRating: { '@type': 'AggregateRating', reviewCount: 15, ratingValue: 4.5 } } } },
+  const url = 'https://wave.ba/kompanije/brand'
+  updateSeo({ route: { meta: { routeName: 'company-profile' }, params: { slug: 'brand' } }, locale: 'de', title: 'Brand', description: 'Company',
+    mainEntity: { '@type': 'Organization', url, aggregateRating: { '@type': 'AggregateRating', reviewCount: 15, ratingValue: 4.5 } },
   })
   const rows = [{ id: 11, authorName: 'Brand', comment: 'Excellent work.', rating: 5, createdAt: '2026-10-16T12:00:00Z' },
     { id: 12, authorName: 'Demo brand', comment: 'Fictional review', rating: 5, isPresentationDemo: true }]
-  updateProfileReviewSchema('creators', 'other-profile', rows)
-  let service = JSON.parse(document.getElementById('wave-schema').textContent)['@graph'][2].mainEntity.makesOffer.itemOffered
+  updateProfileReviewSchema('companies', 'other-profile', rows)
+  let service = JSON.parse(document.getElementById('wave-schema').textContent)['@graph'][2].mainEntity
   assert.equal(service.review, undefined)
-  updateProfileReviewSchema('creators', 'amina', rows)
-  service = JSON.parse(document.getElementById('wave-schema').textContent)['@graph'][2].mainEntity.makesOffer.itemOffered
+  updateProfileReviewSchema('companies', 'brand', rows)
+  service = JSON.parse(document.getElementById('wave-schema').textContent)['@graph'][2].mainEntity
   assert.equal(service.aggregateRating.reviewCount, 15)
   assert.equal(service.review.length, 1)
   assert.equal(service.review[0]['@id'], `${url}#review-11`)
-  assert.equal(service.review[0].author['@type'], 'Organization')
-  updateProfileReviewSchema('creators', 'amina', [])
-  service = JSON.parse(document.getElementById('wave-schema').textContent)['@graph'][2].mainEntity.makesOffer.itemOffered
+  assert.equal(service.review[0].author['@type'], 'Person')
+  updateProfileReviewSchema('companies', 'brand', [])
+  service = JSON.parse(document.getElementById('wave-schema').textContent)['@graph'][2].mainEntity
   assert.equal(service.review, undefined)
   const nodes = JSON.parse(document.getElementById('wave-schema').textContent)['@graph']
-  assert.equal(nodes.find(node => node['@type'] === 'BreadcrumbList').itemListElement[1].item, 'https://wave.ba/de/kreative')
+  assert.equal(nodes.find(node => node['@type'] === 'BreadcrumbList').itemListElement[1].item, 'https://wave.ba/de/unternehmen')
+})
+
+test('creator review pagination cannot restore unsupported Person or Service review markup, including legacy HTML', async () => {
+  const { updateSeo, updateProfileReviewSchema, document } = await seoFixture()
+  const url = 'https://wave.ba/kreatori/amina'
+  const rating = { '@type': 'AggregateRating', reviewCount: 15, ratingValue: 4.5 }
+  updateSeo({ route: { meta: { routeName: 'creator-profile' }, params: { slug: 'amina' } }, locale: 'de', title: 'Amina', description: 'Creator',
+    mainEntity: { '@type': 'Person', url, aggregateRating: rating, review: [{ '@type': 'Review' }], makesOffer: { '@type': 'Offer', itemOffered: { '@type': 'Service', name: 'Content creation', aggregateRating: rating, review: [{ '@type': 'Review' }] } } },
+  })
+  const rows = [{ id: 11, authorName: 'Brand', comment: 'Excellent work.', rating: 5, createdAt: '2026-10-16T12:00:00Z' }]
+  updateProfileReviewSchema('creators', 'other-profile', rows)
+  assert.equal(JSON.parse(document.getElementById('wave-schema').textContent)['@graph'][2].mainEntity.aggregateRating.reviewCount, 15)
+  for (const reviews of [rows, [], rows]) {
+    updateProfileReviewSchema('creators', 'amina', reviews)
+    const nodes = JSON.parse(document.getElementById('wave-schema').textContent)['@graph']
+    const person = nodes[2].mainEntity
+    for (const target of [person, person.makesOffer.itemOffered]) {
+      assert.equal(target.aggregateRating, undefined)
+      assert.equal(target.review, undefined)
+    }
+    assert.equal(person.makesOffer.itemOffered['@type'], 'Service')
+    assert.equal(person.makesOffer.itemOffered.name, 'Content creation')
+    assert.equal(nodes.find(node => node['@type'] === 'BreadcrumbList').itemListElement[1].item, 'https://wave.ba/de/kreative')
+  }
 })
 
 

@@ -10,7 +10,7 @@ it does not expose private account information or grant marketplace access.
 | Homepage | `WebSite`, publisher `Organization`, `WebPage`, and the five visible general questions as `FAQPage` |
 | Creator/company/campaign directories | `CollectionPage`; Vue adds `ItemList` from the results actually loaded, including subsequent result pages |
 | Country creator directory | Existing `CollectionPage` and creator `ItemList`, with localized country content |
-| Creator profile | `ProfilePage` with a `Person`; their `Service` carries public reviews and aggregate rating; packages use `OfferCatalog`/`Offer`/`Service` |
+| Creator profile | `ProfilePage` with a `Person` and their offered `Service`; packages use `OfferCatalog`/`Offer`/`Service`; creator ratings remain in the visible UI, outside review-snippet markup |
 | Creator portfolio and questions | Public images use `ImageGallery.image` URL values; populated creator questions use `FAQPage`/`Question`/`Answer` |
 | Company profile | `ProfilePage` with an `Organization`, public reviews/aggregate rating, and topics in `knowsAbout` |
 | Open campaign | `CreativeWork` describing the collaboration brief |
@@ -36,10 +36,13 @@ remain noindex and do not receive public entity markup.
   accepted collaboration requirements. Unpublished feedback is never included.
 - Fictional presentation accounts and reviews from those accounts are omitted.
   If an aggregate includes demo feedback, that aggregate is omitted as well.
-- Individual review nodes match the displayed review page; the aggregate covers
-  all published reviews. Ratings use the actual 1–5 scale and author type.
-- `Person` does not support `review` or `aggregateRating`. Creator feedback is
-  attached to their offered `Service`. Company feedback belongs to `Organization`.
+- Eligible company review nodes match the displayed review page; the aggregate
+  covers all published reviews. Ratings use the actual 1–5 scale and author type.
+- Google review snippets do not support `Person` or `Service` as the reviewed
+  item, even though Schema.org permits ratings on `Service`. Creator profiles
+  omit `Review` and `AggregateRating` markup; visible reviews and scores remain
+  available through the regular UI/API. Company feedback belongs to `Organization`.
+  Review pagination cleans legacy creator rating markup rather than restoring it.
 - `Organization.industry` was invalid: `industry` belongs to `JobPosting`.
   Company topics now use `knowsAbout`.
 - Fixed package prices use `price` and currency. Starting prices use

@@ -35,8 +35,8 @@ final class ProfileStructuredData
 
         $service = ['@type' => 'Service', '@id' => $url.'#service', 'name' => $creator->getDisplayName(),
             'url' => $url, 'provider' => ['@id' => $url.'#person']];
-        $service += $this->reviews($creator->getOwner(), $locale, $url, 'Organization', $rating);
-        // Person does not support aggregateRating/review: these describe the creator's services.
+        // Google's review snippets support neither Person nor Service as the reviewed item.
+        // Keep the service description without review/aggregateRating rich-result markup.
         $person['makesOffer'] = ['@type' => 'Offer', 'itemOffered' => $service];
         $offers = [];
         foreach ($creator->getPackages() as $index => $package) {
