@@ -39,6 +39,12 @@ cannot claim a client or a Wave campaign. Wave references require the creator's
 own accepted offer on a finished campaign; they cannot inflate review totals.
 The campaign picker excludes blocked and deleted counterparties.
 
+New creator and agency works are public by default. The existing public-display
+switch is at the top of the first work-editor tab; owners can turn it off to hide
+an individual work. Migration `Version20261023120000` also makes every existing
+portfolio work public once, including previously hidden works, without changing
+content, ordering or media. Later visibility choices remain respected.
+
 Work uses existing compressed image uploads and YouTube/Vimeo video links. A
 video may have an owned cover image; a work may have four additional images or
 video links. Every image must belong to the creator and the portfolio folder.

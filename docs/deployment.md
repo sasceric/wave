@@ -1,5 +1,11 @@
 # Production deployment
 
+Portfolio visibility: deploy `Version20261023120000` with the normal Doctrine
+migrations and frontend build. It publishes all existing creator and agency works,
+including previously hidden works, while preserving their content and media.
+New works default to public; the first editor tab retains the switch to hide them.
+The data migration cannot restore previous visibility choices on rollback.
+
 The manual workflow's optional `seed_agency_showcase` input runs the explicitly
 requested Studio Luma import after the release is built. It defaults to false,
 including on pushes. See [presentation profiles](presentation-demo.md#studio-luma-agency-showcase)

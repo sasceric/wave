@@ -1,7 +1,7 @@
 export const CONTENT_LANGUAGES = ['bs', 'hr', 'sr', 'sl', 'cnr', 'en', 'de', 'fr', 'it', 'es', 'tr', 'ar']
 export const PRESENTATION_PLATFORMS = ['TikTok', 'Instagram', 'YouTube', 'Twitch', 'Spotify']
 const number = value => value === '' || value === null || value === undefined ? null : Number(value)
-export const emptyWork = () => ({ id: '', type: 'image', title: '', url: '', platform: 'All', summary: '', source: 'sample', campaignId: null, client: '', agency: '', brief: '', contribution: '', projectDate: '', postUrl: '', deliverables: [], results: [], measuredAt: '', featured: false, publicPermission: false, coverMediaId: null, media: [] })
+export const emptyWork = () => ({ id: '', type: 'image', title: '', url: '', platform: 'All', summary: '', source: 'sample', campaignId: null, client: '', agency: '', brief: '', contribution: '', projectDate: '', postUrl: '', deliverables: [], results: [], measuredAt: '', featured: false, publicPermission: true, coverMediaId: null, media: [] })
 export const emptyDelivery = () => ({ quantity: 1, format: 'video', duration: null })
 export function normalizePresentation(profile) {
   profile.presentation = { languages: [], availability: 'unspecified', availableFrom: '', introVideoUrl: '', ...profile.presentation }

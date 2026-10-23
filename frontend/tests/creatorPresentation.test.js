@@ -1,6 +1,13 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { normalizePresentation, presentationPayload } from '../src/lib/creatorPresentation.js'
+import { emptyWork, normalizePresentation, presentationPayload } from '../src/lib/creatorPresentation.js'
+
+test('new works are public by default and an explicit private choice survives saving', () => {
+  assert.equal(emptyWork().publicPermission, true)
+  const profile = normalizePresentation({ portfolio: [{ ...emptyWork(), publicPermission: false }] })
+  assert.equal(profile.portfolio[0].publicPermission, false)
+  assert.equal(presentationPayload(profile).portfolio[0].publicPermission, false)
+})
 
 test('legacy profiles keep their public work and unknown metrics stay empty', () => {
   const profile = normalizePresentation({ portfolio:[{id:'legacy',type:'image',url:'/image.webp'}], socialProfiles:[{platform:'Instagram',followers:0}], packages:[{title:'Custom',price:null}] })

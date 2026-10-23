@@ -7,6 +7,12 @@ use PHPUnit\Framework\TestCase;
 
 final class CreatorPresentationTest extends TestCase
 {
+    public function testWorkIsPublicByDefaultButCanBeHiddenExplicitly(): void
+    {
+        self::assertTrue(CreatorPresentation::work([])['publicPermission']);
+        self::assertFalse(CreatorPresentation::work(['publicPermission' => false])['publicPermission']);
+    }
+
     public function testSocialMeasurementDateIsPreservedAndUntrustedVerificationIsDiscarded(): void
     {
         $old = [['platform' => 'Instagram', 'handle' => '@creator', 'followers' => 10, 'lastUpdated' => '2026-09-01']];

@@ -7,8 +7,10 @@ namespace App\Tests\Migration;
 use App\Migration\LegacySqlCompatibility;
 use Doctrine\DBAL\DriverManager;
 use Doctrine\DBAL\Platforms\PostgreSQLPlatform;
+use Doctrine\DBAL\Schema\Column;
 use Doctrine\DBAL\Schema\Comparator;
 use Doctrine\DBAL\Schema\Schema;
+use Doctrine\DBAL\Schema\Table;
 use Doctrine\Migrations\AbstractMigration;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\NullLogger;
@@ -73,10 +75,11 @@ final class LegacySqlCompatibilityTest extends TestCase
             // Earlier migrations add tables through SQL, so their changes are not
             // reflected in this disconnected schema. Supply the existing creator
             // table for later schema-based alterations, as Doctrine does at runtime.
-            $before = new Schema();
-            $creator = $before->createTable('creator');
-            $creator->addColumn('id', 'integer', ['autoincrement' => true]);
+            $creator = Table::editor()->setUnquotedName('creator')->setColumns(
+                Column::editor()->setUnquotedName('id')->setTypeName('integer')->setAutoincrement(true)->create(),
+            )->create();
             $creator->setPrimaryKey(['id']);
+            $before = new Schema([$creator]);
             $schema = clone $before;
             $migration->up($schema);
             $statements = array_map(

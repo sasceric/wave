@@ -359,6 +359,13 @@ watch(locale, language => { const names = new Intl.DisplayNames([language === 'c
           </button>
         </nav>
         <div data-studio-step="1" v-show="step===1" class="form-grid">
+          <SwitchField
+            class="form-field--wide"
+            :model-value="work.publicPermission?1:0"
+            :label="t('studio.publicPermission')"
+            :description="t('studio.permissionHint')"
+            @update:model-value="work.publicPermission=$event===1"
+          />
           <label class="form-field form-field--wide">
             <span>{{ t('studio.workTitle') }}</span>
             <input v-model.trim="work.title" maxlength="120" required />
@@ -527,12 +534,6 @@ watch(locale, language => { const names = new Intl.DisplayNames([language === 'c
             @update:model-value="work.measuredAt=$event"
           />
           <p class="creator-studio__hint">{{ t('studio.selfReportedHint') }}</p>
-          <SwitchField
-            :model-value="work.publicPermission?1:0"
-            :label="t('studio.publicPermission')"
-            :description="t('studio.permissionHint')"
-            @update:model-value="work.publicPermission=$event===1"
-          />
         </div>
         <div class="creator-studio__step-actions">
           <button v-if="step>1" type="button" class="button button--outline" @click="step--">{{ t('account.back') }}</button>
