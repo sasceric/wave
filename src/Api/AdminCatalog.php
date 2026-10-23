@@ -48,7 +48,7 @@ final class AdminCatalog
             throw new \InvalidArgumentException('Invalid admin sort.');
         }
         if ($sort === 'createdAt' && in_array($kind, ['companies', 'registrations'], true)) {
-            $builder->leftJoin(AccountMilestone::class, 'registration', 'WITH', "registration.user = ".($kind === 'registrations' ? 'item' : 'owner')." AND registration.stage = 'registered'");
+            $builder->leftJoin(AccountMilestone::class, 'registration', 'ON', "registration.user = ".($kind === 'registrations' ? 'item' : 'owner')." AND registration.stage = 'registered'");
             $builder->addSelect('CASE WHEN registration.occurredAt IS NULL THEN 1 ELSE 0 END AS HIDDEN creationTimeMissing');
         }
         $query = trim($request->query->getString('q'));

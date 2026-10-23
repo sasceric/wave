@@ -2,7 +2,7 @@
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import { ArrowRight } from '@lucide/vue'
+import { ArrowRight, ChevronRight } from '@lucide/vue'
 import { apiGet } from '../lib/api'
 import { localizedRouteName } from '../routePaths'
 import { isSearchableQuery, SEARCH_MIN_LENGTH } from '../lib/searchQuery'
@@ -52,7 +52,7 @@ onBeforeUnmount(() => { revision++; window.removeEventListener('wave:safety-chan
 </script>
 <template>
   <main class="search-page page-width">
-    <nav class="search-page__breadcrumbs" :aria-label="t('globalSearch.breadcrumb')"><LocalizedLink :to="{ name: 'home' }">{{ t('globalSearch.home') }}</LocalizedLink><span aria-hidden="true">›</span><span>{{ t('globalSearch.pageTitle') }}</span></nav>
+    <nav class="search-page__breadcrumbs" :aria-label="t('globalSearch.breadcrumb')"><LocalizedLink :to="{ name: 'home' }">{{ t('globalSearch.home') }}</LocalizedLink><ChevronRight :size="14" aria-hidden="true" /><span>{{ t('globalSearch.pageTitle') }}</span></nav>
     <h1>{{ query ? t('globalSearch.resultsFor', { query }) : t('globalSearch.pageTitle') }}</h1>
     <p v-if="canSearch" class="search-page__intro">{{ loading ? t('globalSearch.loading') : error ? t('globalSearch.error') : t('globalSearch.resultCount', { count: total }) }}</p>
     <ProfileTabs :model-value="type" :items="tabs" :label="t('globalSearch.type')" id-prefix="search" @update:model-value="navigate($event)" />

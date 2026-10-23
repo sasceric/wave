@@ -18,7 +18,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { parsePhoneNumberFromString } from 'libphonenumber-js/min'
 import RouterLink from '../components/shared/LocalizedLink.vue'
 import { I18nT, useI18n } from 'vue-i18n'
-import { ArrowLeft, Eye, ExternalLink, FileText, Plus, Trash2, UserRound, X } from '@lucide/vue'
+import { ArrowRight, ArrowLeft, Eye, ExternalLink, FileText, Plus, Trash2, UserRound, X } from '@lucide/vue'
 import AccountAccessPanel from '../components/account/AccountAccessPanel.vue'
 import AccountSidebar from '../components/account/AccountSidebar.vue'
 import AccountProfileSummary from '../components/account/AccountProfileSummary.vue'
@@ -1405,7 +1405,7 @@ onMounted(loadDashboard)
             <div class="button-row">
               <button class="button button--dark" type="submit" :disabled="busy || !user.emailVerified || !user.approved">
                 {{ editingCampaignId ? t('account.updateCampaign') : t('account.publish') }}
-                <span aria-hidden="true">↗</span>
+                <ArrowRight class="link-arrow" :size="16" aria-hidden="true" />
               </button>
             </div>
           </form>
@@ -1493,7 +1493,7 @@ onMounted(loadDashboard)
               :to="{ name: localizedRouteName(selectedApplication.creator.profileRoute || 'creator-profile', locale), params: { slug: selectedApplication.creator.slug } }"
               @click="closeApplicant"
             >
-              {{ t('account.viewPublicProfile') }} ↗
+              {{ t('account.viewPublicProfile') }} <ArrowRight class="link-arrow" :size="16" aria-hidden="true" />
             </RouterLink>
           </div>
           <p v-if="selectedApplication.status === 'pending'" class="muted">{{ t('hiring.acceptApplicationHint') }}</p>

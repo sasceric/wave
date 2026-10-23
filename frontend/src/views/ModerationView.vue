@@ -1,4 +1,5 @@
 <script setup>
+import { ArrowRight } from '@lucide/vue'
 import { onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import AccountSidebar from '../components/account/AccountSidebar.vue'
@@ -155,7 +156,7 @@ onMounted(loadModerationCatalog)
       <LoadingSkeleton v-if="loading || accessState === 'loading'" variant="account" :label="t('moderation.loading')" />
       <div v-else-if="accessState === 'anonymous'" class="moderation-access">
         <p>{{ t('moderation.signIn') }}</p>
-        <RouterLink class="button button--dark" to="/account">{{ t('auth.signIn') }} <span aria-hidden="true">↗</span></RouterLink>
+        <RouterLink class="button button--dark" to="/account">{{ t('auth.signIn') }} <ArrowRight class="link-arrow" :size="16" aria-hidden="true" /></RouterLink>
       </div>
       <StatusMessage v-else-if="accessState === 'forbidden'">
         {{ t('moderation.noAccess') }}

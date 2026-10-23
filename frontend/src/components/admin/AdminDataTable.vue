@@ -4,7 +4,7 @@ import AdminPagination from './AdminPagination.vue'
 import AdminTableResults from './AdminTableResults.vue'
 import { computed, ref, watch } from 'vue'
 import LoadingSkeleton from '../shared/LoadingSkeleton.vue'
-import { SearchX } from '@lucide/vue'
+import { ArrowDown, ArrowUp, ArrowUpDown, SearchX } from '@lucide/vue'
 
 const props = defineProps({
   selectable: { type: Boolean, default: true },
@@ -127,7 +127,10 @@ function sortBy(column) {
               :aria-sort="sortKey === column.key ? (sortDirection === 'asc' ? 'ascending' : 'descending') : undefined"
             >
               <button v-if="column.sortable" type="button" class="admin-table__sort" @click="sortBy(column)">
-                {{ column.label }} <span aria-hidden="true">{{ sortKey === column.key ? (sortDirection === 'asc' ? '↑' : '↓') : '↕' }}</span>
+                {{ column.label }}
+                <ArrowUp v-if="sortKey === column.key && sortDirection === 'asc'" :size="13" aria-hidden="true" />
+                <ArrowDown v-else-if="sortKey === column.key" :size="13" aria-hidden="true" />
+                <ArrowUpDown v-else :size="13" aria-hidden="true" />
               </button>
               <span v-else>{{ column.label }}</span>
             </th>

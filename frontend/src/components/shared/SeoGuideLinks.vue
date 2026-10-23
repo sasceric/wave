@@ -17,7 +17,7 @@ const { t } = useI18n()
     <p v-if="panel">{{ t(forCreators ? 'regionalSeo.creatorGuides.relatedIntro' : 'regionalSeo.guideRelatedIntro') }}</p>
     <ul>
       <li v-for="slug in slugs" :key="slug">
-        <LocalizedLink :to="{ name: forCreators ? 'creator-guide' : 'seo-guide', params: { guide: slug } }"><FileText v-if="panel" :size="18" aria-hidden="true" /><span>{{ t(`${copyKey}.${slug}.title`) }}</span><ArrowRight v-if="panel" :size="17" aria-hidden="true" /><span v-else aria-hidden="true">→</span></LocalizedLink>
+        <LocalizedLink :to="{ name: forCreators ? 'creator-guide' : 'seo-guide', params: { guide: slug } }"><FileText v-if="panel" :size="18" aria-hidden="true" /><span>{{ t(`${copyKey}.${slug}.title`) }}</span><ArrowRight :size="17" aria-hidden="true" /></LocalizedLink>
       </li>
     </ul>
   </nav>

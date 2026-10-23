@@ -1,4 +1,5 @@
 <script setup>
+import { ArrowRight } from '@lucide/vue'
 import AccountPage from '../components/account/AccountPage.vue'
 import { onMounted, ref } from 'vue'
 import RouterLink from '../components/shared/LocalizedLink.vue'
@@ -67,10 +68,10 @@ async function resetPassword() {
           <input v-model="confirmation" data-equal-to="new-password" type="password" required minlength="8" maxlength="4096" autocomplete="new-password" />
         </label>
         <StatusMessage v-if="error" variant="error">{{ error }}</StatusMessage>
-        <button class="button button--dark button--full" type="submit" :disabled="busy">{{ t('auth.resetTitle') }} <span aria-hidden="true">↗</span></button>
+        <button class="button button--dark button--full" type="submit" :disabled="busy">{{ t('auth.resetTitle') }} <ArrowRight class="link-arrow" :size="16" aria-hidden="true" /></button>
       </form>
-      <RouterLink v-else class="button button--dark" to="/account">{{ t('auth.backToSignIn') }} <span aria-hidden="true">↗</span></RouterLink>
-      <RouterLink v-if="invalid" class="button button--outline" to="/account">{{ t('auth.backToSignIn') }} <span aria-hidden="true">↗</span></RouterLink>
+      <RouterLink v-else class="button button--dark" to="/account">{{ t('auth.backToSignIn') }} <ArrowRight class="link-arrow" :size="16" aria-hidden="true" /></RouterLink>
+      <RouterLink v-if="invalid" class="button button--outline" to="/account">{{ t('auth.backToSignIn') }} <ArrowRight class="link-arrow" :size="16" aria-hidden="true" /></RouterLink>
     </div>
   </AccountPage>
 </template>

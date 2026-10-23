@@ -698,7 +698,7 @@
   }
   .profile-sidebar-details { margin:0; padding:0; border:0; }
   .profile-presentation-pills { display:flex; flex-wrap:wrap; gap:6px; margin-top:10px; span { padding:3px 8px; border-radius:20px; background:#e5ebe2; color:var(--forest); font-size:11px; } }
-  .profile-intro-video { display:inline-block; margin-top:10px; color:var(--forest); font-size:12px; }
+  .profile-intro-video { display:inline-flex; align-items:center; gap:6px; margin-top:10px; color:var(--forest); font-size:12px; }
   #creator-works, #creator-audience, #creator-packages, #creator-reviews, #creator-faqs { scroll-margin-top:100px; }
   @media(max-width:760px) {
     .profile-layout { grid-template-columns:minmax(0,1fr); gap:20px; padding-top:18px; }

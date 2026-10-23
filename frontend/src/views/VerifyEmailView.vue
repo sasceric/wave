@@ -1,4 +1,5 @@
 <script setup>
+import { ArrowRight } from '@lucide/vue'
 import AccountPage from '../components/account/AccountPage.vue'
 import { onMounted, ref } from 'vue'
 import RouterLink from '../components/shared/LocalizedLink.vue'
@@ -42,7 +43,7 @@ onMounted(async () => {
       <StatusMessage v-else-if="status === 'invalid'" variant="error">
         {{ error || t('auth.verificationInvalid') }}
       </StatusMessage>
-      <RouterLink v-if="status !== 'pending'" class="button button--dark" :to="{ name: currentUser ? 'account-dashboard' : 'account' }">{{ t(currentUser ? 'activation.backToOverview' : 'auth.backToSignIn') }} <span aria-hidden="true">↗</span></RouterLink>
+      <RouterLink v-if="status !== 'pending'" class="button button--dark" :to="{ name: currentUser ? 'account-dashboard' : 'account' }">{{ t(currentUser ? 'activation.backToOverview' : 'auth.backToSignIn') }} <ArrowRight class="link-arrow" :size="16" aria-hidden="true" /></RouterLink>
     </div>
   </AccountPage>
 </template>

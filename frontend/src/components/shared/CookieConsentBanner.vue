@@ -1,4 +1,5 @@
 <script setup>
+import { ArrowRight } from '@lucide/vue'
 import { onBeforeUnmount, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import LocalizedLink from './LocalizedLink.vue'
@@ -84,7 +85,7 @@ defineExpose({ open: openPreferences })
       <p>{{ t('legal.cookieBannerDescription') }}</p>
       <LocalizedLink :to="{ name: 'cookie-policy' }" class="cookie-banner__link">
         {{ t('legal.cookies.title') }}
-        <span aria-hidden="true">↗</span>
+        <ArrowRight class="link-arrow" :size="16" aria-hidden="true" />
       </LocalizedLink>
     </div>
     <div class="cookie-banner__preferences">

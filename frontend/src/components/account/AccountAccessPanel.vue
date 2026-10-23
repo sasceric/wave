@@ -4,6 +4,7 @@ import { onMounted, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import {
+  ArrowRight,
   Building2,
   Eye,
   EyeOff,
@@ -163,7 +164,7 @@ function changeMode(nextMode) {
         <LanguageSwitcher />
         <button class="registration-signin" type="button" @click="changeMode('login')">
           {{ t('auth.switchSignIn') }}
-          <span aria-hidden="true">→</span>
+          <ArrowRight class="link-arrow" :size="16" aria-hidden="true" />
         </button>
       </div>
     </header>
@@ -401,7 +402,7 @@ function changeMode(nextMode) {
               ? t('auth.register')
               : t('auth.requestReset')
         }}
-        <span aria-hidden="true">→</span>
+        <ArrowRight class="link-arrow" :size="16" aria-hidden="true" />
       </button>
       <button
         v-if="mode === 'login'"

@@ -14,7 +14,7 @@ import CampaignApplicationRange from '../components/campaigns/CampaignApplicatio
 import { campaignPlace } from '../lib/marketplace'
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
-import { ArrowRight, BadgeCheck, CalendarDays, DollarSign, MapPin, Tag, UsersRound } from '@lucide/vue'
+import { ArrowLeft, ArrowRight, BadgeCheck, CalendarDays, DollarSign, MapPin, Tag, UsersRound } from '@lucide/vue'
 import RouterLink from '../components/shared/LocalizedLink.vue'
 import { useI18n } from 'vue-i18n'
 import LoadingSkeleton from '../components/shared/LoadingSkeleton.vue'
@@ -169,7 +169,7 @@ onMounted(loadCampaign)
   <section v-if="error" class="page-width profile-error">
     <StatusMessage variant="error">{{ error }}</StatusMessage>
     <RouterLink class="text-link" to="/campaigns">
-      {{ t('campaignDetail.back') }} ↗
+      <ArrowLeft class="link-arrow" :size="16" aria-hidden="true" /> {{ t('campaignDetail.back') }}
     </RouterLink>
   </section>
   <LoadingSkeleton v-else-if="!campaign" variant="campaign" :label="t('campaignDetail.loading')" />
@@ -180,7 +180,7 @@ onMounted(loadCampaign)
       </div>
       <div class="page-width brief-hero__inner">
         <div class="brief-hero__navigation">
-          <RouterLink class="back-link" to="/campaigns">{{ t('campaignDetail.back') }}</RouterLink>
+          <RouterLink class="back-link" to="/campaigns"><ArrowLeft class="link-arrow" :size="16" aria-hidden="true" />{{ t('campaignDetail.back') }}</RouterLink>
           <PublicShareButton route-name="campaign-detail" :slug="campaign.slug" :title="campaign.title" />
         </div>
         <div class="brief-hero__grid">
@@ -249,7 +249,7 @@ onMounted(loadCampaign)
             >
               <p>{{ t('account.emailUnverified') }}</p>
               <RouterLink class="button button--dark button--full" to="/account">
-                {{ t('campaignDetail.verifyEmailInAccount') }} <span aria-hidden="true">↗</span>
+                {{ t('campaignDetail.verifyEmailInAccount') }} <ArrowRight class="link-arrow" :size="16" aria-hidden="true" />
               </RouterLink>
             </div>
             <div

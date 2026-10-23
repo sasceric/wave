@@ -6,7 +6,7 @@ import RegistrationPrompt from '../components/shared/RegistrationPrompt.vue'
 import { currentUser } from '../composables/useCurrentUser'
 import { computed, nextTick, onMounted, reactive, ref, useId, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { ArrowRight, ArrowUpRight, Building2, Camera, CircleCheck, ClipboardCheck, CreditCard, FileCheck2, FileText, Handshake, HelpCircle, Mail, MailCheck, Map, Search, ShieldCheck, UserRound, UserRoundPen, UsersRound } from '@lucide/vue'
+import { ArrowDown, ArrowRight, ArrowUpRight, Building2, Camera, CircleCheck, ClipboardCheck, CreditCard, FileCheck2, FileText, Handshake, HelpCircle, Mail, MailCheck, Map, Search, ShieldCheck, UserRound, UserRoundPen, UsersRound } from '@lucide/vue'
 import CampaignCard from '../components/campaigns/CampaignCard.vue'
 import CreatorCard from '../components/creators/CreatorCard.vue'
 import DirectorySkeletonCard from '../components/shared/DirectorySkeletonCard.vue'
@@ -119,7 +119,7 @@ onMounted(loadHome)
         <div class="hero__actions">
           <LocalizedLink class="button button--dark" to="/campaigns">
             {{ t('home.exploreCampaigns') }}
-            <span aria-hidden="true">→</span>
+            <ArrowRight class="link-arrow" :size="16" aria-hidden="true" />
           </LocalizedLink>
           <LocalizedLink class="button button--outline" to="/creators">{{ t('home.findCreator') }}</LocalizedLink>
         </div>
@@ -151,7 +151,7 @@ onMounted(loadHome)
   <section class="intro-strip">
     <div class="page-width intro-strip__inner">
       <p>{{ t('home.intro') }}</p>
-      <span>{{ t('home.lessNoise') }} <span aria-hidden="true">↓</span></span>
+      <span>{{ t('home.lessNoise') }} <ArrowDown class="link-arrow" :size="16" aria-hidden="true" /></span>
     </div>
   </section>
 
@@ -168,7 +168,7 @@ onMounted(loadHome)
         </p>
         <h2>{{ t('home.creatorsTitleLead') }} <em>{{ t('home.creatorsTitleEmphasis') }}</em></h2>
       </div>
-      <LocalizedLink class="text-link" to="/creators">{{ t('home.findPeople') }} <span aria-hidden="true">→</span></LocalizedLink>
+      <LocalizedLink class="text-link" to="/creators">{{ t('home.findPeople') }} <ArrowRight class="link-arrow" :size="16" aria-hidden="true" /></LocalizedLink>
     </div>
     <StatusMessage v-if="creatorsError" variant="error">{{ creatorsError }}</StatusMessage>
     <CardGrid v-else-if="creators.length || loading" kind="creator" layout="home" :aria-busy="loading">
@@ -184,7 +184,7 @@ onMounted(loadHome)
     <div class="page-width section">
       <div class="section-heading">
         <div><p class="eyebrow">{{ t('home.featuredCampaignsEyebrow') }}</p><h2>{{ t('home.campaignsTitleLead') }} <em>{{ t('home.campaignsTitleEmphasis') }}</em></h2></div>
-        <LocalizedLink class="text-link" to="/campaigns">{{ t('home.allCampaigns') }} <span aria-hidden="true">→</span></LocalizedLink>
+        <LocalizedLink class="text-link" to="/campaigns">{{ t('home.allCampaigns') }} <ArrowRight class="link-arrow" :size="16" aria-hidden="true" /></LocalizedLink>
       </div>
       <StatusMessage v-if="campaignsError" variant="error">{{ campaignsError }}</StatusMessage>
       <CardGrid v-else-if="campaigns.length || loading" kind="campaign" layout="home" :aria-busy="loading">
@@ -387,7 +387,7 @@ onMounted(loadHome)
         <div class="contact-form__submit">
           <button class="button button--dark" type="submit" :disabled="contactSending">
             <span>{{ contactSending ? t('home.contactSending') : t('home.contactSubmit') }}</span>
-            <span aria-hidden="true">→</span>
+            <ArrowRight class="link-arrow" :size="16" aria-hidden="true" />
           </button>
           <p class="contact-form__response">{{ t('home.contactResponseTime') }}</p>
         </div>

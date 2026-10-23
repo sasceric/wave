@@ -14,7 +14,7 @@ import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import RouterLink from '../components/shared/LocalizedLink.vue'
 import { useI18n } from 'vue-i18n'
-import { Camera, Check, ChevronRight, CirclePlay, FileText, MapPin, MessageCircle, Music2, Plus, Send, X } from '@lucide/vue'
+import { ArrowLeft, ArrowRight, Camera, Check, ChevronRight, CirclePlay, FileText, MapPin, MessageCircle, Music2, Plus, Send, X } from '@lucide/vue'
 import ProfileFaqs from '../components/shared/ProfileFaqs.vue'
 import ProfileTabs from '../components/shared/ProfileTabs.vue'
 import ProfilePackages from '../components/shared/ProfilePackages.vue'
@@ -429,8 +429,7 @@ onBeforeUnmount(() => { ++profileGeneration; packageDescriptionObserver?.disconn
   <section v-if="error && !creator" class="page-width profile-error">
     <StatusMessage variant="error">{{ error }}</StatusMessage>
     <RouterLink class="text-link" to="/creators">
-      {{ t('creatorProfile.back') }}
-      ↗
+      <ArrowLeft class="link-arrow" :size="16" aria-hidden="true" /> {{ t('creatorProfile.back') }}
     </RouterLink>
   </section>
   <LoadingSkeleton v-else-if="!creator" variant="profile" :label="t('creatorProfile.loading')" />
@@ -468,7 +467,7 @@ onBeforeUnmount(() => { ++profileGeneration; packageDescriptionObserver?.disconn
           <p>{{ t('creatorProfile.companyOnly') }}</p>
           <RouterLink class="button button--dark" to="/account">
             {{ t('creatorProfile.signInAsCompany') }}
-            <span aria-hidden="true">↗</span>
+            <ArrowRight class="link-arrow" :size="16" aria-hidden="true" />
           </RouterLink>
         </div>
         <StatusMessage v-else-if="!viewer.approved" variant="error">
@@ -550,7 +549,7 @@ onBeforeUnmount(() => { ++profileGeneration; packageDescriptionObserver?.disconn
           </label>
           <button class="button button--dark" type="submit" :disabled="requestBusy">
             {{ requestBusy ? t('campaignChat.sending') : t('creatorProfile.sendRequest') }}
-            <span aria-hidden="true">↗</span>
+            <ArrowRight class="link-arrow" :size="16" aria-hidden="true" />
           </button>
         </form>
       </div>
@@ -601,7 +600,7 @@ onBeforeUnmount(() => { ++profileGeneration; packageDescriptionObserver?.disconn
         </template>
         <template v-else>
           <StatusMessage variant="empty">{{ t('campaignChat.noInviteCampaigns') }}</StatusMessage>
-          <RouterLink class="text-link" :to="{ name: 'account-campaigns' }">{{ t('account.campaigns') }} ↗</RouterLink>
+          <RouterLink class="text-link" :to="{ name: 'account-campaigns' }">{{ t('account.campaigns') }} <ArrowRight class="link-arrow" :size="16" aria-hidden="true" /></RouterLink>
         </template>
       </template>
       <template #actions="{ close }">
@@ -656,7 +655,7 @@ onBeforeUnmount(() => { ++profileGeneration; packageDescriptionObserver?.disconn
                 rel="noopener noreferrer"
               >
                 {{ t('studio.introVideo') }}
-                ↗
+                <ArrowRight class="link-arrow" :size="16" aria-hidden="true" />
               </a>
             </div>
           </div>

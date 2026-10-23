@@ -136,6 +136,9 @@
   }
 
   &__sort {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
     border: 0;
     padding: 0;
     color: inherit;
@@ -145,8 +148,8 @@
     cursor: pointer;
   }
 
-  &__sort span {
-    margin-left: 4px;
+  &__sort svg {
+    flex-shrink: 0;
     color: #829087;
   }
 

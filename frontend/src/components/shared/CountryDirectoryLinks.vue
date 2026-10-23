@@ -1,4 +1,5 @@
 <script setup>
+import { ArrowRight } from '@lucide/vue'
 import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import LocalizedLink from './LocalizedLink.vue'
@@ -30,7 +31,7 @@ onMounted(async () => {
     <h2 v-if="!compact">{{ t('regionalSeo.countriesTitle') }}</h2>
     <div>
       <LocalizedLink v-for="item in available" :key="item.value" :to="localizedPath('country-creators', countries[item.value].locale, { country: countries[item.value].slug })">
-        {{ t(`regionalSeo.countries.${item.value}.name`) }} <span aria-hidden="true">→</span>
+        {{ t(`regionalSeo.countries.${item.value}.name`) }} <ArrowRight class="link-arrow" :size="16" aria-hidden="true" />
       </LocalizedLink>
     </div>
   </nav>

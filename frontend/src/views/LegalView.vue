@@ -1,4 +1,5 @@
 <script setup>
+import { ArrowRight } from '@lucide/vue'
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
@@ -50,7 +51,7 @@ function openCookieSettings() {
             rel="noopener noreferrer"
           >
             {{ rt(link.label) }}
-            <span aria-hidden="true">↗</span>
+            <ArrowRight class="link-arrow" :size="16" aria-hidden="true" />
           </a>
         </p>
       </section>
@@ -66,7 +67,7 @@ function openCookieSettings() {
 
       <a class="legal-page__contact" href="mailto:info@wave.ba">
         info@wave.ba
-        <span aria-hidden="true">↗</span>
+        <ArrowRight class="link-arrow" :size="16" aria-hidden="true" />
       </a>
     </div>
   </article>

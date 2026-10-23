@@ -7,7 +7,7 @@ import DatePicker from '../shared/DatePicker.vue'
 import AccountProfileCard from './AccountProfileCard.vue'
 import { languageOptions } from '../../lib/creatorPresentation'
 import { formatDate } from '../../lib/api'
-import { Globe } from '@lucide/vue'
+import { ArrowRight, Globe } from '@lucide/vue'
 const profile = defineModel('profile', { type: Object, required: true })
 defineProps({ editing: Boolean, embedded: Boolean })
 const emit = defineEmits(['edit'])
@@ -62,7 +62,7 @@ const languages = computed(() => languageOptions(locale.value, t))
       </div>
       <a v-if="profile.presentation?.introVideoUrl" :href="profile.presentation.introVideoUrl" target="_blank" rel="noopener noreferrer">
         {{ t('studio.introVideo') }}
-        ↗
+        <ArrowRight class="link-arrow" :size="16" aria-hidden="true" />
       </a>
     </div>
   </component>

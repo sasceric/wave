@@ -6,7 +6,7 @@ import MarketplaceSafetyActions from '../components/shared/MarketplaceSafetyActi
 import ProfileReviews from '../components/reviews/ProfileReviews.vue'
 import RatingSummary from '../components/reviews/RatingSummary.vue'
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
-import { ExternalLink, Globe, MapPin, Megaphone } from '@lucide/vue'
+import { ArrowLeft, ArrowRight, ExternalLink, Globe, MapPin, Megaphone } from '@lucide/vue'
 import SocialPlatformIcon from '../components/shared/SocialPlatformIcon.vue'
 import CardGrid from '../components/shared/CardGrid.vue'
 import { useRoute } from 'vue-router'
@@ -108,7 +108,7 @@ onBeforeUnmount(() => { ++profileGeneration })
 <template>
   <section v-if="error" class="page-width profile-error">
     <StatusMessage variant="error">{{ error }}</StatusMessage>
-    <RouterLink class="text-link" to="/companies">{{ t('companyProfile.back') }} ↗</RouterLink>
+    <RouterLink class="text-link" to="/companies"><ArrowLeft class="link-arrow" :size="16" aria-hidden="true" /> {{ t('companyProfile.back') }}</RouterLink>
   </section>
   <LoadingSkeleton v-else-if="!company" variant="company" :label="t('companyProfile.loading')" />
   <AgencyPublicProfile v-else-if="company.companyType === 'agency'" :company="company" :campaigns="campaigns" />
@@ -181,7 +181,7 @@ onBeforeUnmount(() => { ++profileGeneration })
       <section id="company-campaigns" class="company-profile__campaigns">
         <div class="section-heading">
           <div><p class="eyebrow">{{ t('companyProfile.openCalls') }}</p><h2>{{ t('companyProfile.campaignsFrom', { company: company.name }) }}</h2></div>
-          <RouterLink class="text-link" to="/campaigns">{{ t('companyProfile.allBriefs') }} <span aria-hidden="true">↗</span></RouterLink>
+          <RouterLink class="text-link" to="/campaigns">{{ t('companyProfile.allBriefs') }} <ArrowRight class="link-arrow" :size="16" aria-hidden="true" /></RouterLink>
         </div>
         <CardGrid v-if="campaigns.length" class="company-profile__campaign-grid" kind="campaign" layout="directory">
           <CampaignCard v-for="campaign in campaigns" :key="campaign.id" :campaign="campaign" :image-sizes="PROFILE_CAMPAIGN_IMAGE_SIZES" />

@@ -29,6 +29,12 @@
   }
 }
 
+.link-arrow {
+  display: inline-block;
+  flex-shrink: 0;
+  vertical-align: -0.15em;
+}
+
 .text-link {
   display: inline-flex;
   align-items: center;

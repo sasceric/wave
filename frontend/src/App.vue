@@ -2,7 +2,7 @@
 import { computed, defineAsyncComponent, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { isNavigationFailure, NavigationFailureType, RouterView, useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import { Bell, LifeBuoy, Building2, ChevronRight, Download, House, LogOut, Menu, Megaphone, MessageCircle, UserRound, UsersRound, X } from '@lucide/vue'
+import { ArrowRight, Bell, LifeBuoy, Building2, ChevronRight, Download, House, LogOut, Menu, Megaphone, MessageCircle, UserRound, UsersRound, X } from '@lucide/vue'
 import { registerSW } from 'virtual:pwa-register'
 import LanguageSwitcher from './components/shared/LanguageSwitcher.vue'
 import HeaderCreatorSearch from './components/shared/HeaderCreatorSearch.vue'
@@ -1315,7 +1315,7 @@ async function signOut() {
             <div class="site-footer__accordion-content">
               <p>{{ t('app.footerContactText') }}</p>
               <a class="site-footer__email" href="mailto:info@wave.ba">
-                info@wave.ba <span aria-hidden="true">→</span>
+                info@wave.ba <ArrowRight class="link-arrow" :size="16" aria-hidden="true" />
               </a>
               <span class="site-footer__operator">{{ t('app.footerOperator') }}</span>
             </div>

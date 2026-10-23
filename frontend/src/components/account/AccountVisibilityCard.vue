@@ -1,7 +1,7 @@
 <script setup>
 import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { ShieldCheck, UserRound } from '@lucide/vue'
+import { ArrowRight, ShieldCheck, UserRound } from '@lucide/vue'
 import SwitchField from '../shared/SwitchField.vue'
 import StatusMessage from '../shared/StatusMessage.vue'
 import LocalizedLink from '../shared/LocalizedLink.vue'
@@ -29,6 +29,6 @@ async function visibility(value) {
     <p class="activation-profile__status"><ShieldCheck :size="16" aria-hidden="true" />{{ t(eligible ? 'activation.approved' : 'activation.preparing') }}</p>
     <SwitchField :model-value="currentUser.hide_my_account === 0 ? 1 : 0" :label="t('activation.publicProfile')" :description="t(eligible ? 'activation.visibilityHint' : 'activation.visibilityLocked')" :disabled="!eligible || busy" @update:model-value="visibility" />
     <StatusMessage v-if="error" variant="error">{{ error }}</StatusMessage>
-    <LocalizedLink class="text-link" :to="{ name: 'account' }">{{ t('personalDashboard.editProfile') }} →</LocalizedLink>
+    <LocalizedLink class="text-link" :to="{ name: 'account' }">{{ t('personalDashboard.editProfile') }} <ArrowRight class="link-arrow" :size="16" aria-hidden="true" /></LocalizedLink>
   </aside>
 </template>

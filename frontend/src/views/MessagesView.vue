@@ -1291,7 +1291,7 @@ function messageTimeDescription(value) {
                       <p v-if="message.event.workChangesReason">{{ t('work.reason') }}: {{ message.event.workChangesReason }}</p>
                       <p v-if="message.event.cancellationReason">{{ t('hiring.cancellationReason') }}: {{ message.event.cancellationReason }}</p>
                       <p v-if="message.event.message">{{ message.event.message }}</p>
-                      <LocalizedLink v-if="message.event.campaignSlug && !selectedThread?.readOnly" class="campaign-messages__event-link" :to="{ name: !selectedProvider ? 'account-campaign-detail' : 'campaign-detail', params: { slug: message.event.campaignSlug } }">{{ t('campaignChat.viewCampaign') }} →</LocalizedLink>
+                      <LocalizedLink v-if="message.event.campaignSlug && !selectedThread?.readOnly" class="campaign-messages__event-link" :to="{ name: !selectedProvider ? 'account-campaign-detail' : 'campaign-detail', params: { slug: message.event.campaignSlug } }">{{ t('campaignChat.viewCampaign') }} <ArrowRight class="link-arrow" :size="16" aria-hidden="true" /></LocalizedLink>
                     </template>
                     <p v-else>{{ message.body }}</p>
                     <div class="campaign-messages__message-meta">

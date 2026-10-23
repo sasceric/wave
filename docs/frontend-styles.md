@@ -6,6 +6,10 @@ and `components/shared/DirectoryFilters.vue` uses
 `scss/components/shared/DirectoryFilters.scss`. Sass is a locked frontend
 development dependency; Vite compiles it during development and the production build.
 
+Use the existing `@lucide/vue` icons for arrows, breadcrumbs and sorting controls.
+Do not use Unicode characters, HTML entities or CSS text content as icon substitutes;
+their appearance varies by device. Email buttons use text without decorative arrow glyphs.
+
 ## Brand palette
 
 The user reconfirmed these exact brand colors on 2026-10-08. Preserve them during
