@@ -1,10 +1,12 @@
 <script setup>
 import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { CalendarCheck2, ChevronRight, CirclePlay, ExternalLink, Languages, MapPin } from '@lucide/vue'
+import { ArrowRight, Briefcase, CalendarCheck2, ChevronRight, CirclePlay, Languages, Mail, MapPin, Megaphone } from '@lucide/vue'
 import AgencyContactActions from './AgencyContactActions.vue'
 import AgencyProfileSections from './AgencyProfileSections.vue'
 import ProfileTabs from '../shared/ProfileTabs.vue'
+import ProfileStats from '../shared/ProfileStats.vue'
+import ProfileActionCard from '../shared/ProfileActionCard.vue'
 import PublicShareButton from '../shared/PublicShareButton.vue'
 import PresentationDemoBadge from '../shared/PresentationDemoBadge.vue'
 import SocialPlatformIcon from '../shared/SocialPlatformIcon.vue'
@@ -18,6 +20,8 @@ import ProfileReviews from '../reviews/ProfileReviews.vue'
 import CampaignCard from '../campaigns/CampaignCard.vue'
 import CardGrid from '../shared/CardGrid.vue'
 import { formatDate } from '../../lib/api'
+import { currentUser } from '../../composables/useCurrentUser'
+import { formatAverageRating, startingPackagePrice } from '../../lib/profileStats'
 import { PROFILE_CAMPAIGN_IMAGE_SIZES } from '../../lib/listingImage'
 import { sanitizeRichText } from '../../lib/richText'
 const props = defineProps({ company: { type: Object, required: true }, campaigns: { type: Array, default: () => [] } })
@@ -40,43 +44,91 @@ const intro = computed(() => {
 const social = computed(() => (props.company.socialLinks || []).filter(link => link.platform && link.url))
 const availability = computed(() => props.company.presentation?.availability && props.company.presentation.availability !== 'unspecified' ? t(`agency.${props.company.presentation.availability}`) : '')
 const tabs = computed(() => [
-  { key: 'company-services', label: t('agency.services') },
-  ...(props.company.portfolio?.length ? [{ key: 'company-works', label: t('studio.tabWorks') }] : []),
+  { key: 'company-services', label: t('agency.services'), ...(props.company.services?.length ? { count: props.company.services.length } : {}) },
   { key: 'company-packages', label: t('studio.tabPackages') },
-  { key: 'company-reviews', label: t('studio.tabReviews') },
+  ...(props.company.portfolio?.length ? [{ key: 'company-works', label: t('studio.tabWorks'), count: props.company.portfolio.length }] : []),
+  { key: 'company-campaigns', label: t('app.campaigns'), ...(props.campaigns.length ? { count: props.campaigns.length } : {}) },
+  { key: 'company-reviews', label: t('studio.tabReviews'), ...(props.company.rating?.reviewCount ? { count: props.company.rating.reviewCount } : {}) },
   ...(props.company.faqs?.length ? [{ key: 'company-faqs', label: t('studio.tabFaq') }] : []),
-  { key: 'company-campaigns', label: t('app.campaigns') },
+  { key: 'company-about', label: t('agency.about') },
 ])
+const own = computed(() => Boolean(currentUser.value) && currentUser.value.id === props.company.ownerId)
+const startingPrice = computed(() => startingPackagePrice(props.company.packages || []))
+const stats = computed(() => {
+  const rating = props.company.rating || {}
+  return [
+    { key: 'collaborations', label: t('publicProfile.collaborations'), value: String(rating.completedCampaigns || 0), hint: t('publicProfile.collaborationsHint') },
+    { key: 'campaigns', label: t('app.campaigns'), value: String(props.campaigns.length), hint: t('publicProfile.openNow') },
+    { key: 'rating', label: t('publicProfile.rating'), value: formatAverageRating(rating.average, locale.value), hint: t('studio.reviewCount', { count: rating.reviewCount || 0 }) },
+    ...(startingPrice.value ? [{ key: 'price', label: t('publicProfile.packagesFrom'), value: startingPrice.value }] : []),
+  ]
+})
 const reviewTabs = computed(() => ['provider', 'client'].map(key => ({ key, label: t(key === 'provider' ? 'agency.asProvider' : 'agency.asClient') })))
 </script>
 <template>
   <main class="page-width agency-public-profile">
-    <div class="agency-public-profile__breadcrumb"><LocalizedLink :to="{ name: 'companies' }">{{ t('app.companies') }}</LocalizedLink><ChevronRight :size="14" aria-hidden="true" /><span>{{ company.name }}</span><PresentationDemoBadge v-if="company.isPresentationDemo" /><PublicShareButton route-name="company-profile" :slug="company.slug" :title="company.name" /></div>
+    <div class="agency-public-profile__breadcrumb"><LocalizedLink :to="{ name: 'companies' }">{{ t('app.companies') }}</LocalizedLink><ChevronRight :size="14" aria-hidden="true" /><span>{{ company.name }}</span><PresentationDemoBadge v-if="company.isPresentationDemo" pill /><PublicShareButton route-name="company-profile" :slug="company.slug" :title="company.name" /></div>
     <div class="agency-public-profile__cover"><img :src="company.coverUrl || '/images/company-cover.webp'" :alt="t('account.companyCover')" /></div>
     <header class="agency-public-profile__hero">
       <div class="agency-public-profile__logo"><img v-if="company.logoUrl" :src="company.logoUrl" :alt="company.name" /><WaveLogo v-else mark /></div>
-      <div class="agency-public-profile__identity"><p class="eyebrow">{{ t('companyTypes.options.agency') }}<template v-if="industries.length"> · {{ industries.join(' · ') }}</template></p><h1>{{ company.name }}<span v-if="company.verified" class="verified-mark" :aria-label="t('campaignCard.verified')">✓</span></h1><p v-if="intro" class="agency-public-profile__intro">{{ intro }}</p><div class="agency-public-profile__inline"><span v-if="location"><MapPin :size="15" aria-hidden="true" />{{ location }}</span><a href="#company-reviews" @click="activeSection = 'company-reviews'"><RatingSummary :rating="company.rating" profile /><span class="sr-only">{{ t('agency.combinedRating') }}</span></a></div></div>
-      <div class="agency-public-profile__actions"><AgencyContactActions ref="contact" :company="company" /><span v-if="availability" class="agency-public-profile__availability" :class="{ 'is-available': company.presentation.availability === 'available' }">{{ availability }}<template v-if="company.presentation.availability === 'from' && company.presentation.availableFrom"> · {{ formatDate(company.presentation.availableFrom) }}</template></span></div>
+      <div class="agency-public-profile__identity"><p class="eyebrow">{{ t('companyTypes.options.agency') }}<template v-if="industries.length"> · {{ industries.join(' · ') }}</template></p><h1>{{ company.name }}<span v-if="company.verified" class="verified-mark" :aria-label="t('campaignCard.verified')">✓</span></h1><p v-if="intro" class="agency-public-profile__intro">{{ intro }}</p><div class="agency-public-profile__inline"><span v-if="location"><MapPin :size="15" aria-hidden="true" />{{ location }}</span><a href="#company-reviews" @click="activeSection = 'company-reviews'"><RatingSummary :rating="company.rating" profile /><span class="sr-only">{{ t('agency.combinedRating') }}</span></a><span v-if="availability" class="agency-public-profile__availability" :class="{ 'is-available': company.presentation.availability === 'available' }">{{ availability }}<template v-if="company.presentation.availability === 'from' && company.presentation.availableFrom"> · {{ formatDate(company.presentation.availableFrom) }}</template></span></div></div>
+      <div class="agency-public-profile__actions"><AgencyContactActions ref="contact" :company="company" /></div>
     </header>
-    <ProfileTabs v-model="activeSection" :items="tabs" :label="t('studio.profileSections')" sections />
+    <ProfileStats :items="stats" :label="t('publicProfile.statsLabel')" />
+    <div class="profile-section-bar">
+      <ProfileTabs v-model="activeSection" :items="tabs" :label="t('studio.profileSections')" sections />
+    </div>
     <AgencyProfileSections :company="company" @request="contact?.openRequest($event)">
       <template #reviews>
         <ProfileReviews id="company-reviews" kind="companies" :slug="company.slug" :review-role="reviewRole" :title="t('agency.publicReviewsTitle')" :description="t('agency.publicReviewsHint')"><template #filters><ProfileTabs v-model="reviewRole" :items="reviewTabs" :label="t('reviews.title')" id-prefix="agency-review" /></template></ProfileReviews>
       </template>
       <template #about>
-        <section id="company-about" class="agency-public-profile__about"><h2>{{ t('agency.about') }}</h2><RichTextContent v-if="company.about" :html="company.about" /><div class="agency-public-profile__tags"><span v-for="industry in industries" :key="industry">{{ industry }}</span></div><dl class="agency-public-profile__facts"><div v-if="location"><MapPin :size="16" aria-hidden="true" /><div><dt>{{ t('auth.city') }}</dt><dd>{{ location }}</dd></div></div><div v-if="company.presentation?.languages?.length"><Languages :size="16" aria-hidden="true" /><div><dt>{{ t('studio.languages') }}</dt><dd>{{ company.presentation.languages.map(value => t(`studio.contentLanguages.${value}`)).join(', ') }}</dd></div></div><div v-if="availability"><CalendarCheck2 :size="16" aria-hidden="true" /><div><dt>{{ t('studio.availability') }}</dt><dd>{{ availability }}<template v-if="company.presentation.availability === 'from' && company.presentation.availableFrom"> · {{ formatDate(company.presentation.availableFrom) }}</template></dd></div></div></dl><div v-if="social.length" class="agency-public-profile__social" :aria-label="t('companyProfile.followUs')"><a v-for="link in social" :key="link.platform" :href="link.url" :aria-label="`${company.name} · ${link.platform}`" target="_blank" rel="noopener noreferrer"><SocialPlatformIcon :platform="link.platform" :size="17" /></a></div><a v-if="company.presentation?.introVideoUrl" class="text-link agency-public-profile__video" :href="company.presentation.introVideoUrl" target="_blank" rel="noopener noreferrer"><CirclePlay :size="17" aria-hidden="true" />{{ t('studio.introVideo') }}</a></section>
+        <section id="company-about" class="agency-public-profile__about">
+          <h2>{{ t('agency.about') }}</h2>
+          <div class="agency-public-profile__about-card">
+            <RichTextContent v-if="company.about" :html="company.about" />
+            <div v-if="industries.length" class="agency-public-profile__tags"><span v-for="industry in industries" :key="industry">{{ industry }}</span></div>
+          </div>
+        </section>
+      </template>
+      <template #campaigns>
+        <section id="company-campaigns" class="agency-public-profile__campaigns">
+          <header class="agency-public-profile__section-heading">
+            <div><h2>{{ t('agency.campaignsTitle', { company: company.name }) }}</h2></div>
+            <LocalizedLink class="text-link" :to="{ name: 'campaigns' }">{{ t('companyProfile.allBriefs') }}<ArrowRight :size="16" aria-hidden="true" /></LocalizedLink>
+          </header>
+          <CardGrid v-if="campaigns.length" class="agency-public-profile__campaign-grid" kind="campaign" layout="directory">
+            <CampaignCard v-for="campaign in campaigns" :key="campaign.id" :campaign="campaign" :image-sizes="PROFILE_CAMPAIGN_IMAGE_SIZES" />
+          </CardGrid>
+          <StatusMessage v-else variant="empty">{{ t('agency.emptyCampaigns') }}</StatusMessage>
+        </section>
+      </template>
+      <template #aside>
+        <ProfileActionCard
+          v-if="!own"
+          :label="t('publicProfile.actionsLabel')"
+          :price-label="startingPrice ? t('publicProfile.packagesFrom') : t('creatorProfile.packages')"
+          :price="startingPrice || t('creatorProfile.priceOnRequest')"
+          :note="t('publicProfile.paymentNote')"
+        >
+          <button class="button button--dark" type="button" @click="contact?.openRequest()"><Mail :size="16" aria-hidden="true" />{{ t('creatorProfile.sendRequest') }}</button>
+          <button class="button button--tonal" type="button" @click="contact?.openInvite()"><Megaphone :size="16" aria-hidden="true" />{{ t('creatorProfile.inviteAction') }}</button>
+          <template #bar>
+            <button class="button button--tonal profile-action-bar__icon" type="button" :aria-label="t('creatorProfile.inviteAction')" :title="t('creatorProfile.inviteAction')" @click="contact?.openInvite()"><Megaphone :size="18" aria-hidden="true" /></button>
+            <button class="button button--dark" type="button" @click="contact?.openRequest()">{{ t('creatorProfile.sendRequest') }}</button>
+          </template>
+        </ProfileActionCard>
+        <dl class="agency-public-profile__facts">
+          <div v-if="location"><MapPin :size="16" aria-hidden="true" /><dt>{{ t('auth.city') }}</dt><dd>{{ location }}</dd></div>
+          <div v-if="industries.length"><Briefcase :size="16" aria-hidden="true" /><dt>{{ t('companyProfile.areas') }}</dt><dd>{{ industries.join(', ') }}</dd></div>
+          <div v-if="company.presentation?.languages?.length"><Languages :size="16" aria-hidden="true" /><dt>{{ t('studio.languages') }}</dt><dd>{{ company.presentation.languages.map(value => t(`studio.contentLanguages.${value}`)).join(', ') }}</dd></div>
+          <div v-if="availability"><CalendarCheck2 :size="16" aria-hidden="true" /><dt>{{ t('studio.availability') }}</dt><dd>{{ availability }}<template v-if="company.presentation.availability === 'from' && company.presentation.availableFrom"> · {{ formatDate(company.presentation.availableFrom) }}</template></dd></div>
+          <div><Megaphone :size="16" aria-hidden="true" /><dt>{{ t('app.campaigns') }}</dt><dd>{{ t('publicProfile.openCount', { count: campaigns.length }) }}</dd></div>
+          <div v-if="social.length" class="agency-public-profile__social-row"><dt class="sr-only">{{ t('companyProfile.followUs') }}</dt><dd class="agency-public-profile__social"><a v-for="link in social" :key="link.platform" :href="link.url" :aria-label="`${company.name} · ${link.platform}`" :title="link.platform" target="_blank" rel="noopener noreferrer"><SocialPlatformIcon :platform="link.platform" :size="17" /></a></dd></div>
+        </dl>
+        <a v-if="company.presentation?.introVideoUrl" class="text-link agency-public-profile__video" :href="company.presentation.introVideoUrl" target="_blank" rel="noopener noreferrer"><CirclePlay :size="17" aria-hidden="true" />{{ t('studio.introVideo') }}</a>
       </template>
     </AgencyProfileSections>
-    <section id="company-campaigns" class="agency-public-profile__campaigns">
-      <header class="agency-public-profile__section-heading">
-        <h2>{{ t('agency.campaignsTitle', { company: company.name }) }}</h2>
-        <LocalizedLink class="text-link" :to="{ name: 'campaigns' }">{{ t('companyProfile.allBriefs') }}<ExternalLink :size="14" aria-hidden="true" /></LocalizedLink>
-      </header>
-      <CardGrid v-if="campaigns.length" class="agency-public-profile__campaign-grid" kind="campaign" layout="directory">
-        <CampaignCard v-for="campaign in campaigns" :key="campaign.id" :campaign="campaign" :image-sizes="PROFILE_CAMPAIGN_IMAGE_SIZES" />
-      </CardGrid>
-      <StatusMessage v-else variant="empty">{{ t('agency.emptyCampaigns') }}</StatusMessage>
-    </section>
     <MarketplaceSafetyActions kind="company" :slug="company.slug" />
   </main>
 </template>

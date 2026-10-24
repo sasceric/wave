@@ -12,6 +12,8 @@ defineProps({
   description: { type: String, default: '' },
   linkTo: { type: [String, Object], default: '' },
   linkLabel: { type: String, default: '' },
+  // Shorter label used on phones so the link fits beside the title.
+  linkShortLabel: { type: String, default: '' },
   busy: { type: Boolean, default: false },
   showGrid: { type: Boolean, default: true },
 })
@@ -78,7 +80,9 @@ onBeforeUnmount(detach)
       </div>
       <div class="card-row__actions">
         <LocalizedLink v-if="linkTo && linkLabel" class="card-row__link" :to="linkTo">
-          {{ linkLabel }} <ArrowRight :size="16" aria-hidden="true" />
+          <span :class="{ 'card-row__link-long': linkShortLabel }">{{ linkLabel }}</span>
+          <span v-if="linkShortLabel" class="card-row__link-short" aria-hidden="true">{{ linkShortLabel }}</span>
+          <ArrowRight :size="16" aria-hidden="true" />
         </LocalizedLink>
         <template v-if="canPrevious || canNext">
           <button class="card-row__control" type="button" :disabled="!canPrevious" :aria-label="t('home.previousCards')" @click="scrollRail(-1)">

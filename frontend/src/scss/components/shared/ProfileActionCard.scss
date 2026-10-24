@@ -1,0 +1,112 @@
+@use '../../breakpoints';
+@use '../../glass';
+
+// Short "next step" card for public profiles; on phones it becomes a glass bar above the tab bar.
+.profile-action-card {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+  padding: 20px;
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-card);
+  background: var(--card);
+  box-shadow: var(--shadow-soft);
+
+  &__price {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+
+    small { color: var(--muted-text); font-size: 13px; }
+    strong { color: var(--forest); font-size: 24px; font-variant-numeric: tabular-nums; }
+  }
+
+  &__copy {
+    display: grid;
+    gap: 4px;
+
+    strong { color: var(--ink); font-size: 16px; }
+    p { margin: 0; color: var(--muted-text); font-size: 13px; line-height: 1.55; }
+  }
+
+  &__actions {
+    display: grid;
+    gap: 8px;
+
+    .button { width: 100%; }
+  }
+
+  &__note {
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
+    margin: 0;
+    color: var(--muted-text);
+    font-size: 13px;
+    line-height: 1.5;
+
+    svg { flex: none; margin-top: 2px; }
+  }
+}
+
+.profile-action-bar { display: none; }
+
+@include breakpoints.down(760px) {
+  .profile-action-card { display: none; }
+
+  .profile-action-bar {
+    @include glass.surface;
+
+    & {
+      position: fixed;
+      z-index: 40;
+      right: 12px;
+      bottom: calc(84px + env(safe-area-inset-bottom, 0px));
+      left: 12px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-height: 60px;
+      padding: 8px 8px 8px 18px;
+      border-radius: var(--radius-panel);
+    }
+
+    &__price {
+      display: grid;
+      flex: 1;
+      min-width: 0;
+      line-height: 1.2;
+
+      small { color: var(--muted-text); font-size: 12px; }
+      strong { overflow: hidden; color: var(--forest); font-size: 17px; text-overflow: ellipsis; white-space: nowrap; }
+    }
+
+    &__title {
+      flex: 1;
+      min-width: 0;
+      overflow: hidden;
+      color: var(--ink);
+      font-size: 15px;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    &__actions {
+      display: flex;
+      flex: none;
+      gap: 6px;
+
+      .button { min-height: 44px; }
+    }
+  }
+}
+
+@include breakpoints.down(760px) {
+  .profile-action-bar { transition: transform .22s ease; }
+  .site-shell--mobile-chrome-hidden .profile-action-bar { transform: translateY(calc(76px + env(safe-area-inset-bottom, 0px))); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .profile-action-bar { transition: none; }
+}

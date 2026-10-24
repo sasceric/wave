@@ -7,20 +7,32 @@
     span { min-width: 20px; padding: 1px 6px; border-radius: 20px; color: var(--muted-text); font-size: 12px; line-height: 1.5; background: rgba(31, 42, 40, .06); text-align: center; }
   }
 }
+// In-page section links read as a segmented control (profile prototype).
 .profile-section-nav {
-  grid-column: 1 / -1; display: flex; gap: 4px; min-width: 0; max-width: 100%; padding-bottom: 8px; border-bottom: 1px solid var(--hairline); overflow-x: auto; overscroll-behavior-x: contain; -webkit-overflow-scrolling: touch; scrollbar-width: none;
+  display: inline-flex; gap: 2px; min-width: 0; max-width: 100%; padding: 3px; border-radius: var(--radius-pill); background: var(--surface); overflow-x: auto; overscroll-behavior-x: contain; -webkit-overflow-scrolling: touch; scrollbar-width: none;
   &::-webkit-scrollbar { display: none; }
-  a { flex-shrink: 0; display: inline-flex; align-items: center; min-height: 36px; padding: 0 14px; border-radius: var(--radius-pill); color: var(--muted-text); font-size: 14px; font-weight: 500; text-decoration: none; transition: background .2s ease, color .2s ease;
-    &:hover { color: var(--ink); background: rgba(31, 42, 40, .05); }
-    &[aria-current='location'] { color: var(--forest); background: rgba(23, 61, 54, .09); font-weight: 600; }
-    span { margin-left: 6px; color: var(--muted-text); font-size: 12px; }
+  a { display: inline-flex; flex: none; align-items: center; gap: 6px; min-height: 34px; padding: 0 16px; border-radius: var(--radius-pill); color: var(--muted-text); font-size: 14px; font-weight: 500; text-decoration: none; white-space: nowrap; transition: background .2s ease, color .2s ease;
+    &:hover { color: var(--ink); }
+    &[aria-current='location'] { color: var(--ink); background: var(--card); box-shadow: 0 1px 3px rgba(23, 61, 54, .12); font-weight: 600; }
+    span { padding: 0 6px; border-radius: var(--radius-pill); color: var(--muted-text); background: rgba(31, 42, 40, .07); font-size: 12px; font-weight: 500; }
   }
+}
+// Sticky strip that carries the section control under the header.
+.profile-section-bar {
+  position: sticky; z-index: 20; top: 82px; grid-column: 1 / -1; min-width: 0; padding-block: 12px;
+  background: linear-gradient(var(--paper) 70%, transparent);
+  transition: top .22s ease;
 }
 .profile-tabs button:focus-visible, .profile-section-nav a:focus-visible { outline: 2px solid var(--forest); outline-offset: 1px; }
 @media (max-width: 760px) {
   .profile-tabs { display: flex; flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; overscroll-behavior-x: contain; button { min-height: 38px; } }
   .profile-section-nav { a { min-height: 40px; } }
 }
+@media (max-width: 760px) {
+  .profile-section-bar { top: 62px; }
+  .site-shell--mobile-chrome-hidden .profile-section-bar { top: 0; }
+  .profile-section-nav { display: flex; }
+}
 @media (prefers-reduced-motion: reduce) {
-  .profile-tabs button, .profile-section-nav a { transition: none; }
+  .profile-tabs button, .profile-section-nav a, .profile-section-bar { transition: none; }
 }

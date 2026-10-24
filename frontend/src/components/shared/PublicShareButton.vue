@@ -60,8 +60,8 @@ async function copy() {
 
 <template>
   <div class="public-share">
-    <button class="button button--outline public-share__button" type="button" :disabled="busy" :aria-label="t('sharing.shareTitle', { title })" @click="share">
-      <Share2 :size="17" aria-hidden="true" />{{ t('sharing.share') }}
+    <button class="public-share__button" type="button" :disabled="busy" :aria-label="t('sharing.shareTitle', { title })" :title="t('sharing.share')" @click="share">
+      <Share2 :size="17" aria-hidden="true" />
     </button>
     <FormModal v-model:open="open" :title="t('sharing.share')" :description="title">
       <label :for="`${id}-url`">{{ t('sharing.link') }}
@@ -77,26 +77,31 @@ async function copy() {
 </template>
 
 <style scoped lang="scss">
+// Round icon button from the profile prototype; the label lives in aria-label and the tooltip.
 .public-share {
-  display: none;
+  display: inline-flex;
+  flex: 0 0 auto;
+
+  &__button {
+    display: grid;
+    place-items: center;
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    color: var(--ink);
+    background: rgba(31, 42, 40, .06);
+    cursor: pointer;
+    transition: background .2s var(--ease-standard);
+
+    &:hover { background: rgba(31, 42, 40, .1); }
+    &:focus-visible { outline: 2px solid var(--forest); outline-offset: 2px; }
+    &:disabled { cursor: progress; opacity: .6; }
+  }
 
   @media (max-width: 760px) {
-    display: inline-flex;
-    flex: 0 0 auto;
-    margin-inline-start: auto;
-
-    &__button {
-      min-height: 44px;
-      padding: 10px 14px;
-      gap: 7px;
-      border: 1px solid var(--line);
-      border-radius: 9px;
-      background: var(--paper);
-      color: var(--forest);
-      font-size: 14px;
-      line-height: 1.2;
-      white-space: nowrap;
-    }
+    &__button { width: 44px; height: 44px; }
   }
 }
 </style>

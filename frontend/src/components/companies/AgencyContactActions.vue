@@ -54,12 +54,12 @@ async function send() {
   finally { busy.value = false }
 }
 watch(() => props.company.id, () => { ++revision; mode.value = ''; loading.value = false })
-defineExpose({ openRequest: (id = null) => open('request', id) })
+defineExpose({ openRequest: (id = null) => open('request', id), openInvite: () => open('invite') })
 </script>
 <template>
   <div v-if="!own" class="agency-contact-actions">
-    <button class="button button--light" type="button" @click="open('request')"><Mail :size="17" />{{ t('creatorProfile.sendRequest') }}</button>
-    <button class="button button--dark" type="button" @click="open('invite')"><Megaphone :size="17" />{{ t('creatorProfile.inviteAction') }}</button>
+    <button class="button button--dark" type="button" @click="open('request')"><Mail :size="16" aria-hidden="true" />{{ t('creatorProfile.sendRequest') }}</button>
+    <button class="button button--tonal" type="button" @click="open('invite')"><Megaphone :size="16" aria-hidden="true" />{{ t('creatorProfile.inviteAction') }}</button>
   </div>
   <FormModal :open="Boolean(mode)" :title="t(mode === 'invite' ? 'creatorProfile.inviteAction' : 'creatorProfile.sendRequest')" :busy="busy" @update:open="!$event && (mode = '')" @submit="send">
     <StatusMessage v-if="error" variant="error">{{ error }}</StatusMessage>

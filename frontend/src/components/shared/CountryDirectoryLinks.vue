@@ -1,5 +1,5 @@
 <script setup>
-import { ArrowRight } from '@lucide/vue'
+import { ArrowRight, MapPin } from '@lucide/vue'
 import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import LocalizedLink from './LocalizedLink.vue'
@@ -29,9 +29,13 @@ onMounted(async () => {
 <template>
   <nav v-if="available.length" class="seo-country-links" :class="{ 'seo-country-links--compact': compact }" :aria-label="t('regionalSeo.countriesTitle')">
     <h2 v-if="!compact">{{ t('regionalSeo.countriesTitle') }}</h2>
+    <span v-else class="seo-country-links__label">{{ t('regionalSeo.countriesTitle') }}</span>
     <div>
       <LocalizedLink v-for="item in available" :key="item.value" :to="localizedPath('country-creators', countries[item.value].locale, { country: countries[item.value].slug })">
-        {{ t(`regionalSeo.countries.${item.value}.name`) }} <ArrowRight class="link-arrow" :size="16" aria-hidden="true" />
+        <MapPin v-if="compact" :size="15" aria-hidden="true" />
+        {{ t(`regionalSeo.countries.${item.value}.name`) }}
+        <span v-if="compact" class="seo-country-links__count">{{ item.count }}</span>
+        <ArrowRight v-else class="link-arrow" :size="16" aria-hidden="true" />
       </LocalizedLink>
     </div>
   </nav>

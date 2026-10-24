@@ -27,13 +27,14 @@ const media = computed(() => selected.value ? [{ ...selected.value, id: 'main' }
       >
         <span class="creator-works__visual">
           <img :src="item.coverUrl || (item.type === 'image' ? item.url : '') || CREATOR_PLACEHOLDER" :alt="item.title || name" loading="lazy" />
+          <span v-if="item.platform && item.platform !== 'All'" class="creator-works__chip">{{ item.platform }}</span>
           <span v-if="item.featured" class="creator-works__pin">
             <Pin :size="12" aria-hidden="true" />
             {{ t('studio.featuredWork') }}
           </span>
         </span>
         <span class="creator-works__copy">
-          <small>{{ item.source === 'sample' ? t('studio.sample') : item.client || (item.platform && item.platform !== 'All' ? item.platform : '') }}</small>
+          <small>{{ item.source === 'sample' ? t('studio.sample') : item.client || '' }}</small>
           <strong>{{ item.title }}</strong>
           <span class="creator-works__summary">{{ item.summary }}</span>
           <span class="creator-works__link">
@@ -109,18 +110,37 @@ const media = computed(() => selected.value ? [{ ...selected.value, id: 'main' }
   </section>
 </template>
 <style scoped lang="scss">
-.creator-works { min-width:0; h2 { font-size:27px; margin:0; color:var(--forest); } header p { color:var(--muted); font-size:12px; margin:8px 0 16px; }
-  &__grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
-  &__item { display:flex; flex-direction:column; align-items:stretch; justify-content:flex-start; overflow:hidden; text-align:left; background:#fffefa; border:1px solid #dce2d9; padding:0; border-radius:15px; font:inherit; color:var(--forest); cursor:pointer; min-width:0; }
-  &__visual { position:relative; display:block; flex:0 0 auto; min-width:0; height:155px; overflow:hidden; img { display:block; width:100%; height:100%; object-fit:cover; } }
-  &__item:only-child, &__item:first-child:nth-last-child(3) { grid-column:1/-1; display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); .creator-works__visual { height:240px; } }
-  &__copy { display:flex; flex:1; min-width:0; flex-direction:column; gap:7px; padding:16px; small, >span:not(.creator-works__link):not(.creator-works__pin) { color:var(--muted); font-size:12px; line-height:1.6; } small { display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:1; min-height:1.6em; overflow:hidden; } >strong { display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2; min-height:2.8em; overflow:hidden; overflow-wrap:anywhere; font-size:17px; line-height:1.4; } }
-  &__summary { display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2; min-height:3.2em; overflow:hidden; overflow-wrap:anywhere; }
-  &__pin { position:absolute; bottom:10px; left:10px; display:inline-flex; align-items:center; gap:5px; max-width:calc(100% - 20px); min-height:25px; padding:4px 8px; border:1px solid #ffffffb3; border-radius:8px; color:var(--forest); background:#fffefaf0; box-shadow:0 2px 8px #1f2a2814; font-size:10px; line-height:1.4; text-align:left; svg { flex-shrink:0; } } &__link { display:flex; align-items:center; gap:8px; font-size:12px; margin-top:auto; padding-top:7px; }
-  @media(max-width:760px) {
-    &__visual { height:135px; }
-    &__item:only-child, &__item:first-child:nth-last-child(3) { display:block; .creator-works__visual { height:200px; } }
-    &__copy { padding:12px; }
+@use '../../scss/public-profile-layout';
+
+// Works grid from the profile prototype: the first work spans the row, the rest sit two per row.
+// Thumbnail heights (155/240px, phone 135/200px) are kept as before, matching the upload hints.
+.creator-works { display: grid; gap: 16px; min-width: 0;
+  h2 { @include public-profile-layout.section-title; }
+  header p { @include public-profile-layout.section-intro; }
+  &__grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+  &__item { @include public-profile-layout.card; display: flex; flex-direction: column; align-items: stretch; justify-content: flex-start; min-width: 0; overflow: hidden; padding: 0; color: var(--ink); font: inherit; text-align: left; cursor: pointer; transition: box-shadow .2s var(--ease-standard);
+    &:hover { box-shadow: var(--shadow-soft); }
+    &:focus-visible { outline: 2px solid var(--forest); outline-offset: 3px; }
+  }
+  &__visual { position: relative; display: block; flex: none; min-width: 0; height: 155px; overflow: hidden; background: var(--surface);
+    img { position: absolute; inset: 0; display: block; width: 100%; height: 100%; object-fit: cover; }
+  }
+  // With an odd number of works the first spans the row so the grid has no gap.
+  &__item:first-child:nth-last-child(odd) { grid-column: 1 / -1; display: grid; grid-template-columns: 1.2fr 1fr;
+    .creator-works__visual { height: 240px; }
+  }
+  &__chip, &__pin { position: absolute; left: 12px; display: inline-flex; align-items: center; gap: 5px; max-width: calc(100% - 24px); padding: 5px 11px; border: 1px solid var(--glass-edge); border-radius: var(--radius-pill); color: var(--ink); background: var(--glass-fill-strong); box-shadow: var(--glass-highlight); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); font-size: 13px; font-weight: 600; line-height: 1.3; svg { flex-shrink: 0; } }
+  &__chip { top: 12px; }
+  &__pin { bottom: 12px; }
+  &__copy { display: flex; flex: 1; flex-direction: column; gap: 6px; min-width: 0; padding: 18px 20px 20px;
+    small { display: -webkit-box; overflow: hidden; color: var(--muted-text); font-size: 13px; -webkit-box-orient: vertical; -webkit-line-clamp: 1; }
+    > strong { display: -webkit-box; overflow: hidden; font-size: 18px; font-weight: 600; line-height: 1.3; overflow-wrap: anywhere; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
+  }
+  &__summary { display: -webkit-box; overflow: hidden; color: var(--muted-text); font-size: 14px; line-height: 1.5; overflow-wrap: anywhere; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
+  &__link { display: inline-flex; align-items: center; gap: 6px; margin-top: auto; padding-top: 10px; color: var(--forest); font-size: 14px; font-weight: 600; }
+  @media (max-width: 760px) {
+    &__visual { height: 135px; }
+    &__item:first-child:nth-last-child(odd) { display: flex; .creator-works__visual { height: 200px; } }
   }
 }
 </style>

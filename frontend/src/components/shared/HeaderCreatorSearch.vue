@@ -10,11 +10,9 @@ import { localizedRouteName } from '../../routePaths'
 import { isSearchableQuery, SEARCH_MIN_LENGTH } from '../../lib/searchQuery'
 import CardImage from './CardImage.vue'
 import LocalizedLink from './LocalizedLink.vue'
-import SingleSelect from './SingleSelect.vue'
-import SegmentedControl from './SegmentedControl.vue'
 
 const props = defineProps({
-  // header: compact field in the site header; hero: large homepage field with type pills.
+  // header: compact field in the site header; hero: large homepage field.
   variant: { type: String, default: 'header', validator: value => ['header', 'hero'].includes(value) },
 })
 
@@ -46,6 +44,10 @@ let requestId = 0
 let lastLogged = ''
 let restoringFocus = false
 let suggestionBatch = null
+// A new search term starts on the first tab and moves to the first tab that has results.
+let pickTypeForTerm = false
+let skipTypeWatch = false
+let syncingFromRoute = false
 
 function positionPanel() {
   if (!form.value) return
@@ -123,7 +125,14 @@ async function loadSuggestions() {
     const response = await suggestionBatch.promise
     if (id !== requestId) return
     counts.value = response.meta?.counts ?? {}
-    results.value = (response.data?.[selected] ?? []).slice(0, 10)
+    let shown = selected
+    if (pickTypeForTerm) {
+      pickTypeForTerm = false
+      const hasRows = (value) => (response.data?.[value] ?? []).length > 0
+      if (!hasRows(selected)) shown = types.find(hasRows) ?? selected
+      if (shown !== type.value) { skipTypeWatch = true; type.value = shown }
+    }
+    results.value = (response.data?.[shown] ?? []).slice(0, 10)
   } catch {
     if (id === requestId) { suggestionBatch = null; error.value = true }
   } finally {
@@ -163,17 +172,29 @@ function focusResult() { panel.value?.querySelector('a')?.focus() }
 function handleKey(event) { if (event.key === 'Escape' && (open.value || expanded.value)) { event.preventDefault(); closeSearch(true) } }
 
 watch([query, locale], () => {
+  // A term taken from the URL keeps the directory tab; a typed term starts again from the first tab.
+  if (syncingFromRoute) syncingFromRoute = false
+  else {
+    if (type.value !== types[0]) { skipTypeWatch = true; type.value = types[0] }
+    pickTypeForTerm = true
+  }
   suggestionBatch = null
   counts.value = {}
   lastLogged = ''
   scheduleSearch()
 })
-watch(type, () => { lastLogged = ''; scheduleSearch() })
+watch(type, () => {
+  lastLogged = ''
+  if (skipTypeWatch) { skipTypeWatch = false; return }
+  pickTypeForTerm = false
+  scheduleSearch()
+})
 watch(() => route.fullPath, () => {
   closeSearch()
   const nextType = route.meta.routeName
   if (types.includes(nextType)) type.value = nextType
-  query.value = typeof route.query.q === 'string' ? route.query.q : ''
+  const nextQuery = typeof route.query.q === 'string' ? route.query.q : ''
+  if (nextQuery !== query.value) { syncingFromRoute = true; query.value = nextQuery }
   nextTick(() => closeSearch())
 })
 onMounted(() => {
@@ -200,17 +221,15 @@ onBeforeUnmount(() => {
 
 <template>
   <form ref="form" class="header-creator-search" :class="{ 'is-expanded': expanded, 'is-open': open, 'header-creator-search--hero': variant === 'hero' }" role="search" @submit.prevent="handleSubmit">
-    <SegmentedControl v-if="variant === 'hero'" v-model="type" class="header-creator-search__pills" :options="options" :label="t('globalSearch.type')" />
     <label class="header-creator-search__field">
       <Search :size="17" aria-hidden="true" />
       <input ref="input" v-model="query" type="search" maxlength="200" :placeholder="t('globalSearch.placeholder')" :aria-label="t('globalSearch.placeholder')" :aria-controls="open ? panelId : undefined" @focus="handleInputFocus" @keydown.down.prevent="focusResult" />
     </label>
-    <SingleSelect v-if="variant === 'header'" v-model="type" class="header-creator-search__type" :options="options" :label="t('globalSearch.type')" :show-label="false" />
-    <button class="header-creator-search__submit" type="submit" :aria-label="t('globalSearch.search')" :aria-expanded="open" :aria-controls="open ? panelId : undefined">
-      <Search v-if="variant === 'header'" :size="19" aria-hidden="true" />
-      <template v-else><ArrowRight :size="17" aria-hidden="true" /><span class="header-creator-search__submit-label">{{ t('globalSearch.search') }}</span></template>
-    </button>
     <button v-if="collapsible && expanded" class="header-creator-search__close" type="button" :aria-label="t('app.closeSearch')" @click="closeSearch(true)"><X :size="18" aria-hidden="true" /></button>
+    <button class="header-creator-search__submit" :class="{ 'is-trigger': collapsible && !expanded }" type="submit" :aria-label="t('globalSearch.search')" :aria-expanded="open" :aria-controls="open ? panelId : undefined">
+      <Search v-if="collapsible && !expanded" :size="19" aria-hidden="true" />
+      <template v-else><ArrowRight :size="17" aria-hidden="true" /><span v-if="variant === 'hero'" class="header-creator-search__submit-label">{{ t('globalSearch.search') }}</span></template>
+    </button>
   </form>
   <Teleport to="body">
     <template v-if="open">

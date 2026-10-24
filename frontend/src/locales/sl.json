@@ -1,6 +1,7 @@
 {
   "presentationDemo": {
-    "badge": "Prototip · izmišljeni podatki"
+    "badge": "Prototip · izmišljeni podatki",
+    "shortBadge": "Prototip"
   },
   "meta": {
     "title": "Wave — sodelovanja ustvarjalcev in blagovnih znamk",
@@ -585,7 +586,6 @@
     "heroTitleLead": "Pravi ustvarjalci. Prave znamke.",
     "heroTitleEmphasis": "Eno mesto.",
     "greetingLead": "Pozdravljeni,",
-    "popularCategories": "Priljubljena področja",
     "shortcutsLabel": "Hitre bližnjice",
     "previousCards": "Prejšnje kartice",
     "nextCards": "Naslednje kartice",
@@ -634,7 +634,15 @@
     "howItWorksMore": "Več o tem, kako deluje",
     "faqHeading": "Vprašanja?",
     "contactOpen": "Piši nam",
-    "contactCancel": "Prekliči"
+    "contactCancel": "Prekliči",
+    "allCreatorsShort": "Vsi",
+    "allCampaignsShort": "Vse",
+    "promoLabel": "Izpostavljeno na Wave",
+    "promoSlide": "Diapozitiv {index} od {count}",
+    "promoCreatorsTitle": "Ustvarjalci iz regije.",
+    "promoCreatorsText": "Pristna vsebina za sodobne blagovne znamke.",
+    "promoCampaignsTitle": "Odprte kampanje.",
+    "promoCampaignsText": "Brief, proračun in rok vidni pred prijavo."
   },
   "siteFaq": {
     "eyebrow": "DOBRO JE VEDETI",
@@ -2955,5 +2963,26 @@
       "security_token_no_longer_valid": "Varnostna povezava ni več veljavna ali pa je naslov že potrjen.",
       "reminder_no_longer_current": "Opomnik ni več potreben."
     }
+  },
+  "publicProfile": {
+    "statsLabel": "Statistika profila",
+    "collaborations": "Sodelovanja",
+    "collaborationsHint": "zaključenih na Wave",
+    "rating": "Ocena",
+    "packagesFrom": "Paketi od",
+    "paymentNote": "Wave ne obdeluje plačil. Pogoje in plačilo se dogovorite neposredno.",
+    "actionsLabel": "Sodelovanje",
+    "openNow": "trenutno odprte",
+    "openCampaigns": "Odprte kampanje",
+    "openCampaignsCount": "Odprte kampanje ({count})",
+    "openCampaignsHint": "Brief, proračun in rok so vidni pred prijavo.",
+    "forCreators": "Za ustvarjalce",
+    "forCreatorsHint": "Prijavi se na odprto kampanjo in se o sodelovanju dogovori neposredno.",
+    "view": "Poglej",
+    "brandReviewsTitle": "Kako je sodelovati z nami",
+    "brandReviewsHint": "Ocene ustvarjalcev po zaključenih kampanjah.",
+    "packagesHint": "Paketi z jasnim obsegom in rokom. Plačilo se dogovorite neposredno.",
+    "howIWork": "Kako delam",
+    "openCount": "{count} odprte"
   }
 }

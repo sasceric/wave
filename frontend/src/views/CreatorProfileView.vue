@@ -14,10 +14,12 @@ import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import RouterLink from '../components/shared/LocalizedLink.vue'
 import { useI18n } from 'vue-i18n'
-import { ArrowLeft, ArrowRight, Camera, Check, ChevronRight, CirclePlay, FileText, MapPin, MessageCircle, Music2, Plus, Send, X } from '@lucide/vue'
+import { ArrowLeft, ArrowRight, Camera, Check, ChevronRight, CirclePlay, FileText, Mail, MapPin, MessageCircle, Music2, Plus, Send, X } from '@lucide/vue'
 import ProfileFaqs from '../components/shared/ProfileFaqs.vue'
 import ProfileTabs from '../components/shared/ProfileTabs.vue'
 import ProfilePackages from '../components/shared/ProfilePackages.vue'
+import ProfileStats from '../components/shared/ProfileStats.vue'
+import ProfileActionCard from '../components/shared/ProfileActionCard.vue'
 import CreatorWorks from '../components/creators/CreatorWorks.vue'
 import CreatorAudience from '../components/creators/CreatorAudience.vue'
 import { languageOptions } from '../lib/creatorPresentation'
@@ -26,6 +28,7 @@ import StatusMessage from '../components/shared/StatusMessage.vue'
 import { useMarketplaceCatalog } from '../composables/useMarketplaceCatalog'
 import { apiGet, apiRequest, formatDate, formatMoney } from '../lib/api'
 import { CREATOR_PLACEHOLDER } from '../lib/marketplace'
+import { formatAverageRating, startingPackagePrice } from '../lib/profileStats'
 import { getSeoOrigin, updateSeo } from '../lib/seo'
 import { localizedPath } from '../routePaths'
 
@@ -110,12 +113,38 @@ const profilePackages = computed(() => [
 ])
 
 const sectionTabs = computed(() => [
-  ...(visiblePortfolio.value.length ? [{ key: 'creator-works', label: t('studio.tabWorks') }] : []),
+  ...(visiblePortfolio.value.length ? [{ key: 'creator-works', label: t('studio.tabWorks'), count: visiblePortfolio.value.length }] : []),
+  { key: 'creator-packages', label: t('studio.tabPackages'), ...(creator.value?.packages?.length ? { count: creator.value.packages.length } : {}) },
   ...(creator.value?.socialProfiles.length ? [{ key: 'creator-audience', label: t('studio.tabAudience') }] : []),
-  { key: 'creator-packages', label: t('studio.tabPackages') },
-  { key: 'creator-reviews', label: t('studio.tabReviews') },
+  { key: 'creator-reviews', label: t('studio.tabReviews'), ...(creator.value?.rating?.reviewCount ? { count: creator.value.rating.reviewCount } : {}) },
   ...(profileFaqs.value.length ? [{ key: 'creator-faqs', label: t('studio.tabFaq') }] : []),
 ])
+
+const availabilityLabel = computed(() => {
+  const presentation = creator.value?.presentation
+  if (!presentation?.availability || presentation.availability === 'unspecified') {
+    return ''
+  }
+  const label = t(`studio.${presentation.availability}`)
+
+  return presentation.availability === 'from' && presentation.availableFrom ? `${label} · ${formatDate(presentation.availableFrom)}` : label
+})
+const availabilityClass = computed(() => ({
+  'is-busy': creator.value?.presentation?.availability === 'busy',
+  'is-scheduled': creator.value?.presentation?.availability === 'from',
+}))
+
+const startingPrice = computed(() => startingPackagePrice(creator.value?.packages || []))
+
+const profileStats = computed(() => {
+  const rating = creator.value?.rating || {}
+  const average = formatAverageRating(rating.average, locale.value)
+
+  return [
+    { key: 'collaborations', label: t('publicProfile.collaborations'), value: String(rating.completedCampaigns || 0), hint: t('publicProfile.collaborationsHint') },
+    { key: 'rating', label: t('publicProfile.rating'), value: average, hint: t('studio.reviewCount', { count: rating.reviewCount || 0 }) },
+  ]
+})
 
 const categoryLabel = computed(() => (
   creator.value?.categoryLabel
@@ -622,7 +651,7 @@ onBeforeUnmount(() => { ++profileGeneration; packageDescriptionObserver?.disconn
           <RouterLink :to="{ name: 'creators' }">{{ t('app.creatorsNav') }}</RouterLink>
           <ChevronRight :size="14" aria-hidden="true" />
           <span aria-current="page">{{ creator.displayName }}</span>
-          <PresentationDemoBadge v-if="creator.isPresentationDemo" />
+          <PresentationDemoBadge v-if="creator.isPresentationDemo" pill />
           <PublicShareButton route-name="creator-profile" :slug="creator.slug" :title="creator.displayName" />
         </nav>
         <header class="profile-heading">
@@ -640,6 +669,10 @@ onBeforeUnmount(() => { ++profileGeneration; packageDescriptionObserver?.disconn
                   {{ creator.city }}
                 </span>
                 <RatingSummary :rating="creator.rating" profile />
+                <span v-if="availabilityLabel" class="profile-heading__availability-inline" :class="availabilityClass">
+                  <span class="profile-heading__availability-dot" aria-hidden="true"></span>
+                  {{ availabilityLabel }}
+                </span>
               </div>
               <div v-if="creator.creatorTypes?.length || creator.presentation?.languages?.length" class="profile-presentation-pills">
                 <span v-for="type in creator.creatorTypes" :key="type">{{ t(`creatorTypes.options.${type}`) }}</span>
@@ -657,66 +690,86 @@ onBeforeUnmount(() => { ++profileGeneration; packageDescriptionObserver?.disconn
                 {{ t('studio.introVideo') }}
                 <ArrowRight class="link-arrow" :size="16" aria-hidden="true" />
               </a>
+              <div class="profile-heading__actions">
+                <button v-if="canOpenRequest" class="button button--dark profile-heading__primary" type="button" @click="openRequestForm()">
+                  <Mail :size="16" aria-hidden="true" />
+                  {{ t('creatorProfile.requestPackage') }}
+                </button>
+                <button class="button button--tonal profile-heading__primary" type="button" @click="openCampaignInvitation">
+                  <Send :size="16" aria-hidden="true" />
+                  {{ t('creatorProfile.inviteAction') }}
+                </button>
+                <button class="button button--tonal" type="button" @click="presentationOpen = true">
+                  <FileText :size="16" aria-hidden="true" />
+                  {{ t('studio.presentationTitle') }}
+                </button>
+              </div>
             </div>
           </div>
-          <div class="profile-heading__actions">
-            <button class="button button--outline" type="button" @click="presentationOpen = true">
-              <FileText :size="16" aria-hidden="true" />
-              {{ t('studio.presentationTitle') }}
+        </header>
+        <ProfileStats :items="profileStats" :label="t('publicProfile.statsLabel')" />
+        <div class="profile-section-bar">
+          <ProfileTabs v-model="activeSection" :items="sectionTabs" :label="t('studio.profileSections')" sections />
+        </div>
+        <div class="profile-column">
+          <StatusMessage v-if="catalogError" variant="error">{{ catalogError }}</StatusMessage>
+          <CreatorWorks
+            id="creator-works"
+            v-if="visiblePortfolio.length"
+            class="profile-portfolio"
+            :items="visiblePortfolio"
+            :name="creator.displayName"
+          />
+          <ProfilePackages id="creator-packages" cards :description="t('publicProfile.packagesHint')" :items="profilePackages" :can-request="canOpenRequest" @request="openRequestForm($event.isNegotiationOption ? null : $event, $event.isNegotiationOption)" />
+          <CreatorAudience id="creator-audience" class="profile-audience" :demo="creator.isPresentationDemo" :profiles="creator.socialProfiles" :languages="creator.presentation?.languages || []" :description="creator.tagline || ''" />
+          <ProfileReviews id="creator-reviews" kind="creators" :slug="creator.slug" />
+          <ProfileFaqs
+            id="creator-faqs"
+            v-if="profileFaqs.length"
+            class="profile-content-section profile-faqs"
+            :items="profileFaqs"
+          />
+          <MarketplaceSafetyActions kind="creator" :slug="creator.slug" />
+        </div>
+        <aside class="profile-sidebar">
+          <ProfileActionCard
+            :label="t('publicProfile.actionsLabel')"
+            :price-label="startingPrice ? t('publicProfile.packagesFrom') : t('creatorProfile.packages')"
+            :price="startingPrice || t('creatorProfile.priceOnRequest')"
+            :note="t('publicProfile.paymentNote')"
+          >
+            <button v-if="canOpenRequest" class="button button--dark" type="button" @click="openRequestForm()">
+              <Mail :size="16" aria-hidden="true" />
+              {{ t('creatorProfile.requestPackage') }}
             </button>
-            <button class="button button--dark" type="button" @click="openCampaignInvitation">
+            <button class="button button--tonal" type="button" @click="openCampaignInvitation">
               <Send :size="16" aria-hidden="true" />
               {{ t('creatorProfile.inviteAction') }}
             </button>
-            <span
-              v-if="creator.presentation?.availability && creator.presentation.availability !== 'unspecified'"
-              class="profile-heading__availability"
-              :class="{
-                'profile-heading__availability--busy': creator.presentation.availability === 'busy',
-                'profile-heading__availability--scheduled': creator.presentation.availability === 'from',
-              }"
-            >
-              <span class="profile-heading__availability-dot" aria-hidden="true"></span>
-              <span>{{ t(`studio.${creator.presentation.availability}`) }}
-              <template v-if="creator.presentation.availability === 'from'"> · {{ formatDate(creator.presentation.availableFrom) }}</template></span>
-            </span>
-          </div>
-        </header>
-        <ProfileTabs v-model="activeSection" :items="sectionTabs" :label="t('studio.profileSections')" sections />
-        <div class="profile-column">
-          <div class="profile-main">
-            <StatusMessage v-if="catalogError" variant="error">{{ catalogError }}</StatusMessage>
-            <CreatorWorks
-              id="creator-works"
-              v-if="visiblePortfolio.length"
-              class="profile-portfolio"
-              :items="visiblePortfolio"
-              :name="creator.displayName"
-            />
-          </div>
-          <CreatorAudience id="creator-audience" class="profile-audience" :demo="creator.isPresentationDemo" :profiles="creator.socialProfiles" :languages="creator.presentation?.languages || []" :description="creator.tagline || ''" />
-          <MarketplaceSafetyActions kind="creator" :slug="creator.slug" />
-          <ProfileReviews id="creator-reviews" kind="creators" :slug="creator.slug" />
-        </div>
-        <div class="profile-sidebar">
-          <RegistrationPrompt audience="company" variant="profile" :return-to="localizedPath('creator-profile', locale, { slug: creator.slug })" />
-          <ProfilePackages id="creator-packages" :items="profilePackages" :can-request="canOpenRequest" @request="openRequestForm($event.isNegotiationOption ? null : $event, $event.isNegotiationOption)" />
+            <template #bar>
+              <button
+                class="button button--tonal profile-action-bar__icon"
+                type="button"
+                :aria-label="t('creatorProfile.inviteAction')"
+                :title="t('creatorProfile.inviteAction')"
+                @click="openCampaignInvitation"
+              >
+                <Send :size="18" aria-hidden="true" />
+              </button>
+              <button v-if="canOpenRequest" class="button button--dark" type="button" @click="openRequestForm()">
+                {{ t('creatorProfile.requestPackage') }}
+              </button>
+            </template>
+          </ProfileActionCard>
           <section v-if="creator.bio || creator.tags.length" class="profile-about">
-            <h2>{{ t('studio.aboutCreator') }}</h2>
+            <h2>{{ t('publicProfile.howIWork') }}</h2>
             <RichTextContent class="profile-bio" :html="creator.bio" />
-            <div class="profile-tags">
+            <div v-if="creator.tags.length" class="profile-tags">
               <span v-for="tag in creator.tags" :key="tag">{{ tag }}</span>
             </div>
           </section>
-          <div class="profile-sidebar-details">
-            <ProfileFaqs
-              id="creator-faqs"
-              v-if="profileFaqs.length"
-              class="profile-content-section profile-faqs"
-              :items="profileFaqs"
-            />
-          </div>
-        </div>
+          <RegistrationPrompt audience="company" variant="profile" :return-to="localizedPath('creator-profile', locale, { slug: creator.slug })" />
+        </aside>
       </section>
     </section>
   </template>

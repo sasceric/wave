@@ -54,39 +54,25 @@
     margin-top: 36px;
   }
 
-  &__chips {
-    max-width: 100%;
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 8px;
-    margin-top: 18px;
-  }
-
-  &__chip {
-    min-height: 34px;
-    display: inline-flex;
-    align-items: center;
-    padding: 0 14px;
-    border: 1px solid var(--hairline);
-    border-radius: var(--radius-pill);
-    color: var(--ink);
-    font-size: 14px;
-    text-decoration: none;
-    white-space: nowrap;
-    transition: background .2s var(--ease-standard);
-
-    &:hover {
-      background: var(--card);
-    }
-  }
+  // Top of the page: search first; the brand statement sits after the campaigns row.
+  &--search { padding-block: 40px 24px; }
+  &--search h1 + .home-hero__search { margin-top: 28px; }
+  &--search > .home-hero__search:first-child { margin-top: 0; }
+  &--search h1 { font-size: clamp(36px, 4vw, 56px); }
+  &--statement { padding-block: 80px 0; }
 }
 
+.home-promos {
+  display: block;
+  padding-block: 16px;
+}
+
+// Audience entry points sit after the campaigns row, before "how it works".
 .home-audiences {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 20px;
-  padding-block: 16px;
+  padding-top: 40px;
 }
 
 .home-shortcuts {
@@ -240,6 +226,10 @@
   .home-hero {
     padding-block: 36px 20px;
 
+    &--search { padding-block: 20px 12px; }
+    &--search h1 { font-size: 34px; }
+    &--statement { padding-block: 56px 0; }
+
     h1 {
       font-size: 42px;
     }
@@ -252,27 +242,16 @@
     &__search {
       margin-top: 24px;
     }
+  }
 
-    // One swipeable line of categories instead of a wrapped cloud.
-    &__chips {
-      width: calc(100% + 2 * var(--rail-bleed));
-      flex-wrap: nowrap;
-      justify-content: flex-start;
-      overflow-x: auto;
-      margin-inline: calc(-1 * var(--rail-bleed));
-      padding-inline: var(--rail-bleed);
-      scrollbar-width: none;
-
-      &::-webkit-scrollbar {
-        display: none;
-      }
-    }
+  .home-promos {
+    padding-block: 8px;
   }
 
   .home-audiences {
     grid-template-columns: minmax(0, 1fr);
     gap: 12px;
-    padding-top: 12px;
+    padding-top: 28px;
   }
 
   .home-shortcuts {
@@ -333,11 +312,5 @@
 @include breakpoints.down(420px) {
   .home {
     --rail-bleed: 16px;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .home-hero__chip {
-    transition: none;
   }
 }

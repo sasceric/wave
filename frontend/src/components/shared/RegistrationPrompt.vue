@@ -40,9 +40,6 @@ const registrationRoute = computed(() => ({
       </component>
       <p class="registration-prompt__description">{{ t(`${copyKey}.description`) }}</p>
     </div>
-    <ul v-if="variant === 'profile'" class="registration-prompt__benefits">
-      <li v-for="key in benefitKeys" :key="key"><Check :size="20" aria-hidden="true" /><span>{{ t(`registrationPrompts.${key}`) }}</span></li>
-    </ul>
     <LocalizedLink class="button registration-prompt__action" :class="{ 'button--dark': audience === 'company' || detail, 'button--text': variant === 'sidebar' }" :to="registrationRoute" @click="rememberRegistrationIntent(destination, audience)">
       {{ t(`${copyKey}.action`) }}<ArrowRight :size="21" aria-hidden="true" />
     </LocalizedLink>

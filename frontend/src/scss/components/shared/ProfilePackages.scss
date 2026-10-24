@@ -1,3 +1,4 @@
+@use '../../public-profile-layout';
 .profile-packages {
   min-width: 0; margin: 0; padding: 18px; background: var(--card); border: 1px solid #dce2d9; border-radius: 14px;
   > .profile-section-heading { margin: 0 0 12px; padding: 0; border: 0; h2 { margin: 0; font-size: 23px; color: var(--forest); } }
@@ -22,3 +23,41 @@
   }
 }
 @media (max-width: 760px) { .profile-packages { padding: 16px; } .profile-package__request { min-height: 44px; } }
+
+// Cards variant (public profiles): one row per package, price and request button on the right.
+.profile-packages--cards {
+  display: grid;
+  gap: 16px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+
+  > .profile-section-heading { margin: 0; h2 { @include public-profile-layout.section-title; } p { @include public-profile-layout.section-intro; } }
+
+  .profile-package-grid { gap: 12px; }
+
+  .profile-package {
+    @include public-profile-layout.card;
+    padding: 20px 22px;
+
+    &:last-child { padding-bottom: 20px; border-bottom: 1px solid var(--hairline); }
+    &__details { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 6px 20px; }
+    &__heading { display: contents;
+      h3 { grid-column: 1; grid-row: 1; font-size: 17px; font-weight: 600; line-height: 1.35; }
+      > strong { grid-column: 2; grid-row: 1; color: var(--forest); font-size: 18px; font-variant-numeric: tabular-nums; text-align: right; white-space: nowrap; }
+    }
+    &__description { grid-column: 1; margin: 0; color: var(--muted-text); font-size: 14px; line-height: 1.5; }
+    .creator-package-facts { grid-column: 1; display: flex; flex-wrap: wrap; gap: 6px 14px; margin: 0; padding: 0; color: var(--muted-text); font-size: 13px; li { display: inline-flex; align-items: center; gap: 5px; margin: 0; } }
+    &__request { grid-column: 2; grid-row: 2 / span 2; justify-self: end; width: auto; min-height: 36px; margin: 0; padding: 0 14px; border: 0; border-radius: var(--radius-pill); color: var(--forest); background: rgba(23, 61, 54, .07); font-size: 14px; font-weight: 600;
+      &:hover { border: 0; color: var(--forest); background: rgba(23, 61, 54, .12); }
+    }
+  }
+}
+
+@media (max-width: 760px) {
+  .profile-packages--cards {
+    padding: 0;
+    .profile-package { padding: 18px; }
+    .profile-package__request { grid-column: 1 / -1; grid-row: auto; justify-self: stretch; min-height: 44px; margin-top: 8px; }
+  }
+}

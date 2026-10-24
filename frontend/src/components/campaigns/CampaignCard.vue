@@ -15,7 +15,6 @@ import { useCampaignBookmarks } from '../../composables/useCampaignBookmarks'
 import { localizedRouteName } from '../../routePaths'
 import ConfirmationModal from '../shared/ConfirmationModal.vue'
 import CardImage from '../shared/CardImage.vue'
-import SocialPlatformIcon from '../shared/SocialPlatformIcon.vue'
 import { campaignPlace, CAMPAIGN_PLACEHOLDER } from '../../lib/marketplace'
 
 const props = defineProps({
@@ -121,9 +120,10 @@ async function confirmRemoveBookmark() {
       >
         <Bookmark :size="19" stroke-width="1.8" aria-hidden="true" />
       </button>
-      <span v-if="campaign.featured" class="campaign-card__featured">
-        {{ t('campaignCard.featured') }}
-      </span>
+      <div v-if="campaign.featured || campaign.isPresentationDemo" class="campaign-card__badges">
+        <PresentationDemoBadge v-if="campaign.isPresentationDemo" overlay />
+        <span v-if="campaign.featured" class="campaign-card__featured">{{ t('campaignCard.featured') }}</span>
+      </div>
     </div>
 
     <div class="campaign-card__panel">
@@ -138,13 +138,11 @@ async function confirmRemoveBookmark() {
         ><BadgeCheck :size="16" fill="currentColor" stroke="#fffefa" :stroke-width="2" aria-hidden="true" /></span>
       </div>
 
-      <PresentationDemoBadge v-if="campaign.isPresentationDemo" compact />
       <h3 :id="titleId">{{ campaign.title }}</h3>
       <p class="campaign-card__summary">{{ campaign.summary }}</p>
 
       <div v-if="campaign.channels?.length" class="campaign-card__channels" :aria-label="campaign.channels.join(', ')">
         <span v-for="channel in campaign.channels" :key="channel">
-          <SocialPlatformIcon :platform="channel" :size="14" />
           {{ channel }}
         </span>
       </div>

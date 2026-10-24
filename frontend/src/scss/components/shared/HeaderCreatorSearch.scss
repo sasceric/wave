@@ -1,29 +1,31 @@
 @use '../../breakpoints';
 
+// Same look as the homepage hero search: one pill field with a round forest arrow button.
 .header-creator-search {
   width: min(430px, 32vw);
   min-width: 230px;
-  height: 44px;
+  height: 46px;
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 3px;
-  border: 1px solid #dce3da;
-  border-radius: 10px;
-  background: #fffefa;
+  gap: 4px;
+  padding: 4px 4px 4px 16px;
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-pill);
+  background: var(--card);
+  box-shadow: var(--shadow-soft);
+  transition: box-shadow .2s var(--ease-standard);
 
-  &:focus-within { border-color: #9aada0; }
-  &__field { min-width: 0; flex: 1; display: flex; align-items: center; gap: 9px; padding-left: 10px; color: #82948b; }
-  &__field input { width: 100%; min-width: 0; height: 34px; padding: 0; border: 0; outline: 0; color: var(--ink); background: transparent; font-size: 12px; }
-  &__field input::placeholder { color: #84948c; }
+  &:focus-within { box-shadow: 0 0 0 4px rgba(23, 61, 54, .12), var(--shadow-soft); }
+  &__field { min-width: 0; flex: 1; display: flex; align-items: center; gap: 10px; color: var(--muted-text); }
+  &__field input { width: 100%; min-width: 0; height: 36px; padding: 0; border: 0; outline: 0; color: var(--ink); background: transparent; font-size: 15px; }
+  &__field input::placeholder { color: var(--muted-text); }
   &__field input:focus { box-shadow: none; }
-  &__type { flex: 0 0 108px; border-left: 1px solid #dce3da; padding-left: 6px; }
-  & > &__type { margin: 0; }
-  &__type .single-select__trigger { min-height: 32px; height: 32px; padding: 0 9px; gap: 7px; border: 0; border-radius: 8px; background: #f4f1e9; font-size: 11px; }
-  &__type .single-select__menu { min-width: 140px; }
-  &__submit, &__close { width: 36px; height: 36px; flex: 0 0 36px; display: grid; place-items: center; padding: 0; border: 0; border-radius: 6px; color: #fffefa; background: var(--forest); cursor: pointer; }
+  &__field input::-webkit-search-cancel-button { -webkit-appearance: none; }
+  &__submit, &__close { width: 36px; height: 36px; flex: 0 0 36px; display: grid; place-items: center; padding: 0; border: 0; border-radius: 50%; color: #fffefa; background: var(--forest); cursor: pointer; transition: background .2s var(--ease-standard); }
   &__submit:hover { background: #28534a; }
-  &__close { display: none; color: #52685e; background: transparent; }
+  &__submit:focus-visible, &__close:focus-visible { outline: 2px solid var(--forest); outline-offset: 2px; }
+  &__close { display: none; color: var(--muted-text); background: transparent; }
+  &__close:hover { color: var(--ink); background: var(--surface); }
 }
 .global-search-backdrop { position: fixed; z-index: 90; inset: 0; background: rgba(246, 243, 235, .35); backdrop-filter: blur(4px); }
 .global-search-panel {
@@ -65,13 +67,19 @@
 }
 @include breakpoints.down(900px) {
   .header-creator-search {
-    width: 36px; min-width: 36px; height: 36px; flex: 0 0 36px; justify-content: center; padding: 0; border: 0; background: transparent;
-    & > &__field, & > &__type { display: none; }
-    &__submit, &__submit:hover, &__submit:focus, &__submit:active { color: #52685e; background: transparent; }
-    &__submit:focus-visible { outline: 2px solid #df8267; outline-offset: 1px; }
-    &.is-expanded { position: absolute; z-index: 21; top: calc(100% + 8px); right: 16px; left: 16px; width: auto; height: 50px; padding: 6px; border: 1px solid #dce3da; background: #fffefa; box-shadow: 0 12px 28px rgba(31, 42, 40, .14); }
-    &.is-expanded &__field, &.is-expanded &__type { display: flex; }
+    width: 40px; min-width: 40px; height: 40px; flex: 0 0 40px; justify-content: center; padding: 0; border: 0; background: transparent; box-shadow: none;
+    &:focus-within { box-shadow: none; }
+    & > &__field { display: none; }
+    &:not(.is-expanded):not(.header-creator-search--hero) > &__submit, &__submit.is-trigger, &__submit.is-trigger:hover, &__submit.is-trigger:focus, &__submit.is-trigger:active { width: 40px; height: 40px; flex-basis: 40px; color: var(--forest); background: transparent; }
+    &.is-expanded {
+      position: absolute; z-index: 21; top: calc(100% + 10px); right: 0; left: 0; width: auto; height: 56px; padding: 6px 6px 6px 18px;
+      border: 1px solid var(--hairline); background: var(--card); box-shadow: 0 12px 32px rgba(31, 42, 40, .16);
+    }
+    &.is-expanded:focus-within { box-shadow: 0 0 0 4px rgba(23, 61, 54, .12), 0 12px 32px rgba(31, 42, 40, .16); }
+    &.is-expanded &__field { display: flex; }
+    &.is-expanded &__field input { font-size: 16px; }
     &.is-expanded &__close { display: grid; }
+    &.is-expanded &__submit { width: 44px; height: 44px; flex-basis: 44px; }
   }
   .global-search-panel { max-height: calc(100dvh - 175px); }
 }
@@ -87,10 +95,9 @@
     &__budget { margin-left: auto; font-size: 11px; }
     &__all { font-size: 12px; padding: 17px 0; gap: 10px; }
   }
-  .header-creator-search__type { flex-basis: 97px; }
 }
 
-// Homepage variant: type pills above one large rounded field.
+// Homepage variant: one large rounded field.
 .header-creator-search.header-creator-search--hero {
   position: relative;
   width: min(720px, 100%);
@@ -165,11 +172,6 @@
 @include breakpoints.down(700px) {
   .header-creator-search.header-creator-search--hero {
     gap: 12px;
-
-    .header-creator-search__pills {
-      display: flex;
-      width: 100%;
-    }
 
     > .header-creator-search__field {
       height: 52px;

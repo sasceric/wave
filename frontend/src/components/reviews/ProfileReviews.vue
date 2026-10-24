@@ -50,11 +50,13 @@ onBeforeUnmount(() => { ++generation })
 <template>
   <section class="profile-reviews" :aria-label="t('reviews.title')" :aria-busy="loading">
     <header class="profile-reviews__heading">
-      <h2 ref="heading" tabindex="-1">{{ title || t('reviews.title') }}</h2>
-      <p>{{ description || t('studio.reviewsIntro') }}</p>
+      <div>
+        <h2 ref="heading" tabindex="-1">{{ title || t('reviews.title') }}</h2>
+        <p>{{ description || t('studio.reviewsIntro') }}</p>
+      </div>
+      <div v-if="$slots.filters" class="profile-reviews__filters"><slot name="filters" /></div>
     </header>
     <div class="profile-reviews__surface">
-      <slot name="filters" />
       <div class="profile-reviews__summary">
         <strong class="profile-reviews__average">{{ summary.average == null ? '—' : number(summary.average) }}</strong>
         <div>
@@ -109,28 +111,41 @@ onBeforeUnmount(() => { ++generation })
   </section>
 </template>
 <style scoped lang="scss">
+@use '../../scss/public-profile-layout';
+
+// Reviews from the profile prototype: a score card beside a list of review cards.
 .profile-reviews {
-  margin: 24px 0; min-width: 0;
-  &__heading { margin-bottom: 14px; h2 { margin: 0; color: var(--forest); font-size: 25px; scroll-margin-top: 100px; } p { margin: 5px 0 0; font-size: 12px; color: var(--muted); } }
-  &__surface { padding: 18px; border: 1px solid #dce2d9; border-radius: 14px; background: #fffefa; > p { font-size: 12px; color: var(--muted); } }
-  &__summary { display: flex; align-items: center; gap: 14px; padding-bottom: 14px; margin-bottom: 3px; border-bottom: 1px solid #dce2d9; p { margin: 4px 0 0; font-size: 11px; color: var(--muted); } }
-  &__average { font: 400 34px/1.2 var(--serif); color: var(--forest); }
-  &__stars { display: flex; align-items: center; gap: 3px; color: var(--coral-text); }
-  &__list { display: grid; }
-  article { padding: 16px 0; border-bottom: 1px solid #dce2d9; &:last-child { border: 0; padding-bottom: 0; } }
-  &__identity { display: flex; align-items: center; gap: 10px; min-width: 0; > div { flex: 1; min-width: 0; } h3 { margin: 0; color: var(--forest); font-family: inherit; font-size: 12px; font-weight: 600; } }
-  &__avatar { display: grid; place-items: center; flex: 0 0 38px; height: 38px; border-radius: 10px; color: var(--forest); background: #e5ebe2; font: 400 16px/1 var(--serif); }
-  article:nth-child(even) &__avatar { background: #f3e6de; }
-  &__demo { margin-top: 10px; }
-  &__badge { padding: 4px 9px; border-radius: 30px; background: #e5ebe2; color: var(--forest); font-size: 11px; white-space: nowrap; }
-  small { display: block; margin-top: 3px; font-size: 11px; color: var(--muted); overflow-wrap: anywhere; }
-  blockquote { margin: 12px 0 9px; font-size: 13px; line-height: 1.7; white-space: pre-wrap; overflow-wrap: anywhere; }
-  &__footer { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; color: var(--muted); font-size: 11px; }
-  :deep(.directory-pagination) { flex-wrap: wrap; justify-content: space-between; gap: 10px; margin-top: 0; padding: 14px 0 0; border: 0; border-radius: 0; background: transparent; }
-  :deep(.directory-pagination__status) { flex-basis: auto; order: 0; font-size: 11px; text-align: left; }
+  display: grid; gap: 16px; min-width: 0; margin: 24px 0;
+  &__heading { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 12px 16px; h2 { @include public-profile-layout.section-title; scroll-margin-top: 150px; } p { @include public-profile-layout.section-intro; } }
+  &__filters { min-width: 0; max-width: 100%; :deep(.profile-tabs) { margin: 0; } }
+  &__surface { display: grid; grid-template-columns: 220px minmax(0, 1fr); align-items: start; gap: 16px;
+    > * { grid-column: 2; min-width: 0; }
+    > p { margin: 0; padding: 22px; border: 1px dashed var(--hairline); border-radius: 24px; color: var(--muted-text); font-size: 14px; }
+  }
+  &__summary { @include public-profile-layout.card; grid-column: 1; grid-row: span 3; display: grid; align-content: start; gap: 4px; padding: 22px;
+    p { margin: 2px 0 0; color: var(--muted-text); font-size: 13px; }
+  }
+  &__average { color: var(--forest); font: 400 56px/1 var(--serif); }
+  &__stars { display: flex; align-items: center; gap: 2px; margin-top: 6px; color: var(--coral); }
+  &__list { display: grid; gap: 12px; }
+  article { @include public-profile-layout.card; display: grid; gap: 8px; padding: 20px 22px; }
+  &__identity { display: flex; align-items: center; gap: 12px; min-width: 0; > div { flex: 1; min-width: 0; } h3 { margin: 0; color: var(--ink); font-family: inherit; font-size: 15px; font-weight: 600; } }
+  &__avatar { display: grid; flex: 0 0 40px; place-items: center; height: 40px; border-radius: 50%; color: var(--forest); background: var(--surface); font-size: 14px; font-weight: 600; }
+  &__demo { justify-self: start; }
+  &__badge { padding: 4px 10px; border-radius: var(--radius-pill); background: var(--surface); color: var(--forest); font-size: 12px; white-space: nowrap; }
+  small { display: block; margin-top: 2px; color: var(--muted-text); font-size: 13px; overflow-wrap: anywhere; }
+  blockquote { margin: 0; font-size: 15px; line-height: 1.6; white-space: pre-wrap; overflow-wrap: anywhere; }
+  &__footer { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; color: var(--muted-text); font-size: 13px; }
+  :deep(.directory-pagination) { grid-column: 1 / -1; flex-wrap: wrap; justify-content: space-between; gap: 10px; margin-top: 0; padding: 4px 0 0; border: 0; border-radius: 0; background: transparent; }
+  :deep(.directory-pagination__status) { flex-basis: auto; order: 0; font-size: 13px; text-align: left; }
   :deep(.directory-pagination__controls), :deep(.directory-pagination__pages) { gap: 5px; }
-  :deep(.directory-pagination__controls button) { width: 32px; height: 32px; min-width: 32px; border: 1px solid #dce2d9; border-radius: 7px; color: var(--forest); background: #fffefa; }
-  :deep(.directory-pagination__controls button[aria-current=page]) { border-color: var(--forest); color: #fffefa; background: var(--forest); font-weight: 500; }
-  @media (max-width: 760px) { &__surface { padding: 16px; } :deep(.directory-pagination__controls button) { width: 44px; height: 44px; min-width: 44px; } }
+  :deep(.directory-pagination__controls button) { width: 36px; height: 36px; min-width: 36px; border: 0; border-radius: 50%; color: var(--forest); background: var(--surface); }
+  :deep(.directory-pagination__controls button[aria-current=page]) { color: #fffefa; background: var(--forest); font-weight: 600; }
+  @media (max-width: 760px) {
+    &__surface { grid-template-columns: minmax(0, 1fr); > * { grid-column: 1; } }
+    &__summary { grid-row: auto; grid-template-columns: auto minmax(0, 1fr); align-items: center; column-gap: 16px; }
+    &__average { grid-row: span 2; }
+    :deep(.directory-pagination__controls button) { width: 44px; height: 44px; min-width: 44px; }
+  }
 }
 </style>

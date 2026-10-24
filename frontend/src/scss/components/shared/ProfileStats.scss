@@ -1,0 +1,59 @@
+@use '../../breakpoints';
+
+// Quiet numbers strip under a public profile hero.
+.profile-stats {
+  display: grid;
+  grid-template-columns: repeat(var(--stat-count, 2), minmax(0, 1fr));
+  grid-column: 1 / -1;
+  margin: 0;
+  border-block: 1px solid var(--hairline);
+
+  &__item {
+    display: grid;
+    gap: 2px;
+    min-width: 0;
+    padding: 16px 20px;
+    text-align: center;
+  }
+
+  &__item + &__item { border-left: 1px solid var(--hairline); }
+
+  dt {
+    color: var(--muted-text);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+  }
+
+  dd {
+    display: grid;
+    gap: 2px;
+    margin: 0;
+  }
+
+  strong {
+    color: var(--ink);
+    font-size: 24px;
+    font-variant-numeric: tabular-nums;
+    font-weight: 700;
+    line-height: 1.25;
+  }
+
+  span {
+    color: var(--muted-text);
+    font-size: 13px;
+  }
+}
+
+@include breakpoints.down(760px) {
+  .profile-stats {
+    grid-template-columns: repeat(min(var(--stat-count, 2), 2), minmax(0, 1fr));
+
+    &__item { padding: 12px 8px; }
+    &__item:nth-child(odd) { border-left: 0; }
+    &__item:nth-child(n + 3) { border-top: 1px solid var(--hairline); }
+    strong { font-size: 20px; }
+    span { font-size: 12px; }
+  }
+}

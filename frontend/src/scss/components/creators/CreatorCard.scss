@@ -65,9 +65,20 @@
     }
   }
 
-  &__featured {
+  &__badges {
+    position: absolute;
+    z-index: 2;
     top: 10px;
+    right: 10px;
     left: 10px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    min-width: 0;
+  }
+
+  &__badges &__featured {
+    position: static;
   }
 
   &__metric {
@@ -177,7 +188,7 @@
       font-size: 11px;
     }
 
-    &__featured { top: 8px; left: 8px; }
+    &__badges { top: 8px; right: 8px; left: 8px; }
     &__metric { bottom: 8px; left: 8px; }
   }
 }

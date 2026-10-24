@@ -56,6 +56,10 @@
     }
   }
 
+  &__link-short {
+    display: none;
+  }
+
   &__control {
     width: 36px;
     height: 36px;
@@ -83,10 +87,27 @@
 @include breakpoints.down(760px) {
   .card-row {
     &__head {
-      flex-direction: column;
       align-items: flex-start;
-      gap: 6px;
+      gap: 12px;
       margin-bottom: 14px;
+    }
+
+    &__actions {
+      padding-top: 8px;
+    }
+
+    &__link-long {
+      // Visually hidden on phones, still read by screen readers.
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+    }
+
+    &__link-short {
+      display: inline;
     }
 
     h2 {

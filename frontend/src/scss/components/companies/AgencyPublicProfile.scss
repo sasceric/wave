@@ -1,39 +1,85 @@
 @use '../../breakpoints';
 @use '../../public-profile-layout';
+
+// Public agency profile, matching the approved profile prototype.
+// Cover (340/130px tall) and logo (104/85/65px) keep their previous display sizes, matching the upload hints.
 .agency-public-profile {
-  padding-top: 24px; padding-bottom: 70px;
-  &__breadcrumb { display: flex; flex-wrap: wrap; align-items: center; gap: 9px; margin-bottom: 18px; font-size: 12px; color: var(--muted); a { text-decoration: none; } .presentation-demo-badge { margin-left: auto; } }
-  &__cover { height: 340px; overflow: hidden; border-radius: 18px; background: var(--forest); img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: center; } }
-  &__hero { display: grid; grid-template-columns: 104px minmax(0, 1fr) auto; gap: 23px; align-items: start; padding: 24px 0 27px; }
-  &__logo { position: relative; width: 104px; height: 104px; margin-top: -49px; border: 5px solid var(--paper); border-radius: 22px; background: var(--paper); overflow: hidden; img, .wave-logo { width: 100%; height: 100%; object-fit: cover; } }
-  &__identity { min-width: 0; .eyebrow { font-size: 12px; margin: 0 0 7px; color: var(--muted); } h1 { display: flex; align-items: center; gap: 8px; margin: 0; font-size: 40px; line-height: 1.12; } }
-  &__intro { max-width: 600px; margin: 10px 0 13px; font-size: 14px; line-height: 1.65; color: var(--muted); }
-  &__inline { display: flex; flex-wrap: wrap; gap: 8px 18px; align-items: center; color: var(--muted); font-size: 12px; > span { display: inline-flex; align-items: center; gap: 5px; } a { text-decoration: none; } }
-  &__actions { display: grid; gap: 10px; min-width: 185px; .agency-contact-actions { display: grid; gap: 8px; margin: 0; width: auto; .button { border-radius: var(--radius-pill); min-height: 40px; padding: 9px 13px; font-size: 14px; justify-content: center; &:first-child { background: var(--forest); border-color: var(--forest); color: #fffefa; } &:nth-child(2) { background: var(--card); color: var(--forest); border: 1px solid #bfcbbf; } } } }
-  &__availability { display: flex; justify-content: center; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); &.is-available::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: #3f7758; } }
-  > .profile-section-nav { margin-bottom: 26px; }
-  [id^='company-'] { scroll-margin-top: 100px; }
-  .agency-profile-layout { display: grid; @include public-profile-layout.columns; align-items: start; margin: 0; &__main { display: grid; min-width: 0; gap: 30px; } &__sidebar { display: grid; min-width: 0; gap: 16px; } }
-  &__section-heading { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 9px; margin-bottom: 14px; h2 { font-size: 28px; margin: 0; color: var(--forest); } p { flex-basis: 100%; margin: 0; font-size: 12px; color: var(--muted); } .text-link { font-size: 12px; } }
-  .agency-services__grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; gap: 13px; }
+  padding-top: 20px; padding-bottom: 96px;
+  &__breadcrumb { @include public-profile-layout.breadcrumbs; }
+  &__cover { position: relative; height: 340px; overflow: hidden; border-radius: 32px; background: var(--surface);
+    img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: center; }
+    &::after { position: absolute; inset: 0; background: linear-gradient(180deg, transparent 40%, rgba(20, 34, 30, .38)); content: ''; }
+  }
+  &__hero { position: relative; z-index: 2; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: start; gap: 24px; padding: 18px 28px 28px; }
+  &__logo { position: relative; width: 104px; height: 104px; margin-top: -60px; overflow: hidden; border: 5px solid var(--paper); border-radius: 26px; background: var(--forest); box-shadow: var(--shadow-soft); img, .wave-logo { width: 100%; height: 100%; object-fit: cover; } }
+  &__identity { display: grid; gap: 10px; min-width: 0; padding-bottom: 4px;
+    .eyebrow { margin: 0; color: var(--coral-text); font-size: 12px; font-weight: 700; letter-spacing: .14em; }
+    h1 { display: flex; align-items: center; gap: 8px; margin: 0; color: var(--forest); font-family: var(--serif); font-size: 48px; font-weight: 400; letter-spacing: -.015em; line-height: 1; overflow-wrap: anywhere; }
+  }
+  &__intro { max-width: 52ch; margin: 0; color: var(--muted-text); font-size: 19px; line-height: 1.45; text-wrap: balance; }
+  &__inline { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; color: var(--muted-text); font-size: 14px; > span { display: inline-flex; align-items: center; gap: 6px; } a { color: inherit; text-decoration: none; } }
+  &__actions { align-self: center; .agency-contact-actions { display: flex; flex-wrap: wrap; gap: 10px; margin: 0; .button { margin: 0; } } }
+  &__availability { display: inline-flex; align-items: center; gap: 6px; &.is-available::before { width: 8px; height: 8px; border-radius: 50%; background: #4f9a72; box-shadow: 0 0 0 3px rgba(79, 154, 114, .18); content: ''; } }
+  > .profile-stats { margin-top: 8px; }
+  > .profile-section-bar { margin-bottom: 8px; }
+  [id^='company-'] { scroll-margin-top: 160px; }
+
+  .agency-profile-layout { display: grid; grid-template-columns: minmax(0, 1fr) 340px; align-items: start; gap: 32px; margin: 0; padding-top: 8px;
+    &__main { display: grid; grid-template-columns: minmax(0, 1fr); gap: 56px; min-width: 0; > * { min-width: 0; margin: 0; } }
+    &__sidebar { display: grid; align-content: start; gap: 14px; min-width: 0; }
+  }
+  &__section-heading { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 8px 16px; margin-bottom: 16px; h2 { @include public-profile-layout.section-title; } p { @include public-profile-layout.section-intro; flex-basis: 100%; } .text-link { display: inline-flex; align-items: center; gap: 4px; color: var(--forest); font-size: 14px; font-weight: 600; } }
+  .agency-services__grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; gap: 12px; }
   .profile-reviews { margin: 0; }
-  .profile-faqs { margin: 0; padding: 0; .faq-section { padding: 0; } }
-  &__about { min-width: 0; padding: 18px; background: var(--card); border: 1px solid #dce2d9; border-radius: 14px; h2 { font-size: 24px; margin: 0 0 12px; } .profile-bio { font-size: 12px; color: var(--muted); line-height: 1.7; } }
-  &__tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 13px; span { padding: 4px 8px; background: var(--sage); border-radius: 20px; color: var(--forest); font-size: 12px; } }
-  &__facts { display: grid; gap: 14px; border-top: 1px solid #dce2d9; margin: 18px 0 0; padding-top: 16px; > div { display: flex; align-items: flex-start; gap: 8px; > svg { color: var(--muted); margin-top: 3px; } } dt { color: var(--muted); font-size: 12px; } dd { margin: 2px 0 0; font-size: 12px; color: var(--forest); } }
-  &__social { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 17px; a { display: grid; place-items: center; width: 34px; height: 34px; border: 1px solid #dce2d9; border-radius: 50%; color: var(--forest); &:focus-visible { outline: 2px solid var(--forest); outline-offset: 3px; } } }
-  &__video { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; margin-top: 15px; }
-  &__campaigns { margin-top: 68px; }
-  .agency-public-profile__campaign-grid { @include public-profile-layout.campaigns; }
+  .profile-faqs { margin: 0; padding: 0; }
+  &__about { display: grid; gap: 16px; min-width: 0; h2 { @include public-profile-layout.section-title; } }
+  &__about-card { @include public-profile-layout.card; padding: 22px; color: var(--ink); font-size: 16px; line-height: 1.6; :deep(p), p { margin: 0 0 12px; max-width: 64ch; } }
+  &__tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; span { padding: 4px 11px; border-radius: var(--radius-pill); background: var(--surface); color: var(--ink); font-size: 13px; } }
+  &__facts { @include public-profile-layout.card; display: grid; margin: 0; padding: 8px 22px;
+    > div { display: grid; grid-template-columns: 22px 100px minmax(0, 1fr); align-items: start; gap: 10px; padding: 12px 0; font-size: 14px; > svg { margin-top: 2px; color: var(--muted-text); } }
+    > div + div { border-top: 1px solid var(--hairline); }
+    dt { color: var(--muted-text); }
+    dd { margin: 0; color: var(--ink); font-weight: 600; text-align: right; overflow-wrap: anywhere; }
+  }
+  &__social-row { grid-template-columns: minmax(0, 1fr) !important; }
+  &__social { display: flex; flex-wrap: wrap; justify-content: flex-start; gap: 8px; a { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 50%; color: var(--forest); background: var(--surface); &:focus-visible { outline: 2px solid var(--forest); outline-offset: 3px; } } }
+  &__video { display: inline-flex; align-items: center; gap: 6px; padding-inline: 4px; font-size: 14px; }
+  .agency-public-profile__campaign-grid.campaign-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px 18px; }
   > .marketplace-safety-actions { justify-content: flex-end; margin-top: 25px; }
+
+  @media (min-width: 1051px) and (min-height: 820px) {
+    .agency-profile-layout__sidebar { position: sticky; top: 150px; }
+  }
 }
-@include breakpoints.down(1000px) { .agency-public-profile { &__hero { grid-template-columns: 85px minmax(0, 1fr); gap: 17px; } &__logo { width: 85px; height: 85px; } &__actions { grid-column: 2; justify-self: start; min-width: 0; .agency-contact-actions { display: flex; flex-wrap: wrap; } } &__availability { justify-content: start; } } }
+
+@include breakpoints.down(1000px) {
+  .agency-public-profile__logo { width: 85px; height: 85px; margin-top: -50px; border-radius: 22px; }
+}
+
+@include breakpoints.down(1050px) {
+  .agency-public-profile {
+    .agency-profile-layout { grid-template-columns: minmax(0, 1fr); }
+    .agency-profile-layout__sidebar { grid-template-columns: repeat(2, minmax(0, 1fr)); padding-top: 32px; }
+    .agency-public-profile__campaign-grid.campaign-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    &__hero { grid-template-columns: auto minmax(0, 1fr); }
+    &__actions { grid-column: 2; }
+  }
+}
+
 @include breakpoints.down(760px) {
   .agency-public-profile {
-    padding-top: 18px; &__cover { height: 130px; border-radius: var(--radius-pill); } &__hero { grid-template-columns: 65px minmax(0, 1fr); gap: 12px; padding: 20px 0; } &__logo { width: 65px; height: 65px; margin-top: -39px; border-width: 4px; border-radius: var(--radius-pill); } &__identity h1 { font-size: 32px; } &__identity .eyebrow { font-size: 14px; } &__intro { font-size: 14px; margin: 8px 0 11px; } &__inline { font-size: 14px; gap: 7px 12px; } &__actions { grid-column: 1/-1; width: 100%; justify-self: stretch; margin-top: 6px; .agency-contact-actions { display: grid; grid-template-columns: 1fr 1fr; .button { min-height: 44px; padding: 9px 7px; font-size: 14px; flex: initial; } } } &__availability { justify-content: center; }
-    > .profile-section-nav { gap: 15px; justify-content: space-between; margin-bottom: 23px; a { font-size: 12px; } }
-    .agency-profile-layout { display: flex; flex-direction: column; gap: 27px; &__main, &__sidebar { display: contents; } &__main > *, &__sidebar > * { width: 100%; min-width: 0; } #company-services { order: 0; } #company-works { order: 1; } #company-packages { order: 2; } #company-reviews { order: 3; } #company-faqs { order: 4; } #company-about { order: 5; } }
+    padding-top: 12px; padding-bottom: 130px;
+    &__breadcrumb { padding-bottom: 8px; }
+    &__cover { height: 130px; border-radius: 24px; }
+    &__hero { grid-template-columns: minmax(0, 1fr); gap: 10px; padding: 0 4px 18px; }
+    &__logo { width: 65px; height: 65px; margin-top: -40px; border-width: 4px; border-radius: 18px; }
+    &__identity h1 { font-size: 30px; }
+    &__intro { font-size: 15px; }
+    &__inline { gap: 4px 12px; font-size: 13px; }
+    &__actions { grid-column: 1; .agency-contact-actions { display: none; } }
+    .agency-profile-layout { gap: 40px; &__main { gap: 44px; } &__sidebar { grid-template-columns: minmax(0, 1fr); padding-top: 0; .profile-action-card { display: none; } } }
     .agency-services__grid { grid-template-columns: minmax(0, 1fr); }
-    &__section-heading h2 { font-size: 25px; } &__campaigns { margin-top: 48px; } &__about { padding: 16px; }
+    &__section-heading { flex-direction: column; align-items: flex-start; gap: 4px; }
+    .agency-public-profile__campaign-grid.campaign-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px 12px; }
   }
 }

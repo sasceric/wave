@@ -1,5 +1,5 @@
 <script setup>
-import { nextTick, ref, watch } from 'vue'
+import { nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 const props = defineProps({
   items: { type: Array, required: true },
   modelValue: { type: String, default: '' },
@@ -9,7 +9,50 @@ const props = defineProps({
 })
 const emit = defineEmits(['update:modelValue'])
 const root = ref(null)
+// Section mode: the active link follows the section under the sticky bar while scrolling.
+let spyFrame = 0
+let lockUntil = 0
+function sectionOffset() {
+  const bar = root.value?.closest('.profile-section-bar') || root.value
+  return (bar?.getBoundingClientRect().bottom || 0) + 24
+}
+function spy() {
+  spyFrame = 0
+  if (!props.sections || Date.now() < lockUntil) return
+  const offset = sectionOffset()
+  let current = ''
+  for (const item of props.items) {
+    const section = document.getElementById(item.key)
+    if (section && section.getBoundingClientRect().top <= offset) current = item.key
+  }
+  // At the very bottom the last short section can never reach the bar; select it anyway.
+  if (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 2) current = props.items.at(-1)?.key || current
+  if (current && current !== props.modelValue) emit('update:modelValue', current)
+}
+function queueSpy() {
+  if (!spyFrame) spyFrame = window.requestAnimationFrame(spy)
+}
+function revealActive() {
+  const link = root.value?.querySelector('[aria-current="location"]')
+  if (!root.value || !link) return
+  const nav = root.value.getBoundingClientRect()
+  const box = link.getBoundingClientRect()
+  if (box.left < nav.left || box.right > nav.right) root.value.scrollTo({ left: root.value.scrollLeft + box.left - nav.left - 12, behavior: 'smooth' })
+}
+onMounted(() => {
+  if (!props.sections) return
+  window.addEventListener('scroll', queueSpy, { passive: true })
+  window.addEventListener('resize', queueSpy, { passive: true })
+  queueSpy()
+})
+onBeforeUnmount(() => {
+  window.removeEventListener('scroll', queueSpy)
+  window.removeEventListener('resize', queueSpy)
+  if (spyFrame) window.cancelAnimationFrame(spyFrame)
+})
 function choose(item, event) {
+  // Keep the clicked tab selected while the page scrolls to it.
+  lockUntil = Date.now() + 900
   emit('update:modelValue', item.key)
   const behavior = window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth'
   if (props.sections) document.getElementById(item.key)?.scrollIntoView({ behavior, block: 'start' })
@@ -39,8 +82,8 @@ function scrollTabs(event) {
   tabs.scrollLeft = next
 }
 watch(() => props.modelValue, async () => {
-  if (props.sections) return
   await nextTick()
+  if (props.sections) { revealActive(); return }
   root.value?.querySelector('[aria-selected="true"], [aria-current="location"]')?.scrollIntoView({ block: 'nearest', inline: 'nearest' })
 })
 </script>

@@ -4,6 +4,7 @@ import { useI18n } from 'vue-i18n'
 import { ArrowRight, Building2, CirclePlus, FolderKanban, Mail, Megaphone, MessageCircle, Send, UserRound, UserRoundPen, UsersRound } from '@lucide/vue'
 import AudienceCard from '../components/shared/AudienceCard.vue'
 import CardRow from '../components/shared/CardRow.vue'
+import PromoSlider from '../components/shared/PromoSlider.vue'
 import ContactFormModal from '../components/shared/ContactFormModal.vue'
 import CountryDirectoryLinks from '../components/shared/CountryDirectoryLinks.vue'
 import DirectorySkeletonCard from '../components/shared/DirectorySkeletonCard.vue'
@@ -32,7 +33,6 @@ const creatorMode = ref('latest')
 const contactOpen = ref(false)
 const stepsAudience = ref('creator')
 
-const categoryKeys = ['beauty', 'fashion', 'food', 'lifestyle', 'travel', 'wellness']
 const siteFaqItems = computed(() => Array.from({ length: 5 }, (_, index) => ({
   id: `site-${index + 1}`,
   question: t(`siteFaq.question${index + 1}`),
@@ -89,6 +89,30 @@ const brandImage = {
   height: 900,
 }
 
+const promoSlides = computed(() => [
+  {
+    key: 'creators',
+    to: '/creators',
+    title: t('home.promoCreatorsTitle'),
+    text: t('home.promoCreatorsText'),
+    image: {
+      src: '/images/sunlit-profile-768.webp',
+      srcset: '/images/sunlit-profile-480.webp 480w, /images/sunlit-profile-768.webp 768w, /images/sunlit-profile.webp 1122w',
+      sizes: '(max-width: 760px) calc(100vw - 40px), 50vw',
+      width: 1122,
+      height: 1402,
+      position: '50% 28%',
+    },
+  },
+  {
+    key: 'campaigns',
+    to: '/campaigns',
+    title: t('home.promoCampaignsTitle'),
+    text: t('home.promoCampaignsText'),
+    image: { src: '/images/companies-hero.webp', sizes: '(max-width: 760px) calc(100vw - 40px), 50vw', width: 900, height: 600, position: '60% 50%' },
+  },
+])
+
 async function loadHome() {
   loading.value = true
   creatorsError.value = ''
@@ -112,19 +136,12 @@ onMounted(loadHome)
 
 <template>
   <div class="home">
-    <section class="home-hero page-width" aria-labelledby="home-title">
-      <p class="eyebrow home-hero__eyebrow">{{ t('home.kicker') }}</p>
-      <h1 id="home-title">
-        <template v-if="currentUser && greetingName">{{ t('home.greetingLead') }} <em>{{ greetingName }}.</em></template>
+    <section class="home-hero home-hero--search page-width" :aria-labelledby="currentUser ? 'home-title' : undefined" :aria-label="currentUser ? undefined : t('globalSearch.search')">
+      <h1 v-if="currentUser" id="home-title">
+        <template v-if="greetingName">{{ t('home.greetingLead') }} <em>{{ greetingName }}.</em></template>
         <template v-else>{{ t('home.heroTitleLead') }} <em>{{ t('home.heroTitleEmphasis') }}</em></template>
       </h1>
-      <p class="home-hero__lede">{{ t('siteFaq.answer1') }}</p>
       <div class="home-hero__search"><HeaderCreatorSearch variant="hero" /></div>
-      <nav class="home-hero__chips" :aria-label="t('home.popularCategories')">
-        <LocalizedLink v-for="key in categoryKeys" :key="key" class="home-hero__chip" :to="{ path: '/creators', query: { q: t(`categories.${key}`) } }">
-          {{ t(`categories.${key}`) }}
-        </LocalizedLink>
-      </nav>
     </section>
 
     <section v-if="currentUser" class="home-shortcuts page-width" :aria-label="t('home.shortcutsLabel')">
@@ -139,7 +156,55 @@ onMounted(loadHome)
         :badge-label="item.badge ? `${item.title} (${item.badge})` : ''"
       />
     </section>
-    <div v-else class="home-audiences page-width">
+    <PromoSlider class="home-promos page-width" :slides="promoSlides" :label="t('home.promoLabel')" />
+
+    <CardRow
+      class="home-row page-width"
+      kind="creator"
+      :title="creatorMode === 'featured' ? t('home.featuredCreatorsTitle') : t('home.creatorsRowTitle')"
+      :description="t('home.creatorsRowText')"
+      link-to="/creators"
+      :link-label="t('home.allCreators')"
+      :link-short-label="t('home.allCreatorsShort')"
+      :busy="loading"
+      :show-grid="!creatorsError && Boolean(creators.length || loading)"
+    >
+      <template #status>
+        <StatusMessage v-if="creatorsError" variant="error">{{ creatorsError }}</StatusMessage>
+        <StatusMessage v-else-if="!loading && !creators.length" variant="empty">{{ t('home.emptyCreators') }}</StatusMessage>
+      </template>
+      <CreatorCard v-for="creator in creators" :key="creator.id" :creator="creator" :image-sizes="HOME_IMAGE_SIZES" />
+      <DirectorySkeletonCard v-for="index in loading && !creators.length ? 4 : 0" :key="`loading-${index}`" kind="creator" />
+      <span v-if="loading" class="sr-only" role="status">{{ t('home.loadingCreators') }}</span>
+      <template #after><CountryDirectoryLinks class="home-row__countries" compact /></template>
+    </CardRow>
+
+    <CardRow
+      class="home-row page-width"
+      kind="campaign"
+      :title="t('home.campaignsRowTitle')"
+      :description="t('home.campaignsRowText')"
+      link-to="/campaigns"
+      :link-label="t('home.allCampaigns')"
+      :link-short-label="t('home.allCampaignsShort')"
+      :busy="loading"
+      :show-grid="!campaignsError && Boolean(campaigns.length || loading)"
+    >
+      <template #status>
+        <StatusMessage v-if="campaignsError" variant="error">{{ campaignsError }}</StatusMessage>
+        <StatusMessage v-else-if="!loading && !campaigns.length" variant="empty">{{ t('home.emptyCampaigns') }}</StatusMessage>
+      </template>
+      <CampaignCard v-for="campaign in campaigns" :key="campaign.id" :campaign="campaign" :image-sizes="HOME_IMAGE_SIZES" />
+      <DirectorySkeletonCard v-for="index in loading && !campaigns.length ? 4 : 0" :key="`loading-${index}`" kind="campaign" />
+      <span v-if="loading" class="sr-only" role="status">{{ t('home.loadingCampaigns') }}</span>
+    </CardRow>
+
+    <section v-if="!currentUser" class="home-hero home-hero--statement page-width" aria-labelledby="home-title">
+      <p class="eyebrow home-hero__eyebrow">{{ t('home.kicker') }}</p>
+      <h1 id="home-title">{{ t('home.heroTitleLead') }} <em>{{ t('home.heroTitleEmphasis') }}</em></h1>
+      <p class="home-hero__lede">{{ t('siteFaq.answer1') }}</p>
+    </section>
+    <div v-if="!currentUser" class="home-audiences page-width">
       <AudienceCard
         :eyebrow="t('home.forCreators')"
         :title="t('home.creatorsDoorTitle')"
@@ -166,45 +231,6 @@ onMounted(loadHome)
         </template>
       </AudienceCard>
     </div>
-
-    <CardRow
-      class="home-row page-width"
-      kind="creator"
-      :title="creatorMode === 'featured' ? t('home.featuredCreatorsTitle') : t('home.creatorsRowTitle')"
-      :description="t('home.creatorsRowText')"
-      link-to="/creators"
-      :link-label="t('home.allCreators')"
-      :busy="loading"
-      :show-grid="!creatorsError && Boolean(creators.length || loading)"
-    >
-      <template #status>
-        <StatusMessage v-if="creatorsError" variant="error">{{ creatorsError }}</StatusMessage>
-        <StatusMessage v-else-if="!loading && !creators.length" variant="empty">{{ t('home.emptyCreators') }}</StatusMessage>
-      </template>
-      <CreatorCard v-for="creator in creators" :key="creator.id" :creator="creator" :image-sizes="HOME_IMAGE_SIZES" />
-      <DirectorySkeletonCard v-for="index in loading && !creators.length ? 4 : 0" :key="`loading-${index}`" kind="creator" />
-      <span v-if="loading" class="sr-only" role="status">{{ t('home.loadingCreators') }}</span>
-      <template #after><CountryDirectoryLinks class="home-row__countries" compact /></template>
-    </CardRow>
-
-    <CardRow
-      class="home-row page-width"
-      kind="campaign"
-      :title="t('home.campaignsRowTitle')"
-      :description="t('home.campaignsRowText')"
-      link-to="/campaigns"
-      :link-label="t('home.allCampaigns')"
-      :busy="loading"
-      :show-grid="!campaignsError && Boolean(campaigns.length || loading)"
-    >
-      <template #status>
-        <StatusMessage v-if="campaignsError" variant="error">{{ campaignsError }}</StatusMessage>
-        <StatusMessage v-else-if="!loading && !campaigns.length" variant="empty">{{ t('home.emptyCampaigns') }}</StatusMessage>
-      </template>
-      <CampaignCard v-for="campaign in campaigns" :key="campaign.id" :campaign="campaign" :image-sizes="HOME_IMAGE_SIZES" />
-      <DirectorySkeletonCard v-for="index in loading && !campaigns.length ? 4 : 0" :key="`loading-${index}`" kind="campaign" />
-      <span v-if="loading" class="sr-only" role="status">{{ t('home.loadingCampaigns') }}</span>
-    </CardRow>
 
     <section id="how-it-works" class="home-steps page-width" aria-labelledby="home-steps-title">
       <div class="home-steps__panel">

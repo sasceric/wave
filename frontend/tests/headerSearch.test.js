@@ -84,8 +84,9 @@ test('shrinking a query below three characters ignores a pending result and clea
 test('submit followed by see all logs once and routes the selected category with localized query', async () => {
   const { state, logs, navigations, locale } = await searchSetup()
   locale.value = 'en'
-  state.type.value = 'companies'
   state.query.value = '  Natura  '
+  await nextTick()
+  state.type.value = 'companies'
   await nextTick()
   await state.handleSubmit()
   state.seeAll()
@@ -168,4 +169,21 @@ test('closing from a result button restores input focus without reopening sugges
   await nextTick()
   assert.equal(state.open.value, false)
   assert.equal(state.loading.value, false)
+})
+
+test('a new search starts on the first tab and falls back to the first tab with results', async () => {
+  const { state, calls } = await searchSetup(async () => ({ data: { creators: [], campaigns: [{ id: 7, title: 'Kampanja' }], companies: [{ id: 3 }] }, meta: { counts: { creators: 0, campaigns: 1, companies: 1 } } }))
+  state.type.value = 'companies'
+  await nextTick()
+  state.query.value = 'kampanja'
+  await nextTick()
+  await state.loadSuggestions()
+  assert.equal(state.type.value, 'campaigns')
+  assert.equal(state.results.value[0].id, 7)
+  state.type.value = 'creators'
+  await nextTick()
+  await state.loadSuggestions()
+  assert.equal(state.type.value, 'creators')
+  assert.equal(state.results.value.length, 0)
+  assert.equal(calls.length, 1)
 })

@@ -1,6 +1,7 @@
 {
   "presentationDemo": {
-    "badge": "Prototype · fictional data"
+    "badge": "Prototype · fictional data",
+    "shortBadge": "Prototype"
   },
   "meta": {
     "title": "Wave — creator and brand partnerships",
@@ -584,7 +585,6 @@
     "heroTitleLead": "Real creators. Real brands.",
     "heroTitleEmphasis": "One place.",
     "greetingLead": "Hi,",
-    "popularCategories": "Popular categories",
     "shortcutsLabel": "Shortcuts",
     "previousCards": "Previous cards",
     "nextCards": "Next cards",
@@ -633,7 +633,15 @@
     "howItWorksMore": "More about how it works",
     "faqHeading": "Questions?",
     "contactOpen": "Write to us",
-    "contactCancel": "Cancel"
+    "contactCancel": "Cancel",
+    "allCreatorsShort": "All",
+    "allCampaignsShort": "All",
+    "promoLabel": "Featured on Wave",
+    "promoSlide": "Slide {index} of {count}",
+    "promoCreatorsTitle": "Creators from the region.",
+    "promoCreatorsText": "Authentic content for modern brands.",
+    "promoCampaignsTitle": "Open campaigns.",
+    "promoCampaignsText": "Brief, budget and deadline visible before you apply."
   },
   "siteFaq": {
     "eyebrow": "GOOD TO KNOW",
@@ -2954,5 +2962,26 @@
       "security_token_no_longer_valid": "The security link is no longer valid or the address is already verified.",
       "reminder_no_longer_current": "The reminder is no longer needed."
     }
+  },
+  "publicProfile": {
+    "statsLabel": "Profile stats",
+    "collaborations": "Collaborations",
+    "collaborationsHint": "completed on Wave",
+    "rating": "Rating",
+    "packagesFrom": "Packages from",
+    "paymentNote": "Wave doesn't process payments. You agree terms and payment directly.",
+    "actionsLabel": "Collaboration",
+    "openNow": "open right now",
+    "openCampaigns": "Open campaigns",
+    "openCampaignsCount": "Open campaigns ({count})",
+    "openCampaignsHint": "Brief, budget and deadline are visible before you apply.",
+    "forCreators": "For creators",
+    "forCreatorsHint": "Apply to an open campaign and agree the collaboration directly.",
+    "view": "View",
+    "brandReviewsTitle": "What it is like to work with us",
+    "brandReviewsHint": "Creator reviews after completed campaigns.",
+    "packagesHint": "Packages with a clear scope and deadline. You agree payment directly.",
+    "howIWork": "How I work",
+    "openCount": "{count} open"
   }
 }

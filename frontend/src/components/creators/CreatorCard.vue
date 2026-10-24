@@ -58,7 +58,10 @@ const startingPrice = computed(() => {
         :src="creator.avatarUrl || CREATOR_PLACEHOLDER"
         :alt="creator.displayName"
       />
-      <span v-if="creator.featured" class="creator-card__featured">{{ t('campaignCard.featured') }}</span>
+      <div v-if="creator.featured || creator.isPresentationDemo" class="creator-card__badges">
+        <span v-if="creator.featured" class="creator-card__featured">{{ t('campaignCard.featured') }}</span>
+        <PresentationDemoBadge v-if="creator.isPresentationDemo" overlay />
+      </div>
       <span
         v-if="primarySocial"
         class="creator-card__metric"
@@ -74,7 +77,6 @@ const startingPrice = computed(() => {
         <strong v-if="startingPrice" class="creator-card__price">{{ startingPrice }}</strong>
       </div>
       <p v-if="creator.city" class="creator-card__place"><MapPin :size="13" aria-hidden="true" /><span>{{ creator.city }}</span></p>
-      <PresentationDemoBadge v-if="creator.isPresentationDemo" compact />
       <RatingSummary v-if="creator.rating?.reviewCount" class="creator-card__rating" :rating="creator.rating" compact />
       <p class="creator-card__categories">{{ categories.join(', ') }}</p>
     </div>

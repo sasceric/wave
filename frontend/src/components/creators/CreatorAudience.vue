@@ -115,21 +115,45 @@ function channelUrl(profile) {
   </section>
 </template>
 <style scoped lang="scss">
+@use '../../scss/public-profile-layout';
+
+// Audience card from the profile prototype: segmented platform switch, metric tiles, country bars.
 .creator-audience {
-  min-width: 0;
-  header { margin-bottom: 14px; h2 { font-size: 25px; margin: 0; color: var(--forest); } p { margin: 5px 0 0; color: var(--muted); font-size: 12px; } }
-  &__surface { padding: 18px; border: 1px solid #dce2d9; border-radius: 14px; background: #fffefa; }
-  &--embedded &__surface { border: 0; border-radius: 0; padding: 0; background: transparent; }
-  &__channel { font-size: 12px; margin: 0 0 16px; overflow-wrap: anywhere; a { display: inline-flex; align-items: center; gap: 6px; color: var(--forest); } }
+  display: grid; gap: 16px; min-width: 0;
+  header { h2 { @include public-profile-layout.section-title; } p { @include public-profile-layout.section-intro; } }
+  &__surface { @include public-profile-layout.card; display: grid; gap: 18px; padding: 22px; > div:not(.creator-audience__tabs) { display: grid; gap: 18px; min-width: 0; } }
+  &--embedded &__surface { padding: 0; border: 0; border-radius: 0; background: transparent; }
+  &__tabs { display: inline-flex; justify-self: start; max-width: 100%; gap: 2px; margin: 0; padding: 3px; overflow-x: auto; border-radius: var(--radius-pill); background: var(--surface); scrollbar-width: none;
+    &::-webkit-scrollbar { display: none; }
+    button { display: inline-flex; flex: none; align-items: center; justify-content: center; gap: 6px; min-height: 34px; padding: 0 16px; border: 0; border-radius: var(--radius-pill); color: var(--muted-text); background: transparent; font: inherit; font-size: 14px; font-weight: 500; white-space: nowrap; cursor: pointer;
+      &[aria-pressed=true] { color: var(--ink); background: var(--card); box-shadow: 0 1px 3px rgba(23, 61, 54, .12); font-weight: 600; }
+      &:focus-visible { outline: 2px solid var(--forest); outline-offset: 1px; }
+    }
+  }
   &__platform-icon { display: inline-block; flex: 0 0 16px; width: 16px; height: 16px; background: currentColor; mask: var(--platform-icon) center / contain no-repeat; }
-  &__tabs { display: flex; flex-wrap: wrap; gap: 7px; margin: 0 0 16px; button { display: inline-flex; align-items: center; justify-content: center; gap: 6px; border: 1px solid #dce2d9; background: transparent; color: var(--muted); border-radius: 8px; padding: 6px 10px; min-height: 34px; font: inherit; font-size: 12px; cursor: pointer; &[aria-pressed=true] { background: var(--forest); border-color: var(--forest); color: #fffefa; } } }
-  &__metrics { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; padding-bottom: 17px; border-bottom: 1px solid #dce2d9; strong { display: block; font-size: 24px; font-weight: 500; color: var(--forest); line-height: 1.2; } span { display: block; font-size: 11px; color: var(--muted); margin-top: 5px; } }
-  &__lower { display: grid; grid-template-columns: 1.2fr 1fr; gap: 26px; padding-top: 15px; h3 { margin: 0 0 10px; font: 600 12px/1.5 'DM Sans', sans-serif; color: var(--forest); } }
-  &__countries { min-width: 0; p { display: flex; justify-content: space-between; gap: 8px; font-size: 11px; margin: 9px 0 4px; } strong { font-weight: 500; } }
-  &__track { display: block; height: 5px; background: #e5ebe2; border-radius: 5px; span { display: block; height: 100%; background: var(--forest); border-radius: 5px; } }
-  &__notes { min-width: 0; p { margin: 0 0 8px; color: var(--muted); font-size: 12px; line-height: 1.7; } strong { color: var(--forest); font-weight: 500; } }
-  &__source { font-size: 11px; line-height: 1.6; color: var(--muted); margin: 12px 0 0; }
-  &__attribution { display: flex; align-items: flex-start; gap: 5px; svg { flex: 0 0 13px; margin-top: 2px; } }
-  @media (max-width: 760px) { &__surface { padding: 16px; } &__tabs button { min-height: 44px; } &__lower { grid-template-columns: minmax(0, 1fr); gap: 18px; } &__metrics { gap: 10px; strong { font-size: 22px; overflow-wrap: anywhere; } } }
+  &__channel { margin: 0; font-size: 14px; font-weight: 600; overflow-wrap: anywhere; a { display: inline-flex; align-items: center; gap: 6px; color: var(--forest); } }
+  &__metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px;
+    > div { display: flex; flex-direction: column-reverse; justify-content: flex-end; gap: 2px; min-width: 0; padding: 16px; border-radius: 18px; background: var(--paper); }
+    strong { display: block; color: var(--ink); font-size: 28px; font-variant-numeric: tabular-nums; font-weight: 700; line-height: 1.2; overflow-wrap: anywhere; }
+    span { display: block; color: var(--muted-text); font-size: 13px; }
+  }
+  &__lower { display: grid; grid-template-columns: 1.2fr 1fr; gap: 24px; h3 { margin: 0 0 10px; color: var(--ink); font: 600 14px/1.5 var(--font-body, 'DM Sans', sans-serif); } }
+  &__countries { display: grid; gap: 10px; min-width: 0;
+    > div { display: grid; grid-template-columns: 110px minmax(0, 1fr) 44px; align-items: center; gap: 12px; font-size: 14px; }
+    p { display: contents; }
+    p strong { order: 3; color: var(--muted-text); font-variant-numeric: tabular-nums; font-weight: 400; text-align: right; }
+    p span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  }
+  &__track { order: 2; display: block; height: 8px; overflow: hidden; border-radius: var(--radius-pill); background: var(--surface); span { display: block; height: 100%; border-radius: inherit; background: var(--forest); } }
+  &__notes { min-width: 0; p { margin: 0 0 8px; color: var(--muted-text); font-size: 14px; line-height: 1.6; } strong { color: var(--ink); font-weight: 600; } }
+  &__source { margin: 0; color: var(--muted-text); font-size: 13px; line-height: 1.5; }
+  &__attribution { display: flex; align-items: center; gap: 6px; svg { flex: 0 0 13px; } }
+  @media (max-width: 760px) {
+    &__surface { padding: 18px; }
+    &__metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); strong { font-size: 24px; } }
+    &__lower { grid-template-columns: minmax(0, 1fr); gap: 18px; }
+    &__countries > div { grid-template-columns: 86px minmax(0, 1fr) 40px; }
+    &__tabs button { min-height: 40px; }
+  }
 }
 </style>

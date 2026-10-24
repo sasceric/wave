@@ -1,6 +1,7 @@
 {
   "presentationDemo": {
-    "badge": "Prototyp · fiktive Daten"
+    "badge": "Prototyp · fiktive Daten",
+    "shortBadge": "Prototyp"
   },
   "meta": {
     "title": "Wave — Kooperationen zwischen Creatorn und Marken",
@@ -584,7 +585,6 @@
     "heroTitleLead": "Echte Creator. Echte Marken.",
     "heroTitleEmphasis": "Ein Ort.",
     "greetingLead": "Hallo,",
-    "popularCategories": "Beliebte Bereiche",
     "shortcutsLabel": "Schnellzugriff",
     "previousCards": "Vorherige Karten",
     "nextCards": "Nächste Karten",
@@ -633,7 +633,15 @@
     "howItWorksMore": "Mehr dazu, wie es funktioniert",
     "faqHeading": "Fragen?",
     "contactOpen": "Schreib uns",
-    "contactCancel": "Abbrechen"
+    "contactCancel": "Abbrechen",
+    "allCreatorsShort": "Alle",
+    "allCampaignsShort": "Alle",
+    "promoLabel": "Auf Wave vorgestellt",
+    "promoSlide": "Folie {index} von {count}",
+    "promoCreatorsTitle": "Creator aus der Region.",
+    "promoCreatorsText": "Authentische Inhalte für moderne Marken.",
+    "promoCampaignsTitle": "Offene Kampagnen.",
+    "promoCampaignsText": "Briefing, Budget und Frist vor der Bewerbung sichtbar."
   },
   "siteFaq": {
     "eyebrow": "GUT ZU WISSEN",
@@ -2954,5 +2962,26 @@
       "security_token_no_longer_valid": "Der Sicherheitslink ist nicht mehr gültig oder die Adresse ist bereits bestätigt.",
       "reminder_no_longer_current": "Die Erinnerung ist nicht mehr erforderlich."
     }
+  },
+  "publicProfile": {
+    "statsLabel": "Profilstatistik",
+    "collaborations": "Kooperationen",
+    "collaborationsHint": "auf Wave abgeschlossen",
+    "rating": "Bewertung",
+    "packagesFrom": "Pakete ab",
+    "paymentNote": "Wave wickelt keine Zahlungen ab. Bedingungen und Zahlung vereinbart ihr direkt.",
+    "actionsLabel": "Zusammenarbeit",
+    "openNow": "aktuell offen",
+    "openCampaigns": "Offene Kampagnen",
+    "openCampaignsCount": "Offene Kampagnen ({count})",
+    "openCampaignsHint": "Briefing, Budget und Frist sind vor der Bewerbung sichtbar.",
+    "forCreators": "Für Creator",
+    "forCreatorsHint": "Bewirb dich auf eine offene Kampagne und vereinbart die Zusammenarbeit direkt.",
+    "view": "Ansehen",
+    "brandReviewsTitle": "So ist die Zusammenarbeit mit uns",
+    "brandReviewsHint": "Bewertungen von Creatorn nach abgeschlossenen Kampagnen.",
+    "packagesHint": "Pakete mit klarem Umfang und Frist. Die Zahlung vereinbart ihr direkt.",
+    "howIWork": "So arbeite ich",
+    "openCount": "{count} offen"
   }
 }
