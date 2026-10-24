@@ -658,6 +658,10 @@ onBeforeUnmount(() => { ++profileGeneration; packageDescriptionObserver?.disconn
           <div class="profile-heading__identity">
             <div class="profile-heading__avatar">
               <img :src="creator.avatarUrl || CREATOR_PLACEHOLDER" :alt="creator.displayName" />
+              <span v-if="availabilityLabel" class="profile-heading__availability" :class="availabilityClass">
+                <span class="profile-heading__availability-dot" aria-hidden="true"></span>
+                <span>{{ availabilityLabel }}</span>
+              </span>
             </div>
             <div class="profile-heading__copy">
               <p class="eyebrow">{{ categoryLabel }}</p>

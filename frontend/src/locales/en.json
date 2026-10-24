@@ -2983,5 +2983,65 @@
     "packagesHint": "Packages with a clear scope and deadline. You agree payment directly.",
     "howIWork": "How I work",
     "openCount": "{count} open"
+  },
+  "authScreen": {
+    "orWithEmail": "or with email",
+    "creatorTypeHint": "Profile, work and campaign applications",
+    "companyTypeHint": "A brand or agency looking for creators",
+    "creatorName": "Full name",
+    "companyName": "Company name",
+    "creatorNamePlaceholder": "e.g. Amina Kovač",
+    "companyNamePlaceholder": "e.g. Studio Wave",
+    "emailExample": "name{'@'}example.com",
+    "passwordTooShort": "Too short: at least 8 characters.",
+    "passwordGood": "Good password.",
+    "passwordStrong": "Strong password.",
+    "privacyNotice": "By signing up you confirm you have read the {privacy}.",
+    "noAccountLead": "No account yet?",
+    "hasAccountLead": "Already have an account?",
+    "registerShort": "Sign up",
+    "forgotTitle": "Forgot your password?",
+    "forgotIntro": "Enter your account email and we will send you a link to set a new password.",
+    "sendResetLink": "Send link",
+    "resetSentTitle": "Check your email.",
+    "resetSentText": "If there is an account for {email}, we have sent a link to set a new password. Check your spam folder too.",
+    "resetNotReceived": "Nothing arrived?",
+    "resetSendAgain": "Send again",
+    "media": {
+      "login": {
+        "eyebrow": "For creators and brands",
+        "title": "Get back to your opportunities.",
+        "text": "Wave connects creative people and brands through authentic collaborations that make sense.",
+        "perk1Title": "Real opportunities",
+        "perk1Text": "Collaborations with brands that share your values.",
+        "perk2Title": "Growth without limits",
+        "perk2Text": "Turn your creativity into long-term opportunities."
+      },
+      "creator": {
+        "eyebrow": "For creators",
+        "title": "Show your work. Find campaigns.",
+        "perk1Title": "A profile that sells",
+        "perk1Text": "Work, audience and packages in one place.",
+        "perk2Title": "Campaigns with a clear budget",
+        "perk2Text": "See the brief, deadline and budget before you apply.",
+        "perk3Title": "Invitations straight from brands",
+        "perk3Text": "Requests and offers arrive in Wave messages."
+      },
+      "company": {
+        "eyebrow": "For brands and agencies",
+        "title": "Find creators. Post a campaign.",
+        "perk1Title": "Search by category and city",
+        "perk1Text": "Public profiles with work, audience and prices.",
+        "perk2Title": "Applications and offers in one place",
+        "perk2Text": "Compare creators and reply in messages.",
+        "perk3Title": "For your own brand or clients",
+        "perk3Text": "Agencies run campaigns for several clients."
+      },
+      "reset": {
+        "eyebrow": "Account security",
+        "title": "A new password in minutes.",
+        "text": "We only send the link to the email address of your Wave account. It is valid for a limited time."
+      }
+    }
   }
 }

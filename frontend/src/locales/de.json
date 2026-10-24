@@ -2983,5 +2983,65 @@
     "packagesHint": "Pakete mit klarem Umfang und Frist. Die Zahlung vereinbart ihr direkt.",
     "howIWork": "So arbeite ich",
     "openCount": "{count} offen"
+  },
+  "authScreen": {
+    "orWithEmail": "oder per E-Mail",
+    "creatorTypeHint": "Profil, Arbeiten und Kampagnenbewerbungen",
+    "companyTypeHint": "Marke oder Agentur auf der Suche nach Creatorn",
+    "creatorName": "Vor- und Nachname",
+    "companyName": "Firmenname",
+    "creatorNamePlaceholder": "z. B. Amina Kovač",
+    "companyNamePlaceholder": "z. B. Studio Wave",
+    "emailExample": "name{'@'}beispiel.de",
+    "passwordTooShort": "Zu kurz: mindestens 8 Zeichen.",
+    "passwordGood": "Gutes Passwort.",
+    "passwordStrong": "Starkes Passwort.",
+    "privacyNotice": "Mit der Registrierung bestätigst du, dass du die {privacy} gelesen hast.",
+    "noAccountLead": "Noch kein Konto?",
+    "hasAccountLead": "Schon ein Konto?",
+    "registerShort": "Registrieren",
+    "forgotTitle": "Passwort vergessen?",
+    "forgotIntro": "Gib die E-Mail-Adresse deines Kontos ein, und wir senden dir einen Link für ein neues Passwort.",
+    "sendResetLink": "Link senden",
+    "resetSentTitle": "Prüfe dein Postfach.",
+    "resetSentText": "Wenn es ein Konto für {email} gibt, haben wir einen Link für ein neues Passwort gesendet. Prüfe auch den Spam-Ordner.",
+    "resetNotReceived": "Nichts angekommen?",
+    "resetSendAgain": "Erneut senden",
+    "media": {
+      "login": {
+        "eyebrow": "Für Creator und Marken",
+        "title": "Zurück zu deinen Chancen.",
+        "text": "Wave verbindet kreative Menschen und Marken durch authentische Kooperationen, die Sinn ergeben.",
+        "perk1Title": "Echte Chancen",
+        "perk1Text": "Kooperationen mit Marken, die deine Werte teilen.",
+        "perk2Title": "Wachstum ohne Grenzen",
+        "perk2Text": "Mach aus deiner Kreativität langfristige Möglichkeiten."
+      },
+      "creator": {
+        "eyebrow": "Für Creator",
+        "title": "Zeig deine Arbeit. Finde Kampagnen.",
+        "perk1Title": "Ein Profil, das überzeugt",
+        "perk1Text": "Arbeiten, Publikum und Pakete an einem Ort.",
+        "perk2Title": "Kampagnen mit klarem Budget",
+        "perk2Text": "Briefing, Frist und Budget siehst du vor der Bewerbung.",
+        "perk3Title": "Einladungen direkt von Marken",
+        "perk3Text": "Anfragen und Angebote kommen in den Wave-Nachrichten an."
+      },
+      "company": {
+        "eyebrow": "Für Marken und Agenturen",
+        "title": "Finde Creator. Veröffentliche eine Kampagne.",
+        "perk1Title": "Suche nach Bereich und Stadt",
+        "perk1Text": "Öffentliche Profile mit Arbeiten, Publikum und Preisen.",
+        "perk2Title": "Bewerbungen und Angebote an einem Ort",
+        "perk2Text": "Vergleiche Creator und antworte in Nachrichten.",
+        "perk3Title": "Für die eigene Marke oder Kunden",
+        "perk3Text": "Agenturen führen Kampagnen für mehrere Kunden."
+      },
+      "reset": {
+        "eyebrow": "Kontosicherheit",
+        "title": "Ein neues Passwort in Minuten.",
+        "text": "Den Link senden wir nur an die E-Mail-Adresse deines Wave-Kontos. Er ist begrenzt gültig."
+      }
+    }
   }
 }

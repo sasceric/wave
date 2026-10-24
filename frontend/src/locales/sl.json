@@ -2984,5 +2984,65 @@
     "packagesHint": "Paketi z jasnim obsegom in rokom. Plačilo se dogovorite neposredno.",
     "howIWork": "Kako delam",
     "openCount": "{count} odprte"
+  },
+  "authScreen": {
+    "orWithEmail": "ali z e-pošto",
+    "creatorTypeHint": "Profil, dela in prijave na kampanje",
+    "companyTypeHint": "Blagovna znamka ali agencija, ki išče ustvarjalce",
+    "creatorName": "Ime in priimek",
+    "companyName": "Ime podjetja",
+    "creatorNamePlaceholder": "Npr. Ana Novak",
+    "companyNamePlaceholder": "Npr. Studio Wave",
+    "emailExample": "ime{'@'}primer.si",
+    "passwordTooShort": "Prekratko: vsaj 8 znakov.",
+    "passwordGood": "Dobro geslo.",
+    "passwordStrong": "Močno geslo.",
+    "privacyNotice": "Z registracijo potrjuješ, da si prebral/a {privacy}.",
+    "noAccountLead": "Nimaš računa?",
+    "hasAccountLead": "Že imaš račun?",
+    "registerShort": "Registriraj se",
+    "forgotTitle": "Pozabljeno geslo?",
+    "forgotIntro": "Vpiši e-naslov računa in poslali ti bomo povezavo za novo geslo.",
+    "sendResetLink": "Pošlji povezavo",
+    "resetSentTitle": "Preveri e-pošto.",
+    "resetSentText": "Če obstaja račun za {email}, smo poslali povezavo za novo geslo. Preveri tudi neželeno pošto.",
+    "resetNotReceived": "Ni prispelo?",
+    "resetSendAgain": "Pošlji znova",
+    "media": {
+      "login": {
+        "eyebrow": "Za ustvarjalce in znamke",
+        "title": "Vrni se k svojim priložnostim.",
+        "text": "Wave povezuje ustvarjalne ljudi in znamke skozi pristna sodelovanja, ki imajo smisel.",
+        "perk1Title": "Prave priložnosti",
+        "perk1Text": "Sodelovanja z znamkami, ki delijo tvoje vrednote.",
+        "perk2Title": "Rast brez meja",
+        "perk2Text": "Ustvarjalnost spremeni v dolgoročne priložnosti."
+      },
+      "creator": {
+        "eyebrow": "Za ustvarjalce",
+        "title": "Pokaži svoje delo. Najdi kampanje.",
+        "perk1Title": "Profil, ki prodaja",
+        "perk1Text": "Dela, občinstvo in paketi na enem mestu.",
+        "perk2Title": "Kampanje z jasnim proračunom",
+        "perk2Text": "Brief, rok in proračun vidiš pred prijavo.",
+        "perk3Title": "Povabila neposredno od znamk",
+        "perk3Text": "Povpraševanja in ponudbe prispejo v sporočila Wave."
+      },
+      "company": {
+        "eyebrow": "Za znamke in agencije",
+        "title": "Najdi ustvarjalce. Objavi kampanjo.",
+        "perk1Title": "Iskanje po področju in mestu",
+        "perk1Text": "Javni profili z deli, občinstvom in cenami.",
+        "perk2Title": "Prijave in ponudbe na enem mestu",
+        "perk2Text": "Primerjaj ustvarjalce in odgovori v sporočilih.",
+        "perk3Title": "Za lastno znamko ali stranke",
+        "perk3Text": "Agencije vodijo kampanje za več strank."
+      },
+      "reset": {
+        "eyebrow": "Varnost računa",
+        "title": "Novo geslo v nekaj minutah.",
+        "text": "Povezavo pošljemo samo na e-naslov tvojega računa Wave. Velja omejen čas."
+      }
+    }
   }
 }

@@ -960,13 +960,8 @@ async function signOut() {
       'site-shell--account': hideSiteFooter,
       'site-shell--home': route.meta.routeName === 'home',
       'site-shell--footer-visible': !hideSiteFooter,
-      'site-shell--registration': route.meta.accountAccessPage
-        && (route.meta.authMode || route.query.mode) === 'register'
-        && !currentUser,
-      'site-shell--auth-splash': route.meta.accountAccessPage
-        && (route.meta.authMode || route.query.mode) !== 'register'
-        && (route.meta.authMode || route.query.mode) !== 'reset'
-        && !currentUser,
+      // Log in, sign up and forgot-password use their own full-screen layout.
+      'site-shell--auth': route.meta.accountAccessPage && !currentUser,
     }"
   >
     <PullToRefresh />
