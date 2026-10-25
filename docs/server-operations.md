@@ -74,6 +74,12 @@ before pagination, including transport totals and individual message types.
 `UnreadMessageReminderTask` runs hourly. Migration `Version20261008090000`
 updates existing 300-second schedules to 3600 seconds and sets their next check
 one hour ahead, preserving paused/running state, active job IDs and history.
+`ProfileReminderTask` runs hourly and sends up to four profile tips emails (days
+1, 4, 10 and 21 after an approved account is first seen) while the profile
+strength is below 100%. It skips accounts that switched tips off; every optional
+email carries a signed one-click `List-Unsubscribe` link (`/api/email/unsubscribe`)
+and a login-free preferences page. Signatures use `APP_SECRET`, so rotating it
+invalidates links in emails already sent.
 For manual deployment, run the same steps and:
 
 On an existing installation, pause the dispatcher and consumers as described in

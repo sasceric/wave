@@ -1,10 +1,10 @@
-const completionRoutes = new Set(['login', 'register', 'forgot-password', 'account-dashboard', 'account', 'account-settings', 'account-support', 'support', 'support-create', 'support-track', 'verify-email', 'reset-password', 'imprint', 'privacy-policy', 'cookie-policy'])
+const completionRoutes = new Set(['login', 'register', 'forgot-password', 'account-dashboard', 'account', 'account-settings', 'account-email-preferences', 'account-profile-guide', 'account-support', 'support', 'support-create', 'support-track', 'verify-email', 'reset-password', 'imprint', 'privacy-policy', 'cookie-policy'])
 
 export function accountAccessRedirect(route, user) {
   if (!user || user.isAdmin || user.isModerator) return null
   const name = route.meta?.routeName
   if (user.profileComplete === false && !completionRoutes.has(name)) return { name: 'account' }
-  const operational = name === 'messages' || name?.startsWith('account-') && !['account-dashboard', 'account-settings', 'account-support'].includes(name)
+  const operational = name === 'messages' || name?.startsWith('account-') && !['account-dashboard', 'account-settings', 'account-email-preferences', 'account-profile-guide', 'account-support'].includes(name)
   if (operational && (!user.approved || !user.emailVerified)) return { name: 'account-dashboard' }
   return null
 }

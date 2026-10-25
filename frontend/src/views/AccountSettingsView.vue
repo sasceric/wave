@@ -44,6 +44,7 @@ const pushHint = computed(() => {
 })
 const visibilitySaving = ref(false)
 const notificationsSaving = ref(false)
+const emailSaving = ref('')
 const signingOut = ref(false)
 const error = ref('')
 const notice = ref('')
@@ -82,6 +83,23 @@ async function updateNotifications(enabled) {
     if (currentUser.value?.id === id) error.value = cause.message
   } finally {
     notificationsSaving.value = false
+  }
+}
+
+// Optional emails. Account, security and collaboration emails are always sent.
+async function updateEmailPreference(key, enabled) {
+  if (!user.value || emailSaving.value) return
+  const id = user.value.id
+  emailSaving.value = key
+  error.value = ''
+  notice.value = ''
+  try {
+    const response = await apiRequest('/me/email-preferences', { method: 'PUT', body: { [key]: enabled === 1 } })
+    if (currentUser.value?.id === id) { setCurrentUser(response.data); notice.value = t('emailPreferences.saved') }
+  } catch (cause) {
+    if (currentUser.value?.id === id) error.value = cause.message
+  } finally {
+    emailSaving.value = ''
   }
 }
 
@@ -141,6 +159,18 @@ async function signOut() {
           </div>
         </div>
         <CampaignAlertSettings v-if="creator && operational" :key="user.id" />
+      </section>
+
+      <section class="account-settings__group" aria-labelledby="settings-emails">
+        <h2 id="settings-emails">{{ t('emailPreferences.group') }}</h2>
+        <div class="account-settings__card">
+          <SwitchField :model-value="user.emailPreferences?.profileTips === false ? 0 : 1" :label="t('emailPreferences.profileTips')" :description="t('emailPreferences.profileTipsHint')" :disabled="Boolean(emailSaving)" @update:model-value="updateEmailPreference('profileTips', $event)" />
+          <SwitchField :model-value="user.emailPreferences?.newsletter === false ? 0 : 1" :label="t('emailPreferences.newsletter')" :description="t('emailPreferences.newsletterHint')" :disabled="Boolean(emailSaving)" @update:model-value="updateEmailPreference('newsletter', $event)" />
+          <div class="account-settings__row account-settings__row--static">
+            <span class="account-settings__icon"><Mail :size="18" aria-hidden="true" /></span>
+            <span class="account-settings__text">{{ t('emailPreferences.always') }}<small>{{ t('emailPreferences.alwaysHint') }}</small></span>
+          </div>
+        </div>
       </section>
 
       <section class="account-settings__group" aria-labelledby="settings-privacy">

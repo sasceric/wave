@@ -47,6 +47,7 @@ framework:
             'App\Message\SendWebPushMessage': push
             'App\Message\PublishRealtimeMessage': realtime
             'App\Message\UnreadMessageReminderTask': background
+            'App\Message\ProfileReminderTask': background
             'App\Message\GenerateThumbnailsMessage': background
             'App\Message\MediaIndexingMessage': background
             'App\Message\CreatorIndexingMessage': background

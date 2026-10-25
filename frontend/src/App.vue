@@ -23,6 +23,7 @@ import { mobileAccountSidebarOpen } from './composables/useMobileAccountSidebar'
 import { setLocale } from './i18n'
 import { apiGet, apiRequest } from './lib/api'
 import { startInboxSync } from './lib/inboxSync'
+import { incompleteProfileScore } from './lib/profileStrength'
 import { startPwaUpdates } from './lib/pwaUpdates'
 import { updateAppBadge } from './lib/appBadge'
 import { notificationDestination, startNotificationNavigation } from './lib/notificationNavigation'
@@ -128,6 +129,7 @@ const mobileNavRole = computed(() => {
   if (!operational || user.isAdmin) return 'member'
   return user.accountType === 'creator' ? 'creator' : 'company'
 })
+const profileHintScore = computed(() => incompleteProfileScore(currentUser.value))
 const meTabActive = computed(() => Boolean(
   ['account', 'verify-email', 'reset-password'].includes(route.meta.routeName)
   || (route.meta.accountSection && !['applications', 'inquiries', 'bookmarks', 'offers', 'invitations', 'campaigns'].includes(route.meta.accountSection))
@@ -1516,12 +1518,13 @@ async function signOut() {
         v-if="currentUser"
         :to="{ name: 'account-dashboard' }"
         class="mobile-bottom-nav__link"
-        :aria-label="t('accountHub.me')"
+        :aria-label="profileHintScore !== null ? `${t('accountHub.me')} (${t('profileStrength.incomplete', { score: profileHintScore })})` : t('accountHub.me')"
         :class="{ 'is-active': meTabActive }"
       >
         <span class="mobile-bottom-nav__avatar">
           <img v-if="currentUser.profile?.avatarUrl || currentUser.profile?.logoUrl" :src="currentUser.profile?.avatarUrl || currentUser.profile?.logoUrl" alt="">
           <UserRound v-else :size="21" stroke-width="1.8" aria-hidden="true" />
+          <span v-if="profileHintScore !== null" class="mobile-bottom-nav__dot" aria-hidden="true" />
         </span>
         <span class="mobile-bottom-nav__label">{{ t('accountHub.me') }}</span>
       </LocalizedLink>

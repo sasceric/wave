@@ -48,5 +48,7 @@
   "account-reviews": "safety.myReviews",
   "account-dashboard": "personalDashboard.title",
   "account-settings": "account.sidebarSettings",
-  "search": "seo.searchTitle"
+  "search": "seo.searchTitle",
+  "account-email-preferences": "emailPreferences.title",
+  "account-profile-guide": "profileGuide.title"
 }

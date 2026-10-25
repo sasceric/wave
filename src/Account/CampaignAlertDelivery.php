@@ -16,6 +16,7 @@ final class CampaignAlertDelivery
         #[Autowire('%env(MAIL_FROM_ADDRESS)%')] private readonly string $fromAddress,
         #[Autowire('%env(MAIL_FROM_NAME)%')] private readonly string $fromName,
         #[Autowire('%env(APP_BASE_URL)%')] private readonly string $baseUrl,
+        private readonly EmailPreferences $preferences,
     ) {}
 
     public function schedule(int $after = 0): void
@@ -43,10 +44,8 @@ final class CampaignAlertDelivery
             if ($rows !== []) {
                 $locale = $user['preferred_locale'];
                 $copy = CampaignAlertEmailCopy::forLocale($locale);
-                $routes = json_decode((string) file_get_contents(__DIR__.'/../../config/localized_routes.json'), true, flags: JSON_THROW_ON_ERROR);
-                $path = $routes[$locale]['account-dashboard'] ?? $routes['bs']['account-dashboard'];
-                $prefixes = json_decode((string) file_get_contents(__DIR__.'/../../config/localized_route_prefixes.json'), true, flags: JSON_THROW_ON_ERROR);
-                $settingsUrl = rtrim($this->baseUrl, '/').(!empty($prefixes[$locale]) ? '/'.$prefixes[$locale] : '').'/'.$path;
+                // Signed page: switching alerts off works without signing in.
+                $settingsUrl = $this->preferences->pageUrl($id, null, $locale);
                 $details = implode("\n", array_map(fn (array $row): string => $row['title'].' · '.$row['name'].' · '.$row['budget_min'].'–'.$row['budget_max'].' '.$row['currency']."\n".rtrim($this->baseUrl, '/').'/kampanje/'.$row['slug'], $rows));
                 $url = rtrim($this->baseUrl, '/').'/kampanje/'.$rows[0]['slug'];
                 $variables = [
@@ -59,6 +58,7 @@ final class CampaignAlertDelivery
                 $email = new Email()->from(new Address($this->fromAddress, $this->fromName))->to(new Address($user['email'], EmailRecipient::cleanName($user['recipient_name'])))->subject($copy['subject'])
                     ->text($variables['greeting']."\n\n".$copy['message']."\n\n".$details."\n\n".$variables['footer'].' '.$settingsUrl)
                     ->html($this->templates->render('campaign_alert', $variables));
+                $this->preferences->addUnsubscribeHeaders($email, $id, EmailPreferences::CAMPAIGN_ALERTS);
                 $this->transport->send($email);
             }
             // Empty windows advance too, preventing repeated scans or empty digests.

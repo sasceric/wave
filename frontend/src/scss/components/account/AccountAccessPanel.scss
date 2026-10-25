@@ -109,6 +109,18 @@
   &__icon { display: grid; place-items: center; width: 56px; height: 56px; margin-bottom: 6px; border-radius: 18px; color: var(--forest); background: rgba(23, 61, 54, .08); }
   &__icon--ok { color: #2f7a52; background: rgba(79, 154, 114, .14); }
   &__submit { min-height: 52px; font-size: 15px; }
+  &__check {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    color: var(--muted-text);
+    font-size: 13px;
+    line-height: 1.45;
+    cursor: pointer;
+
+    input { flex: none; width: 18px; height: 18px; margin: 1px 0 0; accent-color: var(--forest); }
+    strong { color: var(--ink); font-weight: 600; }
+  }
   &__fine { margin: 0; color: var(--muted-text); font-size: 13px; text-align: center; a { color: var(--forest); font-weight: 600; } }
   &__switch {
     margin: 0; color: var(--muted-text); font-size: 14px; text-align: center;

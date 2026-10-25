@@ -55,7 +55,9 @@
     "account-reviews": "racun/recenzije",
     "account-dashboard": "racun/pregled",
     "account-settings": "racun/postavke",
-    "search": "pretraga"
+    "search": "pretraga",
+    "account-email-preferences": "racun/e-mailovi",
+    "account-profile-guide": "racun/vodic-za-profil"
   },
   "hr": {
     "login": "prijava",
@@ -113,7 +115,9 @@
     "account-reviews": "racun/recenzije",
     "account-dashboard": "racun/pregled",
     "account-settings": "racun/postavke",
-    "search": "pretraga"
+    "search": "pretraga",
+    "account-email-preferences": "racun/e-posta",
+    "account-profile-guide": "racun/vodic-za-profil"
   },
   "sr": {
     "login": "prijava",
@@ -171,7 +175,9 @@
     "account-reviews": "nalog/recenzije",
     "account-dashboard": "nalog/pregled",
     "account-settings": "nalog/podesavanja",
-    "search": "pretraga"
+    "search": "pretraga",
+    "account-email-preferences": "nalog/mejlovi",
+    "account-profile-guide": "nalog/vodic-za-profil"
   },
   "cnr": {
     "login": "prijava",
@@ -229,7 +235,9 @@
     "account-reviews": "nalog/recenzije",
     "account-dashboard": "nalog/pregled",
     "account-settings": "nalog/podesavanja",
-    "search": "pretraga"
+    "search": "pretraga",
+    "account-email-preferences": "nalog/e-mailovi",
+    "account-profile-guide": "nalog/vodic-za-profil"
   },
   "sl": {
     "login": "prijava",
@@ -287,7 +295,9 @@
     "account-reviews": "racun/ocene",
     "account-dashboard": "racun/pregled",
     "account-settings": "racun/nastavitve",
-    "search": "iskanje"
+    "search": "iskanje",
+    "account-email-preferences": "racun/e-posta",
+    "account-profile-guide": "racun/vodnik-za-profil"
   },
   "en": {
     "login": "login",
@@ -345,7 +355,9 @@
     "account-reviews": "account/reviews",
     "account-dashboard": "account/overview",
     "account-settings": "account/settings",
-    "search": "search"
+    "search": "search",
+    "account-email-preferences": "account/emails",
+    "account-profile-guide": "account/profile-guide"
   },
   "de": {
     "login": "anmelden",
@@ -403,6 +415,8 @@
     "account-reviews": "konto/bewertungen",
     "account-dashboard": "konto/uebersicht",
     "account-settings": "konto/einstellungen",
-    "search": "suche"
+    "search": "suche",
+    "account-email-preferences": "konto/e-mails",
+    "account-profile-guide": "konto/profil-leitfaden"
   }
 }

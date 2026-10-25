@@ -14,6 +14,7 @@ final class EmailTemplateRenderer
 
     private const TEMPLATES = [
         'campaign_alert' => 'campaign_alert.html',
+        'profile_reminder' => 'profile_reminder.html',
         'credit_code_assigned' => 'credit_code_assigned.html',
         'credits_activated' => 'marketplace_notification.html',
         'account_action' => 'account_action.html',
@@ -35,6 +36,7 @@ final class EmailTemplateRenderer
     private const REQUIRED_VARIABLES = [
         'verification_reminder' => ['locale', 'preheader', 'eyebrow', 'heading', 'greeting', 'message', 'buttonLabel', 'actionUrl', 'expiration', 'security', 'fallback', 'footer'],
         'profile_tip' => ['locale', 'preheader', 'eyebrow', 'heading', 'greeting', 'message', 'buttonLabel', 'actionUrl', 'expiration', 'security', 'fallback', 'footer'],
+        'profile_reminder' => ['locale', 'preheader', 'eyebrow', 'heading', 'greeting', 'message', 'scoreLabel', 'score', 'stepsLabel', 'steps', 'buttonLabel', 'actionUrl', 'guideLabel', 'guideUrl', 'footer', 'unsubscribeLabel', 'unsubscribeUrl', 'settingsLabel', 'settingsUrl'],
         'campaign_alert' => ['locale', 'preheader', 'eyebrow', 'heading', 'greeting', 'message', 'campaignsLabel', 'campaigns', 'buttonLabel', 'actionUrl', 'footer', 'settingsLabel', 'settingsUrl'],
         'credit_code_assigned' => ['locale', 'preheader', 'eyebrow', 'heading', 'greeting', 'message', 'name', 'amount', 'code', 'firstLabel', 'firstValue', 'secondLabel', 'secondValue', 'detailsLabel', 'details', 'buttonLabel', 'actionUrl', 'footer'],
         'credits_activated' => ['locale', 'preheader', 'eyebrow', 'heading', 'greeting', 'message', 'firstLabel', 'firstValue', 'secondLabel', 'secondValue', 'detailsLabel', 'details', 'applicationLabel', 'campaignLabel', 'buttonLabel', 'actionUrl', 'footer'],

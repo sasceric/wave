@@ -324,6 +324,7 @@ final class OAuthController extends AbstractController
         $user->setEmailVerified(true);
         $user->setApproved(false);
         $user->setHideMyAccount(true);
+        $user->setNewsletterEnabled(!is_bool($data['newsletter'] ?? null) || $data['newsletter']);
 
         if ($type === 'creator') {
             $categories = array_key_exists('categories', $data) ? $this->categoryList($data['categories']) : [];

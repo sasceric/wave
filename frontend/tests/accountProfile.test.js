@@ -4,6 +4,8 @@ import { ref } from 'vue'
 import { mergeCampaignActivity } from '../src/lib/campaignActivity.js'
 import { accountLanding } from '../src/lib/accountAccess.js'
 import { normalizeServices } from '../src/lib/agencyServices.js'
+import { companyProfileBody, creatorProfileBody } from '../src/lib/profileDraft.js'
+import { normalizePresentation } from '../src/lib/creatorPresentation.js'
 import { setupView } from './setupView.js'
 
 async function setupAccount({ saveError = null, accountType = 'company', actionResponse = null } = {}) {
@@ -29,6 +31,8 @@ async function setupAccount({ saveError = null, accountType = 'company', actionR
     '../composables/useMarketplaceCatalog': { useMarketplaceCatalog: () => ({ categories: ref([]), error: ref('') }) },
     '../composables/useCampaignBookmarks': { useCampaignBookmarks: () => ({ bookmarks: ref([]), loadCampaignBookmarks: async () => {} }) },
     '../lib/agencyServices': { normalizeServices },
+    '../lib/profileDraft': { companyProfileBody, creatorProfileBody },
+    '../lib/creatorPresentation': { normalizePresentation },
     '../lib/campaignActivity': { mergeCampaignActivity },
     '../lib/accountAccess': { accountLanding },
     '../routePaths': { localizedRouteName: (name, locale) => `${name}-${locale}`, localizedPath: name => `/racun/${name}` },

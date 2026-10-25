@@ -14,6 +14,8 @@ const notFoundView = () => import('./views/NotFoundView.vue')
 const routeViews = {
   'account-dashboard': () => import('./views/AccountDashboardView.vue'),
   'account-settings': () => import('./views/AccountSettingsView.vue'),
+  'account-email-preferences': () => import('./views/AccountEmailPreferencesView.vue'),
+  'account-profile-guide': () => import('./views/AccountProfileGuideView.vue'),
   'account-reviews': () => import('./views/AdminSafetyView.vue'),
   'admin-reports': () => import('./views/AdminSafetyView.vue'),
   'account-blocks': () => import('./views/AdminSafetyView.vue'),

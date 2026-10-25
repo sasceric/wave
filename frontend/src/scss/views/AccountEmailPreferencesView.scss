@@ -1,0 +1,76 @@
+// Login-free email choices opened from an email footer.
+.email-preferences {
+  display: grid;
+  place-items: start center;
+  padding-block: 48px 72px;
+
+  &__card {
+    display: grid;
+    gap: 16px;
+    width: min(100%, 560px);
+    padding: 32px;
+    border: 1px solid var(--hairline);
+    border-radius: 24px;
+    background: var(--card);
+
+    h1 { margin: 0; color: var(--forest); font-family: var(--serif); font-size: clamp(28px, 4vw, 36px); font-weight: 400; line-height: 1.1; }
+    > p { margin: 0; color: var(--muted-text); font-size: 15px; line-height: 1.5; }
+    > p.email-preferences__lead { color: var(--ink); font-size: 16px; font-weight: 600; }
+  }
+
+  &__icon {
+    display: grid;
+    place-items: center;
+    width: 48px;
+    height: 48px;
+    border-radius: 16px;
+    color: var(--forest);
+    background: rgba(23, 61, 54, .07);
+
+    &.is-done { color: #fff; background: #2f7a52; }
+  }
+
+  &__list {
+    display: grid;
+    border: 1px solid var(--hairline);
+    border-radius: 18px;
+
+    overflow: hidden;
+
+    > * { padding: 14px 16px; }
+    > * + * { border-top: 1px solid var(--hairline); }
+    // Rows of one card, as in Postavke.
+    .switch-field { min-width: 0; max-width: none; margin: 0; border: 0 solid var(--hairline); border-radius: 0; background: none; }
+    > * + .switch-field, > .switch-field + * { border-top-width: 1px; }
+    .switch-field__label { color: var(--ink); font-size: 15px; font-weight: 600; }
+    .switch-field__description { color: var(--muted-text); font-size: 13px; }
+  }
+
+  &__always {
+    display: grid;
+    gap: 2px;
+
+    strong { display: flex; align-items: center; gap: 8px; font-size: 15px; font-weight: 600; }
+    strong span { padding: 2px 8px; border-radius: var(--radius-pill); color: var(--muted-text); background: var(--surface); font-size: 11px; font-weight: 700; }
+    small { color: var(--muted-text); font-size: 13px; line-height: 1.45; }
+  }
+
+  &__notice { margin: 0; color: #2f7a52; font-size: 14px; font-weight: 600; }
+
+  &__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+
+    .button { gap: 8px; }
+  }
+}
+
+@media (max-width: 560px) {
+  .email-preferences {
+    padding-block: 20px 40px;
+
+    &__card { padding: 22px 18px; border-radius: 20px; }
+    &__actions .button { flex: 1 1 100%; justify-content: center; }
+  }
+}

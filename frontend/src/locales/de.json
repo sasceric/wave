@@ -3154,5 +3154,416 @@
     "pushOff": "Ausschalten",
     "pushInstallHint": "Füge Wave auf dem iPhone zum Home-Bildschirm hinzu und öffne es dort, um Benachrichtigungen zu erhalten.",
     "pushDeniedHint": "Benachrichtigungen für Wave sind blockiert. Erlaube sie in den Telefon- oder Browsereinstellungen und kehre dann hierher zurück."
+  },
+  "profileStrength": {
+    "title": "Profilstärke",
+    "scoreLabel": "Profilstärke {score} %",
+    "levels": {
+      "1": "Einsteiger",
+      "2": "Gut",
+      "3": "Sehr gut",
+      "4": "Bereit"
+    },
+    "toNext": "Noch {points} % bis „{level}“.",
+    "why": {
+      "brands": "Marken sehen sich vollständige Profile zuerst an.",
+      "creators": "Creator bewerben sich lieber bei Marken mit vollständigem Profil."
+    },
+    "oneLeft": "Noch ein Schritt.",
+    "stepsLeft": "Schritte bis zum vollständigen Profil: {count}. Beginne mit dem wichtigsten.",
+    "open": "Öffnen",
+    "addNow": "Jetzt hinzufügen",
+    "add": "Hinzufügen",
+    "allSteps": "Alle Schritte ({done}/{total})",
+    "previewTitle": {
+      "brands": "So sehen dich Marken",
+      "creators": "So sehen euch Creator"
+    },
+    "previewLabel": "Vorschau deiner Karte",
+    "previewHint": "So sieht deine Karte aus. Gestrichelt ist, was noch fehlt.",
+    "readyTitle": "Dein Profil ist bereit",
+    "readyText": {
+      "brands": "Alles, was Marken suchen, ist da. Aktualisiere deine Arbeiten nach jeder Kooperation.",
+      "creators": "Alles, was Creator suchen, ist da. Halte es mit jeder Kampagne aktuell."
+    },
+    "saved": "+{points} % · Profilstärke {score} %",
+    "priceFrom": "ab {price}",
+    "missing": {
+      "photo": "Foto hinzufügen",
+      "cover": "Titelbild",
+      "logo": "Logo",
+      "social": "Netzwerke hinzufügen",
+      "bio": "Bio hinzufügen",
+      "about": "Beschreibung hinzufügen",
+      "links": "Website und Netzwerke hinzufügen",
+      "packages": "Paket mit Preis hinzufügen"
+    },
+    "phoneMissing": "Zum Speichern des Profils wird eine Telefonnummer benötigt. Füge sie im Profileditor hinzu.",
+    "photoTip": "Natürliches Licht, Gesicht gut sichtbar, keine starken Filter.",
+    "logoTip": "Dasselbe Logo wie in den sozialen Netzwerken, auf hellem Hintergrund.",
+    "coverTip": "Produkt, Raum oder Team; vermeide Text über dem Bild.",
+    "bioPlaceholder": "Was du erstellst, für wen und was dich auszeichnet…",
+    "aboutPlaceholder": "Was ihr macht, für wen und wofür ihr bekannt seid…",
+    "minChars": "{count}/{min} Zeichen",
+    "network": "Netzwerk",
+    "handlePlaceholder": "{'@'}nutzername oder Profillink",
+    "addNetwork": "Weiteres Netzwerk hinzufügen",
+    "link": "Link",
+    "addLink": "Link hinzufügen",
+    "packageTitle": "Paketname",
+    "packageTitlePlaceholder": "Reel + Storys",
+    "packageTitlePlaceholderAgency": "Kampagne mit 3 Creatorn",
+    "packageIncludes": "Was enthalten ist",
+    "packageIncludesPlaceholder": "1 Reel, 3 Storys, 1 Änderung",
+    "packageIncludesPlaceholderAgency": "Briefing, 3 Creator, Bericht",
+    "packagePrice": "Preis (KM)",
+    "packageTip": "Ein Richtpreis genügt. Lieferzeiten und weitere Details bearbeitest du im Profil.",
+    "faqTip": "Beantworte eine oder mehrere Fragen, mindestens 10 Zeichen pro Antwort.",
+    "faqCreator1": "Wie lange dauert die Lieferung?",
+    "faqCreator2": "Wie viele Änderungen sind enthalten?",
+    "faqCreator3": "Wie lange darf die Marke den Inhalt nutzen?",
+    "faqAgency1": "Wann könnt ihr starten?",
+    "faqAgency2": "Wie sieht die Zusammenarbeit mit euch aus?",
+    "faqAgency3": "Was enthält der Bericht?",
+    "save": "Speichern",
+    "saving": "Wird gespeichert…",
+    "steps": {
+      "photo": {
+        "title": "Profilfoto hinzufügen",
+        "why": "Marken sehen zuerst das Foto. Ohne wirkt das Profil unfertig.",
+        "short": "Profilfoto"
+      },
+      "logo": {
+        "title": "Logo hinzufügen",
+        "why": "Das Logo ist eure Unterschrift in jeder Nachricht und jedem Angebot.",
+        "short": "Logo"
+      },
+      "cover": {
+        "title": "Titelbild hinzufügen",
+        "why": "Der erste Eindruck des Profils, noch vor dem ersten Satz.",
+        "short": "Titelbild"
+      },
+      "works": {
+        "title": "3–4 Arbeiten zum Portfolio hinzufügen",
+        "why": "Zeig Stil und Ergebnisse; das überzeugt mehr als eine Beschreibung.",
+        "short": "Portfolio-Arbeiten"
+      },
+      "bio": {
+        "title": "Schreib ein paar Sätze über dich",
+        "why": "Was du erstellst, für wen und was dich auszeichnet.",
+        "short": "Bio (150+ Zeichen)"
+      },
+      "about": {
+        "title": "Beschreibung schreiben",
+        "why": "Was ihr macht, für wen und welchen Ton ihr sucht.",
+        "short": "Beschreibung (80+ Zeichen)"
+      },
+      "social": {
+        "title": "Soziale Netzwerke verbinden",
+        "why": "Netzwerke und Followerzahlen filtern Marken zuerst.",
+        "short": "Soziale Netzwerke"
+      },
+      "links": {
+        "title": "Website und Netzwerke hinzufügen",
+        "why": "Die andere Seite prüft vor der ersten Nachricht, wer ihr seid.",
+        "short": "Website und Netzwerke"
+      },
+      "packages": {
+        "title": "Paket mit Preis hinzufügen",
+        "why": "Ein klarer Preis verkürzt die Abstimmung und bringt direkte Anfragen.",
+        "short": "Paket mit Preis"
+      },
+      "audience": {
+        "title": "Zielgruppendaten hinzufügen",
+        "why": "Länder, Aufrufe und Engagement helfen der Marke bei der Wahl.",
+        "short": "Zielgruppendaten"
+      },
+      "services": {
+        "title": "Leistungen angeben",
+        "why": "Marken suchen eine Leistung, keine Agentur. Lasst euch darüber finden.",
+        "short": "Leistungen"
+      },
+      "industries": {
+        "title": "Branchen auswählen",
+        "why": "So finden euch die passenden Creator in der Suche.",
+        "short": "Branchen"
+      },
+      "faq": {
+        "title": "Häufige Fragen beantworten",
+        "why": "Fristen, Änderungen und Arbeitsweise, im Voraus.",
+        "short": "FAQ"
+      }
+    },
+    "incomplete": "Profil zu {score} % ausgefüllt"
+  },
+  "emailPreferences": {
+    "title": "E-Mails",
+    "group": "E-Mails",
+    "loading": "Auswahl wird geladen …",
+    "intro": "Das sind die E-Mails, die Wave an {email} sendet. Jede Änderung wird sofort gespeichert.",
+    "profileTips": "Profiltipps",
+    "profileTipsHint": "Kurze Erinnerungen, solange dein Profil unvollständig ist, höchstens vier.",
+    "newsletter": "Wave-Neuigkeiten",
+    "newsletterHint": "Neue Funktionen und Beispiele für Kooperationen, ab und zu.",
+    "campaignAlerts": "Neue Kampagnen",
+    "campaignAlertsHint": "Kampagnen zu deinen Kategorien und Ländern.",
+    "always": "Konto und Kooperationen",
+    "alwaysTag": "immer",
+    "alwaysHint": "Nachrichten, Angebote, Bestätigungen und Sicherheit. Diese E-Mails lassen sich nicht abschalten.",
+    "saved": "Deine Auswahl ist gespeichert.",
+    "resubscribed": "Wieder eingeschaltet: {name}.",
+    "unsubscribedTitle": "Abmeldung erfolgreich.",
+    "unsubscribedText": "Ausgeschaltet: {name}. Deine anderen E-Mails wählst du unten.",
+    "undo": "Doch weiter erhalten: {name}",
+    "invalid": "Dieser Link ist ungültig oder das Konto wurde gelöscht. Melde dich an und ändere die Auswahl in den Einstellungen.",
+    "toWave": "Zu Wave",
+    "registerTitle": "Schick mir Wave-Neuigkeiten und Tipps.",
+    "registerHint": "Abmeldung mit einem Klick in jeder E-Mail."
+  },
+  "profileGuide": {
+    "title": "Profil-Leitfaden",
+    "intro": "Vier Seiten dazu, wie ein starkes Wave-Profil aussieht. Speichere sie als PDF oder drucke sie aus.",
+    "typeLabel": "Kontotyp",
+    "types": {
+      "creator": "Creator",
+      "agency": "Agentur",
+      "brand": "Marke"
+    },
+    "download": "PDF herunterladen",
+    "inside": "In diesem Leitfaden",
+    "anatomyEyebrow": "Aufbau des Profils",
+    "anatomyTitle": "Was wohin gehört, und warum",
+    "checklistEyebrow": "Checkliste",
+    "checklistTitle": "Schritt für Schritt",
+    "lookEyebrow": "Die andere Seite",
+    "lookTitle": {
+      "brands": "Worauf Marken achten",
+      "creators": "Worauf Creator achten"
+    },
+    "do": "Mach das",
+    "dont": "Vermeide",
+    "ctaTitle": "Erstelle dein Profil auf Wave.",
+    "ctaScore": "Dein Profil ist zu {score} % fertig.",
+    "ctaText": "Öffne deine Übersicht auf Wave und mach beim ersten Schritt weiter.",
+    "cardLink": "Leitfaden: So sieht ein starkes Profil aus",
+    "creator": {
+      "eyebrow": "Leitfaden für Creator",
+      "title": "Ein Profil, das Marken zuerst öffnen",
+      "lead": "Marken entscheiden in Sekunden: Foto, Netzwerke, Arbeitsbeispiele und Preis. Dieser Leitfaden zeigt, wie du das auf Wave zusammenstellst.",
+      "sampleName": "Lejla Begić",
+      "sampleMeta": "Sarajevo · Lifestyle · ab 150 BAM",
+      "sampleAbout": "Ich filme den Alltag in Sarajevo, Essen und Cafés, warm und natürlich.",
+      "sampleChips": "Instagram 12,4 Tsd.; TikTok 8,1 Tsd.",
+      "notes": {
+        "1": {
+          "title": "Profilfoto",
+          "text": "Gesicht gut sichtbar, natürliches Licht, keine starken Filter."
+        },
+        "2": {
+          "title": "Name und Kategorie",
+          "text": "Der Name, unter dem dich dein Publikum kennt, und ein bis drei Kategorien."
+        },
+        "3": {
+          "title": "Bio",
+          "text": "Was du machst, für wen und was dich auszeichnet, in zwei bis drei Sätzen."
+        },
+        "4": {
+          "title": "Netzwerke und Publikum",
+          "text": "Nutzername, Follower und, falls vorhanden, Aufrufe und Engagement."
+        },
+        "5": {
+          "title": "Arbeiten und ein Paket",
+          "text": "Drei bis vier deiner besten Arbeiten und mindestens ein Paket mit Preis."
+        }
+      },
+      "tips": {
+        "1": {
+          "title": "Zeigen statt beschreiben",
+          "text": "Ein gutes Video sagt mehr als ein Absatz über deinen Stil."
+        },
+        "2": {
+          "title": "Ein Preis spart Zeit",
+          "text": "Ein Paket mit Preis verkürzt die Absprache und bringt direkte Anfragen."
+        },
+        "3": {
+          "title": "Sei konkret",
+          "text": "Stadt, Themen und Publikum helfen Marken, dich zu finden."
+        }
+      },
+      "do": {
+        "1": "Neue Arbeiten gleich nach der Veröffentlichung hinzufügen.",
+        "2": "Zahlen einmal im Monat aktualisieren.",
+        "3": "Häufige Fragen vorab beantworten."
+      },
+      "dont": {
+        "1": "Bilder mit fremdem Logo oder Wasserzeichen.",
+        "2": "Eine Bio aus einem Wort.",
+        "3": "Alte Zahlen, die nicht zum Profil passen."
+      },
+      "look": {
+        "1": {
+          "title": "Foto und erster Eindruck",
+          "text": "Zuerst sehen Marken dein Foto und deinen Namen auf der Karte."
+        },
+        "2": {
+          "title": "Netzwerke und Zahlen",
+          "text": "Sie filtern nach Netzwerk, Followern und Land des Publikums."
+        },
+        "3": {
+          "title": "Arbeitsbeispiele",
+          "text": "Deine Arbeiten zeigen die Qualität und den Ton, den eine Marke erwarten kann."
+        },
+        "4": {
+          "title": "Preis und Bedingungen",
+          "text": "Ein klares Paket und Antworten verkürzen den Weg zum Angebot."
+        }
+      }
+    },
+    "agency": {
+      "eyebrow": "Leitfaden für Agenturen",
+      "title": "Ein Profil, das die richtigen Anfragen bringt",
+      "lead": "Marken suchen eine Leistung, keinen Agenturnamen. Zeigen Sie, was Sie tun, für wen und mit welchen Ergebnissen.",
+      "sampleName": "Studio Kadar",
+      "sampleMeta": "Sarajevo · Videoproduktion",
+      "sampleAbout": "Wir drehen Kampagnen für lokale Marken, von der Idee bis zur Veröffentlichung.",
+      "sampleChips": "UGC; Videoproduktion; Fotografie",
+      "notes": {
+        "1": {
+          "title": "Titelbild und Logo",
+          "text": "Das Titelbild zeigt Ihre Arbeit, das Logo unterschreibt jede Nachricht."
+        },
+        "2": {
+          "title": "Name und Branche",
+          "text": "Der Name der Agentur und die Bereiche, in denen Sie arbeiten."
+        },
+        "3": {
+          "title": "Beschreibung",
+          "text": "Was Sie tun, für wen und wie Sie arbeiten, in wenigen Sätzen."
+        },
+        "4": {
+          "title": "Leistungen",
+          "text": "Jede Leistung einzeln, damit Marken Sie über ihren Bedarf finden."
+        },
+        "5": {
+          "title": "Arbeiten und Pakete",
+          "text": "Ihre besten Kampagnen und Pakete mit klarem Leistungsumfang."
+        }
+      },
+      "tips": {
+        "1": {
+          "title": "Leistung vor Name",
+          "text": "Benennen Sie Leistungen mit den Worten, die Marken bei der Suche verwenden."
+        },
+        "2": {
+          "title": "Ergebnisse überzeugen",
+          "text": "Ergänzen Sie kurz, was jede Kampagne erreicht hat."
+        },
+        "3": {
+          "title": "Klare Pakete",
+          "text": "Ein Paket mit Leistungsumfang erleichtert das erste Angebot."
+        }
+      },
+      "do": {
+        "1": "Neue Kampagnen nach dem Start hinzufügen.",
+        "2": "Angeben, für wen welche Leistung gedacht ist.",
+        "3": "Fragen zu Fristen und Änderungen beantworten."
+      },
+      "dont": {
+        "1": "Allgemeine Beschreibungen ohne Beispiele.",
+        "2": "Dutzende Leistungen ohne Beschreibung.",
+        "3": "Ein Logo in niedriger Auflösung."
+      },
+      "look": {
+        "1": {
+          "title": "Wer Sie sind",
+          "text": "Logo, Titelbild und Beschreibung zeigen, ob Sie der richtige Partner sind."
+        },
+        "2": {
+          "title": "Was Sie tun",
+          "text": "Leistungen und Branchen entscheiden, ob man Sie findet."
+        },
+        "3": {
+          "title": "Wie Sie arbeiten",
+          "text": "Arbeiten und Pakete zeigen Qualität und Umfang."
+        },
+        "4": {
+          "title": "Wie es weitergeht",
+          "text": "Antworten auf häufige Fragen verkürzen das erste Gespräch."
+        }
+      }
+    },
+    "brand": {
+      "eyebrow": "Leitfaden für Marken",
+      "title": "Ein Profil, dem Creator vertrauen",
+      "lead": "Vor einer Bewerbung prüfen Creator, wer Sie sind. Ein vollständiges Profil bringt mehr Bewerbungen und bessere Vorschläge.",
+      "sampleName": "Aroma Lab",
+      "sampleMeta": "Sarajevo · Kosmetik",
+      "sampleAbout": "Natürliche Parfums und Pflege, in kleinen Serien in Sarajevo hergestellt.",
+      "sampleChips": "Kosmetik; Beauty; Lifestyle",
+      "notes": {
+        "1": {
+          "title": "Titelbild und Logo",
+          "text": "Produkt, Raum oder Team, und ein gut erkennbares Logo."
+        },
+        "2": {
+          "title": "Name",
+          "text": "Der Markenname, wie ihn Ihre Kundschaft kennt."
+        },
+        "3": {
+          "title": "Beschreibung",
+          "text": "Was Sie tun, für wen und welchen Ton Sie sich von Creatorn wünschen."
+        },
+        "4": {
+          "title": "Branchen",
+          "text": "So finden Sie die passenden Creator in der Suche."
+        },
+        "5": {
+          "title": "Website und Netzwerke",
+          "text": "Creator prüfen Website und Netzwerke vor der ersten Nachricht."
+        }
+      },
+      "tips": {
+        "1": {
+          "title": "Zuerst der Ton",
+          "text": "Beschreiben Sie, welche Inhalte Ihnen gefallen, Creator passen sich an."
+        },
+        "2": {
+          "title": "Nachprüfbar sein",
+          "text": "Website und Netzwerke schaffen Vertrauen vor der ersten Kooperation."
+        },
+        "3": {
+          "title": "Eine klare Kampagne",
+          "text": "Mit vollständigem Profil bringt ein klares Briefing bessere Bewerbungen."
+        }
+      },
+      "do": {
+        "1": "Website und mindestens ein Netzwerk hinzufügen.",
+        "2": "Das Publikum beschreiben, das Sie erreichen möchten.",
+        "3": "Die Beschreibung aktualisieren, wenn sich Ihr Angebot ändert."
+      },
+      "dont": {
+        "1": "Ein Profil ohne Logo.",
+        "2": "Eine Beschreibung aus einem Satz.",
+        "3": "Defekte Links."
+      },
+      "look": {
+        "1": {
+          "title": "Ob es Sie wirklich gibt",
+          "text": "Logo, Website und Netzwerke bestätigen, wer hinter der Kampagne steht."
+        },
+        "2": {
+          "title": "Was Sie verkaufen",
+          "text": "Beschreibung und Branchen zeigen, ob Sie zu ihren Inhalten passen."
+        },
+        "3": {
+          "title": "Welchen Ton Sie suchen",
+          "text": "Creator wählen Marken, deren Stil sie vermitteln können."
+        },
+        "4": {
+          "title": "Wie Sie zusammenarbeiten",
+          "text": "Klare Kampagnen und schnelle Antworten führen zu weiteren Kooperationen."
+        }
+      }
+    }
   }
 }

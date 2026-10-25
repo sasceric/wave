@@ -35,6 +35,7 @@ import LocalizedLink from '../shared/LocalizedLink.vue'
 import LanguageSwitcher from '../shared/LanguageSwitcher.vue'
 import { mobileAccountSidebarOpen } from '../../composables/useMobileAccountSidebar'
 import { unreadMessageCount } from '../../composables/useUnreadMessages'
+import { incompleteProfileScore } from '../../lib/profileStrength'
 
 const props = defineProps({
   user: {
@@ -75,6 +76,10 @@ const publicRoute = computed(() => identity.value.slug ? {
   name: props.user?.accountType === 'creator' ? 'creator-profile' : 'company-profile',
   params: { slug: identity.value.slug },
 } : null)
+const profileHint = computed(() => {
+  const score = incompleteProfileScore(props.user)
+  return score === null ? '' : t('profileStrength.incomplete', { score })
+})
 const primaryItems = computed(() => navigationItems.value.filter((item) => !item.route.startsWith('admin') && !item.group))
 const adminItems = computed(() => navigationItems.value.filter((item) => (
   item.route.startsWith('admin') && !item.group
@@ -146,7 +151,7 @@ const navigationItems = computed(() => {
     if (provider) items.push({ route: 'account-applications', labelKey: 'agency.providerWork', icon: Handshake, match: workRoutes.filter((name) => name !== 'account-inquiries') })
   }
   if (canUseMarketplace && props.user) items.push({ route: 'messages', labelKey: 'app.messages', icon: MessageCircle, badge: unreadMessageCount.value || null })
-  if (props.user) items.push({ route: 'account', labelKey: 'accountHub.profile', icon: UserRound })
+  if (props.user) items.push({ route: 'account', labelKey: 'accountHub.profile', icon: UserRound, hint: profileHint.value })
 
   if (props.user?.isModerator) {
     items.push({ route: 'moderation', labelKey: 'moderation.title', icon: ClipboardCheck })
@@ -232,13 +237,14 @@ function isActive(item) {
       :class="{ 'is-active': isActive(item) }"
       :to="{ name: item.route }"
       :title="item.label"
-      :aria-label="item.badge != null ? `${item.label} (${item.badge})` : item.label"
+      :aria-label="item.badge != null ? `${item.label} (${item.badge})` : item.hint ? `${item.label} (${item.hint})` : item.label"
       :aria-current="isActive(item) ? 'page' : undefined"
       @click="closeMobileSidebar"
     >
       <component :is="item.icon" :size="18" aria-hidden="true" />
       <span class="account-sidebar__text">{{ item.label }}</span>
       <strong v-if="item.badge != null" class="account-sidebar__badge">{{ item.badge }}</strong>
+      <span v-else-if="item.hint" class="account-sidebar__dot" :title="item.hint" />
     </LocalizedLink>
     </div>
     <div v-if="adminItems.length" class="account-sidebar__group">

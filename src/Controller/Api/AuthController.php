@@ -110,6 +110,10 @@ final class AuthController extends AbstractController
                 return new JsonResponse(['error' => ApiMessages::get('invalid_registration', $locale)], 400);
             }
         }
+        // Wave news opt-in from the registration form; older cached forms omit it.
+        if (array_key_exists('newsletter', $data) && !is_bool($data['newsletter'])) {
+            return new JsonResponse(['error' => ApiMessages::get('invalid_registration', $locale)], 400);
+        }
         $type = $data['accountType'] ?? null;
         $phone = is_string($data['phone'] ?? null) ? trim($data['phone']) : '';
         $city = is_string($data['city'] ?? null) ? trim($data['city']) : '';
@@ -152,6 +156,7 @@ final class AuthController extends AbstractController
         $user->setEmailVerified(false);
         $user->setApproved(false);
         $user->setHideMyAccount(true);
+        $user->setNewsletterEnabled($data['newsletter'] ?? true);
         if ($type === 'creator') {
             $category = is_string($data['category'] ?? null) ? trim($data['category']) : '';
             $categories = !array_key_exists('categories', $data) && $category === '' ? [] : $this->categoryList($data['categories'] ?? [$category]);

@@ -5,6 +5,7 @@ import { ArrowRight, ClipboardCheck, Coins, Handshake, Mail, Megaphone, MessageC
 import AccountActivationPanel from '../components/account/AccountActivationPanel.vue'
 import AccountVisibilityCard from '../components/account/AccountVisibilityCard.vue'
 import AccountPage from '../components/account/AccountPage.vue'
+import ProfileStrengthCard from '../components/account/ProfileStrengthCard.vue'
 import CreatorProfileStatistics from '../components/account/CreatorProfileStatistics.vue'
 import AccountSidebar from '../components/account/AccountSidebar.vue'
 import LocalizedLink from '../components/shared/LocalizedLink.vue'
@@ -97,6 +98,7 @@ onBeforeUnmount(() => { ++revision })
       <div v-if="!ready" class="activation-layout"><AccountActivationPanel :user="currentUser" /><AccountVisibilityCard /></div>
       <div v-else class="personal-overview__body">
         <div class="personal-overview__main">
+          <ProfileStrengthCard />
           <section v-if="todos.length" class="personal-overview__section" aria-labelledby="overview-todo-title">
             <header class="personal-overview__section-head"><div><h2 id="overview-todo-title">{{ t('accountHub.todoTitle') }}</h2><p>{{ t('accountHub.todoIntro') }}</p></div></header>
             <ul class="personal-overview__todo">

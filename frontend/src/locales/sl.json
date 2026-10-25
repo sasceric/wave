@@ -3155,5 +3155,416 @@
     "pushOff": "Izklopi",
     "pushInstallHint": "Na iPhonu dodaj Wave na začetni zaslon in ga odpri od tam, da boš prejemal obvestila.",
     "pushDeniedHint": "Obvestila za Wave so blokirana. Vklopi jih v nastavitvah telefona ali brskalnika in se vrni sem."
+  },
+  "profileStrength": {
+    "title": "Moč profila",
+    "scoreLabel": "Moč profila {score} %",
+    "levels": {
+      "1": "Začetni",
+      "2": "Dober",
+      "3": "Odličen",
+      "4": "Pripravljen"
+    },
+    "toNext": "Še {points} % do ravni »{level}«.",
+    "why": {
+      "brands": "Blagovne znamke najprej pregledajo izpolnjene profile.",
+      "creators": "Ustvarjalci se raje prijavijo znamkam z izpolnjenim profilom."
+    },
+    "oneLeft": "Ostal je še en korak.",
+    "stepsLeft": "Koraki do polnega profila: {count}. Začni z najpomembnejšim.",
+    "open": "Odpri",
+    "addNow": "Dodaj zdaj",
+    "add": "Dodaj",
+    "allSteps": "Vsi koraki ({done}/{total})",
+    "previewTitle": {
+      "brands": "Kako te vidijo znamke",
+      "creators": "Kako vas vidijo ustvarjalci"
+    },
+    "previewLabel": "Predogled tvoje kartice",
+    "previewHint": "Tako je videti tvoja kartica. Črtkano je, kar še manjka.",
+    "readyTitle": "Profil je pripravljen",
+    "readyText": {
+      "brands": "Vse, kar iščejo znamke, je tu. Osveži dela po vsakem sodelovanju.",
+      "creators": "Vse, kar iščejo ustvarjalci, je tu. Posodabljaj ga z vsako kampanjo."
+    },
+    "saved": "+{points} % · Moč profila {score} %",
+    "priceFrom": "od {price}",
+    "missing": {
+      "photo": "Dodaj sliko",
+      "cover": "Naslovna slika",
+      "logo": "Logotip",
+      "social": "Dodaj omrežja",
+      "bio": "Dodaj bio",
+      "about": "Dodaj opis",
+      "links": "Dodaj splet in omrežja",
+      "packages": "Dodaj paket s ceno"
+    },
+    "phoneMissing": "Za shranjevanje profila je potrebna telefonska številka. Dodaj jo v urejanju profila.",
+    "photoTip": "Naravna svetloba, jasno vidno obraz, brez močnih filtrov.",
+    "logoTip": "Isti logotip kot na omrežjih, na svetli podlagi.",
+    "coverTip": "Izdelek, prostor ali ekipa; izogibaj se besedilu čez sliko.",
+    "bioPlaceholder": "Kakšne vsebine ustvarjaš, za koga in kaj te loči od drugih…",
+    "aboutPlaceholder": "Kaj delate, za koga in po čem ste znani…",
+    "minChars": "{count}/{min} znakov",
+    "network": "Omrežje",
+    "handlePlaceholder": "{'@'}uporabnik ali povezava do profila",
+    "addNetwork": "Dodaj še eno omrežje",
+    "link": "Povezava",
+    "addLink": "Dodaj povezavo",
+    "packageTitle": "Ime paketa",
+    "packageTitlePlaceholder": "Reel + zgodbe",
+    "packageTitlePlaceholderAgency": "Kampanja s 3 ustvarjalci",
+    "packageIncludes": "Kaj je vključeno",
+    "packageIncludesPlaceholder": "1 reel, 3 zgodbe, 1 popravek",
+    "packageIncludesPlaceholderAgency": "Brief, 3 ustvarjalci, poročilo",
+    "packagePrice": "Cena (KM)",
+    "packageTip": "Okvirna cena je dovolj. Roke in druge podrobnosti paketa urediš v profilu.",
+    "faqTip": "Odgovori na eno ali več vprašanj, vsaj 10 znakov na odgovor.",
+    "faqCreator1": "Koliko časa traja oddaja?",
+    "faqCreator2": "Koliko popravkov je vključenih?",
+    "faqCreator3": "Kako dolgo sme znamka uporabljati vsebino?",
+    "faqAgency1": "Kdaj lahko začnete?",
+    "faqAgency2": "Kako poteka sodelovanje z vami?",
+    "faqAgency3": "Kaj vsebuje poročilo?",
+    "save": "Shrani",
+    "saving": "Shranjujem…",
+    "steps": {
+      "photo": {
+        "title": "Dodaj profilno sliko",
+        "why": "Znamke najprej pogledajo sliko. Brez nje je profil videti nedokončan.",
+        "short": "Profilna slika"
+      },
+      "logo": {
+        "title": "Dodaj logotip",
+        "why": "Logotip je vaš podpis v vsakem sporočilu in ponudbi.",
+        "short": "Logotip"
+      },
+      "cover": {
+        "title": "Dodaj naslovno sliko",
+        "why": "Prvi vtis profila, še pred prvim stavkom.",
+        "short": "Naslovna slika"
+      },
+      "works": {
+        "title": "Dodaj 3–4 dela v portfelj",
+        "why": "Pokaži slog in rezultate; prepričajo bolj kot opis.",
+        "short": "Dela v portfelju"
+      },
+      "bio": {
+        "title": "Napiši nekaj stavkov o sebi",
+        "why": "Kakšne vsebine ustvarjaš, za koga in kaj te loči od drugih.",
+        "short": "Bio (150+ znakov)"
+      },
+      "about": {
+        "title": "Napiši opis",
+        "why": "Kaj delate, za koga in kakšen ton iščete.",
+        "short": "Opis (80+ znakov)"
+      },
+      "social": {
+        "title": "Poveži družbena omrežja",
+        "why": "Omrežja in število sledilcev znamke filtrirajo najprej.",
+        "short": "Družbena omrežja"
+      },
+      "links": {
+        "title": "Dodaj splet in omrežja",
+        "why": "Druga stran preveri, kdo ste, preden vam piše.",
+        "short": "Splet in omrežja"
+      },
+      "packages": {
+        "title": "Dodaj paket s ceno",
+        "why": "Jasna cena skrajša dogovor in prinese neposredna povpraševanja.",
+        "short": "Paket s ceno"
+      },
+      "audience": {
+        "title": "Dodaj podatke o občinstvu",
+        "why": "Države, ogledi in angažiranost znamki pomagajo pri izbiri.",
+        "short": "Podatki o občinstvu"
+      },
+      "services": {
+        "title": "Navedi storitve",
+        "why": "Znamka išče storitev, ne agencije. Naj vas najde po njej.",
+        "short": "Storitve"
+      },
+      "industries": {
+        "title": "Izberi dejavnosti",
+        "why": "Tako vas pravi ustvarjalci najdejo v iskanju.",
+        "short": "Dejavnosti"
+      },
+      "faq": {
+        "title": "Odgovori na pogosta vprašanja",
+        "why": "Roki, popravki in način dela, vnaprej.",
+        "short": "Pogosta vprašanja"
+      }
+    },
+    "incomplete": "Profil izpolnjen {score} %"
+  },
+  "emailPreferences": {
+    "title": "E-pošta",
+    "group": "E-pošta",
+    "loading": "Nalaganje izbire …",
+    "intro": "To so sporočila, ki jih Wave pošilja na {email}. Vsaka sprememba se takoj shrani.",
+    "profileTips": "Nasveti za profil",
+    "profileTipsHint": "Kratki opomniki, dokler profil ni izpolnjen, največ štirje.",
+    "newsletter": "Novice Wave",
+    "newsletterHint": "Nove možnosti in primeri sodelovanj, občasno.",
+    "campaignAlerts": "Nove kampanje",
+    "campaignAlertsHint": "Kampanje po tvojih kategorijah in državah.",
+    "always": "Račun in sodelovanja",
+    "alwaysTag": "vedno",
+    "alwaysHint": "Sporočila, ponudbe, potrditve in varnost. Teh sporočil ni mogoče izklopiti.",
+    "saved": "Izbira je shranjena.",
+    "resubscribed": "Znova vklopljeno: {name}.",
+    "unsubscribedTitle": "Odjava je uspela.",
+    "unsubscribedText": "Izklopljeno: {name}. Druga sporočila izbereš spodaj.",
+    "undo": "Vseeno želim: {name}",
+    "invalid": "Ta povezava ni veljavna ali pa je bil račun izbrisan. Prijavi se in izbiro spremeni v Nastavitvah.",
+    "toWave": "Na Wave",
+    "registerTitle": "Pošiljaj mi novice in nasvete Wave.",
+    "registerHint": "Odjava z enim klikom v vsakem sporočilu."
+  },
+  "profileGuide": {
+    "title": "Vodnik za profil",
+    "intro": "Štiri strani o tem, kako je videti dober profil na Wavu. Shrani jih kot PDF ali jih natisni.",
+    "typeLabel": "Vrsta računa",
+    "types": {
+      "creator": "Ustvarjalec",
+      "agency": "Agencija",
+      "brand": "Znamka"
+    },
+    "download": "Prenesi PDF",
+    "inside": "V vodniku",
+    "anatomyEyebrow": "Zgradba profila",
+    "anatomyTitle": "Kaj gre kam in zakaj",
+    "checklistEyebrow": "Kontrolni seznam",
+    "checklistTitle": "Korak za korakom",
+    "lookEyebrow": "Druga stran",
+    "lookTitle": {
+      "brands": "Kaj gledajo znamke",
+      "creators": "Kaj gledajo ustvarjalci"
+    },
+    "do": "Naredi",
+    "dont": "Izogibaj se",
+    "ctaTitle": "Ustvari svoj profil na Wavu.",
+    "ctaScore": "Tvoj profil je {score} % dokončan.",
+    "ctaText": "Odpri Pregled na Wavu in nadaljuj s prvim korakom.",
+    "cardLink": "Vodnik: kako je videti dober profil",
+    "creator": {
+      "eyebrow": "Vodnik za ustvarjalce",
+      "title": "Profil, ki ga znamke odprejo prvega",
+      "lead": "Znamke se odločijo v nekaj sekundah: fotografija, omrežja, primeri dela in cena. Vodnik pokaže, kako to sestaviti na Wavu.",
+      "sampleName": "Lejla Begić",
+      "sampleMeta": "Sarajevo · Lifestyle · od 150 BAM",
+      "sampleAbout": "Snemam vsakdan Sarajeva, hrano in kavarne, toplo in naravno.",
+      "sampleChips": "Instagram 12,4 tis.; TikTok 8,1 tis.",
+      "notes": {
+        "1": {
+          "title": "Profilna fotografija",
+          "text": "Obraz dobro viden, naravna svetloba, brez močnih filtrov."
+        },
+        "2": {
+          "title": "Ime in kategorija",
+          "text": "Ime, pod katerim te pozna občinstvo, in ena do tri kategorije."
+        },
+        "3": {
+          "title": "Opis",
+          "text": "Kaj ustvarjaš, za koga in kaj te loči od drugih, v dveh ali treh stavkih."
+        },
+        "4": {
+          "title": "Omrežja in občinstvo",
+          "text": "Uporabniško ime, sledilci in, če jih imaš, ogledi in angažiranost."
+        },
+        "5": {
+          "title": "Dela in paket",
+          "text": "Tri do štiri najboljša dela in vsaj en paket s ceno."
+        }
+      },
+      "tips": {
+        "1": {
+          "title": "Pokaži, ne opisuj",
+          "text": "En dober video pove več kot odstavek o slogu."
+        },
+        "2": {
+          "title": "Cena prihrani čas",
+          "text": "Paket s ceno skrajša dogovor in prinese neposredna povpraševanja."
+        },
+        "3": {
+          "title": "Bodi konkreten",
+          "text": "Mesto, teme in občinstvo znamkam pomagajo, da te najdejo."
+        }
+      },
+      "do": {
+        "1": "Nova dela dodaj takoj po objavi.",
+        "2": "Številke posodobi enkrat na mesec.",
+        "3": "Na pogosta vprašanja odgovori vnaprej."
+      },
+      "dont": {
+        "1": "Slike s tujim logotipom ali vodnim žigom.",
+        "2": "Opis iz ene besede.",
+        "3": "Stare številke, ki se ne ujemajo s profilom."
+      },
+      "look": {
+        "1": {
+          "title": "Fotografija in prvi vtis",
+          "text": "Znamke najprej vidijo tvojo fotografijo in ime na kartici."
+        },
+        "2": {
+          "title": "Omrežja in številke",
+          "text": "Filtrirajo po omrežju, sledilcih in državi občinstva."
+        },
+        "3": {
+          "title": "Primeri dela",
+          "text": "Dela pokažejo kakovost in ton, ki ju znamka lahko pričakuje."
+        },
+        "4": {
+          "title": "Cena in pogoji",
+          "text": "Jasen paket in odgovori skrajšajo pot do ponudbe."
+        }
+      }
+    },
+    "agency": {
+      "eyebrow": "Vodnik za agencije",
+      "title": "Profil, ki prinaša prava povpraševanja",
+      "lead": "Znamke iščejo storitev, ne imena agencije. Pokažite, kaj delate, za koga in s kakšnimi rezultati.",
+      "sampleName": "Studio Kadar",
+      "sampleMeta": "Sarajevo · Video produkcija",
+      "sampleAbout": "Snemamo kampanje za lokalne znamke, od ideje do objave.",
+      "sampleChips": "UGC; Video produkcija; Fotografija",
+      "notes": {
+        "1": {
+          "title": "Naslovna slika in logotip",
+          "text": "Naslovna slika pokaže vaše delo, logotip podpiše vsako sporočilo."
+        },
+        "2": {
+          "title": "Ime in dejavnost",
+          "text": "Ime agencije in področja, na katerih delate."
+        },
+        "3": {
+          "title": "Opis",
+          "text": "Kaj delate, za koga in kako, v nekaj stavkih."
+        },
+        "4": {
+          "title": "Storitve",
+          "text": "Vsaka storitev posebej, da vas znamke najdejo po tem, kar iščejo."
+        },
+        "5": {
+          "title": "Dela in paketi",
+          "text": "Najboljše kampanje in paketi z jasno vsebino."
+        }
+      },
+      "tips": {
+        "1": {
+          "title": "Storitev pred imenom",
+          "text": "Storitve poimenujte z besedami, ki jih znamke uporabljajo pri iskanju."
+        },
+        "2": {
+          "title": "Rezultati prepričajo",
+          "text": "Ob delu na kratko navedite, kaj je kampanja dosegla."
+        },
+        "3": {
+          "title": "Jasni paketi",
+          "text": "Paket z opisom vsebine olajša prvo ponudbo."
+        }
+      },
+      "do": {
+        "1": "Nove kampanje dodajte po objavi.",
+        "2": "Napišite, za koga je katera storitev.",
+        "3": "Odgovorite na vprašanja o rokih in popravkih."
+      },
+      "dont": {
+        "1": "Splošni opisi brez primerov.",
+        "2": "Desetine storitev brez opisa.",
+        "3": "Logotip nizke ločljivosti."
+      },
+      "look": {
+        "1": {
+          "title": "Kdo ste",
+          "text": "Logotip, naslovna slika in opis pokažejo, ali ste pravi partner."
+        },
+        "2": {
+          "title": "Kaj delate",
+          "text": "Storitve in dejavnosti odločajo, ali vas najdejo."
+        },
+        "3": {
+          "title": "Kako delate",
+          "text": "Dela in paketi pokažejo kakovost in obseg."
+        },
+        "4": {
+          "title": "Kaj sledi",
+          "text": "Odgovori na pogosta vprašanja skrajšajo prvi pogovor."
+        }
+      }
+    },
+    "brand": {
+      "eyebrow": "Vodnik za znamke",
+      "title": "Profil, ki mu ustvarjalci zaupajo",
+      "lead": "Pred prijavo ustvarjalci preverijo, kdo ste. Izpolnjen profil prinese več prijav in boljše predloge.",
+      "sampleName": "Aroma Lab",
+      "sampleMeta": "Sarajevo · Kozmetika",
+      "sampleAbout": "Naravni parfumi in nega, izdelani v majhnih serijah v Sarajevu.",
+      "sampleChips": "Kozmetika; Lepota; Lifestyle",
+      "notes": {
+        "1": {
+          "title": "Naslovna slika in logotip",
+          "text": "Izdelek, prostor ali ekipa in logotip, ki ga je lahko prepoznati."
+        },
+        "2": {
+          "title": "Ime",
+          "text": "Ime znamke, kot ga poznajo kupci."
+        },
+        "3": {
+          "title": "Opis",
+          "text": "Kaj delate, za koga in kakšen ton želite od ustvarjalcev."
+        },
+        "4": {
+          "title": "Dejavnosti",
+          "text": "Tako vas pravi ustvarjalci najdejo pri iskanju."
+        },
+        "5": {
+          "title": "Splet in omrežja",
+          "text": "Ustvarjalci pred prvim sporočilom preverijo splet in omrežja."
+        }
+      },
+      "tips": {
+        "1": {
+          "title": "Najprej ton",
+          "text": "Opišite, kakšne vsebine vam je všeč, ustvarjalci se bodo prilagodili."
+        },
+        "2": {
+          "title": "Bodite preverljivi",
+          "text": "Splet in omrežja gradijo zaupanje pred prvim sodelovanjem."
+        },
+        "3": {
+          "title": "Jasna kampanja",
+          "text": "Ob izpolnjenem profilu jasen brif prinese boljše prijave."
+        }
+      },
+      "do": {
+        "1": "Dodajte spletno stran in vsaj eno omrežje.",
+        "2": "Opišite občinstvo, ki ga želite doseči.",
+        "3": "Opis posodobite, ko se ponudba spremeni."
+      },
+      "dont": {
+        "1": "Profil brez logotipa.",
+        "2": "Opis iz enega stavka.",
+        "3": "Nedelujoče povezave."
+      },
+      "look": {
+        "1": {
+          "title": "Ali ste resnični",
+          "text": "Logotip, splet in omrežja potrdijo, kdo stoji za kampanjo."
+        },
+        "2": {
+          "title": "Kaj prodajate",
+          "text": "Opis in dejavnosti pokažejo, ali se ujemate z njihovimi vsebinami."
+        },
+        "3": {
+          "title": "Kakšen ton iščete",
+          "text": "Ustvarjalci izberejo znamke, katerih slog lahko prenesejo."
+        },
+        "4": {
+          "title": "Kako sodelujete",
+          "text": "Jasne kampanje in hitri odgovori vodijo do ponovnih sodelovanj."
+        }
+      }
+    }
   }
 }

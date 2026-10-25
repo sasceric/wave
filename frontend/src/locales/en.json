@@ -3154,5 +3154,416 @@
     "pushOff": "Turn off",
     "pushInstallHint": "On iPhone, add Wave to your Home Screen and open it from there to get notifications.",
     "pushDeniedHint": "Notifications are blocked for Wave. Allow them in your phone or browser settings, then come back here."
+  },
+  "profileStrength": {
+    "title": "Profile strength",
+    "scoreLabel": "Profile strength {score}%",
+    "levels": {
+      "1": "Starter",
+      "2": "Good",
+      "3": "Great",
+      "4": "Ready"
+    },
+    "toNext": "{points}% more to “{level}”.",
+    "why": {
+      "brands": "Brands look at complete profiles first.",
+      "creators": "Creators prefer to apply to brands with a complete profile."
+    },
+    "oneLeft": "One step left.",
+    "stepsLeft": "Steps to a full profile: {count}. Start with the most important.",
+    "open": "Open",
+    "addNow": "Add now",
+    "add": "Add",
+    "allSteps": "All steps ({done}/{total})",
+    "previewTitle": {
+      "brands": "How brands see you",
+      "creators": "How creators see you"
+    },
+    "previewLabel": "Preview of your card",
+    "previewHint": "This is your card. Dashed areas are still missing.",
+    "readyTitle": "Your profile is ready",
+    "readyText": {
+      "brands": "Everything brands look for is here. Refresh your work after each collaboration.",
+      "creators": "Everything creators look for is here. Keep it current with each campaign."
+    },
+    "saved": "+{points}% · Profile strength {score}%",
+    "priceFrom": "from {price}",
+    "missing": {
+      "photo": "Add a photo",
+      "cover": "Cover image",
+      "logo": "Logo",
+      "social": "Add networks",
+      "bio": "Add a bio",
+      "about": "Add a description",
+      "links": "Add website and networks",
+      "packages": "Add a priced package"
+    },
+    "phoneMissing": "Saving your profile needs a phone number. Add it in the profile editor.",
+    "photoTip": "Natural light, face clearly visible, no heavy filters.",
+    "logoTip": "The same logo you use on social media, on a light background.",
+    "coverTip": "Your product, space or team; avoid text over the image.",
+    "bioPlaceholder": "What you create, for whom, and what makes you different…",
+    "aboutPlaceholder": "What you do, for whom, and what you are known for…",
+    "minChars": "{count}/{min} characters",
+    "network": "Network",
+    "handlePlaceholder": "{'@'}username or profile link",
+    "addNetwork": "Add another network",
+    "link": "Link",
+    "addLink": "Add a link",
+    "packageTitle": "Package name",
+    "packageTitlePlaceholder": "Reel + stories",
+    "packageTitlePlaceholderAgency": "Campaign with 3 creators",
+    "packageIncludes": "What's included",
+    "packageIncludesPlaceholder": "1 reel, 3 stories, 1 revision",
+    "packageIncludesPlaceholderAgency": "Brief, 3 creators, report",
+    "packagePrice": "Price (BAM)",
+    "packageTip": "A guide price is enough. Edit delivery times and other package details in your profile.",
+    "faqTip": "Answer one or more questions, at least 10 characters each.",
+    "faqCreator1": "How long does delivery take?",
+    "faqCreator2": "How many revisions are included?",
+    "faqCreator3": "How long can the brand use the content?",
+    "faqAgency1": "When can you start?",
+    "faqAgency2": "What does working with you look like?",
+    "faqAgency3": "What does the report include?",
+    "save": "Save",
+    "saving": "Saving…",
+    "steps": {
+      "photo": {
+        "title": "Add a profile photo",
+        "why": "Brands look at the photo first. Without it the profile looks unfinished.",
+        "short": "Profile photo"
+      },
+      "logo": {
+        "title": "Add your logo",
+        "why": "Your logo signs every message and offer.",
+        "short": "Logo"
+      },
+      "cover": {
+        "title": "Add a cover image",
+        "why": "The first impression on your profile, before the first sentence.",
+        "short": "Cover image"
+      },
+      "works": {
+        "title": "Add 3–4 works to your portfolio",
+        "why": "Show your style and results; they sell better than a description.",
+        "short": "Portfolio works"
+      },
+      "bio": {
+        "title": "Write a few sentences about yourself",
+        "why": "What you create, for whom, and what makes you different.",
+        "short": "Bio (150+ characters)"
+      },
+      "about": {
+        "title": "Write a description",
+        "why": "What you do, for whom, and the tone you are after.",
+        "short": "Description (80+ characters)"
+      },
+      "social": {
+        "title": "Connect your social networks",
+        "why": "Networks and follower counts are what brands filter by first.",
+        "short": "Social networks"
+      },
+      "links": {
+        "title": "Add website and networks",
+        "why": "The other side checks who you are before the first message.",
+        "short": "Website and networks"
+      },
+      "packages": {
+        "title": "Add a package with a price",
+        "why": "A clear price shortens the deal and brings direct requests.",
+        "short": "Priced package"
+      },
+      "audience": {
+        "title": "Add audience data",
+        "why": "Countries, views and engagement help a brand choose you.",
+        "short": "Audience data"
+      },
+      "services": {
+        "title": "List your services",
+        "why": "Brands search for a service, not an agency. Let them find you by it.",
+        "short": "Services"
+      },
+      "industries": {
+        "title": "Choose your industries",
+        "why": "That is how the right creators find you in search.",
+        "short": "Industries"
+      },
+      "faq": {
+        "title": "Answer common questions",
+        "why": "Timelines, revisions and how you work, up front.",
+        "short": "FAQ"
+      }
+    },
+    "incomplete": "Profile {score}% complete"
+  },
+  "emailPreferences": {
+    "title": "Emails",
+    "group": "Emails",
+    "loading": "Loading your choices…",
+    "intro": "These are the emails Wave sends to {email}. Every change is saved right away.",
+    "profileTips": "Profile tips",
+    "profileTipsHint": "Short reminders while your profile is incomplete, four at most.",
+    "newsletter": "Wave news",
+    "newsletterHint": "New features and collaboration examples, now and then.",
+    "campaignAlerts": "New campaigns",
+    "campaignAlertsHint": "Campaigns matching your categories and countries.",
+    "always": "Account and collaborations",
+    "alwaysTag": "always",
+    "alwaysHint": "Messages, offers, confirmations and security. These emails cannot be switched off.",
+    "saved": "Your choice is saved.",
+    "resubscribed": "Switched back on: {name}.",
+    "unsubscribedTitle": "You’re unsubscribed.",
+    "unsubscribedText": "Switched off: {name}. Choose your other emails below.",
+    "undo": "Keep receiving: {name}",
+    "invalid": "This link is not valid or the account was deleted. Sign in and change your choice in Settings.",
+    "toWave": "Go to Wave",
+    "registerTitle": "Send me Wave news and tips.",
+    "registerHint": "Unsubscribe in one click from any email."
+  },
+  "profileGuide": {
+    "title": "Profile guide",
+    "intro": "Four pages on what a strong Wave profile looks like. Save them as a PDF or print them.",
+    "typeLabel": "Account type",
+    "types": {
+      "creator": "Creator",
+      "agency": "Agency",
+      "brand": "Brand"
+    },
+    "download": "Download PDF",
+    "inside": "In this guide",
+    "anatomyEyebrow": "Profile anatomy",
+    "anatomyTitle": "What goes where, and why",
+    "checklistEyebrow": "Checklist",
+    "checklistTitle": "Step by step",
+    "lookEyebrow": "The other side",
+    "lookTitle": {
+      "brands": "What brands look at",
+      "creators": "What creators look at"
+    },
+    "do": "Do",
+    "dont": "Avoid",
+    "ctaTitle": "Create your profile on Wave.",
+    "ctaScore": "Your profile is {score}% complete.",
+    "ctaText": "Open your Overview on Wave and continue from the first step.",
+    "cardLink": "Guide: what a strong profile looks like",
+    "creator": {
+      "eyebrow": "Guide for creators",
+      "title": "A profile brands open first",
+      "lead": "Brands decide in seconds: photo, networks, examples of work and price. This guide shows how to put that together on Wave.",
+      "sampleName": "Lejla Begić",
+      "sampleMeta": "Sarajevo · Lifestyle · from 150 BAM",
+      "sampleAbout": "I film everyday Sarajevo, food and cafés, warm and natural.",
+      "sampleChips": "Instagram 12.4K; TikTok 8.1K",
+      "notes": {
+        "1": {
+          "title": "Profile photo",
+          "text": "Face clearly visible, natural light, no heavy filters."
+        },
+        "2": {
+          "title": "Name and category",
+          "text": "The name your audience knows and one to three categories."
+        },
+        "3": {
+          "title": "Bio",
+          "text": "What you create, for whom and what sets you apart, in two or three sentences."
+        },
+        "4": {
+          "title": "Networks and audience",
+          "text": "Username, followers and, if you have them, views and engagement."
+        },
+        "5": {
+          "title": "Work and a package",
+          "text": "Three or four of your best pieces and at least one package with a price."
+        }
+      },
+      "tips": {
+        "1": {
+          "title": "Show, don’t tell",
+          "text": "One good video says more than a paragraph about style."
+        },
+        "2": {
+          "title": "A price saves time",
+          "text": "A package with a price shortens the deal and brings direct requests."
+        },
+        "3": {
+          "title": "Be specific",
+          "text": "City, topics and audience help brands find you."
+        }
+      },
+      "do": {
+        "1": "Add new work as soon as it is published.",
+        "2": "Update your numbers once a month.",
+        "3": "Answer common questions up front."
+      },
+      "dont": {
+        "1": "Images with someone else’s logo or watermark.",
+        "2": "A one-word bio.",
+        "3": "Old numbers that don’t match your profile."
+      },
+      "look": {
+        "1": {
+          "title": "Photo and first impression",
+          "text": "Brands see your photo and name on the card first."
+        },
+        "2": {
+          "title": "Networks and numbers",
+          "text": "They filter by network, followers and audience country."
+        },
+        "3": {
+          "title": "Examples of work",
+          "text": "Your work shows the quality and tone a brand can expect."
+        },
+        "4": {
+          "title": "Price and terms",
+          "text": "A clear package and answers shorten the way to an offer."
+        }
+      }
+    },
+    "agency": {
+      "eyebrow": "Guide for agencies",
+      "title": "A profile that brings the right requests",
+      "lead": "Brands look for a service, not an agency name. Show what you do, for whom and with what results.",
+      "sampleName": "Studio Kadar",
+      "sampleMeta": "Sarajevo · Video production",
+      "sampleAbout": "We film campaigns for local brands, from idea to publication.",
+      "sampleChips": "UGC; Video production; Photography",
+      "notes": {
+        "1": {
+          "title": "Cover and logo",
+          "text": "The cover shows your work, the logo signs every message."
+        },
+        "2": {
+          "title": "Name and industry",
+          "text": "Your agency name and the fields you work in."
+        },
+        "3": {
+          "title": "About",
+          "text": "What you do, for whom and how you work, in a few sentences."
+        },
+        "4": {
+          "title": "Services",
+          "text": "Each service on its own, so brands find you by what they need."
+        },
+        "5": {
+          "title": "Work and packages",
+          "text": "Your best campaigns and packages with clear deliverables."
+        }
+      },
+      "tips": {
+        "1": {
+          "title": "Service before name",
+          "text": "Name services in the words brands use when searching."
+        },
+        "2": {
+          "title": "Results sell",
+          "text": "Add a line on what each campaign achieved."
+        },
+        "3": {
+          "title": "Clear packages",
+          "text": "A package that lists deliverables makes the first offer easier."
+        }
+      },
+      "do": {
+        "1": "Add new campaigns after they go live.",
+        "2": "Say who each service is for.",
+        "3": "Answer questions about timelines and revisions."
+      },
+      "dont": {
+        "1": "Generic descriptions without examples.",
+        "2": "Dozens of services without descriptions.",
+        "3": "A low-resolution logo."
+      },
+      "look": {
+        "1": {
+          "title": "Who you are",
+          "text": "Logo, cover and description show whether you are the right partner."
+        },
+        "2": {
+          "title": "What you do",
+          "text": "Services and industries decide whether you are found."
+        },
+        "3": {
+          "title": "How you work",
+          "text": "Work and packages show quality and scope."
+        },
+        "4": {
+          "title": "What comes next",
+          "text": "Answers to common questions shorten the first conversation."
+        }
+      }
+    },
+    "brand": {
+      "eyebrow": "Guide for brands",
+      "title": "A profile creators trust",
+      "lead": "Before applying, creators check who you are. A complete profile brings more applications and better proposals.",
+      "sampleName": "Aroma Lab",
+      "sampleMeta": "Sarajevo · Cosmetics",
+      "sampleAbout": "Natural perfumes and care, made in small batches in Sarajevo.",
+      "sampleChips": "Cosmetics; Beauty; Lifestyle",
+      "notes": {
+        "1": {
+          "title": "Cover and logo",
+          "text": "Your product, space or team, and a logo that is easy to recognise."
+        },
+        "2": {
+          "title": "Name",
+          "text": "Your brand name as customers know it."
+        },
+        "3": {
+          "title": "About",
+          "text": "What you do, for whom and the tone you want from creators."
+        },
+        "4": {
+          "title": "Industries",
+          "text": "This is how the right creators find you in search."
+        },
+        "5": {
+          "title": "Website and networks",
+          "text": "Creators check your website and networks before the first message."
+        }
+      },
+      "tips": {
+        "1": {
+          "title": "Tone first",
+          "text": "Describe the content you like and creators will adapt."
+        },
+        "2": {
+          "title": "Be verifiable",
+          "text": "A website and networks build trust before the first collaboration."
+        },
+        "3": {
+          "title": "A clear campaign",
+          "text": "With a complete profile, a clear brief brings better applications."
+        }
+      },
+      "do": {
+        "1": "Add your website and at least one network.",
+        "2": "Describe the audience you want to reach.",
+        "3": "Update your description when your offer changes."
+      },
+      "dont": {
+        "1": "A profile without a logo.",
+        "2": "A one-sentence description.",
+        "3": "Broken links."
+      },
+      "look": {
+        "1": {
+          "title": "Whether you are real",
+          "text": "Logo, website and networks confirm who is behind the campaign."
+        },
+        "2": {
+          "title": "What you sell",
+          "text": "Description and industries show whether you fit their content."
+        },
+        "3": {
+          "title": "The tone you want",
+          "text": "Creators choose brands whose style they can carry."
+        },
+        "4": {
+          "title": "How you collaborate",
+          "text": "Clear campaigns and quick replies lead to repeat collaborations."
+        }
+      }
+    }
   }
 }

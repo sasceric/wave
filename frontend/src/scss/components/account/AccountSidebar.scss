@@ -167,6 +167,15 @@
     flex: 1;
   }
 
+  &__dot {
+    width: 8px;
+    height: 8px;
+    margin-left: auto;
+    flex: 0 0 auto;
+    border-radius: 50%;
+    background: var(--coral-text);
+  }
+
   &__badge {
     min-width: 22px;
     padding: 2px 7px;

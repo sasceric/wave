@@ -28,6 +28,7 @@ final class JobCatalog
         'QueueMaintenanceTask' => 'background',
         'SearchReconcileTask' => 'background',
         'SearchIndexBatchMessage' => 'background',
+        'ProfileReminderTask' => 'background',
     ];
 
     public static function message(string $type, string $id): JobMessage

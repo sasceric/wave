@@ -11,6 +11,7 @@ final class TaskRegistry
     public const DEFINITIONS = [
         'CampaignAlertTask' => [3600, null],
         'UnreadMessageReminderTask' => [3600, null],
+        'ProfileReminderTask' => [3600, null],
         'SitemapGenerateTask' => [3600, null],
         'ExpiredTokenCleanupTask' => [3600, null],
         'QueueMaintenanceTask' => [900, null],

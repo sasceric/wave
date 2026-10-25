@@ -57,6 +57,8 @@ final class AdminProfileResource
             'profileImage' => MediaImageResource::fromEntity($media, 96),
             'profileImageUrl' => $media?->getUrl() ?? $imageUrl,
             'completion' => $completion,
+            // Same 0–100 score the account sees on Pregled (null for staff and profiles without an account).
+            'profileStrength' => $owner !== null ? \App\Account\ProfileStrength::forUser($owner)['score'] ?? null : null,
         ];
     }
 

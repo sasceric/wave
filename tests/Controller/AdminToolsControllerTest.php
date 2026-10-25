@@ -146,7 +146,7 @@ final class AdminToolsControllerTest extends WebTestCase
         self::assertResponseIsSuccessful();
         $rows = $this->payload()['data'];
         self::assertSame(['QueueMaintenanceTask', 'SitemapGenerateTask', 'UnreadMessageReminderTask'], array_slice(array_column($rows, 'name'), 0, 3));
-        self::assertSame(array_fill(0, 7, null), array_slice(array_column($rows, 'nextExpectedAt'), 3));
+        self::assertSame(array_fill(0, 8, null), array_slice(array_column($rows, 'nextExpectedAt'), 3));
     }
 
     public function testAdminTaskWritesRequireCsrfAndProductionWorkerCannotRun(): void

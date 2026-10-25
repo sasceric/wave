@@ -63,6 +63,20 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(options: ['default' => true])]
     private bool $notificationsEnabled = true;
 
+    /** Optional emails; account, security and collaboration emails are always sent. */
+    #[ORM\Column(options: ['default' => true])]
+    private bool $profileTipsEnabled = true;
+
+    #[ORM\Column(options: ['default' => true])]
+    private bool $newsletterEnabled = true;
+
+    /** Profile reminder series: emails already sent and when the next one is due (managed by ProfileReminderBatch). */
+    #[ORM\Column(type: 'smallint', options: ['default' => 0])]
+    private int $profileReminderStage = 0;
+
+    #[ORM\Column(type: 'datetime_immutable', nullable: true)]
+    private ?\DateTimeImmutable $profileReminderNextAt = null;
+
     #[ORM\Column(type: 'datetime_immutable', nullable: true)]
     private ?\DateTimeImmutable $deletedAt = null;
 
@@ -190,6 +204,36 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function setNotificationsEnabled(bool $enabled): void
     {
         $this->notificationsEnabled = $enabled;
+    }
+
+    public function isProfileTipsEnabled(): bool
+    {
+        return $this->profileTipsEnabled;
+    }
+
+    public function setProfileTipsEnabled(bool $enabled): void
+    {
+        $this->profileTipsEnabled = $enabled;
+    }
+
+    public function isNewsletterEnabled(): bool
+    {
+        return $this->newsletterEnabled;
+    }
+
+    public function setNewsletterEnabled(bool $enabled): void
+    {
+        $this->newsletterEnabled = $enabled;
+    }
+
+    public function getProfileReminderStage(): int
+    {
+        return $this->profileReminderStage;
+    }
+
+    public function getProfileReminderNextAt(): ?\DateTimeImmutable
+    {
+        return $this->profileReminderNextAt;
     }
 
     public function setHideMyAccount(bool $hideMyAccount): void

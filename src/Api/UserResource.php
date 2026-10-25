@@ -27,6 +27,7 @@ final class UserResource
             'isAdmin' => $user->hasRole('ROLE_ADMIN'),
             'hide_my_account' => !$user->isApproved() || $user->isHideMyAccount() ? 1 : 0,
             'notificationsEnabled' => $user->isNotificationsEnabled(),
+            'emailPreferences' => ['profileTips' => $user->isProfileTipsEnabled(), 'newsletter' => $user->isNewsletterEnabled()],
             'profile' => $profile instanceof \App\Entity\Creator
                 ? CreatorResource::fromEntity($profile, $locale, categoryLabels: $categoryLabels, public: false) + ['birthday' => $profile->getBirthday()?->format('Y-m-d')]
                 : ($profile instanceof \App\Entity\Company ? CompanyResource::fromEntity($profile, $locale, categoryLabels: $categoryLabels, public: false) : null),

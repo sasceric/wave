@@ -32,7 +32,8 @@ import ProfileFaqFields from '../components/account/ProfileFaqFields.vue'
 import { normalizeServices } from '../lib/agencyServices'
 import AgencyProfileFields from '../components/companies/AgencyProfileFields.vue'
 import CreatorStudioPanel from '../components/account/CreatorStudioPanel.vue'
-import { normalizePresentation, presentationPayload } from '../lib/creatorPresentation'
+import { normalizePresentation } from '../lib/creatorPresentation'
+import { companyProfileBody, creatorProfileBody } from '../lib/profileDraft'
 import CreatorCampaignActivity from '../components/account/CreatorCampaignActivity.vue'
 import CompanyCampaignDetail from '../components/account/CompanyCampaignDetail.vue'
 import CompanyCampaignList from '../components/account/CompanyCampaignList.vue'
@@ -620,35 +621,8 @@ async function saveProfile() {
   const imageChanges = []
   let profileSaved = false
   const body = isCreator
-    ? {
-        displayName: profile.value.displayName,
-        category: profile.value.categories[0] || profile.value.category,
-        categories: profile.value.categories,
-        creatorTypes: profile.value.creatorTypes,
-        birthday: profile.value.birthday || null,
-        phone: normalizedPhone,
-        city: profile.value.city.trim(),
-        countryCode: profile.value.countryCode,
-        bio: profile.value.bio,
-        tagline: profile.value.tagline,
-        avatarMediaId: profile.value.avatarMediaId || null,
-        avatarUrl: profile.value.avatarMediaId ? null : profile.value.avatarUrl || null,
-        tags: [...tags.value],
-        ...presentationPayload(profile.value),
-        faqs: profile.value.faqs.map(({ question, answer }) => ({ question, answer })),
-      }
-    : {
-        name: profile.value.name,
-        companyType: profile.value.companyType,
-        industries: profile.value.industries,
-        coverMediaId: profile.value.coverMediaId || null,
-        about: profile.value.about || '',
-        city: profile.value.city?.trim() || null,
-        countryCode: profile.value.countryCode || null,
-        phone: normalizedPhone,
-        ...(agency.value ? { ...presentationPayload(profile.value), services: profile.value.services, faqs: profile.value.faqs } : {}),
-        socialLinks: (profile.value.socialLinks || []).map(({ platform, url }) => ({ platform, url })),
-      }
+    ? creatorProfileBody(profile.value, { tags: tags.value, phone: normalizedPhone })
+    : companyProfileBody(profile.value, { phone: normalizedPhone, agency: agency.value })
   try {
     const fields = [
       { field: profileImageField.value, id: isCreator ? 'avatarMediaId' : 'logoMediaId', url: isCreator ? 'avatarUrl' : 'logoUrl' },

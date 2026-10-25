@@ -42,6 +42,7 @@ const form = reactive({
   password: '',
   accountType: route.query.accountType === 'company' ? 'company' : 'creator',
   name: '',
+  newsletter: true,
 })
 
 watch(() => [route.meta?.authMode, route.query.mode], ([authMode, queryMode]) => {
@@ -148,6 +149,7 @@ async function submit() {
     Object.assign(body, {
       accountType: form.accountType,
       name: form.name.trim(),
+      newsletter: form.newsletter,
     })
   }
 
@@ -334,6 +336,11 @@ function changeMode(nextMode) {
               </template>
             </div>
           </div>
+
+          <label v-if="mode === 'register'" class="auth-form__check">
+            <input v-model="form.newsletter" type="checkbox" />
+            <span><strong>{{ t('emailPreferences.registerTitle') }}</strong> {{ t('emailPreferences.registerHint') }}</span>
+          </label>
 
           <button class="button button--dark button--full auth-form__submit" type="submit" :disabled="busy">
             {{ mode === 'login' ? t('auth.signIn') : mode === 'register' ? t('auth.register') : t('authScreen.sendResetLink') }}
