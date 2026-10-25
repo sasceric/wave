@@ -1455,7 +1455,11 @@
     "noMatches": "Nema rezultata za ovu pretragu.",
     "companyFeaturedSaved": "Odabir istaknutih tvrtki je spremljen.",
     "totalResults": "Ukupno rezultata: {count}",
-    "loadedResults": "Učitano rezultata: {count}"
+    "loadedResults": "Učitano rezultata: {count}",
+    "profileReminderEmailTemplate": "Savjeti za profil, {n}. e-poruka (dan {day})",
+    "profileReminderEmailTemplateHint": "Šalje se dok profil nije popunjen. Izmjena vrijedi za kreatore i tvrtke.",
+    "campaignAlertEmailTemplate": "Nove kampanje",
+    "campaignAlertEmailTemplateHint": "Pregled novih kampanja po kategorijama i zemljama kreatora."
   },
   "api": {
     "invalidResponse": "Wave nije uspio pročitati odgovor poslužitelja. Pokušaj ponovno.",

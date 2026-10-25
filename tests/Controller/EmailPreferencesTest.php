@@ -81,13 +81,18 @@ final class EmailPreferencesTest extends WebTestCase
         self::assertEmailCount(0);
         self::assertNotNull($db->fetchOne('SELECT profile_reminder_next_at FROM wave_user WHERE id = ?', [$user->getId()]));
 
+        // An admin-edited first reminder replaces the built-in subject and HTML.
+        $html = str_replace('{{heading}}</h1>', '{{heading}} Custom reminder</h1>', static::getContainer()->get(\App\Account\EmailTemplateRenderer::class)->getDefaultHtml('profile_reminder_1'));
+        $this->em->persist(new \App\Entity\EmailTemplate('profile_reminder_1', 'en', 'Score {{score}}% · {{firstStep}}', $html));
+        $this->em->flush();
         $db->executeStatement('UPDATE wave_user SET profile_reminder_next_at = ? WHERE id = ?', [gmdate('Y-m-d H:i:s', time() - 60), $user->getId()]);
         self::assertSame(1, $batch->run(false));
         self::assertEmailCount(1);
         $email = self::getMailerMessage();
         self::assertInstanceOf(Email::class, $email);
         self::assertSame('amina@example.test', $email->getTo()[0]->getAddress());
-        self::assertEmailHtmlBodyContains($email, '%');
+        self::assertSame('Score 0% · Add a profile photo', $email->getSubject());
+        self::assertEmailHtmlBodyContains($email, 'Custom reminder');
         self::assertStringContainsString('/api/email/unsubscribe?u='.$user->getId(), $email->getHeaders()->get('List-Unsubscribe')?->getBodyAsString() ?? '');
         self::assertSame('List-Unsubscribe=One-Click', $email->getHeaders()->get('List-Unsubscribe-Post')?->getBodyAsString());
         self::assertSame(1, (int) $db->fetchOne('SELECT profile_reminder_stage FROM wave_user WHERE id = ?', [$user->getId()]));

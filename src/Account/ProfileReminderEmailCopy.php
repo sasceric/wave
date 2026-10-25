@@ -134,7 +134,7 @@ final class ProfileReminderEmailCopy
     /**
      * @return array<string, string>
      */
-    public static function forStage(string $locale, string $audience, int $stage, int $score, string $firstStep): array
+    public static function forStage(string $locale, string $audience, int $stage, int|string $score, string $firstStep): array
     {
         $copy = self::COPY[$locale] ?? self::COPY['bs'];
         $group = $copy[$audience === 'creator' ? 'creator' : 'company'];

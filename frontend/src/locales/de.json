@@ -1454,7 +1454,11 @@
     "noMatches": "Keine Einträge entsprechen dieser Suche.",
     "companyFeaturedSaved": "Auswahl hervorgehobener Unternehmen gespeichert.",
     "totalResults": "Ergebnisse insgesamt: {count}",
-    "loadedResults": "Geladene Ergebnisse: {count}"
+    "loadedResults": "Geladene Ergebnisse: {count}",
+    "profileReminderEmailTemplate": "Profiltipps, E-Mail {n} (Tag {day})",
+    "profileReminderEmailTemplateHint": "Wird gesendet, solange ein Profil unvollständig ist. Änderungen gelten für Creator und Unternehmen.",
+    "campaignAlertEmailTemplate": "Neue Kampagnen",
+    "campaignAlertEmailTemplateHint": "Übersicht neuer Kampagnen passend zu Kategorien und Ländern des Creators."
   },
   "api": {
     "invalidResponse": "Wave konnte die Serverantwort nicht lesen. Bitte versuche es erneut.",

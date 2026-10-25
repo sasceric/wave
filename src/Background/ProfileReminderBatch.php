@@ -7,6 +7,7 @@ use App\Account\EmailRecipient;
 use App\Account\EmailTemplateRenderer;
 use App\Account\ProfileReminderEmailCopy;
 use App\Account\ProfileStrength;
+use App\Entity\EmailTemplate;
 use App\Entity\User;
 use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
@@ -100,41 +101,85 @@ final class ProfileReminderBatch
      */
     public function send(User $user, string $locale, int $stage, array $strength): void
     {
-        $audience = $strength['kind'] === 'creator' ? 'creator' : 'company';
-        $steps = $this->steps($locale);
-        $missing = array_slice($strength['missing'], 0, 2);
-        $first = $steps[$missing[0]['key'] ?? '']['title'] ?? '';
-        $copy = ProfileReminderEmailCopy::forStage($locale, $audience, $stage, $strength['score'], $first);
-        $lines = array_map(static fn (array $step): string => '• '.($steps[$step['key']]['title'] ?? $step['key']).' (+'.$step['points'].'%)'
-            .(isset($steps[$step['key']]['why']) ? "\n".$steps[$step['key']]['why'] : ''), $missing);
         $id = (int) $user->getId();
         $name = EmailRecipient::name($user);
-        $variables = [
-            'locale' => match ($locale) { 'sr' => 'sr-Latn', 'cnr' => 'cnr-Latn-ME', default => $locale },
-            'preheader' => $copy['preheader'], 'eyebrow' => $copy['eyebrow'], 'heading' => $copy['heading'],
-            'greeting' => EmailRecipient::greeting($copy['greeting'], $name), 'message' => $copy['message'], 'recipientName' => $name,
-            'scoreLabel' => $copy['scoreLabel'], 'score' => (string) $strength['score'],
-            'stepsLabel' => $copy['stepsLabel'], 'steps' => implode("\n\n", $lines),
-            'buttonLabel' => $copy['buttonLabel'], 'actionUrl' => $this->preferences->routeUrl('account-dashboard', $locale),
-            'guideLabel' => $copy['guideLabel'], 'guideUrl' => $this->preferences->routeUrl('account-profile-guide', $locale),
-            'footer' => $copy['footer'],
-            'unsubscribeLabel' => $copy['unsubscribeLabel'], 'unsubscribeUrl' => $this->preferences->pageUrl($id, EmailPreferences::PROFILE_TIPS, $locale),
-            'settingsLabel' => $copy['settingsLabel'], 'settingsUrl' => $this->preferences->pageUrl($id, null, $locale),
-        ];
+        $variables = $this->variables($locale, $strength['kind'] === 'creator' ? 'creator' : 'company', $stage, $strength['score'], $strength['missing'], $name, [
+            'unsubscribeUrl' => $this->preferences->pageUrl($id, EmailPreferences::PROFILE_TIPS, $locale),
+            'settingsUrl' => $this->preferences->pageUrl($id, null, $locale),
+        ]);
+        $key = self::templateKey($stage);
+        // Admins can edit each reminder per language (Admin → Email templates).
+        $custom = $this->entityManager->getRepository(EmailTemplate::class)->findOneBy(['templateKey' => $key, 'locale' => $locale]);
+        $subject = $custom instanceof EmailTemplate
+            ? strtr($custom->getSubject(), ['{{score}}' => $variables['score'], '{{firstStep}}' => $variables['firstStep']])
+            : $variables['subject'];
+        unset($variables['subject']);
         $text = implode("\n\n", [
-            $variables['greeting'], $copy['message'], $copy['scoreLabel'].': '.$strength['score'].'%',
-            $copy['stepsLabel'].":\n".$variables['steps'], $copy['buttonLabel'].":\n".$variables['actionUrl'],
-            $copy['guideLabel'].":\n".$variables['guideUrl'],
-            $copy['footer']."\n".$copy['unsubscribeLabel'].': '.$variables['unsubscribeUrl'],
+            $variables['greeting'], $variables['message'], $variables['scoreLabel'].': '.$variables['score'].'%',
+            $variables['stepsLabel'].":\n".$variables['steps'], $variables['buttonLabel'].":\n".$variables['actionUrl'],
+            $variables['guideLabel'].":\n".$variables['guideUrl'],
+            $variables['footer']."\n".$variables['unsubscribeLabel'].': '.$variables['unsubscribeUrl'],
         ]);
         $email = new Email()
             ->from(new Address($this->fromAddress, $this->fromName))
             ->to(new Address($user->getEmail(), $name))
-            ->subject($copy['subject'])
+            ->subject($subject)
             ->text($text)
-            ->html($this->templates->render('profile_reminder', $variables));
+            ->html($this->templates->render($key, $variables, $custom instanceof EmailTemplate ? $custom->getHtmlBody() : null));
         $this->preferences->addUnsubscribeHeaders($email, $id, EmailPreferences::PROFILE_TIPS);
         $this->mailer->send($email);
+    }
+
+    public static function templateKey(int $stage): string
+    {
+        return 'profile_reminder_'.max(1, min(count(self::SCHEDULE_DAYS), $stage));
+    }
+
+    /** Subject shown in the admin editor; {{score}} and {{firstStep}} are filled in when sending. */
+    public function defaultSubject(int $stage, string $locale): string
+    {
+        return ProfileReminderEmailCopy::forStage($locale, 'creator', $stage, '{{score}}', '{{firstStep}}')['subject'];
+    }
+
+    /** @return array<string, string> */
+    public function previewVariables(int $stage, string $locale): array
+    {
+        $variables = $this->variables($locale, 'creator', $stage, 35, [['key' => 'works', 'points' => 20], ['key' => 'bio', 'points' => 15]], 'Amina Kovač', [
+            'unsubscribeUrl' => 'https://wave.ba/example-unsubscribe', 'settingsUrl' => 'https://wave.ba/example-email-settings',
+        ]);
+        unset($variables['subject']);
+
+        return $variables;
+    }
+
+    /**
+     * @param list<array{key: string, points: int}> $missing
+     * @param array{unsubscribeUrl: string, settingsUrl: string} $links
+     * @return array<string, string>
+     */
+    private function variables(string $locale, string $audience, int $stage, int $score, array $missing, string $name, array $links): array
+    {
+        $locale = in_array($locale, ProfileReminderEmailCopy::locales(), true) ? $locale : 'bs';
+        $steps = $this->steps($locale);
+        $missing = array_slice($missing, 0, 2);
+        $first = $steps[$missing[0]['key'] ?? '']['title'] ?? '';
+        $copy = ProfileReminderEmailCopy::forStage($locale, $audience, $stage, $score, $first);
+        $lines = array_map(static fn (array $step): string => '• '.($steps[$step['key']]['title'] ?? $step['key']).' (+'.$step['points'].'%)'
+            .(isset($steps[$step['key']]['why']) ? "\n".$steps[$step['key']]['why'] : ''), $missing);
+
+        return [
+            'subject' => $copy['subject'],
+            'locale' => match ($locale) { 'sr' => 'sr-Latn', 'cnr' => 'cnr-Latn-ME', default => $locale },
+            'preheader' => $copy['preheader'], 'eyebrow' => $copy['eyebrow'], 'heading' => $copy['heading'],
+            'greeting' => EmailRecipient::greeting($copy['greeting'], $name), 'message' => $copy['message'], 'recipientName' => $name,
+            'scoreLabel' => $copy['scoreLabel'], 'score' => (string) $score, 'firstStep' => $first,
+            'stepsLabel' => $copy['stepsLabel'], 'steps' => implode("\n\n", $lines),
+            'buttonLabel' => $copy['buttonLabel'], 'actionUrl' => $this->preferences->routeUrl('account-dashboard', $locale),
+            'guideLabel' => $copy['guideLabel'], 'guideUrl' => $this->preferences->routeUrl('account-profile-guide', $locale),
+            'footer' => $copy['footer'],
+            'unsubscribeLabel' => $copy['unsubscribeLabel'], 'unsubscribeUrl' => $links['unsubscribeUrl'],
+            'settingsLabel' => $copy['settingsLabel'], 'settingsUrl' => $links['settingsUrl'],
+        ];
     }
 
     private function after(\DateTimeImmutable $now, int $days): string

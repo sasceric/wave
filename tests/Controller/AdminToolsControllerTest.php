@@ -2,7 +2,9 @@
 
 namespace App\Tests\Controller;
 
+use App\Background\JobCatalog;
 use App\Background\JobDispatcher;
+use App\Background\TaskRegistry;
 use App\Entity\User;
 use App\Service\AdminLogReader;
 use Doctrine\ORM\EntityManagerInterface;
@@ -60,7 +62,7 @@ final class AdminToolsControllerTest extends WebTestCase
         self::assertSame('unregistered', $this->payload()['data'][0]['status']);
         $this->client->request('GET', '/api/admin/tools/queues?locale=en');
         self::assertCount(25, $this->payload()['data']);
-        self::assertSame(26, $this->payload()['meta']['total']);
+        self::assertSame(count(JobCatalog::TYPES) + 5, $this->payload()['meta']['total']);
         self::assertContains('CreditsAnnouncementMessage', array_column($this->payload()['data'], 'id'));
         for ($index = 1; $index <= 35; ++$index) {
             file_put_contents($this->directory . '/prod.log', 'line ' . $index . "\n", FILE_APPEND);
@@ -146,7 +148,7 @@ final class AdminToolsControllerTest extends WebTestCase
         self::assertResponseIsSuccessful();
         $rows = $this->payload()['data'];
         self::assertSame(['QueueMaintenanceTask', 'SitemapGenerateTask', 'UnreadMessageReminderTask'], array_slice(array_column($rows, 'name'), 0, 3));
-        self::assertSame(array_fill(0, 8, null), array_slice(array_column($rows, 'nextExpectedAt'), 3));
+        self::assertSame(array_fill(0, count(TaskRegistry::DEFINITIONS) - 3, null), array_slice(array_column($rows, 'nextExpectedAt'), 3));
     }
 
     public function testAdminTaskWritesRequireCsrfAndProductionWorkerCannotRun(): void
@@ -158,12 +160,12 @@ final class AdminToolsControllerTest extends WebTestCase
         $token = $this->payload()['csrfToken'];
         $this->client->request('POST', '/api/admin/tools/tasks/register?locale=en', server: ['HTTP_X_CSRF_TOKEN' => $token]);
         self::assertResponseStatusCodeSame(202);
-        self::assertSame(10, $this->payload()['data']['registered']);
+        self::assertSame(count(TaskRegistry::DEFINITIONS), $this->payload()['data']['registered']);
         $db = static::getContainer()->get(EntityManagerInterface::class)->getConnection();
         $db->executeStatement('UPDATE wave_scheduled_task SET next_run_at = ?', ['2000-01-01 00:00:00']);
         $this->client->request('POST', '/api/admin/tools/tasks/register?locale=en', server: ['HTTP_X_CSRF_TOKEN' => $token]);
         self::assertResponseStatusCodeSame(202);
-        self::assertSame(10, $this->payload()['data']['registered']);
+        self::assertSame(count(TaskRegistry::DEFINITIONS), $this->payload()['data']['registered']);
         foreach ($db->fetchAllAssociative('SELECT next_run_at, interval_seconds FROM wave_scheduled_task') as $row) {
             self::assertEqualsWithDelta(time() + (int) $row['interval_seconds'], strtotime($row['next_run_at'].' UTC'), 5);
         }

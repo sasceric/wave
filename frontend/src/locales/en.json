@@ -1454,7 +1454,11 @@
     "noMatches": "No items match this search.",
     "companyFeaturedSaved": "Featured company selections saved.",
     "totalResults": "Total results: {count}",
-    "loadedResults": "Loaded results: {count}"
+    "loadedResults": "Loaded results: {count}",
+    "profileReminderEmailTemplate": "Profile tips, email {n} (day {day})",
+    "profileReminderEmailTemplateHint": "Sent while a profile is incomplete. Edits apply to creators and companies.",
+    "campaignAlertEmailTemplate": "New campaigns",
+    "campaignAlertEmailTemplateHint": "Digest of new campaigns matching a creator’s categories and countries."
   },
   "api": {
     "invalidResponse": "Wave could not read the server response. Please try again.",

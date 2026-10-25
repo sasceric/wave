@@ -3,9 +3,11 @@
 namespace App\Controller\Api;
 
 use App\Account\AccountEmailSender;
+use App\Account\CampaignAlertDelivery;
 use App\Account\ContactEmailCopy;
 use App\Account\EmailTemplateRenderer;
 use App\Api\ApiAccess;
+use App\Background\ProfileReminderBatch;
 use App\Api\JsonPayload;
 use App\Entity\EmailTemplate;
 use App\Localization\ApiMessages;
@@ -36,6 +38,11 @@ final class EmailTemplateController
         'credit_code_assigned',
         'verification_reminder',
         'profile_tip',
+        'profile_reminder_1',
+        'profile_reminder_2',
+        'profile_reminder_3',
+        'profile_reminder_4',
+        'campaign_alert',
     ];
     #[Route('/api/admin/email-templates', name: 'api_admin_email_templates', methods: ['GET'])]
     public function list(
@@ -45,6 +52,8 @@ final class EmailTemplateController
         AccountEmailSender $accountEmailSender,
         NewsletterSubscriberEmailSender $subscriberEmailSender,
         EmailTemplateRenderer $renderer,
+        ProfileReminderBatch $profileReminders,
+        CampaignAlertDelivery $campaignAlerts,
     ): JsonResponse {
         $locale = LocaleContext::fromRequest($request);
         if ($locale === null) {
@@ -66,16 +75,18 @@ final class EmailTemplateController
                 'locale' => $locale,
                 'subject' => $customization instanceof EmailTemplate
                     ? $customization->getSubject()
-                    : $this->defaultSubject($key, $locale, $accountEmailSender, $subscriberEmailSender),
+                    : $this->defaultSubject($key, $locale, $accountEmailSender, $subscriberEmailSender, $profileReminders, $campaignAlerts),
                 'htmlBody' => $customization instanceof EmailTemplate
                     ? $renderer->prepareHtml($customization->getHtmlBody())
                     : $renderer->getDefaultHtml($key),
                 'variables' => $renderer->variables($key),
-                'preview' => $key === 'contact'
-                    ? ContactEmailCopy::previewVariables($locale)
-                    : ($key === 'subscribed'
-                        ? $subscriberEmailSender->previewVariables($locale)
-                        : $accountEmailSender->previewVariables($key, $locale)),
+                'preview' => match (true) {
+                    $key === 'contact' => ContactEmailCopy::previewVariables($locale),
+                    $key === 'subscribed' => $subscriberEmailSender->previewVariables($locale),
+                    $key === 'campaign_alert' => $campaignAlerts->previewVariables($locale),
+                    str_starts_with($key, 'profile_reminder_') => $profileReminders->previewVariables((int) substr($key, -1), $locale),
+                    default => $accountEmailSender->previewVariables($key, $locale),
+                },
             ];
         }
 
@@ -140,8 +151,16 @@ final class EmailTemplateController
         string $locale,
         AccountEmailSender $accountEmailSender,
         NewsletterSubscriberEmailSender $subscriberEmailSender,
+        ProfileReminderBatch $profileReminders,
+        CampaignAlertDelivery $campaignAlerts,
     ): string
     {
+        if ($key === 'campaign_alert') {
+            return $campaignAlerts->defaultSubject($locale);
+        }
+        if (str_starts_with($key, 'profile_reminder_')) {
+            return $profileReminders->defaultSubject((int) substr($key, -1), $locale);
+        }
         if ($key === 'contact') {
             return ContactEmailCopy::forLocale($locale)['subject'];
         }

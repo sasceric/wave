@@ -55,15 +55,37 @@ final class CampaignAlertDelivery
                     'campaignsLabel' => $copy['campaigns'], 'campaigns' => $details, 'buttonLabel' => $copy['view'], 'actionUrl' => $url,
                     'footer' => $copy['footer'], 'settingsUrl' => $settingsUrl, 'settingsLabel' => $copy['settings'],
                 ];
-                $email = new Email()->from(new Address($this->fromAddress, $this->fromName))->to(new Address($user['email'], EmailRecipient::cleanName($user['recipient_name'])))->subject($copy['subject'])
+                // Admins can edit this email per language (Admin → Email templates).
+                $custom = $this->db->fetchAssociative('SELECT subject, html_body FROM email_template WHERE template_key = ? AND locale = ?', ['campaign_alert', $locale]);
+                $email = new Email()->from(new Address($this->fromAddress, $this->fromName))->to(new Address($user['email'], EmailRecipient::cleanName($user['recipient_name'])))->subject($custom ? (string) $custom['subject'] : $copy['subject'])
                     ->text($variables['greeting']."\n\n".$copy['message']."\n\n".$details."\n\n".$variables['footer'].' '.$settingsUrl)
-                    ->html($this->templates->render('campaign_alert', $variables));
+                    ->html($this->templates->render('campaign_alert', $variables, $custom ? (string) $custom['html_body'] : null));
                 $this->preferences->addUnsubscribeHeaders($email, $id, EmailPreferences::CAMPAIGN_ALERTS);
                 $this->transport->send($email);
             }
             // Empty windows advance too, preventing repeated scans or empty digests.
             $this->db->executeStatement('UPDATE campaign_alert_preference SET checked_at = ? WHERE user_id = ?', [$until, $id]);
         });
+    }
+
+    public function defaultSubject(string $locale): string
+    {
+        return CampaignAlertEmailCopy::forLocale($locale)['subject'];
+    }
+
+    /** @return array<string, string> */
+    public function previewVariables(string $locale): array
+    {
+        $copy = CampaignAlertEmailCopy::forLocale($locale);
+
+        return [
+            'locale' => $locale, 'preheader' => $copy['message'], 'eyebrow' => 'WAVE', 'heading' => $copy['subject'],
+            'greeting' => EmailRecipient::greeting($copy['greeting'], 'Amina Kovač'), 'message' => $copy['message'], 'recipientName' => 'Amina Kovač',
+            'campaignsLabel' => $copy['campaigns'],
+            'campaigns' => "Summer campaign · Wave Studio · 300–800 BAM\nhttps://wave.ba/kampanje/summer-campaign\nCafé stories · Kafeterija Mlin · 150–250 BAM\nhttps://wave.ba/kampanje/cafe-stories",
+            'buttonLabel' => $copy['view'], 'actionUrl' => 'https://wave.ba/kampanje/summer-campaign',
+            'footer' => $copy['footer'], 'settingsUrl' => 'https://wave.ba/example-email-settings', 'settingsLabel' => $copy['settings'],
+        ];
     }
 
     public function matches(int $id, string $since, string $until, array $categories, array $countries): array

@@ -1455,7 +1455,11 @@
     "noMatches": "Ni zadetkov za to iskanje.",
     "companyFeaturedSaved": "Izbor izpostavljenih podjetij je shranjen.",
     "totalResults": "Skupaj rezultatov: {count}",
-    "loadedResults": "Naloženi rezultati: {count}"
+    "loadedResults": "Naloženi rezultati: {count}",
+    "profileReminderEmailTemplate": "Nasveti za profil, {n}. sporočilo ({day}. dan)",
+    "profileReminderEmailTemplateHint": "Pošlje se, dokler profil ni izpolnjen. Sprememba velja za ustvarjalce in podjetja.",
+    "campaignAlertEmailTemplate": "Nove kampanje",
+    "campaignAlertEmailTemplateHint": "Pregled novih kampanj po kategorijah in državah ustvarjalca."
   },
   "api": {
     "invalidResponse": "Wave ni mogel prebrati odgovora strežnika. Poskusi znova.",

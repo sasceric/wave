@@ -1455,7 +1455,11 @@
     "noMatches": "Nema rezultata za ovu pretragu.",
     "companyFeaturedSaved": "Izbor izdvojenih kompanija je sačuvan.",
     "totalResults": "Ukupno rezultata: {count}",
-    "loadedResults": "Učitano rezultata: {count}"
+    "loadedResults": "Učitano rezultata: {count}",
+    "profileReminderEmailTemplate": "Saveti za profil, {n}. imejl (dan {day})",
+    "profileReminderEmailTemplateHint": "Šalje se dok profil nije popunjen. Izmena važi za kreatore i kompanije.",
+    "campaignAlertEmailTemplate": "Nove kampanje",
+    "campaignAlertEmailTemplateHint": "Pregled novih kampanja po kategorijama i zemljama kreatora."
   },
   "api": {
     "invalidResponse": "Wave nije uspeo da pročita odgovor servera. Pokušaj ponovo.",
