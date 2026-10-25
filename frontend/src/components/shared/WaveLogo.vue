@@ -15,7 +15,7 @@ defineProps({
   <svg
     v-else
     class="wave-logo wave-logo--wordmark"
-    viewBox="48 55 660 225"
+    viewBox="48 115 660 162"
     aria-hidden="true"
   >
     <text

@@ -21,6 +21,7 @@ import { I18nT, useI18n } from 'vue-i18n'
 import { ArrowRight, ArrowLeft, Eye, ExternalLink, FileText, Plus, Trash2, UserRound, X } from '@lucide/vue'
 import AccountAccessPanel from '../components/account/AccountAccessPanel.vue'
 import AccountSidebar from '../components/account/AccountSidebar.vue'
+import AccountWorkTabs from '../components/account/AccountWorkTabs.vue'
 import AccountProfileSummary from '../components/account/AccountProfileSummary.vue'
 import AccountProfileCard from '../components/account/AccountProfileCard.vue'
 import AccountProfileDetails from '../components/account/AccountProfileDetails.vue'
@@ -979,6 +980,7 @@ onMounted(loadDashboard)
     <div class="account-layout">
       <AccountSidebar :user="user" :profile="profile" />
       <main class="account-content">
+      <AccountWorkTabs v-if="['applications', 'bookmarks', 'inquiries'].includes(accountSection) || (accountSection === 'campaigns' && campaignPage === 'list' && user.accountType !== 'creator')" />
       <div class="account-grid">
       <form v-form-validation
         v-if="accountSection === 'profile'"

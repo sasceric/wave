@@ -2,7 +2,7 @@
 import { computed, defineAsyncComponent, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { isNavigationFailure, NavigationFailureType, RouterView, useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import { ArrowRight, Bell, LifeBuoy, Building2, ChevronRight, Download, House, LogOut, Menu, Megaphone, MessageCircle, UserRound, UsersRound, X } from '@lucide/vue'
+import { ArrowRight, Bell, LifeBuoy, Building2, ChevronRight, Download, Handshake, House, LogOut, Menu, Megaphone, MessageCircle, UserRound, UsersRound, X } from '@lucide/vue'
 import { registerSW } from 'virtual:pwa-register'
 import LanguageSwitcher from './components/shared/LanguageSwitcher.vue'
 import HeaderCreatorSearch from './components/shared/HeaderCreatorSearch.vue'
@@ -112,6 +112,24 @@ const isMobileAccountNavigationPage = computed(() => Boolean(
       && (currentUser.value.isModerator || currentUser.value.isAdmin))),
 ))
 const mobileNavigationOpen = computed(() => mobileAccountSidebarOpen.value)
+// Desktop: account pages show the sidebar; elsewhere a menu button opens it as a drawer.
+const desktopSidebarOpen = ref(false)
+const canOpenDesktopSidebar = computed(() => Boolean(currentUser.value && !isMobileAccountNavigationPage.value))
+function toggleDesktopSidebar() { desktopSidebarOpen.value = !desktopSidebarOpen.value }
+function closeDesktopSidebar() { desktopSidebarOpen.value = false }
+watch(() => [route.fullPath, currentUser.value?.id], closeDesktopSidebar)
+// Signed-in phones get a personal tab bar: work, messages and "Me" replace directory tabs.
+const mobileNavRole = computed(() => {
+  const user = currentUser.value
+  if (!user) return 'guest'
+  const operational = user.isAdmin || (user.approved && user.emailVerified !== false && user.profileComplete !== false)
+  if (!operational || user.isAdmin) return 'member'
+  return user.accountType === 'creator' ? 'creator' : 'company'
+})
+const meTabActive = computed(() => Boolean(
+  ['account', 'verify-email', 'reset-password'].includes(route.meta.routeName)
+  || (route.meta.accountSection && !['applications', 'inquiries', 'bookmarks', 'offers', 'invitations', 'campaigns'].includes(route.meta.accountSection))
+))
 const hideSiteFooter = computed(() => Boolean(
   route.meta.accountSection
   || route.meta.adminSection
@@ -976,6 +994,18 @@ async function signOut() {
     <PullToRefresh />
     <header class="site-header">
       <div class="site-header__inner">
+        <button
+          v-if="canOpenDesktopSidebar"
+          class="header-sidebar-toggle"
+          type="button"
+          :aria-label="desktopSidebarOpen ? t('app.closeMenu') : t('app.openMenu')"
+          :aria-expanded="desktopSidebarOpen"
+          aria-controls="account-sidebar-menu"
+          @click="toggleDesktopSidebar"
+        >
+          <X v-if="desktopSidebarOpen" :size="21" stroke-width="1.8" aria-hidden="true" />
+          <Menu v-else :size="21" stroke-width="1.8" aria-hidden="true" />
+        </button>
         <WaveWordmark :aria-label="t('app.homeAria')" />
         <nav class="main-nav" :aria-label="t('app.mainNavigation')">
           <LocalizedLink
@@ -1163,6 +1193,13 @@ async function signOut() {
       :user="currentUser"
       :profile="currentUser?.profile"
       mobile-only
+    />
+    <AccountSidebar
+      v-if="canOpenDesktopSidebar && desktopSidebarOpen"
+      :user="currentUser"
+      :profile="currentUser?.profile"
+      drawer
+      @close="closeDesktopSidebar"
     />
 
     <main>
@@ -1401,6 +1438,17 @@ async function signOut() {
         <span class="mobile-bottom-nav__label">{{ t('app.homeTab') }}</span>
       </LocalizedLink>
       <LocalizedLink
+        v-if="mobileNavRole === 'creator'"
+        :to="{ name: 'account-applications' }"
+        class="mobile-bottom-nav__link"
+        :aria-label="t('accountHub.work')"
+        :class="{ 'is-active': ['applications', 'inquiries', 'bookmarks', 'offers', 'invitations'].includes(route.meta.accountSection) }"
+      >
+        <Handshake :size="21" stroke-width="1.8" aria-hidden="true" />
+        <span class="mobile-bottom-nav__label">{{ t('accountHub.work') }}</span>
+      </LocalizedLink>
+      <LocalizedLink
+        v-else
         to="/creators"
         class="mobile-bottom-nav__link"
         :aria-label="t('app.creatorsNav')"
@@ -1435,6 +1483,17 @@ async function signOut() {
         <span class="mobile-bottom-nav__label">{{ t('app.companies') }}</span>
       </LocalizedLink>
       <LocalizedLink
+        v-if="mobileNavRole === 'company'"
+        :to="{ name: 'account-campaigns' }"
+        class="mobile-bottom-nav__link"
+        :aria-label="t('accountHub.campaigns')"
+        :class="{ 'is-active': route.meta.accountSection === 'campaigns' || ['campaigns', 'campaign-detail'].includes(route.meta.routeName) }"
+      >
+        <Megaphone :size="21" stroke-width="1.8" aria-hidden="true" />
+        <span class="mobile-bottom-nav__label">{{ t('accountHub.campaigns') }}</span>
+      </LocalizedLink>
+      <LocalizedLink
+        v-else
         to="/campaigns"
         class="mobile-bottom-nav__link"
         :aria-label="t('app.campaigns')"
@@ -1444,6 +1503,20 @@ async function signOut() {
         <span class="mobile-bottom-nav__label">{{ t('app.campaigns') }}</span>
       </LocalizedLink>
       <LocalizedLink
+        v-if="currentUser"
+        :to="{ name: 'account-dashboard' }"
+        class="mobile-bottom-nav__link"
+        :aria-label="t('accountHub.me')"
+        :class="{ 'is-active': meTabActive }"
+      >
+        <span class="mobile-bottom-nav__avatar">
+          <img v-if="currentUser.profile?.avatarUrl || currentUser.profile?.logoUrl" :src="currentUser.profile?.avatarUrl || currentUser.profile?.logoUrl" alt="">
+          <UserRound v-else :size="21" stroke-width="1.8" aria-hidden="true" />
+        </span>
+        <span class="mobile-bottom-nav__label">{{ t('accountHub.me') }}</span>
+      </LocalizedLink>
+      <LocalizedLink
+        v-else
         to="/account"
         class="mobile-bottom-nav__link"
         :aria-label="t('app.account')"

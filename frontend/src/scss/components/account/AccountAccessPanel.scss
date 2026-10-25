@@ -46,7 +46,7 @@
     @include glass.surface;
 
     & { display: inline-flex; align-items: center; height: 44px; padding: 0 16px; border-radius: var(--radius-pill); }
-    svg, img { display: block; width: auto; height: 22px; }
+    svg, img { display: block; width: auto; height: 16px; }
   }
 
   &__card {

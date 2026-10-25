@@ -2,7 +2,7 @@
 import { computed, onBeforeUnmount, onMounted, watch } from 'vue'
 import {
   ExternalLink,
-  Star, Flag, Ban,
+  Flag,
   Coins,
   LogOut,
   Building2,
@@ -20,6 +20,8 @@ import {
   CornerUpRight,
   LogIn,
   UserRoundPlus,
+  Handshake,
+  Settings,
 } from '@lucide/vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
@@ -28,12 +30,11 @@ import { logoutAccount } from '../../lib/pushSession'
 import { useAdminNavigationCounts } from '../../composables/useAdminNavigationCounts'
 import { setCurrentUser } from '../../composables/useCurrentUser'
 import { localizedPath } from '../../routePaths'
-import CreditBalanceLink from './CreditBalanceLink.vue'
-import AccountDeletionAction from './AccountDeletionAction.vue'
 import WaveLogo from '../shared/WaveLogo.vue'
 import LocalizedLink from '../shared/LocalizedLink.vue'
 import LanguageSwitcher from '../shared/LanguageSwitcher.vue'
 import { mobileAccountSidebarOpen } from '../../composables/useMobileAccountSidebar'
+import { unreadMessageCount } from '../../composables/useUnreadMessages'
 
 const props = defineProps({
   user: {
@@ -53,7 +54,13 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
+  // Desktop drawer opened from the header menu button outside account pages.
+  drawer: {
+    type: Boolean,
+    default: false,
+  },
 })
+const emit = defineEmits(['close'])
 
 const adminCounts = useAdminNavigationCounts(() => props.user)
 const route = useRoute()
@@ -68,13 +75,14 @@ const publicRoute = computed(() => identity.value.slug ? {
   name: props.user?.accountType === 'creator' ? 'creator-profile' : 'company-profile',
   params: { slug: identity.value.slug },
 } : null)
-const primaryItems = computed(() => navigationItems.value.filter((item) => !item.route.startsWith('admin') && item.group !== 'settings'))
+const primaryItems = computed(() => navigationItems.value.filter((item) => !item.route.startsWith('admin') && !item.group))
 const adminItems = computed(() => navigationItems.value.filter((item) => (
-  item.route.startsWith('admin') && item.group !== 'marketing' && item.group !== 'settings'
+  item.route.startsWith('admin') && !item.group
 )))
 const adminMarketingItems = computed(() => navigationItems.value.filter((item) => (
   item.group === 'marketing'
 )))
+const adminSettingsItems = computed(() => navigationItems.value.filter((item) => item.group === 'admin-settings'))
 const settingsItems = computed(() => navigationItems.value.filter((item) => item.group === 'settings'))
 const exploreItems = computed(() => props.user?.profileComplete === false && !props.user?.isAdmin && !props.user?.isModerator ? [] : [
   props.user
@@ -99,6 +107,7 @@ async function signOut() {
 
 function closeMobileSidebar() {
   mobileAccountSidebarOpen.value = false
+  if (props.drawer) emit('close')
 }
 
 function handleSidebarKeydown(event) {
@@ -118,29 +127,26 @@ onBeforeUnmount(() => {
   closeMobileSidebar()
 })
 
+// Five places for every account (overview, work, messages, profile, settings);
+// reviews, blocks, tickets, credits and deletion live on the settings page.
+const workRoutes = ['account-applications', 'account-inquiries', 'account-bookmarks', 'account-offers', 'account-invitations']
+const campaignRoutes = ['account-campaigns', 'account-campaign-create', 'account-campaign-detail', 'account-inquiries']
+const settingsRoutes = ['account-settings', 'account-reviews', 'account-blocks', 'account-support', 'account-credits']
+
 const navigationItems = computed(() => {
   const canUseMarketplace = props.user?.isAdmin || props.user?.approved && props.user?.profileComplete !== false && props.user?.emailVerified !== false
   const creator = props.user?.accountType === 'creator'
-  const items = props.user ? [{ route: 'account-dashboard', labelKey: 'personalDashboard.title', icon: LayoutDashboard }, { route: 'account-support', labelKey: 'support.myTickets', icon: LifeBuoy, group: 'settings' }] : []
-
+  const provider = !creator && (props.user?.canOfferServices || props.user?.hasServiceHistory)
+  const items = props.user ? [{ route: 'account-dashboard', labelKey: 'personalDashboard.title', icon: LayoutDashboard }] : []
 
   if (canUseMarketplace && creator) {
-    items.push(
-      { route: 'account-applications', labelKey: 'account.myApplications', icon: ClipboardCheck },
-      { route: 'account-inquiries', labelKey: 'account.directRequests', icon: MessageCircle },
-      { route: 'account-bookmarks', labelKey: 'account.bookmarks', icon: House },
-    )
+    items.push({ route: 'account-applications', labelKey: 'accountHub.work', icon: Handshake, match: workRoutes })
   } else if (canUseMarketplace) {
-    items.push(
-      { route: 'account-campaigns', labelKey: 'account.campaigns', icon: Megaphone },
-      { route: 'account-inquiries', labelKey: 'account.directRequests', icon: MessageCircle },
-    )
+    items.push({ route: 'account-campaigns', labelKey: 'accountHub.campaigns', icon: Megaphone, match: campaignRoutes })
+    if (provider) items.push({ route: 'account-applications', labelKey: 'agency.providerWork', icon: Handshake, match: workRoutes.filter((name) => name !== 'account-inquiries') })
   }
-
-  if (canUseMarketplace && !creator && (props.user?.canOfferServices || props.user?.hasServiceHistory)) {
-    items.push({ route: 'account-applications', labelKey: 'agency.providerWork', icon: ClipboardCheck }, { route: 'account-bookmarks', labelKey: 'account.bookmarks', icon: House })
-  }
-  if (canUseMarketplace) items.push({ route: 'account-reviews', labelKey: 'safety.myReviews', icon: Star }, { route: 'account-blocks', labelKey: 'safety.myBlocks', icon: Ban, group: 'settings' })
+  if (canUseMarketplace && props.user) items.push({ route: 'messages', labelKey: 'app.messages', icon: MessageCircle, badge: unreadMessageCount.value || null })
+  if (props.user) items.push({ route: 'account', labelKey: 'accountHub.profile', icon: UserRound })
 
   if (props.user?.isModerator) {
     items.push({ route: 'moderation', labelKey: 'moderation.title', icon: ClipboardCheck })
@@ -154,11 +160,11 @@ const navigationItems = computed(() => {
       { route: 'admin-companies', labelKey: 'adminDashboard.navCompanies', icon: Building2 },
       { route: 'admin-campaigns', labelKey: 'adminDashboard.navCampaigns', icon: Megaphone },
       { route: 'admin-email-templates', labelKey: 'adminDashboard.navEmailTemplates', icon: Mail, group: 'marketing' },
-      { route: 'admin-credit-settings', labelKey: 'credits.adminTitle', icon: Coins, group: 'settings' },
-      { route: 'admin-tools', labelKey: 'adminTools.title', icon: Wrench, group: 'settings' },
-      { route: 'admin-registrations', labelKey: 'adminDashboard.navRegistrations', icon: ClipboardCheck, group: 'settings', badge: adminCounts.value?.approvals ?? props.pendingRegistrations },
-      { route: 'admin-reports', labelKey: 'safety.reports', icon: Flag, group: 'settings', badge: adminCounts.value?.reports },
-      { route: 'admin-support', labelKey: 'support.adminTitle', icon: LifeBuoy, group: 'settings', badge: adminCounts.value?.tickets },
+      { route: 'admin-credit-settings', labelKey: 'credits.adminTitle', icon: Coins, group: 'admin-settings' },
+      { route: 'admin-tools', labelKey: 'adminTools.title', icon: Wrench, group: 'admin-settings' },
+      { route: 'admin-registrations', labelKey: 'adminDashboard.navRegistrations', icon: ClipboardCheck, group: 'admin-settings', badge: adminCounts.value?.approvals ?? props.pendingRegistrations },
+      { route: 'admin-reports', labelKey: 'safety.reports', icon: Flag, group: 'admin-settings', badge: adminCounts.value?.reports },
+      { route: 'admin-support', labelKey: 'support.adminTitle', icon: LifeBuoy, group: 'admin-settings', badge: adminCounts.value?.tickets },
       { route: 'admin-qr', labelKey: 'adminQr.title', icon: QrCode, group: 'marketing' },
       { route: 'admin-redirects', labelKey: 'adminRedirects.title', icon: CornerUpRight, group: 'marketing' },
       {
@@ -169,18 +175,24 @@ const navigationItems = computed(() => {
       },
     )
   }
+  if (props.user) items.push({ route: 'account-settings', labelKey: 'account.sidebarSettings', icon: Settings, group: 'settings', match: settingsRoutes })
 
   return items.map((item) => ({
     ...item,
     label: t(item.labelKey),
   }))
 })
+
+function isActive(item) {
+  return item.match ? item.match.includes(route.meta.routeName) : route.meta.routeName === item.route
+}
 </script>
 
 <template>
   <button
-    v-if="mobileAccountSidebarOpen"
+    v-if="mobileAccountSidebarOpen || drawer"
     class="account-sidebar__backdrop"
+    :class="{ 'account-sidebar__backdrop--drawer': drawer }"
     type="button"
     :aria-label="t('app.closeMenu')"
     @click="closeMobileSidebar"
@@ -192,6 +204,7 @@ const navigationItems = computed(() => {
       'account-sidebar--admin': adminLayout,
       'account-sidebar--mobile-only': mobileOnly,
       'account-sidebar--mobile-open': mobileAccountSidebarOpen,
+      'account-sidebar--drawer': drawer,
     }"
     :aria-label="t('account.navigation')"
   >
@@ -211,16 +224,16 @@ const navigationItems = computed(() => {
       <LocalizedLink v-if="!user" class="account-sidebar__link" :class="{ 'is-active': route.meta.routeName === 'support' }" :to="{ name: 'support' }" @click="closeMobileSidebar"><LifeBuoy :size="20" aria-hidden="true" /><span class="account-sidebar__text">{{ t('support.label') }}</span></LocalizedLink>
     </div>
     <div v-if="user && primaryItems.length" class="account-sidebar__group">
-    <p class="account-sidebar__label">{{ t('account.navigation') }}</p>
-    <LocalizedLink
+      <p class="sr-only">{{ t('account.navigation') }}</p>
+      <LocalizedLink
       v-for="item in primaryItems"
       :key="item.route"
       class="account-sidebar__link"
-      :class="{ 'is-active': route.meta.routeName === item.route }"
+      :class="{ 'is-active': isActive(item) }"
       :to="{ name: item.route }"
       :title="item.label"
       :aria-label="item.badge != null ? `${item.label} (${item.badge})` : item.label"
-      :aria-current="route.meta.routeName === item.route ? 'page' : undefined"
+      :aria-current="isActive(item) ? 'page' : undefined"
       @click="closeMobileSidebar"
     >
       <component :is="item.icon" :size="18" aria-hidden="true" />
@@ -236,13 +249,41 @@ const navigationItems = computed(() => {
       <p class="account-sidebar__label">{{ t('adminDashboard.navMarketing') }}</p>
       <LocalizedLink v-for="item in adminMarketingItems" :key="item.route" class="account-sidebar__link" :class="{ 'is-active': route.meta.routeName === item.route }" :to="{ name: item.route }" :aria-current="route.meta.routeName === item.route ? 'page' : undefined" @click="closeMobileSidebar"><component :is="item.icon" :size="20" aria-hidden="true" /><span class="account-sidebar__text">{{ item.label }}</span><strong v-if="item.badge != null" class="account-sidebar__badge">{{ item.badge }}</strong></LocalizedLink>
     </div>
-    <div v-if="user" class="account-sidebar__group">
+    <div v-if="adminSettingsItems.length" class="account-sidebar__group">
       <p class="account-sidebar__label">{{ t('account.sidebarSettings') }}</p>
-      <LocalizedLink class="account-sidebar__link" :to="{ name: 'account' }" @click="closeMobileSidebar"><UserRound :size="20" aria-hidden="true" /><span class="account-sidebar__text">{{ t('app.account') }}</span></LocalizedLink>
-      <LocalizedLink v-for="item in settingsItems" :key="item.route" class="account-sidebar__link" :class="{ 'is-active': route.meta.routeName === item.route }" :to="{ name: item.route }" :aria-current="route.meta.routeName === item.route ? 'page' : undefined" @click="closeMobileSidebar"><component :is="item.icon" :size="20" aria-hidden="true" /><span class="account-sidebar__text">{{ item.label }}</span><strong v-if="item.badge != null" class="account-sidebar__badge">{{ item.badge }}</strong></LocalizedLink>
-      <CreditBalanceLink v-if="user.isAdmin || user.approved && user.emailVerified !== false && user.profileComplete !== false" @click="closeMobileSidebar" />
-      <AccountDeletionAction v-if="!user.isAdmin && !user.isModerator" @opened="closeMobileSidebar" />
-      <button class="account-sidebar__link account-sidebar__link--signout" type="button" :disabled="signingOut" @click="signOut"><LogOut :size="20" aria-hidden="true" /><span class="account-sidebar__text">{{ t('account.signOut') }}</span></button>
+      <LocalizedLink
+      v-for="item in adminSettingsItems"
+      :key="item.route"
+      class="account-sidebar__link"
+      :class="{ 'is-active': isActive(item) }"
+      :to="{ name: item.route }"
+      :title="item.label"
+      :aria-label="item.badge != null ? `${item.label} (${item.badge})` : item.label"
+      :aria-current="isActive(item) ? 'page' : undefined"
+      @click="closeMobileSidebar"
+    >
+      <component :is="item.icon" :size="18" aria-hidden="true" />
+      <span class="account-sidebar__text">{{ item.label }}</span>
+      <strong v-if="item.badge != null" class="account-sidebar__badge">{{ item.badge }}</strong>
+    </LocalizedLink>
+    </div>
+    <div v-if="user" class="account-sidebar__group account-sidebar__group--footer">
+      <LocalizedLink
+      v-for="item in settingsItems"
+      :key="item.route"
+      class="account-sidebar__link"
+      :class="{ 'is-active': isActive(item) }"
+      :to="{ name: item.route }"
+      :title="item.label"
+      :aria-label="item.badge != null ? `${item.label} (${item.badge})` : item.label"
+      :aria-current="isActive(item) ? 'page' : undefined"
+      @click="closeMobileSidebar"
+    >
+      <component :is="item.icon" :size="18" aria-hidden="true" />
+      <span class="account-sidebar__text">{{ item.label }}</span>
+      <strong v-if="item.badge != null" class="account-sidebar__badge">{{ item.badge }}</strong>
+    </LocalizedLink>
+      <button class="account-sidebar__link account-sidebar__link--signout" type="button" :disabled="signingOut" @click="signOut"><LogOut :size="18" aria-hidden="true" /><span class="account-sidebar__text">{{ t('account.signOut') }}</span></button>
       <p v-if="signOutError" class="account-sidebar__error" role="alert">{{ signOutError }}</p>
     </div>
   </nav>

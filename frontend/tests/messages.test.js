@@ -136,12 +136,15 @@ test('closing a pending Mercure authorization prevents a stale connection from o
   assert.equal(connections, 0)
 })
 
-test('the sidebar omits media kit and messages while retaining account workflow routes', async () => {
+test('the sidebar keeps five account places and moves secondary pages into settings', async () => {
   const { state } = await setupView('../src/components/account/AccountSidebar.vue', {}, {
     user: { accountType: 'creator', approved: true }, pendingRegistrations: 0, adminLayout: false,
   })
-  assert.ok(!state.navigationItems.value.some((item) => ['account', 'messages'].includes(item.route)))
-  assert.ok(state.navigationItems.value.some((item) => item.route === 'account-applications'))
+  assert.deepEqual(Array.from(state.navigationItems.value, (item) => item.route), ['account-dashboard', 'account-applications', 'messages', 'account', 'account-settings'])
+  const work = state.navigationItems.value.find((item) => item.route === 'account-applications')
+  assert.ok(['account-inquiries', 'account-bookmarks'].every((name) => work.match.includes(name)))
+  const settings = state.navigationItems.value.find((item) => item.route === 'account-settings')
+  assert.ok(['account-reviews', 'account-blocks', 'account-support', 'account-credits'].every((name) => settings.match.includes(name)))
   assert.deepEqual(Array.from(state.exploreItems.value, (item) => item.route), ['companies'])
 })
 

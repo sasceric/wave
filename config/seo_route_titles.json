@@ -47,5 +47,6 @@
   "account-blocks": "safety.myBlocks",
   "account-reviews": "safety.myReviews",
   "account-dashboard": "personalDashboard.title",
+  "account-settings": "account.sidebarSettings",
   "search": "seo.searchTitle"
 }

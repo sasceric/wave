@@ -9,6 +9,7 @@ import { apiRequest } from '../../lib/api'
 import { setCurrentUser } from '../../composables/useCurrentUser'
 import { localizedPath } from '../../routePaths'
 
+defineProps({ row: { type: Boolean, default: false } })
 const emit = defineEmits(['opened'])
 const { t, locale } = useI18n()
 const router = useRouter()
@@ -40,7 +41,11 @@ async function deleteAccount() {
 </script>
 
 <template>
-  <button class="account-sidebar__link account-sidebar__link--signout" type="button" @click="showConfirmation">
+  <button v-if="row" class="account-settings__row account-settings__row--danger" type="button" @click="showConfirmation">
+    <span class="account-settings__icon"><Trash2 :size="18" aria-hidden="true" /></span>
+    <span class="account-settings__text">{{ t('accountDeletion.action') }}<small>{{ t('accountHub.deleteHint') }}</small></span>
+  </button>
+  <button v-else class="account-sidebar__link account-sidebar__link--signout" type="button" @click="showConfirmation">
     <Trash2 :size="20" aria-hidden="true" /><span class="account-sidebar__text">{{ t('accountDeletion.action') }}</span>
   </button>
   <Teleport to="body">

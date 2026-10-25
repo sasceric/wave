@@ -14,12 +14,12 @@ import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import {
   ArrowRight,
-  Building2,
   CalendarDays,
   Check,
   CheckCheck,
   ChevronLeft,
   FileText,
+  Info,
   MapPin,
   Megaphone,
   MessageCircle,
@@ -264,6 +264,31 @@ const currentDisplayName = computed(() => (
   || currentUser.value?.email
   || ''
 ))
+// Where the collaboration stands, shown above the conversation:
+// talk → offer → collaboration → done, plus the next action when there is one.
+const threadStage = computed(() => {
+  const thread = selectedThread.value
+  if (!thread) return null
+  const offer = thread.engagement?.offer
+  if (offer?.status === 'cancelled' || thread.cancelled || selectedCampaign.value?.status === 'cancelled') return null
+  if (offer?.workCompletedAt || (offer?.status === 'accepted' && selectedCampaign.value?.status === 'finished')) return 4
+  if (offer?.status === 'accepted') return 2
+  if (offer?.status === 'pending') return 1
+  return 0
+})
+const threadStages = computed(() => ['stageTalk', 'stageOffer', 'stageWork', 'stageDone'].map((key, index) => ({
+  key,
+  label: t(`accountHub.${key}`),
+  state: threadStage.value > index || threadStage.value === 4 ? 'done' : threadStage.value === index ? 'current' : 'upcoming',
+})))
+const threadAction = computed(() => {
+  const thread = selectedThread.value
+  if (!thread || thread.readOnly) return null
+  const offer = thread.engagement?.offer
+  if (thread.engagement?.canHire && offer?.status !== 'pending') return 'actionHire'
+  if (offer?.status === 'accepted' && !offer.workCompletedAt) return 'actionWork'
+  return null
+})
 const collaborationCancelled = computed(() => selectedCampaign.value?.status === 'cancelled' || selectedConversation.value?.cancelled || selectedThread.value?.engagement?.offer?.status === 'cancelled')
 const campaignChatClosed = computed(() => collaborationCancelled.value || selectedThread.value?.readOnly || selectedCampaign.value?.status === 'finished' || (selectedCampaign.value?.status === 'closed' && selectedThread.value?.engagement?.offer?.status !== 'accepted'))
 const campaignChatNotice = computed(() => collaborationCancelled.value ? 'hiring.cancelledNotice' : selectedThread.value?.blocked ? 'safety.blockedHistory' : selectedThread.value?.readOnly ? 'campaignChat.deletedAccountNotice' : selectedCampaign.value?.status === 'finished' ? 'campaignChat.finishedNotice' : 'campaignChat.closedNotice')
@@ -1234,9 +1259,17 @@ function messageTimeDescription(value) {
               aria-controls="campaign-details-panel"
               @click="detailsOpen = !detailsOpen"
             >
-              <Building2 :size="19" aria-hidden="true" />
+              <Info :size="18" aria-hidden="true" />
+              <span class="campaign-messages__details-toggle-label">{{ t('accountHub.details') }}</span>
+              <i v-if="threadAction && !detailsOpen" class="campaign-messages__details-dot" aria-hidden="true"></i>
             </button>
           </header>
+          <div v-if="threadStage !== null" class="campaign-messages__stage">
+            <ol :aria-label="t('accountHub.stageLabel')">
+              <li v-for="step in threadStages" :key="step.key" :class="`is-${step.state}`" :aria-current="step.state === 'current' ? 'step' : undefined"><i aria-hidden="true"></i>{{ step.label }}</li>
+            </ol>
+            <button v-if="threadAction" type="button" class="campaign-messages__stage-action" aria-controls="campaign-details-panel" :aria-expanded="detailsOpen" @click="detailsOpen = true">{{ t(`accountHub.${threadAction}`) }}<ArrowRight :size="15" aria-hidden="true" /></button>
+          </div>
           <div
             ref="messageList"
             class="campaign-messages__timeline"
@@ -1352,7 +1385,8 @@ function messageTimeDescription(value) {
               aria-controls="campaign-details-panel"
               @click="detailsOpen = !detailsOpen"
             >
-              <Building2 :size="19" aria-hidden="true" />
+              <Info :size="18" aria-hidden="true" />
+              <span class="campaign-messages__details-toggle-label">{{ t('accountHub.details') }}</span>
             </button>
           </header>
           <p class="campaign-messages__empty">{{ t('campaignChat.newConversationDescription') }}</p>
@@ -1372,8 +1406,8 @@ function messageTimeDescription(value) {
           <div v-if="selectedThread?.engagement?.offer?.status === 'pending' && selectedProvider && !campaignChatClosed" class="campaign-messages__offer-confirmation">
             <p>{{ t('hiring.pendingOffer', { amount: campaignCompensationLabel({ ...selectedThread.engagement.offer, currency: selectedThread.engagement.offer.currency || selectedCampaign?.currency }, t, selectedThread.engagement.offer.amount) }) }}</p>
             <p v-if="selectedThread.engagement.offer.dueDate">{{ t('hiring.deliveryDue', { date: formatDate(selectedThread.engagement.offer.dueDate) }) }}</p>
-            <button type="button" class="campaign-messages__offer-action campaign-messages__offer-action--accept" @click="confirmOffer('accept')"><Check :size="14" aria-hidden="true" />{{ t('hiring.acceptOffer') }}</button>
-            <button type="button" class="campaign-messages__offer-action" @click="confirmOffer('reject')"><X :size="14" aria-hidden="true" />{{ t('hiring.declineOffer') }}</button>
+            <button type="button" class="campaign-messages__offer-action campaign-messages__offer-action--accept" @click="confirmOffer('accept')"><Check :size="16" aria-hidden="true" />{{ t('hiring.acceptOffer') }}</button>
+            <button type="button" class="campaign-messages__offer-action" @click="confirmOffer('reject')"><X :size="16" aria-hidden="true" />{{ t('hiring.declineOffer') }}</button>
           </div>
           <p v-if="campaignChatClosed" id="campaign-chat-closed-notice" class="campaign-messages__closed-notice" role="status">{{ t(campaignChatNotice) }}</p>
           <label class="campaign-messages__composer-field">
@@ -1424,7 +1458,7 @@ function messageTimeDescription(value) {
             :aria-label="t('campaignChat.closeDetails')"
             @click="detailsOpen = false"
           >
-            <ChevronLeft :size="22" aria-hidden="true" />
+            <X :size="20" aria-hidden="true" />
           </button>
         </header>
         <div class="campaign-messages__details-scroll">
@@ -1537,7 +1571,7 @@ function messageTimeDescription(value) {
             :aria-label="t('campaignChat.closeDetails')"
             @click="detailsOpen = false"
           >
-            <ChevronLeft :size="22" aria-hidden="true" />
+            <X :size="20" aria-hidden="true" />
           </button>
         </header>
         <div class="campaign-messages__details-scroll">
@@ -1583,7 +1617,7 @@ function messageTimeDescription(value) {
 
 <style scoped lang="scss">
 .campaign-messages__event-link { color: inherit; text-decoration: underline; font-size: 12px; }
-.campaign-messages__offer-confirmation { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 6px; width: 100%; margin-bottom: 8px; p { flex-basis: 100%; margin: 0; color: var(--forest); font-size: 12px; line-height: 1.5; } }
-.campaign-messages__offer-action { display: inline-flex; align-items: center; gap: 5px; min-height: 32px; padding: 0 10px; border: 1px solid #dfe4dc; border-radius: 6px; color: #6f7d74; background: transparent; font: inherit; font-size: 11px; cursor: pointer; &:hover { color: var(--forest); background: #f1f3ef; } &:focus-visible { outline: 2px solid var(--forest); outline-offset: 2px; } &--accept { color: var(--forest); background: #edf1eb; } }
+.campaign-messages__offer-confirmation { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 8px; width: 100%; margin-bottom: 10px; padding: 14px; border: 1px solid var(--hairline); border-radius: 20px; background: var(--card); box-shadow: 0 1px 2px rgba(23, 61, 54, .05), 0 8px 24px rgba(23, 61, 54, .06); p { flex-basis: 100%; margin: 0; color: var(--ink); font-size: 14px; line-height: 1.5; } p:first-child { color: var(--forest); font-weight: 600; } }
+.campaign-messages__offer-action { display: inline-flex; flex: 1 1 140px; align-items: center; justify-content: center; gap: 6px; min-height: 44px; padding: 0 16px; border: 0; border-radius: var(--radius-pill); color: var(--forest); background: rgba(23, 61, 54, .07); font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; &:hover { background: rgba(23, 61, 54, .12); } &:focus-visible { outline: 2px solid var(--forest); outline-offset: 2px; } &--accept { color: var(--paper); background: var(--forest); &:hover { background: #0f2d27; } } }
 .campaign-messages__brief :deep(.profile-bio) { font-size: inherit; margin: 12px 0; }
 </style>

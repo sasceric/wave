@@ -54,6 +54,7 @@
     "account-blocks": "racun/blokirani-racuni",
     "account-reviews": "racun/recenzije",
     "account-dashboard": "racun/pregled",
+    "account-settings": "racun/postavke",
     "search": "pretraga"
   },
   "hr": {
@@ -111,6 +112,7 @@
     "account-blocks": "racun/blokirani-racuni",
     "account-reviews": "racun/recenzije",
     "account-dashboard": "racun/pregled",
+    "account-settings": "racun/postavke",
     "search": "pretraga"
   },
   "sr": {
@@ -168,6 +170,7 @@
     "account-blocks": "nalog/blokirani-nalozi",
     "account-reviews": "nalog/recenzije",
     "account-dashboard": "nalog/pregled",
+    "account-settings": "nalog/podesavanja",
     "search": "pretraga"
   },
   "cnr": {
@@ -225,6 +228,7 @@
     "account-blocks": "nalog/blokirani-nalozi",
     "account-reviews": "nalog/recenzije",
     "account-dashboard": "nalog/pregled",
+    "account-settings": "nalog/podesavanja",
     "search": "pretraga"
   },
   "sl": {
@@ -282,6 +286,7 @@
     "account-blocks": "racun/blokirani-racuni",
     "account-reviews": "racun/ocene",
     "account-dashboard": "racun/pregled",
+    "account-settings": "racun/nastavitve",
     "search": "iskanje"
   },
   "en": {
@@ -339,6 +344,7 @@
     "account-blocks": "account/blocked-accounts",
     "account-reviews": "account/reviews",
     "account-dashboard": "account/overview",
+    "account-settings": "account/settings",
     "search": "search"
   },
   "de": {
@@ -396,6 +402,7 @@
     "account-blocks": "konto/blockierte-konten",
     "account-reviews": "konto/bewertungen",
     "account-dashboard": "konto/uebersicht",
+    "account-settings": "konto/einstellungen",
     "search": "suche"
   }
 }

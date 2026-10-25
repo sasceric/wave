@@ -70,3 +70,5 @@ onBeforeUnmount(() => { ++revision })
     </FormModal>
   </section>
 </template>
+
+<style lang="scss" src="../../scss/components/account/CampaignAlertSettings.scss"></style>
