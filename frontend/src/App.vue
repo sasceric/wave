@@ -18,6 +18,7 @@ import { logoutAccount } from './lib/pushSession'
 import { currentUser, loadCurrentUser, setCurrentUser } from './composables/useCurrentUser'
 import { useAdminWorker } from './composables/useAdminWorker'
 import { unreadMessageCount } from './composables/useUnreadMessages'
+import { pushBusy, pushConfigured, pushPermission, pushStatus, pushSubscribed, pushSupported, registerPushToggle } from './composables/usePushDevice'
 import { mobileAccountSidebarOpen } from './composables/useMobileAccountSidebar'
 import { setLocale } from './i18n'
 import { apiGet, apiRequest } from './lib/api'
@@ -82,10 +83,6 @@ const notificationsError = ref('')
 const markingAllRead = ref(false)
 const optimisticUnreadNotificationIds = ref([])
 const pushConfig = ref({ enabled: false, publicKey: '' })
-const pushSupported = ref(false)
-const pushSubscribed = ref(false)
-const pushStatus = ref('')
-const pushBusy = ref(false)
 const updateAvailable = ref(false)
 const updateReloadRequired = ref(false)
 const updateInProgress = ref(false)
@@ -112,6 +109,11 @@ const isMobileAccountNavigationPage = computed(() => Boolean(
       && (currentUser.value.isModerator || currentUser.value.isAdmin))),
 ))
 const mobileNavigationOpen = computed(() => mobileAccountSidebarOpen.value)
+const pushDevicePrompt = computed(() => Boolean(
+  currentUser.value?.notificationsEnabled !== false
+  && pushSupported.value && pushConfigured.value && !pushSubscribed.value && !pushBusy.value
+  && pushPermission.value !== 'denied',
+))
 // Desktop: account pages show the sidebar; elsewhere a menu button opens it as a drawer.
 const desktopSidebarOpen = ref(false)
 const canOpenDesktopSidebar = computed(() => Boolean(currentUser.value && !isMobileAccountNavigationPage.value))
@@ -261,7 +263,9 @@ watch(
   },
   { immediate: true },
 )
+let stopPushToggle = null
 onMounted(() => {
+  stopPushToggle = registerPushToggle(togglePushNotifications)
   footerMobileBreakpoint.addEventListener('change', handleFooterBreakpointChange)
   stopNotificationNavigation = startNotificationNavigation(async (path) => {
     const failure = await router.push(path)
@@ -309,6 +313,7 @@ onMounted(() => {
   document.addEventListener('pointerdown', closeMessagesOnOutsideClick)
 })
 onBeforeUnmount(() => {
+  stopPushToggle?.()
   footerMobileBreakpoint.removeEventListener('change', handleFooterBreakpointChange)
   stopNotificationNavigation?.()
   inboxSync?.stop()
@@ -657,6 +662,8 @@ async function loadPushSettings() {
     const response = await apiGet('/me/push/config')
     if (!isCurrent()) return
     pushConfig.value = response.data
+    pushConfigured.value = Boolean(pushConfig.value.enabled)
+    pushPermission.value = window.Notification?.permission || 'default'
     if (!pushConfig.value.enabled) {
       pushStatus.value = 'pushNotConfigured'
       return
@@ -713,6 +720,7 @@ async function togglePushNotifications() {
     }
 
     const permission = await Notification.requestPermission()
+    pushPermission.value = permission
     if (!isCurrent()) return
     if (permission !== 'granted') {
       pushStatus.value = permission === 'denied' ? 'pushDenied' : 'pushPermissionNeeded'
@@ -1066,7 +1074,9 @@ async function signOut() {
               @close="closeNotifications"
               @read-all="markAllNotificationsRead"
               @open="openNotification"
+              :device-prompt="pushDevicePrompt"
               @enable="enableAccountNotifications"
+              @enable-device="togglePushNotifications"
               @load-more="loadMoreNotifications"
             />
           </div>

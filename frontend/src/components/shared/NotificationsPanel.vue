@@ -15,8 +15,10 @@ const props = defineProps({
   enabling: { type: Boolean, default: false },
   loadingMore: { type: Boolean, default: false },
   remaining: { type: Number, default: 0 },
+  // This device is not subscribed although the account allows notifications.
+  devicePrompt: { type: Boolean, default: false },
 })
-const emit = defineEmits(['close', 'read-all', 'open', 'enable', 'load-more'])
+const emit = defineEmits(['close', 'read-all', 'open', 'enable', 'enable-device', 'load-more'])
 const { t } = useI18n()
 const panel = ref(null)
 const heading = ref(null)
@@ -66,6 +68,11 @@ function relativeTime(date) {
       <button class="notifications-panel__close" type="button" :aria-label="t('app.closeNotifications')" @click="emit('close')"><X :size="20" aria-hidden="true" /></button>
     </header>
     <p v-if="error" class="notifications-panel__error" role="alert">{{ error }}</p>
+    <div v-if="devicePrompt && !disabled" class="notifications-panel__device">
+      <Bell :size="18" aria-hidden="true" />
+      <p>{{ t('app.pushDisabled') }}</p>
+      <button class="button button--dark" type="button" :disabled="enabling" @click="emit('enable-device')">{{ t('app.pushEnable') }}</button>
+    </div>
     <div v-if="disabled" class="notifications-panel__disabled">
       <div class="notifications-panel__sleep" aria-hidden="true"><Bell :size="48" stroke-width="1.5" /><span>z</span></div>
       <h3>{{ t('app.notificationsOff') }}</h3>

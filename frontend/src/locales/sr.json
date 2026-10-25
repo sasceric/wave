@@ -3149,6 +3149,11 @@
     "stageWork": "Saradnja",
     "stageDone": "Završeno",
     "actionHire": "Pošalji ponudu",
-    "actionWork": "Isporuka i završetak"
+    "actionWork": "Isporuka i završetak",
+    "pushDevice": "Obaveštenja na ovom uređaju",
+    "pushOn": "Uključi",
+    "pushOff": "Isključi",
+    "pushInstallHint": "Na iPhoneu dodaj Wave na početni ekran i otvori ga odatle da bi primao obaveštenja.",
+    "pushDeniedHint": "Obaveštenja su blokirana za Wave. Uključi ih u podešavanjima telefona ili pregledača, pa se vrati ovde."
   }
 }

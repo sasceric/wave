@@ -22,6 +22,7 @@ import { ArrowRight, ArrowLeft, Eye, ExternalLink, FileText, Plus, Trash2, UserR
 import AccountAccessPanel from '../components/account/AccountAccessPanel.vue'
 import AccountSidebar from '../components/account/AccountSidebar.vue'
 import AccountWorkTabs from '../components/account/AccountWorkTabs.vue'
+import { pushConfigured, pushPermission, pushSubscribed, pushSupported, togglePushDevice } from '../composables/usePushDevice'
 import AccountProfileSummary from '../components/account/AccountProfileSummary.vue'
 import AccountProfileCard from '../components/account/AccountProfileCard.vue'
 import AccountProfileDetails from '../components/account/AccountProfileDetails.vue'
@@ -578,6 +579,8 @@ async function updateNotificationPreference(enabled) {
     const response = await apiRequest('/me/notifications/settings', { method: 'PUT', body: { enabled } })
     user.value = response.data
     setCurrentUser(response.data)
+    // Turning notifications on also subscribes this device, as the bell panel does.
+    if (enabled && pushSupported.value && pushConfigured.value && !pushSubscribed.value && pushPermission.value !== 'denied') await togglePushDevice()
   } catch (cause) {
     error.value = cause.message
   } finally {

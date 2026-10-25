@@ -2,7 +2,7 @@
 import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
-import { Ban, BookOpen, ChevronRight, Coins, LifeBuoy, LogOut, Mail, Star } from '@lucide/vue'
+import { Ban, BookOpen, ChevronRight, Coins, LifeBuoy, LogOut, Mail, Smartphone, Star } from '@lucide/vue'
 import AccountPage from '../components/account/AccountPage.vue'
 import AccountSidebar from '../components/account/AccountSidebar.vue'
 import AccountDeletionAction from '../components/account/AccountDeletionAction.vue'
@@ -15,6 +15,7 @@ import StatusMessage from '../components/shared/StatusMessage.vue'
 import SwitchField from '../components/shared/SwitchField.vue'
 import { currentUser, setCurrentUser } from '../composables/useCurrentUser'
 import { creditAccount, refreshCredits } from '../composables/useCredits'
+import { pushBusy, pushConfigured, pushPermission, pushStatus, pushSubscribed, pushSupported, togglePushDevice } from '../composables/usePushDevice'
 import { apiRequest } from '../lib/api'
 import { logoutAccount } from '../lib/pushSession'
 import { localizedPath } from '../routePaths'
@@ -29,6 +30,18 @@ const operational = computed(() => Boolean(user.value?.isAdmin || (user.value?.a
 const visibilityEligible = computed(() => Boolean(user.value?.approved && user.value?.emailVerified && user.value?.profileComplete))
 const profile = computed(() => user.value?.profile || null)
 const guidesRoute = computed(() => creator.value ? 'creator-guides' : 'seo-guides')
+// This device's push subscription is separate from the account switch: a reinstalled
+// app or a reset phone permission needs to be turned on again here.
+const standalone = typeof window !== 'undefined' && (window.matchMedia?.('(display-mode: standalone)').matches || window.navigator?.standalone === true)
+const iosBrowser = typeof navigator !== 'undefined' && /iPad|iPhone|iPod/.test(navigator.userAgent) && !standalone
+const pushCanToggle = computed(() => pushSupported.value && pushConfigured.value && pushPermission.value !== 'denied' && user.value?.notificationsEnabled !== false)
+const pushHint = computed(() => {
+  if (!pushSupported.value) return iosBrowser ? t('accountHub.pushInstallHint') : t('app.pushUnsupported')
+  if (!pushConfigured.value) return t('app.pushNotConfigured')
+  if (pushPermission.value === 'denied') return t('accountHub.pushDeniedHint')
+  if (pushStatus.value === 'pushError') return t('app.pushError')
+  return t(pushSubscribed.value ? 'app.pushEnabled' : 'app.pushDisabled')
+})
 const visibilitySaving = ref(false)
 const notificationsSaving = ref(false)
 const signingOut = ref(false)
@@ -61,7 +74,10 @@ async function updateNotifications(enabled) {
   notice.value = ''
   try {
     const response = await apiRequest('/me/notifications/settings', { method: 'PUT', body: { enabled: enabled === 1 } })
-    if (currentUser.value?.id === id) setCurrentUser(response.data)
+    if (currentUser.value?.id !== id) return
+    setCurrentUser(response.data)
+    // Turning notifications on also subscribes this device, as the bell panel does.
+    if (enabled === 1 && pushSupported.value && pushConfigured.value && !pushSubscribed.value && pushPermission.value !== 'denied') await togglePushDevice()
   } catch (cause) {
     if (currentUser.value?.id === id) error.value = cause.message
   } finally {
@@ -118,6 +134,11 @@ async function signOut() {
         <h2 id="settings-notifications">{{ t('app.notifications') }}</h2>
         <div class="account-settings__card">
           <SwitchField :model-value="user.notificationsEnabled === false ? 0 : 1" :label="t('app.notifications')" :description="t('account.notificationsHint')" :disabled="notificationsSaving || !user.emailVerified" @update:model-value="updateNotifications" />
+          <div class="account-settings__row account-settings__row--static">
+            <span class="account-settings__icon"><Smartphone :size="18" aria-hidden="true" /></span>
+            <span class="account-settings__text">{{ t('accountHub.pushDevice') }}<small role="status">{{ pushHint }}</small></span>
+            <button v-if="pushCanToggle" class="button" :class="pushSubscribed ? 'button--tonal' : 'button--dark'" type="button" :disabled="pushBusy" @click="togglePushDevice">{{ t(pushSubscribed ? 'accountHub.pushOff' : 'accountHub.pushOn') }}</button>
+          </div>
         </div>
         <CampaignAlertSettings v-if="creator && operational" :key="user.id" />
       </section>

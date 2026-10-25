@@ -3148,6 +3148,11 @@
     "stageWork": "Collaboration",
     "stageDone": "Done",
     "actionHire": "Send an offer",
-    "actionWork": "Delivery and wrap-up"
+    "actionWork": "Delivery and wrap-up",
+    "pushDevice": "Notifications on this device",
+    "pushOn": "Turn on",
+    "pushOff": "Turn off",
+    "pushInstallHint": "On iPhone, add Wave to your Home Screen and open it from there to get notifications.",
+    "pushDeniedHint": "Notifications are blocked for Wave. Allow them in your phone or browser settings, then come back here."
   }
 }

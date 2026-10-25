@@ -3148,6 +3148,11 @@
     "stageWork": "Kooperation",
     "stageDone": "Abgeschlossen",
     "actionHire": "Angebot senden",
-    "actionWork": "Lieferung und Abschluss"
+    "actionWork": "Lieferung und Abschluss",
+    "pushDevice": "Benachrichtigungen auf diesem Gerät",
+    "pushOn": "Einschalten",
+    "pushOff": "Ausschalten",
+    "pushInstallHint": "Füge Wave auf dem iPhone zum Home-Bildschirm hinzu und öffne es dort, um Benachrichtigungen zu erhalten.",
+    "pushDeniedHint": "Benachrichtigungen für Wave sind blockiert. Erlaube sie in den Telefon- oder Browsereinstellungen und kehre dann hierher zurück."
   }
 }

@@ -153,3 +153,9 @@
     .activation-alerts { flex-wrap: wrap; }
   }
 }
+
+.account-settings__row .button { flex: none; min-height: 38px; padding: 0 16px; font-size: 14px; }
+@include breakpoints.down(760px) {
+  .account-settings__row--static:has(.button) { flex-wrap: wrap; }
+  .account-settings__row--static .button { margin-left: 50px; }
+}
