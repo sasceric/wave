@@ -1,5 +1,8 @@
 <script setup>
 import { campaignCompensationLabel } from '../lib/campaignCompensation'
+import ChatMessageBubble from '../components/messages/ChatMessageBubble.vue'
+import ChatMessageText from '../components/messages/ChatMessageText.vue'
+import ChatLinkCard from '../components/messages/ChatLinkCard.vue'
 import CampaignCompensation from '../components/campaigns/CampaignCompensation.vue'
 import { isProviderInThread } from '../lib/collaborationRole'
 import CampaignCancellationAction from '../components/account/CampaignCancellationAction.vue'
@@ -115,6 +118,18 @@ const visualViewportHeight = ref(0)
 const visualViewportTop = ref(0)
 const keyboardOpen = ref(false)
 const composerInput = ref(null)
+function resizeComposer() {
+  const input = composerInput.value
+  if (!input?.style) return
+  input.style.height = 'auto'
+  input.style.height = `${Math.max(44, Math.min(input.scrollHeight, 160))}px`
+  input.style.overflowY = input.scrollHeight > 160 ? 'auto' : 'hidden'
+}
+function handleComposerKeydown(event) {
+  if (event.key !== 'Enter' || event.shiftKey || event.isComposing || isMobileView.value) return
+  event.preventDefault()
+  if (canSend.value) event.currentTarget.form?.requestSubmit()
+}
 const composerFocused = ref(false)
 let viewportLayoutHeight = 0
 let viewportLayoutWidth = 0
@@ -123,6 +138,12 @@ let viewportSettleTimers = []
 const conversationQuery = ref('')
 const conversationFilter = ref('all')
 const draft = ref('')
+watch(draft, () => { void nextTick(resizeComposer) })
+const replyingTo = ref(null)
+const heartBusy = ref(false)
+const editingMessage = ref(null)
+const mutationBusy = ref(false)
+let draftBeforeEdit = ''
 const loading = ref(true)
 const inboxLoaded = ref(false)
 const sending = ref(false)
@@ -173,6 +194,8 @@ const selectedThreadKey = computed(() => (
       ? `inquiry-${selectedInquiry.value.id}`
       : null
 ))
+watch(selectedThreadKey, () => { replyingTo.value = null; cancelEditing() })
+watch(() => currentUser.value?.id, () => { replyingTo.value = null; cancelEditing() })
 const mobileThreadOpen = computed(() => Boolean(
   selectedConversationId.value !== null || selectedInquiryId.value !== null || (pendingStart.value && pendingDetails.value),
 ))
@@ -476,6 +499,17 @@ function handleRealtimeUpdate(event) {
   const isInquiry = update?.inquiryId !== undefined
   const id = Number(isInquiry ? update.inquiryId : update?.conversationId)
   const isSelected = (isInquiry ? selectedInquiryId.value : selectedConversationId.value) === id
+  if (update?.type === 'chat_reaction') {
+    if (isSelected) conversationMessages.value = conversationMessages.value.map((message) => (
+      message.id === update.message?.id ? { ...message, hearts: update.message.hearts } : message
+    ))
+    return
+  }
+  if (update?.type === 'chat_message_updated') {
+    if (isSelected) applyMessageUpdate(update.message)
+    void refreshInbox()
+    return
+  }
   if (update?.type === 'chat_read') {
     if (isSelected && update.readerId !== currentUser.value?.id && update.throughId > counterpartReadCursor) {
       counterpartReadCursor = update.throughId
@@ -983,9 +1017,14 @@ async function sendMessage(event) {
     return
   }
   focusComposerForSend(event)
+  if (editingMessage.value) {
+    await changeMessage(editingMessage.value, 'PATCH', { body: draft.value.trim() })
+    return
+  }
   sending.value = true
   error.value = ''
   const body = draft.value.trim()
+  const replyToId = replyingTo.value?.id || null
   const senderId = currentUser.value?.id
   const threadKey = selectedThreadKey.value
   const isCurrentSend = () => !unmounted && currentUser.value?.id === senderId && selectedThreadKey.value === threadKey
@@ -1013,7 +1052,7 @@ async function sendMessage(event) {
     } else if (selectedInquiryId.value !== null) {
       const response = await apiRequest(
         `/me/inquiries/${selectedInquiryId.value}/messages`,
-        { method: 'POST', body: { body } },
+        { method: 'POST', body: { body, replyToId } },
       )
       if (!isCurrentSend()) return
       mergeMessages([response.data])
@@ -1027,7 +1066,7 @@ async function sendMessage(event) {
     } else if (selectedConversationId.value !== null) {
       const response = await apiRequest(
         `/me/conversations/${selectedConversationId.value}/messages`,
-        { method: 'POST', body: { body } },
+        { method: 'POST', body: { body, replyToId } },
       )
       if (!isCurrentSend()) return
       mergeMessages([response.data])
@@ -1045,6 +1084,7 @@ async function sendMessage(event) {
       await scrollToLatestMessage()
     }
     draft.value = ''
+    replyingTo.value = null
   } catch (cause) {
     if (isCurrentSend()) error.value = cause.message
   } finally {
@@ -1069,6 +1109,101 @@ function isMessageMine(message) {
   return selectedInquiry.value
     ? message.senderId ? message.senderId === currentUser.value?.id : message.senderRole === (selectedProvider.value ? 'creator' : 'company')
     : message.senderId === currentUser.value?.id
+}
+
+function messageAuthor(message) {
+  return isMessageMine(message) ? t('chatInteractions.you') : conversationName(selectedThread.value)
+}
+
+function replyToMessage(message) {
+  if (campaignChatClosed.value || message.deletedAt) return
+  cancelEditing()
+  replyingTo.value = { id: message.id, senderId: message.senderId, body: message.body }
+  composerInput.value?.focus()
+}
+
+function canModifyMessage(message) {
+  return isMessageMine(message) && !message.event && !message.deletedAt
+    && Date.parse(message.createdAt) > Math.max(chatClock.value, Date.now()) - 10 * 60 * 1000
+}
+
+function editMessage(message) {
+  if (!canModifyMessage(message) || campaignChatClosed.value || mutationBusy.value) return
+  if (!editingMessage.value) draftBeforeEdit = draft.value
+  editingMessage.value = message
+  replyingTo.value = null
+  draft.value = message.body
+  composerInput.value?.focus()
+}
+
+function cancelEditing() {
+  if (!editingMessage.value) return
+  draft.value = draftBeforeEdit
+  editingMessage.value = null
+  draftBeforeEdit = ''
+}
+
+function applyMessageUpdate(update) {
+  if (!update?.id) return
+  conversationMessages.value = conversationMessages.value.map((message) => {
+    if (message.id === update.id) return { ...message, ...update }
+    if (message.replyTo?.id === update.id) return { ...message, replyTo: { ...message.replyTo, body: update.body, deletedAt: update.deletedAt } }
+    return message
+  })
+  if (replyingTo.value?.id === update.id) {
+    replyingTo.value = update.deletedAt ? null : { ...replyingTo.value, body: update.body }
+  }
+  if (editingMessage.value?.id === update.id && update.deletedAt) cancelEditing()
+}
+
+async function changeMessage(message, method, body = {}) {
+  const thread = activeThread()
+  if (!thread || mutationBusy.value || campaignChatClosed.value) return
+  if (!canModifyMessage(message)) { error.value = t('chatInteractions.expired'); return }
+  const key = selectedThreadKey.value
+  const userId = currentUser.value?.id
+  mutationBusy.value = true
+  sending.value = true
+  try {
+    const response = await apiRequest(`${threadPath(thread)}/messages/${message.id}`, { method, body })
+    if (selectedThreadKey.value !== key || currentUser.value?.id !== userId) return
+    applyMessageUpdate(response.data)
+    cancelEditing()
+    await refreshInbox()
+  } catch (cause) {
+    if (selectedThreadKey.value === key && currentUser.value?.id === userId) error.value = cause.status === 409 ? t('chatInteractions.expired') : cause.message
+  } finally { mutationBusy.value = false; sending.value = false }
+}
+
+async function reactToMessage(message) {
+  const thread = activeThread()
+  if (!thread || heartBusy.value || campaignChatClosed.value) return
+  const key = selectedThreadKey.value
+  const userId = currentUser.value?.id
+  heartBusy.value = true
+  try {
+    const response = await apiRequest(`${threadPath(thread)}/messages/${message.id}/heart`, {
+      method: 'POST', body: { active: !(message.hearts || []).includes(userId) },
+    })
+    if (selectedThreadKey.value !== key || currentUser.value?.id !== userId) return
+    conversationMessages.value = conversationMessages.value.map((item) => item.id === message.id ? { ...item, hearts: response.data.hearts } : item)
+  } catch (cause) {
+    if (selectedThreadKey.value === key && currentUser.value?.id === userId) error.value = cause.message
+  } finally { heartBusy.value = false }
+}
+
+async function jumpToReply(id) {
+  const key = selectedThreadKey.value
+  while (!conversationMessages.value.some((message) => message.id === id) && hasOlderMessages.value && !loadingOlderMessages.value) {
+    await loadOlderMessages()
+    if (selectedThreadKey.value !== key || historyError.value) return
+  }
+  await nextTick()
+  if (selectedThreadKey.value !== key) return
+  const target = messageList.value?.querySelector(`[data-message-id="${id}"]`)
+  target?.scrollIntoView({ block: 'center', behavior: 'instant' })
+  target?.querySelector('.chat-message-bubble__quote, .action-menu__trigger')?.focus({ preventScroll: true })
+  target?.animate?.([{ opacity: .45 }, { opacity: 1 }], { duration: 600 })
 }
 
 function conversationName(conversation) {
@@ -1314,20 +1449,33 @@ function messageTimeDescription(value) {
                     <img v-if="counterpartAvatar" :src="counterpartAvatar" alt="" loading="lazy">
                     <span v-else>{{ initials(counterpartName) }}</span>
                   </span>
-                  <article
-                    class="campaign-messages__message"
-                    :class="{ 'campaign-messages__message--mine': isMessageMine(message) }"
+                  <ChatMessageBubble
+                    :mine="isMessageMine(message)"
+                    :message="message"
+                    :user-id="currentUser?.id"
+                    :quote-label="message.replyTo ? messageAuthor(message.replyTo) : ''"
+                    :disabled="campaignChatClosed"
+                    :busy="heartBusy"
+                    :can-modify="canModifyMessage(message) && !mutationBusy"
+                    @reply="replyToMessage"
+                    @heart="reactToMessage"
+                    @jump="jumpToReply"
+                    @edit="editMessage"
+                    @delete="changeMessage($event, 'DELETE')"
                   >
-                    <template v-if="message.event">
+                    <template #preview><ChatLinkCard v-if="!message.deletedAt && !message.event" :body="message.body" :path="`${threadPath(activeThread())}/messages/${message.id}/preview`" @loaded="atLatestMessage && scrollToLatestMessage()" /></template>
+                    <p v-if="message.deletedAt" class="campaign-messages__deleted">{{ t('chatInteractions.deleted') }}</p>
+                    <template v-else-if="message.event">
                       <p>{{ t(`hiring.${message.event.context === 'inquiry' ? 'directTimeline' : 'timeline'}.${message.event.type}`, { campaign: message.event.campaignTitle, amount: message.event.amount == null ? '' : campaignCompensationLabel(message.event, t, message.event.amount) }) }}</p>
                       <p v-if="message.event.dueDate">{{ t('hiring.deliveryDue', { date: formatDate(message.event.dueDate) }) }}</p>
-                      <p v-if="message.event.workChangesReason">{{ t('work.reason') }}: {{ message.event.workChangesReason }}</p>
-                      <p v-if="message.event.cancellationReason">{{ t('hiring.cancellationReason') }}: {{ message.event.cancellationReason }}</p>
-                      <p v-if="message.event.message">{{ message.event.message }}</p>
+                      <ChatMessageText v-if="message.event.workChangesReason" :text="`${t('work.reason')}: ${message.event.workChangesReason}`" />
+                      <ChatMessageText v-if="message.event.cancellationReason" :text="`${t('hiring.cancellationReason')}: ${message.event.cancellationReason}`" />
+                      <ChatMessageText v-if="message.event.message" :text="message.event.message" />
                       <LocalizedLink v-if="message.event.campaignSlug && !selectedThread?.readOnly" class="campaign-messages__event-link" :to="{ name: !selectedProvider ? 'account-campaign-detail' : 'campaign-detail', params: { slug: message.event.campaignSlug } }">{{ t('campaignChat.viewCampaign') }} <ArrowRight class="link-arrow" :size="16" aria-hidden="true" /></LocalizedLink>
                     </template>
-                    <p v-else>{{ message.body }}</p>
+                    <ChatMessageText v-else :text="message.body" />
                     <div class="campaign-messages__message-meta">
+                      <span v-if="message.editedAt && !message.deletedAt" class="campaign-messages__edited">{{ t('chatInteractions.edited') }}</span>
                       <time
                         :datetime="message.createdAt"
                         :title="messageTimeDescription(message.createdAt)"
@@ -1339,7 +1487,7 @@ function messageTimeDescription(value) {
                         <Check v-else :size="15" aria-hidden="true" />
                       </span>
                     </div>
-                  </article>
+                  </ChatMessageBubble>
                   <span
                     v-if="isMessageMine(message)"
                     class="campaign-messages__avatar campaign-messages__avatar--message"
@@ -1410,23 +1558,32 @@ function messageTimeDescription(value) {
             <button type="button" class="campaign-messages__offer-action" @click="confirmOffer('reject')"><X :size="16" aria-hidden="true" />{{ t('hiring.declineOffer') }}</button>
           </div>
           <p v-if="campaignChatClosed" id="campaign-chat-closed-notice" class="campaign-messages__closed-notice" role="status">{{ t(campaignChatNotice) }}</p>
+          <div v-if="editingMessage && !campaignChatClosed" class="campaign-messages__reply-draft" role="status">
+            <div><strong>{{ t('chatInteractions.editing') }}</strong><span>{{ t('chatInteractions.editWindow') }}</span></div>
+            <button type="button" :disabled="mutationBusy" :aria-label="t('chatInteractions.cancelEdit')" @click="cancelEditing"><X :size="18" aria-hidden="true" /></button>
+          </div>
+          <div v-if="replyingTo && !campaignChatClosed" class="campaign-messages__reply-draft" role="status">
+            <div><strong>{{ t('chatInteractions.replyingTo', { name: messageAuthor(replyingTo) }) }}</strong><span>{{ replyingTo.body }}</span></div>
+            <button type="button" :aria-label="t('chatInteractions.cancelReply')" @click="replyingTo = null"><X :size="18" aria-hidden="true" /></button>
+          </div>
           <label class="campaign-messages__composer-field">
             <span class="sr-only">{{ t(selectedThread ? 'campaignChat.replyPlaceholder' : 'campaignChat.firstMessage') }}</span>
-            <input
+            <textarea
               ref="composerInput"
               v-model="draft"
               :disabled="campaignChatClosed"
               @focus="handleComposerFocus"
               @blur="handleComposerBlur"
-              @input="scheduleViewportUpdate"
-              type="text"
+              @input="resizeComposer(); scheduleViewportUpdate()"
+              @keydown="handleComposerKeydown"
+              rows="1"
               maxlength="2000"
               required
               autocomplete="off"
-              enterkeyhint="send"
+              :enterkeyhint="isMobileView ? 'enter' : 'send'"
               :placeholder="t(selectedThread ? 'campaignChat.replyPlaceholder' : 'campaignChat.firstMessage')"
               :aria-describedby="campaignChatClosed ? 'campaign-chat-closed-notice' : 'campaign-message-enter-hint'"
-            >
+            ></textarea>
             <span id="campaign-message-enter-hint" class="sr-only">
               {{ t('campaignChat.messageHint') }}
             </span>
@@ -1436,11 +1593,11 @@ function messageTimeDescription(value) {
             type="submit"
             @pointerdown="preserveComposerFocus"
             @mousedown="preserveComposerFocus"
-            :aria-label="sending ? t('campaignChat.sending') : t('campaignChat.send')"
-            :title="sending ? t('campaignChat.sending') : t('campaignChat.send')"
+            :aria-label="sending ? t('campaignChat.sending') : t(editingMessage ? 'chatInteractions.save' : 'campaignChat.send')"
+            :title="sending ? t('campaignChat.sending') : t(editingMessage ? 'chatInteractions.save' : 'campaignChat.send')"
             :disabled="!canSend"
           >
-            <Send :size="16" aria-hidden="true" />
+            <Check v-if="editingMessage" :size="16" aria-hidden="true" /><Send v-else :size="16" aria-hidden="true" />
           </button>
         </form>
       </section>

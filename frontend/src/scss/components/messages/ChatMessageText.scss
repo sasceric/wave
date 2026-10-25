@@ -1,0 +1,14 @@
+.chat-message-text {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+
+  a {
+    color: #246b85;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+
+    &:focus-visible { outline: 2px solid currentColor; outline-offset: 3px; }
+  }
+}
+
+.campaign-messages__message--mine .chat-message-text a { color: #9ed9ed; }

@@ -107,7 +107,7 @@
   &__link { display: inline-flex; align-items: center; gap: 4px; color: var(--forest); font-size: 14px; font-weight: 600; text-decoration: none; }
 }
 
-.campaign-card {
+.campaign-detail-card {
   @include public-profile-layout.card;
   padding: 22px;
   color: var(--ink);

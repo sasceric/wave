@@ -1,0 +1,23 @@
+.chat-link-card {
+  min-height: 1px;
+  width: 300px;
+  max-width: 100%;
+  white-space: normal;
+  &.is-ready { margin-top: 10px; }
+  a {
+    display: block;
+    overflow: hidden;
+    border: 1px solid var(--hairline);
+    border-radius: 16px;
+    color: var(--ink);
+    background: var(--card, #fffefa);
+    text-decoration: none;
+    &:focus-visible { outline: 2px solid var(--coral); outline-offset: 3px; }
+  }
+  img { display: block; width: 100%; aspect-ratio: 1.91; object-fit: cover; background: var(--surface); }
+  &__copy { display: grid; gap: 5px; padding: 12px; }
+  strong { font-size: 14px; font-weight: 600; line-height: 1.4; }
+  span { color: #65766d; font-size: 12px; line-height: 1.4; }
+  strong, span { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; overflow-wrap: anywhere; }
+  small { color: #65766d; font-size: 11px; overflow-wrap: anywhere; }
+}

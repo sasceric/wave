@@ -245,7 +245,7 @@ onMounted(loadCampaign)
         <div class="campaign-layout__main">
           <section class="campaign-section" aria-labelledby="campaign-idea-title">
             <header class="campaign-section__head"><h2 id="campaign-idea-title">{{ t('campaignDetail.idea') }}</h2><p>{{ t('campaignDetail.ideaHeadline') }}</p></header>
-            <div class="campaign-card"><RichTextContent :html="campaign.description" /></div>
+            <div class="campaign-detail-card"><RichTextContent :html="campaign.description" /></div>
           </section>
           <section v-if="campaign.deliverables?.length" class="campaign-section" aria-labelledby="campaign-deliverables-title">
             <header class="campaign-section__head"><h2 id="campaign-deliverables-title">{{ t('campaignDetail.deliverables') }}</h2><p>{{ t('campaignDetail.deliverablesHint') }}</p></header>
@@ -261,7 +261,7 @@ onMounted(loadCampaign)
               <h2 id="campaign-brand-title">{{ t('companyProfile.aboutEyebrow') }}</h2>
               <RouterLink v-if="!campaign.company.deleted" class="campaign-section__link" :to="{ name: 'company-profile', params: { slug: campaign.company.slug } }">{{ t('companyDirectory.viewProfile') }} <ArrowRight :size="15" aria-hidden="true" /></RouterLink>
             </header>
-            <div class="campaign-card campaign-company">
+            <div class="campaign-detail-card campaign-company">
               <div class="campaign-company__heading">
                 <span class="campaign-brand__logo campaign-brand__logo--large">
                   <img v-if="campaign.company.logoUrl" :src="campaign.company.logoUrl" :alt="campaign.company.name">

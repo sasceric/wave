@@ -11,6 +11,10 @@ framework:
         gc_maxlifetime: 7776000
 
     rate_limiter:
+        wave_chat_preview:
+            policy: sliding_window
+            limit: 120
+            interval: '1 minute'
         wave_public_search:
             policy: 'sliding_window'
             limit: 240

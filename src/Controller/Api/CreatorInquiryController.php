@@ -434,6 +434,9 @@ final class CreatorInquiryController
         }
 
         $message = new InquiryMessage($inquiry, $user, $body);
+        if (!(new \App\Service\ChatMessageReplies($entityManager))->attach($message, $data['replyToId'] ?? null)) {
+            return new JsonResponse(['error' => ApiMessages::get('invalid_request', $locale)], 400);
+        }
         $entityManager->persist($message);
         $entityManager->flush();
 
@@ -463,6 +466,7 @@ final class CreatorInquiryController
         $creatorOwnerId = $inquiry->getCreator()->getOwner()?->getId();
 
         return [
+            ...\App\Api\ChatMessageInteractionsResource::fromEntity($message),
             'id' => $message->getId(),
             'senderId' => $sender->getId(),
             'readAt' => $message->getReadAt()?->format(\DateTimeInterface::ATOM),

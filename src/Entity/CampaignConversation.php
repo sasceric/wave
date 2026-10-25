@@ -110,6 +110,11 @@ class CampaignConversation
         return $this->lastMessagePreview;
     }
 
+    public function reviseLastMessagePreview(string $body): void
+    {
+        $this->lastMessagePreview = mb_substr($body, 0, 240);
+    }
+
     public function getLastMessageSender(): User
     {
         return $this->lastMessageSender;

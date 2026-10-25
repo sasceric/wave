@@ -438,7 +438,7 @@ test('hidden chats and readers of older history do not send seen receipts', asyn
   assert.equal(writes, 0)
 })
 
-test('private read events do not increment notification badges or fetch the inbox', async () => {
+test('private read and reaction events do not increment notification badges or fetch the inbox', async () => {
   const sources = []
   let requests = 0
   const { state, unreadMessageCount, windowTarget } = await setupView('../src/App.vue', {
@@ -448,7 +448,9 @@ test('private read events do not increment notification badges or fetch the inbo
   windowTarget.addEventListener('wave:realtime', () => { delivered += 1 })
   await state.connectRealtime()
   sources[0].onmessage({ data: JSON.stringify({ type: 'chat_read', conversationId: 1, throughId: 42 }) })
-  assert.equal(delivered, 1)
+  sources[0].onmessage({ data: JSON.stringify({ type: 'chat_reaction', conversationId: 1, message: { id: 42, hearts: [2] } }) })
+  sources[0].onmessage({ data: JSON.stringify({ type: 'chat_message_updated', conversationId: 1, message: { id: 42, body: 'Edited' } }) })
+  assert.equal(delivered, 3)
   assert.equal(requests, 1)
   assert.equal(unreadMessageCount.value, 0)
 })

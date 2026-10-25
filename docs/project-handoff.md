@@ -218,6 +218,19 @@ that belongs to the authorized thread; it does not create notifications for seen
 The Vue Messages view prepends older pages with a retained DOM anchor, merges by ID,
 and catches up with bounded `after` pages after a reconnect. New incoming messages do
 not force scroll while reading history. There is no online/away/offline presence service.
+
+Chat replies use `replyToId` on both message POST endpoints and validate that the
+original belongs to the same thread. `ChatMessageActionController` handles heart
+reactions and own-message PATCH/DELETE requests, enforcing a ten-minute window;
+deletions clear the body and preserve a history placeholder. Private reaction and
+edit events update existing messages without incrementing unread counts. Shared
+`ChatMessageBubble`, `ChatMessageText`, `ChatLinkCard` and `ActionMenu` components
+provide swipe/long-press actions, safe linkification and standalone preview cards.
+`ChatLinkPreviewController` authorizes each preview against its message; metadata
+and raster images use bounded public-network HTTP fetches and application cache,
+with no database storage. Preview loading is lazy and limited to two concurrent
+frontend requests. Migrations `Version20261025140000` and `Version20261025150000`
+add the reply, reaction and edit/deletion fields.
 Creators and campaigns directories use four columns on desktop and two on phones; homepage
 carousels are separate from directory grids. Public directories load batches as described
 below; account campaign management retains its own pagination.

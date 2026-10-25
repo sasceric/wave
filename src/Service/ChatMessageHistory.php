@@ -25,7 +25,8 @@ final class ChatMessageHistory
         }
 
         $query = $this->entityManager->createQueryBuilder()
-            ->select('message')->from($messageClass, 'message')
+            ->select('message', 'reply')->from($messageClass, 'message')
+            ->leftJoin('message.replyTo', 'reply')
             ->where('message.'.$association.' = :thread')->setParameter('thread', $thread)
             ->orderBy('message.id', $after === null ? \SortDirection::Descending : \SortDirection::Ascending)
             ->setMaxResults($limit + 1);

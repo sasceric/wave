@@ -47,6 +47,54 @@ class CampaignMessage
         $conversation->recordMessage($body, $sender);
     }
 
+    #[ORM\ManyToOne(targetEntity: self::class)]
+    #[ORM\JoinColumn(nullable: true, onDelete: 'SET NULL')]
+    private ?self $replyTo = null;
+
+    #[ORM\Column(type: 'json', options: ['default' => '[]'])]
+    private array $hearts = [];
+
+    #[ORM\Column(nullable: true)]
+    private ?DateTimeImmutable $editedAt = null;
+
+    #[ORM\Column(nullable: true)]
+    private ?DateTimeImmutable $deletedAt = null;
+
+    public function getEditedAt(): ?DateTimeImmutable { return $this->editedAt; }
+    public function getDeletedAt(): ?DateTimeImmutable { return $this->deletedAt; }
+
+    public function canModify(User $user): bool
+    {
+        return $this->sender->getId() === $user->getId() && $this->event === null
+            && $this->deletedAt === null && $this->createdAt > new DateTimeImmutable('-10 minutes');
+    }
+
+    public function editBody(string $body): void
+    {
+        $this->body = $body;
+        $this->editedAt = new DateTimeImmutable();
+    }
+
+    public function deleteBody(): void
+    {
+        $this->body = '';
+        $this->hearts = [];
+        $this->deletedAt = new DateTimeImmutable();
+    }
+
+    public function getReplyTo(): ?self { return $this->replyTo; }
+    public function setReplyTo(self $message): void { $this->replyTo = $message; }
+    public function getHearts(): array { return $this->hearts; }
+
+    public function setHeart(User $user, bool $active): void
+    {
+        $this->hearts = array_values(array_filter($this->hearts, static fn (int $id): bool => $id !== $user->getId()));
+        if ($active) {
+            $this->hearts[] = $user->getId();
+        }
+        sort($this->hearts);
+    }
+
     public function getEvent(): ?array { return $this->event; }
 
     public function getId(): ?int

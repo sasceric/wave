@@ -293,6 +293,9 @@ final class CampaignMessagingController
         }
 
         $message = new CampaignMessage($conversation, $user, $body);
+        if (!(new \App\Service\ChatMessageReplies($entityManager))->attach($message, $data['replyToId'] ?? null)) {
+            return new JsonResponse(['error' => ApiMessages::get('invalid_request', $locale)], 400);
+        }
         $entityManager->persist($message);
         $recipient = $this->otherParticipant($conversation, $user);
         $notification = null;

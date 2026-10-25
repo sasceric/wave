@@ -9,6 +9,7 @@ final class CampaignMessageResource
     public static function fromEntity(CampaignMessage $message): array
     {
         return [
+            ...ChatMessageInteractionsResource::fromEntity($message),
             'id' => $message->getId(),
             'body' => \App\Localization\DisplayDate::text($message->getBody()),
             'event' => $message->getEvent(),

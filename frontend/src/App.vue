@@ -547,7 +547,7 @@ async function connectRealtime() {
         if (accountResponseMismatch(update.recipientId, userId)) return
         if (update.type === 'report_update') { window.dispatchEvent(new CustomEvent('wave:report-update')); return }
         if (update.type === 'safety_changed') { window.dispatchEvent(new CustomEvent('wave:safety-changed')); return }
-        if (update.type === 'chat_read') {
+        if (['chat_read', 'chat_reaction', 'chat_message_updated'].includes(update.type)) {
           window.dispatchEvent(new CustomEvent('wave:realtime', { detail: update }))
           return
         }
