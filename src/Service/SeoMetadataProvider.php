@@ -114,7 +114,7 @@ final class SeoMetadataProvider
             }
         }
         $description = $this->translation($locale, $descriptionKey);
-        $image = $name === 'home' ? $this->absoluteUrl('/images/share.webp') : null;
+        $image = $this->absoluteUrl('/images/share.webp');
         $entitySchema = null;
         $searchResults = $name === 'search' || (in_array($name, ['creators', 'companies', 'campaigns'], true) && trim(is_string($query['q'] ?? null) ? $query['q'] : '') !== '');
         $indexable = !$private && !$searchResults;
@@ -178,7 +178,7 @@ final class SeoMetadataProvider
                 );
                 $description = $this->plainDescription($translation['bio'] ?? $creator->getBio(), $description);
                 $image = $this->absoluteUrl($creator->getAvatarMedia()?->getUrl() ?? $creator->getAvatarUrl())
-                    ?? $this->absoluteUrl('/images/logo-icon.svg');
+                    ?? $image;
                 $entitySchema = $this->profileSchema->creator($creator, $locale);
             }
         } elseif ($name === 'company-profile') {
@@ -203,7 +203,7 @@ final class SeoMetadataProvider
                 );
                 $description = $this->plainDescription($company->getAbout() ?? '', $translation['industry'] ?? $company->getIndustry());
                 $image = $this->absoluteUrl($company->getLogoMedia()?->getUrl() ?? $company->getLogoUrl())
-                    ?? $this->absoluteUrl('/images/logo-icon.svg');
+                    ?? $image;
                 $entitySchema = $this->profileSchema->company($company, $locale);
             }
         } elseif ($name === 'campaign-detail') {
@@ -230,6 +230,7 @@ final class SeoMetadataProvider
                     ['{name}' => $translation['title'] ?? $campaign->getTitle()],
                 );
                 $description = $translation['summary'] ?? $campaign->getSummary();
+                $image = $this->absoluteUrl($campaign->getCoverMedia()?->getUrl()) ?? $image;
                 $entitySchema = $this->campaignSchema($campaign, $locale, $params);
             }
         }

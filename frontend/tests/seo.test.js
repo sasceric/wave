@@ -158,6 +158,19 @@ test('JSON-LD uses a context-bearing graph compatible with Safari metadata parsi
   }
 })
 
+test('share images reset between routes and all missing images use the homepage artwork', async () => {
+  const { updateSeo, document } = await seoFixture()
+  for (const routeName of ['home', 'campaign-detail', 'creator-profile', 'company-profile']) {
+    for (const image of ['/media/42/campaign.jpg', null]) {
+      updateSeo({ route: { meta: { routeName }, params: { slug: 'example' }, path: '/' }, locale: 'bs', title: 'Example', description: 'Example', image })
+      const expected = `https://wave.ba${image || '/images/share.webp'}`
+      assert.equal(document.head.querySelector('meta[property="og:image"]').content, expected)
+      assert.equal(document.head.querySelector('meta[name="twitter:image"]').content, expected)
+      assert.equal(document.head.querySelector('meta[name="twitter:card"]').content, 'summary_large_image')
+    }
+  }
+})
+
 test('company reviews follow pagination, omit prototypes and leave the aggregate intact', async () => {
   const { updateSeo, updateProfileReviewSchema, document } = await seoFixture()
   const url = 'https://wave.ba/kompanije/brand'

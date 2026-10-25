@@ -161,6 +161,7 @@ watch(
       title: t('seo.campaignProfileTitle', { name: value.title }),
       noindex: value.readOnly || value.status !== 'open' || new Date(value.closesAt).getTime() < new Date().setHours(0, 0, 0, 0),
       description: value.summary,
+      image: value.coverImageUrl,
       mainEntity: {
         '@type': 'CreativeWork',
         name: value.title,

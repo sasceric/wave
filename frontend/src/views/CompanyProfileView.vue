@@ -107,7 +107,7 @@ watch(
   [company, locale],
   ([value]) => {
     if (!value) return
-    const logo = value.logoUrl ? new URL(value.logoUrl, getSeoOrigin()).href : new URL('/images/company-cover.webp', getSeoOrigin()).href
+    const logo = value.logoUrl ? new URL(value.logoUrl, getSeoOrigin()).href : undefined
     updateSeo({
       route,
       locale: locale.value,

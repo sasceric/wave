@@ -65,7 +65,7 @@ final class FrontendController
                 $html,
                 $seo,
                 $siteOrigin->base(),
-                $siteOrigin->url('/pwa-512.png'),
+                $siteOrigin->url('/images/share.webp'),
                 $this->googleSiteVerification,
                 ($seo['homepageStyles'] ?? false) === true ? $frontendAssets->homepageStyles() : [],
             ),

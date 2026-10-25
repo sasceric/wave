@@ -56,6 +56,42 @@ job postings, and creator services are not relabeled as products to obtain stars
 Schema.org validity does not guarantee a Google rich result: Google supports a
 smaller set of types and applies its own eligibility rules.
 
+## Link previews
+
+Initial Symfony HTML and Vue navigation use the same image policy: campaigns use
+their uploaded cover, creators use their avatar, and brands/agencies use their
+logo. When that image is absent, all pages fall back to `/images/share.webp`, the
+homepage artwork. App icons and the square Wave mark are not share-image fallbacks.
+Both Open Graph and Twitter metadata use absolute image URLs and the large-image
+card format. Sharing does not require a session; existing public-media access
+checks still apply. Messaging apps can retain a previously fetched preview after
+deployment, so an old conversation is not proof that new metadata was ignored.
+
+## Search Console review (2026-10-25)
+
+Reviewed the notifications and affected URL examples in the authenticated console:
+
+- Review snippets: validation passed, zero invalid items. Image Metadata: all four
+  historic optional-field warnings now have zero affected items.
+- Robots exclusions point to account, login and registration URLs. Keep these
+  private areas blocked. Search pages and search-query URLs intentionally remain
+  `noindex, follow` and are not in the current sitemap.
+- The campaign `/kampanje/kafa-ritual-price-iz-komsiluka`, previously reported as
+  noindex, currently returns 200 with `index, follow` and a self canonical.
+  `/kompanije/dn-kozmetik` and `/kreatori/lejla-hadzic` currently return 404 and
+  are absent from the sitemap; do not expose unavailable profiles to clear a report.
+- Old localized creator/campaign detail examples now redirect to their public
+  directories. For the Montenegrin application guide, Google selected the Bosnian
+  version of the same content. The localized guide still permits indexing and
+  declares its own canonical; this is Google's duplicate-content selection, not a
+  crawl/access failure.
+- The live sitemap contains 166 URLs and none of the inspected obsolete profile,
+  authentication, search or malformed `/[object Object]` URLs. The malformed path
+  is a historic 404; it was not reproduced in the current campaign HTML.
+
+No blanket indexing validation was submitted for intentionally excluded URLs.
+Google's reports reflect prior crawls and do not clear immediately after a change.
+
 References: [Schema.org review domains](https://schema.org/review),
 [Service](https://schema.org/Service), [industry](https://schema.org/industry),
 [Google profile pages](https://developers.google.com/search/docs/appearance/structured-data/profile-page),

@@ -101,8 +101,7 @@ export function updateSeo({
     en: 'en_US',
     de: 'de_DE',
   })[locale] || 'en_US')
-  const hasShareImage = Boolean(image) || routeName === 'home'
-  setMeta('name', 'twitter:card', hasShareImage ? 'summary_large_image' : 'summary')
+  setMeta('name', 'twitter:card', 'summary_large_image')
   setMeta('name', 'twitter:title', title)
   setMeta('name', 'twitter:description', description)
 
@@ -115,12 +114,7 @@ export function updateSeo({
     document.head.querySelector('meta[property="og:url"]')?.remove()
   }
 
-  const fallbackImage = routeName === 'home'
-    ? '/images/share.webp'
-    : ['creator-profile', 'company-profile'].includes(routeName)
-      ? '/images/logo-icon.svg'
-      : '/pwa-512.png'
-  const ogImage = image ? new URL(image, origin).href : new URL(fallbackImage, origin).href
+  const ogImage = new URL(image || '/images/share.webp', origin).href
   setMeta('property', 'og:image', ogImage)
   setMeta('name', 'twitter:image', ogImage)
   const alternates = document.head.querySelectorAll('link[rel="alternate"][hreflang]')

@@ -5,6 +5,9 @@ namespace App\Tests\Controller;
 use App\Entity\Campaign;
 use App\Entity\Company;
 use App\Entity\Creator;
+use App\Entity\Media;
+use App\Entity\MediaFolder;
+use App\Entity\User;
 use App\Localization\LocalizedRouteMap;
 use App\Service\FrontendAssets;
 use DateTimeImmutable;
@@ -387,7 +390,7 @@ final class SeoControllerTest extends WebTestCase
         self::assertStringNotContainsString('rel="preload" as="image"', $html);
         self::assertStringContainsString('<title>Maya Chen — profil kreatora | Wave</title>', $html);
         self::assertStringContainsString('rel="canonical" href="http://127.0.0.1:8000/kreatori/maya-chen"', $html);
-        self::assertStringContainsString('property="og:image" content="http://127.0.0.1:8000/images/logo-icon.svg"', $html);
+        self::assertStringContainsString('property="og:image" content="http://127.0.0.1:8000/images/share.webp"', $html);
         self::assertStringContainsString('"@type":"Person"', $html);
         self::assertStringContainsString('Slow travel and local guides.', $html);
     }
@@ -480,7 +483,7 @@ final class SeoControllerTest extends WebTestCase
         }
     }
 
-    public function testCompanyProfileUsesItsLogoOrTheWavePlaceholderForSharing(): void
+    public function testCompanyProfileWithoutALogoUsesTheHomepageShareImage(): void
     {
         $entityManager = static::getContainer()->get(EntityManagerInterface::class);
         $entityManager->persist(new Company('field-notes', 'Field Notes', 'Travel'));
@@ -490,9 +493,41 @@ final class SeoControllerTest extends WebTestCase
 
         self::assertResponseIsSuccessful();
         self::assertStringContainsString(
-            'property="og:image" content="http://127.0.0.1:8000/images/logo-icon.svg"',
+            'property="og:image" content="http://127.0.0.1:8000/images/share.webp"',
             $this->client->getResponse()->getContent(),
         );
+    }
+
+    public function testCampaignAndProfileShareImagesUseTheirOwnImagesOrTheHomepageFallback(): void
+    {
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $owner = new User('share-images@example.test', 'company');
+        $owner->setPassword('unused-test-password');
+        $folder = new MediaFolder('share-test', 'Share test');
+        $cover = new Media($folder, $owner, 'campaign.jpg', 'share-test/campaign.jpg', 'image/jpeg', 1024);
+        $brand = new Company('share-brand', 'Share Brand', 'Travel', '/images/brand.jpg');
+        $agency = new Company('share-agency', 'Share Agency', 'Travel');
+        $agency->setCompanyType('agency');
+        $creator = new Creator('share-creator', 'Share Creator', 'Travel', 'Sarajevo', 'Travel content', [], avatarUrl: '/images/creator.jpg');
+        $campaign = new Campaign('share-cover', 'Campaign with cover', 'Summary', 'Description', 'Travel', [], [], 100, 200, 'Sarajevo', 1, new DateTimeImmutable('+20 days'), new DateTimeImmutable(), $brand, coverMedia: $cover);
+        $withoutCover = new Campaign('share-no-cover', 'Campaign without cover', 'Summary', 'Description', 'Travel', [], [], 100, 200, 'Sarajevo', 1, new DateTimeImmutable('+20 days'), new DateTimeImmutable(), $brand);
+        foreach ([$owner, $folder, $cover, $brand, $agency, $creator, $campaign, $withoutCover] as $entity) $em->persist($entity);
+        $em->flush();
+
+        foreach ([
+            '/kampanje/share-cover' => $cover->getUrl(),
+            '/kampanje/share-no-cover' => '/images/share.webp',
+            '/kompanije/share-brand' => '/images/brand.jpg',
+            '/kompanije/share-agency' => '/images/share.webp',
+            '/kreatori/share-creator' => '/images/creator.jpg',
+        ] as $path => $image) {
+            $crawler = $this->client->request('GET', $path);
+            self::assertResponseIsSuccessful();
+            foreach (['meta[property="og:image"]', 'meta[name="twitter:image"]'] as $selector) {
+                self::assertSame('http://127.0.0.1:8000'.$image, $crawler->filter($selector)->attr('content'), $path);
+            }
+            self::assertSame('summary_large_image', $crawler->filter('meta[name="twitter:card"]')->attr('content'));
+        }
     }
 
     public function testLegalPagesAreIndexableWithLocalizedCanonicalAlternatesAndOrganizationSchema(): void
