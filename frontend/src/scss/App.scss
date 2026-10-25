@@ -377,15 +377,16 @@
     top: calc(100% + 8px);
     right: 0;
     width: max-content;
-    max-width: min(240px, calc(100vw - 24px));
-    padding: 9px 11px;
-    border: 1px solid #e0e6dd;
-    border-radius: 8px;
-    color: #52685e;
-    background: #fffefa;
-    box-shadow: 0 10px 24px rgba(31, 42, 40, .14);
-    font-size: 11px;
-    line-height: 1.5;
+    max-width: min(260px, calc(100vw - 24px));
+    padding: 12px 14px;
+    border: 1px solid var(--hairline);
+    border-radius: 16px;
+    color: var(--ink);
+    background: var(--card);
+    box-shadow: 0 16px 40px rgba(23, 61, 54, .16);
+    font-size: 13px;
+    line-height: 1.45;
+    white-space: normal;
   }
 }
 

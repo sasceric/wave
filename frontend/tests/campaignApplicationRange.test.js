@@ -39,6 +39,7 @@ test('a successful application refreshes the range from its response without ano
     },
   })
   state.campaign.value = { slug: 'spring', applicationRange: 'fewerThan5', company: { name: 'Brand', slug: 'brand' } }
+  state.user.value = { id: 1, accountType: 'creator', approved: true, emailVerified: true }
   state.applicationMessage.value = 'My proposal for this campaign.'
   await state.applyToCampaign()
   assert.deepEqual(requests, ['/campaigns/spring/applications'])

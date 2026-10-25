@@ -1,672 +1,244 @@
 @use '../breakpoints';
 @use '../glass';
+@use '../public-profile-layout';
 
-.brief-hero {
-  position: relative;
-  isolation: isolate;
-  overflow: hidden;
-  padding: 18px 0 32px;
-  background: #f6f2ea;
+// Public campaign brief, matching the approved prototype: copy beside the cover, a numbers strip,
+// the brief on the left and a sticky application card on the right; a glass bar on phones.
 
-  &::before,
-  &::after {
-    position: absolute;
-    z-index: -1;
-    width: 210px;
-    height: 210px;
-    border-radius: 50%;
-    background: rgba(53, 93, 77, .58);
-    content: '';
-    pointer-events: none;
+.campaign-page {
+  padding-top: 20px;
+  padding-bottom: 96px;
+
+  &__breadcrumb { @include public-profile-layout.breadcrumbs; }
+  > .profile-stats { margin-top: 8px; }
+  // Budget and hiring progress are components with their own small type; in the strip and card they take the strip's size.
+  .profile-stats strong *, .campaign-apply__budget strong *, .campaign-apply__facts dd * { color: inherit; font: inherit; }
+}
+
+// Hero: the uploaded cover is shown whole at its own proportions (the upload hint asks for 3:2).
+.campaign-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
+  align-items: center;
+  gap: 40px;
+  padding-block: 8px 28px;
+
+  &--no-cover { grid-template-columns: minmax(0, 760px); }
+
+  &__copy { display: grid; grid-template-columns: minmax(0, 1fr); align-content: start; gap: 14px; min-width: 0; }
+  .eyebrow { margin: 0; color: var(--coral-text); font-size: 12px; font-weight: 700; letter-spacing: .14em; }
+  h1 { margin: 0; color: var(--forest); font-family: var(--serif); font-size: clamp(38px, 4.2vw, 56px); font-weight: 400; letter-spacing: -.015em; line-height: 1.02; overflow-wrap: anywhere; text-wrap: balance; }
+  &__summary { max-width: 56ch; margin: 0; color: var(--muted-text); font-size: 19px; line-height: 1.45; text-wrap: pretty; }
+  .status-message { margin: 0; }
+
+  &__channels {
+    display: flex; flex-wrap: wrap; gap: 6px;
+    span { padding: 4px 11px; border-radius: var(--radius-pill); background: var(--surface); color: var(--ink); font-size: 13px; }
   }
 
-  &::before {
-    bottom: -105px;
-    left: -82px;
-  }
-
-  &::after {
-    top: -150px;
-    left: 47%;
-    width: 190px;
-    height: 190px;
-    background: rgba(219, 134, 94, .78);
-  }
-
-  &__image {
-    position: absolute;
-    z-index: -2;
-    inset: 0;
-
-    &::after {
-      position: absolute;
-      inset: 0;
-      background: linear-gradient(
-        90deg,
-        #f6f2ea 0%,
-        rgba(246, 242, 234, .98) 29%,
-        rgba(246, 242, 234, .8) 46%,
-        rgba(246, 242, 234, .16) 78%,
-        rgba(246, 242, 234, .12) 100%
-      );
-      content: '';
-    }
-
-    img {
-      position: absolute;
-      inset: 0 0 0 auto;
-      width: 74%;
-      height: 100%;
-      object-fit: cover;
-      object-position: center;
-    }
-  }
-
-  &__inner {
+  &__cover {
     position: relative;
-    z-index: 1;
-  }
-
-  &__grid {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(320px, 370px);
-    align-items: center;
-    gap: clamp(28px, 5vw, 72px);
-    min-height: 280px;
-  }
-
-  &__copy {
-    max-width: 650px;
-  }
-
-  &__copy > .eyebrow {
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 9px;
-    margin: 0 0 12px;
-  }
-
-  h1 {
-    max-width: 720px;
-    margin: 0 0 12px;
-    color: #172b2a;
-    font-family: var(--serif);
-    font-size: clamp(42px, 5.1vw, 68px);
-    font-weight: 500;
-    letter-spacing: -.04em;
-    line-height: .99;
-  }
-
-  &__summary {
-    max-width: 590px;
-    margin: 0 0 22px;
-    color: #64736d;
-    font-size: 16px;
-    line-height: 1.65;
-  }
-
-  &__brand {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    color: var(--forest);
-    font-size: 13px;
-    font-weight: 700;
-  }
-
-  &__brand-link {
-    width: fit-content;
-    text-decoration: none;
-  }
-
-  &__brand-link:hover {
-    color: #557469;
-  }
-
-  &__brand small {
-    display: block;
-    margin-top: 3px;
-    color: #76857d;
-    font-size: 12px;
-    font-weight: 400;
-  }
-
-  &__verified {
-    flex: 0 0 auto;
-    color: #378566;
-  }
-}
-
-.back-link {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  margin-bottom: 22px;
-  color: #64766d;
-  font-size: 12px;
-  font-weight: 500;
-  text-decoration: none;
-
-  &:hover {
-    color: var(--forest);
-    text-decoration: underline;
-    text-underline-offset: 3px;
-  }
-}
-
-.brand-avatar {
-  &--large {
-    width: 48px;
-    height: 48px;
-    flex: 0 0 auto;
-    display: grid;
-    place-items: center;
+    margin: 0;
     overflow: hidden;
-    border-radius: 50%;
-    color: #fff;
-    background: var(--forest);
+    border-radius: 28px;
+    background: var(--surface);
+    box-shadow: var(--shadow-soft);
 
-    img,
-    .wave-logo {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
+    img { display: block; width: 100%; height: auto; }
+  }
+
+  &__range {
+    @include glass.surface;
+
+    & { position: absolute; bottom: 14px; left: 14px; padding: 5px 12px; border-radius: var(--radius-pill); color: var(--ink); font-size: 13px; font-weight: 600; }
   }
 }
 
-.brief-aside,
-.brief-company-card {
-  border: 1px solid var(--hairline);
-  border-radius: var(--radius-card);
-  background: var(--card);
-}
-
-// The application card floats over the hero image, so it uses the glass surface.
-.brief-application-card {
-  @include glass.surface;
-
-  & {
-    border-radius: 24px;
-    background: var(--glass-fill-strong);
-  }
-}
-
-.brief-application-card {
-  padding: 20px 22px;
-
-  &__top {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    margin-bottom: 8px;
-  }
-
-  &__top .eyebrow {
-    margin: 0;
-  }
-
-  &__guest p {
-    margin: 10px 0 0;
-    color: #718078;
-    font-size: 12px;
-    text-align: center;
-  }
-}
-
-.brief-status {
+.campaign-brand {
   display: inline-flex;
+  justify-self: start;
   align-items: center;
-  gap: 6px;
-  color: #557d62;
-  font-size: 12px;
-  white-space: nowrap;
-
-  i {
-    width: 7px;
-    height: 7px;
-    display: inline-block;
-    border-radius: 50%;
-    background: #78a786;
-  }
-}
-
-.brief-hero-fact {
-  display: grid;
-  grid-template-columns: 20px minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 10px;
-  min-height: 43px;
-  border-top: 1px solid #e9ebe5;
-  color: #728078;
-  font-size: 12px;
-
-  svg {
-    color: var(--forest);
-  }
-
-  strong {
-    color: var(--forest);
-    font-size: 13px;
-    font-weight: 600;
-    text-align: right;
-  }
-}
-
-.brief-application {
-  margin-top: 12px;
-
-  textarea {
-    width: 100%;
-    min-height: 76px;
-    margin-bottom: 10px;
-    padding: 10px 12px;
-    border: 1px solid var(--hairline);
-    border-radius: 8px;
-    color: var(--ink);
-    background: #fff;
-    font: inherit;
-    font-size: 13px;
-    line-height: 1.55;
-    resize: vertical;
-  }
-
-  .field-label {
-    display: block;
-    margin: 13px 0 7px;
-    color: #61736a;
-    font-size: 12px;
-    font-weight: 600;
-  }
-
-  .status-message {
-    margin: 0 0 10px;
-  }
-
-  &__actions {
-    display: flex;
-    justify-content: flex-end;
-    flex-wrap: wrap;
-    gap: 8px;
-  }
-}
-
-.brief-notice {
-  margin: 14px 0 0;
-  padding: 13px;
-  border-left: 3px solid #d69879;
-  border-radius: 4px;
-  color: #6f7771;
-  background: #f6f2e9;
-  font-size: 12px;
-  line-height: 1.6;
-
-  > p {
-    margin: 0 0 12px;
-  }
-}
-
-.brief-application-card > .button {
-  margin-top: 12px;
-}
-
-.brief-application-card .button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 9px;
-}
-
-.brief-layout {
-  display: grid;
-  grid-template-columns: minmax(0, 1.65fr) minmax(310px, .9fr);
-  align-items: start;
-  gap: clamp(28px, 4vw, 58px);
-  padding-top: 42px;
-  padding-bottom: 88px;
-}
-
-.brief-copy {
-  min-width: 0;
-
-  > .eyebrow {
-    margin: 0 0 10px;
-  }
-
-  h2 {
-    max-width: 720px;
-    margin: 0 0 14px;
-    color: #172b2a;
-    font-family: var(--serif);
-    font-size: clamp(28px, 3vw, 38px);
-    font-weight: 500;
-    letter-spacing: -.03em;
-    line-height: 1.16;
-  }
-
-  &__description {
-    margin: 0;
-    color: #68776f;
-    font-size: 15px;
-    line-height: 1.8;
-  }
-
-  &__section {
-    margin-top: 28px;
-    padding-top: 21px;
-    border-top: 1px solid #e0e4dd;
-  }
-
-  &__section > .eyebrow {
-    margin: 0 0 14px;
-  }
-}
-
-.brief-deliverables {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 190px), 1fr));
   gap: 12px;
-  margin: 0;
-  padding: 0;
-  list-style: none;
+  max-width: 100%;
+  padding: 8px 14px 8px 8px;
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-pill);
+  color: var(--ink);
+  background: var(--card);
+  text-decoration: none;
+  transition: border-color .2s var(--ease-standard);
 
-  li {
-    min-height: 66px;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 12px;
-    border: 1px solid #e1e6de;
-    border-radius: 10px;
-    color: #42564d;
-    background: rgba(255, 254, 250, .62);
-    font-size: 13px;
-    line-height: 1.5;
+  &:hover { border-color: rgba(31, 42, 40, .18); }
+  > svg { flex: none; color: var(--muted-text); }
+
+  &__logo {
+    display: grid; flex: none; place-items: center; width: 40px; height: 40px; overflow: hidden; border-radius: 50%; background: var(--surface);
+    img, .wave-logo { width: 100%; height: 100%; object-fit: cover; }
   }
-
-  &__icon {
-    width: 34px;
-    height: 34px;
-    flex: 0 0 auto;
-    display: grid;
-    place-items: center;
-    border-radius: 9px;
-    color: var(--forest);
-    background: #edf1e9;
+  &__logo--large { width: 56px; height: 56px; border-radius: 16px; }
+  &__name {
+    display: grid; min-width: 0;
+    strong { display: flex; align-items: center; gap: 6px; font-size: 15px; font-weight: 600; svg { color: #4f8f74; } }
+    small { overflow: hidden; color: var(--muted-text); font-size: 13px; text-overflow: ellipsis; white-space: nowrap; }
   }
 }
 
-.brief-channel-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-
-  span {
-    padding: 7px 12px;
-    border: 1px solid #dfe5db;
-    border-radius: 999px;
-    color: #50675c;
-    background: #f3f5ef;
-    font-size: 12px;
-  }
-}
-
-.brief-sidebar {
+// Body
+.campaign-layout {
   display: grid;
-  gap: 16px;
-  min-width: 0;
+  grid-template-columns: minmax(0, 1fr) 340px;
+  align-items: start;
+  gap: 32px;
+  padding-top: 32px;
+
+  &__main { display: grid; grid-template-columns: minmax(0, 1fr); gap: 56px; min-width: 0; > * { min-width: 0; margin: 0; } }
+  &__aside { display: grid; align-content: start; gap: 14px; min-width: 0; }
+
+  .marketplace-safety-actions { justify-content: flex-start; }
 }
 
-.brief-aside {
-  padding: 20px 22px;
-
-  &__top {
-    margin-bottom: 8px;
+.campaign-section {
+  display: grid; gap: 16px; scroll-margin-top: 150px;
+  &__head {
+    display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 8px 16px;
+    h2 { @include public-profile-layout.section-title; }
+    p { @include public-profile-layout.section-intro; flex-basis: 100%; }
   }
-
-  &__top .eyebrow {
-    margin: 0;
-  }
+  &__link { display: inline-flex; align-items: center; gap: 4px; color: var(--forest); font-size: 14px; font-weight: 600; text-decoration: none; }
 }
 
-.brief-fact {
-  display: grid;
-  grid-template-columns: 20px minmax(90px, .8fr) minmax(0, 1fr);
-  align-items: center;
-  gap: 10px;
-  min-height: 39px;
-  border-top: 1px solid #eaebe5;
-  color: #7a8880;
-  font-size: 12px;
+.campaign-card {
+  @include public-profile-layout.card;
+  padding: 22px;
+  color: var(--ink);
+  font-size: 16px;
+  line-height: 1.65;
 
-  svg {
-    color: var(--forest);
-  }
-
-  strong {
-    color: #263b35;
-    font-size: 12px;
-    font-weight: 500;
-    text-align: right;
-  }
+  p { margin: 0 0 12px; max-width: 64ch; }
 }
 
-.brief-company-card {
-  padding: 20px 22px;
+.campaign-deliverables {
+  display: grid; gap: 10px; margin: 0; padding: 0; list-style: none;
+  li { @include public-profile-layout.card; display: flex; align-items: center; gap: 14px; padding: 16px 18px; font-size: 16px; font-weight: 500; }
+  &__icon { display: grid; flex: none; place-items: center; width: 40px; height: 40px; border-radius: 13px; color: var(--forest); background: rgba(23, 61, 54, .08); }
+}
 
-  > .eyebrow {
-    margin: 0 0 16px;
-  }
-
+.campaign-company {
+  display: grid; gap: 12px;
   &__heading {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin-bottom: 15px;
-
-    > div {
-      min-width: 0;
-      flex: 1;
-    }
+    display: flex; align-items: center; gap: 14px;
+    strong { display: flex; align-items: center; gap: 6px; font-size: 17px; font-weight: 600; svg { color: #4f8f74; } }
+    small { display: block; color: var(--muted-text); font-size: 13px; }
   }
-
-  h2 {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    margin: 0;
-    color: var(--forest);
-    font-size: 14px;
-    font-weight: 700;
-  }
-
-  &__heading p {
-    margin: 4px 0 0;
-    color: #839087;
-    font-size: 12px;
-  }
-
-  &__link {
-    display: inline-flex;
-    flex: 0 0 auto;
-    align-items: center;
-    gap: 6px;
-    padding: 8px 10px;
-    border: 1px solid #c9d4ca;
-    border-radius: 7px;
-    color: var(--forest);
-    font-size: 12px;
-    text-decoration: none;
-
-    &:hover {
-      background: #f1f4ed;
-    }
-  }
-
-  .profile-bio {
-    margin: 0;
-    color: #6f7b74;
-    font-size: 12px;
-    line-height: 1.7;
-  }
-
-  &__empty {
-    margin: 0;
-    color: #6f7b74;
-    font-size: 12px;
-    line-height: 1.7;
-  }
+  &__empty { color: var(--muted-text); }
 }
 
-@include breakpoints.down(1000px) {
-  .brief-hero__grid {
-    grid-template-columns: minmax(0, 1fr) minmax(300px, 350px);
-    gap: 28px;
-  }
+// Application card (all existing application states render inside it)
+.campaign-apply {
+  @include public-profile-layout.card;
+  display: grid;
+  gap: 14px;
+  padding: 20px;
+  scroll-margin-top: 110px;
 
-  .brief-layout {
-    grid-template-columns: minmax(0, 1.3fr) minmax(300px, .9fr);
-    gap: 28px;
+  &__top { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  &__budget {
+    display: grid; min-width: 0;
+    small { color: var(--muted-text); font-size: 13px; }
+    strong { color: var(--forest); font-size: 24px; font-variant-numeric: tabular-nums; line-height: 1.25; }
   }
+  &__status {
+    display: inline-flex; flex: none; align-items: center; gap: 6px; color: var(--muted-text); font-size: 13px; font-weight: 600;
+    i { width: 8px; height: 8px; border-radius: 50%; background: var(--secondary, #9aa59f); }
+    &.is-open { color: #2f7a52; i { background: #4f9a72; box-shadow: 0 0 0 3px rgba(79, 154, 114, .18); } }
+  }
+  &__facts {
+    display: grid; margin: 0; border-block: 1px solid var(--hairline);
+    > div { display: flex; justify-content: space-between; gap: 12px; padding: 10px 0; font-size: 14px; }
+    > div + div { border-top: 1px solid var(--hairline); }
+    dt { display: inline-flex; align-items: center; gap: 8px; color: var(--muted-text); }
+    dd { margin: 0; font-weight: 600; text-align: right; }
+  }
+  &__range { margin: 0; color: var(--muted-text); font-size: 13px; }
+  &__note { display: flex; align-items: flex-start; gap: 6px; margin: 0; color: var(--muted-text); font-size: 13px; line-height: 1.5; svg { flex: none; margin-top: 2px; } }
 
-  .brief-fact {
-    grid-template-columns: 20px minmax(76px, .8fr) minmax(0, 1fr);
-    gap: 8px;
+  .button { display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+}
+
+// Kept class names: application form and notices inside the card.
+.brief-application {
+  textarea {
+    width: 100%; min-height: 140px; margin: 0 0 12px; padding: 14px 16px;
+    border: 1px solid var(--hairline); border-radius: 16px; outline: 0;
+    color: var(--ink); background: var(--paper); font: inherit; font-size: 15px; line-height: 1.5; resize: vertical;
+    &:focus { border-color: rgba(23, 61, 54, .45); box-shadow: 0 0 0 4px rgba(23, 61, 54, .1); }
   }
+  .field-label { display: block; margin: 0 0 6px; color: var(--ink); font-size: 14px; font-weight: 600; }
+  .status-message { margin: 0 0 12px; }
+  &__actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
+}
+.brief-notice {
+  margin: 0; padding: 14px; border-radius: 18px; color: var(--ink); background: var(--surface); font-size: 14px; line-height: 1.55;
+  > p { margin: 0 0 12px; }
+}
+.brief-application-card__guest {
+  display: grid; gap: 8px;
+  p { margin: 0; color: var(--muted-text); font-size: 13px; text-align: center; }
+}
+.agency-proposal-fields { display: grid; gap: 12px; min-width: 0; margin: 0 0 14px; padding: 16px; border: 1px solid var(--hairline); border-radius: 18px; legend { padding-inline: 6px; font-weight: 600; } }
+
+.campaign-steps {
+  @include public-profile-layout.card;
+  padding: 20px 22px;
+  h2 { margin: 0 0 12px; color: var(--ink); font: 600 15px/1.4 var(--font-body, 'DM Sans', sans-serif); }
+  ol { display: grid; gap: 12px; margin: 0; padding: 0; list-style: none; }
+  li { display: grid; grid-template-columns: 28px minmax(0, 1fr); gap: 10px; color: var(--muted-text); font-size: 14px; line-height: 1.45; }
+  li > span { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; color: var(--forest); background: var(--surface); font-size: 13px; font-weight: 700; }
+  strong { display: block; color: var(--ink); font-weight: 600; }
+}
+
+.campaign-apply-bar { display: none; }
+
+@media (min-width: 1051px) and (min-height: 820px) {
+  .campaign-layout__aside { position: sticky; top: 110px; }
+}
+
+@include breakpoints.down(1050px) {
+  .campaign-hero { grid-template-columns: minmax(0, 1fr); gap: 24px; }
+  .campaign-hero__cover { order: -1; }
+  .campaign-layout { grid-template-columns: minmax(0, 1fr); }
+  .campaign-layout__aside { order: -1; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; }
 }
 
 @include breakpoints.down(760px) {
-  .brief-hero {
-    padding: 14px 0 28px;
+  .campaign-page { padding-top: 12px; padding-bottom: 130px; &__breadcrumb { padding-bottom: 8px; } }
+  .campaign-hero { padding-block: 4px 18px; }
+  .campaign-hero__cover { border-radius: 22px; }
+  .campaign-hero__summary { font-size: 16px; }
+  .campaign-layout { gap: 40px; padding-top: 24px; &__main { gap: 44px; } &__aside { grid-template-columns: minmax(0, 1fr); } }
+  .campaign-section__head { display: grid; justify-items: start; gap: 4px; }
 
-    &__navigation {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      margin-bottom: 16px;
+  .campaign-apply-bar {
+    @include glass.surface;
 
-      .back-link { margin-bottom: 0; }
+    & {
+      position: fixed; z-index: 40; right: 12px; bottom: calc(84px + env(safe-area-inset-bottom, 0px)); left: 12px;
+      display: flex; align-items: center; gap: 10px; min-height: 60px; padding: 8px 8px 8px 18px; border-radius: var(--radius-panel);
+      transition: transform .22s ease;
     }
-
-    &::after {
-      left: auto;
-      right: -90px;
-    }
-
-    &__image {
-      position: relative;
-      z-index: 0;
-      inset: auto;
-      width: min(calc(100% - 40px), 560px);
-      aspect-ratio: 3 / 2;
-      margin: 0 auto 22px;
-      overflow: hidden;
-      border-radius: 14px;
-
-      &::after {
-        display: none;
-      }
-
-      img {
-        inset: 0;
-        width: 100%;
-      }
-    }
-
-    &__grid {
-      grid-template-columns: minmax(0, 1fr);
-      gap: 22px;
-      min-height: 0;
-    }
-
-    h1 {
-      font-size: clamp(38px, 10vw, 54px);
-    }
-
-    &__summary {
-      font-size: 14px;
-    }
+    > div { display: grid; flex: 1; min-width: 0; line-height: 1.2; }
+    small { color: var(--muted-text); font-size: 12px; }
+    strong { overflow: hidden; color: var(--forest); font-size: 17px; text-overflow: ellipsis; white-space: nowrap; }
+    .button { flex: none; min-height: 44px; }
   }
-
-  .back-link {
-    margin-bottom: 24px;
-  }
-
-  .brief-application-card {
-    width: min(100%, 480px);
-  }
-
-  .brief-layout {
-    grid-template-columns: minmax(0, 1fr);
-    gap: 24px;
-    padding-top: 32px;
-    padding-bottom: 64px;
-  }
-
-  .brief-copy h2 {
-    font-size: 30px;
-  }
-
-  .brief-sidebar {
-    grid-template-columns: minmax(0, 1fr);
-  }
+  .site-shell--mobile-chrome-hidden .campaign-apply-bar { transform: translateY(calc(76px + env(safe-area-inset-bottom, 0px))); }
 }
 
-@include breakpoints.down(420px) {
-  .brief-hero__image { width: calc(100% - 32px); }
+@media (prefers-reduced-motion: reduce) {
+  .campaign-brand, .campaign-apply-bar { transition: none; }
 }
 
-@include breakpoints.down(520px) {
-  .brief-hero__copy > .eyebrow {
-    font-size: 12px;
-  }
-
-  .brief-application-card,
-  .brief-aside,
-  .brief-company-card {
-    padding: 17px;
-  }
-
-  .brief-hero-fact {
-    grid-template-columns: 20px minmax(0, 1fr) auto;
-    gap: 8px;
-    font-size: 12px;
-
-    strong {
-      font-size: 12px;
-    }
-  }
-
-  .brief-company-card__heading {
-    flex-wrap: wrap;
-
-    .brand-avatar--large {
-      width: 42px;
-      height: 42px;
-    }
-  }
-
-  .brief-company-card__link {
-    margin-left: 54px;
-  }
-
-  .brief-fact {
-    grid-template-columns: 19px minmax(76px, .8fr) minmax(0, 1fr);
-    font-size: 12px;
-
-    strong {
-      font-size: 12px;
-    }
-  }
-}
-.brief-application-card__proposals {
-  margin: 16px 0;
-  padding-top: 14px;
-  border-top: 1px solid var(--border, #dce2d9);
-  color: var(--muted-text);
-  font-size: 13px;
-}
-
-.agency-proposal-fields { display: grid; gap: 12px; min-width: 0; margin-block: 16px; padding: 16px; border: 1px solid var(--line); border-radius: 14px; legend { padding-inline: 6px; font-weight: 600; } }
+// Loading skeleton (LoadingSkeleton variant="campaign") still uses these wrappers.
+.brief-hero { padding: 20px 0 28px; }
+.brief-layout { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 32px; padding-bottom: 88px; }
+@include breakpoints.down(760px) { .brief-layout { grid-template-columns: minmax(0, 1fr); } }

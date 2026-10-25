@@ -1,19 +1,53 @@
+// Notices: soft rounded panels. Success and error carry an icon; a title adds a bold first line.
 .notice,
 .empty-state {
-  margin: 22px 0;
-  padding: 23px;
-  border: 1px solid #e0e6df;
-  border-radius: 4px;
-  color: #708079;
-  background: var(--card);
-  font-size: 12px;
-  line-height: 1.65;
+  margin: 16px 0;
+  padding: 14px 16px;
+  border: 0;
+  border-radius: 18px;
+  color: var(--muted-text);
+  background: var(--surface);
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.empty-state {
+  padding: 22px;
+  border: 1px dashed var(--hairline);
+  background: transparent;
 }
 
 .notice {
+  &--success {
+    color: #24603f;
+    background: rgba(79, 154, 114, .12);
+  }
+
   &--error {
-    border-color: #e9c2b8;
-    color: #a34433;
-    background: #fff8f5;
+    color: #8f3a26;
+    background: rgba(196, 85, 58, .09);
+  }
+
+  &--rich {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  &__icon {
+    flex: none;
+    margin-top: 1px;
+  }
+
+  &__body {
+    display: grid;
+    gap: 2px;
+    min-width: 0;
+  }
+
+  &__title {
+    color: var(--ink);
+    font-size: 15px;
+    font-weight: 600;
   }
 }

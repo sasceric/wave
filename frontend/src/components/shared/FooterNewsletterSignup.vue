@@ -2,12 +2,15 @@
 import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { ArrowRight, Mail } from '@lucide/vue'
+import StatusMessage from './StatusMessage.vue'
 
 const props = defineProps({
   inputId: { type: String, required: true },
   loading: { type: Boolean, default: false },
   modelValue: { type: String, default: '' },
   error: { type: String, default: '' },
+  // True after a successful sign-up; shows the confirmation under the field until the address changes.
+  sent: { type: Boolean, default: false },
 })
 
 const emit = defineEmits(['update:modelValue', 'submit'])
@@ -63,6 +66,7 @@ function submitForm() {
       </div>
     </form>
     <p v-if="error" class="site-footer__newsletter-error" role="alert">{{ error }}</p>
-    <span class="site-footer__newsletter-note">{{ t('app.footerNewsletterNote') }}</span>
+    <StatusMessage v-if="sent" class="site-footer__newsletter-sent" variant="success" :title="t('app.footerNewsletterSuccessTitle')">{{ t('app.footerNewsletterSuccessMessage') }}</StatusMessage>
+    <span v-else class="site-footer__newsletter-note">{{ t('app.footerNewsletterNote') }}</span>
   </div>
 </template>

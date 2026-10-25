@@ -85,8 +85,9 @@
 .home-row {
   padding-top: 56px;
 
-  &__countries {
-    margin-top: 20px;
+  // Same space above as the next row's top padding (the card grid pulls up 4px).
+  &__countries.seo-country-links {
+    margin-top: 60px;
   }
 }
 
@@ -260,6 +261,10 @@
 
   .home-row {
     padding-top: 40px;
+  }
+
+  .home-row__countries.seo-country-links {
+    margin-top: 44px;
   }
 
   .home-steps {

@@ -311,7 +311,9 @@
       "years": "Prije {count} god"
     },
     "homeTab": "Početna",
-    "profileTab": "Profil"
+    "profileTab": "Profil",
+    "installBrowserHint": "U meniju preglednika odaberi Instaliraj aplikaciju ili Dodaj na početni zaslon.",
+    "installSafariHint": "U Safariju odaberi Datoteka → Dodaj u Dock."
   },
   "campaignChat": {
     "unreadDivider": "Nove poruke",
@@ -822,8 +824,21 @@
     "applicationsNote": "Prijave još nisu omogućene u ovoj početnoj verziji. Ovdje možeš istražiti javni brief.",
     "alreadyApplied": "Već ste se prijavili na ovu kampanju.",
     "verifyEmailInAccount": "Potvrdi e-mail u svom računu",
+    "applicantsOnlyNotice": "Na kampanje se mogu prijaviti samo kreatori i agencije. Brendovi ne mogu slati prijave.",
+    "ownCampaignNotice": "Ne možeš se prijaviti na kampanju svoje kompanije.",
     "askAbout": "Pitaj nas o kampanji",
-    "emailSubject": "Pitanje o Wave kampanji"
+    "emailSubject": "Pitanje o Wave kampanji",
+    "deliverablesHint": "Okvir sadržaja. Detalje dogovarate u porukama.",
+    "howTitle": "Kako ide prijava",
+    "how1Title": "Pošalji prijavu",
+    "how1Text": "Kratko predstavljanje i ideja za sadržaj.",
+    "how2Title": "Brend odgovara",
+    "how2Text": "Prihvata prijavu ili šalje ponudu u porukama.",
+    "how3Title": "Dogovorite detalje",
+    "how3Text": "Rok, sadržaj i plaćanje dogovarate direktno.",
+    "applyShort": "Prijavi se",
+    "applicationSentTitle": "Prijava je poslana.",
+    "applicationSentText": "Brend će je pregledati; obavijest stiže u Wave poruke."
   },
   "notFound": {
     "eyebrow": "404 · Stranica nije pronađena",
@@ -2048,6 +2063,24 @@
       "collaboration": "Od prijave na kampanju do recenzije",
       "companyProfile": "Registracija i profil kompanije",
       "campaigns": "Kreiranje kampanje i upravljanje statusima"
+    },
+    "guidesUi": {
+      "audience": "Vodiči za",
+      "forBrands": "Za brendove",
+      "forBrandsLong": "Za brendove i agencije",
+      "forCreators": "Za kreatore",
+      "counts": "Vodiči: {guides} · Video: {videos}",
+      "writtenTitle": "Pisani vodiči",
+      "writtenIntro": "Tri kratka koraka u svakom vodiču.",
+      "steps": "{count} koraka",
+      "read": "Pročitaj vodič",
+      "guide": "Vodič",
+      "withVideo": "Uz video vodič",
+      "contents": "Sadržaj",
+      "nextStepTitle": "Spreman/na za sljedeći korak?",
+      "nextGuides": "Sljedeći vodiči",
+      "helpTitle": "Treba ti pomoć?",
+      "helpText": "Pitaj nas bilo šta o saradnji, kampanjama ili profilu."
     }
   },
   "support": {
@@ -2187,7 +2220,18 @@
       "high": "Visok"
     },
     "statusChangedTo": "Status je promijenjen u: {status}",
-    "download": "Preuzmi"
+    "download": "Preuzmi",
+    "chooseTitle": "Šta ti treba?",
+    "chooseIntro": "Odaberi vrstu zahtjeva; formular traje tri kratka koraka.",
+    "startAction": "Započni",
+    "guidesTitle": "Vodiči korak po korak",
+    "guidesText": "Kratki video i pisani vodiči za kreatore i brendove.",
+    "guidesAction": "Otvori vodiče",
+    "existingTitle": "Već imaš tiket?",
+    "existingText": "Prati odgovore i status prijava na jednom mjestu.",
+    "formHeading": "Javi nam se.",
+    "replyTitle": "Gdje stiže odgovor",
+    "replyText": "Odgovor stiže na tvoj e-mail, a tiket pratiš preko privatnog linka iz potvrde."
   },
   "accountDeletion": {
     "action": "Obriši račun",

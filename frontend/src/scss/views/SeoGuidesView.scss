@@ -1,0 +1,164 @@
+@use '../breakpoints';
+@use '../glass';
+@use '../public-profile-layout';
+
+// Guides index and guide article, matching the approved prototype.
+.guides-page {
+  display: grid;
+  gap: 56px;
+  padding-top: 20px;
+  padding-bottom: 96px;
+
+  &__breadcrumb { @include public-profile-layout.breadcrumbs; margin-bottom: -40px; padding-bottom: 0; }
+  .eyebrow { margin: 0; color: var(--coral-text); font-size: 12px; font-weight: 700; letter-spacing: .14em; }
+}
+
+.guides-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, .9fr);
+  align-items: center;
+  gap: 40px;
+
+  &__copy { display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; min-width: 0; }
+  h1 { margin: 0; color: var(--forest); font-family: var(--serif); font-size: clamp(38px, 4.6vw, 60px); font-weight: 400; letter-spacing: -.015em; line-height: 1.02; text-wrap: balance; }
+  &__intro { max-width: 56ch; margin: 0; color: var(--muted-text); font-size: 19px; line-height: 1.45; text-wrap: pretty; }
+
+  &__art {
+    position: relative; aspect-ratio: 5 / 4; overflow: hidden; border-radius: 32px; background: var(--surface);
+    img { display: block; width: 100%; height: 100%; object-fit: cover; }
+  }
+  &__card {
+    @include glass.surface;
+
+    & { position: absolute; right: 16px; bottom: 16px; left: 16px; display: flex; align-items: center; gap: 12px; padding: 14px 16px; border-radius: 22px; }
+    span:last-child { display: grid; color: var(--muted-text); font-size: 13px; }
+    strong { color: var(--ink); font-size: 15px; }
+  }
+}
+
+.guides-icon { display: grid; flex: none; place-items: center; width: 44px; height: 44px; border-radius: 14px; color: var(--forest); background: rgba(23, 61, 54, .08); }
+
+// Segmented switch between the brand and creator guide sets (two routes).
+.guides-switch {
+  display: inline-flex; justify-self: start; gap: 2px; padding: 3px; border-radius: var(--radius-pill); background: var(--surface);
+  a { display: inline-flex; align-items: center; min-height: 36px; padding: 0 16px; border-radius: var(--radius-pill); color: var(--muted-text); font-size: 14px; font-weight: 500; text-decoration: none; white-space: nowrap;
+    &[aria-current='page'] { color: var(--ink); background: var(--card); box-shadow: 0 1px 3px rgba(23, 61, 54, .12); font-weight: 600; }
+    &:focus-visible { outline: 2px solid var(--forest); outline-offset: 1px; }
+  }
+}
+
+.guides-section {
+  display: grid; gap: 16px;
+  &__head { display: grid; gap: 4px; h2 { @include public-profile-layout.section-title; } p { @include public-profile-layout.section-intro; } }
+}
+
+.guides-videos { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; &--single { grid-template-columns: minmax(0, 760px); } }
+
+.guides-cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+.guides-card {
+  @include public-profile-layout.card;
+  display: flex; flex-direction: column; overflow: hidden; color: var(--ink); text-decoration: none; transition: box-shadow .2s var(--ease-standard);
+  &:hover { box-shadow: var(--shadow-soft); }
+  &:focus-visible { outline: 2px solid var(--forest); outline-offset: 3px; }
+  &__media { display: block; aspect-ratio: 4 / 3; overflow: hidden; background: var(--surface); img { display: block; width: 100%; height: 100%; object-fit: cover; } }
+  &__body {
+    display: flex; flex: 1; flex-direction: column; gap: 8px; padding: 18px 20px 20px;
+    small { display: inline-flex; align-items: center; gap: 6px; color: var(--muted-text); font-size: 13px; }
+    strong { font-size: 18px; font-weight: 600; line-height: 1.3; }
+    > span:not(.guides-card__link) { color: var(--muted-text); font-size: 14px; line-height: 1.5; }
+  }
+  &__link { display: inline-flex; align-items: center; gap: 4px; margin-top: auto; padding-top: 6px; color: var(--forest); font-size: 14px; font-weight: 600; }
+}
+
+.guides-region {
+  @include public-profile-layout.card;
+  display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); align-items: center; gap: 24px; padding: 28px;
+  h2 { @include public-profile-layout.section-title; margin-bottom: 6px; }
+  > div:first-child > p { margin: 0 0 16px; color: var(--muted-text); }
+  &__aside {
+    display: grid; gap: 8px; padding: 22px; border-radius: 22px; color: var(--paper); background: var(--forest);
+    > svg { color: var(--coral); }
+    h3 { margin: 0; font-family: var(--serif); font-size: 24px; font-weight: 400; }
+    p { margin: 0; color: rgba(246, 242, 234, .82); font-size: 14px; }
+  }
+  &__avatars {
+    display: flex; margin-top: 8px;
+    span { width: 36px; height: 36px; margin-left: -8px; overflow: hidden; border: 2px solid var(--forest); border-radius: 50%; &:first-child { margin-left: 0; } }
+    img { display: block; width: 100%; height: 100%; object-fit: cover; }
+  }
+}
+
+.guides-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; .text-link { display: inline-flex; align-items: center; gap: 4px; margin-left: 6px; } }
+
+// Article
+.guides-article-hero {
+  display: grid; gap: 14px; max-width: 760px; margin-bottom: -24px;
+  h1 { margin: 0; color: var(--forest); font-family: var(--serif); font-size: clamp(36px, 4.4vw, 56px); font-weight: 400; letter-spacing: -.015em; line-height: 1.02; text-wrap: balance; }
+  &__meta { display: flex; flex-wrap: wrap; gap: 8px 16px; margin: 0; color: var(--muted-text); font-size: 14px; span { display: inline-flex; align-items: center; gap: 6px; } }
+}
+.guides-article { display: grid; grid-template-columns: 220px minmax(0, 1fr) 300px; align-items: start; gap: 32px; }
+.guides-toc {
+  position: sticky; top: 110px; display: grid; gap: 4px;
+  small { padding: 0 12px 6px; color: var(--muted-text); font-size: 12px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; }
+  a { display: flex; gap: 10px; padding: 8px 12px; border-radius: 12px; color: var(--muted-text); font-size: 14px; line-height: 1.4; text-decoration: none;
+    b { color: var(--forest); font-weight: 600; }
+    &:hover { color: var(--ink); }
+    &[aria-current='true'] { color: var(--ink); background: var(--card); box-shadow: 0 1px 3px rgba(23, 61, 54, .1); }
+  }
+}
+.guides-steps { display: grid; gap: 14px; min-width: 0; }
+.guides-step {
+  @include public-profile-layout.card;
+  display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 18px; padding: 24px; scroll-margin-top: 110px;
+  &__number { display: grid; place-items: center; width: 44px; height: 44px; border-radius: 14px; color: var(--paper); background: var(--forest); font-family: var(--serif); font-size: 22px; }
+  h2 { display: flex; align-items: center; gap: 8px; margin: 0 0 8px; color: var(--ink); font-size: 22px; font-weight: 600; line-height: 1.3; svg { flex: none; color: var(--forest); } }
+  p { margin: 0; color: var(--ink); font-size: 16px; line-height: 1.65; }
+}
+.guides-next {
+  @include public-profile-layout.card;
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin-top: 8px; padding: 20px 22px;
+  strong { font-size: 17px; }
+  p { margin: 2px 0 0; color: var(--muted-text); font-size: 14px; }
+}
+.guides-aside { position: sticky; top: 110px; display: grid; gap: 14px; min-width: 0; }
+.guides-related {
+  @include public-profile-layout.card;
+  display: grid; padding: 18px;
+  strong { padding-bottom: 6px; font-size: 15px; }
+  a { display: flex; justify-content: space-between; gap: 10px; padding: 10px 0; border-top: 1px solid var(--hairline); color: var(--ink); font-size: 14px; text-decoration: none; svg { flex: none; margin-top: 2px; } &:hover { color: var(--forest); } }
+}
+.guides-help {
+  display: grid; gap: 10px; padding: 20px; border-radius: 24px; color: var(--paper); background: var(--forest);
+  h3 { margin: 0; font-family: var(--serif); font-size: 24px; font-weight: 400; line-height: 1.15; }
+  p { margin: 0; color: rgba(246, 242, 234, .78); font-size: 14px; }
+  &__button.button { justify-content: center; color: var(--forest); background: var(--paper); }
+}
+.guides-countries { @include public-profile-layout.card; display: grid; gap: 10px; padding: 18px; strong { font-size: 15px; } }
+
+@include breakpoints.down(1050px) {
+  .guides-hero { grid-template-columns: minmax(0, 1fr); gap: 24px; }
+  .guides-hero__art { max-height: 360px; aspect-ratio: auto; height: 360px; }
+  .guides-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .guides-article { grid-template-columns: minmax(0, 1fr); }
+  .guides-toc { display: none; }
+  .guides-aside { position: static; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@include breakpoints.down(760px) {
+  .guides-page { gap: 44px; padding-top: 12px; padding-bottom: 64px; &__breadcrumb { margin-bottom: -32px; } }
+  .guides-hero__intro { font-size: 16px; }
+  .guides-hero__art { height: 280px; border-radius: 24px; }
+  .guides-videos, .guides-cards, .guides-region { grid-template-columns: minmax(0, 1fr); }
+  .guides-region { padding: 20px; }
+  .guides-aside { grid-template-columns: minmax(0, 1fr); }
+  .guides-step { gap: 14px; padding: 18px; h2 { font-size: 19px; } }
+  .guides-switch { display: flex; justify-self: stretch; a { flex: 1; justify-content: center; } }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .guides-card { transition: none; }
+}
+
+// The heading above already says it; drop the country list's own label here.
+.guides-region .seo-country-links__label,
+.guides-countries .seo-country-links__label { display: none; }

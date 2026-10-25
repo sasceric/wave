@@ -1,17 +1,14 @@
 <script setup>
-import { computed, onMounted, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import LocalizedLink from '../components/shared/LocalizedLink.vue'
 import CountryDirectoryLinks from '../components/shared/CountryDirectoryLinks.vue'
-import SeoGuideLinks from '../components/shared/SeoGuideLinks.vue'
-import SeoHeroArtwork from '../components/shared/SeoHeroArtwork.vue'
 import GuideVideo from '../components/shared/GuideVideo.vue'
 import NotFoundView from './NotFoundView.vue'
 import { guideSlugs, creatorGuideSlugs } from '../lib/regionalSeo'
 import { apiGet } from '../lib/api'
-import { ArrowLeft, ArrowRight, BadgeCheck, BriefcaseBusiness, FileText, Images, MapPin, PlayCircle, Search, Send, UserRound } from '@lucide/vue'
-import creatorRegionMap from '../assets/creator-region-map.svg'
+import { ArrowRight, BadgeCheck, BookOpen, BriefcaseBusiness, ChevronRight, FileText, Images, MapPin, PlayCircle, Search, Send, UserRound } from '@lucide/vue'
 
 const { t } = useI18n()
 const route = useRoute()
@@ -45,6 +42,40 @@ const stepIcons = {
   'offer-packages': [BriefcaseBusiness, FileText, Send],
   'apply-to-campaigns': [Search, Send, BadgeCheck],
 }
+const indexRoute = computed(() => forCreators.value ? 'creator-guides' : 'seo-guides')
+const articleRoute = computed(() => forCreators.value ? 'creator-guide' : 'seo-guide')
+const otherSlugs = computed(() => slugs.value.filter(slug => slug !== guide.value))
+// Large decorative photos (1050px and up) so the hero stays sharp.
+const heroImage = computed(() => forCreators.value
+  ? { src: '/images/home-faq-creator-1050.webp', srcset: '/images/home-faq-creator-1050.webp 1050w, /images/home-faq-creator-1400.webp 1400w' }
+  : { src: '/images/minimalist-wave-768.webp', srcset: '/images/minimalist-wave-768.webp 768w, /images/minimalist-wave.webp 1122w' })
+
+// Article contents: the link of the step that reached the top stays highlighted.
+const activeStep = ref(1)
+let stepFrame = 0
+function trackStep() {
+  stepFrame = 0
+  if (!guide.value) return
+  let current = 1
+  for (const index of [1, 2, 3]) {
+    const section = document.getElementById(`guide-step-${index}`)
+    if (section && section.getBoundingClientRect().top <= 160) current = index
+  }
+  activeStep.value = current
+}
+function queueStep() { if (!stepFrame) stepFrame = window.requestAnimationFrame(trackStep) }
+function goToStep(index) {
+  activeStep.value = index
+  const behavior = window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth'
+  document.getElementById(`guide-step-${index}`)?.scrollIntoView({ behavior, block: 'start' })
+}
+watch(guide, () => { activeStep.value = 1 })
+onMounted(() => window.addEventListener('scroll', queueStep, { passive: true }))
+onBeforeUnmount(() => {
+  window.removeEventListener('scroll', queueStep)
+  if (stepFrame) window.cancelAnimationFrame(stepFrame)
+})
+
 const regionalCreators = ref([])
 onMounted(async () => {
   if (guide.value) return
@@ -58,101 +89,150 @@ onMounted(async () => {
 </script>
 
 <template>
-  <section v-if="valid" class="page-width seo-content" :class="{ 'seo-content--article': guide }">
-    <LocalizedLink v-if="guide" class="text-link seo-content__back" :to="{ name: forCreators ? 'creator-guides' : 'seo-guides' }"><ArrowLeft :size="17" aria-hidden="true" /> {{ t('regionalSeo.back') }}</LocalizedLink>
-    <div v-if="!guide" class="seo-content__hero">
-      <div>
-        <p class="eyebrow">{{ t(forCreators ? 'regionalSeo.creatorGuides.eyebrow' : 'regionalSeo.eyebrow') }}</p>
-        <h1>{{ t(titleKey) }}</h1>
-        <p class="seo-content__intro">{{ t(forCreators ? 'regionalSeo.creatorGuides.intro' : 'regionalSeo.guideIntro') }}</p>
-      </div>
-      <SeoHeroArtwork />
-    </div>
-    <div v-else class="seo-content__hero seo-content__hero--article">
-      <div>
-        <p class="eyebrow">{{ t(forCreators ? 'regionalSeo.creatorGuides.eyebrow' : 'regionalSeo.eyebrow') }}</p>
-        <h1>{{ t(`${copyKey}.${guide}.title`) }}</h1>
-        <p class="seo-content__intro">{{ t(`${copyKey}.${guide}.intro`) }}</p>
-      </div>
-      <SeoHeroArtwork article :icon="guideIcons[guide]" />
-    </div>
-    <section v-if="videos.length" class="seo-content__videos" aria-labelledby="guide-videos-title">
-      <header>
-        <h2 id="guide-videos-title">{{ t('regionalSeo.videoTutorials.title') }}</h2>
-        <p>{{ t('regionalSeo.videoTutorials.intro') }}</p>
-      </header>
-      <div class="seo-content__video-grid" :class="{ 'seo-content__video-grid--single': videos.length === 1 }">
-        <GuideVideo v-for="video in videos" :key="video.id" :video="video" />
-      </div>
-    </section>
-    <article v-if="guide" class="seo-content__article">
-      <section v-for="index in 3" :key="`${guide}-${index}`" class="seo-content__step">
-        <span class="seo-content__step-number" aria-hidden="true">{{ index }}</span>
-        <span class="seo-content__step-icon"><component :is="stepIcons[guide][index - 1]" :size="28" aria-hidden="true" /></span>
-        <div>
-          <h2>{{ t(`${copyKey}.${guide}.sections.${index - 1}.heading`) }}</h2>
-          <p>{{ t(`${copyKey}.${guide}.sections.${index - 1}.body`) }}</p>
+  <main v-if="valid" class="page-width guides-page" :class="{ 'guides-page--article': guide }">
+    <nav class="guides-page__breadcrumb" :aria-label="t('creatorProfile.breadcrumbs')">
+      <LocalizedLink to="/">{{ t('app.homeTab') }}</LocalizedLink>
+      <ChevronRight :size="14" aria-hidden="true" />
+      <LocalizedLink v-if="guide" :to="{ name: indexRoute }">{{ t(titleKey) }}</LocalizedLink>
+      <span v-else aria-current="page">{{ t(titleKey) }}</span>
+      <template v-if="guide"><ChevronRight :size="14" aria-hidden="true" /><span aria-current="page">{{ t(`${copyKey}.${guide}.title`) }}</span></template>
+    </nav>
+
+    <template v-if="!guide">
+      <section class="guides-hero">
+        <div class="guides-hero__copy">
+          <p class="eyebrow">{{ t(forCreators ? 'regionalSeo.creatorGuides.eyebrow' : 'regionalSeo.eyebrow') }}</p>
+          <h1>{{ t(titleKey) }}</h1>
+          <p class="guides-hero__intro">{{ t(forCreators ? 'regionalSeo.creatorGuides.intro' : 'regionalSeo.guideIntro') }}</p>
+          <nav class="guides-switch" :aria-label="t('regionalSeo.guidesUi.audience')">
+            <LocalizedLink :to="{ name: 'seo-guides' }" :aria-current="!forCreators ? 'page' : undefined">{{ t('regionalSeo.guidesUi.forBrands') }}</LocalizedLink>
+            <LocalizedLink :to="{ name: 'creator-guides' }" :aria-current="forCreators ? 'page' : undefined">{{ t('regionalSeo.guidesUi.forCreators') }}</LocalizedLink>
+          </nav>
+        </div>
+        <div class="guides-hero__art" aria-hidden="true">
+          <img :src="heroImage.src" :srcset="heroImage.srcset" sizes="(max-width: 1050px) 100vw, 46vw" alt="" fetchpriority="high">
+          <div class="guides-hero__card">
+            <span class="guides-icon"><BookOpen :size="22" /></span>
+            <span><strong>{{ t(forCreators ? 'regionalSeo.guidesUi.forCreators' : 'regionalSeo.guidesUi.forBrandsLong') }}</strong>{{ t('regionalSeo.guidesUi.counts', { guides: slugs.length, videos: videos.length }) }}</span>
+          </div>
         </div>
       </section>
-    </article>
-    <div v-else class="seo-content__guides">
-      <LocalizedLink
-        v-for="slug in slugs"
-        :key="slug"
-        class="seo-content__guide-card"
-        :to="{ name: forCreators ? 'creator-guide' : 'seo-guide', params: { guide: slug } }"
-        :aria-labelledby="`guide-title-${slug}`"
-      >
-        <div class="seo-content__guide-media">
-          <img :src="guideImages[slug]" alt="" loading="lazy">
-        </div>
-        <div class="seo-content__guide-body">
-          <h2 :id="`guide-title-${slug}`">{{ t(`${copyKey}.${slug}.title`) }} <ArrowRight :size="17" aria-hidden="true" /></h2>
-          <p>{{ t(`${copyKey}.${slug}.intro`) }}</p>
-          <div class="seo-content__guide-meta"><component :is="guideIcons[slug]" :size="20" aria-hidden="true" /><span>{{ t(`${copyKey}.${slug}.sections.0.heading`) }}</span></div>
-        </div>
-      </LocalizedLink>
-    </div>
-    <div class="seo-content__actions">
-      <LocalizedLink class="button button--dark" :to="{ name: forCreators ? 'campaigns' : 'creators' }">{{ t(forCreators ? 'regionalSeo.creatorGuides.browse' : 'regionalSeo.browse') }} <ArrowRight :size="17" aria-hidden="true" /></LocalizedLink>
-      <LocalizedLink class="button button--outline" :to="{ name: forCreators ? 'account' : 'account-campaign-create' }">{{ t(forCreators ? 'regionalSeo.creatorGuides.profile' : 'regionalSeo.campaign') }}</LocalizedLink>
-      <LocalizedLink class="text-link" :to="{ name: 'how-it-works' }">{{ t('regionalSeo.howItWorks.title') }} <ArrowRight :size="17" aria-hidden="true" /></LocalizedLink>
-    </div>
 
-    <section v-if="!guide" class="seo-content__regional">
-      <div class="seo-content__regional-copy">
-        <h2>{{ t('regionalSeo.countriesTitle') }}</h2>
-        <p>{{ t('regionalSeo.regionalIntro') }}</p>
-        <div class="seo-content__avatars" aria-hidden="true">
-          <span v-for="creator in regionalCreators" :key="creator.slug"><img :src="creator.avatarUrl || '/images/creator-placeholder.webp'" alt="" loading="lazy"></span>
-          <span v-if="regionalCreators.length" class="seo-content__avatar-more">+</span>
+      <section v-if="videos.length" class="guides-section" aria-labelledby="guide-videos-title">
+        <header class="guides-section__head"><h2 id="guide-videos-title">{{ t('regionalSeo.videoTutorials.title') }}</h2><p>{{ t('regionalSeo.videoTutorials.intro') }}</p></header>
+        <div class="guides-videos" :class="{ 'guides-videos--single': videos.length === 1 }">
+          <GuideVideo v-for="video in videos" :key="video.id" :video="video" />
         </div>
-        <CountryDirectoryLinks compact />
-      </div>
-      <div class="seo-content__regional-side">
-        <div class="seo-content__regional-aside">
-          <MapPin :size="26" aria-hidden="true" />
-          <h3>{{ t('regionalSeo.regionalAsideTitle') }}</h3>
-          <p>{{ t('regionalSeo.regionalAsideBody') }}</p>
+      </section>
+
+      <section class="guides-section" aria-labelledby="guide-written-title">
+        <header class="guides-section__head"><h2 id="guide-written-title">{{ t('regionalSeo.guidesUi.writtenTitle') }}</h2><p>{{ t('regionalSeo.guidesUi.writtenIntro') }}</p></header>
+        <div class="guides-cards">
+          <LocalizedLink
+            v-for="slug in slugs"
+            :key="slug"
+            class="guides-card"
+            :to="{ name: articleRoute, params: { guide: slug } }"
+            :aria-labelledby="`guide-title-${slug}`"
+          >
+            <span class="guides-card__media"><img :src="guideImages[slug]" alt="" loading="lazy" width="500" height="375"></span>
+            <span class="guides-card__body">
+              <small><component :is="guideIcons[slug]" :size="15" aria-hidden="true" />{{ t('regionalSeo.guidesUi.steps', { count: 3 }) }} · {{ t(`${copyKey}.${slug}.sections.0.heading`) }}</small>
+              <strong :id="`guide-title-${slug}`">{{ t(`${copyKey}.${slug}.title`) }}</strong>
+              <span>{{ t(`${copyKey}.${slug}.intro`) }}</span>
+              <span class="guides-card__link">{{ t('regionalSeo.guidesUi.read') }} <ArrowRight :size="15" aria-hidden="true" /></span>
+            </span>
+          </LocalizedLink>
         </div>
-        <div class="seo-content__regional-map" aria-hidden="true">
-          <img class="seo-content__map-base" :src="creatorRegionMap" alt="">
-        </div>
-      </div>
-    </section>
-    <div v-else class="seo-content__related">
-      <SeoGuideLinks panel :for-creators="forCreators" />
-      <section class="seo-content__region-card">
+      </section>
+
+      <section class="guides-region" aria-labelledby="guide-region-title">
         <div>
-          <h2>{{ t('regionalSeo.countriesTitle') }}</h2>
+          <h2 id="guide-region-title">{{ t('regionalSeo.countriesTitle') }}</h2>
           <p>{{ t('regionalSeo.regionalIntro') }}</p>
           <CountryDirectoryLinks compact />
         </div>
-        <img :src="creatorRegionMap" alt="" loading="lazy" aria-hidden="true">
+        <div class="guides-region__aside">
+          <MapPin :size="24" aria-hidden="true" />
+          <h3>{{ t('regionalSeo.regionalAsideTitle') }}</h3>
+          <p>{{ t('regionalSeo.regionalAsideBody') }}</p>
+          <div v-if="regionalCreators.length" class="guides-region__avatars" aria-hidden="true">
+            <span v-for="creator in regionalCreators.slice(0, 6)" :key="creator.slug"><img :src="creator.avatarUrl || '/images/creator-placeholder.webp'" alt="" loading="lazy"></span>
+          </div>
+        </div>
       </section>
+    </template>
+
+    <template v-else>
+      <section class="guides-article-hero">
+        <p class="eyebrow">{{ t(forCreators ? 'regionalSeo.guidesUi.forCreators' : 'regionalSeo.guidesUi.forBrands') }} · {{ t('regionalSeo.guidesUi.guide') }}</p>
+        <h1>{{ t(`${copyKey}.${guide}.title`) }}</h1>
+        <p class="guides-hero__intro">{{ t(`${copyKey}.${guide}.intro`) }}</p>
+        <p class="guides-article-hero__meta">
+          <span><BookOpen :size="16" aria-hidden="true" />{{ t('regionalSeo.guidesUi.steps', { count: 3 }) }}</span>
+          <span v-if="videos.length"><PlayCircle :size="16" aria-hidden="true" />{{ t('regionalSeo.guidesUi.withVideo') }}</span>
+        </p>
+      </section>
+
+      <div class="guides-article">
+        <nav class="guides-toc" :aria-label="t('regionalSeo.guidesUi.contents')">
+          <small>{{ t('regionalSeo.guidesUi.contents') }}</small>
+          <a
+            v-for="index in 3"
+            :key="index"
+            :href="`#guide-step-${index}`"
+            :aria-current="activeStep === index ? 'true' : undefined"
+            @click.prevent="goToStep(index)"
+          ><b>{{ index }}</b>{{ t(`${copyKey}.${guide}.sections.${index - 1}.heading`) }}</a>
+        </nav>
+
+        <article class="guides-steps">
+          <GuideVideo v-for="video in videos" :key="video.id" :video="video" />
+          <section v-for="index in 3" :id="`guide-step-${index}`" :key="`${guide}-${index}`" class="guides-step">
+            <span class="guides-step__number" aria-hidden="true">{{ index }}</span>
+            <div>
+              <h2><component :is="stepIcons[guide][index - 1]" :size="20" aria-hidden="true" />{{ t(`${copyKey}.${guide}.sections.${index - 1}.heading`) }}</h2>
+              <p>{{ t(`${copyKey}.${guide}.sections.${index - 1}.body`) }}</p>
+            </div>
+          </section>
+          <section class="guides-next">
+            <div>
+              <strong>{{ t('regionalSeo.guidesUi.nextStepTitle') }}</strong>
+              <p>{{ t(forCreators ? 'regionalSeo.creatorGuides.relatedIntro' : 'regionalSeo.guideRelatedIntro') }}</p>
+            </div>
+            <div class="guides-actions">
+              <LocalizedLink class="button button--dark" :to="{ name: forCreators ? 'campaigns' : 'creators' }">{{ t(forCreators ? 'regionalSeo.creatorGuides.browse' : 'regionalSeo.browse') }} <ArrowRight :size="16" aria-hidden="true" /></LocalizedLink>
+              <LocalizedLink class="button button--tonal" :to="{ name: forCreators ? 'account' : 'account-campaign-create' }">{{ t(forCreators ? 'regionalSeo.creatorGuides.profile' : 'regionalSeo.campaign') }}</LocalizedLink>
+            </div>
+          </section>
+        </article>
+
+        <aside class="guides-aside">
+          <nav class="guides-related" :aria-label="t('regionalSeo.guidesUi.nextGuides')">
+            <strong>{{ t('regionalSeo.guidesUi.nextGuides') }}</strong>
+            <LocalizedLink v-for="slug in otherSlugs" :key="slug" :to="{ name: articleRoute, params: { guide: slug } }">{{ t(`${copyKey}.${slug}.title`) }} <ArrowRight :size="15" aria-hidden="true" /></LocalizedLink>
+            <LocalizedLink :to="{ name: indexRoute }">{{ t('regionalSeo.back') }} <ArrowRight :size="15" aria-hidden="true" /></LocalizedLink>
+          </nav>
+          <section class="guides-help">
+            <h3>{{ t('regionalSeo.guidesUi.helpTitle') }}</h3>
+            <p>{{ t('regionalSeo.guidesUi.helpText') }}</p>
+            <LocalizedLink class="button guides-help__button" :to="{ name: 'support' }">{{ t('support.label') }}</LocalizedLink>
+          </section>
+          <section class="guides-countries">
+            <strong>{{ t('regionalSeo.countriesTitle') }}</strong>
+            <CountryDirectoryLinks compact />
+          </section>
+        </aside>
+      </div>
+    </template>
+
+    <div v-if="!guide" class="guides-actions guides-actions--page">
+      <LocalizedLink class="button button--dark" :to="{ name: forCreators ? 'campaigns' : 'creators' }">{{ t(forCreators ? 'regionalSeo.creatorGuides.browse' : 'regionalSeo.browse') }} <ArrowRight :size="16" aria-hidden="true" /></LocalizedLink>
+      <LocalizedLink class="button button--tonal" :to="{ name: forCreators ? 'account' : 'account-campaign-create' }">{{ t(forCreators ? 'regionalSeo.creatorGuides.profile' : 'regionalSeo.campaign') }}</LocalizedLink>
+      <LocalizedLink class="text-link" :to="{ name: 'how-it-works' }">{{ t('regionalSeo.howItWorks.title') }} <ArrowRight :size="16" aria-hidden="true" /></LocalizedLink>
     </div>
-  </section>
+  </main>
   <NotFoundView v-else />
 </template>
 
-<style lang="scss" src="../scss/components/shared/SeoContent.scss"></style>
+<style lang="scss" src="../scss/views/SeoGuidesView.scss"></style>

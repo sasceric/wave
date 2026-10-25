@@ -310,7 +310,9 @@
       "years": "{count} y ago"
     },
     "homeTab": "Home",
-    "profileTab": "Profile"
+    "profileTab": "Profile",
+    "installBrowserHint": "In your browser menu, choose Install app or Add to Home Screen.",
+    "installSafariHint": "In Safari, choose File → Add to Dock."
   },
   "campaignChat": {
     "unreadDivider": "New messages",
@@ -821,8 +823,21 @@
     "applicationsNote": "Applications are not open in this early MVP. This public brief is here to explore.",
     "alreadyApplied": "You have already applied to this campaign.",
     "verifyEmailInAccount": "Verify your email in your account",
+    "applicantsOnlyNotice": "Only creators and agencies can apply to campaigns. Brand accounts cannot apply.",
+    "ownCampaignNotice": "You cannot apply to your own company’s campaign.",
     "askAbout": "Ask us about this brief",
-    "emailSubject": "Question about a Wave brief"
+    "emailSubject": "Question about a Wave brief",
+    "deliverablesHint": "The content outline. You agree the details in messages.",
+    "howTitle": "How applying works",
+    "how1Title": "Send an application",
+    "how1Text": "A short introduction and your content idea.",
+    "how2Title": "The brand replies",
+    "how2Text": "It accepts the application or sends an offer in messages.",
+    "how3Title": "Agree the details",
+    "how3Text": "You agree the deadline, content and payment directly.",
+    "applyShort": "Apply",
+    "applicationSentTitle": "Application sent.",
+    "applicationSentText": "The brand will review it; you will be notified in Wave messages."
   },
   "notFound": {
     "eyebrow": "404 · Page not found",
@@ -2047,6 +2062,24 @@
       "collaboration": "From campaign application to review",
       "companyProfile": "Company registration and profile",
       "campaigns": "Creating campaigns and managing statuses"
+    },
+    "guidesUi": {
+      "audience": "Guides for",
+      "forBrands": "For brands",
+      "forBrandsLong": "For brands and agencies",
+      "forCreators": "For creators",
+      "counts": "Guides: {guides} · Videos: {videos}",
+      "writtenTitle": "Written guides",
+      "writtenIntro": "Three short steps in every guide.",
+      "steps": "{count} steps",
+      "read": "Read the guide",
+      "guide": "Guide",
+      "withVideo": "With a video guide",
+      "contents": "Contents",
+      "nextStepTitle": "Ready for the next step?",
+      "nextGuides": "Next guides",
+      "helpTitle": "Need help?",
+      "helpText": "Ask us anything about collaborations, campaigns or your profile."
     }
   },
   "support": {
@@ -2186,7 +2219,18 @@
       "high": "High"
     },
     "statusChangedTo": "Status changed to: {status}",
-    "download": "Download"
+    "download": "Download",
+    "chooseTitle": "What do you need?",
+    "chooseIntro": "Pick a request type; the form takes three short steps.",
+    "startAction": "Start",
+    "guidesTitle": "Step-by-step guides",
+    "guidesText": "Short videos and written guides for creators and brands.",
+    "guidesAction": "Open guides",
+    "existingTitle": "Already have a ticket?",
+    "existingText": "Follow replies and the status of your requests in one place.",
+    "formHeading": "Get in touch.",
+    "replyTitle": "Where the reply goes",
+    "replyText": "We reply to your email, and you can follow the ticket through the private link in the confirmation."
   },
   "accountDeletion": {
     "action": "Delete account",

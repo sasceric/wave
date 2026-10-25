@@ -35,7 +35,6 @@ const safetyRevision = ref(0)
 function safetyChanged() { safetyRevision.value += 1; notifications.value = []; void loadNotifications(); void loadUnreadMessages() }
 
 const AccountSidebar = defineAsyncComponent(() => import('./components/account/AccountSidebar.vue'))
-const SuccessModal = defineAsyncComponent(() => import('./components/shared/SuccessModal.vue'))
 const NotificationsPanel = defineAsyncComponent(() => import('./components/shared/NotificationsPanel.vue'))
 const MessagesPanel = defineAsyncComponent(() => import('./components/shared/MessagesPanel.vue'))
 
@@ -47,7 +46,7 @@ const currentYear = new Date().getFullYear()
 const newsletterEmail = ref('')
 const newsletterError = ref('')
 const newsletterSubmitting = ref(false)
-const newsletterSuccessOpen = ref(false)
+const newsletterSent = ref(false)
 const footerMobileBreakpoint = window.matchMedia('(max-width: 760px)')
 const isMobileFooter = ref(footerMobileBreakpoint.matches)
 const mobileFooterSectionsOpen = ref({
@@ -93,15 +92,18 @@ const updateInProgress = ref(false)
 const updateError = ref('')
 const installHelpVisible = ref(false)
 const installAvailable = ref(false)
-const installHint = computed(() => isIosDevice() ? t('app.installIosHint') : t('app.installHint'))
+const appInstalled = ref(window.matchMedia('(display-mode: standalone)').matches || window.navigator?.standalone === true)
+const installHint = computed(() => {
+  if (isIosDevice()) return t('app.installIosHint')
+  if (installAvailable.value) return t('app.installHint')
+  return isDesktopSafari() ? t('app.installSafariHint') : t('app.installBrowserHint')
+})
 const unreadNotificationCount = computed(() => currentUser.value?.notificationsEnabled === false ? 0 : (
   unreadNotificationTotal.value
   + optimisticUnreadNotificationIds.value.length
 ))
-const canShowInstallButton = computed(() => (
-  installAvailable.value
-  || (isIosDevice() && !window.matchMedia('(display-mode: standalone)').matches)
-))
+// Always offer install outside the installed app; without a native prompt the button explains how.
+const canShowInstallButton = computed(() => installAvailable.value || !appInstalled.value)
 const isMobileAccountNavigationPage = computed(() => Boolean(
   currentUser.value
   && (route.meta.accountSection
@@ -736,11 +738,16 @@ function decodeApplicationServerKey(value) {
   return Uint8Array.from(window.atob(base64), (character) => character.charCodeAt(0))
 }
 
+function isDesktopSafari() {
+  return /^((?!chrome|chromium|crios|fxios|edg|android).)*safari/i.test(navigator.userAgent)
+}
+
 function isIosDevice() {
   return /iPad|iPhone|iPod/.test(navigator.userAgent)
     || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
 }
 
+watch(newsletterEmail, (value) => { if (value) newsletterSent.value = false })
 async function openNewsletterSignup({ website = '' } = {}) {
   if (newsletterSubmitting.value) return
   newsletterError.value = ''
@@ -756,7 +763,7 @@ async function openNewsletterSignup({ website = '' } = {}) {
       },
     })
     newsletterEmail.value = ''
-    newsletterSuccessOpen.value = true
+    newsletterSent.value = true
   } catch (cause) {
     newsletterError.value = cause.message || t('app.footerNewsletterError')
   } finally {
@@ -795,6 +802,7 @@ function onAppInstalled() {
   installPrompt = null
   installAvailable.value = false
   installHelpVisible.value = false
+  appInstalled.value = true
   refreshAppBadge()
 }
 
@@ -882,6 +890,7 @@ function toggleNotifications() {
 }
 
 function closeMobileMenuOnOutsideClick(event) {
+  if (installHelpVisible.value && !(event.target instanceof Element && event.target.closest('.header-install'))) installHelpVisible.value = false
   if (!(event.target instanceof Node) || mobileMenu.value?.contains(event.target) || event.target.closest?.('.account-sidebar')) {
     return
   }
@@ -1236,6 +1245,7 @@ async function signOut() {
             v-model="newsletterEmail"
             :loading="newsletterSubmitting"
             :error="newsletterError"
+            :sent="newsletterSent"
             @submit="openNewsletterSignup"
           />
 
@@ -1328,6 +1338,7 @@ async function signOut() {
                   v-model="newsletterEmail"
                   :loading="newsletterSubmitting"
                   :error="newsletterError"
+                  :sent="newsletterSent"
                   @submit="openNewsletterSignup"
                 />
               </div>
@@ -1361,13 +1372,6 @@ async function signOut() {
       </div>
     </footer>
     <ReportNotices v-if="currentUser?.approved && currentUser?.emailVerified" />
-    <SuccessModal
-      v-if="newsletterSuccessOpen"
-      v-model:open="newsletterSuccessOpen"
-      :title="t('app.footerNewsletterSuccessTitle')"
-      :message="t('app.footerNewsletterSuccessMessage')"
-      :close-label="t('app.footerNewsletterClose')"
-    />
 
     <CookieConsentBanner ref="cookieConsentBanner" />
 

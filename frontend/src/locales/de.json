@@ -310,7 +310,9 @@
       "years": "Vor {count} Jahren"
     },
     "homeTab": "Start",
-    "profileTab": "Profil"
+    "profileTab": "Profil",
+    "installBrowserHint": "Wähle im Browsermenü „App installieren“ oder „Zum Startbildschirm hinzufügen“.",
+    "installSafariHint": "Wähle in Safari Ablage → Zum Dock hinzufügen."
   },
   "campaignChat": {
     "unreadDivider": "Neue Nachrichten",
@@ -821,8 +823,21 @@
     "applicationsNote": "Bewerbungen sind in dieser frühen Version noch nicht möglich. Du kannst dir das öffentliche Briefing bereits ansehen.",
     "alreadyApplied": "Du hast dich bereits für diese Kampagne beworben.",
     "verifyEmailInAccount": "E-Mail im Konto bestätigen",
+    "applicantsOnlyNotice": "Nur Creator und Agenturen können sich auf Kampagnen bewerben. Markenkonten können sich nicht bewerben.",
+    "ownCampaignNotice": "Du kannst dich nicht auf eine Kampagne deines eigenen Unternehmens bewerben.",
     "askAbout": "Frage zu diesem Briefing stellen",
-    "emailSubject": "Frage zu einem Wave-Briefing"
+    "emailSubject": "Frage zu einem Wave-Briefing",
+    "deliverablesHint": "Der inhaltliche Rahmen. Details klärt ihr in Nachrichten.",
+    "howTitle": "So läuft die Bewerbung",
+    "how1Title": "Bewerbung senden",
+    "how1Text": "Eine kurze Vorstellung und deine Inhaltsidee.",
+    "how2Title": "Die Marke antwortet",
+    "how2Text": "Sie nimmt die Bewerbung an oder sendet ein Angebot in Nachrichten.",
+    "how3Title": "Details vereinbaren",
+    "how3Text": "Frist, Inhalte und Bezahlung vereinbart ihr direkt.",
+    "applyShort": "Bewerben",
+    "applicationSentTitle": "Bewerbung gesendet.",
+    "applicationSentText": "Die Marke prüft sie; die Benachrichtigung kommt in den Wave-Nachrichten."
   },
   "notFound": {
     "eyebrow": "404 · Seite nicht gefunden",
@@ -2047,6 +2062,24 @@
       "collaboration": "Von der Kampagnenbewerbung bis zur Bewertung",
       "companyProfile": "Registrierung und Unternehmensprofil",
       "campaigns": "Kampagnen erstellen und Status verwalten"
+    },
+    "guidesUi": {
+      "audience": "Leitfäden für",
+      "forBrands": "Für Marken",
+      "forBrandsLong": "Für Marken und Agenturen",
+      "forCreators": "Für Creator",
+      "counts": "Leitfäden: {guides} · Videos: {videos}",
+      "writtenTitle": "Schriftliche Leitfäden",
+      "writtenIntro": "Drei kurze Schritte in jedem Leitfaden.",
+      "steps": "{count} Schritte",
+      "read": "Leitfaden lesen",
+      "guide": "Leitfaden",
+      "withVideo": "Mit Video-Leitfaden",
+      "contents": "Inhalt",
+      "nextStepTitle": "Bereit für den nächsten Schritt?",
+      "nextGuides": "Weitere Leitfäden",
+      "helpTitle": "Brauchst du Hilfe?",
+      "helpText": "Frag uns alles zu Kooperationen, Kampagnen oder deinem Profil."
     }
   },
   "support": {
@@ -2186,7 +2219,18 @@
       "high": "Hoch"
     },
     "statusChangedTo": "Status geändert zu: {status}",
-    "download": "Herunterladen"
+    "download": "Herunterladen",
+    "chooseTitle": "Was brauchst du?",
+    "chooseIntro": "Wähle die Art der Anfrage; das Formular hat drei kurze Schritte.",
+    "startAction": "Starten",
+    "guidesTitle": "Schritt-für-Schritt-Anleitungen",
+    "guidesText": "Kurze Videos und schriftliche Anleitungen für Creator und Marken.",
+    "guidesAction": "Anleitungen öffnen",
+    "existingTitle": "Schon ein Ticket?",
+    "existingText": "Verfolge Antworten und den Status deiner Anfragen an einem Ort.",
+    "formHeading": "Schreib uns.",
+    "replyTitle": "Wohin die Antwort geht",
+    "replyText": "Wir antworten an deine E-Mail, und das Ticket verfolgst du über den privaten Link aus der Bestätigung."
   },
   "accountDeletion": {
     "action": "Konto löschen",

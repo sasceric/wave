@@ -9,7 +9,7 @@ defineProps({
     <div v-for="item in items" :key="item.key" class="profile-stats__item">
       <dt>{{ item.label }}</dt>
       <dd>
-        <strong>{{ item.value }}</strong>
+        <strong><slot :name="`value-${item.key}`">{{ item.value }}</slot></strong>
         <span v-if="item.hint">{{ item.hint }}</span>
       </dd>
     </div>

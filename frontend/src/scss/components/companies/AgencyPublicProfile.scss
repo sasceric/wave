@@ -33,7 +33,7 @@
   .profile-reviews { margin: 0; }
   .profile-faqs { margin: 0; padding: 0; }
   &__about { display: grid; gap: 16px; min-width: 0; h2 { @include public-profile-layout.section-title; } }
-  &__about-card { @include public-profile-layout.card; padding: 22px; color: var(--ink); font-size: 16px; line-height: 1.6; :deep(p), p { margin: 0 0 12px; max-width: 64ch; } }
+  &__about-card { @include public-profile-layout.card; padding: 22px; color: var(--ink); font-size: 16px; line-height: 1.6; p { margin: 0 0 12px; max-width: 64ch; } }
   &__tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; span { padding: 4px 11px; border-radius: var(--radius-pill); background: var(--surface); color: var(--ink); font-size: 13px; } }
   &__facts { @include public-profile-layout.card; display: grid; margin: 0; padding: 8px 22px;
     > div { display: grid; grid-template-columns: 22px 100px minmax(0, 1fr); align-items: start; gap: 10px; padding: 12px 0; font-size: 14px; > svg { margin-top: 2px; color: var(--muted-text); } }
@@ -79,7 +79,7 @@
     &__actions { grid-column: 1; .agency-contact-actions { display: none; } }
     .agency-profile-layout { gap: 40px; &__main { gap: 44px; } &__sidebar { grid-template-columns: minmax(0, 1fr); padding-top: 0; .profile-action-card { display: none; } } }
     .agency-services__grid { grid-template-columns: minmax(0, 1fr); }
-    &__section-heading { flex-direction: column; align-items: flex-start; gap: 4px; }
+    &__section-heading { display: grid; justify-items: start; gap: 4px; }
     .agency-public-profile__campaign-grid.campaign-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px 12px; }
   }
 }

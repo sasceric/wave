@@ -1,6 +1,5 @@
 <script setup>
 import CampaignCompensation from '../components/campaigns/CampaignCompensation.vue'
-import RegistrationPrompt from '../components/shared/RegistrationPrompt.vue'
 import PublicShareButton from '../components/shared/PublicShareButton.vue'
 import { rememberRegistrationIntent } from '../lib/registrationIntent'
 import PresentationDemoBadge from '../components/shared/PresentationDemoBadge.vue'
@@ -14,7 +13,8 @@ import CampaignApplicationRange from '../components/campaigns/CampaignApplicatio
 import { campaignPlace } from '../lib/marketplace'
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
-import { ArrowLeft, ArrowRight, BadgeCheck, CalendarDays, DollarSign, MapPin, Tag, UsersRound } from '@lucide/vue'
+import { ArrowLeft, ArrowRight, BadgeCheck, CalendarDays, ChevronRight, Info, MapPin, Tag, UsersRound } from '@lucide/vue'
+import ProfileStats from '../components/shared/ProfileStats.vue'
 import RouterLink from '../components/shared/LocalizedLink.vue'
 import { useI18n } from 'vue-i18n'
 import LoadingSkeleton from '../components/shared/LoadingSkeleton.vue'
@@ -31,7 +31,7 @@ const error = ref('')
 const applyError = ref('')
 const applying = ref(false)
 const canApply = computed(() => user.value?.accountType === 'creator' || user.value?.canOfferServices)
-const ownCampaign = computed(() => campaign.value?.company?.ownerId === user.value?.id)
+const ownCampaign = computed(() => Boolean(user.value?.id) && campaign.value?.company?.ownerId === user.value.id)
 const applicationMessage = ref('')
 const agencyProposal = ref({ amount: null, scope: '', timeline: '', team: '' })
 const selectedOffering = ref('')
@@ -106,8 +106,25 @@ async function loadCampaign() {
   }
 }
 
+const coverUrl = computed(() => campaign.value?.coverImageUrl || campaign.value?.company?.coverUrl || '')
+const categories = computed(() => (campaign.value?.categoryLabels || [campaign.value?.categoryLabel || campaign.value?.category]).filter(Boolean).join(', '))
+const stats = computed(() => campaign.value ? [
+  { key: 'budget', label: t('campaignDetail.budget') },
+  { key: 'spots', label: t('campaignDetail.spots') },
+  { key: 'closes', label: t('campaignDetail.closes'), value: formatDate(campaign.value.closesAt) },
+  { key: 'location', label: t('campaignDetail.location'), value: campaignPlace(campaign.value, locale.value) },
+] : [])
+// Phones: a short bar above the tab bar that jumps to the application card.
+const showApplyBar = computed(() => Boolean(campaign.value) && campaign.value.status === 'open' && !campaign.value.readOnly
+  && !applicationSent.value && !alreadyApplied.value && !engaged.value && !ownCampaign.value && (!user.value || canApply.value))
+function openApplication() {
+  if (canApply.value && !ownCampaign.value && !invitation.value && user.value?.emailVerified !== false && user.value?.approved) applicationFormOpen.value = true
+  const behavior = window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth'
+  document.getElementById('campaign-apply')?.scrollIntoView({ behavior, block: 'start' })
+}
+
 async function applyToCampaign() {
-  if (applying.value || invitation.value || alreadyApplied.value || engaged.value) return
+  if (!canApply.value || ownCampaign.value || applying.value || invitation.value || alreadyApplied.value || engaged.value) return
   applying.value = true
   applyError.value = ''
   try {
@@ -174,257 +191,204 @@ onMounted(loadCampaign)
   </section>
   <LoadingSkeleton v-else-if="!campaign" variant="campaign" :label="t('campaignDetail.loading')" />
   <template v-else>
-    <section class="brief-hero">
-      <div v-if="campaign.coverImageUrl || campaign.company.coverUrl" class="brief-hero__image" aria-hidden="true">
-        <img :src="campaign.coverImageUrl || campaign.company.coverUrl" alt="" fetchpriority="high" decoding="async">
-      </div>
-      <div class="page-width brief-hero__inner">
-        <div class="brief-hero__navigation">
-          <RouterLink class="back-link" to="/campaigns"><ArrowLeft class="link-arrow" :size="16" aria-hidden="true" />{{ t('campaignDetail.back') }}</RouterLink>
-          <PublicShareButton route-name="campaign-detail" :slug="campaign.slug" :title="campaign.title" />
-        </div>
-        <div class="brief-hero__grid">
-          <div class="brief-hero__copy">
-            <p class="eyebrow">
-              {{ (campaign.categoryLabels || [campaign.categoryLabel || campaign.category]).join(', ') }}
-              <span aria-hidden="true">·</span>
-              {{ campaign.status === 'open' ? t('campaignDetail.openCampaign') : t(`account.${campaign.status}`) }}
-            </p>
-            <PresentationDemoBadge v-if="campaign.isPresentationDemo" />
-            <h1>{{ campaign.title }}</h1>
-            <MarketplaceSafetyActions kind="campaign" :slug="campaign.slug" :owner-slug="campaign.company.slug" />
-            <p class="brief-hero__summary">{{ campaign.summary }}</p>
-            <StatusMessage v-if="campaign.compensationType === 'voluntary'">{{ t('compensation.voluntaryHint') }}</StatusMessage>
-            <RouterLink
-              class="brief-hero__brand brief-hero__brand-link"
-              v-if="!campaign.company.deleted"
-              :to="{ name: 'company-profile', params: { slug: campaign.company.slug } }"
-            >
-              <span class="brand-avatar brand-avatar--large">
-                <img v-if="campaign.company.logoUrl" :src="campaign.company.logoUrl" :alt="campaign.company.name">
-                <WaveLogo v-else mark />
-              </span>
-              <span>
-                {{ campaign.company.name }}
-                <small>{{ campaign.company.industry }}</small>
-              </span>
-              <BadgeCheck
-                v-if="campaign.company.verified"
-                class="brief-hero__verified"
-                :size="16"
-                :aria-label="t('campaignCard.verified')"
-              />
-            </RouterLink>
-          </div>
+    <main class="campaign-page page-width">
+      <nav class="campaign-page__breadcrumb" :aria-label="t('creatorProfile.breadcrumbs')">
+        <RouterLink to="/campaigns">{{ t('app.campaigns') }}</RouterLink>
+        <ChevronRight :size="14" aria-hidden="true" />
+        <span aria-current="page">{{ campaign.title }}</span>
+        <PresentationDemoBadge v-if="campaign.isPresentationDemo" pill />
+        <PublicShareButton route-name="campaign-detail" :slug="campaign.slug" :title="campaign.title" />
+      </nav>
 
-          <aside class="brief-application-card" aria-labelledby="campaign-application-title">
-            <div class="brief-application-card__top">
-              <p id="campaign-application-title" class="eyebrow">{{ campaign.status === 'open' ? t('campaignDetail.openCampaign') : t(`account.${campaign.status}`) }}</p>
-              <span class="brief-status"><i></i>{{ t(`account.${campaign.status}`) }}</span>
-            </div>
-            <div class="brief-hero-fact">
-              <DollarSign :size="18" aria-hidden="true" />
-              <span>{{ t('campaignDetail.budget') }}</span>
-              <strong><CampaignCompensation :campaign="campaign" /></strong>
-            </div>
-            <div class="brief-hero-fact">
-              <UsersRound :size="18" aria-hidden="true" />
-              <span>{{ t('campaignDetail.spots') }}</span>
-              <strong><CampaignHiringProgress :campaign="campaign" /></strong>
-            </div>
-            <div class="brief-hero-fact">
-              <CalendarDays :size="18" aria-hidden="true" />
-              <span>{{ t('campaignDetail.closes') }}</span>
-              <strong>{{ formatDate(campaign.closesAt) }}</strong>
-            </div>
-            <p v-if="campaign.applicationRange" class="brief-application-card__proposals">
-              <CampaignApplicationRange :range="campaign.applicationRange" />
-            </p>
-
-            <div v-if="campaign.status === 'cancelled'" class="brief-notice" role="status">{{ t('account.cancelled') }}</div>
-            <div v-else-if="campaign.readOnly" class="brief-notice" role="status">{{ t('campaignChat.deletedAccountNotice') }}</div>
-            <div
-              v-else-if="!campaign.readOnly && canApply && user.emailVerified === false"
-              class="brief-notice"
-            >
-              <p>{{ t('account.emailUnverified') }}</p>
-              <RouterLink class="button button--dark button--full" to="/account">
-                {{ t('campaignDetail.verifyEmailInAccount') }} <ArrowRight class="link-arrow" :size="16" aria-hidden="true" />
-              </RouterLink>
-            </div>
-            <div
-              v-else-if="canApply && !user.approved"
-              class="brief-notice"
-              role="status"
-            >
-              {{ t('account.approvalPendingNotice') }}
-            </div>
-            <div v-else-if="campaign.status !== 'open'" class="brief-notice" role="status">{{ t(`account.${campaign.status}`) }}</div>
-            <div v-else-if="collaborationCancelled" class="brief-notice" role="status">{{ t('hiring.cancelledNotice') }}</div>
-            <div v-else-if="engaged" class="brief-notice" role="status">{{ t('hiring.hired') }}</div>
-            <div v-else-if="invitation" class="brief-notice" role="status">
-              <p>{{ t('hiring.invitedHint') }}</p>
-              <RouterLink class="button button--dark button--full" :to="invitation.conversationId ? { name: 'messages', query: { conversation: invitation.conversationId } } : { name: 'account-applications' }">{{ t(invitation.conversationId ? 'account.activityChat' : 'hiring.viewInvitation') }} <ArrowRight :size="17" aria-hidden="true" /></RouterLink>
-            </div>
-            <div v-else-if="canApply && alreadyApplied" class="brief-notice" role="status">
-              {{ t('campaignDetail.alreadyApplied') }}
-            </div>
-            <div v-else-if="canApply && !ownCampaign && !applicationSent" class="brief-application">
-              <button
-                v-if="!applicationFormOpen"
-                class="button button--dark button--full"
-                type="button"
-                @click="applicationFormOpen = true"
-              >
-                {{ t('account.apply') }} <ArrowRight :size="17" aria-hidden="true" />
-              </button>
-              <form v-else v-form-validation @submit.prevent="applyToCampaign">
-                <CreditActionNotice action="application" />
-                <fieldset v-if="user?.profile?.companyType === 'agency'" class="agency-proposal-fields">
-                  <legend>{{ t('agency.proposal') }}</legend>
-                  <SingleSelect v-if="offerings.length" v-model="selectedOffering" :options="offeringOptions" :label="t('agency.chooseOffering')" />
-                  <p v-if="offerings.length" class="creator-studio__hint">{{ t('agency.chooseOfferingHint') }}</p>
-                  <label v-if="campaign.compensationType !== 'voluntary'" class="form-field"><span>{{ t('agency.amount') }} ({{ campaign.currency }})</span><input v-model.number="agencyProposal.amount" type="number" min="1" max="10000000" /></label>
-                  <label class="form-field"><span>{{ t('agency.scope') }}</span><textarea v-model.trim="agencyProposal.scope" maxlength="2000"></textarea></label>
-                  <label class="form-field"><span>{{ t('agency.timeline') }}</span><input v-model.trim="agencyProposal.timeline" maxlength="240" /></label>
-                  <label class="form-field"><span>{{ t('agency.team') }}</span><input v-model.trim="agencyProposal.team" maxlength="500" /></label>
-                </fieldset>
-                <label class="field-label" for="application-message">{{ t('account.applicationMessage') }}</label>
-                <textarea
-                  id="application-message"
-                  v-model="applicationMessage"
-                  required
-                  minlength="20"
-                  maxlength="1200"
-                  :placeholder="t('account.applicationPlaceholder')"
-                />
-                <StatusMessage v-if="applyError" variant="error">{{ applyError }}</StatusMessage>
-                <div class="brief-application__actions">
-                  <button class="button button--outline" type="button" @click="applicationFormOpen = false">
-                    {{ t('account.richTextCancel') }}
-                  </button>
-                  <button
-                    class="button button--dark"
-                    type="submit"
-                    :disabled="applying"
-                  >
-                    {{ t('account.sendApplication') }} <ArrowRight :size="17" aria-hidden="true" />
-                  </button>
-                </div>
-              </form>
-            </div>
-            <div v-else-if="applicationSent" class="brief-notice" role="status">
-              {{ t('account.applicationSent') }}
-            </div>
-            <div v-else-if="!user" class="brief-application-card__guest">
-              <RouterLink class="button button--dark button--full" :to="{ name: 'register', query: { accountType: 'creator', returnTo: route.path } }" @click="rememberRegistrationIntent(route.path, 'creator')">
-                {{ t('registrationPrompts.campaignCreator.action') }} <ArrowRight :size="17" aria-hidden="true" />
-              </RouterLink>
-              <p>{{ t('account.signInToApply') }}</p>
-            </div>
-            <a
-              v-else
-              class="button button--outline button--full"
-              :href="`mailto:hello@wave.example?subject=${encodeURIComponent(t('campaignDetail.emailSubject'))}`"
-            >
-              {{ t('campaignDetail.askAbout') }} <ArrowRight :size="17" aria-hidden="true" />
-            </a>
-          </aside>
-        </div>
-      </div>
-    </section>
-
-    <section class="brief-layout page-width">
-      <article class="brief-copy">
-        <p class="eyebrow">{{ t('campaignDetail.idea') }}</p>
-        <h2>{{ t('campaignDetail.ideaHeadline') }}</h2>
-        <RichTextContent :html="campaign.description" />
-        <div class="brief-copy__section">
-          <p class="eyebrow">{{ t('campaignDetail.deliverables') }}</p>
-          <ul v-if="campaign.deliverables?.length" class="brief-deliverables">
-            <li v-for="deliverable in campaign.deliverables" :key="deliverable">
-              <span class="brief-deliverables__icon"><Tag :size="18" aria-hidden="true" /></span>
-              <span>{{ deliverable }}</span>
-            </li>
-          </ul>
-        </div>
-        <div v-if="campaign.channels?.length" class="brief-copy__section">
-          <p class="eyebrow">{{ t('campaignDetail.channels') }}</p>
-          <div class="brief-channel-list">
-            <span v-for="channel in campaign.channels" :key="channel">{{ channel }}</span>
-          </div>
-        </div>
-      </article>
-      <aside class="brief-sidebar">
-        <RegistrationPrompt v-if="campaign.status === 'open' && !campaign.readOnly" audience="creator" variant="campaign" :return-to="route.path" />
-        <section v-if="!user && campaign.status === 'open' && !campaign.readOnly" class="brief-aside">
-          <h2>{{ t('registrationPrompts.collaborationTitle') }}</h2>
-          <p>{{ t('registrationPrompts.collaborationDescription') }}</p>
-          <p>{{ t('registrationPrompts.noPayments') }}</p>
-        </section>
-        <section class="brief-aside">
-          <div class="brief-aside__top">
-            <span class="eyebrow">{{ t('campaignDetail.details') }}</span>
-          </div>
-          <div class="brief-fact">
-            <Tag :size="18" aria-hidden="true" />
-            <span>{{ t('campaignDetail.category') }}</span>
-            <strong>{{ (campaign.categoryLabels || [campaign.categoryLabel || campaign.category]).join(', ') }}</strong>
-          </div>
-          <div class="brief-fact">
-            <MapPin :size="18" aria-hidden="true" />
-            <span>{{ t('campaignDetail.location') }}</span>
-            <strong>{{ campaignPlace(campaign, locale) }}</strong>
-          </div>
-          <div class="brief-fact">
-            <DollarSign :size="18" aria-hidden="true" />
-            <span>{{ t('campaignDetail.budget') }}</span>
-            <strong><CampaignCompensation :campaign="campaign" /></strong>
-          </div>
-          <div class="brief-fact">
-            <UsersRound :size="18" aria-hidden="true" />
-            <span>{{ t('campaignDetail.spots') }}</span>
-            <strong><CampaignHiringProgress :campaign="campaign" /></strong>
-          </div>
-          <div class="brief-fact">
-            <CalendarDays :size="18" aria-hidden="true" />
-            <span>{{ t('campaignDetail.closes') }}</span>
-            <strong>{{ formatDate(campaign.closesAt) }}</strong>
-          </div>
-        </section>
-
-        <section class="brief-company-card">
-          <p class="eyebrow">{{ t('companyProfile.aboutEyebrow') }}</p>
-          <div class="brief-company-card__heading">
-            <span class="brand-avatar brand-avatar--large">
+      <section class="campaign-hero" :class="{ 'campaign-hero--no-cover': !coverUrl }" aria-labelledby="campaign-title">
+        <div class="campaign-hero__copy">
+          <p class="eyebrow">
+            {{ categories }}
+            <span aria-hidden="true">·</span>
+            {{ campaign.status === 'open' ? t('campaignDetail.openCampaign') : t(`account.${campaign.status}`) }}
+          </p>
+          <h1 id="campaign-title">{{ campaign.title }}</h1>
+          <p class="campaign-hero__summary">{{ campaign.summary }}</p>
+          <StatusMessage v-if="campaign.compensationType === 'voluntary'">{{ t('compensation.voluntaryHint') }}</StatusMessage>
+          <RouterLink
+            v-if="!campaign.company.deleted"
+            class="campaign-brand"
+            :to="{ name: 'company-profile', params: { slug: campaign.company.slug } }"
+          >
+            <span class="campaign-brand__logo">
               <img v-if="campaign.company.logoUrl" :src="campaign.company.logoUrl" :alt="campaign.company.name">
               <WaveLogo v-else mark />
             </span>
-            <div>
-              <h2>
-                {{ campaign.company.name }}
-                <BadgeCheck
-                  v-if="campaign.company.verified"
-                  class="brief-hero__verified"
-                  :size="15"
-                  :aria-label="t('campaignCard.verified')"
-                />
-              </h2>
-              <p>{{ campaign.company.industry }}</p>
-            </div>
-            <RouterLink
-              class="brief-company-card__link"
-              v-if="!campaign.company.deleted"
-              :to="{ name: 'company-profile', params: { slug: campaign.company.slug } }"
-            >
-              {{ t('companyDirectory.viewProfile') }} <ArrowRight :size="15" aria-hidden="true" />
-            </RouterLink>
+            <span class="campaign-brand__name">
+              <strong>{{ campaign.company.name }}<BadgeCheck v-if="campaign.company.verified" :size="16" :aria-label="t('campaignCard.verified')" /></strong>
+              <small>{{ campaign.company.industry }}</small>
+            </span>
+            <ChevronRight :size="16" aria-hidden="true" />
+          </RouterLink>
+          <div v-if="campaign.channels?.length" class="campaign-hero__channels" :aria-label="t('campaignDetail.channels')">
+            <span v-for="channel in campaign.channels" :key="channel">{{ channel }}</span>
           </div>
-          <RichTextContent v-if="campaign.company.about" :html="campaign.company.about" />
-          <p v-else class="brief-company-card__empty">{{ t('companyProfile.profileLabel') }}</p>
-        </section>
-      </aside>
-    </section>
+        </div>
+        <figure v-if="coverUrl" class="campaign-hero__cover">
+          <!-- The whole uploaded cover, at its own proportions: never cropped. -->
+          <img :src="coverUrl" :width="campaign.coverImage?.width || undefined" :height="campaign.coverImage?.height || undefined" alt="" fetchpriority="high" decoding="async">
+          <figcaption v-if="campaign.applicationRange" class="campaign-hero__range"><CampaignApplicationRange :range="campaign.applicationRange" /></figcaption>
+        </figure>
+      </section>
+
+      <ProfileStats :items="stats" :label="t('campaignDetail.details')">
+        <template #value-budget><CampaignCompensation :campaign="campaign" /></template>
+        <template #value-spots><CampaignHiringProgress :campaign="campaign" /></template>
+      </ProfileStats>
+
+      <div class="campaign-layout">
+        <div class="campaign-layout__main">
+          <section class="campaign-section" aria-labelledby="campaign-idea-title">
+            <header class="campaign-section__head"><h2 id="campaign-idea-title">{{ t('campaignDetail.idea') }}</h2><p>{{ t('campaignDetail.ideaHeadline') }}</p></header>
+            <div class="campaign-card"><RichTextContent :html="campaign.description" /></div>
+          </section>
+          <section v-if="campaign.deliverables?.length" class="campaign-section" aria-labelledby="campaign-deliverables-title">
+            <header class="campaign-section__head"><h2 id="campaign-deliverables-title">{{ t('campaignDetail.deliverables') }}</h2><p>{{ t('campaignDetail.deliverablesHint') }}</p></header>
+            <ul class="campaign-deliverables">
+              <li v-for="deliverable in campaign.deliverables" :key="deliverable">
+                <span class="campaign-deliverables__icon"><Tag :size="18" aria-hidden="true" /></span>
+                <span>{{ deliverable }}</span>
+              </li>
+            </ul>
+          </section>
+          <section class="campaign-section" aria-labelledby="campaign-brand-title">
+            <header class="campaign-section__head">
+              <h2 id="campaign-brand-title">{{ t('companyProfile.aboutEyebrow') }}</h2>
+              <RouterLink v-if="!campaign.company.deleted" class="campaign-section__link" :to="{ name: 'company-profile', params: { slug: campaign.company.slug } }">{{ t('companyDirectory.viewProfile') }} <ArrowRight :size="15" aria-hidden="true" /></RouterLink>
+            </header>
+            <div class="campaign-card campaign-company">
+              <div class="campaign-company__heading">
+                <span class="campaign-brand__logo campaign-brand__logo--large">
+                  <img v-if="campaign.company.logoUrl" :src="campaign.company.logoUrl" :alt="campaign.company.name">
+                  <WaveLogo v-else mark />
+                </span>
+                <div>
+                  <strong>{{ campaign.company.name }}<BadgeCheck v-if="campaign.company.verified" :size="15" :aria-label="t('campaignCard.verified')" /></strong>
+                  <small>{{ campaign.company.industry }}</small>
+                </div>
+              </div>
+              <RichTextContent v-if="campaign.company.about" :html="campaign.company.about" />
+              <p v-else class="campaign-company__empty">{{ t('companyProfile.profileLabel') }}</p>
+            </div>
+          </section>
+          <MarketplaceSafetyActions kind="campaign" :slug="campaign.slug" :owner-slug="campaign.company.slug" />
+        </div>
+
+        <aside class="campaign-layout__aside">
+          <section id="campaign-apply" class="campaign-apply" aria-labelledby="campaign-application-title">
+            <div class="campaign-apply__top">
+              <div class="campaign-apply__budget"><small id="campaign-application-title">{{ t('campaignDetail.budget') }}</small><strong><CampaignCompensation :campaign="campaign" /></strong></div>
+              <span class="campaign-apply__status" :class="`is-${campaign.status}`"><i aria-hidden="true"></i>{{ t(`account.${campaign.status}`) }}</span>
+            </div>
+            <dl class="campaign-apply__facts">
+              <div><dt><UsersRound :size="16" aria-hidden="true" />{{ t('campaignDetail.spots') }}</dt><dd><CampaignHiringProgress :campaign="campaign" /></dd></div>
+              <div><dt><CalendarDays :size="16" aria-hidden="true" />{{ t('campaignDetail.closes') }}</dt><dd>{{ formatDate(campaign.closesAt) }}</dd></div>
+              <div><dt><MapPin :size="16" aria-hidden="true" />{{ t('campaignDetail.location') }}</dt><dd>{{ campaignPlace(campaign, locale) }}</dd></div>
+            </dl>
+            <p v-if="campaign.applicationRange" class="campaign-apply__range"><CampaignApplicationRange :range="campaign.applicationRange" /></p>
+              <div v-if="campaign.status === 'cancelled'" class="brief-notice" role="status">{{ t('account.cancelled') }}</div>
+              <div v-else-if="campaign.readOnly" class="brief-notice" role="status">{{ t('campaignChat.deletedAccountNotice') }}</div>
+              <StatusMessage v-else-if="ownCampaign">{{ t('campaignDetail.ownCampaignNotice') }}</StatusMessage>
+              <div
+                v-else-if="!campaign.readOnly && canApply && user.emailVerified === false"
+                class="brief-notice"
+              >
+                <p>{{ t('account.emailUnverified') }}</p>
+                <RouterLink class="button button--dark button--full" to="/account">
+                  {{ t('campaignDetail.verifyEmailInAccount') }} <ArrowRight class="link-arrow" :size="16" aria-hidden="true" />
+                </RouterLink>
+              </div>
+              <div
+                v-else-if="canApply && !user.approved"
+                class="brief-notice"
+                role="status"
+              >
+                {{ t('account.approvalPendingNotice') }}
+              </div>
+              <div v-else-if="campaign.status !== 'open'" class="brief-notice" role="status">{{ t(`account.${campaign.status}`) }}</div>
+              <div v-else-if="collaborationCancelled" class="brief-notice" role="status">{{ t('hiring.cancelledNotice') }}</div>
+              <div v-else-if="engaged" class="brief-notice" role="status">{{ t('hiring.hired') }}</div>
+              <div v-else-if="invitation" class="brief-notice" role="status">
+                <p>{{ t('hiring.invitedHint') }}</p>
+                <RouterLink class="button button--dark button--full" :to="invitation.conversationId ? { name: 'messages', query: { conversation: invitation.conversationId } } : { name: 'account-applications' }">{{ t(invitation.conversationId ? 'account.activityChat' : 'hiring.viewInvitation') }} <ArrowRight :size="17" aria-hidden="true" /></RouterLink>
+              </div>
+              <div v-else-if="canApply && alreadyApplied" class="brief-notice" role="status">
+                {{ t('campaignDetail.alreadyApplied') }}
+              </div>
+              <div v-else-if="canApply && !ownCampaign && !applicationSent" class="brief-application">
+                <button
+                  v-if="!applicationFormOpen"
+                  class="button button--dark button--full"
+                  type="button"
+                  @click="applicationFormOpen = true"
+                >
+                  {{ t('account.apply') }} <ArrowRight :size="17" aria-hidden="true" />
+                </button>
+                <form v-else v-form-validation @submit.prevent="applyToCampaign">
+                  <CreditActionNotice action="application" />
+                  <fieldset v-if="user?.profile?.companyType === 'agency'" class="agency-proposal-fields">
+                    <legend>{{ t('agency.proposal') }}</legend>
+                    <SingleSelect v-if="offerings.length" v-model="selectedOffering" :options="offeringOptions" :label="t('agency.chooseOffering')" />
+                    <p v-if="offerings.length" class="creator-studio__hint">{{ t('agency.chooseOfferingHint') }}</p>
+                    <label v-if="campaign.compensationType !== 'voluntary'" class="form-field"><span>{{ t('agency.amount') }} ({{ campaign.currency }})</span><input v-model.number="agencyProposal.amount" type="number" min="1" max="10000000" /></label>
+                    <label class="form-field"><span>{{ t('agency.scope') }}</span><textarea v-model.trim="agencyProposal.scope" maxlength="2000"></textarea></label>
+                    <label class="form-field"><span>{{ t('agency.timeline') }}</span><input v-model.trim="agencyProposal.timeline" maxlength="240" /></label>
+                    <label class="form-field"><span>{{ t('agency.team') }}</span><input v-model.trim="agencyProposal.team" maxlength="500" /></label>
+                  </fieldset>
+                  <label class="field-label" for="application-message">{{ t('account.applicationMessage') }}</label>
+                  <textarea
+                    id="application-message"
+                    v-model="applicationMessage"
+                    required
+                    minlength="20"
+                    maxlength="1200"
+                    :placeholder="t('account.applicationPlaceholder')"
+                  />
+                  <StatusMessage v-if="applyError" variant="error">{{ applyError }}</StatusMessage>
+                  <div class="brief-application__actions">
+                    <button class="button button--outline" type="button" @click="applicationFormOpen = false">
+                      {{ t('account.richTextCancel') }}
+                    </button>
+                    <button
+                      class="button button--dark"
+                      type="submit"
+                      :disabled="applying"
+                    >
+                      {{ t('account.sendApplication') }} <ArrowRight :size="17" aria-hidden="true" />
+                    </button>
+                  </div>
+                </form>
+              </div>
+              <StatusMessage v-else-if="applicationSent" variant="success" :title="t('campaignDetail.applicationSentTitle')">
+                {{ t('campaignDetail.applicationSentText') }}
+              </StatusMessage>
+              <div v-else-if="!user" class="brief-application-card__guest">
+                <RouterLink class="button button--dark button--full" :to="{ name: 'register', query: { accountType: 'creator', returnTo: route.path } }" @click="rememberRegistrationIntent(route.path, 'creator')">
+                  {{ t('registrationPrompts.campaignCreator.action') }} <ArrowRight :size="17" aria-hidden="true" />
+                </RouterLink>
+                <p>{{ t('account.signInToApply') }}</p>
+              </div>
+              <StatusMessage v-else>{{ t('campaignDetail.applicantsOnlyNotice') }}</StatusMessage>
+            <p class="campaign-apply__note"><Info :size="15" aria-hidden="true" />{{ t('publicProfile.paymentNote') }}</p>
+          </section>
+          <section v-if="campaign.status === 'open' && !campaign.readOnly" class="campaign-steps" aria-labelledby="campaign-steps-title">
+            <h2 id="campaign-steps-title">{{ t('campaignDetail.howTitle') }}</h2>
+            <ol>
+              <li v-for="index in 3" :key="index"><span aria-hidden="true">{{ index }}</span><div><strong>{{ t(`campaignDetail.how${index}Title`) }}</strong>{{ t(`campaignDetail.how${index}Text`) }}</div></li>
+            </ol>
+          </section>
+        </aside>
+      </div>
+    </main>
+    <div v-if="showApplyBar" class="campaign-apply-bar" role="group" :aria-label="t('campaignDetail.budget')">
+      <div><small>{{ t('campaignDetail.budget') }}</small><strong><CampaignCompensation :campaign="campaign" /></strong></div>
+      <button class="button button--dark" type="button" @click="openApplication">{{ t('campaignDetail.applyShort') }}</button>
+    </div>
   </template>
 </template>
 
