@@ -5,8 +5,9 @@ import { emptyWork, PRESENTATION_PLATFORMS } from '../src/lib/creatorPresentatio
 import { htmlToPlainText } from '../src/lib/profileDraft.js'
 import { setupView } from './setupView.js'
 
-async function studio(apiGet) {
+async function studio(apiGet, overrides = {}) {
   const props = vue.reactive({ tab: 'portfolio', editing: false, profile: { id: 1, portfolio: [{ ...emptyWork(), source: 'wave', contribution: 'My own contribution.' }], socialProfiles: [], packages: [] } })
+  Object.assign(props, overrides)
   const view = await setupView('../src/components/account/CreatorStudioPanel.vue', {
     vue: { ...vue, onBeforeUnmount: () => {}, useModel: (props, name) => vue.toRef(props, name) },
     'vue-i18n': { useI18n: () => ({ locale: vue.ref('bs'), t: key => key, te: () => false }) },
@@ -62,5 +63,18 @@ test('campaign options paginate and failed refreshes expose an error for retry',
   fail = true
   await state.loadCampaigns()
   assert.equal(state.loadError.value, 'Connection failed')
+  assert.equal(state.loading.value, false)
+})
+
+
+test('an organizing agency loads campaign choices without a provider studio', async () => {
+  const paths = []
+  const { state } = await studio(async path => {
+    paths.push(path)
+    return { data: [{ id: 42, title: 'Agency organized campaign', company: 'Agency', companyType: 'agency' }], meta: { nextCursor: null } }
+  }, { editing: true, profile: { id: 2, companyType: 'agency', providerId: null, portfolio: [], socialProfiles: [], packages: [] } })
+  await vue.nextTick()
+  assert.deepEqual(paths, ['/me/portfolio-campaigns'])
+  assert.equal(state.campaignOptions.value[0].value, 42)
   assert.equal(state.loading.value, false)
 })

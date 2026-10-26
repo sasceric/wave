@@ -787,10 +787,14 @@ the separate public-profile link remains available.
 
 ### Portfolio campaign selection (2026-10-26)
 
-`GET /api/me/portfolio-campaigns` and portfolio save validation accept an owned,
-accepted hire once its `workCompletedAt` is set, even if the campaign remains
-open for other providers. Legacy finished campaigns remain eligible. The list
-keeps its owner/block/deleted-account restrictions and 20-item cursor batches.
+`PortfolioCampaigns` shares eligibility between `GET /api/me/portfolio-campaigns`
+and portfolio save validation. Providers can select their accepted hires once
+`workCompletedAt` is set. Agency organizers can also select their own campaign
+as soon as any hired creator/agency completes work, without requiring a provider
+studio. Neither case requires the campaign to close or reviews to be submitted.
+Legacy finished campaigns remain eligible. The list preserves ownership, block
+and deleted-account restrictions, grouping unique campaigns before 20-item cursor
+pagination.
 `CreatorStudioPanel.vue` places source and campaign selection first and fills
 title, summary, brief, client/agency, completion date and platform from the
 selected campaign. It leaves the creator's contribution and uploaded media for

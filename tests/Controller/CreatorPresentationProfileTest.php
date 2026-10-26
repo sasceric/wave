@@ -138,6 +138,105 @@ final class CreatorPresentationProfileTest extends WebTestCase
         self::assertSame([], $this->payload()['data']);
     }
 
+    public function testAgencyCanSelectItsOpenCampaignAsSoonAsAHiredCreatorCompletesWork(): void
+    {
+        $this->client->disableReboot();
+        $creator = $this->creator('agency-client-provider');
+        $otherCreator = $this->creator('agency-client-second-provider');
+        $em = self::getContainer()->get(EntityManagerInterface::class);
+        $agency = new User('organizer@example.test', 'ROLE_COMPANY');
+        $agency->setPassword('unused');
+        $company = new Company('organizer', 'Organizing Agency', 'Beauty');
+        $company->setCompanyType('agency');
+        $agency->setCompany($company);
+        $foreignOwner = new User('other-organizer@example.test', 'ROLE_COMPANY');
+        $foreignOwner->setPassword('unused');
+        $foreignOwner->setCompany(new Company('other-organizer', 'Other Organizer', 'Beauty'));
+        $em->persist($agency);
+        $em->persist($foreignOwner);
+        $makeCampaign = static fn (string $slug, Company $owner): Campaign => new Campaign($slug, $slug, 'Campaign summary', '<p>Campaign brief.</p>', 'Beauty', ['Instagram'], ['Video'], 100, 300, 'Sarajevo', 2, new \DateTimeImmutable('+10 days'), new \DateTimeImmutable(), $owner);
+        $campaign = $makeCampaign('agency-owned-open', $company);
+        $unfinished = $makeCampaign('agency-owned-ongoing', $company);
+        $foreign = $makeCampaign('another-agencys-work', $foreignOwner->getCompany());
+        foreach ([$campaign, $unfinished, $foreign] as $item) $em->persist($item);
+        $offers = [];
+        foreach ([[$campaign, $creator], [$campaign, $otherCreator], [$unfinished, $creator], [$foreign, $creator]] as [$item, $provider]) {
+            $application = new Application($item, $provider->getCreator(), 'Agency organizer test.');
+            $offer = new Offer($application, 100, 'Agreed scope.');
+            $offer->respond('accepted');
+            $em->persist($application);
+            $em->persist($offer);
+            $offers[] = $offer;
+        }
+        $offers[3]->completeWork();
+        $em->flush();
+        $campaignId = $campaign->getId();
+        $offerIds = array_map(static fn (Offer $offer): int => $offer->getId(), $offers);
+        self::assertNull($agency->getCreator(), 'An organizing agency does not need a provider studio.');
+        $this->client->loginUser($agency, 'main');
+        $this->client->request('GET', '/api/me/portfolio-campaigns');
+        self::assertResponseIsSuccessful();
+        self::assertSame([], $this->payload()['data']);
+
+        // Completion alone unlocks the campaign immediately, without closing it or waiting for reviews.
+        $em = self::getContainer()->get(EntityManagerInterface::class);
+        $offer = $em->find(Offer::class, $offerIds[0]);
+        $offer->completeWork();
+        $em->flush();
+        $completedAt = $offer->getWorkCompletedAt()->format('Y-m-d');
+        $this->client->request('GET', '/api/me/portfolio-campaigns');
+        self::assertResponseIsSuccessful();
+        $rows = $this->payload()['data'];
+        self::assertSame([$campaignId], array_column($rows, 'id'));
+        self::assertSame($completedAt, $rows[0]['completedAt']);
+        self::assertSame('Organizing Agency', $rows[0]['company']);
+        self::assertSame('agency', $rows[0]['companyType']);
+        self::assertNull($rows[0]['finishedAt']);
+        $body = ['name' => 'Organizing Agency', 'companyType' => 'agency', 'industries' => ['Beauty'], 'portfolio' => [
+            ['title' => 'Our completed collaboration', 'type' => 'video', 'url' => 'https://youtu.be/abcdefghijk', 'source' => 'wave', 'campaignId' => $campaignId],
+        ]];
+        $this->update($body);
+        self::assertResponseIsSuccessful();
+        $saved = $this->payload()['data']['profile']['portfolio'][0];
+        self::assertSame($campaignId, $saved['campaignId']);
+        self::assertSame('Organizing Agency', $saved['agency']);
+        self::assertSame($completedAt, $saved['projectDate']);
+        foreach ([$unfinished, $foreign] as $invalid) {
+            $body['portfolio'][0]['campaignId'] = $invalid->getId();
+            $this->update($body);
+            self::assertResponseStatusCodeSame(400);
+        }
+
+        // Multiple completed providers must not duplicate a campaign or reduce a 20-campaign page.
+        $em = self::getContainer()->get(EntityManagerInterface::class);
+        $em->find(Offer::class, $offerIds[1])->completeWork();
+        $company = $em->find(Company::class, $company->getId());
+        $provider = $em->find(Creator::class, $creator->getCreator()->getId());
+        for ($i = 0; $i < 20; ++$i) {
+            $item = $makeCampaign('agency-owned-page-'.$i, $company);
+            $application = new Application($item, $provider, 'Another finished collaboration.');
+            $offer = new Offer($application, 100, 'Agreed scope.');
+            $offer->respond('accepted');
+            $offer->completeWork();
+            $em->persist($item);
+            $em->persist($application);
+            $em->persist($offer);
+        }
+        $em->flush();
+        $this->client->request('GET', '/api/me/portfolio-campaigns');
+        self::assertResponseIsSuccessful();
+        $page = $this->payload();
+        self::assertCount(20, $page['data']);
+        self::assertCount(20, array_unique(array_column($page['data'], 'id')));
+        self::assertTrue($page['meta']['hasMore']);
+        $this->client->request('GET', '/api/me/portfolio-campaigns?before='.$page['meta']['nextCursor']);
+        self::assertResponseIsSuccessful();
+        self::assertSame([$campaignId], array_column($this->payload()['data'], 'id'));
+        self::assertFalse($this->payload()['meta']['hasMore']);
+        self::assertNull($this->payload()['meta']['nextCursor']);
+        self::assertSame('open', $em->find(Campaign::class, $campaignId)->getStatus());
+    }
+
     public function testExtendedFieldsSurviveAndForgedReferencesCannotOverwriteTheProfile(): void
     {
         $owner = $this->creator('studio-owner');
