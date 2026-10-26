@@ -45,7 +45,7 @@ final class CreatorController
     }
 
     #[Route('/api/creators', name: 'api_creators_index', methods: ['GET'])]
-    public function index(Request $request, EntityManagerInterface $entityManager, DirectoryCursor $cursor): JsonResponse
+    public function index(Request $request, EntityManagerInterface $entityManager, \App\Api\RecommendedProfiles $recommendations, DirectoryCursor $cursor): JsonResponse
     {
         $locale = LocaleContext::fromRequest($request);
         if ($locale === null) {
@@ -91,7 +91,7 @@ final class CreatorController
             }
             $cursorMode = $cursor->enabled($request);
             $positionTypes = match ($sort) {
-                'recommended' => ['featured' => 'bool', 'date' => 'date', 'id' => 'int'],
+                'recommended' => \App\Api\RecommendedProfiles::POSITION_TYPES,
                 'newest' => ['date' => 'date', 'id' => 'int'],
                 'followers' => ['followers' => 'int', 'id' => 'int'],
                 default => ['name' => 'string', 'id' => 'int'],
@@ -168,31 +168,41 @@ final class CreatorController
                 'large' => 'followers >= 50000',
             };
         }
+        $params['rankingNow'] = $recommendations->parameters()['rankingNow'];
+        if ($sort === 'recommended') $params = array_replace($params, $recommendations->parameters($position));
+        if ($request->query->has('featured')) {
+            $conditions[] = 'featured = :featuredFilter';
+            $params['featuredFilter'] = $request->query->getBoolean('featured');
+            $types['featuredFilter'] = \Doctrine\DBAL\ParameterType::BOOLEAN;
+        }
+        $rankingColumns = $sort === 'recommended' ? $recommendations->columns('creator') : "(c.featured AND (c.featured_until IS NULL OR c.featured_until > :rankingNow)) AS featured";
+        $rankingJoins = $sort === 'recommended' ? $recommendations->joins('creator') : '';
         $metric = ($sort === 'followers' || $audience !== '') ? self::followersSql('c.social_profiles') : '0';
-        $base = "SELECT c.id, c.featured, c.display_name, c.created_at, c.category, c.categories, c.creator_types, c.bio, c.tags, c.social_profiles, c.birthday,
+        $base = "SELECT c.id, $rankingColumns, c.display_name, c.created_at, c.category, c.categories, c.creator_types, c.bio, c.tags, c.social_profiles, c.birthday,
             COALESCE(u.city, c.city) AS city, u.country_code, i.search_text, i.tag_text, i.platform_keys, $metric AS followers
             FROM creator c LEFT JOIN wave_user u ON u.id = c.owner_id
             LEFT JOIN directory_index i ON i.kind = 'creator' AND i.entity_id = c.id
+            $rankingJoins
             WHERE c.agency_profile = FALSE AND (u.id IS NULL OR (u.approved = TRUE AND u.hide_my_account = FALSE))";
         $base .= ' AND '.$this->blocks->visible('u.id');
         $filtered = ' FROM (' . $base . ') ranked WHERE 1 = 1' . ($conditions === [] ? '' : ' AND ' . implode(' AND ', $conditions));
         $connection = $entityManager->getConnection();
         $total = $position !== null ? null : (int) $connection->fetchOne('SELECT COUNT(*)' . $filtered, $params, $types);
-        $sql = 'SELECT id, featured, display_name, created_at, followers' . $filtered;
+        $sql = 'SELECT *' . $filtered;
         if ($position !== null) {
             $sql .= match ($sort) {
-                'recommended' => ' AND (featured < :featured OR (featured = :featured AND (created_at < :date OR (created_at = :date AND id < :id))))',
+                'recommended' => $recommendations->seek(),
                 'newest' => ' AND (created_at < :date OR (created_at = :date AND id < :id))',
                 'followers' => ' AND (followers < :followers OR (followers = :followers AND id < :id))',
                 default => ' AND (display_name > :name OR (display_name = :name AND id > :id))',
             };
-            $params += $position;
+            $params += array_diff_key($position, ['asOf' => true]);
             if ($sort === 'recommended') {
                 $types['featured'] = \Doctrine\DBAL\ParameterType::BOOLEAN;
             }
         }
         $sql .= ' ORDER BY ' . match ($sort) {
-            'recommended' => 'featured DESC, created_at DESC, id DESC',
+            'recommended' => \App\Api\RecommendedProfiles::ORDER,
             'newest' => 'created_at DESC, id DESC',
             'followers' => 'followers DESC, id DESC',
             default => 'display_name ASC, id ASC',
@@ -216,7 +226,7 @@ final class CreatorController
             $last = $rows === [] ? null : $rows[array_key_last($rows)];
             $meta['hasMore'] = $hasMore;
             $meta['nextCursor'] = !$hasMore || $last === null ? null : $cursor->encode($request, 'creator', match ($sort) {
-                'recommended' => ['featured' => (bool) $last['featured'], 'date' => (new \DateTimeImmutable($last['created_at']))->format('Y-m-d H:i:s'), 'id' => (int) $last['id']],
+                'recommended' => $recommendations->position($last, $params),
                 'newest' => ['date' => (new \DateTimeImmutable($last['created_at']))->format('Y-m-d H:i:s'), 'id' => (int) $last['id']],
                 'followers' => ['followers' => (int) $last['followers'], 'id' => (int) $last['id']],
                 default => ['name' => $last['display_name'], 'id' => (int) $last['id']],
@@ -225,7 +235,7 @@ final class CreatorController
             $meta['offset'] = $offset;
         }
         $card = $request->query->getString('view') === 'card';
-        $ratings = $this->feedback->summaries(array_values(array_filter(array_map(static fn (Creator $profile): ?int => $profile->getOwner()?->getId(), $creators))));
+        $ratings = $this->feedback->summaries(array_values(array_filter(array_map(static fn (Creator $profile): ?int => $profile->getOwner()?->getId(), $creators))), 'provider');
         $categoryLabels = MarketplaceCategoryLabels::forLocale($entityManager, $locale);
         if (!$card && $creators !== []) {
             $entityManager->createQueryBuilder()->select('creator', 'portfolioMedia', 'media')->from(Creator::class, 'creator')
@@ -304,7 +314,7 @@ final class CreatorController
         }
         $categoryLabels = MarketplaceCategoryLabels::forLocale($entityManager, $locale);
 
-        $rating = $this->feedback->summary($owner);
+        $rating = $this->feedback->summary($owner, 'provider');
         return new JsonResponse([
             'data' => CreatorResource::fromEntity(
                 $creator,

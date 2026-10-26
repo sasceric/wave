@@ -2521,7 +2521,8 @@
     "closeCampaign": "Kampagne schließen",
     "finishCampaign": "Kampagne abschließen",
     "closeCampaignHint": "Das Schließen stoppt neue Bewerbungen. Bereits beauftragte Kreative und Agenturen arbeiten und chatten weiter.",
-    "showing": "Bewertungen {from}–{to} von {total}"
+    "showing": "Bewertungen {from}–{to} von {total}",
+    "newProfile": "Neu"
   },
   "passwordChange": {
     "title": "Passwort ändern",
@@ -3970,5 +3971,21 @@
       "interestLabel": "Bezeichnung Interesse",
       "messageLabel": "Bezeichnung Nachricht"
     }
+  },
+  "adminHome": {
+    "intro": "Wähle Profile und Kampagnen aus, die hervorgehoben werden sollen. Änderungen werden erst nach dem Speichern veröffentlicht.",
+    "recommendedMode": "Empfohlene Profile",
+    "modeHint": "Wähle, ob die Startseite nur hervorgehobene Creator zeigt oder freie Plätze mit weiteren empfohlenen Profilen füllt.",
+    "featuredSelection": "Hervorgehobene Inhalte",
+    "choose": "Auswählen",
+    "rankingHint": "Hervorgehobene Profile stehen zuerst. Danach zählen die Verlässlichkeit der Bewertungen, abgeschlossene Kooperationen und die Profilstärke. Gleichwertige Profile wechseln täglich ihre Reihenfolge.",
+    "viewProfile": "Ansehen",
+    "until": "Hervorgehoben bis",
+    "noExpiry": "Ohne Ablauf",
+    "noPicks": "Noch keine hervorgehobenen Inhalte. Wähle sie im Feld oben aus.",
+    "unsaved": "Ungespeicherte Änderungen",
+    "saved": "Alles gespeichert",
+    "applySelection": "Auswahl übernehmen",
+    "leaveConfirm": "Du hast ungespeicherte Änderungen an der Startseite. Seite verlassen?"
   }
 }

@@ -1,0 +1,33 @@
+.profile-avatar {
+  position: relative;
+  display: inline-grid;
+  flex: 0 0 auto;
+  place-items: center;
+  width: var(--profile-avatar-size, 38px);
+  height: var(--profile-avatar-size, 38px);
+  border-radius: 50%;
+
+  &__image {
+    display: grid;
+    place-items: center;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    border-radius: inherit;
+    background: var(--sage);
+    > img, > .wave-logo { width: 100%; height: 100%; object-fit: cover; }
+  }
+
+  & > &__ring {
+    position: absolute;
+    inset: -4px;
+    width: calc(100% + 8px);
+    height: calc(100% + 8px);
+    overflow: visible;
+    pointer-events: none;
+    fill: none;
+    stroke-width: 2;
+  }
+  &__track { stroke: var(--line); }
+  &__progress { stroke: var(--forest); }
+}

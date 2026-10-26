@@ -127,6 +127,7 @@
     border-radius: 16px;
     background: var(--card);
     box-shadow: 0 18px 45px rgb(31 42 40 / 16%);
+    &.has-footer { grid-template-rows: auto minmax(0, 1fr) auto; }
   }
 
   &__control.is-above > .multi-select__menu {
@@ -167,8 +168,8 @@
   }
 
   // The wrapper shows focus; no second ring on the inner field.
-  .multi-select .multi-select__search input:focus,
-  .multi-select .multi-select__search input:focus-visible {
+  &.multi-select .multi-select__search input:focus,
+  &.multi-select .multi-select__search input:focus-visible {
     border: 0;
     outline: 0;
     box-shadow: none;
@@ -204,6 +205,12 @@
     text-align: left;
     cursor: pointer;
   }
+
+  &__option-label { flex: 1; min-width: 0; overflow-wrap: anywhere; small { display: block; margin-top: 3px; color: var(--muted-text); font-size: 12px; font-weight: 400; } }
+  &__image { flex: 0 0 auto; width: 32px; height: 32px; border-radius: 8px; object-fit: cover; }
+  &__image--value { width: 22px; height: 22px; border-radius: 6px; }
+  &__load-more { min-height: 36px; padding: 7px 10px; border: 0; border-radius: 10px; color: var(--forest); background: var(--surface); font: inherit; font-size: 13px; cursor: pointer; &:disabled { color: var(--muted-text); cursor: default; } &:focus-visible { outline: 2px solid var(--forest); outline-offset: -2px; } }
+  &__menu.has-footer &__options { max-height: max(0px, min(228px, calc(var(--dropdown-available-height, 300px) - 110px))); }
 
   &__option:hover,
   &__option.is-selected {

@@ -35,6 +35,7 @@ export async function setupView(path, extraModules = {}, props = {}, globals = {
     '../../composables/useMobileAccountSidebar': { mobileAccountSidebarOpen: vue.ref(false) },
     ...extraModules,
   }
+  modules['vue-router'] = { onBeforeRouteLeave: () => {}, onBeforeRouteUpdate: () => {}, ...modules['vue-router'] }
   const source = await readFile(new URL(path, import.meta.url), 'utf8')
   const { descriptor } = parse(source)
   const script = compileScript(descriptor, { id: 'wave-test' })

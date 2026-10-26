@@ -767,3 +767,20 @@ No CAPI token or server forwarding is part of this integration.
 ### Email attempt history
 
 `src/Mail/MailLog.php` writes JSON audit rows and encrypted rendered-content snapshots to files under `var/log`; there is no database log table. `LoggedMailTransport` decorates `mailer.transports`, covering synchronous and queued sends; `QueuedMailer` captures content before enqueue and `JobExecutor` logs obsolete-token/reminder skips. Tools → Logs selects daily `*.mail-*.log` files and opens private HTML/text previews through the existing admin authorization. The shared `EmailPreviewFrame` blocks active content. See [email logs](email-logs.md) for retention and deployment.
+
+### Recommended profiles and homepage curation (2026-10-26)
+
+`RecommendedProfiles` supplies the PostgreSQL recommendation order for public
+directories and homepage creators: active featured status, review quality adjusted
+for volume, completed campaigns, profile strength, then daily tie rotation. Signed
+cursors pin the rotation day. `AdminHomepageCuration.vue` replaces the homepage
+multiselects with tabbed selected rows, the shared searchable `MultiSelect` and optional creator /
+company feature end dates. Migration `20261026180000` adds those dates; expiry is
+evaluated on read without a worker. See [profile ranking](profile-ranking.md) for
+the formula, role separation, expiry semantics and deployment requirements. This
+supersedes earlier newest-first / campaign-count recommendation descriptions.
+
+`ProfileAvatar.vue` adds a number-free strength ring to the signed-in header,
+mobile account tab and account sidebar using the existing client checklist.
+The sidebar photo and name both link to `account-dashboard` (Pregled), while
+the separate public-profile link remains available.

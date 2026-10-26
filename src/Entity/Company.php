@@ -70,6 +70,9 @@ class Company
     #[ORM\Column(options: ['default' => false])]
     private bool $featured = false;
 
+    #[ORM\Column(nullable: true)]
+    private ?\DateTimeImmutable $featuredUntil = null;
+
     #[ORM\Column(type: 'json', options: ['default' => '{}'])]
     private array $translations;
 
@@ -192,13 +195,19 @@ class Company
 
     public function isFeatured(): bool
     {
-        return $this->featured;
+        return $this->featured && ($this->featuredUntil === null || $this->featuredUntil > \Symfony\Component\Clock\Clock::get()->now());
     }
 
     public function setFeatured(bool $featured): void
     {
         $this->featured = $featured;
+        if (!$featured) $this->featuredUntil = null;
     }
+
+    public function isFeaturedConfigured(): bool { return $this->featured; }
+    public function getFeaturedUntil(): ?\DateTimeImmutable { return $this->featuredUntil; }
+    public function setFeaturedUntil(?\DateTimeImmutable $until): void { $this->featuredUntil = $until; }
+
 
     public function getTranslations(): array
     {

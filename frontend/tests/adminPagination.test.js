@@ -27,15 +27,48 @@ test('remote tables display server rows without sorting or slicing the page agai
 })
 
 test('remote homepage selectors keep selected labels outside the current search page', async () => {
-  const props = vue.reactive({ label: 'Creators', labels: {}, options: [{ id: 30, label: 'New page' }], selectionOptions: [{ id: 1, label: 'Selected earlier' }], modelValue: [1], remote: true })
-  const { state, emitted } = await setupView('../src/components/admin/AdminMultiSelect.vue', {}, props)
+  const props = vue.reactive({ label: 'Creators', options: [{ value: 30, label: 'New page' }], selectionOptions: [{ value: 1, label: 'Selected earlier' }], modelValue: [1], remote: true })
+  const { state, emitted } = await setupView('../src/components/shared/MultiSelect.vue', {}, props)
   assert.equal(state.selectedOptions.value[0].label, 'Selected earlier')
-  state.search.value = 'server query'
+  state.isOpen.value = true
+  state.query.value = 'server query'
   await vue.nextTick()
   assert.equal(emitted[0][0], 'search')
-  assert.equal(state.visibleOptions.value.length, 1)
-  state.toggleOption(30, true)
+  assert.equal(state.filteredOptions.value.length, 1)
+  state.toggleOption(30)
   assert.deepEqual(Array.from(emitted[1][1]), [1, 30])
+})
+
+test('the shared country multiselect keeps local search and selection limits', async () => {
+  const props = vue.reactive({ options: [{ value: 'BA', label: 'Bosna i Hercegovina' }, { value: 'DE', label: 'Njemačka' }], selectionOptions: [], modelValue: ['BA'], maxSelections: 1 })
+  const { state, emitted } = await setupView('../src/components/shared/MultiSelect.vue', {}, props)
+  state.query.value = 'njemacka'
+  assert.equal(state.filteredOptions.value[0].value, 'DE')
+  state.toggleOption('DE')
+  assert.equal(emitted.length, 0)
+  state.toggleOption('BA')
+  assert.deepEqual(Array.from(emitted[0][1]), [])
+})
+
+test('remote multiselect scrolling loads one next batch and stops when exhausted', async () => {
+  const props = vue.reactive({ options: [], selectionOptions: [], modelValue: [], remote: true, hasMore: true, loading: false })
+  const { state, emitted } = await setupView('../src/components/shared/MultiSelect.vue', {}, props)
+  const nearBottom = { currentTarget: { scrollHeight: 1000, clientHeight: 200, scrollTop: 750 } }
+  state.onOptionsScroll({ currentTarget: { scrollHeight: 1000, clientHeight: 200, scrollTop: 0 } })
+  assert.equal(emitted.length, 0)
+  state.onOptionsScroll(nearBottom)
+  state.onOptionsScroll(nearBottom)
+  assert.equal(emitted.length, 1)
+  assert.equal(emitted[0][0], 'load-more')
+  props.loading = true
+  await vue.nextTick()
+  props.loading = false
+  await vue.nextTick()
+  state.onOptionsScroll(nearBottom)
+  assert.equal(emitted.length, 2)
+  props.hasMore = false
+  state.onOptionsScroll(nearBottom)
+  assert.equal(emitted.length, 2)
 })
 
 test('required profile fields emit replacements rather than modifying parent props', async () => {
@@ -87,9 +120,12 @@ test('homepage search and candidate paging preserve existing featured IDs when s
   assert.deepEqual(Array.from(state.featuredCreatorIds.value), [100])
   state.candidates.creators.q = 'Search another creator'
   await state.loadCandidates('creators', true)
-  assert.equal(state.creatorOptions.value[0].id, 50)
-  assert.ok(state.selectionOptions.value.creators.some(({ id }) => id === 100))
+  assert.equal(state.candidates.creators.rows[0].id, 50)
+  assert.ok(state.dashboard.value.creators.some(({ id }) => id === 100))
+  state.setFeaturedExpiry('creators', 100, '2026-11-30')
   await state.saveCuration()
+  assert.equal(saved.featuredExpirations.creators[100], '2026-11-30')
+  assert.equal(state.curationDirty.value, false)
   assert.deepEqual(Array.from(saved.featuredCreatorIds), [100])
 })
 

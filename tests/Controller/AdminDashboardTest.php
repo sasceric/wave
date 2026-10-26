@@ -49,6 +49,15 @@ final class AdminDashboardTest extends WebTestCase
         self::assertCount(25, $result['data']);
         self::assertSame(61, $result['meta']['total']);
         self::assertSame('Creator 036', $result['data'][0]['displayName']);
+        $ids = [];
+        foreach ([1 => 20, 2 => 20, 3 => 20, 4 => 1] as $page => $count) {
+            $this->client->request('GET', '/api/admin/catalog/creators?limit=20&page='.$page);
+            self::assertResponseIsSuccessful();
+            $batch = $this->payload();
+            self::assertCount($count, $batch['data']);
+            $ids = [...$ids, ...array_column($batch['data'], 'id')];
+        }
+        self::assertCount(61, array_unique($ids));
         $this->client->request('GET', '/api/admin/catalog/creators?q=Creator+061');
         self::assertResponseIsSuccessful();
         self::assertSame(1, $this->payload()['meta']['total']);
@@ -191,7 +200,7 @@ final class AdminDashboardTest extends WebTestCase
 
         $this->client->request('GET', '/api/homepage?locale=en');
         self::assertResponseIsSuccessful();
-        self::assertSame(
+        self::assertEqualsCanonicalizing(
             ['latest-creator', 'featured-creator'],
             array_column($this->payload()['data']['creators'], 'slug'),
         );

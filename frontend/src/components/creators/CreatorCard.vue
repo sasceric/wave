@@ -78,7 +78,7 @@ const startingPrice = computed(() => {
         <strong v-if="startingPrice" class="creator-card__price">{{ startingPrice }}</strong>
       </div>
       <p v-if="creator.city" class="creator-card__place"><MapPin :size="13" aria-hidden="true" /><span>{{ creator.city }}</span></p>
-      <RatingSummary v-if="creator.rating?.reviewCount" class="creator-card__rating" :rating="creator.rating" compact />
+      <RatingSummary class="creator-card__rating" :rating="creator.rating" compact />
       <p class="creator-card__categories">{{ categories.join(', ') }}</p>
     </div>
   </RouterLink>

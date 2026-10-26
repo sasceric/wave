@@ -8,6 +8,7 @@ import LanguageSwitcher from './components/shared/LanguageSwitcher.vue'
 import HeaderCreatorSearch from './components/shared/HeaderCreatorSearch.vue'
 import LocalizedLink from './components/shared/LocalizedLink.vue'
 import WaveLogo from './components/shared/WaveLogo.vue'
+import ProfileAvatar from './components/shared/ProfileAvatar.vue'
 import WaveWordmark from './components/shared/WaveWordmark.vue'
 import FooterNewsletterSignup from './components/shared/FooterNewsletterSignup.vue'
 import SkeletonBlock from './components/shared/SkeletonBlock.vue'
@@ -23,7 +24,7 @@ import { mobileAccountSidebarOpen } from './composables/useMobileAccountSidebar'
 import { setLocale } from './i18n'
 import { apiGet, apiRequest } from './lib/api'
 import { startInboxSync } from './lib/inboxSync'
-import { incompleteProfileScore } from './lib/profileStrength'
+import { profileStrength } from './lib/profileStrength'
 import { startPwaUpdates } from './lib/pwaUpdates'
 import { updateAppBadge } from './lib/appBadge'
 import { notificationDestination, startNotificationNavigation } from './lib/notificationNavigation'
@@ -64,7 +65,6 @@ const authMenuOpen = ref(false)
 const authMenu = ref(null)
 const authMenuTrigger = ref(null)
 const authMenuError = ref('')
-const failedAccountImage = ref('')
 const accountName = computed(() => currentUser.value?.profile?.displayName || currentUser.value?.profile?.name || currentUser.value?.name || currentUser.value?.email || t('app.account'))
 const accountImage = computed(() => currentUser.value?.profile?.avatarUrl || currentUser.value?.profile?.logoUrl || '')
 const signingOut = ref(false)
@@ -129,7 +129,7 @@ const mobileNavRole = computed(() => {
   if (!operational || user.isAdmin) return 'member'
   return user.accountType === 'creator' ? 'creator' : 'company'
 })
-const profileHintScore = computed(() => incompleteProfileScore(currentUser.value))
+const accountStrengthScore = computed(() => profileStrength(currentUser.value)?.score ?? null)
 const meTabActive = computed(() => Boolean(
   ['account', 'verify-email', 'reset-password'].includes(route.meta.routeName)
   || (route.meta.accountSection && !['applications', 'inquiries', 'bookmarks', 'offers', 'invitations', 'campaigns'].includes(route.meta.accountSection))
@@ -1144,20 +1144,14 @@ async function signOut() {
               :aria-expanded="authMenuOpen"
               @click="toggleAuthMenu"
             >
-              <span class="header-user-menu__avatar">
-                <img v-if="accountImage && failedAccountImage !== accountImage" :src="accountImage" alt="" @error="failedAccountImage = accountImage" />
-                <WaveLogo v-else mark />
-              </span>
+              <ProfileAvatar class="header-user-menu__avatar" :src="accountImage" :score="accountStrengthScore"><WaveLogo mark /></ProfileAvatar>
               <span class="header-user-menu__name">{{ accountName }}</span>
             </button>
             <div v-if="authMenuOpen" class="header-user-menu__backdrop" aria-hidden="true" @click="closeAuthMenuAndRestoreFocus"></div>
             <div v-if="authMenuOpen" id="header-user-menu-panel" class="header-user-menu__panel">
               <template v-if="currentUser">
                 <div class="header-user-menu__identity">
-                  <span class="header-user-menu__avatar header-user-menu__avatar--large">
-                    <img v-if="accountImage && failedAccountImage !== accountImage" :src="accountImage" alt="" @error="failedAccountImage = accountImage" />
-                    <WaveLogo v-else mark />
-                  </span>
+                  <ProfileAvatar class="header-user-menu__avatar header-user-menu__avatar--large" :src="accountImage" :score="accountStrengthScore"><WaveLogo mark /></ProfileAvatar>
                   <div><h2>{{ accountName }}</h2><p>{{ currentUser.email }}</p></div>
                 </div>
                 <LocalizedLink class="header-user-menu__item" :to="{ name: 'account' }" @click="authMenuOpen = false">
@@ -1527,14 +1521,10 @@ async function signOut() {
         v-if="currentUser"
         :to="{ name: 'account-dashboard' }"
         class="mobile-bottom-nav__link"
-        :aria-label="profileHintScore !== null ? `${t('accountHub.me')} (${t('profileStrength.incomplete', { score: profileHintScore })})` : t('accountHub.me')"
+        :aria-label="t('accountHub.me')"
         :class="{ 'is-active': meTabActive }"
       >
-        <span class="mobile-bottom-nav__avatar">
-          <img v-if="currentUser.profile?.avatarUrl || currentUser.profile?.logoUrl" :src="currentUser.profile?.avatarUrl || currentUser.profile?.logoUrl" alt="">
-          <UserRound v-else :size="21" stroke-width="1.8" aria-hidden="true" />
-          <span v-if="profileHintScore !== null" class="mobile-bottom-nav__dot" aria-hidden="true" />
-        </span>
+        <ProfileAvatar class="mobile-bottom-nav__avatar" :src="accountImage" :score="accountStrengthScore"><UserRound :size="21" stroke-width="1.8" aria-hidden="true" /></ProfileAvatar>
         <span class="mobile-bottom-nav__label">{{ t('accountHub.me') }}</span>
       </LocalizedLink>
       <LocalizedLink

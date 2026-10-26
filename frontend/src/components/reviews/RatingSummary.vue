@@ -8,7 +8,7 @@ const average = computed(() => props.rating?.average == null ? null : new Intl.N
 </script>
 <template>
   <span class="rating-summary" :class="{ 'rating-summary--compact': compact, 'rating-summary--profile': profile }" :title="t('reviews.ratingHint', { count: rating?.reviewCount || 0 })">
-    <Star :size="14" aria-hidden="true" /><strong>{{ average ?? '—' }}</strong>
+    <template v-if="average !== null"><Star :size="14" aria-hidden="true" /><strong>{{ average }}</strong></template><strong v-else>{{ t('reviews.newProfile') }}</strong>
     <span>{{ profile ? `· ${t('studio.reviewCount', { count: rating?.reviewCount || 0 })}` : compact ? `(${rating?.reviewCount || 0})` : t('reviews.completed', { count: rating?.completedCampaigns || 0 }) }}</span>
   </span>
 </template>

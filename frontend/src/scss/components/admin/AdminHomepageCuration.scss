@@ -1,0 +1,45 @@
+.admin-home {
+  display: grid; gap: 20px; min-width: 0; padding-bottom: 16px;
+  &__intro { max-width: 720px; margin: -8px 0 0; color: var(--muted-text); font-size: 14px; line-height: 1.6; }
+  &__mode { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 20px; border: 1px solid var(--line); border-radius: 22px; background: var(--card);
+    h2 { margin: 0 0 5px; font-family: inherit; font-weight: 600; font-size: 15px; }
+    p { margin: 0; color: var(--muted-text); font-size: 13px; line-height: 1.5; }
+    .profile-tabs { flex-shrink: 0; margin: 0; }
+  }
+  &__toolbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; .profile-tabs { margin: 0; } > .button { min-height: 40px; padding: 10px 16px; font-size: 14px; } }
+  &__panel { min-width: 0; border: 1px solid var(--line); border-radius: 24px; background: var(--card);
+    > header { display: flex; align-items: flex-start; gap: 12px; padding: 20px; border-bottom: 1px solid var(--line); color: var(--forest); h2 { margin: 0 0 5px; font-family: inherit; font-size: 16px; } p { max-width: 700px; margin: 0; color: var(--muted-text); font-size: 13px; line-height: 1.6; } svg { flex-shrink: 0; margin-top: 2px; } }
+    > .status-message { margin: 20px; }
+  }
+  &__selections { padding-inline: 20px; }
+  &__select { position: relative; z-index: 6; padding: 20px; border-bottom: 1px solid var(--line); }
+  &__row { display: grid; grid-template-columns: 48px minmax(0, 1fr) 40px; align-items: center; gap: 14px; padding-block: 16px;
+    & + & { border-top: 1px solid var(--line); }
+    > img { width: 48px; height: 48px; border-radius: 14px; object-fit: cover; }
+  }
+  &__initial { display: grid; place-items: center; width: 48px; height: 48px; border-radius: 14px; color: var(--forest); background: var(--surface); font-size: 20px; font-weight: 600; }
+  &__identity { display: grid; gap: 4px; min-width: 0; strong { font-size: 15px; overflow-wrap: anywhere; } > span { overflow: hidden; color: var(--muted-text); font-size: 12px; text-overflow: ellipsis; white-space: nowrap; } a { display: inline-flex; align-items: center; gap: 5px; width: fit-content; color: var(--forest); font-size: 12px; text-decoration: none; } }
+  &__expiry { grid-column: 2; grid-row: 2; width: min(100%, 240px); min-width: 0; .date-picker { margin: 0; } .form-field > label { font-size: 12px; } .text-link { padding: 4px 0; font-size: 11px; } }
+  &__remove { grid-column: 3; grid-row: 1; display: grid; place-items: center; min-width: 40px; min-height: 40px; border: 1px solid var(--line); border-radius: 12px; color: var(--muted-text); background: transparent; cursor: pointer; &:hover { color: var(--coral); background: var(--paper); } }
+  &__save { position: sticky; bottom: 16px; z-index: 5; display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 14px 18px; border: 1px solid var(--line); border-radius: 20px; background: var(--card); box-shadow: 0 8px 32px #173d3610;
+    > span { display: flex; align-items: center; gap: 7px; color: var(--muted-text); font-size: 13px; &.is-dirty { color: var(--coral); } }
+    .button { min-height: 40px; padding: 10px 20px; font-size: 14px; }
+  }
+}
+@media (max-width: 1000px) { .admin-home__mode { align-items: flex-start; flex-direction: column; } }
+@media (max-width: 760px) {
+  .admin-home {
+    gap: 16px;
+    &__mode { padding: 16px; border-radius: 20px; .profile-tabs { width: 100%; button { flex: 1; justify-content: center; font-size: 12px; padding-inline: 9px; } } }
+    &__toolbar .profile-tabs { max-width: 100%; button { padding-inline: 11px; font-size: 13px; } }
+    &__panel > header { padding: 16px; }
+    &__selections { padding-inline: 16px; }
+    &__select { padding: 16px; }
+    &__row, &__row:has(.admin-home__expiry) { grid-template-columns: 40px minmax(0, 1fr) 40px; gap: 12px; > img, .admin-home__initial { width: 40px; height: 40px; } }
+    &__expiry { grid-column: 2; grid-row: 2; }
+    &__row:has(.admin-home__expiry) .admin-home__remove { grid-column: 3; grid-row: 1; }
+    &__save { bottom: calc(80px + env(safe-area-inset-bottom, 0px)); padding: 12px; > span { font-size: 12px; } .button { padding-inline: 14px; } }
+  }
+}
+
+.admin-dashboard .admin-home .button { min-height: 40px; border-radius: var(--radius-pill); padding: 10px 16px; font-size: 14px; }

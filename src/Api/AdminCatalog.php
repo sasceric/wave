@@ -32,7 +32,7 @@ final class AdminCatalog
         if ($kind === 'creators') $builder->andWhere('item.agencyProfile = false');
         $limit = $request->query->getInt('limit', 25);
         $page = $request->query->getInt('page', 1);
-        if (!in_array($limit, [25, 50, 100], true) || $page < 1 || $page > 1000000) {
+        if (!in_array($limit, [20, 25, 50, 100], true) || $page < 1 || $page > 1000000) {
             throw new \InvalidArgumentException('Invalid admin page.');
         }
         $columns = match ($kind) {
@@ -114,8 +114,10 @@ final class AdminCatalog
     {
         $categoryLabels = $kind === 'companies' ? MarketplaceCategoryLabels::forLocale($this->entityManager, $locale) : [];
 
+        $builder = $this->query($kind);
+        if ($kind === 'creators') $builder->andWhere('item.agencyProfile = false');
         return array_map(fn (object $item): array => $this->resource($item, $locale, $categoryLabels),
-            $this->query($kind)->andWhere('item.featured = :featured')->setParameter('featured', true)->orderBy('item.id', \SortDirection::Ascending)->getQuery()->getResult());
+            $builder->andWhere('item.featured = :featured')->setParameter('featured', true)->orderBy('item.id', \SortDirection::Ascending)->getQuery()->getResult());
     }
 
     private function query(string $kind): QueryBuilder
@@ -130,7 +132,8 @@ final class AdminCatalog
                 ->leftJoin('item.owner', 'owner')->addSelect('owner')->andWhere('owner.id IS NULL OR owner.approved = :approved')->setParameter('approved', true);
             if ($kind === 'companies') $builder->leftJoin('owner.creator', 'studio')->leftJoin('item.coverMedia', 'cover')->addSelect('studio', 'cover');
         } elseif ($kind === 'campaigns') {
-            $builder->join('item.company', 'company')->addSelect('company');
+            $builder->join('item.company', 'company')->addSelect('company')
+                ->leftJoin('item.coverMedia', 'cover')->addSelect('cover');
         } else {
             $builder->leftJoin('item.creator', 'creator')->leftJoin('item.company', 'company')->addSelect('creator', 'company')
                 ->leftJoin('creator.avatarMedia', 'avatar')->leftJoin('company.logoMedia', 'logo')->addSelect('avatar', 'logo')
@@ -152,12 +155,13 @@ final class AdminCatalog
                 'category' => $item->getCategory(),
                 'city' => $item->getCity(),
                 'avatarUrl' => $item->getAvatarMedia()?->getUrl() ?? $item->getAvatarUrl(),
-                'featured' => $item->isFeatured(),
+                'featured' => $item->isFeaturedConfigured(),
+                'featuredUntil' => $item->getFeaturedUntil()?->modify('-1 day')->format('Y-m-d'),
             ];
         }
         if ($item instanceof Company) {
             $resource = CompanyResource::fromEntity($item, $locale, card: true, categoryLabels: $categoryLabels);
-            return AdminProfileResource::summary($item) + $resource;
+            return ['featured' => $item->isFeaturedConfigured(), 'featuredUntil' => $item->getFeaturedUntil()?->modify('-1 day')->format('Y-m-d')] + AdminProfileResource::summary($item) + $resource;
         }
         if ($item instanceof Campaign) {
             return [
@@ -166,6 +170,7 @@ final class AdminCatalog
                 'title' => $item->getTitle(),
                 'status' => $item->getStatus(),
                 'featured' => $item->isFeatured(),
+                'coverImageUrl' => $item->getCoverMedia()?->getUrl(),
                 'company' => ['name' => $item->getCompany()->getName()],
             ];
         }

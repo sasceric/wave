@@ -32,11 +32,12 @@ import { useAdminNavigationCounts } from '../../composables/useAdminNavigationCo
 import { setCurrentUser } from '../../composables/useCurrentUser'
 import { localizedPath } from '../../routePaths'
 import WaveLogo from '../shared/WaveLogo.vue'
+import ProfileAvatar from '../shared/ProfileAvatar.vue'
 import LocalizedLink from '../shared/LocalizedLink.vue'
 import LanguageSwitcher from '../shared/LanguageSwitcher.vue'
 import { mobileAccountSidebarOpen } from '../../composables/useMobileAccountSidebar'
 import { unreadMessageCount } from '../../composables/useUnreadMessages'
-import { incompleteProfileScore } from '../../lib/profileStrength'
+import { incompleteProfileScore, profileStrength } from '../../lib/profileStrength'
 
 const props = defineProps({
   user: {
@@ -73,6 +74,7 @@ const signOutError = ref('')
 const identity = computed(() => props.profile || props.user?.profile || {})
 const name = computed(() => identity.value.displayName || identity.value.name || props.user?.name || props.user?.email || t('app.account'))
 const image = computed(() => identity.value.avatarUrl || identity.value.logoUrl)
+const strengthScore = computed(() => profileStrength(props.user ? { ...props.user, profile: identity.value } : null)?.score ?? null)
 const publicRoute = computed(() => identity.value.slug ? {
   name: props.user?.accountType === 'creator' ? 'creator-profile' : 'company-profile',
   params: { slug: identity.value.slug },
@@ -216,8 +218,8 @@ function isActive(item) {
     :aria-label="t('account.navigation')"
   >
     <div v-if="user" class="account-sidebar__identity">
-      <div class="account-sidebar__avatar"><img v-if="image" :src="image" :alt="name" /><WaveLogo v-else mark /></div>
-      <div><strong>{{ name }}</strong><LocalizedLink v-if="publicRoute && user.profileComplete !== false" :to="publicRoute" @click="closeMobileSidebar">{{ t('account.viewPublicProfile') }}<ExternalLink :size="12" aria-hidden="true" /></LocalizedLink></div>
+      <LocalizedLink class="account-sidebar__overview" :to="{ name: 'account-dashboard' }" :aria-label="`${name} · ${t('personalDashboard.title')}`" @click="closeMobileSidebar"><ProfileAvatar class="account-sidebar__avatar" :src="image" :score="strengthScore"><WaveLogo mark /></ProfileAvatar></LocalizedLink>
+      <div><LocalizedLink class="account-sidebar__name" :to="{ name: 'account-dashboard' }" @click="closeMobileSidebar"><strong>{{ name }}</strong></LocalizedLink><LocalizedLink v-if="publicRoute && user.profileComplete !== false" :to="publicRoute" @click="closeMobileSidebar">{{ t('account.viewPublicProfile') }}<ExternalLink :size="12" aria-hidden="true" /></LocalizedLink></div>
     </div>
     <div class="account-sidebar__group account-sidebar__group--public">
       <div v-if="!user" class="account-sidebar__language">

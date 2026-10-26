@@ -2522,7 +2522,8 @@
     "closeCampaign": "Zatvori kampanju",
     "finishCampaign": "Završi kampanju",
     "closeCampaignHint": "Zatvaranjem kampanje zaustavljaš nove prijave. Angažovani kreatori i agencije nastavljaju rad i razgovor.",
-    "showing": "Prikazano {from}–{to} od {total} recenzija"
+    "showing": "Prikazano {from}–{to} od {total} recenzija",
+    "newProfile": "Novo"
   },
   "passwordChange": {
     "title": "Promijeni lozinku",
@@ -3971,5 +3972,21 @@
       "interestLabel": "Oznaka interesa",
       "messageLabel": "Oznaka poruke"
     }
+  },
+  "adminHome": {
+    "intro": "Odaberi profile i kampanje koje želiš izdvojiti. Promjene se objavljuju tek nakon čuvanja.",
+    "recommendedMode": "Preporučeni profili",
+    "modeHint": "Odaberi da li početna prikazuje samo izdvojene kreatore ili popunjava mjesta drugim preporučenim profilima.",
+    "featuredSelection": "Izdvojeni sadržaj",
+    "choose": "Odaberi",
+    "rankingHint": "Izdvojeni su prvi. Zatim slijede pouzdanost ocjena, završene saradnje i snaga profila. Jednaki profili se rotiraju svaki dan.",
+    "viewProfile": "Pogledaj",
+    "until": "Izdvojeno do",
+    "noExpiry": "Bez isteka",
+    "noPicks": "Još nema izdvojenih stavki. Odaberi ih u polju iznad.",
+    "unsaved": "Nesačuvane izmjene",
+    "saved": "Sve je sačuvano",
+    "applySelection": "Primijeni odabir",
+    "leaveConfirm": "Imaš nesačuvane izmjene početne stranice. Želiš li napustiti stranicu?"
   }
 }

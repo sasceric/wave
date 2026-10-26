@@ -24,7 +24,7 @@ final class CompanyController
     }
 
     #[Route('/api/companies', name: 'api_companies_index', methods: ['GET'])]
-    public function index(Request $request, EntityManagerInterface $entityManager, DirectoryCursor $cursor): JsonResponse
+    public function index(Request $request, EntityManagerInterface $entityManager, \App\Api\RecommendedProfiles $recommendations, DirectoryCursor $cursor): JsonResponse
     {
         $locale = LocaleContext::fromRequest($request);
         if ($locale === null) {
@@ -67,16 +67,18 @@ final class CompanyController
             $positionTypes = match ($sort) {
                 'name' => ['name' => 'string', 'id' => 'int'],
                 'campaigns' => ['count' => 'int', 'name' => 'string', 'id' => 'int'],
-                default => ['featured' => 'bool', 'count' => 'int', 'name' => 'string', 'id' => 'int'],
+                default => \App\Api\RecommendedProfiles::POSITION_TYPES,
             };
             $position = $cursorMode ? $cursor->decode($request, 'company', $positionTypes) : null;
         } catch (\InvalidArgumentException) {
             return new JsonResponse(['error' => ApiMessages::get('invalid_request', $locale)], 400);
         }
         $today = (new \DateTimeImmutable('today'))->format('Y-m-d H:i:s');
-        $baseSql = <<<'SQL'
+        $rankingColumns = $sort === 'recommended' ? $recommendations->columns('company') : '(c.featured AND (c.featured_until IS NULL OR c.featured_until > :rankingNow)) AS featured';
+        $rankingJoins = $sort === 'recommended' ? $recommendations->joins('company') : '';
+        $baseSql = <<<SQL
             SELECT * FROM (
-                SELECT c.id, c.featured, c.verified, c.name, c.company_type, c.industry, c.about,
+                SELECT c.id, $rankingColumns, c.verified, c.name, c.company_type, c.industry, c.about,
                     u.city, u.country_code,
                     COALESCE(i.available_campaign_count, (
                         SELECT COUNT(*) FROM campaign a
@@ -85,11 +87,12 @@ final class CompanyController
                 FROM company c
                 LEFT JOIN wave_user u ON u.id = c.owner_id
                 LEFT JOIN directory_index i ON i.kind = 'company' AND i.entity_id = c.id AND i.indexed_at >= :today
+                $rankingJoins
                 WHERE u.id IS NULL OR (u.approved = TRUE AND u.hide_my_account = FALSE)
             ) ranked WHERE 1 = 1
             SQL;
         $countBaseSql = <<<'SQL'
-            SELECT c.id, c.featured, c.verified, c.name, c.company_type, c.industry, c.about,
+            SELECT c.id, (c.featured AND (c.featured_until IS NULL OR c.featured_until > :rankingNow)) AS featured, c.verified, c.name, c.company_type, c.industry, c.about,
                 u.city, u.country_code
             FROM company c
             LEFT JOIN wave_user u ON u.id = c.owner_id
@@ -99,6 +102,8 @@ final class CompanyController
         $countBaseSql .= ' AND '.$this->blocks->visible('u.id');
         $params = ['today' => $today];
         $parameterTypes = ['today' => \Doctrine\DBAL\ParameterType::STRING];
+        $params['rankingNow'] = $recommendations->parameters()['rankingNow'];
+        if ($sort === 'recommended') $params = array_replace($params, $recommendations->parameters($position));
 
         $conditions = [];
         if ($query !== '') {
@@ -154,15 +159,15 @@ final class CompanyController
             $sql .= match ($sort) {
                 'name' => ' AND (name > :name OR (name = :name AND id > :id))',
                 'campaigns' => ' AND (campaign_count < :count OR (campaign_count = :count AND (name > :name OR (name = :name AND id > :id))))',
-                default => ' AND (featured < :featured OR (featured = :featured AND (campaign_count < :count OR (campaign_count = :count AND (name > :name OR (name = :name AND id > :id))))))',
+                default => $recommendations->seek(),
             };
-            $params += $position;
+            $params += array_diff_key($position, ['asOf' => true]);
             $parameterTypes += ['featured' => \Doctrine\DBAL\ParameterType::BOOLEAN, 'count' => \Doctrine\DBAL\ParameterType::INTEGER, 'name' => \Doctrine\DBAL\ParameterType::STRING, 'id' => \Doctrine\DBAL\ParameterType::INTEGER];
         }
         $orderBy = match ($sort) {
             'name' => 'name ASC, id ASC',
             'campaigns' => 'campaign_count DESC, name ASC, id ASC',
-            default => 'featured DESC, campaign_count DESC, name ASC, id ASC',
+            default => \App\Api\RecommendedProfiles::ORDER,
         };
         $sql .= ' ORDER BY ' . $orderBy . ' LIMIT :limit OFFSET :offset';
         $params += ['limit' => $limit + ($cursorMode ? 1 : 0), 'offset' => $cursorMode ? 0 : $offset];
@@ -235,13 +240,13 @@ final class CompanyController
             $meta['nextCursor'] = !$hasMore || $last === null ? null : $cursor->encode($request, 'company', match ($sort) {
                 'name' => ['name' => $last['name'], 'id' => (int) $last['id']],
                 'campaigns' => ['count' => (int) $last['campaign_count'], 'name' => $last['name'], 'id' => (int) $last['id']],
-                default => ['featured' => (bool) $last['featured'], 'count' => (int) $last['campaign_count'], 'name' => $last['name'], 'id' => (int) $last['id']],
+                default => $recommendations->position($last, $params),
             });
         } else {
             $meta['offset'] = $offset;
         }
 
-        $ratings = $this->feedback->summaries(array_values(array_filter(array_map(static fn (Company $profile): ?int => $profile->getOwner()?->getId(), $companies))));
+        $ratings = $this->feedback->companySummaries($companies);
         $categoryLabels = MarketplaceCategoryLabels::forLocale($entityManager, $locale);
 
         return new JsonResponse([
@@ -335,7 +340,7 @@ final class CompanyController
         if (str_ends_with($request->getPathInfo(), '/reviews')) {
             return new JsonResponse($owner === null ? ['data' => [], 'summary' => $this->feedback->summary(null), 'meta' => ['hasMore' => false, 'nextCursor' => null]] : $this->feedback->publicReviews($owner, $locale, max(0, $request->query->getInt('before')), max(1, $request->query->getInt('page', 1)), role: $reviewRole));
         }
-        $rating = $this->feedback->summary($owner);
+        $rating = $this->feedback->summary($owner, $company->getCompanyType() === 'agency' ? 'provider' : 'client');
         return new JsonResponse(['data' => CompanyResource::fromEntity($company, $locale, categoryLabels: MarketplaceCategoryLabels::forLocale($entityManager, $locale)) + ['rating' => $rating, 'indexable' => $owner === null || ($owner->isApproved() && !$owner->isHideMyAccount() && !$owner->isDeleted()), 'structuredData' => $this->profileSchema->company($company, $locale, $rating)]]);
     }
 }

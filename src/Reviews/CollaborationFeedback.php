@@ -34,7 +34,7 @@ final class CollaborationFeedback
     }
 
     /** SQL shared by list and average queries so hidden feedback never leaks through totals. */
-    private function publicCondition(?string $role = null): string
+    public function publicCondition(?string $role = null): string
     {
         $scope = match ($role) {
             'provider' => ' AND EXISTS (SELECT 1 FROM creator provider WHERE provider.id = a.creator_id AND provider.owner_id = r.recipient_id)',
@@ -86,6 +86,19 @@ final class CollaborationFeedback
     {
         return $user?->getId() === null ? ['average' => null, 'reviewCount' => 0, 'completedCampaigns' => 0]
             : $this->summaries([$user->getId()], $role)[$user->getId()];
+    }
+
+    /** Company directory reviews follow the public role: agency provider or brand client. */
+    public function companySummaries(array $companies): array
+    {
+        $providers = $clients = [];
+        foreach ($companies as $company) {
+            $id = $company->getOwner()?->getId();
+            if ($id === null) continue;
+            if ($company->getCompanyType() === 'agency') $providers[] = $id;
+            else $clients[] = $id;
+        }
+        return $this->summaries($providers, 'provider') + $this->summaries($clients, 'client');
     }
 
     public function state(Application $application, User $user, string $locale): array

@@ -4,20 +4,17 @@ import AdminPage from '../components/admin/AdminPage.vue'
 import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import {
   Check,
-  Building2,
   Eye,
   EyeOff,
   ClipboardList,
-  Megaphone,
   Mail,
   ShieldCheck,
   ShieldOff,
   Trash2,
-  Users,
 } from '@lucide/vue'
-import { useRoute } from 'vue-router'
+import { onBeforeRouteLeave, onBeforeRouteUpdate, useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import AdminMultiSelect from '../components/admin/AdminMultiSelect.vue'
+import AdminHomepageCuration from '../components/admin/AdminHomepageCuration.vue'
 import AdminDataTable from '../components/admin/AdminDataTable.vue'
 import AdminEmailTemplates from '../components/admin/AdminEmailTemplates.vue'
 import AdminRowActions from '../components/admin/AdminRowActions.vue'
@@ -117,42 +114,36 @@ const pageTitle = computed(() => t(
     : `adminDashboard.${section.value}PageTitle`,
 ))
 
-const creatorOptions = computed(() => (candidates.creators.rows).map((creator) => ({
-  id: creator.id,
-  label: creator.displayName,
-  description: [creator.category, creator.city].filter(Boolean).join(' · '),
-})))
-
-const campaignOptions = computed(() => (candidates.campaigns.rows).map((campaign) => ({
-  id: campaign.id,
-  label: campaign.title,
-  description: campaign.company.name,
-})))
-
-const companyOptions = computed(() => (candidates.companies.rows).map((company) => ({
-  id: company.id,
-  label: company.name,
-  description: company.industry,
-})))
-
-const selectionOptions = computed(() => ({
-  creators: (dashboard.value?.creators ?? []).map((row) => ({ id: row.id, label: row.displayName })),
-  companies: (dashboard.value?.companies ?? []).map((row) => ({ id: row.id, label: row.name })),
-  campaigns: (dashboard.value?.campaigns ?? []).map((row) => ({ id: row.id, label: row.title })),
+const featuredExpirations = ref({ creators: {}, companies: {} })
+const savedCuration = ref('')
+const curationSelections = computed(() => ({ creators: featuredCreatorIds.value, companies: featuredCompanyIds.value, campaigns: featuredCampaignIds.value }))
+const curationBody = computed(() => ({
+  creatorMode: creatorMode.value,
+  featuredCreatorIds: featuredCreatorIds.value,
+  featuredCompanyIds: featuredCompanyIds.value,
+  featuredCampaignIds: featuredCampaignIds.value,
+  featuredExpirations: Object.fromEntries(['creators', 'companies'].map(kind => [kind, Object.fromEntries(curationSelections.value[kind].map(id => [id, featuredExpirations.value[kind][id] || null]))])),
 }))
-
-const multiSelectLabels = computed(() => ({
-  loading: t('adminDashboard.loading'),
-  loadMore: t('directoryLoading.loadMore'),
-  search: t('adminDashboard.searchOptions'),
-  selectVisible: t('adminDashboard.selectVisible'),
-  deselectVisible: t('adminDashboard.deselectVisible'),
-  clear: t('adminDashboard.clearSelection'),
-  noSelection: t('adminDashboard.noSelection'),
-  noResults: t('adminDashboard.noOptions'),
-  selectedCount: (count) => t('adminDashboard.selectedOptions', { count }),
-  remove: (name) => t('adminDashboard.removeOption', { name }),
-}))
+const curationDirty = computed(() => section.value === 'homepage' && Boolean(savedCuration.value) && JSON.stringify(curationBody.value) !== savedCuration.value)
+function selectFeatured(kind, ids) {
+  if (saving.value) return
+  if (kind === 'creators') featuredCreatorIds.value = ids
+  else if (kind === 'companies') featuredCompanyIds.value = ids
+  else if (kind === 'campaigns') featuredCampaignIds.value = ids
+}
+function setFeaturedExpiry(kind, id, value) {
+  if (!saving.value) featuredExpirations.value[kind][id] = value
+}
+function warnCurationUnload(event) {
+  if (!curationDirty.value) return
+  event.preventDefault()
+  event.returnValue = ''
+}
+function confirmCurationNavigation() {
+  return !curationDirty.value || window.confirm(t('adminHome.leaveConfirm'))
+}
+onBeforeRouteLeave(confirmCurationNavigation)
+onBeforeRouteUpdate(confirmCurationNavigation)
 
 const bulkApprovalConfirmationMessage = computed(() => {
   if (!bulkApprovalRequest.value) return ''
@@ -275,6 +266,8 @@ async function loadDashboard() {
     featuredCreatorIds.value = data.creators.filter(({ featured }) => featured).map(({ id }) => id)
     featuredCompanyIds.value = data.companies.filter(({ featured }) => featured).map(({ id }) => id)
     featuredCampaignIds.value = data.campaigns.filter(({ featured }) => featured).map(({ id }) => id)
+    featuredExpirations.value = Object.fromEntries(['creators', 'companies'].map(kind => [kind, Object.fromEntries(data[kind].map(row => [row.id, row.featuredUntil || '']))]))
+    savedCuration.value = JSON.stringify(curationBody.value)
     accessState.value = 'allowed'
     if (isList.value) await loadList()
     if (section.value === 'homepage') await Promise.all(Object.keys(candidates).map((kind) => loadCandidates(kind, true)))
@@ -325,7 +318,7 @@ async function loadCandidates(kind, reset = false) {
   state.loading = true
   state.error = false
   try {
-    const params = new URLSearchParams({ page, limit: 25, q: state.q.trim() })
+    const params = new URLSearchParams({ page, limit: 20, q: state.q.trim() })
     const response = await apiGet(`/admin/catalog/${kind}?${params}`)
     if (disposed || version !== state.version || viewVersion !== dashboardVersion) return
     state.rows = reset ? response.data : [...state.rows, ...response.data]
@@ -349,27 +342,25 @@ function searchCandidates(kind, value) {
   const state = candidates[kind]
   state.q = value
   state.version++
+  state.loading = true
   clearTimeout(state.timer)
   state.timer = setTimeout(() => loadCandidates(kind, true), 250)
 }
 
 async function saveCuration() {
+  if (saving.value || !curationDirty.value) return
+  const snapshot = JSON.stringify(curationBody.value)
+  const version = dashboardVersion
   saving.value = true
   error.value = ''
   notice.value = ''
   try {
-    await apiRequest('/admin/homepage', {
-      method: 'PUT',
-      body: {
-        creatorMode: creatorMode.value,
-        featuredCreatorIds: featuredCreatorIds.value,
-        featuredCompanyIds: featuredCompanyIds.value,
-        featuredCampaignIds: featuredCampaignIds.value,
-      },
-    })
+    await apiRequest('/admin/homepage', { method: 'PUT', body: JSON.parse(snapshot) })
+    if (disposed || version !== dashboardVersion) return
+    savedCuration.value = snapshot
     notice.value = t('adminDashboard.saved')
   } catch (cause) {
-    error.value = cause.message || t('adminDashboard.saveError')
+    if (!disposed && version === dashboardVersion) error.value = cause.message || t('adminDashboard.saveError')
   } finally {
     saving.value = false
   }
@@ -509,11 +500,13 @@ watch([query, statusFilter], () => {
   searchTimer = setTimeout(() => loadList({ ...listOptions.value, page: 1 }), 250)
 })
 onBeforeUnmount(() => {
+  window.removeEventListener('beforeunload', warnCurationUnload)
   disposed = true
   window.clearTimeout(createdAtTimer)
   clearTimeout(searchTimer)
   Object.values(candidates).forEach((state) => clearTimeout(state.timer))
 })
+onMounted(() => window.addEventListener('beforeunload', warnCurationUnload))
 onMounted(loadDashboard)
 onMounted(updateCreatedAtClock)
 </script>
@@ -550,90 +543,22 @@ onMounted(updateCreatedAtClock)
 
         <AdminOverviewAnalytics v-if="section === 'overview'" :metrics="dashboard.metrics" />
 
-        <section v-else-if="section === 'homepage'" class="admin-dashboard__panel">
-          <form v-form-validation class="admin-dashboard__form" @submit.prevent="saveCuration">
-            <div class="admin-settings-grid">
-              <article class="admin-settings-card">
-                <header class="admin-settings-card__heading">
-                  <span class="admin-settings-card__icon"><Users :size="18" aria-hidden="true" /></span>
-                  <div>
-                    <h2>{{ t('adminDashboard.creatorPicks') }}</h2>
-                    <p>{{ t('adminDashboard.creatorPicksHint') }}</p>
-                  </div>
-                </header>
-                <label class="admin-dashboard__mode">
-                  <span>{{ t('adminDashboard.creatorMode') }}</span>
-                  <select v-model="creatorMode">
-                    <option value="latest">{{ t('adminDashboard.latestCreators') }}</option>
-                    <option value="featured">{{ t('adminDashboard.featuredCreators') }}</option>
-                  </select>
-                </label>
-                <AdminMultiSelect
-                  v-model="featuredCreatorIds"
-                  :label="t('adminDashboard.selectFeaturedCreators')"
-                  :options="creatorOptions"
-                  :selection-options="selectionOptions.creators"
-                  :remote="true"
-                  :loading="candidates.creators.loading"
-                  :has-more="candidates.creators.error || candidates.creators.rows.length < candidates.creators.total"
-                  @search="searchCandidates('creators', $event)"
-                  @load-more="loadCandidates('creators')"
-                  :labels="multiSelectLabels"
-                />
-              </article>
-
-              <article class="admin-settings-card">
-                <header class="admin-settings-card__heading">
-                  <span class="admin-settings-card__icon"><Megaphone :size="18" aria-hidden="true" /></span>
-                  <div>
-                    <h2>{{ t('adminDashboard.campaignPicks') }}</h2>
-                    <p>{{ t('adminDashboard.campaignPicksHint') }}</p>
-                  </div>
-                </header>
-                <AdminMultiSelect
-                  v-model="featuredCampaignIds"
-                  :label="t('adminDashboard.selectFeaturedCampaigns')"
-                  :options="campaignOptions"
-                  :selection-options="selectionOptions.campaigns"
-                  :remote="true"
-                  :loading="candidates.campaigns.loading"
-                  :has-more="candidates.campaigns.error || candidates.campaigns.rows.length < candidates.campaigns.total"
-                  @search="searchCandidates('campaigns', $event)"
-                  @load-more="loadCandidates('campaigns')"
-                  :labels="multiSelectLabels"
-                />
-              </article>
-
-              <article class="admin-settings-card">
-                <header class="admin-settings-card__heading">
-                  <span class="admin-settings-card__icon"><Building2 :size="18" aria-hidden="true" /></span>
-                  <div>
-                    <h2>{{ t('adminDashboard.companyPicks') }}</h2>
-                    <p>{{ t('adminDashboard.companyPicksHint') }}</p>
-                  </div>
-                </header>
-                <AdminMultiSelect
-                  v-model="featuredCompanyIds"
-                  :label="t('adminDashboard.selectFeaturedCompanies')"
-                  :options="companyOptions"
-                  :selection-options="selectionOptions.companies"
-                  :remote="true"
-                  :loading="candidates.companies.loading"
-                  :has-more="candidates.companies.error || candidates.companies.rows.length < candidates.companies.total"
-                  @search="searchCandidates('companies', $event)"
-                  @load-more="loadCandidates('companies')"
-                  :labels="multiSelectLabels"
-                />
-              </article>
-            </div>
-            <footer class="admin-settings__footer">
-              <span>{{ t('adminDashboard.homepageDescription') }}</span>
-              <button class="button button--dark" type="submit" :disabled="saving">
-                {{ saving ? t('adminDashboard.saving') : t('adminDashboard.save') }}
-              </button>
-            </footer>
-          </form>
-        </section>
+        <AdminHomepageCuration
+          v-else-if="section === 'homepage'"
+          :mode="creatorMode"
+          :selections="curationSelections"
+          :expirations="featuredExpirations"
+          :catalog="dashboard"
+          :candidates="candidates"
+          :busy="saving || loading"
+          :dirty="curationDirty"
+          @mode="!saving && (creatorMode = $event)"
+          @select="selectFeatured"
+          @expiry="setFeaturedExpiry"
+          @search="searchCandidates"
+          @load-more="loadCandidates"
+          @save="saveCuration"
+        />
 
         <AdminEmailTemplates v-else-if="section === 'email-templates'" />
 

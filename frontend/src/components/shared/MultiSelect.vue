@@ -1,11 +1,19 @@
 <script setup>
-import { computed, nextTick, onBeforeUnmount, onMounted, ref, useId } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, useId, watch } from 'vue'
 import { Check, ChevronDown, Search, X } from '@lucide/vue'
 import { getDropdownPlacement } from '../../utils/dropdownPlacement'
 
 const props = defineProps({
   modelValue: { type: Array, default: () => [] },
   options: { type: Array, required: true },
+  selectionOptions: { type: Array, default: () => [] },
+  showImages: { type: Boolean, default: false },
+  showSelectedValues: { type: Boolean, default: true },
+  remote: { type: Boolean, default: false },
+  loading: { type: Boolean, default: false },
+  hasMore: { type: Boolean, default: false },
+  loadingLabel: { type: String, default: '' },
+  loadMoreLabel: { type: String, default: '' },
   label: { type: String, required: true },
   placeholder: { type: String, required: true },
   searchPlaceholder: { type: String, required: true },
@@ -17,7 +25,7 @@ const props = defineProps({
   required: { type: Boolean, default: false },
 })
 
-const emit = defineEmits(['update:modelValue'])
+const emit = defineEmits(['update:modelValue', 'search', 'load-more'])
 const id = `multi-select-${useId()}`
 const root = ref(null)
 const trigger = ref(null)
@@ -26,18 +34,22 @@ const menu = ref(null)
 const isOpen = ref(false)
 const opensAbove = ref(false)
 const query = ref('')
+const loadRequested = ref(false)
 
-const selectedOptions = computed(() => props.options.filter(
-  (option) => props.modelValue.includes(option.value),
-))
+const selectedOptions = computed(() => {
+  const options = [...new Map([...props.selectionOptions, ...props.options].map(option => [option.value, option])).values()]
+  return options.filter(option => props.modelValue.includes(option.value))
+})
 const normalizedQuery = computed(() => normalize(query.value))
 const filteredOptions = computed(() => {
-  if (!normalizedQuery.value) {
+  if (props.remote || !normalizedQuery.value) {
     return props.options
   }
 
-  return props.options.filter((option) => normalize(option.label).includes(normalizedQuery.value))
+  return props.options.filter((option) => normalize(`${option.label} ${option.description || ''}`).includes(normalizedQuery.value))
 })
+watch(query, value => { if (props.remote && isOpen.value) emit('search', value) })
+watch(() => props.loading, loading => { if (!loading) loadRequested.value = false })
 const isAtLimit = computed(() => (
   props.maxSelections > 0 && props.modelValue.length >= props.maxSelections
 ))
@@ -66,6 +78,7 @@ function normalize(value) {
 }
 
 function toggleOption(value) {
+  if (props.disabled) return
   const selected = props.modelValue.includes(value)
   if (!selected && isAtLimit.value) {
     return
@@ -75,6 +88,17 @@ function toggleOption(value) {
     ? props.modelValue.filter((item) => item !== value)
     : [...props.modelValue, value]
   emit('update:modelValue', nextValue)
+}
+
+function requestMore() {
+  if (!props.remote || props.disabled || props.loading || loadRequested.value || !props.hasMore) return
+  loadRequested.value = true
+  emit('load-more')
+}
+
+function onOptionsScroll(event) {
+  const { scrollHeight, scrollTop, clientHeight } = event.currentTarget
+  if (scrollHeight - scrollTop - clientHeight <= 64) requestMore()
 }
 
 function removeOption(value) {
@@ -95,6 +119,7 @@ async function openMenu() {
 
   query.value = ''
   isOpen.value = true
+  if (props.remote) emit('search', '')
   await nextTick()
   updateMenuPlacement()
   searchInput.value?.focus()
@@ -168,17 +193,20 @@ defineExpose({ openMenu })
       class="multi-select__control"
       :class="{ 'is-open': isOpen, 'is-disabled': disabled, 'is-above': opensAbove }"
     >
-      <span v-for="option in selectedOptions" :key="option.value" class="multi-select__value">
-        <span :title="option.label">{{ option.label }}</span>
-        <button
-          type="button"
-          :aria-label="`${removeLabel}: ${option.label}`"
-          :disabled="disabled"
-          @click="removeOption(option.value)"
-        >
-          <X :size="13" aria-hidden="true" />
-        </button>
-      </span>
+      <template v-if="showSelectedValues">
+        <span v-for="option in selectedOptions" :key="option.value" class="multi-select__value">
+          <img v-if="showImages && option.image" :src="option.image" alt="" class="multi-select__image multi-select__image--value" />
+          <span :title="option.label">{{ option.label }}</span>
+          <button
+            type="button"
+            :aria-label="`${removeLabel}: ${option.label}`"
+            :disabled="disabled"
+            @click="removeOption(option.value)"
+          >
+            <X :size="13" aria-hidden="true" />
+          </button>
+        </span>
+      </template>
       <button
         :id="`${id}-trigger`"
         ref="trigger"
@@ -196,7 +224,7 @@ defineExpose({ openMenu })
         <span>{{ selectedOptions.length ? searchPlaceholder : placeholder }}</span>
         <ChevronDown :size="16" aria-hidden="true" />
       </button>
-      <div v-if="isOpen" ref="menu" class="multi-select__menu">
+      <div v-if="isOpen" ref="menu" class="multi-select__menu" :class="{ 'has-footer': loading || hasMore }" :aria-busy="loading">
         <label class="multi-select__search">
           <Search :size="15" aria-hidden="true" />
           <input
@@ -215,6 +243,7 @@ defineExpose({ openMenu })
           role="listbox"
           aria-multiselectable="true"
           :aria-labelledby="`${id}-label`"
+          @scroll.passive="onOptionsScroll"
         >
           <button
             v-for="(option, index) in filteredOptions"
@@ -231,15 +260,17 @@ defineExpose({ openMenu })
             @keydown.up.prevent="focusPreviousOption(index)"
             @keydown.esc.prevent.stop="closeMenu(true)"
           >
-            <span>{{ option.label }}</span>
+            <img v-if="showImages && option.image" :src="option.image" alt="" class="multi-select__image" />
+            <span class="multi-select__option-label">{{ option.label }}<small v-if="option.description">{{ option.description }}</small></span>
             <span class="multi-select__check" aria-hidden="true">
               <Check v-if="modelValue.includes(option.value)" :size="14" />
             </span>
           </button>
-          <p v-if="!filteredOptions.length" class="multi-select__empty">
+          <p v-if="!loading && !filteredOptions.length" class="multi-select__empty">
             {{ noResultsLabel }}
           </p>
         </div>
+        <button v-if="loading || hasMore" type="button" class="multi-select__load-more" :disabled="disabled || loading || loadRequested" @click="requestMore">{{ loading ? loadingLabel : loadMoreLabel }}</button>
       </div>
     </div>
   </div>

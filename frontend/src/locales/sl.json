@@ -2522,7 +2522,8 @@
     "closeCampaign": "Zapri kampanjo",
     "finishCampaign": "Zaključi kampanjo",
     "closeCampaignHint": "Zaprtje kampanje ustavi nove prijave. Angažirani ustvarjalci in agencije nadaljujejo delo in pogovor.",
-    "showing": "Prikazanih {from}–{to} od {total} ocen"
+    "showing": "Prikazanih {from}–{to} od {total} ocen",
+    "newProfile": "Novo"
   },
   "passwordChange": {
     "title": "Spremeni geslo",
@@ -3971,5 +3972,21 @@
       "interestLabel": "Oznaka zanimanja",
       "messageLabel": "Oznaka sporočila"
     }
+  },
+  "adminHome": {
+    "intro": "Izberi profile in kampanje, ki jih želiš izpostaviti. Spremembe se objavijo šele po shranjevanju.",
+    "recommendedMode": "Priporočeni profili",
+    "modeHint": "Izberi, ali domača stran prikazuje samo izpostavljene ustvarjalce ali mesta dopolni z drugimi priporočenimi profili.",
+    "featuredSelection": "Izpostavljena vsebina",
+    "choose": "Izberi",
+    "rankingHint": "Izpostavljeni so prvi. Sledijo zanesljivost ocen, zaključena sodelovanja in moč profila. Enakovredni profili se vsak dan izmenjujejo.",
+    "viewProfile": "Ogled",
+    "until": "Izpostavljeno do",
+    "noExpiry": "Brez izteka",
+    "noPicks": "Izbranih vsebin še ni. Izberi jih v zgornjem polju.",
+    "unsaved": "Neshranjene spremembe",
+    "saved": "Vse je shranjeno",
+    "applySelection": "Uporabi izbor",
+    "leaveConfirm": "Imaš neshranjene spremembe domače strani. Želiš zapustiti stran?"
   }
 }

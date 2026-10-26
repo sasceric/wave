@@ -31,7 +31,7 @@ use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
 final class HomepageController
 {
     #[Route('/api/homepage', name: 'api_homepage', methods: ['GET'])]
-    public function homepage(Request $request, EntityManagerInterface $entityManager, CollaborationFeedback $feedback, \App\Safety\BlockPolicy $blocks): JsonResponse
+    public function homepage(Request $request, EntityManagerInterface $entityManager, CollaborationFeedback $feedback, \App\Safety\BlockPolicy $blocks, \App\Api\RecommendedProfiles $recommendations): JsonResponse
     {
         $locale = LocaleContext::fromRequest($request);
         if ($locale === null) {
@@ -39,22 +39,18 @@ final class HomepageController
         }
 
         $mode = $entityManager->find(HomepageSettings::class, 1)?->getCreatorMode() ?? HomepageSettings::MODE_LATEST;
-        $creatorQuery = $entityManager->getRepository(Creator::class)->createQueryBuilder('creator')
-            ->leftJoin('creator.owner', 'creatorOwner')->andWhere('creator.agencyProfile = false')
-            ->andWhere($blocks->visible('creatorOwner.id'))
-            ->andWhere('creatorOwner.id IS NULL OR (creatorOwner.approved = :approved AND creatorOwner.hideMyAccount = :visible)')
-            ->setParameter('approved', true)
-            ->setParameter('visible', false);
-        if ($mode === HomepageSettings::MODE_FEATURED) {
-            $creatorQuery->andWhere('creator.featured = :featured')->setParameter('featured', true);
-        }
-        $creators = $creatorQuery
-            ->orderBy('creator.featured', \SortDirection::Descending)
-            ->addOrderBy('creator.createdAt', \SortDirection::Descending)
-            ->addOrderBy('creator.id', \SortDirection::Descending)
-            ->setMaxResults(4)
-            ->getQuery()
-            ->getResult();
+        $rankingColumns = $recommendations->columns('creator');
+        $rankingJoins = $recommendations->joins('creator');
+        $parameters = $recommendations->parameters();
+        $visibility = $blocks->visible('u.id');
+        $featuredOnly = $mode === HomepageSettings::MODE_FEATURED ? ' WHERE featured = TRUE' : '';
+        $ids = $entityManager->getConnection()->fetchFirstColumn("SELECT id FROM (
+            SELECT c.id, $rankingColumns FROM creator c LEFT JOIN wave_user u ON u.id = c.owner_id $rankingJoins
+            WHERE c.agency_profile = FALSE AND (u.id IS NULL OR (u.approved = TRUE AND u.hide_my_account = FALSE)) AND $visibility
+        ) ranked$featuredOnly ORDER BY ".\App\Api\RecommendedProfiles::ORDER.' LIMIT 4', $parameters);
+        $creators = $ids === [] ? [] : $entityManager->getRepository(Creator::class)->findBy(['id' => $ids]);
+        $order = array_flip($ids);
+        usort($creators, static fn (Creator $a, Creator $b): int => $order[$a->getId()] <=> $order[$b->getId()]);
         $categoryLabels = MarketplaceCategoryLabels::forLocale($entityManager, $locale);
         $campaigns = $entityManager->getRepository(Campaign::class)->createQueryBuilder('campaign')
             ->join('campaign.company', 'company')
@@ -74,7 +70,7 @@ final class HomepageController
             ->getQuery()
             ->getResult();
 
-        $ratings = $feedback->summaries(array_values(array_filter(array_map(static fn (Creator $creator): ?int => $creator->getOwner()?->getId(), $creators))));
+        $ratings = $feedback->summaries(array_values(array_filter(array_map(static fn (Creator $creator): ?int => $creator->getOwner()?->getId(), $creators))), 'provider');
         $hiredCounts = CampaignHiredCounts::forCampaigns($entityManager, $campaigns);
 
         return new JsonResponse([
@@ -197,6 +193,38 @@ final class HomepageController
             || count($campaigns) !== count($campaignIds)
         ) {
             return new JsonResponse(['error' => ApiMessages::get('invalid_request', $locale)], 400);
+        }
+
+        $expirations = $data['featuredExpirations'] ?? [];
+        if (!is_array($expirations) || array_diff(array_keys($expirations), ['creators', 'companies']) !== []) {
+            return new JsonResponse(['error' => ApiMessages::get('invalid_request', $locale)], 400);
+        }
+        $parsedExpirations = [];
+        foreach (['creators' => $creatorIds, 'companies' => $companyIds ?? []] as $kind => $ids) {
+            $dates = $expirations[$kind] ?? [];
+            if (!is_array($dates) || count($dates) > 1000) return new JsonResponse(['error' => ApiMessages::get('invalid_request', $locale)], 400);
+            foreach ($dates as $id => $value) {
+                if (!in_array((int) $id, $ids, true) || (string) (int) $id !== (string) $id) return new JsonResponse(['error' => ApiMessages::get('invalid_request', $locale)], 400);
+                if ($value === null || $value === '') { $parsedExpirations[$kind][$id] = null; continue; }
+                $date = is_string($value) ? \DateTimeImmutable::createFromFormat('!Y-m-d', $value, new \DateTimeZone('UTC')) : false;
+                if ($date === false || (int) $date->format('Y') < 1 || $date->format('Y-m-d') !== $value) return new JsonResponse(['error' => ApiMessages::get('invalid_request', $locale)], 400);
+                $parsedExpirations[$kind][$id] = $date->modify('+1 day');
+            }
+        }
+        foreach ($creators as $creator) {
+            if ($creator->isAgencyProfile() || ($creator->getOwner() !== null && (!$creator->getOwner()->isApproved() || $creator->getOwner()->isDeleted()))) {
+                return new JsonResponse(['error' => ApiMessages::get('invalid_request', $locale)], 400);
+            }
+        }
+        foreach ($companies as $company) {
+            if ($company->getOwner() !== null && (!$company->getOwner()->isApproved() || $company->getOwner()->isDeleted())) {
+                return new JsonResponse(['error' => ApiMessages::get('invalid_request', $locale)], 400);
+            }
+        }
+        foreach (['creators' => $creators, 'companies' => $companies] as $kind => $profiles) {
+            foreach ($profiles as $profile) {
+                if (array_key_exists($profile->getId(), $parsedExpirations[$kind] ?? [])) $profile->setFeaturedUntil($parsedExpirations[$kind][$profile->getId()]);
+            }
         }
 
         $selectedCreators = array_fill_keys($creatorIds, true);

@@ -2521,7 +2521,8 @@
     "closeCampaign": "Close campaign",
     "finishCampaign": "Finish campaign",
     "closeCampaignHint": "Closing a campaign stops new applications. Hired creators and agencies continue working and chatting.",
-    "showing": "Showing {from}–{to} of {total} reviews"
+    "showing": "Showing {from}–{to} of {total} reviews",
+    "newProfile": "New"
   },
   "passwordChange": {
     "title": "Change password",
@@ -3970,5 +3971,21 @@
       "interestLabel": "Interest label",
       "messageLabel": "Message label"
     }
+  },
+  "adminHome": {
+    "intro": "Choose the profiles and campaigns to feature. Changes go live only after saving.",
+    "recommendedMode": "Recommended profiles",
+    "modeHint": "Choose whether the homepage shows only featured creators or fills remaining places with other recommended profiles.",
+    "featuredSelection": "Featured content",
+    "choose": "Choose",
+    "rankingHint": "Featured profiles come first, followed by rating confidence, completed collaborations and profile strength. Otherwise equal profiles rotate daily.",
+    "viewProfile": "View",
+    "until": "Featured through",
+    "noExpiry": "No expiry",
+    "noPicks": "Nothing featured yet. Select items in the field above.",
+    "unsaved": "Unsaved changes",
+    "saved": "All changes saved",
+    "applySelection": "Apply selection",
+    "leaveConfirm": "You have unsaved homepage changes. Leave this page?"
   }
 }
