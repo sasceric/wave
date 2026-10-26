@@ -11,6 +11,7 @@ use InvalidArgumentException;
 final class CreatorPresentation
 {
     public const PLATFORMS = ['TikTok', 'Instagram', 'YouTube', 'Twitch', 'Spotify'];
+    public const REFERENCE_PLATFORMS = ['All', ...self::PLATFORMS, 'Facebook', 'LinkedIn', 'Pinterest', 'Other'];
     public const LANGUAGES = ['bs', 'hr', 'sr', 'sl', 'cnr', 'en', 'de', 'fr', 'it', 'es', 'tr', 'ar'];
 
     public static function settings(mixed $value): array

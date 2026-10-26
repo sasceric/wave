@@ -55,6 +55,15 @@ final class CreatorResource
                     return $media;
                 }, $item['media'] ?? []);
 
+                if (isset($item['references'])) {
+                    $item['references'] = array_map(static function (array $reference) use ($portfolioMedia): array {
+                        if (isset($reference['mediaId'])) {
+                            $reference['imageUrl'] = $portfolioMedia[$reference['mediaId']] ?? null;
+                        }
+                        return $reference;
+                    }, $item['references']);
+                }
+
                 return $item;
             },
             array_values(array_filter($creator->getPortfolio(), static fn (array $item): bool => !$public || ($item['publicPermission'] ?? true))),

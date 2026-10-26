@@ -2802,6 +2802,14 @@
     "save": "Shrani URL"
   },
   "studio": {
+    "references": "Reference vsebine",
+    "referencesHint": "Dodaj povezavo za vsako objavo, fotografijo ali video. YouTube in Vimeo omogočata predogled videa; druge povezave odprejo objavo.",
+    "addReference": "Dodaj referenco",
+    "referenceNumber": "Referenca {number}",
+    "referenceUrl": "URL objave ali vsebine",
+    "referenceUpload": "Dodaj fotografijo iz naprave",
+    "viewReference": "Poglej vsebino",
+    "otherPlatform": "Druga platforma",
     "publicAudience": "Moje občinstvo",
     "publicAudienceIntro": "Komu je namenjena moja vsebina in kaj spremljajo.",
     "languageAndContent": "Jezik in vsebina",

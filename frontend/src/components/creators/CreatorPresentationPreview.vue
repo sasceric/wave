@@ -2,6 +2,7 @@
 import PresentationDemoBadge from '../shared/PresentationDemoBadge.vue'
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { workImage } from '../../lib/creatorPresentation'
 import { CREATOR_PLACEHOLDER } from '../../lib/marketplace'
 
 const props = defineProps({ profile: { type: Object, required: true } })
@@ -10,7 +11,7 @@ const channel = computed(() => props.profile.socialProfiles
   .filter(item => item.followers != null)
   .reduce((largest, item) => !largest || item.followers > largest.followers ? item : largest, null))
 const images = computed(() => props.profile.portfolio
-  .filter(item => item.publicPermission !== false && (item.coverUrl || item.type === 'image' && item.url))
+  .filter(item => item.publicPermission !== false && workImage(item))
   .slice(0, 4))
 const types = computed(() => (props.profile.creatorTypes || []).map(type => t(`creatorTypes.options.${type}`)).join(' · '))
 const number = value => new Intl.NumberFormat(locale.value === 'bs' ? 'hr' : locale.value, { maximumFractionDigits: 1 }).format(value)
@@ -44,7 +45,7 @@ const rating = computed(() => props.profile.rating?.average == null ? '—' : nu
         </div>
       </dl>
       <div v-if="images.length" class="creator-presentation-preview__gallery">
-        <img v-for="work in images" :key="work.id" :src="work.coverUrl || work.url" :alt="work.title" loading="lazy" />
+        <img v-for="work in images" :key="work.id" :src="workImage(work)" :alt="work.title" loading="lazy" />
       </div>
       <p class="creator-presentation-preview__sections">{{ t('creatorProfile.presentationSections') }}</p>
       <p class="creator-presentation-preview__url">wave.ba/kreatori/{{ profile.slug }}</p>

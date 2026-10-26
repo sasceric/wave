@@ -4,6 +4,7 @@ import { useI18n } from 'vue-i18n'
 import { ArrowDown, ArrowUp, Images, Pencil, Pin, Plus, Trash2, UsersRound, Handshake } from '@lucide/vue'
 import ProfileCollectionCard from './ProfileCollectionCard.vue'
 import CreatorDeliverables from './CreatorDeliverables.vue'
+import CreatorWorkReferences from './CreatorWorkReferences.vue'
 import SingleSelect from '../shared/SingleSelect.vue'
 import SearchableSelect from '../shared/SearchableSelect.vue'
 import SwitchField from '../shared/SwitchField.vue'
@@ -14,7 +15,7 @@ import CreatorAudience from '../creators/CreatorAudience.vue'
 import CreatorWorks from '../creators/CreatorWorks.vue'
 import CreatorPackageFacts from '../creators/CreatorPackageFacts.vue'
 import CreatorMediaKit from '../creators/CreatorMediaKit.vue'
-import { emptyWork, PRESENTATION_PLATFORMS } from '../../lib/creatorPresentation'
+import { emptyWork, PRESENTATION_PLATFORMS, workImage } from '../../lib/creatorPresentation'
 import { apiGet, formatMoney } from '../../lib/api'
 import { dateOnly } from '../../lib/datePicker'
 import { CURRENCIES } from '../../lib/marketplace'
@@ -97,7 +98,7 @@ watch(() => [profile.value.id, props.tab, props.editing], () => {
     selectedNetwork.value = 0
     selectedPackage.value = null
     step.value = 1
-    if (props.tab === 'portfolio' && props.editing && (!profile.value.companyType || profile.value.providerId)) loadCampaigns()
+    if (props.tab === 'portfolio' && props.editing && (!profile.value.companyType || profile.value.companyType === 'agency')) loadCampaigns()
 }, { immediate: true })
 onBeforeUnmount(() => { ++generation; })
 function addWork() { if (profile.value.portfolio.length < 4) {
@@ -130,8 +131,6 @@ function pickCampaign(id) { const campaign = campaigns.value.find(row => row.id 
     work.value.projectDate = campaign.completedAt || campaign.finishedAt || ''
     work.value.platform = campaign.channels?.length === 1 && PRESENTATION_PLATFORMS.includes(campaign.channels[0]) ? campaign.channels[0] : 'All'
 } }
-function changeType(item) { item.mediaId = null; item.url = ''; delete item.embedUrl; }
-function changeMediaType(item) { item.mediaId = null; item.url = ''; }
 function addSocial() {
     if (profile.value.socialProfiles.length >= 5) return
     profile.value.socialProfiles.push({ platform: 'Instagram', handle: '', followers: null, averageViews: null, sampleSize: 10, engagementRate: null, engagementBasis: 'followers', audienceCountries: [], lastUpdated: dateOnly() })
@@ -318,7 +317,7 @@ watch(locale, language => { const names = new Intl.DisplayNames([language === 'c
     <template v-else-if="tab === 'portfolio'">
       <div v-if="!work" class="creator-studio__card">
         <article v-for="(item,index) in profile.portfolio" :key="item.id || index" class="creator-studio__work-row">
-          <img v-if="item.coverUrl || item.url && item.type === 'image'" :src="item.coverUrl || item.url" :alt="item.title" />
+          <img v-if="workImage(item)" :src="workImage(item)" :alt="item.title" />
           <div>
             <h3>{{ item.title || t('studio.workTitle') }}</h3>
             <p>{{ item.client || t(`studio.${item.source}`) }}</p>
@@ -426,78 +425,16 @@ watch(locale, language => { const names = new Intl.DisplayNames([language === 'c
               <span>{{ t('studio.contribution') }}</span>
               <textarea v-model.trim="work.contribution" maxlength="1500"></textarea>
             </label>
-            <SingleSelect
-              v-model="work.type"
-              :label="t('account.mediaType')"
-              :options="[{value:'image',label:t('account.image')},{value:'video',label:t('account.video')}]"
-              @update:model-value="changeType(work)"
-            />
-            <SingleSelect v-model="work.platform" :label="t('account.platform')" :options="allPlatforms" />
           </div>
-          <CreatorDeliverables v-model:items="work.deliverables" />
+          <CreatorWorkReferences v-model:items="work.references" />
+          <h3 class="creator-studio__subtitle">{{ t('studio.cover') }}</h3>
           <MediaUploadField
-            v-if="work.type==='image'"
-            v-model="work.mediaId"
-            folder="creator-portfolio"
-            :preview-url="work.url"
-            @uploaded="work.url=$event.url"
-          />
-          <label v-else class="form-field">
-            <span>{{ t('account.mediaUrl') }}</span>
-            <input v-model.trim="work.url" type="url" maxlength="1000" placeholder="https://" required />
-            <small>{{ t('studio.videoHint') }}</small>
-          </label>
-          <h3 v-if="work.type === 'video'" class="creator-studio__subtitle">{{ t('studio.cover') }}</h3>
-          <MediaUploadField
-            v-if="work.type==='video'"
             v-model="work.coverMediaId"
             folder="creator-portfolio"
             :preview-url="work.coverUrl || ''"
             optional
             @uploaded="work.coverUrl=$event.url"
           />
-          <div class="creator-studio__repeat">
-            <header>
-              <h3>{{ t('studio.extraMedia') }}</h3>
-              <button
-                type="button"
-                class="profile-editor__add"
-                :disabled="work.media.length>=4"
-                @click="work.media.push({type:'video',url:'',mediaId:null})"
-              >
-                <Plus :size="16" />
-                {{ t('studio.addItem') }}
-              </button>
-            </header>
-            <article v-for="(media,index) in work.media" :key="index" class="creator-studio__card">
-              <header>
-                <SingleSelect
-                  v-model="media.type"
-                  :label="t('account.mediaType')"
-                  :options="[{value:'image',label:t('account.image')},{value:'video',label:t('account.video')}]"
-                  @update:model-value="changeMediaType(media)"
-                />
-                <button type="button" class="creator-studio__icon" :aria-label="t('account.remove')" @click="work.media.splice(index,1)">
-                  <Trash2 :size="16" />
-                </button>
-              </header>
-              <MediaUploadField
-                v-if="media.type==='image'"
-                v-model="media.mediaId"
-                folder="creator-portfolio"
-                :preview-url="media.url || ''"
-                @uploaded="media.url=$event.url"
-              />
-              <label v-else class="form-field">
-                <span>{{ t('account.mediaUrl') }}</span>
-                <input v-model.trim="media.url" type="url" required maxlength="1000" />
-              </label>
-            </article>
-          </div>
-          <label class="form-field">
-            <span>{{ t('studio.postUrl') }}</span>
-            <input v-model.trim="work.postUrl" type="url" maxlength="1000" />
-          </label>
         </div>
         <div data-studio-step="3" v-show="step===3">
           <div class="creator-studio__repeat">

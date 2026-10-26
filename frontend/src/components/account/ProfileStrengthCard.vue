@@ -1,4 +1,5 @@
 <script setup>
+import { workImage } from '../../lib/creatorPresentation'
 import { computed, nextTick, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { ArrowRight, BarChart3, Briefcase, Camera, Check, ChevronDown, CircleHelp, ExternalLink, FileText, Globe, Image as ImageIcon, PencilLine, Plus, Tag, Users } from '@lucide/vue'
@@ -58,7 +59,7 @@ const previewPrice = computed(() => {
   const prices = (profile.value.packages || []).map((row) => Number(row.price)).filter((price) => price > 0)
   return prices.length ? t('profileStrength.priceFrom', { price: formatMoney(Math.min(...prices), profile.value.packages.find((row) => Number(row.price) === Math.min(...prices))?.currency || 'BAM') }) : ''
 })
-const previewWorks = computed(() => (profile.value.portfolio || []).slice(0, 4).map((item) => item.coverUrl || (item.type === 'image' ? item.url : '')))
+const previewWorks = computed(() => (profile.value.portfolio || []).slice(0, 4).map((item) => workImage(item)))
 const previewChips = computed(() => kind.value === 'agency' ? (profile.value.services || []).slice(0, 3).map((row) => (typeof row === 'string' ? row : row.title)).filter(Boolean) : (profile.value.socialLinks || []).slice(0, 3).map((row) => row.platform === 'Website' ? row.url.replace(/^https?:\/\//, '').replace(/\/$/, '') : row.platform))
 const done = (key) => strength.value?.steps.find((step) => step.key === key)?.done
 </script>

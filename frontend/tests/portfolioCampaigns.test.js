@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import * as vue from 'vue'
-import { emptyWork, PRESENTATION_PLATFORMS } from '../src/lib/creatorPresentation.js'
+import { emptyWork, PRESENTATION_PLATFORMS, workImage } from '../src/lib/creatorPresentation.js'
 import { htmlToPlainText } from '../src/lib/profileDraft.js'
 import { setupView } from './setupView.js'
 
@@ -13,7 +13,7 @@ async function studio(apiGet, overrides = {}) {
     'vue-i18n': { useI18n: () => ({ locale: vue.ref('bs'), t: key => key, te: () => false }) },
     '../../data/countries.json': { default: ['BA'] },
     '../../lib/api': { apiGet, formatMoney: String },
-    '../../lib/creatorPresentation': { emptyWork, PRESENTATION_PLATFORMS },
+    '../../lib/creatorPresentation': { emptyWork, PRESENTATION_PLATFORMS, workImage },
     '../../lib/profileDraft': { htmlToPlainText },
   }, props)
   view.state.selectedWork.value = 0

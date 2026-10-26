@@ -285,7 +285,7 @@ final class MediaController
                     continue;
                 }
                 $ids = [$work['mediaId'] ?? null, $work['coverMediaId'] ?? null];
-                foreach ($work['media'] ?? [] as $extra) {
+                foreach ([...($work['media'] ?? []), ...($work['references'] ?? [])] as $extra) {
                     $ids[] = $extra['mediaId'] ?? null;
                 }
                 if (in_array($media->getId(), $ids, true)) {

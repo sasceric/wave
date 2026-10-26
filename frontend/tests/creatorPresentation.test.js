@@ -27,3 +27,26 @@ test('extended payload preserves dates and sends nullable numeric values correct
   assert.equal(payload.packages[0].revisions,0)
   assert.equal(payload.packages[0].usageDays,30)
 })
+
+test('legacy media and original post become separate reference rows without losing delivery data', () => {
+  const original = { id: 'legacy-work', type: 'image', url: '/old.webp', platform: 'Instagram', postUrl: 'https://instagram.com/p/original/', media: [{ type: 'video', url: 'https://youtu.be/abcdefghijk', embedUrl: 'https://www.youtube-nocookie.com/embed/abcdefghijk' }], deliverables: [{ quantity: 3, format: 'photo', duration: null }] }
+  const profile = normalizePresentation({ portfolio: [original] })
+  assert.equal(profile.portfolio[0].references.length, 3)
+  assert.equal(profile.portfolio[0].references[0].legacyImage, true)
+  assert.equal(profile.portfolio[0].references[1].platform, 'Instagram')
+  const saved = presentationPayload(profile).portfolio[0]
+  assert.deepEqual(saved.references.map(row => row.url), ['/old.webp', 'https://youtu.be/abcdefghijk', 'https://instagram.com/p/original/'])
+  assert.deepEqual(saved.deliverables, original.deliverables)
+  assert.equal(original.references, undefined)
+  assert.equal(saved.url, '/old.webp')
+})
+
+test('reference uploads preserve post URLs and numeric IDs, without duplicating the legacy primary media', () => {
+  const profile = normalizePresentation({ portfolio: [{ type: 'image', url: '/old.webp', media: [{ type: 'video', url: 'https://youtu.be/abcdefghijk' }], references: [{ type: 'image', platform: 'Facebook', mediaId: '12', imageUrl: '/uploads/work.webp', url: 'https://facebook.com/posts/123' }, { type: 'video', platform: 'TikTok', url: 'https://www.tiktok.com/@creator/video/123' }] }] })
+  const work = presentationPayload(profile).portfolio[0]
+  assert.equal(work.references.length, 2)
+  assert.equal(work.references[0].mediaId, 12)
+  assert.equal(work.references[0].url, 'https://facebook.com/posts/123')
+  assert.equal('imageUrl' in work.references[0], false)
+  assert.equal(work.references[1].platform, 'TikTok')
+})

@@ -2801,6 +2801,14 @@
     "save": "Save URL"
   },
   "studio": {
+    "references": "Content references",
+    "referencesHint": "Add a link for each post, image or video. YouTube and Vimeo support video previews; other links open the post.",
+    "addReference": "Add reference",
+    "referenceNumber": "Reference {number}",
+    "referenceUrl": "Post or content URL",
+    "referenceUpload": "Add an image from your device",
+    "viewReference": "View content",
+    "otherPlatform": "Other platform",
     "publicAudience": "My audience",
     "publicAudienceIntro": "Who my content reaches and what they watch.",
     "languageAndContent": "Language and content",

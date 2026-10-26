@@ -2802,6 +2802,14 @@
     "save": "Spremi URL"
   },
   "studio": {
+    "references": "Reference sadržaja",
+    "referencesHint": "Dodaj poveznicu za svaku objavu, fotografiju ili video. YouTube i Vimeo imaju video pregled; ostale poveznice otvaraju objavu.",
+    "addReference": "Dodaj referencu",
+    "referenceNumber": "Referenca {number}",
+    "referenceUrl": "URL objave ili sadržaja",
+    "referenceUpload": "Dodaj fotografiju s uređaja",
+    "viewReference": "Pogledaj sadržaj",
+    "otherPlatform": "Druga platforma",
     "publicAudience": "Moja publika",
     "publicAudienceIntro": "Kome se obraćam i kakav sadržaj gledaju.",
     "languageAndContent": "Jezik i sadržaj",

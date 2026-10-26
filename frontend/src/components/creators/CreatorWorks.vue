@@ -1,15 +1,16 @@
 <script setup>
-import { computed, ref } from 'vue'
+import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { Pin, ArrowUpRight, BriefcaseBusiness, CalendarDays, Clapperboard } from '@lucide/vue'
 import FormModal from '../shared/FormModal.vue'
-import PortfolioGallery from '../shared/PortfolioGallery.vue'
+import WorkReferences from './WorkReferences.vue'
+import { workImage, workReferences } from '../../lib/creatorPresentation'
 import { formatDate } from '../../lib/api'
 import { CREATOR_PLACEHOLDER } from '../../lib/marketplace'
 defineProps({ items: { type: Array, default: () => [] }, name: { type: String, required: true }, showHeading: { type: Boolean, default: true } })
 const { t } = useI18n()
 const selected = ref(null)
-const media = computed(() => selected.value ? [{ ...selected.value, id: 'main' }, ...(selected.value.media || []).map((item, index) => ({ ...item, id: `extra-${index}`, title: selected.value.title }))].filter(item => item.url || item.embedUrl) : [])
+
 </script>
 <template>
   <section v-if="items.length" class="creator-works">
@@ -26,7 +27,7 @@ const media = computed(() => selected.value ? [{ ...selected.value, id: 'main' }
         @click="selected = item"
       >
         <span class="creator-works__visual">
-          <img :src="item.coverUrl || (item.type === 'image' ? item.url : '') || CREATOR_PLACEHOLDER" :alt="item.title || name" loading="lazy" />
+          <img :src="workImage(item) || CREATOR_PLACEHOLDER" :alt="item.title || name" loading="lazy" />
           <span v-if="item.platform && item.platform !== 'All'" class="creator-works__chip">{{ item.platform }}</span>
           <span v-if="item.featured" class="creator-works__pin">
             <Pin :size="12" aria-hidden="true" />
@@ -61,7 +62,7 @@ const media = computed(() => selected.value ? [{ ...selected.value, id: 'main' }
               {{ formatDate(selected.projectDate) }}
             </span>
           </div>
-          <PortfolioGallery v-if="media.length" :items="media" :name="name" showcase />
+          <WorkReferences :items="workReferences(selected)" :name="name" />
           <p v-if="selected.summary && selected.summary !== selected.title && selected.summary !== selected.client" class="work-detail__summary">{{ selected.summary }}</p>
           <div v-if="selected.brief || selected.contribution" class="work-detail__sections">
             <section v-if="selected.brief">
@@ -100,7 +101,7 @@ const media = computed(() => selected.value ? [{ ...selected.value, id: 'main' }
         </div>
       </template>
       <template #actions="{close}">
-        <a v-if="selected?.postUrl" class="button button--dark" :href="selected.postUrl" target="_blank" rel="noopener noreferrer">
+        <a v-if="selected?.postUrl && !selected.references" class="button button--dark" :href="selected.postUrl" target="_blank" rel="noopener noreferrer">
           {{ t('studio.viewPost') }}
           <ArrowUpRight :size="16" aria-hidden="true" />
         </a>

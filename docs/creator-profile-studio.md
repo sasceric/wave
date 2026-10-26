@@ -32,11 +32,13 @@ The statistics are explicitly self-reported. There are no statistics screenshots
 or evidence uploads.
 
 Each of up to four work entries supports a summary, source (Wave, external or
-sample), eligible finished campaign, client and agency, brief, contribution,
+sample), eligible campaign with completed collaboration, client and agency, brief, contribution,
 deliverables, project date, original-post link, numerical results with period and
 measurement date, one featured position, and public-display permission. Samples
 cannot claim a client or a Wave campaign. Wave references require the creator's
-own accepted offer on a finished campaign; they cannot inflate review totals.
+own completed accepted offer, even while the campaign stays open. An organizing
+agency can select its own campaign after any accepted provider completes work.
+These references cannot inflate review totals.
 The campaign picker excludes blocked and deleted counterparties.
 
 New creator and agency works are public by default. The existing public-display
@@ -45,9 +47,23 @@ an individual work. Migration `Version20261023120000` also makes every existing
 portfolio work public once, including previously hidden works, without changing
 content, ordering or media. Later visibility choices remain respected.
 
-Work uses existing compressed image uploads and YouTube/Vimeo video links. A
-video may have an owned cover image; a work may have four additional images or
-video links. Every image must belong to the creator and the portfolio folder.
+The Sadržaj editor uses up to 12 `references` rows per work, each with its own
+platform, image/video type and HTTPS post/content URL. Image rows may instead
+use an owned compressed portfolio upload, with an optional linked post URL.
+Each row is displayed as a separate reference card; only allowlisted YouTube/
+Vimeo videos and owned or preserved legacy images are previewed. Other links
+open the original post. Wave does not fetch external post content or embed
+arbitrary URLs. A separate owned cover image is optional.
+
+Existing work JSON needs no migration. The editor maps the legacy primary image/
+video, extra media and distinct original-post link into reference rows. Existing
+delivery quantities/formats/durations and other work metadata survive saves.
+The API still accepts the old work shape; once reference rows are supplied, they
+become canonical and legacy primary fields mirror the first row for existing
+consumers. Uploaded image URLs are returned as `imageUrl`, separately from a
+row's post `url`. Only URLs already stored on that same owned legacy work can
+retain legacy image previews. Every uploaded image must belong to the creator
+and the portfolio folder.
 Draft work is excluded from public JSON and its media files are private unless
 the same file is also referenced by a public work. Replacing media associations
 uses a transaction so repeated saves/reordering do not conflict with unique

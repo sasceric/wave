@@ -2,6 +2,7 @@
 import PresentationDemoBadge from '../shared/PresentationDemoBadge.vue'
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { workImage, workReferences } from '../../lib/creatorPresentation'
 import { formatMoney } from '../../lib/api'
 
 const props = defineProps({
@@ -36,8 +37,8 @@ const number = value => new Intl.NumberFormat(locale.value === 'bs' || locale.va
     </div>
     <div v-if="works.length" class="creator-kit-paper__images">
       <figure v-for="work in works" :key="work.key || work.id">
-        <img v-if="work.coverUrl || work.type === 'image' && work.url" :src="work.coverUrl || work.url" :alt="work.title" />
-        <figcaption v-else>{{ work.title }}</figcaption>
+        <img v-if="workImage(work)" :src="workImage(work)" :alt="work.title" />
+        <figcaption>{{ work.title }}<a v-for="(reference, index) in workReferences(work).filter(row => row.url)" :key="index" :href="reference.url" target="_blank" rel="noopener noreferrer">{{ reference.platform === 'All' ? t('studio.viewReference') : reference.platform }} · {{ t(reference.type === 'image' ? 'account.image' : 'account.video') }}</a></figcaption>
       </figure>
     </div>
     <div v-if="options.packages && profile.packages?.length" class="creator-kit-paper__section">
@@ -71,6 +72,7 @@ const number = value => new Intl.NumberFormat(locale.value === 'bs' || locale.va
   &__images { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin: 14px 0; }
   figure { min-width: 0; margin: 0; }
   &__images img { display: block; width: 100%; height: 100px; object-fit: cover; border-radius: 7px; }
+  figcaption a { display: block; color: var(--forest); font-size: 11px; overflow-wrap: anywhere; }
   figcaption { display: grid; place-items: center; min-height: 100px; padding: 12px; border-radius: 7px; background: #e5ebe2; color: var(--forest); font-size: 12px; }
   p.creator-kit-paper__url { margin-top: 14px; color: var(--forest); }
 }

@@ -5,6 +5,7 @@ namespace App\Controller\Api;
 use App\Account\CreatorBirthday;
 use App\Account\CreatorTypes;
 use App\Account\CreatorPresentation;
+use App\Account\PortfolioCampaigns;
 use App\Api\ApiAccess;
 use App\Api\Currency;
 use App\Api\CreatorResource;
@@ -20,7 +21,6 @@ use App\Localization\ApiMessages;
 use App\Localization\LocaleContext;
 use App\Service\RichTextSanitizer;
 use App\Service\UnusedMediaCleanup;
-use App\Safety\BlockPolicy;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -30,6 +30,8 @@ use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
 
 final class ProfileController
 {
+    public function __construct(private readonly PortfolioCampaigns $portfolioCampaigns) {}
+
     #[Route('/api/me/profile-statistics', name: 'api_profile_statistics', methods: ['GET'])]
     public function statistics(Request $request, EntityManagerInterface $entityManager, Security $security): JsonResponse
     {
@@ -51,38 +53,13 @@ final class ProfileController
     }
 
     #[Route('/api/me/portfolio-campaigns', name: 'api_profile_portfolio_campaigns', methods: ['GET'])]
-    public function portfolioCampaigns(Request $request, EntityManagerInterface $entityManager, Security $security, BlockPolicy $blocks): JsonResponse
+    public function portfolioCampaigns(Request $request, Security $security): JsonResponse
     {
         $user = $security->getUser();
         $locale = LocaleContext::fromRequest($request) ?? 'bs';
         if (!$user instanceof User || (!$user->getCreator() && !$user->isAgency())) return new JsonResponse(['error' => ApiMessages::get('authentication_required', $locale)], 401);
-        if ($user->getCreator() === null) return new JsonResponse(['data' => [], 'meta' => ['hasMore' => false, 'nextCursor' => null]]);
         $before = max(0, $request->query->getInt('before'));
-        $query = $entityManager->getRepository(\App\Entity\Application::class)->createQueryBuilder('a')
-            ->join('a.campaign', 'c')->addSelect('c')->join('c.company', 'p')->addSelect('p')->join('a.offer', 'o')->addSelect('o')
-            ->leftJoin('p.owner', 'owner')->andWhere($blocks->visible('owner.id'))
-            ->andWhere('(owner.id IS NULL OR owner.deletedAt IS NULL)')
-            ->andWhere('a.creator = :creator')->andWhere("o.workCompletedAt IS NOT NULL OR c.status = 'finished'")->andWhere("o.status = 'accepted'")
-            ->setParameter('creator', $user->getCreator())->orderBy('c.id', \SortDirection::Descending)->setMaxResults(21);
-        if ($before) $query->andWhere('c.id < :before')->setParameter('before', $before);
-        $rows = $query->getQuery()->getResult();
-        $more = count($rows) > 20;
-        $data = array_map(static function (\App\Entity\Application $application) use ($locale): array {
-            $campaign = $application->getCampaign();
-            $translation = $campaign->getTranslations()[$locale] ?? [];
-            return [
-                'id' => $campaign->getId(),
-                'title' => $translation['title'] ?? $campaign->getTitle(),
-                'summary' => $translation['summary'] ?? $campaign->getSummary(),
-                'description' => $translation['description'] ?? $campaign->getDescription(),
-                'channels' => $campaign->getChannels(),
-                'company' => $campaign->getCompany()->getName(),
-                'companyType' => $campaign->getCompany()->getCompanyType(),
-                'completedAt' => ($application->getOffer()?->getWorkCompletedAt() ?? $campaign->getFinishedAt())?->format('Y-m-d'),
-                'finishedAt' => $campaign->getFinishedAt()?->format('Y-m-d'),
-            ];
-        }, array_slice($rows, 0, 20));
-        return new JsonResponse(['data' => $data, 'meta' => ['hasMore' => $more, 'nextCursor' => $more ? $data[array_key_last($data)]['id'] : null]]);
+        return new JsonResponse($this->portfolioCampaigns->page($user, $locale, $before), headers: ['Cache-Control' => 'private, no-store']);
     }
 
     #[Route('/api/me/account-visibility', name: 'api_profile_visibility_update', methods: ['PUT'])]
@@ -479,6 +456,7 @@ final class ProfileController
         $associations = [];
         $mediaIds = [];
         foreach ($value as $position => $item) {
+            if (is_array($item) && is_array($item['references'] ?? null)) $item['type'] ??= $item['references'][0]['type'] ?? null;
             if (!is_array($item)
                 || !is_string($item['type'] ?? null)
                 || !in_array($item['type'], ['image', 'video'], true)
@@ -494,9 +472,23 @@ final class ProfileController
                 : bin2hex(random_bytes(8));
             if (mb_strlen($title) > 120
                 || !is_string($platform)
-                || !in_array($platform, ['All', ...CreatorPresentation::PLATFORMS], true)
+                || !in_array($platform, CreatorPresentation::REFERENCE_PLATFORMS, true)
             ) {
                 return null;
+            }
+
+            if (array_key_exists('references', $item)) {
+                $references = $this->portfolioReferences($item['references'], $creator, $id, $user, $entityManager);
+                if ($references === null) return null;
+                $first = $references['items'][0];
+                $items[] = ['id' => $id, 'title' => $title, 'platform' => $first['platform'], 'type' => $first['type'], ...array_intersect_key($first, array_flip(['url', 'mediaId', 'embedUrl'])), 'references' => $references['items']];
+                foreach ($references['media'] as $media) {
+                    if (!isset($mediaIds[$media->getId()])) {
+                        $mediaIds[$media->getId()] = true;
+                        $associations[] = ['media' => $media, 'position' => 100 + count($associations), 'title' => $title, 'platform' => $first['platform']];
+                    }
+                }
+                continue;
             }
 
             if ($item['type'] === 'image') {
@@ -569,18 +561,17 @@ final class ProfileController
                 $details = CreatorPresentation::work($raw);
                 if ($details['featured'] && ++$featured > 1) return null;
                 if ($details['source'] === 'wave') {
-                    $application = $entityManager->getRepository(\App\Entity\Application::class)->findOneBy(['creator' => $creator, 'campaign' => $details['campaignId']]);
-                    if (!$application instanceof \App\Entity\Application || $application->getOffer()?->getStatus() !== 'accepted'
-                        || ($application->getOffer()->getWorkCompletedAt() === null && $application->getCampaign()->getStatus() !== 'finished')) return null;
-                    $details['projectDate'] ??= ($application->getOffer()->getWorkCompletedAt() ?? $application->getCampaign()->getFinishedAt())?->format('Y-m-d');
-                    $company = $application->getCampaign()->getCompany();
+                    $linked = $this->portfolioCampaigns->find($user, $details['campaignId']);
+                    if ($linked === null) return null;
+                    $details['projectDate'] ??= $linked['completedAt'];
+                    $company = $linked['campaign']->getCompany();
                     if ($company->getCompanyType() === 'agency') $details['agency'] = $company->getName();
                     else { $details['client'] = $company->getName(); $details['agency'] = ''; }
                 }
                 $item += $details;
                 $item['coverMediaId'] = null;
                 $item['media'] = [];
-                $extras = $raw['media'] ?? [];
+                $extras = array_key_exists('references', $raw) ? [] : ($raw['media'] ?? []);
                 if (!is_array($extras) || !array_is_list($extras) || count($extras) > 4) return null;
                 foreach ([['type' => 'image', 'mediaId' => $raw['coverMediaId'] ?? null, 'cover' => true], ...$extras] as $extra) {
                     if (!is_array($extra)) return null;
@@ -605,6 +596,47 @@ final class ProfileController
         } catch (\InvalidArgumentException) { return null; }
 
         return ['items' => $items, 'associations' => $associations];
+    }
+
+    /** References accept HTTPS post links; only owned images and allowlisted video players are previewed. */
+    private function portfolioReferences(mixed $value, Creator $creator, string $workId, User $user, EntityManagerInterface $manager): ?array
+    {
+        if (!is_array($value) || !array_is_list($value) || count($value) < 1 || count($value) > 12) return null;
+        $items = [];
+        $media = [];
+        try {
+            foreach ($value as $row) {
+                if (!is_array($row) || !in_array($row['type'] ?? null, ['image', 'video'], true)
+                    || !in_array($row['platform'] ?? null, CreatorPresentation::REFERENCE_PLATFORMS, true)) return null;
+                $reference = ['type' => $row['type'], 'platform' => $row['platform']];
+                if (isset($row['mediaId'])) {
+                    if ($row['type'] !== 'image') return null;
+                    $image = $this->ownedMedia($row['mediaId'], $user, 'creator-portfolio', $manager);
+                    if (!$image instanceof Media) return null;
+                    $media[$image->getId()] = $image;
+                    $reference['mediaId'] = $image->getId();
+                    // A linked post can accompany an uploaded image. Never store its private media URL as a post link.
+                    $reference['url'] = ($row['url'] ?? '') === $image->getUrl() ? '' : CreatorPresentation::url($row['url'] ?? '');
+                } else {
+                    $url = $row['url'] ?? '';
+                    if (!is_string($url) || $url === '') return null;
+                    $legacyImage = false;
+                    foreach ($creator->getPortfolio() as $old) {
+                        if (($old['id'] ?? '') !== $workId) continue;
+                        $candidates = isset($old['references']) ? $old['references'] : [$old, ...($old['media'] ?? [])];
+                        foreach ($candidates as $candidate) {
+                            if (($candidate['type'] ?? '') === 'image' && !isset($candidate['mediaId']) && ($candidate['url'] ?? '') === $url
+                                && (!isset($old['references']) || ($candidate['legacyImage'] ?? false))) $legacyImage = true;
+                        }
+                    }
+                    $reference['url'] = $legacyImage && $row['type'] === 'image' ? $url : CreatorPresentation::url($url);
+                    if ($legacyImage && $row['type'] === 'image') $reference['legacyImage'] = true;
+                    if ($row['type'] === 'video' && ($embed = $this->videoEmbedUrl($url)) !== null) $reference['embedUrl'] = $embed;
+                }
+                $items[] = $reference;
+            }
+        } catch (\InvalidArgumentException) { return null; }
+        return ['items' => $items, 'media' => array_values($media)];
     }
 
     private function ownedMedia(

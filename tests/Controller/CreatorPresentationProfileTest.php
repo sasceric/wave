@@ -237,6 +237,125 @@ final class CreatorPresentationProfileTest extends WebTestCase
         self::assertSame('open', $em->find(Campaign::class, $campaignId)->getStatus());
     }
 
+    public function testReferenceRowsRoundTripAndUnsafeLinksCannotOverwriteExistingWork(): void
+    {
+        $owner = $this->creator('reference-owner');
+        $this->client->loginUser($owner, 'main');
+        $rows = [
+            ['type' => 'video', 'platform' => 'TikTok', 'url' => 'https://www.tiktok.com/@creator/video/123', 'embedUrl' => 'https://malicious.example/player'],
+            ['type' => 'image', 'platform' => 'Instagram', 'url' => 'https://www.instagram.com/p/photo/'],
+            ['type' => 'video', 'platform' => 'YouTube', 'url' => 'https://youtu.be/abcdefghijk'],
+            ['type' => 'image', 'platform' => 'Facebook', 'url' => 'https://www.facebook.com/photo/123'],
+        ];
+        $body = ['displayName' => 'Reference Owner', 'categories' => ['Beauty'], 'bio' => '', 'avatarUrl' => null, 'tags' => [], 'portfolio' => [['id' => 'references-one', 'title' => 'Several references', 'references' => $rows]]];
+        foreach ([1, 2] as $attempt) {
+            $this->update($body);
+            self::assertResponseIsSuccessful();
+            $saved = $this->payload()['data']['portfolio'][0];
+            self::assertCount(4, $saved['references']);
+            self::assertSame(array_column($rows, 'url'), array_column($saved['references'], 'url'));
+            self::assertSame(array_column($rows, 'platform'), array_column($saved['references'], 'platform'));
+            self::assertArrayNotHasKey('embedUrl', $saved['references'][0]);
+            self::assertSame('https://www.youtube-nocookie.com/embed/abcdefghijk', $saved['references'][2]['embedUrl']);
+            self::assertSame('video', $saved['type']);
+        }
+        foreach ([[], array_fill(0, 13, $rows[0]), [['type' => 'video', 'platform' => 'TikTok', 'url' => 'javascript:alert(1)']], [['type' => 'image', 'platform' => 'All', 'url' => '/media/private.webp', 'legacyImage' => true]], [['type' => 'video', 'platform' => 'Fake', 'url' => 'https://example.com']], [['type' => 'image', 'platform' => 'All', 'url' => 'https://user:password@example.com']]] as $invalid) {
+            $body['portfolio'][0]['references'] = $invalid;
+            $this->update($body);
+            self::assertResponseStatusCodeSame(400);
+        }
+        $this->client->request('GET', '/api/auth/me');
+        self::assertCount(4, $this->payload()['data']['profile']['portfolio'][0]['references']);
+        $this->client->request('GET', '/api/creators/reference-owner');
+        self::assertCount(4, $this->payload()['data']['portfolio'][0]['references']);
+        $body['portfolio'][0]['references'] = $rows;
+        $body['portfolio'][0]['publicPermission'] = false;
+        $this->update($body);
+        self::assertResponseIsSuccessful();
+        $this->client->request('GET', '/api/creators/reference-owner');
+        self::assertSame([], $this->payload()['data']['portfolio']);
+    }
+
+    public function testLegacyWorkCanBeEditedIntoReferenceRowsWithoutLosingImagesVideosOrDeliverables(): void
+    {
+        $owner = $this->creator('legacy-reference-owner');
+        $em = self::getContainer()->get(EntityManagerInterface::class);
+        $old = ['id' => 'legacy-reference', 'title' => 'Legacy project', 'type' => 'image', 'url' => 'https://cdn.example.test/legacy.webp', 'platform' => 'Instagram', 'postUrl' => 'https://instagram.com/p/post/', 'media' => [['type' => 'video', 'url' => 'https://youtu.be/abcdefghijk']], 'deliverables' => [['quantity' => 3, 'format' => 'photo', 'duration' => null]]];
+        $owner->getCreator()->setPortfolio([$old]);
+        $em->flush();
+        $this->client->loginUser($owner, 'main');
+        $body = ['displayName' => 'Legacy Owner', 'categories' => ['Beauty'], 'bio' => '', 'avatarUrl' => null, 'tags' => [], 'portfolio' => [$old]];
+        // Existing clients can continue saving the original shape unchanged.
+        $this->update($body);
+        self::assertResponseIsSuccessful();
+        $body['portfolio'][0]['references'] = [
+            ['type' => 'image', 'platform' => 'Instagram', 'url' => 'https://cdn.example.test/legacy.webp'],
+            ['type' => 'video', 'platform' => 'YouTube', 'url' => 'https://youtu.be/abcdefghijk'],
+            ['type' => 'image', 'platform' => 'Instagram', 'url' => 'https://instagram.com/p/post/'],
+        ];
+        foreach ([1, 2] as $attempt) {
+            $this->update($body);
+            self::assertResponseIsSuccessful();
+            $saved = $this->payload()['data']['portfolio'][0];
+            self::assertSame('https://cdn.example.test/legacy.webp', $saved['references'][0]['url']);
+            self::assertTrue($saved['references'][0]['legacyImage']);
+            self::assertCount(3, $saved['references']);
+            self::assertSame($old['deliverables'], $saved['deliverables']);
+            self::assertSame($old['postUrl'], $saved['postUrl']);
+        }
+    }
+
+    public function testUploadedReferenceImagesKeepOwnershipAndPublicVisibilityRules(): void
+    {
+        $owner = $this->creator('reference-image-owner');
+        $other = $this->creator('reference-image-other');
+        $em = self::getContainer()->get(EntityManagerInterface::class);
+        $storage = self::getContainer()->get(MediaStorage::class);
+        $folder = new MediaFolder('creator-portfolio', 'Portfolio');
+        $em->persist($folder);
+        $file = new UploadedFile(dirname(__DIR__, 2).'/public/images/home-faq-creator.webp', 'reference.webp', test: true);
+        $media = [];
+        try {
+            foreach ([$owner, $other] as $account) {
+                $stored = $storage->store($file, $folder, $account);
+                $image = new Media($folder, $account, 'reference.webp', $stored['path'], $stored['mimeType'], $stored['fileSize']);
+                $em->persist($image);
+                $media[] = $image;
+            }
+            $em->flush();
+            $this->client->loginUser($owner, 'main');
+            $body = ['displayName' => 'Reference Images', 'categories' => ['Beauty'], 'bio' => '', 'avatarUrl' => null, 'tags' => [], 'portfolio' => [[
+                'id' => 'reference-images', 'title' => 'Images and posts', 'publicPermission' => false, 'references' => [
+                    ['type' => 'video', 'platform' => 'TikTok', 'url' => 'https://www.tiktok.com/@creator/video/123'],
+                    ['type' => 'image', 'platform' => 'Instagram', 'mediaId' => $media[0]->getId(), 'url' => 'https://www.instagram.com/p/photo/'],
+                ],
+            ]]];
+            foreach ([1, 2] as $attempt) {
+                $this->update($body);
+                self::assertResponseIsSuccessful();
+                $reference = $this->payload()['data']['portfolio'][0]['references'][1];
+                self::assertSame($media[0]->getUrl(), $reference['imageUrl']);
+                self::assertSame('https://www.instagram.com/p/photo/', $reference['url']);
+            }
+            $body['portfolio'][0]['references'][1]['mediaId'] = $media[1]->getId();
+            $this->update($body);
+            self::assertResponseStatusCodeSame(400);
+            $this->client->restart();
+            $this->client->request('GET', $media[0]->getUrl());
+            self::assertResponseStatusCodeSame(404);
+            $body['portfolio'][0]['references'][1]['mediaId'] = $media[0]->getId();
+            $body['portfolio'][0]['publicPermission'] = true;
+            $this->client->loginUser($owner, 'main');
+            $this->update($body);
+            self::assertResponseIsSuccessful();
+            $this->client->restart();
+            $this->client->request('GET', $media[0]->getUrl());
+            self::assertResponseIsSuccessful();
+        } finally {
+            foreach ($media as $image) $storage->remove($image);
+        }
+    }
+
     public function testExtendedFieldsSurviveAndForgedReferencesCannotOverwriteTheProfile(): void
     {
         $owner = $this->creator('studio-owner');

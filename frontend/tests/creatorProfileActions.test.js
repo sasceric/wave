@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict'
+import { workImage } from '../src/lib/creatorPresentation.js'
 import test from 'node:test'
 import { ref } from 'vue'
 import { setupView } from './setupView.js'
@@ -78,7 +79,7 @@ test('overflowing tabs scroll horizontally without trapping the page at the end'
 })
 
 test('public presentation uses the largest known channel and omits private work', async () => {
-  const { state } = await setupView('../src/components/creators/CreatorPresentationPreview.vue', {}, {
+  const { state } = await setupView('../src/components/creators/CreatorPresentationPreview.vue', { '../../lib/creatorPresentation': { workImage } }, {
     profile: {
       socialProfiles: [{ platform: 'TikTok', followers: 18000 }, { platform: 'Instagram', followers: 24800 }, { platform: 'Spotify', followers: null }],
       portfolio: [{ id: 'public', type: 'image', url: '/work.webp' }, { id: 'private', type: 'image', url: '/private.webp', publicPermission: false }],

@@ -2801,6 +2801,14 @@
     "save": "URL speichern"
   },
   "studio": {
+    "references": "Inhaltsreferenzen",
+    "referencesHint": "Füge für jeden Beitrag, jedes Bild oder Video einen Link hinzu. YouTube und Vimeo bieten eine Videovorschau; andere Links öffnen den Beitrag.",
+    "addReference": "Referenz hinzufügen",
+    "referenceNumber": "Referenz {number}",
+    "referenceUrl": "Beitrags- oder Inhalts-URL",
+    "referenceUpload": "Bild vom Gerät hinzufügen",
+    "viewReference": "Inhalt ansehen",
+    "otherPlatform": "Andere Plattform",
     "publicAudience": "Meine Zielgruppe",
     "publicAudienceIntro": "Wen meine Inhalte erreichen und was diese Menschen ansehen.",
     "languageAndContent": "Sprache und Inhalte",
