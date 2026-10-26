@@ -10,6 +10,8 @@ import {
   ClipboardList,
   Megaphone,
   Mail,
+  ShieldCheck,
+  ShieldOff,
   Trash2,
   Users,
 } from '@lucide/vue'
@@ -40,6 +42,8 @@ const loading = ref(false)
 const saving = ref(false)
 const deleting = ref(false)
 const approving = ref(false)
+const adminRequest = ref(null)
+const adminSaving = ref(false)
 const error = ref('')
 const notice = ref('')
 const reviewRequest = ref(null)
@@ -371,6 +375,28 @@ async function saveCuration() {
   }
 }
 
+// Administrator rights for a creator or company account (not your own).
+function requestAdminChange(row) {
+  adminRequest.value = { row, grant: !row.isAdmin, name: row.displayName ?? row.name ?? row.email ?? String(row.id) }
+}
+async function confirmAdminChange() {
+  const request = adminRequest.value
+  if (!request || adminSaving.value) return
+  adminSaving.value = true
+  error.value = ''
+  notice.value = ''
+  try {
+    const { data } = await apiRequest(`/admin/catalog/${section.value}/${request.row.id}/admin`, { method: 'PUT', body: { admin: request.grant } })
+    Object.assign(request.row, data)
+    notice.value = t(request.grant ? 'adminProfiles.admin.granted' : 'adminProfiles.admin.removed', { name: request.name })
+  } catch (cause) {
+    error.value = cause.message
+  } finally {
+    adminSaving.value = false
+    adminRequest.value = null
+  }
+}
+
 function requestDelete(ids, name = null) {
   if (ids.length === 0) return
   deleteRequest.value = { ids, name }
@@ -683,6 +709,9 @@ onMounted(updateCreatedAtClock)
                 <button v-if="isProfileList" class="admin-row-actions__item" type="button" role="menuitem" :disabled="visibilitySaving || !row.canChangeVisibility || (!row.publicVisible && !row.canShowProfile)" :title="!row.canChangeVisibility ? t('adminProfiles.noAccount') : !row.publicVisible && !row.canShowProfile ? t('adminProfiles.showRequirements') : undefined" @click="changeVisibility(row)">
                   <EyeOff v-if="row.publicVisible" :size="15" aria-hidden="true" /><Eye v-else :size="15" aria-hidden="true" />{{ t(row.publicVisible ? 'adminProfiles.hide' : 'adminProfiles.show') }}
                 </button>
+                <button v-if="['creators', 'companies'].includes(section) && row.canChangeAdmin && row.accountId !== currentUser?.id" class="admin-row-actions__item" type="button" role="menuitem" :disabled="adminSaving" @click="requestAdminChange(row)">
+                  <ShieldOff v-if="row.isAdmin" :size="15" aria-hidden="true" /><ShieldCheck v-else :size="15" aria-hidden="true" />{{ t(row.isAdmin ? 'adminProfiles.admin.remove' : 'adminProfiles.admin.make') }}
+                </button>
                 <button
                   class="admin-row-actions__item admin-row-actions__item--danger"
                   type="button"
@@ -712,6 +741,16 @@ onMounted(updateCreatedAtClock)
       <p>{{ t('adminProfiles.reminderLimit') }}</p>
       <LocalizedLink :to="{ name: 'admin-email-templates', query: { template: reminderRequest?.kind === 'verification' ? 'verification_reminder' : 'profile_tip' } }">{{ t('adminProfiles.editReminderTemplates') }}</LocalizedLink>
     </ConfirmationModal>
+    <ConfirmationModal
+      :open="adminRequest !== null"
+      :title="t(adminRequest?.grant ? 'adminProfiles.admin.makeTitle' : 'adminProfiles.admin.removeTitle', { name: adminRequest?.name || '' })"
+      :message="t(adminRequest?.grant ? 'adminProfiles.admin.makeMessage' : 'adminProfiles.admin.removeMessage', { name: adminRequest?.name || '' })"
+      :confirm-label="t(adminRequest?.grant ? 'adminProfiles.admin.make' : 'adminProfiles.admin.remove')"
+      :cancel-label="t('adminDashboard.cancelAction')"
+      :loading="adminSaving"
+      @update:open="!$event && !adminSaving && (adminRequest = null)"
+      @confirm="confirmAdminChange"
+    />
     <ConfirmationModal
       :open="deleteRequest !== null"
       :title="t('adminDashboard.confirmDeleteTitle')"

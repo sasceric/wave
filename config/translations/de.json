@@ -107,7 +107,8 @@
     "legal_terms_required": "Akzeptieren Sie die aktuellen Nutzungsbedingungen und bestätigen Sie, dass Sie mindestens 18 sind.",
     "profile_tips_disabled": "Diese Person hat Profiltipps ausgeschaltet.",
     "profile_already_complete": "Dieses Profil ist bereits vollständig.",
-    "profile_reminder_unavailable": "Profiltipps werden erst nach Freigabe des Kontos und Bestätigung der E-Mail gesendet."
+    "profile_reminder_unavailable": "Profiltipps werden erst nach Freigabe des Kontos und Bestätigung der E-Mail gesendet.",
+    "admin_self_change": "Du kannst deine eigenen Administratorrechte nicht ändern."
   },
   "account": {
     "verify": {

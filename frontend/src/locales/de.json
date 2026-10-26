@@ -3106,6 +3106,17 @@
         "tips_disabled": "Diese Person hat Profiltipps ausgeschaltet, daher werden sie auch nicht manuell gesendet.",
         "pending_approval": "Die Tipps beginnen am Tag nach Freigabe des Kontos und Bestätigung der E-Mail."
       }
+    },
+    "admin": {
+      "make": "Zum Admin machen",
+      "remove": "Admin entfernen",
+      "badge": "Admin",
+      "makeTitle": "{name} zum Admin machen?",
+      "removeTitle": "{name} als Admin entfernen?",
+      "makeMessage": "{name} erhält vollen Zugriff auf die Verwaltung: Registrierungen, Profile, Kampagnen, E-Mails und Einstellungen. Die Änderung gilt nach der nächsten Anmeldung.",
+      "removeMessage": "{name} hat keinen Zugriff mehr auf die Verwaltung. Konto und Profil bleiben unverändert. Die Änderung gilt sofort und beendet die aktuelle Sitzung.",
+      "granted": "{name} ist jetzt Admin.",
+      "removed": "{name} ist kein Admin mehr."
     }
   },
   "imageUpload": {

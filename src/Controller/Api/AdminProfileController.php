@@ -49,6 +49,31 @@ final class AdminProfileController
         return new JsonResponse(['data' => AdminProfileResource::details($item, $locale, MarketplaceCategoryLabels::forLocale($em, $locale))], headers: ['Cache-Control' => 'private, no-store']);
     }
 
+    /** Give or remove administrator rights. Admins cannot change their own rights. */
+    #[Route('/api/admin/catalog/{kind}/{id}/admin', requirements: ['kind' => 'creators|companies', 'id' => '\d+'], methods: ['PUT'])]
+    public function administrator(string $kind, int $id, Request $request, Security $security, EntityManagerInterface $em, CsrfTokenManagerInterface $csrf, \Psr\Log\LoggerInterface $logger): JsonResponse
+    {
+        $locale = LocaleContext::fromRequest($request);
+        if ($locale === null) return new JsonResponse(['error' => ApiMessages::get('unsupported_language', 'bs')], 400);
+        $admin = ApiAccess::requireRole($security, 'ROLE_ADMIN', $locale);
+        if ($admin instanceof JsonResponse) return $admin;
+        if ($error = ApiAccess::requireCsrf($request, $csrf, $locale)) return $error;
+        $item = $em->find($kind === 'creators' ? Creator::class : Company::class, $id);
+        if (!$item instanceof Creator && !$item instanceof Company) return $this->missing($locale);
+        $owner = AdminProfileResource::owner($item);
+        $grant = JsonPayload::fromRequest($request)['admin'] ?? null;
+        if (!is_bool($grant)) return new JsonResponse(['error' => ApiMessages::get('invalid_request', $locale)], 400);
+        if ($owner === null || !AdminProfileResource::summary($item)['canChangeAdmin']) return $this->missing($locale);
+        if ($owner->getId() === $admin->getId()) return new JsonResponse(['error' => ApiMessages::get('admin_self_change', $locale)], 400);
+
+        $owner->setAdmin($grant);
+        $em->flush();
+        // Changed roles end that person's current sessions; they sign in again with the new rights.
+        $logger->notice('admin.role_changed', ['actorId' => $admin->getId(), 'targetId' => $owner->getId(), 'admin' => $grant]);
+
+        return new JsonResponse(['data' => AdminProfileResource::summary($item)], headers: ['Cache-Control' => 'private, no-store']);
+    }
+
     /** Send a profile completion email now: repeat the last one, or send the next one early. */
     #[Route('/api/admin/catalog/{kind}/{id}/profile-reminders', requirements: ['kind' => 'creators|companies|registrations', 'id' => '\d+'], methods: ['POST'])]
     public function profileReminder(

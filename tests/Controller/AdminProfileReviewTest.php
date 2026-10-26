@@ -124,6 +124,49 @@ final class AdminProfileReviewTest extends WebTestCase
         }
     }
 
+    public function testAdminCanGrantAndRemoveAdminRightsForCreatorsAndCompanies(): void
+    {
+        foreach ([false, true] as $company) {
+            $owner = $this->account($company ? 'role-company' : 'role-creator', true, $company);
+            $profile = $company ? $owner->getCompany() : $owner->getCreator();
+            $url = '/api/admin/catalog/'.($company ? 'companies' : 'creators').'/'.$profile->getId().'/admin';
+            $this->client->loginUser($owner);
+            $this->client->jsonRequest('PUT', $url, ['admin' => true], ['HTTP_X_CSRF_TOKEN' => $this->csrf()]);
+            self::assertResponseStatusCodeSame(403);
+            $this->client->loginUser($this->admin);
+            $this->client->jsonRequest('PUT', $url, ['admin' => true]); self::assertResponseStatusCodeSame(403);
+            $token = $this->csrf();
+            $this->client->jsonRequest('PUT', $url, ['admin' => 'yes'], ['HTTP_X_CSRF_TOKEN' => $token]); self::assertResponseStatusCodeSame(400);
+            $this->client->jsonRequest('PUT', $url, ['admin' => true], ['HTTP_X_CSRF_TOKEN' => $token]); self::assertResponseIsSuccessful();
+            self::assertTrue($this->payload()['data']['isAdmin']);
+            self::assertTrue($this->em->find(User::class, $owner->getId())->hasRole('ROLE_ADMIN'));
+            $this->client->jsonRequest('PUT', $url, ['admin' => false], ['HTTP_X_CSRF_TOKEN' => $this->csrf()]); self::assertResponseIsSuccessful();
+            self::assertFalse($this->payload()['data']['isAdmin']);
+            $this->em->clear();
+            self::assertFalse($this->em->find(User::class, $owner->getId())->hasRole('ROLE_ADMIN'));
+            $this->admin = $this->em->find(User::class, $this->admin->getId());
+        }
+    }
+
+    public function testAdminRightsCannotChangeOwnOrUnverifiedAccounts(): void
+    {
+        $this->admin->setEmailVerified(true);
+        $this->admin->setCompany(new Company('review-admin', 'Admin company', 'Beauty'));
+        $this->em->flush();
+        $unverified = $this->account('role-unverified', true, false);
+        $unverified->setEmailVerified(false); $this->em->flush();
+        $this->client->loginUser($this->admin);
+        $token = $this->csrf();
+        $this->client->jsonRequest('PUT', '/api/admin/catalog/companies/'.$this->admin->getCompany()->getId().'/admin', ['admin' => false], ['HTTP_X_CSRF_TOKEN' => $token]);
+        self::assertResponseStatusCodeSame(400);
+        self::assertSame(ApiMessages::get('admin_self_change', 'bs'), $this->payload()['error']);
+        $this->client->jsonRequest('PUT', '/api/admin/catalog/creators/'.$unverified->getCreator()->getId().'/admin', ['admin' => true], ['HTTP_X_CSRF_TOKEN' => $token]);
+        self::assertResponseStatusCodeSame(404);
+        $this->em->clear();
+        self::assertTrue($this->em->find(User::class, $this->admin->getId())->hasRole('ROLE_ADMIN'));
+        self::assertFalse($this->em->find(User::class, $unverified->getId())->hasRole('ROLE_ADMIN'));
+    }
+
     private function account(string $key, bool $approved, bool $company): User
     {
         $owner = new User($key.'@example.test', $company ? 'ROLE_COMPANY' : 'ROLE_CREATOR');

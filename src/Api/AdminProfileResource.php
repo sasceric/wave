@@ -54,6 +54,10 @@ final class AdminProfileResource
             'hideMyAccount' => $owner?->isHideMyAccount() ?? false,
             'publicVisible' => $profile !== null && ($owner === null || (!$owner->isDeleted() && $owner->isApproved() && !$owner->isHideMyAccount())),
             'canChangeVisibility' => $manageable,
+            'isAdmin' => $owner?->hasRole('ROLE_ADMIN') ?? false,
+            // Staff rights can be given to any real, verified creator or company account.
+            'canChangeAdmin' => $owner !== null && !$owner->isDeleted() && $owner->isEmailVerified() && !$owner->isPresentationDemo()
+                && in_array($owner->getRoles()[0] ?? null, ['ROLE_CREATOR', 'ROLE_COMPANY'], true),
             'canShowProfile' => $manageable && $owner->isApproved() && $owner->isEmailVerified() && $owner->hasCompleteProfile(),
             'profileImage' => MediaImageResource::fromEntity($media, 96),
             'profileImageUrl' => $media?->getUrl() ?? $imageUrl,

@@ -3107,6 +3107,17 @@
         "tips_disabled": "Korisnik je isključio savete za profil, pa ih ne šaljemo ni ručno.",
         "pending_approval": "Saveti počinju dan posle odobrenja naloga i potvrde imejla."
       }
+    },
+    "admin": {
+      "make": "Postavi za admina",
+      "remove": "Ukloni admina",
+      "badge": "Admin",
+      "makeTitle": "Postaviti {name} za admina?",
+      "removeTitle": "Ukloniti admina {name}?",
+      "makeMessage": "{name} će imati pun pristup administraciji: registracije, profili, kampanje, imejlovi i podešavanja. Promena važi posle sledeće prijave.",
+      "removeMessage": "{name} više neće imati pristup administraciji. Nalog i profil ostaju kakvi jesu. Promena važi odmah; trenutna prijava se prekida.",
+      "granted": "{name} je sada admin.",
+      "removed": "{name} više nije admin."
     }
   },
   "imageUpload": {

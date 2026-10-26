@@ -3107,6 +3107,17 @@
         "tips_disabled": "Uporabnik je izklopil nasvete za profil, zato jih ne pošiljamo niti ročno.",
         "pending_approval": "Nasveti se začnejo dan po odobritvi računa in potrditvi e-pošte."
       }
+    },
+    "admin": {
+      "make": "Nastavi za skrbnika",
+      "remove": "Odstrani skrbnika",
+      "badge": "Skrbnik",
+      "makeTitle": "Nastaviti {name} za skrbnika?",
+      "removeTitle": "Odstraniti skrbnika {name}?",
+      "makeMessage": "{name} bo imel/a poln dostop do administracije: registracije, profili, kampanje, e-pošta in nastavitve. Sprememba velja po naslednji prijavi.",
+      "removeMessage": "{name} ne bo več imel/a dostopa do administracije. Račun in profil ostaneta nespremenjena. Sprememba velja takoj; trenutna prijava se prekine.",
+      "granted": "{name} je zdaj skrbnik.",
+      "removed": "{name} ni več skrbnik."
     }
   },
   "imageUpload": {

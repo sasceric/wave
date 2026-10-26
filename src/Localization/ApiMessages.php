@@ -6,6 +6,7 @@ final class ApiMessages
 {
     private const MESSAGES = [
         'bs' => [
+            'admin_self_change' => 'Ne možeš mijenjati vlastita administratorska prava.',
             'profile_tips_disabled' => 'Korisnik je isključio savjete za profil.',
             'profile_already_complete' => 'Profil je već potpuno popunjen.',
             'profile_reminder_unavailable' => 'Savjeti za profil šalju se tek kad je račun odobren i e-mail potvrđen.',
@@ -116,6 +117,7 @@ final class ApiMessages
             'newsletter_email_failed' => 'Potvrdni e-mail nije poslan. Pokušaj ponovo kasnije.',
         ],
         'hr' => [
+            'admin_self_change' => 'Ne možeš mijenjati vlastita administratorska prava.',
             'profile_tips_disabled' => 'Korisnik je isključio savjete za profil.',
             'profile_already_complete' => 'Profil je već potpuno popunjen.',
             'profile_reminder_unavailable' => 'Savjeti za profil šalju se tek kad je račun odobren i e-pošta potvrđena.',
@@ -226,6 +228,7 @@ final class ApiMessages
             'newsletter_email_failed' => 'Potvrdna e-pošta nije poslana. Pokušaj ponovno kasnije.',
         ],
         'sr' => [
+            'admin_self_change' => 'Ne možeš da menjaš sopstvena administratorska prava.',
             'profile_tips_disabled' => 'Korisnik je isključio savete za profil.',
             'profile_already_complete' => 'Profil je već potpuno popunjen.',
             'profile_reminder_unavailable' => 'Saveti za profil šalju se tek kad je nalog odobren i imejl potvrđen.',
@@ -336,6 +339,7 @@ final class ApiMessages
             'newsletter_email_failed' => 'Potvrdni e-mail nije poslat. Pokušaj ponovo kasnije.',
         ],
         'cnr' => [
+            'admin_self_change' => 'Ne možeš mijenjati sopstvena administratorska prava.',
             'profile_tips_disabled' => 'Korisnik je isključio savjete za profil.',
             'profile_already_complete' => 'Profil je već potpuno popunjen.',
             'profile_reminder_unavailable' => 'Savjeti za profil šalju se tek kad je nalog odobren i e-mail potvrđen.',
@@ -446,6 +450,7 @@ final class ApiMessages
             'newsletter_email_failed' => 'Potvrdni e-mail nije poslat. Pokušaj ponovo kasnije.',
         ],
         'sl' => [
+            'admin_self_change' => 'Svojih skrbniških pravic ne moreš spreminjati.',
             'profile_tips_disabled' => 'Uporabnik je izklopil nasvete za profil.',
             'profile_already_complete' => 'Profil je že v celoti izpolnjen.',
             'profile_reminder_unavailable' => 'Nasveti za profil se pošiljajo šele, ko je račun odobren in e-pošta potrjena.',
@@ -556,6 +561,7 @@ final class ApiMessages
             'newsletter_email_failed' => 'Potrditvenega e-poštnega sporočila ni bilo mogoče poslati. Poskusi znova pozneje.',
         ],
         'en' => [
+            'admin_self_change' => 'You cannot change your own administrator rights.',
             'profile_tips_disabled' => 'This user switched profile tips off.',
             'profile_already_complete' => 'This profile is already complete.',
             'profile_reminder_unavailable' => 'Profile tips are sent only after the account is approved and the email is verified.',
