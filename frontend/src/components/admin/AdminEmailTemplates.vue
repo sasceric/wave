@@ -70,11 +70,11 @@ const templateLabels = computed(() => ({
     title: t('adminDashboard.unreadMessageReminderEmailTemplate'),
     description: t('adminDashboard.unreadMessageReminderEmailTemplateHint'),
   },
-  // The four profile tips emails, sent on days 1, 4, 10 and 21.
-  ...Object.fromEntries([1, 4, 10, 21].map((day, index) => [`profile_reminder_${index + 1}`, {
-    title: t('adminDashboard.profileReminderEmailTemplate', { n: index + 1, day }),
+  // One layout for the four profile tips emails (days 1, 4, 10 and 21).
+  profile_reminder: {
+    title: t('adminDashboard.profileReminderEmailTemplate'),
     description: t('adminDashboard.profileReminderEmailTemplateHint'),
-  }])),
+  },
   campaign_alert: {
     title: t('adminDashboard.campaignAlertEmailTemplate'),
     description: t('adminDashboard.campaignAlertEmailTemplateHint'),

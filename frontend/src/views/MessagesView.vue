@@ -276,6 +276,12 @@ const counterpartAvatar = computed(() => (
     ? selectedCreator.value?.avatarUrl || null
     : selectedCompany.value?.logoUrl || null
 ))
+// Public profile of the other side of the thread; none for deleted accounts.
+const counterpartRoute = computed(() => {
+  const profile = selectedProvider.value ? selectedCompany.value : selectedCreator.value
+  if (!profile?.slug || profile.deleted) return null
+  return { name: selectedProvider.value ? 'company-profile' : profile.profileRoute || 'creator-profile', params: { slug: profile.slug } }
+})
 const currentAvatar = computed(() => (
   currentUser.value?.profile?.avatarUrl
   || currentUser.value?.profile?.logoUrl
@@ -1369,15 +1375,24 @@ function messageTimeDescription(value) {
             >
               <ChevronLeft :size="22" aria-hidden="true" />
             </button>
-            <span class="campaign-messages__avatar campaign-messages__avatar--large">
+            <component
+              :is="counterpartRoute ? LocalizedLink : 'span'"
+              :to="counterpartRoute || undefined"
+              class="campaign-messages__avatar campaign-messages__avatar--large"
+              :aria-hidden="counterpartRoute ? 'true' : undefined"
+              :tabindex="counterpartRoute ? -1 : undefined"
+            >
               <img v-if="counterpartAvatar" :src="counterpartAvatar" alt="" loading="lazy">
               <span v-else>{{ initials(counterpartName) }}</span>
-            </span>
+            </component>
             <div class="campaign-messages__thread-person">
-              <h2>{{ counterpartName }}</h2>
+              <h2>
+                <LocalizedLink v-if="counterpartRoute" class="campaign-messages__person-link" :to="counterpartRoute">{{ counterpartName }}</LocalizedLink>
+                <template v-else>{{ counterpartName }}</template>
+              </h2>
               <LocalizedLink
                 v-if="selectedConversation?.campaign?.slug"
-                :to="{ name: !selectedProvider ? 'account-campaign-detail' : 'campaign-detail', params: { slug: selectedConversation.campaign.slug } }"
+                :to="{ name: 'campaign-detail', params: { slug: selectedConversation.campaign.slug } }"
               >
                 {{ selectedConversation.campaign.title }}
               </LocalizedLink>

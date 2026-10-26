@@ -157,13 +157,12 @@ final class ProfileReminderBatch
             'unsubscribeUrl' => $this->preferences->pageUrl($id, EmailPreferences::PROFILE_TIPS, $locale),
             'settingsUrl' => $this->preferences->pageUrl($id, null, $locale),
         ]);
-        $key = self::templateKey($stage);
-        // Admins can edit each reminder per language (Admin → Email templates).
+        $key = self::TEMPLATE_KEY;
+        // One template per language for all four emails (Admin → Email templates); {{subject}} is this email's own subject.
         $custom = $this->entityManager->getRepository(EmailTemplate::class)->findOneBy(['templateKey' => $key, 'locale' => $locale]);
         $subject = $custom instanceof EmailTemplate
-            ? strtr($custom->getSubject(), ['{{score}}' => $variables['score'], '{{firstStep}}' => $variables['firstStep']])
+            ? strtr($custom->getSubject(), ['{{subject}}' => $variables['subject'], '{{score}}' => $variables['score'], '{{firstStep}}' => $variables['firstStep']])
             : $variables['subject'];
-        unset($variables['subject']);
         $text = implode("\n\n", [
             $variables['greeting'], $variables['message'], $variables['scoreLabel'].': '.$variables['score'].'%',
             $variables['stepsLabel'].":\n".$variables['steps'], $variables['buttonLabel'].":\n".$variables['actionUrl'],
@@ -180,26 +179,20 @@ final class ProfileReminderBatch
         $this->mailer->send($email);
     }
 
-    public static function templateKey(int $stage): string
+    public const TEMPLATE_KEY = 'profile_reminder';
+
+    /** Subject shown in the admin editor: {{subject}} is replaced with the built-in subject of the email being sent. */
+    public function defaultSubject(): string
     {
-        return 'profile_reminder_'.max(1, min(count(self::SCHEDULE_DAYS), $stage));
+        return '{{subject}}';
     }
 
-    /** Subject shown in the admin editor; {{score}} and {{firstStep}} are filled in when sending. */
-    public function defaultSubject(int $stage, string $locale): string
+    /** Preview with the first email's text; the other three use the same layout. @return array<string, string> */
+    public function previewVariables(string $locale): array
     {
-        return ProfileReminderEmailCopy::forStage($locale, 'creator', $stage, '{{score}}', '{{firstStep}}')['subject'];
-    }
-
-    /** @return array<string, string> */
-    public function previewVariables(int $stage, string $locale): array
-    {
-        $variables = $this->variables($locale, 'creator', $stage, 35, [['key' => 'works', 'points' => 20], ['key' => 'bio', 'points' => 15]], 'Amina Kovač', [
+        return $this->variables($locale, 'creator', 1, 35, [['key' => 'works', 'points' => 20], ['key' => 'bio', 'points' => 15]], 'Amina Kovač', [
             'unsubscribeUrl' => 'https://wave.ba/example-unsubscribe', 'settingsUrl' => 'https://wave.ba/example-email-settings',
         ]);
-        unset($variables['subject']);
-
-        return $variables;
     }
 
     /**

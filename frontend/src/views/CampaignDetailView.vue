@@ -263,16 +263,21 @@ onMounted(loadCampaign)
               <RouterLink v-if="!campaign.company.deleted" class="campaign-section__link" :to="{ name: 'company-profile', params: { slug: campaign.company.slug } }">{{ t('companyDirectory.viewProfile') }} <ArrowRight :size="15" aria-hidden="true" /></RouterLink>
             </header>
             <div class="campaign-detail-card campaign-company">
-              <div class="campaign-company__heading">
+              <component
+                :is="campaign.company.deleted ? 'div' : RouterLink"
+                class="campaign-company__heading"
+                :class="{ 'campaign-company__heading--link': !campaign.company.deleted }"
+                :to="campaign.company.deleted ? undefined : { name: 'company-profile', params: { slug: campaign.company.slug } }"
+              >
                 <span class="campaign-brand__logo campaign-brand__logo--large">
-                  <img v-if="campaign.company.logoUrl" :src="campaign.company.logoUrl" :alt="campaign.company.name">
+                  <img v-if="campaign.company.logoUrl" :src="campaign.company.logoUrl" alt="">
                   <WaveLogo v-else mark />
                 </span>
                 <div>
                   <strong>{{ campaign.company.name }}<BadgeCheck v-if="campaign.company.verified" :size="15" :aria-label="t('campaignCard.verified')" /></strong>
                   <small>{{ campaign.company.industry }}</small>
                 </div>
-              </div>
+              </component>
               <RichTextContent v-if="campaign.company.about" :html="campaign.company.about" />
               <p v-else class="campaign-company__empty">{{ t('companyProfile.profileLabel') }}</p>
             </div>

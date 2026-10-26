@@ -38,10 +38,7 @@ final class EmailTemplateController
         'credit_code_assigned',
         'verification_reminder',
         'profile_tip',
-        'profile_reminder_1',
-        'profile_reminder_2',
-        'profile_reminder_3',
-        'profile_reminder_4',
+        'profile_reminder',
         'campaign_alert',
         'account_deleted',
         'terms_updated',
@@ -86,7 +83,7 @@ final class EmailTemplateController
                     $key === 'contact' => ContactEmailCopy::previewVariables($locale),
                     $key === 'subscribed' => $subscriberEmailSender->previewVariables($locale),
                     $key === 'campaign_alert' => $campaignAlerts->previewVariables($locale),
-                    str_starts_with($key, 'profile_reminder_') => $profileReminders->previewVariables((int) substr($key, -1), $locale),
+                    $key === 'profile_reminder' => $profileReminders->previewVariables($locale),
                     default => $accountEmailSender->previewVariables($key, $locale),
                 },
             ];
@@ -160,8 +157,8 @@ final class EmailTemplateController
         if ($key === 'campaign_alert') {
             return $campaignAlerts->defaultSubject($locale);
         }
-        if (str_starts_with($key, 'profile_reminder_')) {
-            return $profileReminders->defaultSubject((int) substr($key, -1), $locale);
+        if ($key === 'profile_reminder') {
+            return $profileReminders->defaultSubject();
         }
         if ($key === 'contact') {
             return ContactEmailCopy::forLocale($locale)['subject'];
