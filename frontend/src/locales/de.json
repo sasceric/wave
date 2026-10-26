@@ -1454,7 +1454,14 @@
     "editFaq": "FAQ bearbeiten",
     "questionFor": "Frage auf",
     "answerFor": "Antwort auf",
-    "faqSaved": "FAQ gespeichert."
+    "faqSaved": "FAQ gespeichert.",
+    "categoriesTab": "Bereiche",
+    "faqsTab": "FAQ",
+    "searchCatalog": "Bereiche und Fragen suchen…",
+    "statusFilter": "Status",
+    "allStatuses": "Alle Status",
+    "results": "{count} von {total} angezeigt",
+    "noResults": "Keine Ergebnisse. Ändere die Suche oder den Filter."
   },
   "adminDashboard": {
     "eyebrow": "Wave-Verwaltung",

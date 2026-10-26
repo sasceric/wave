@@ -1454,7 +1454,14 @@
     "editFaq": "Edit FAQ",
     "questionFor": "Question in",
     "answerFor": "Answer in",
-    "faqSaved": "FAQ saved."
+    "faqSaved": "FAQ saved.",
+    "categoriesTab": "Areas",
+    "faqsTab": "FAQ",
+    "searchCatalog": "Search areas and questions…",
+    "statusFilter": "Status",
+    "allStatuses": "All statuses",
+    "results": "Showing {count} of {total}",
+    "noResults": "No results. Change your search or filter."
   },
   "adminDashboard": {
     "eyebrow": "Wave administration",

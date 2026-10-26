@@ -1455,7 +1455,14 @@
     "editFaq": "Uredi često pitanje",
     "questionFor": "Pitanje na jeziku",
     "answerFor": "Odgovor na jeziku",
-    "faqSaved": "Često pitanje je sačuvano."
+    "faqSaved": "Često pitanje je sačuvano.",
+    "categoriesTab": "Oblasti",
+    "faqsTab": "FAQ",
+    "searchCatalog": "Pretraži oblasti i pitanja…",
+    "statusFilter": "Status",
+    "allStatuses": "Svi statusi",
+    "results": "Prikazano {count} od {total}",
+    "noResults": "Nema rezultata. Promijeni pretragu ili filter."
   },
   "adminDashboard": {
     "eyebrow": "Wave administracija",

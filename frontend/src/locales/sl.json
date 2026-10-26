@@ -1455,7 +1455,14 @@
     "editFaq": "Uredi pogosto vprašanje",
     "questionFor": "Vprašanje v jeziku",
     "answerFor": "Odgovor v jeziku",
-    "faqSaved": "Pogosto vprašanje je shranjeno."
+    "faqSaved": "Pogosto vprašanje je shranjeno.",
+    "categoriesTab": "Področja",
+    "faqsTab": "FAQ",
+    "searchCatalog": "Poišči področja in vprašanja…",
+    "statusFilter": "Stanje",
+    "allStatuses": "Vsa stanja",
+    "results": "Prikazanih {count} od {total}",
+    "noResults": "Ni rezultatov. Spremeni iskanje ali filter."
   },
   "adminDashboard": {
     "eyebrow": "Administracija Wave",

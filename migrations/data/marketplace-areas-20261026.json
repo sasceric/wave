@@ -1,0 +1,74 @@
+[
+  {
+    "value": "Repairs and services",
+    "labels": {
+      "bs": "Servis i usluge",
+      "hr": "Servis i usluge",
+      "sr": "Servis i usluge",
+      "cnr": "Servis i usluge",
+      "sl": "Servis in storitve",
+      "en": "Repairs and services",
+      "de": "Reparatur und Dienstleistungen"
+    }
+  },
+  {
+    "value": "Cycling",
+    "labels": {
+      "bs": "Biciklizam",
+      "hr": "Biciklizam",
+      "sr": "Biciklizam",
+      "cnr": "Biciklizam",
+      "sl": "Kolesarstvo",
+      "en": "Cycling",
+      "de": "Radsport"
+    }
+  },
+  {
+    "value": "Mountain biking",
+    "labels": {
+      "bs": "Brdski biciklizam",
+      "hr": "Brdski biciklizam",
+      "sr": "Brdski biciklizam",
+      "cnr": "Brdski biciklizam",
+      "sl": "Gorsko kolesarstvo",
+      "en": "Mountain biking",
+      "de": "Mountainbiken"
+    }
+  },
+  {
+    "value": "Electric scooters",
+    "labels": {
+      "bs": "Električni romobili",
+      "hr": "Električni romobili",
+      "sr": "Električni trotineti",
+      "cnr": "Električni trotineti",
+      "sl": "Električni skiroji",
+      "en": "Electric scooters",
+      "de": "E-Scooter"
+    }
+  },
+  {
+    "value": "Adventure",
+    "labels": {
+      "bs": "Avantura i aktivnosti na otvorenom",
+      "hr": "Avantura i aktivnosti na otvorenom",
+      "sr": "Avantura i aktivnosti na otvorenom",
+      "cnr": "Avantura i aktivnosti na otvorenom",
+      "sl": "Pustolovščine in dejavnosti na prostem",
+      "en": "Adventure and outdoor activities",
+      "de": "Abenteuer und Outdoor-Aktivitäten"
+    }
+  },
+  {
+    "value": "Extreme sports",
+    "labels": {
+      "bs": "Ekstremni sportovi",
+      "hr": "Ekstremni sportovi",
+      "sr": "Ekstremni sportovi",
+      "cnr": "Ekstremni sportovi",
+      "sl": "Ekstremni športi",
+      "en": "Extreme sports",
+      "de": "Extremsport"
+    }
+  }
+]
