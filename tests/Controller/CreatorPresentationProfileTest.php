@@ -6,6 +6,7 @@ use App\Entity\Creator;
 use App\Entity\Media;
 use App\Entity\MediaFolder;
 use App\Entity\User;
+use App\Entity\{Application, Campaign, CampaignReview, Company, Offer, UserBlock};
 use App\Service\MediaStorage;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Tools\SchemaTool;
@@ -47,6 +48,94 @@ final class CreatorPresentationProfileTest extends WebTestCase
     {
         $csrf = $this->token();
         $this->client->request('PUT', '/api/me/profile', server: ['CONTENT_TYPE' => 'application/json', 'HTTP_X_CSRF_TOKEN' => $csrf], content: json_encode($body, JSON_THROW_ON_ERROR));
+    }
+
+    public function testCompletedCreatorAndAgencyWorkCanBeSelectedAndSavedWhileCampaignStaysOpen(): void
+    {
+        $this->client->disableReboot();
+        $creator = $this->creator('portfolio-provider');
+        $stranger = $this->creator('portfolio-stranger');
+        $em = self::getContainer()->get(EntityManagerInterface::class);
+        $brand = new User('portfolio-brand@example.test', 'ROLE_COMPANY');
+        $brand->setPassword('unused');
+        $brand->setCompany(new Company('portfolio-brand', 'Portfolio Brand', 'Beauty'));
+        $agency = new User('portfolio-agency@example.test', 'ROLE_COMPANY');
+        $agency->setPassword('unused');
+        $company = new Company('portfolio-agency', 'Portfolio Agency', 'Beauty');
+        $company->setCompanyType('agency');
+        $agency->setCompany($company);
+        $em->persist($brand);
+        $em->persist($agency);
+        $em->flush();
+        \App\Account\AgencyProfiles::ensure($agency, $em);
+        $makeCampaign = static fn (string $slug): Campaign => new Campaign($slug, $slug, 'Campaign summary', '<p>Campaign brief.</p>', 'Beauty', ['Instagram'], ['Video'], 100, 300, 'Sarajevo', 2, new \DateTimeImmutable('+10 days'), new \DateTimeImmutable(), $brand->getCompany());
+        $campaign = $makeCampaign('open-with-completed-work');
+        $unfinished = $makeCampaign('work-in-progress');
+        $foreign = $makeCampaign('other-provider-only');
+        $legacy = $makeCampaign('legacy-finished-campaign');
+        $legacy->setStatus('finished');
+        foreach ([$campaign, $unfinished, $foreign, $legacy] as $item) $em->persist($item);
+        $offers = [];
+        foreach ([[$campaign, $creator], [$campaign, $agency], [$unfinished, $creator], [$foreign, $stranger], [$legacy, $creator]] as [$item, $provider]) {
+            $application = new Application($item, $provider->getCreator(), 'Portfolio test application.');
+            $offer = new Offer($application, 100, 'Agreed scope.');
+            $offer->respond('accepted');
+            $em->persist($application);
+            $em->persist($offer);
+            $offers[] = $offer;
+        }
+        // Another provider completing a campaign must never unlock it for this creator.
+        $offers[3]->completeWork();
+        $em->flush();
+        $this->client->loginUser($creator, 'main');
+        $this->client->request('GET', '/api/me/portfolio-campaigns');
+        self::assertResponseIsSuccessful();
+        self::assertSame([$legacy->getId()], array_column($this->payload()['data'], 'id'));
+
+        foreach (array_slice($offers, 0, 2) as $offer) {
+            $offer->completeWork();
+            $provider = $offer->getApplication()->getCreator()->getOwner();
+            $em->persist(new CampaignReview($offer->getApplication(), $brand, $provider, 5, 'Finished well.'));
+            $em->persist(new CampaignReview($offer->getApplication(), $provider, $brand, 5, 'Great collaboration.'));
+        }
+        $em->flush();
+        foreach ([$creator, $agency] as $provider) {
+            $this->client->loginUser($provider, 'main');
+            $this->client->request('GET', '/api/me/portfolio-campaigns');
+            self::assertResponseIsSuccessful();
+            $rows = $this->payload()['data'];
+            self::assertContains($campaign->getId(), array_column($rows, 'id'));
+            self::assertNotContains($unfinished->getId(), array_column($rows, 'id'));
+            self::assertNotContains($foreign->getId(), array_column($rows, 'id'));
+            $row = $rows[array_search($campaign->getId(), array_column($rows, 'id'), true)];
+            self::assertSame('Campaign summary', $row['summary']);
+            self::assertSame('<p>Campaign brief.</p>', $row['description']);
+            self::assertSame(['Instagram'], $row['channels']);
+            self::assertSame($offers[0]->getWorkCompletedAt()->format('Y-m-d'), $row['completedAt']);
+            self::assertNull($row['finishedAt']);
+            $body = $provider === $creator
+                ? ['displayName' => 'Portfolio Provider', 'categories' => ['Beauty'], 'bio' => '', 'avatarUrl' => null, 'tags' => []]
+                : ['name' => 'Portfolio Agency', 'companyType' => 'agency', 'industries' => ['Beauty']];
+            $body['portfolio'] = [['title' => 'Finished work', 'type' => 'video', 'url' => 'https://youtu.be/abcdefghijk', 'source' => 'wave', 'campaignId' => $campaign->getId()]];
+            $this->update($body);
+            self::assertResponseIsSuccessful();
+            $savedProfile = $provider === $creator ? $this->payload()['data'] : $this->payload()['data']['profile'];
+            self::assertSame('Portfolio Brand', $savedProfile['portfolio'][0]['client']);
+            self::assertSame($row['completedAt'], $savedProfile['portfolio'][0]['projectDate']);
+            foreach ([$unfinished, $foreign] as $invalid) {
+                $body['portfolio'][0]['campaignId'] = $invalid->getId();
+                $this->update($body);
+                self::assertResponseStatusCodeSame(400);
+            }
+        }
+        self::assertSame('open', $campaign->getStatus());
+        $em = self::getContainer()->get(EntityManagerInterface::class);
+        $em->persist(new UserBlock(bin2hex(random_bytes(16)), $em->getReference(User::class, $creator->getId()), $em->getReference(User::class, $brand->getId()), new \DateTimeImmutable(), null));
+        $em->flush();
+        $this->client->loginUser($creator, 'main');
+        $this->client->request('GET', '/api/me/portfolio-campaigns');
+        self::assertResponseIsSuccessful();
+        self::assertSame([], $this->payload()['data']);
     }
 
     public function testExtendedFieldsSurviveAndForgedReferencesCannotOverwriteTheProfile(): void

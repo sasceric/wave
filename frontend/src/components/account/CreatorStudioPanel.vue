@@ -18,6 +18,7 @@ import { emptyWork, PRESENTATION_PLATFORMS } from '../../lib/creatorPresentation
 import { apiGet, formatMoney } from '../../lib/api'
 import { dateOnly } from '../../lib/datePicker'
 import { CURRENCIES } from '../../lib/marketplace'
+import { htmlToPlainText } from '../../lib/profileDraft'
 const profile = defineModel('profile', { type: Object, required: true })
 const props = defineProps({ tab: { type: String, required: true }, editing: Boolean })
 const emit = defineEmits(['edit'])
@@ -69,11 +70,12 @@ const agencyCampaign = computed(() => {
     return campaign ? campaign.companyType === 'agency' : Boolean(work.value?.agency)
 })
 async function loadCampaigns(append = false) {
-    if (loading.value)
+    if (append && loading.value)
         return
     const token = ++generation
     loading.value = true
     loadError.value = ''
+    if (!append) { campaigns.value = []; nextCursor.value = null }
     try {
         const result = await apiGet(`/me/portfolio-campaigns${append && nextCursor.value ? `?before=${nextCursor.value}` : ''}`)
         if (token !== generation)
@@ -83,7 +85,7 @@ async function loadCampaigns(append = false) {
     }
     catch (cause) {
         if (token === generation)
-            loadError.value = cause.message
+            loadError.value = cause.message || t('studio.campaignLoadError')
     }
     finally {
         if (token === generation)
@@ -122,10 +124,11 @@ function pickCampaign(id) { const campaign = campaigns.value.find(row => row.id 
         work.value.client = campaign.company
         work.value.agency = ''
     }
-    if (!work.value.title)
-        work.value.title = campaign.title
-    if (!work.value.projectDate)
-        work.value.projectDate = campaign.finishedAt || ''
+    work.value.title = campaign.title.slice(0, 120)
+    work.value.summary = (campaign.summary || '').slice(0, 300)
+    work.value.brief = htmlToPlainText(campaign.description || '').slice(0, 1500)
+    work.value.projectDate = campaign.completedAt || campaign.finishedAt || ''
+    work.value.platform = campaign.channels?.length === 1 && PRESENTATION_PLATFORMS.includes(campaign.channels[0]) ? campaign.channels[0] : 'All'
 } }
 function changeType(item) { item.mediaId = null; item.url = ''; delete item.embedUrl; }
 function changeMediaType(item) { item.mediaId = null; item.url = ''; }
@@ -359,6 +362,23 @@ watch(locale, language => { const names = new Intl.DisplayNames([language === 'c
           </button>
         </nav>
         <div data-studio-step="1" v-show="step===1" class="form-grid">
+          <SingleSelect v-model="work.source" class="form-field--wide" :label="t('studio.source')" :options="choices(['wave','external','sample'])" @update:model-value="$event === 'wave' && loadCampaigns()" />
+          <template v-if="work.source==='wave'">
+            <SingleSelect
+              v-model="work.campaignId"
+              class="form-field--wide"
+              :label="t('studio.campaign')"
+              :options="campaignOptions"
+              :disabled="loading || !campaignOptions.length"
+              required
+              @update:model-value="pickCampaign"
+            />
+            <p class="creator-studio__hint form-field--wide">{{ t('studio.campaignHint') }}</p>
+            <p v-if="loading" class="creator-studio__hint form-field--wide" role="status">{{ t('studio.loadingCampaigns') }}</p>
+            <StatusMessage v-else-if="loadError" class="form-field--wide" variant="error">{{ loadError }} <button type="button" class="text-link" @click="loadCampaigns()">{{ t('directoryLoading.retry') }}</button></StatusMessage>
+            <p v-else-if="!campaignOptions.length" class="creator-studio__hint form-field--wide">{{ t('studio.noCompletedCollaborations') }}</p>
+            <button v-if="nextCursor && !loading" class="profile-editor__add form-field--wide" type="button" @click="loadCampaigns(true)">{{ t('studio.loadMore') }}</button>
+          </template>
           <SwitchField
             class="form-field--wide"
             :model-value="work.publicPermission?1:0"
@@ -374,27 +394,12 @@ watch(locale, language => { const names = new Intl.DisplayNames([language === 'c
             <span>{{ t('studio.summary') }}</span>
             <textarea v-model.trim="work.summary" maxlength="300"></textarea>
           </label>
-          <SingleSelect v-model="work.source" :label="t('studio.source')" :options="choices(['wave','external','sample'])" />
           <DatePicker
             :model-value="work.projectDate || ''"
             :label="t('studio.projectDate')"
             :placeholder="t('datePicker.placeholder')"
             @update:model-value="work.projectDate=$event"
           />
-          <template v-if="work.source==='wave'">
-            <SingleSelect
-              v-model="work.campaignId"
-              class="form-field--wide"
-              :label="t('studio.campaign')"
-              :options="campaignOptions"
-              required
-              @update:model-value="pickCampaign"
-            />
-            <button v-if="nextCursor" class="profile-editor__add" type="button" :disabled="loading" @click="loadCampaigns(true)">
-              {{ t('studio.loadMore') }}
-            </button>
-            <StatusMessage v-if="loadError" variant="error">{{ loadError }}</StatusMessage>
-          </template>
           <label v-if="work.source!=='sample'" class="form-field">
             <span>{{ t('studio.client') }}</span>
             <input v-model.trim="work.client" maxlength="120" :readonly="work.source==='wave' && !agencyCampaign" />

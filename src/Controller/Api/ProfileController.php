@@ -59,15 +59,29 @@ final class ProfileController
         if ($user->getCreator() === null) return new JsonResponse(['data' => [], 'meta' => ['hasMore' => false, 'nextCursor' => null]]);
         $before = max(0, $request->query->getInt('before'));
         $query = $entityManager->getRepository(\App\Entity\Application::class)->createQueryBuilder('a')
-            ->join('a.campaign', 'c')->addSelect('c')->join('c.company', 'p')->addSelect('p')->join('a.offer', 'o')
+            ->join('a.campaign', 'c')->addSelect('c')->join('c.company', 'p')->addSelect('p')->join('a.offer', 'o')->addSelect('o')
             ->leftJoin('p.owner', 'owner')->andWhere($blocks->visible('owner.id'))
             ->andWhere('(owner.id IS NULL OR owner.deletedAt IS NULL)')
-            ->where('a.creator = :creator')->andWhere("c.status = 'finished'")->andWhere("o.status = 'accepted'")
+            ->andWhere('a.creator = :creator')->andWhere("o.workCompletedAt IS NOT NULL OR c.status = 'finished'")->andWhere("o.status = 'accepted'")
             ->setParameter('creator', $user->getCreator())->orderBy('c.id', \SortDirection::Descending)->setMaxResults(21);
         if ($before) $query->andWhere('c.id < :before')->setParameter('before', $before);
         $rows = $query->getQuery()->getResult();
         $more = count($rows) > 20;
-        $data = array_map(static fn (\App\Entity\Application $a): array => ['id' => $a->getCampaign()->getId(), 'title' => $a->getCampaign()->getTitle(), 'company' => $a->getCampaign()->getCompany()->getName(), 'companyType' => $a->getCampaign()->getCompany()->getCompanyType(), 'finishedAt' => $a->getCampaign()->getFinishedAt()?->format('Y-m-d')], array_slice($rows, 0, 20));
+        $data = array_map(static function (\App\Entity\Application $application) use ($locale): array {
+            $campaign = $application->getCampaign();
+            $translation = $campaign->getTranslations()[$locale] ?? [];
+            return [
+                'id' => $campaign->getId(),
+                'title' => $translation['title'] ?? $campaign->getTitle(),
+                'summary' => $translation['summary'] ?? $campaign->getSummary(),
+                'description' => $translation['description'] ?? $campaign->getDescription(),
+                'channels' => $campaign->getChannels(),
+                'company' => $campaign->getCompany()->getName(),
+                'companyType' => $campaign->getCompany()->getCompanyType(),
+                'completedAt' => ($application->getOffer()?->getWorkCompletedAt() ?? $campaign->getFinishedAt())?->format('Y-m-d'),
+                'finishedAt' => $campaign->getFinishedAt()?->format('Y-m-d'),
+            ];
+        }, array_slice($rows, 0, 20));
         return new JsonResponse(['data' => $data, 'meta' => ['hasMore' => $more, 'nextCursor' => $more ? $data[array_key_last($data)]['id'] : null]]);
     }
 
@@ -556,8 +570,9 @@ final class ProfileController
                 if ($details['featured'] && ++$featured > 1) return null;
                 if ($details['source'] === 'wave') {
                     $application = $entityManager->getRepository(\App\Entity\Application::class)->findOneBy(['creator' => $creator, 'campaign' => $details['campaignId']]);
-                    if (!$application instanceof \App\Entity\Application || $application->getOffer()?->getStatus() !== 'accepted' || $application->getCampaign()->getStatus() !== 'finished') return null;
-                    $details['projectDate'] ??= $application->getCampaign()->getFinishedAt()?->format('Y-m-d');
+                    if (!$application instanceof \App\Entity\Application || $application->getOffer()?->getStatus() !== 'accepted'
+                        || ($application->getOffer()->getWorkCompletedAt() === null && $application->getCampaign()->getStatus() !== 'finished')) return null;
+                    $details['projectDate'] ??= ($application->getOffer()->getWorkCompletedAt() ?? $application->getCampaign()->getFinishedAt())?->format('Y-m-d');
                     $company = $application->getCampaign()->getCompany();
                     if ($company->getCompanyType() === 'agency') $details['agency'] = $company->getName();
                     else { $details['client'] = $company->getName(); $details['agency'] = ''; }

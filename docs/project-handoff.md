@@ -784,3 +784,15 @@ supersedes earlier newest-first / campaign-count recommendation descriptions.
 mobile account tab and account sidebar using the existing client checklist.
 The sidebar photo and name both link to `account-dashboard` (Pregled), while
 the separate public-profile link remains available.
+
+### Portfolio campaign selection (2026-10-26)
+
+`GET /api/me/portfolio-campaigns` and portfolio save validation accept an owned,
+accepted hire once its `workCompletedAt` is set, even if the campaign remains
+open for other providers. Legacy finished campaigns remain eligible. The list
+keeps its owner/block/deleted-account restrictions and 20-item cursor batches.
+`CreatorStudioPanel.vue` places source and campaign selection first and fills
+title, summary, brief, client/agency, completion date and platform from the
+selected campaign. It leaves the creator's contribution and uploaded media for
+the creator to enter. `CreatorPresentationProfileTest` covers creator and agency
+completion on open campaigns, saving, foreign/unfinished work and block filtering.
