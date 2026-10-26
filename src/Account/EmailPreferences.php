@@ -45,6 +45,64 @@ final class EmailPreferences
         return $id > 0 && hash_equals($this->signature($id), $signature) ? $id : null;
     }
 
+    public function subscriberSignature(int $subscriberId): string
+    {
+        return hash_hmac('sha256', 'wave-newsletter-subscriber:'.$subscriberId, $this->secret);
+    }
+
+    public function verifySubscriber(mixed $id, mixed $signature): ?int
+    {
+        if (!is_string($signature) || !(is_int($id) || (is_string($id) && ctype_digit($id)))) {
+            return null;
+        }
+
+        return (int) $id > 0 && hash_equals($this->subscriberSignature((int) $id), $signature) ? (int) $id : null;
+    }
+
+    public function subscriberPageUrl(int $id, string $locale): string
+    {
+        return $this->routeUrl('account-email-preferences', $locale, ['n' => $id, 's' => $this->subscriberSignature($id), 'c' => self::NEWSLETTER]);
+    }
+
+    public function subscriberConfirmationUrl(int $id, string $locale): string
+    {
+        return $this->routeUrl('account-email-preferences', $locale, ['n' => $id, 's' => $this->subscriberSignature($id), 'confirm' => 1]);
+    }
+
+    public function subscriberOneClickUrl(int $id): string
+    {
+        return rtrim($this->baseUrl, '/').'/api/email/unsubscribe?'.http_build_query(['n' => $id, 's' => $this->subscriberSignature($id), 'c' => self::NEWSLETTER]);
+    }
+
+    /** @return array{email: string, profileTips: null, newsletter: bool, campaignAlerts: null}|null */
+    public function subscriberStates(int $id): ?array
+    {
+        $row = $this->db->fetchAssociative('SELECT email, legal_records FROM newsletter_subscriber WHERE id = ?', [$id]);
+        if ($row === false) return null;
+        $records = $row['legal_records'] === null ? [] : json_decode($row['legal_records'], true, flags: JSON_THROW_ON_ERROR);
+
+        return ['email' => self::maskedEmail($row['email']), 'profileTips' => null, 'newsletter' => ($records['newsletter']['enabled'] ?? true) === true, 'campaignAlerts' => null];
+    }
+
+    public function setSubscriber(int $id, bool $enabled): bool
+    {
+        if (!$enabled) {
+            $userId = $this->db->fetchOne('SELECT u.id FROM wave_user u INNER JOIN newsletter_subscriber n ON n.email = u.email WHERE n.id = ? AND u.deleted_at IS NULL', [$id]);
+            if ($userId !== false) return $this->setNewsletter((int) $userId, false);
+        }
+        return $this->db->transactional(function () use ($id, $enabled): bool {
+            $lock = $this->db->getDatabasePlatform() instanceof \Doctrine\DBAL\Platforms\PostgreSQLPlatform ? ' FOR UPDATE' : '';
+            $row = $this->db->fetchAssociative('SELECT legal_records, locale, email FROM newsletter_subscriber WHERE id = ?'.$lock, [$id]);
+            if ($row === false) return false;
+            $records = $row['legal_records'] === null ? [] : json_decode($row['legal_records'], true, flags: JSON_THROW_ON_ERROR);
+            $records['newsletter'] = \App\Legal\LegalPolicies::emailRecord($records['newsletter'] ?? [], $enabled, 'signed_newsletter_preferences', $row['locale']);
+            if ($enabled) $records['newsletter']['confirmedAt'] = gmdate(DATE_ATOM);
+            $this->db->executeStatement('UPDATE newsletter_subscriber SET legal_records = ? WHERE id = ?', [json_encode($records, JSON_THROW_ON_ERROR), $id]);
+
+            return true;
+        });
+    }
+
     /** Endpoint for mail clients' one-click unsubscribe (POST, no login, no page). */
     public function oneClickUrl(int $userId, string $category): string
     {
@@ -116,6 +174,15 @@ final class EmailPreferences
             if ($row === false) return false;
             $records = $row['legal_records'] === null ? [] : json_decode($row['legal_records'], true, flags: JSON_THROW_ON_ERROR);
             $records['newsletter'] = \App\Legal\LegalPolicies::emailRecord($records['newsletter'] ?? [], $enabled, 'signed_email_preferences', $row['preferred_locale']);
+            if (!$enabled) {
+                $subscriberId = $this->db->fetchOne('SELECT n.id FROM newsletter_subscriber n INNER JOIN wave_user u ON u.email = n.email WHERE u.id = ?', [$userId]);
+                if ($subscriberId !== false) {
+                    $subscriber = $this->db->fetchAssociative('SELECT legal_records, locale FROM newsletter_subscriber WHERE id = ?'.$lock, [$subscriberId]);
+                    $subscriberRecords = $subscriber['legal_records'] === null ? [] : json_decode($subscriber['legal_records'], true, flags: JSON_THROW_ON_ERROR);
+                    $subscriberRecords['newsletter'] = \App\Legal\LegalPolicies::emailRecord($subscriberRecords['newsletter'] ?? [], false, 'account_newsletter_withdrawal', $subscriber['locale']);
+                    $this->db->executeStatement('UPDATE newsletter_subscriber SET legal_records = ? WHERE id = ?', [json_encode($subscriberRecords, JSON_THROW_ON_ERROR), $subscriberId]);
+                }
+            }
             return $this->db->executeStatement('UPDATE wave_user SET newsletter_enabled = ?, legal_records = ? WHERE id = ?', [$enabled, json_encode($records, JSON_THROW_ON_ERROR), $userId], [\Doctrine\DBAL\ParameterType::BOOLEAN, \Doctrine\DBAL\ParameterType::STRING, \Doctrine\DBAL\ParameterType::INTEGER]) > 0;
         });
     }

@@ -30,6 +30,7 @@ final class NotificationResource
             'campaign' => $campaign === null ? null : [
                 'slug' => $campaign->getSlug(),
                 'title' => $campaignTranslation['title'] ?? $campaign->getTitle(),
+                'compensationType' => $campaign->getCompensationType(),
             ],
             'supportTicketId' => $notification->getSupportTicket()?->getId(),
             'supportAdmin' => $notification->getRecipient()->hasRole('ROLE_ADMIN'),

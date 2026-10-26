@@ -66,6 +66,7 @@ final class EmailTemplateAdminControllerTest extends WebTestCase
                 'creator_inquiry_accepted',
                 'creator_hired',
                 'unread_message_reminder',
+                'campaign_invitation',
                 'credits_activated',
                 'credit_code_assigned',
                 'verification_reminder',
@@ -298,6 +299,137 @@ final class EmailTemplateAdminControllerTest extends WebTestCase
         self::assertEmailHtmlBodyContains($email, 'Saved custom copy.');
         $saved = static::getContainer()->get(EntityManagerInterface::class)->getRepository(EmailTemplate::class)->findOneBy(['templateKey' => 'verify', 'locale' => 'en']);
         self::assertSame($source, $saved->getHtmlBody());
+    }
+
+    public function testTextOnlyChangesKeepTheBuiltInLayoutCanBeTestedAndReset(): void
+    {
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $admin = new User('text-admin@example.test', 'ROLE_COMPANY');
+        $admin->setPassword('unused-test-hash'); $admin->setAdmin(true); $admin->setEmailVerified(true);
+        $em->persist($admin); $em->flush();
+        $this->client->loginUser($admin, 'main');
+        $this->client->request('GET', '/api/admin/email-templates?locale=en');
+        $template = array_values(array_filter($this->payload()['data']['templates'], static fn (array $row): bool => $row['key'] === 'creator_hired'))[0];
+        self::assertFalse($template['customized']);
+        self::assertSame([], $template['customizedLocales']);
+        $text = array_column($template['text'], 'value', 'key');
+        self::assertArrayHasKey('heading', $text);
+        self::assertArrayNotHasKey('firstValue', $text);
+        $body = ['subject' => $template['defaultSubject'], 'htmlBody' => $template['defaultHtmlBody'], 'text' => ['heading' => 'You are on the team!', 'buttonLabel' => $text['buttonLabel']]];
+
+        $this->jsonRequest('PUT', '/api/admin/email-templates/creator_hired?locale=en', array_replace($body, ['text' => ['firstValue' => 'Not editable']]), $this->csrfToken());
+        self::assertResponseStatusCodeSame(400);
+        $this->jsonRequest('POST', '/api/admin/email-templates/creator_hired/test?locale=en', $body, $this->csrfToken());
+        self::assertResponseIsSuccessful();
+        self::assertEmailCount(1);
+        $test = self::getMailerMessage();
+        self::assertInstanceOf(Email::class, $test);
+        self::assertSame('text-admin@example.test', $test->getTo()[0]->getAddress());
+        self::assertStringStartsWith('[Test] ', (string) $test->getSubject());
+        self::assertEmailHtmlBodyContains($test, 'You are on the team!');
+        self::assertNull($em->getRepository(EmailTemplate::class)->findOneBy(['templateKey' => 'creator_hired']));
+
+        $this->jsonRequest('PUT', '/api/admin/email-templates/creator_hired?locale=en', $body, $this->csrfToken());
+        self::assertResponseIsSuccessful();
+        self::assertTrue($this->payload()['data']['customized']);
+        $em->clear();
+        $saved = $em->getRepository(EmailTemplate::class)->findOneBy(['templateKey' => 'creator_hired', 'locale' => 'en']);
+        self::assertNull($saved->getSubject());
+        self::assertNull($saved->getHtmlBody());
+        self::assertSame(['heading' => 'You are on the team!'], $saved->getCopy());
+
+        $creator = new User('hired@example.test', 'ROLE_CREATOR');
+        $creator->setPreferredLocale('en');
+        static::getContainer()->get(AccountEmailSender::class)->sendCreatorHired($creator, 'Wave Studio', 'Summer campaign');
+        $email = self::getMailerMessage();
+        self::assertInstanceOf(Email::class, $email);
+        self::assertSame($template['defaultSubject'], $email->getSubject());
+        self::assertEmailHtmlBodyContains($email, 'You are on the team!');
+        self::assertEmailHtmlBodyContains($email, 'Summer campaign');
+
+        $this->client->request('GET', '/api/admin/email-templates?locale=en');
+        $template = array_values(array_filter($this->payload()['data']['templates'], static fn (array $row): bool => $row['key'] === 'creator_hired'))[0];
+        self::assertTrue($template['customized']);
+        self::assertSame(['en'], $template['customizedLocales']);
+        self::assertSame('You are on the team!', array_column($template['text'], 'value', 'key')['heading']);
+
+        $this->jsonRequest('DELETE', '/api/admin/email-templates/creator_hired?locale=en', [], $this->csrfToken());
+        self::assertResponseIsSuccessful();
+        $em->clear();
+        self::assertNull($em->getRepository(EmailTemplate::class)->findOneBy(['templateKey' => 'creator_hired']));
+    }
+
+    public function testPreviewSaveAndRealDeliveryUseTheSameSubjectVariables(): void
+    {
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $admin = new User('subject-admin@example.test', 'ROLE_COMPANY');
+        $admin->setPassword('unused-test-hash');
+        $admin->setAdmin(true);
+        $admin->setEmailVerified(true);
+        $em->persist($admin);
+        $em->flush();
+        $this->client->loginUser($admin, 'main');
+        $this->client->request('GET', '/api/admin/email-templates?locale=en');
+        self::assertSame(['name' => 'Wave', 'email' => 'no-reply@wave.ba'], $this->payload()['data']['sender']);
+        $templates = array_column($this->payload()['data']['templates'], null, 'key');
+        $template = $templates['creator_hired'];
+        $body = ['subject' => 'For {{firstValue}}: {{secondValue}}', 'htmlBody' => $template['defaultHtmlBody'], 'text' => ['heading' => 'A new collaboration']];
+        $this->jsonRequest('PUT', '/api/admin/email-templates/creator_hired?locale=en', array_replace($body, ['subject' => '{{not_a_template_variable}}']), $this->csrfToken());
+        self::assertResponseStatusCodeSame(400);
+        $this->jsonRequest('PUT', '/api/admin/email-templates/creator_hired?locale=en', $body, $this->csrfToken());
+        self::assertResponseIsSuccessful();
+        $this->jsonRequest('POST', '/api/admin/email-templates/creator_hired/test?locale=en', $body + ['to' => 'someone-else@example.test'], $this->csrfToken());
+        self::assertResponseIsSuccessful();
+        $email = self::getMailerMessage();
+        self::assertInstanceOf(Email::class, $email);
+        self::assertSame('subject-admin@example.test', $email->getTo()[0]->getAddress());
+        self::assertSame('[Test] For Summer campaign: Wave Studio', $email->getSubject());
+        $recipient = new User('subject-recipient@example.test', 'ROLE_CREATOR');
+        $recipient->setPreferredLocale('en');
+        static::getContainer()->get(AccountEmailSender::class)->sendCreatorHired($recipient, 'Real brand', "Real campaign\nsecond line");
+        $sent = self::getMailerMessage(1);
+        self::assertSame('For Real campaign second line: Real brand', $sent->getSubject());
+        self::assertEmailHtmlBodyContains($sent, 'A new collaboration');
+
+        $this->client->request('GET', '/api/admin/email-templates?locale=bs');
+        $otherLanguage = array_column($this->payload()['data']['templates'], null, 'key')['creator_hired'];
+        self::assertFalse($otherLanguage['customized']);
+        self::assertSame(['en'], $otherLanguage['customizedLocales']);
+        $this->jsonRequest('DELETE', '/api/admin/email-templates/creator_hired?locale=bs', [], $this->csrfToken());
+        self::assertResponseIsSuccessful();
+        $this->client->request('GET', '/api/admin/email-templates?locale=en');
+        self::assertTrue(array_column($this->payload()['data']['templates'], null, 'key')['creator_hired']['customized']);
+    }
+
+    public function testResetAndTestSendingRequireAdminAccessAndCsrf(): void
+    {
+        $this->jsonRequest('DELETE', '/api/admin/email-templates/verify?locale=en', [], $this->csrfToken());
+        self::assertResponseStatusCodeSame(401);
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $user = new User('template-access@example.test', 'ROLE_COMPANY');
+        $user->setEmailVerified(false);
+        $user->setPassword('unused-test-hash');
+        $em->persist($user);
+        $em->flush();
+        $this->client->loginUser($user, 'main');
+        $this->jsonRequest('POST', '/api/admin/email-templates/verify/test?locale=en', [], $this->csrfToken());
+        self::assertResponseStatusCodeSame(403);
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $user = $em->getRepository(User::class)->findOneBy(['email' => 'template-access@example.test']);
+        $user->setAdmin(true);
+        $em->flush();
+        $this->client->loginUser($user, 'main');
+        $this->jsonRequest('POST', '/api/admin/email-templates/verify/test?locale=en', [], $this->csrfToken());
+        self::assertResponseStatusCodeSame(403, 'Unverified administrators cannot send test emails.');
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $user = $em->getRepository(User::class)->findOneBy(['email' => 'template-access@example.test']);
+        $user->setEmailVerified(true);
+        $em->flush();
+        foreach (['DELETE' => '/api/admin/email-templates/verify?locale=en', 'POST' => '/api/admin/email-templates/verify/test?locale=en'] as $method => $path) {
+            $this->jsonRequest($method, $path, [], '');
+            self::assertResponseStatusCodeSame(403);
+        }
+        self::assertEmailCount(0);
     }
 
     private function csrfToken(): string

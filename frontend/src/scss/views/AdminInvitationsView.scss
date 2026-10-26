@@ -1,0 +1,207 @@
+@use '../breakpoints';
+
+.admin-invitations {
+  &__heading {
+    margin-bottom: 24px;
+
+    .eyebrow { margin: 0 0 8px; }
+
+    h1 {
+      margin: 0 0 8px;
+      color: var(--forest);
+      font-family: var(--serif);
+      font-size: 28px;
+      font-weight: 500;
+    }
+
+    p:not(.eyebrow) {
+      max-width: 720px;
+      margin: 0;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.6;
+    }
+  }
+
+  &__card {
+    display: grid;
+    gap: 16px;
+    margin-bottom: 16px;
+    padding: 24px;
+    border: 1px solid var(--hairline);
+    border-radius: var(--radius-card);
+    background: var(--card);
+
+    > header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    h2 {
+      margin: 0;
+      color: var(--forest);
+      font-family: var(--serif);
+      font-size: 22px;
+      font-weight: 500;
+    }
+  }
+
+  &__step {
+    display: grid;
+    flex: none;
+    place-items: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    color: #fff;
+    background: var(--forest);
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+  &__reset {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 36px;
+    margin-left: auto;
+    padding: 0 12px;
+    border: 1px solid var(--hairline);
+    border-radius: 12px;
+    color: var(--ink);
+    background: var(--card);
+    font: inherit;
+    font-size: 13px;
+    cursor: pointer;
+
+    &:hover:not(:disabled) { border-color: rgba(23, 61, 54, .35); }
+  }
+
+  &__hint {
+    margin: 0;
+    color: var(--muted);
+    font-size: 13px;
+
+    a { color: var(--forest); font-weight: 500; }
+  }
+
+  &__editor {
+    display: grid;
+    gap: 8px;
+
+    .form-field { margin: 0; }
+
+    textarea {
+      width: 100%;
+      min-height: 320px;
+      padding: 16px 18px;
+      border: 1px solid var(--hairline);
+      border-radius: 16px;
+      outline: 0;
+      color: var(--ink);
+      background: var(--paper);
+      font: inherit;
+      font-size: 15px;
+      font-weight: 400;
+      line-height: 1.6;
+      resize: vertical;
+
+      &:focus { border-color: rgba(23, 61, 54, .45); box-shadow: 0 0 0 4px rgba(23, 61, 54, .1); }
+    }
+  }
+
+  &__variables {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+
+    > span { color: var(--muted); font-size: 13px; }
+
+    button {
+      min-height: 32px;
+      padding: 0 12px;
+      border: 1px dashed rgba(23, 61, 54, .35);
+      border-radius: 10px;
+      color: var(--forest);
+      background: #f4f6f2;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 13px;
+      cursor: pointer;
+
+      &:hover:not(:disabled) { background: #eaf0e9; }
+      &:focus-visible { outline: 2px solid var(--forest); outline-offset: 2px; }
+    }
+  }
+
+  &__counter {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    margin: 0;
+    color: var(--muted);
+    font-size: 12px;
+    font-variant-numeric: tabular-nums;
+
+    &.is-error { color: #b2533f; }
+  }
+
+  &__preview {
+    border: 1px solid var(--hairline);
+    border-radius: 14px;
+    background: #fbfbf8;
+
+    summary {
+      min-height: 44px;
+      padding: 12px 16px;
+      color: var(--forest);
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+    }
+
+    p {
+      margin: 0;
+      padding: 0 16px 16px;
+      color: var(--ink);
+      font-size: 14px;
+      line-height: 1.6;
+      white-space: pre-wrap;
+    }
+  }
+
+  &__empty {
+    justify-items: start;
+
+    p { margin: 0; color: var(--muted); font-size: 14px; }
+  }
+
+  &__footer {
+    position: sticky;
+    bottom: 12px;
+    z-index: 2;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 14px 18px;
+    border: 1px solid var(--hairline);
+    border-radius: 18px;
+    background: rgba(255, 255, 252, .94);
+    box-shadow: 0 12px 30px -18px rgba(23, 61, 54, .35);
+    backdrop-filter: blur(10px);
+
+    p { margin: 0; color: var(--muted); font-size: 13px; }
+
+    .button { display: inline-flex; align-items: center; gap: 8px; }
+  }
+}
+
+@include breakpoints.down(560px) {
+  .admin-invitations {
+    &__card { padding: 18px; }
+    &__footer .button { justify-content: center; width: 100%; }
+  }
+}

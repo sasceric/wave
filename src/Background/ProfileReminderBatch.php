@@ -160,9 +160,9 @@ final class ProfileReminderBatch
         $key = self::TEMPLATE_KEY;
         // One template per language for all four emails (Admin → Email templates); {{subject}} is this email's own subject.
         $custom = $this->entityManager->getRepository(EmailTemplate::class)->findOneBy(['templateKey' => $key, 'locale' => $locale]);
-        $subject = $custom instanceof EmailTemplate
-            ? strtr($custom->getSubject(), ['{{subject}}' => $variables['subject'], '{{score}}' => $variables['score'], '{{firstStep}}' => $variables['firstStep']])
-            : $variables['subject'];
+        $variables = EmailTemplate::applyCopy($variables, $custom?->getCopy());
+        $customSubject = $custom?->getSubject();
+        $subject = $this->templates->renderSubject($customSubject ?? $variables['subject'], $variables);
         $text = implode("\n\n", [
             $variables['greeting'], $variables['message'], $variables['scoreLabel'].': '.$variables['score'].'%',
             $variables['stepsLabel'].":\n".$variables['steps'], $variables['buttonLabel'].":\n".$variables['actionUrl'],
@@ -174,7 +174,7 @@ final class ProfileReminderBatch
             ->to(new Address($user->getEmail(), $name))
             ->subject($subject)
             ->text($text)
-            ->html($this->templates->render($key, $variables, $custom instanceof EmailTemplate ? $custom->getHtmlBody() : null));
+            ->html($this->templates->render($key, $variables, $custom?->getHtmlBody()));
         $this->preferences->addUnsubscribeHeaders($email, $id, EmailPreferences::PROFILE_TIPS);
         $this->mailer->send($email);
     }

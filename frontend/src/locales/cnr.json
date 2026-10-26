@@ -100,9 +100,11 @@
           ]
         },
         {
-          "heading": "Kako koristimo informacije",
+          "heading": "Svrhe i pravni osnovi",
           "paragraphs": [
-            "Informacije koristimo za pružanje naloga i funkcija tržišta, prikaz sadržaja koji odaberete da bude javan, povezivanje kreatora i kompanija, slanje servisnih poruka, sprečavanje zloupotreba i bezbjedan i pouzdan rad Wavea."
+            "Registraciju, profile, prijave, ponude, poruke i zatraženu podršku obrađujemo radi pružanja usluge i izvršenja ugovora s tobom. Obavezni podaci potrebni su za otvaranje i zaštitu računa; neobavezna polja profila možeš ostaviti prazna.",
+            "Sigurnost, sprečavanje zloupotrebe, moderacija i ograničeni savjeti za postavljanje profila zasnivaju se na našem legitimnom interesu za sigurno i korisno tržište. Savjeti sadrže upute za račun, prestaju nakon najviše četiri poruke ili popunjavanja profila i mogu se isključiti. Možeš prigovoriti obradi zasnovanoj na legitimnom interesu.",
+            "Newsletter, obavijesti o kampanjama, analitika i oglašavanje imaju odvojene dobrovoljne prijave. Pristanak možeš povući bilo kada, bez uticaja na raniju zakonitu obradu. Podatke obrađujemo i kada to nalaže zakon, npr. radi valjanog zahtjeva nadležnog organa. Ne donosimo odluke s pravnim ili slično značajnim posljedicama isključivo automatizovanom obradom."
           ]
         },
         {
@@ -112,17 +114,42 @@
           ]
         },
         {
-          "heading": "Pružaoci usluga i čuvanje podataka",
+          "heading": "Pružaoci usluga i međunarodna obrada",
           "paragraphs": [
-            "Wave radi na serverima kompanije Hetzner Online GmbH u Njemačkoj, gdje se nalaze baza podataka, datoteke i rezervne kopije. E-mailove (potvrde, obavještenja i newsletter) šalje Brevo (Brevo SAS, Francuska), koji za to prima adresu, ime i sadržaj poruke. Pružaoci dobijaju samo podatke potrebne za svoju uslugu. Ne prodajemo lične podatke.",
-            "Podatke naloga čuvamo dok nalog postoji. Nakon brisanja naloga lični podaci i sopstvene datoteke se uklanjaju, a rezervne kopije se automatski brišu nakon 14 dana. Zapisi aplikacije i slanja e-mailova čuvaju se 14 dana. Zajednička istorija saradnji i poruka može ostati drugim učesnicima, uz anonimizovan nalog. Neke zapise možemo čuvati duže kada to zakon zahtijeva. Zahtjev za brisanje možeš poslati i na info{'@'}wave.ba."
+            "Hetzner Online GmbH hostuje Wave bazu, datoteke i sigurnosne kopije za oporavak u Njemačkoj. Brevo (Brevo SAS, Francuska) dostavlja e-mailove koristeći adrese, imena i sadržaj poruka; objavljene lokacije njegovih baza su Francuska, Njemačka i Belgija.",
+            "Cloudflare, Inc. pruža proxy/CDN i sigurnosne usluge. Obrađuje podatke mrežnih zahtjeva, uključujući IP adresu, URL i podatke preglednika, te može keširati javne resurse. Globalna mreža može obrađivati podatke izvan BiH i Evropskog ekonomskog prostora. Opcionalne usluge Googlea, Applea i Mete također mogu uključivati međunarodnu obradu.",
+            "Međunarodni prijenosi zahtijevaju osnov i zaštitne mjere prema primjenjivom zakonu, što može uključivati priznate odluke o primjerenosti ili ugovorne zaštitne mjere. Kontaktiraj nas za informacije o primjenjivim aranžmanima i dobivanje njihove kopije. Sjedište pružaoca u EU ne znači da sva obrada ostaje u EU. Ne prodajemo lične podatke."
+          ],
+          "links": [
+            {
+              "label": "Hetzner",
+              "url": "https://www.hetzner.com/legal/privacy-policy/"
+            },
+            {
+              "label": "Brevo",
+              "url": "https://www.brevo.com/legal/privacypolicy/"
+            },
+            {
+              "label": "Cloudflare",
+              "url": "https://www.cloudflare.com/privacypolicy/"
+            }
+          ]
+        },
+        {
+          "heading": "Čuvanje i brisanje",
+          "paragraphs": [
+            "Podatke računa i profila čuvamo dok je račun aktivan. Brisanje računa uklanja lična polja profila, vlastite datoteke, pretplate i pristupne tokene iz aktivne aplikacije. Zajedničke poruke i evidencija saradnji mogu ostati drugim učesnicima uz anonimizovane oznake računa; ranije napisani tekst poruka ne prepravlja se automatski. Ne šalji nepotrebne osjetljive podatke.",
+            "Sigurnosne kopije za oporavak rotiraju se u roku od 14 dana od nastanka. Izbrisani podaci mogu ostati u starijoj kopiji do njenog isteka; kopije služe oporavku, a ne aktivnom korištenju računa. Aplikacijski logovi i šifrirani pregledi e-mailova čiste se nakon 14 dana. Završeni ili odbačeni poslovi reda čiste se nakon 30 dana.",
+            "Brevo odvojeno čuva vlastitu evidenciju dostave; Wave pravilo od 14 dana za lokalne logove ne određuje Brevo rok. Kontaktiraj nas radi uklanjanja zapisa kod pružaoca. Podršku, moderaciju, pristanke i zajedničku historiju čuvamo samo koliko je potrebno za rješavanje predmeta, potrebe učesnika, zakonske obaveze ili pravne zahtjeve; nužnost procjenjujemo po zatvaranju predmeta i zahtjevu za brisanje.",
+            "Odjava newslettera zaustavlja tu pretplatu; minimalan zapis odjave može ostati radi poštivanja i dokazivanja tvog izbora. Ranije pretplate bez zapisa dobrovoljne prijave nisu dokaz izričitog pristanka."
           ]
         },
         {
           "heading": "Vaša prava i zahtjevi",
           "paragraphs": [
             "Gdje je primjenjivo, možete zatražiti pristup ličnim podacima, ispravku ili brisanje, kao i informacije o ograničenju obrade, prenosivosti ili pravu na prigovor. Pišite na info{'@'}wave.ba. Prije postupanja možda ćemo morati potvrditi vaš identitet.",
-            "Ako smatrate da obrada vaših ličnih podataka nije u skladu sa važećim propisima, možete podnijeti prigovor Agenciji za zaštitu ličnih podataka u Bosni i Hercegovini ili drugom nadležnom nadzornom organu."
+            "Ako smatrate da obrada vaših ličnih podataka nije u skladu sa važećim propisima, možete podnijeti prigovor Agenciji za zaštitu ličnih podataka u Bosni i Hercegovini ili drugom nadležnom nadzornom organu.",
+            "Zahtjeve za prava šalji na info{'@'}wave.ba. Odgovaramo bez nepotrebnog odgađanja, u pravilu u roku od 30 dana; objasnit ćemo svako zakonski dopušteno produženje i razloge. Tražimo samo razmjerne podatke potrebne za provjeru identiteta. Računi su za punoljetne osobe od najmanje 18 godina."
           ],
           "links": [
             {
@@ -134,7 +161,7 @@
         {
           "heading": "Spoljne usluge",
           "paragraphs": [
-            "Wave učitava fontove lokalno i može prikazati YouTube videozapise dodate na profile. Ti pružaoci mogu primiti tehničke podatke zahtjeva kada se vaš pregledač poveže s njihovim uslugama.",
+            "Fontove poslužuje Wave. Video player se povezuje s YouTubeom tek kada odabereš otvaranje/reprodukciju videa. Google tada prima tehničke podatke zahtjeva i može koristiti vlastitu pohranu. Otvaranje vanjskog linka povezuje te s tom stranicom prema njenim pravilima.",
             "Ako odaberete prijavu putem Googlea ili Applea, odabrani pružalac obrađuje podatke za prijavu prema sopstvenim pravilima privatnosti. Google Analytics može obrađivati podatke o korišćenju samo ako ga odobrite.",
             "Uz odvojeni pristanak za Marketing, Meta Pixel može obrađivati tehničke podatke o pregledniku, URL-u i registraciji radi mjerenja oglasa. Podatke obrađuje Meta prema svojoj politici privatnosti. Pristanak je moguće povući u postavkama kolačića."
           ],
@@ -208,7 +235,8 @@
             "wave.registration-intent (lokalno skladište, Wave): stranica na koju se vraćaš nakon registracije. Neophodan; briše se nakon upotrebe ili nakon 14 dana.",
             "Keš service workera (Wave): datoteke aplikacije za brže učitavanje. Neophodan; zamjenjuje se pri svakom ažuriranju.",
             "_ga i _ga_… (kolačići, Google Analytics): mjerenje posjeta. Samo uz pristanak za analitiku; traju najviše 180 dana.",
-            "_fbp i _fbc (kolačići, Meta Pixel): mjerenje oglasa. Samo uz pristanak za marketing; trajanje određuje Meta, a Wave ih briše kad povučeš pristanak."
+            "_fbp i _fbc (kolačići, Meta Pixel): mjerenje oglasa. Samo uz pristanak za marketing; trajanje određuje Meta, a Wave ih briše kad povučeš pristanak.",
+            "Cloudflare može postaviti nužne sigurnosne kolačiće kao što su __cf_bm (obično 30 minuta) ili cf_clearance (prema podešenom trajanju provjere), ako su te sigurnosne funkcije aktivne. Služe zaštiti od botova i sigurnosnim provjerama, nezavisno od opcionalne analitike ili marketinga."
           ]
         },
         {
@@ -239,9 +267,9 @@
           ]
         },
         {
-          "heading": "Spoljni fontovi i video",
+          "heading": "Fontovi i video",
           "paragraphs": [
-            "Fontovi interfejsa učitavaju se lokalno sa Wavea. Kada se prikaže video s profila, pregledač se može povezati s youtube-nocookie.com, uslugom Googlea. Ti pružaoci mogu obrađivati tehničke podatke ili koristiti sopstvenu memoriju pregledača; Wave ne upravlja tom memorijom."
+            "Fontove poslužuje Wave. Video player se povezuje s YouTubeom tek kada odabereš otvaranje/reprodukciju videa. Google tada prima tehničke podatke zahtjeva i može koristiti vlastitu pohranu. Otvaranje vanjskog linka povezuje te s tom stranicom prema njenim pravilima."
           ],
           "links": [
             {
@@ -277,7 +305,8 @@
           "heading": "Uloga platforme",
           "paragraphs": [
             "Wave omogućava objavu profila, kampanja i ponuda te komunikaciju između kreatora, brendova i agencija. Korisnici samostalno odlučuju hoće li sarađivati. Wave nije poslodavac, zastupnik niti ugovorna strana njihove saradnje.",
-            "Wave ne obrađuje isplate između korisnika i ne pruža escrow. Prikaz dogovorenog iznosa nije potvrda da je uplata izvršena."
+            "Wave ne obrađuje isplate između korisnika i ne pruža escrow. Prikaz dogovorenog iznosa nije potvrda da je uplata izvršena.",
+            "Ako je Wave izričito naveden kao naručilac vlastite kampanje, operator učestvuje kao taj naručilac prema posebno dogovorenim uslovima."
           ]
         },
         {
@@ -346,7 +375,9 @@
       ]
     },
     "acceptTerms": "Potvrđujem da imam najmanje 18 godina i prihvatam {terms}.",
-    "lastUpdated": "Ažurirano: {date}"
+    "lastUpdated": "Ažurirano: {date}",
+    "acceptTermsLink": "Uslove korišćenja",
+    "registrationPrivacyLink": "Politiku privatnosti"
   },
   "app": {
     "loading": "Učitavanje…",
@@ -377,8 +408,8 @@
     "footerNewsletterPlaceholder": "Tvoja e-mail adresa",
     "footerNewsletterSubmit": "Prijavi se putem e-pošte",
     "footerNewsletterNote": "Poslaćemo ti e-mail da potvrdimo prijavu.",
-    "footerNewsletterSuccessTitle": "Prijava je uspješna",
-    "footerNewsletterSuccessMessage": "Hvala ti! Uskoro ćeš dobiti e-mail s potvrdom prijave na Wave novosti.",
+    "footerNewsletterSuccessTitle": "Provjeri e-mail",
+    "footerNewsletterSuccessMessage": "Poslali smo poveznicu. Otvori je i potvrdi prijavu da uključiš newsletter.",
     "footerNewsletterError": "Prijavu nije moguće dovršiti. Pokušaj ponovo kasnije.",
     "footerNewsletterClose": "Zatvori",
     "footerQuickLinks": "Brzi linkovi",
@@ -1523,6 +1554,8 @@
     "creatorInquiryEmailTemplateHint": "Šalje se kreatoru s odabranim paketima, budžetom i porukom kompanije.",
     "creatorInquiryAcceptedEmailTemplate": "Prihvaćen upit za saradnju",
     "creatorInquiryAcceptedEmailTemplateHint": "Šalje se kompaniji kada kreator prihvati upit.",
+    "campaignInvitationEmailTemplate": "Poziv za kampanju",
+    "campaignInvitationEmailTemplateHint": "Šalje se kreatoru ili agenciji kada ih kompanija ili Wave pozove u kampanju (i iz Admin → Pozivnice).",
     "creatorHiredEmailTemplate": "Kreator je angažovan",
     "creatorHiredEmailTemplateHint": "Šalje se kreatoru nakon što prihvati ponudu za kampanju.",
     "unreadMessageReminderEmailTemplate": "Podsjetnik za nepročitanu poruku",
@@ -1622,7 +1655,14 @@
     "accountDeletedEmailTemplate": "Nalog obrisan",
     "accountDeletedEmailTemplateHint": "Potvrda nakon što korisnik sam obriše nalog.",
     "termsUpdatedEmailTemplate": "Novi uslovi korišćenja",
-    "termsUpdatedEmailTemplateHint": "Obavještenje postojećim korisnicima kad objavimo novu verziju uslova."
+    "termsUpdatedEmailTemplateHint": "Obavještenje postojećim korisnicima kad objavimo novu verziju uslova.",
+    "subscriberStatus": "Status prijave",
+    "subscriptionStates": {
+      "subscribed": "Prijavljen/a",
+      "unsubscribed": "Odjavljen/a",
+      "unverified": "Ranija prijava bez zapisa pristanka",
+      "pending": "Čeka potvrdu"
+    }
   },
   "api": {
     "invalidResponse": "Wave nije uspio pročitati odgovor servera. Pokušaj ponovo.",
@@ -3524,7 +3564,9 @@
     "invalid": "Ovaj link nije ispravan ili je račun obrisan. Prijavi se i promijeni izbor u Podešavanjima.",
     "toWave": "Na Wave",
     "registerTitle": "Šalji mi Wave novosti.",
-    "registerHint": "Odjava jednim klikom u svakom e-mailu."
+    "registerHint": "Odjava jednim klikom u svakom e-mailu.",
+    "confirmNewsletter": "Potvrdi prijavu na Wave novosti",
+    "confirmNewsletterHint": "Klikni Potvrdi ako želiš primati newsletter. Možeš se odjaviti bilo kada."
   },
   "profileGuide": {
     "title": "Vodič za profil",
@@ -3770,6 +3812,157 @@
           "text": "Jasne kampanje i brzi odgovori donose ponovne saradnje."
         }
       }
+    }
+  },
+  "adminInvitations": {
+    "nav": "Pozivnice",
+    "title": "Pozivnice za kampanju",
+    "intro": "Pozovi registrovane kreatore u Wave kampanju. Svaki kreator dobija lični poziv u aplikaciji, a tvoja poruka postaje prva poruka u razgovoru kada prihvati.",
+    "campaignStep": "Kampanja",
+    "campaign": "Kampanja",
+    "voluntaryCampaign": "Besplatna kampanja",
+    "paidCampaign": "Plaćena kampanja",
+    "viewCampaign": "Otvori kampanju",
+    "invitedCount": "pozvano: {count}",
+    "messageStep": "Poruka",
+    "resetMessage": "Vrati podrazumijevani tekst",
+    "variables": "Varijable",
+    "insert": "Umetni:",
+    "message": "Poruka poziva",
+    "variablesHint": "{'{{'}name{'}}'} se mijenja imenom kreatora, a {'{{'}companyName{'}}'} nazivom kompanije.",
+    "unknownVariables": "Nepoznate varijable: {names}",
+    "preview": "Pregled poruke",
+    "previewName": "Amina",
+    "creatorsStep": "Kreatori",
+    "creators": "Kreatori",
+    "searchCreators": "Pretraži kreatore po imenu ili gradu",
+    "selectAll": "Svi dostupni ({count})",
+    "selectedCount": "Odabrano: {count}",
+    "totalCreators": "ukupno kreatora: {count}",
+    "clearSelection": "Poništi izbor",
+    "profileStrength": "Snaga profila",
+    "noCreators": "Nema kreatora za prikaz.",
+    "loadError": "Podatke nije moguće učitati.",
+    "sendError": "Pozivnice nije moguće poslati.",
+    "status": {
+      "invited": "Pozvan",
+      "applied": "Prijavljen"
+    },
+    "footerHint": "Kreatori koji su već pozvani ili prijavljeni automatski se preskaču.",
+    "send": "Pošalji pozivnice ({count})",
+    "confirmTitle": "Poslati pozivnice ({count})?",
+    "confirmMessage": "Kreatori ({count}) dobiće poziv za kampanju „{campaign}”. Poziv se ne može povući iz ovog prikaza.",
+    "sent": "Pozivnice su poslate: {count}.",
+    "sentWithSkipped": "Pozivnice su poslate: {count}. Preskočeno (već pozvani ili prijavljeni): {skipped}.",
+    "noCampaignsTitle": "Nema otvorene Wave kampanje",
+    "noCampaigns": "Pozivnice se šalju za otvorene kampanje Wave kompanije. Objavi kampanju sa svog Wave naloga pa se vrati ovdje.",
+    "createCampaign": "Nova kampanja"
+  },
+  "emailTemplates": {
+    "intro": "Svaki predložak je jedan automatski e-mail. Ovdje mijenjaš naslov, tekst i izgled po jeziku – kada se e-mail šalje i kome, određuje Wave.",
+    "templatesCount": "Predlošci",
+    "customCount": "Prilagođeni",
+    "search": "Pretraži po nazivu ili događaju",
+    "filter": "Filter predložaka",
+    "filters": {
+      "all": "Svi",
+      "custom": "Prilagođeni",
+      "default": "Podrazumijevani"
+    },
+    "noResults": "Nema predložaka za ovu pretragu.",
+    "groups": {
+      "account": "Nalog i pristup",
+      "collaboration": "Kampanje i saradnja",
+      "profile": "Profil",
+      "credits": "Krediti",
+      "contact": "Kontakt i novosti"
+    },
+    "recipients": {
+      "newUser": "Novi korisnik",
+      "user": "Korisnik",
+      "formerUser": "Bivši korisnik",
+      "allUsers": "Svi korisnici",
+      "company": "Kompanija",
+      "creator": "Kreator",
+      "creatorOrAgency": "Kreator ili agencija",
+      "creatorOrCompany": "Kreator i kompanija",
+      "participant": "Učesnik razgovora",
+      "team": "Wave tim",
+      "subscriber": "Pretplatnik"
+    },
+    "frequency": {
+      "once": "Jednom",
+      "perRequest": "Na zahtjev",
+      "everyEvent": "Svaki put",
+      "perVersion": "Jednom po verziji",
+      "oncePerConversation": "Jednom po razgovoru",
+      "dailyOrWeekly": "Dnevno ili sedmično",
+      "series": "Niz od 4 e-maila",
+      "manual": "Ručno, na zahtjev administratora"
+    },
+    "whenSent": "Kada se šalje",
+    "recipient": "Prima",
+    "frequencyLabel": "Učestalost",
+    "language": "Jezik predloška",
+    "languageHint": "tačka znači da je jezik prilagođen",
+    "customizedDot": "prilagođeno",
+    "statusDefault": "Podrazumijevani tekst Wavea",
+    "statusCustom": "Prilagođeno za {locale}",
+    "statusDirty": "Nesačuvane izmjene",
+    "editing": "Uređivanje",
+    "tabs": {
+      "text": "Tekst",
+      "html": "HTML (napredno)"
+    },
+    "textHint": "Promijeni riječi bez diranja koda – izgled e-maila ostaje isti. Imena, linkovi i podaci popunjavaju se automatski.",
+    "noTextFields": "Ovaj e-mail nema tekst koji se može mijenjati ovdje. Koristi HTML.",
+    "htmlHint": "Mijenjaj HTML samo ako želiš drugačiji izgled. Nepoznate varijable i skripte ne mogu se sačuvati.",
+    "restoreLayout": "Vrati podrazumijevani izgled",
+    "restoreField": "Vrati podrazumijevano",
+    "insert": "Umetni:",
+    "preview": "Pregled uživo",
+    "previewSample": "Primjer podataka · {language}",
+    "device": "Veličina ekrana",
+    "devices": {
+      "desktop": "Računar",
+      "mobile": "Mobilni"
+    },
+    "from": "Od",
+    "unsaved": "Nesačuvane izmjene za {locale}",
+    "allSaved": "Sve je sačuvano · izmjene važe samo za {locale}",
+    "reset": "Vrati podrazumijevano",
+    "sendTest": "Pošalji test meni",
+    "save": "Sačuvaj za {locale}",
+    "testSent": "Test je poslat na {email}.",
+    "testError": "Test nije moguće poslati.",
+    "resetDone": "Vraćen je podrazumijevani e-mail za {locale}.",
+    "resetTitle": "Vratiti podrazumijevani e-mail?",
+    "resetMessage": "Tvoje izmjene naslova, teksta i izgleda za {locale} biće obrisane. Ostali jezici ostaju kakvi jesu.",
+    "discardTitle": "Odbaciti izmjene?",
+    "discardMessage": "Imaš nesačuvane izmjene u ovom predlošku.",
+    "discard": "Odbaci",
+    "keepEditing": "Nastavi uređivanje",
+    "fields": {
+      "preheader": "Tekst pregleda u inboxu",
+      "eyebrow": "Nadnaslov",
+      "heading": "Naslov u e-mailu",
+      "message": "Poruka",
+      "buttonLabel": "Tekst dugmeta",
+      "footer": "Podnožje",
+      "firstLabel": "Oznaka 1. reda",
+      "secondLabel": "Oznaka 2. reda",
+      "detailsLabel": "Oznaka detalja",
+      "scoreLabel": "Oznaka snage profila",
+      "stepsLabel": "Oznaka koraka",
+      "guideLabel": "Tekst linka vodiča",
+      "campaignsLabel": "Oznaka kampanja",
+      "settingsLabel": "Tekst linka podešavanja",
+      "unsubscribeLabel": "Tekst odjave",
+      "roleLabel": "Oznaka uloge",
+      "nameLabel": "Oznaka imena",
+      "emailLabel": "Oznaka e-maila",
+      "interestLabel": "Oznaka interesovanja",
+      "messageLabel": "Oznaka poruke"
     }
   }
 }

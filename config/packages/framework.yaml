@@ -76,6 +76,10 @@ framework:
             policy: sliding_window
             limit: 3
             interval: '1 hour'
+        wave_email_template_test:
+            policy: sliding_window
+            limit: 20
+            interval: '1 hour'
         wave_registration_reminder:
             policy: sliding_window
             limit: 1

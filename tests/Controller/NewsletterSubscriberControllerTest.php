@@ -37,7 +37,7 @@ final class NewsletterSubscriberControllerTest extends WebTestCase
         ], $this->csrfToken());
 
         self::assertResponseIsSuccessful();
-        self::assertSame('You’re subscribed to Wave updates.', $this->payload()['message']);
+        self::assertSame('Check your email and confirm your Wave news signup.', $this->payload()['message']);
         self::assertSame(
             1,
             static::getContainer()->get(EntityManagerInterface::class)
@@ -56,9 +56,9 @@ final class NewsletterSubscriberControllerTest extends WebTestCase
         $email = self::getMailerMessage();
         self::assertInstanceOf(Email::class, $email);
         self::assertSame('alex@example.test', $email->getTo()[0]->getAddress());
-        self::assertEmailSubjectContains($email, 'You’re on the Wave updates list');
+        self::assertEmailSubjectContains($email, 'Confirm Wave news signup');
         self::assertEmailHtmlBodyContains($email, '<html lang="en">');
-        self::assertEmailHtmlBodyContains($email, 'Glad you’re here.');
+        self::assertEmailHtmlBodyContains($email, 'Confirm Wave news signup');
         self::assertEmailHtmlBodyContains($email, 'Hello!');
     }
 
@@ -154,7 +154,7 @@ final class NewsletterSubscriberControllerTest extends WebTestCase
         $email = self::getMailerMessage();
         self::assertInstanceOf(Email::class, $email);
         self::assertEmailSubjectContains($email, 'A custom newsletter subject');
-        self::assertEmailHtmlBodyContains($email, '<h1>Glad you’re here.</h1>');
+        self::assertEmailHtmlBodyContains($email, '<h1>Confirm Wave news signup</h1>');
     }
 
     public function testSubscriberListIsAdminOnlyAndPaginated(): void
@@ -191,6 +191,61 @@ final class NewsletterSubscriberControllerTest extends WebTestCase
         );
     }
 
+    public function testStandaloneConfirmationAndWithdrawalAreSignedScopedAndRecorded(): void
+    {
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $user = new User('optin@example.test', 'ROLE_CREATOR');
+        $user->setPassword('unused-test-hash');
+        $em->persist($user);
+        $em->flush();
+        $this->jsonRequest('POST', '/api/newsletter/subscribers?locale=en', ['email' => 'optin@example.test'], $this->csrfToken());
+        self::assertResponseIsSuccessful();
+        $email = self::getMailerMessage();
+        self::assertInstanceOf(Email::class, $email);
+        self::assertStringContainsString('confirm=1', $email->getHtmlBody());
+        self::assertStringContainsString('List-Unsubscribe=One-Click', $email->getHeaders()->get('List-Unsubscribe-Post')->getBodyAsString());
+
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $subscriber = $em->getRepository(NewsletterSubscriber::class)->findOneBy(['email' => 'optin@example.test']);
+        $id = $subscriber->getId();
+        self::assertFalse($subscriber->getLegalRecords()['newsletter']['enabled']);
+        self::assertArrayNotHasKey('grantedAt', $subscriber->getLegalRecords()['newsletter']);
+        $preferences = static::getContainer()->get(\App\Account\EmailPreferences::class);
+        $query = 'n='.$id.'&s='.$preferences->subscriberSignature($id);
+        $this->client->request('GET', '/api/email/preferences?locale=en&'.$query);
+        self::assertResponseIsSuccessful();
+        self::assertFalse($this->payload()['data']['newsletter'], 'Opening a link must not confirm it.');
+        self::assertNull($this->payload()['data']['profileTips']);
+
+        $this->jsonRequest('PUT', '/api/email/preferences?locale=en&'.$query, ['newsletter' => true], '');
+        self::assertResponseStatusCodeSame(403);
+        $this->jsonRequest('PUT', '/api/email/preferences?locale=en&'.$query, ['profileTips' => false], $this->csrfToken());
+        self::assertResponseStatusCodeSame(400);
+        $this->jsonRequest('PUT', '/api/email/preferences?locale=en&'.$query, ['newsletter' => true], $this->csrfToken());
+        self::assertResponseIsSuccessful();
+        self::assertTrue($this->payload()['data']['newsletter']);
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $record = $em->getRepository(NewsletterSubscriber::class)->find($id)->getLegalRecords()['newsletter'];
+        self::assertArrayHasKey('confirmedAt', $record);
+        self::assertSame(\App\Legal\LegalPolicies::archiveHash(), $record['archiveHash']);
+
+        $this->client->request('POST', '/api/email/unsubscribe?c=newsletter&n='.$id.'&s=forged');
+        self::assertResponseStatusCodeSame(400);
+        $this->client->request('POST', '/api/email/unsubscribe?c=profile_tips&'.$query);
+        self::assertResponseStatusCodeSame(400);
+        $this->client->request('POST', '/api/email/unsubscribe?c=newsletter&'.$query);
+        self::assertResponseIsSuccessful();
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        self::assertFalse($em->getRepository(NewsletterSubscriber::class)->find($id)->getLegalRecords()['newsletter']['enabled']);
+        self::assertFalse($em->getRepository(User::class)->findOneBy(['email' => 'optin@example.test'])->isNewsletterEnabled());
+
+        $this->jsonRequest('POST', '/api/newsletter/subscribers?locale=en', ['email' => 'optin@example.test'], $this->csrfToken());
+        self::assertResponseIsSuccessful();
+        self::assertEmailCount(0);
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        self::assertFalse($em->getRepository(NewsletterSubscriber::class)->find($id)->getLegalRecords()['newsletter']['enabled'], 'An unsigned request cannot undo withdrawal.');
+    }
+
     private function csrfToken(): string
     {
         $this->client->request('GET', '/api/auth/csrf?locale=en');
@@ -200,7 +255,7 @@ final class NewsletterSubscriberControllerTest extends WebTestCase
     }
 
     /**
-     * @param array<string, string> $body
+     * @param array<string, mixed> $body
      */
     private function jsonRequest(string $method, string $path, array $body, string $csrf): void
     {

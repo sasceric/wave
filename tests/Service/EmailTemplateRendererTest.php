@@ -10,6 +10,12 @@ use PHPUnit\Framework\TestCase;
 
 final class EmailTemplateRendererTest extends TestCase
 {
+    public function testSubjectVariablesCannotIntroduceHeaderLineBreaks(): void
+    {
+        $renderer = new EmailTemplateRenderer(new SiteOrigin('https://wave.ba'));
+        self::assertSame('Hello Amina Next', $renderer->renderSubject('Hello {{name}}', ['name' => "Amina\r\nNext"]));
+    }
+
     public function testEveryDefaultLayoutUsesTheActualBrandArtwork(): void
     {
         $renderer = new EmailTemplateRenderer(new SiteOrigin('https://wave.ba'));

@@ -161,6 +161,11 @@ const companyApplications = ref([])
 const inquiries = ref([])
 const editingCampaignId = ref(null)
 const editingCampaign = computed(() => campaigns.value.find(campaign => campaign.id === editingCampaignId.value))
+// Free campaigns are for Wave administrators; an existing free campaign keeps its option while editing.
+const compensationOptions = computed(() => [
+  { value: 'paid', label: t('compensation.paid') },
+  ...(user.value?.isAdmin || editingCampaign.value?.compensationType === 'voluntary' ? [{ value: 'voluntary', label: t('compensation.voluntaryLabel') }] : []),
+])
 const campaignForm = ref(emptyCampaign())
 const applicantDialog = ref(null)
 const selectedApplication = ref(null)
@@ -1368,7 +1373,7 @@ onMounted(loadDashboard)
                 <button class="profile-editor__add" type="button" :disabled="campaignForm.deliverables.length >= 10" @click="campaignForm.deliverables.push('')"><Plus :size="16" aria-hidden="true" />{{ t('account.addDeliverable') }}</button>
               </div>
             </AccountProfileCard>
-            <SingleSelect v-model="campaignForm.compensationType" :disabled="Boolean(editingCampaign?.appliedCreatorIds?.length || editingCampaign?.invitedCreatorIds?.length || ['finished', 'cancelled'].includes(editingCampaign?.status))" :label="t('compensation.type')" :options="[{ value: 'paid', label: t('compensation.paid') }, { value: 'voluntary', label: t('compensation.voluntaryLabel') }]" required />
+            <SingleSelect v-if="compensationOptions.length > 1" v-model="campaignForm.compensationType" :disabled="Boolean(editingCampaign?.appliedCreatorIds?.length || editingCampaign?.invitedCreatorIds?.length || ['finished', 'cancelled'].includes(editingCampaign?.status))" :label="t('compensation.type')" :options="compensationOptions" required />
             <StatusMessage v-if="campaignForm.compensationType === 'voluntary'">{{ t('compensation.voluntaryHint') }}</StatusMessage>
             <p v-if="editingCampaign?.appliedCreatorIds?.length || editingCampaign?.invitedCreatorIds?.length" class="muted">{{ t('compensation.locked') }}</p>
             <div class="form-grid">

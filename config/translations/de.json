@@ -87,7 +87,7 @@
     "contact_sent": "Danke für deine Nachricht. Wir melden uns bald bei dir.",
     "contact_failed": "Deine Nachricht konnte nicht gesendet werden. Bitte versuche es später erneut.",
     "contact_invalid": "Prüfe Name, E-Mail, Rolle und Thema. Die Nachricht muss 20–4.000 Zeichen enthalten.",
-    "newsletter_subscribed": "Du bist für Wave-Neuigkeiten angemeldet.",
+    "newsletter_subscribed": "Prüfe deine E-Mails und bestätige die Anmeldung für Wave-Neuigkeiten.",
     "newsletter_email_failed": "Die Bestätigungs-E-Mail konnte nicht gesendet werden. Bitte versuche es später erneut.",
     "invalid_offer_due_date": "Wähle einen gültigen Liefertermin: heute oder ein späteres Datum.",
     "invalid_cancellation_reason": "Beschreibe den Grund (10–1000 Zeichen). Die andere Seite kann ihn sehen.",
@@ -108,7 +108,9 @@
     "profile_tips_disabled": "Diese Person hat Profiltipps ausgeschaltet.",
     "profile_already_complete": "Dieses Profil ist bereits vollständig.",
     "profile_reminder_unavailable": "Profiltipps werden erst nach Freigabe des Kontos und Bestätigung der E-Mail gesendet.",
-    "admin_self_change": "Du kannst deine eigenen Administratorrechte nicht ändern."
+    "admin_self_change": "Du kannst deine eigenen Administratorrechte nicht ändern.",
+    "invitation_unknown_variable": "Die Nachricht enthält eine unbekannte Variable. Verwende nur {{name}} und {{companyName}}.",
+    "voluntary_campaign_admin_only": "Kostenlose Kampagnen kann nur ein Wave-Administrator veröffentlichen."
   },
   "account": {
     "verify": {
@@ -199,6 +201,21 @@
       "companyMessageLabel": "Nachricht des Unternehmens",
       "noPackages": "Keine Pakete ausgewählt",
       "priceByAgreement": "Nach Vereinbarung"
+    },
+    "campaign_invitation": {
+      "subject": "Du wurdest zu einer Kampagne auf Wave eingeladen",
+      "preheader": "Ein Unternehmen lädt dich zu seiner Kampagne ein.",
+      "eyebrow": "KAMPAGNENEINLADUNG",
+      "heading": "Du hast eine neue Kampagneneinladung.",
+      "greeting": "Hallo!",
+      "message": "Ein Unternehmen lädt dich zu seiner Kampagne ein. Sieh dir die Details an und nimm die Einladung auf Wave an oder lehne sie ab. Sobald du annimmst, öffnet sich ein Chat mit dem Unternehmen.",
+      "firstLabel": "Kampagne",
+      "secondLabel": "Unternehmen",
+      "detailsLabel": "Nachricht des Unternehmens",
+      "buttonLabel": "Einladung ansehen",
+      "footer": "Dies ist eine automatische Nachricht von Wave. Bitte antworte nicht darauf.",
+      "voluntaryBadge": "Freiwillige Zusammenarbeit — ohne Vergütung",
+      "paidBadge": "Bezahlte Zusammenarbeit"
     },
     "creator_hired": {
       "subject": "Dein Angebot auf Wave wurde angenommen",
@@ -294,13 +311,15 @@
     }
   },
   "newsletter": {
-    "subject": "Du bist für Wave-Neuigkeiten angemeldet",
-    "preheader": "Danke, dass du dich für Neuigkeiten aus der Wave-Community angemeldet hast.",
+    "subject": "Anmeldung für Wave-Neuigkeiten bestätigen",
+    "preheader": "Anmeldung für Wave-Neuigkeiten bestätigen",
     "eyebrow": "WAVE-NEUIGKEITEN",
-    "heading": "Schön, dass du da bist.",
+    "heading": "Anmeldung für Wave-Neuigkeiten bestätigen",
     "greeting": "Hallo!",
-    "message": "Du bist für gelegentliche Neuigkeiten über neue Kampagnen, Creator und Ideen aus der Wave-Community angemeldet.",
-    "footer": "Diese automatische Nachricht bestätigt deine Anmeldung für Wave-Neuigkeiten. Falls du dich nicht angemeldet hast, kannst du diese E-Mail ignorieren."
+    "message": "Bestätige, dass du gelegentliche Neuigkeiten zu Kampagnen, Kreativen und Ideen von Wave erhalten möchtest. Dein Abonnement bleibt bis zur Bestätigung auf der verlinkten Seite inaktiv.",
+    "footer": "Falls du dies nicht angefordert hast, ignoriere die Nachricht. Der Newsletter bleibt ausgeschaltet.",
+    "unsubscribeLabel": "Wave-Neuigkeiten abbestellen",
+    "confirmLabel": "Anmeldung für Wave-Neuigkeiten bestätigen"
   },
   "campaignAlert": {
     "subject": "Neue Kampagnen für dich",

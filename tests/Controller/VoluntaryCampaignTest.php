@@ -30,7 +30,7 @@ final class VoluntaryCampaignTest extends WebTestCase
     public function testExplicitTermsValidationCompatibilityAndLocking(): void
     {
         $brand = $this->user('brand', 'ROLE_COMPANY');
-        $brand->setCompany(new Company('voluntary-brand', 'Wave', 'Travel'));
+        $brand->setCompany(new Company('voluntary-brand', 'Wave', 'Travel')); $brand->setAdmin(true);
         $creator = $this->user('creator', 'ROLE_CREATOR');
         $creator->setCreator(new Creator('voluntary-creator', 'Creator', 'Travel', 'Sarajevo', 'Complete profile biography.', [], []));
         $this->em->flush();
@@ -68,7 +68,7 @@ final class VoluntaryCampaignTest extends WebTestCase
     public function testCreatorAndAgencyCompleteVoluntaryWorkWithConsentAndRevisions(): void
     {
         $brand = $this->user('brand', 'ROLE_COMPANY');
-        $brand->setCompany(new Company('voluntary-brand', 'Wave', 'Travel'));
+        $brand->setCompany(new Company('voluntary-brand', 'Wave', 'Travel')); $brand->setAdmin(true);
         $creator = $this->user('creator', 'ROLE_CREATOR');
         $creator->setCreator(new Creator('voluntary-creator', 'Creator', 'Travel', 'Sarajevo', 'Complete profile biography.', [], []));
         $agency = $this->user('agency', 'ROLE_COMPANY');
@@ -147,6 +147,27 @@ final class VoluntaryCampaignTest extends WebTestCase
         $this->client->loginUser($brand);
         $this->write('POST', '/api/company/applications/'.$application->getId().'/offer', ['amount' => 0, 'dueDate' => (new DateTimeImmutable('+7 days'))->format('Y-m-d'), 'message' => 'A paid campaign cannot have a zero offer.']);
         self::assertResponseStatusCodeSame(400);
+    }
+
+    public function testOnlyAdministratorsPublishOrSwitchToFreeCampaigns(): void
+    {
+        $brand = $this->user('brand', 'ROLE_COMPANY'); $brand->setCompany(new Company('free-brand', 'Brand', 'Travel'));
+        $agency = $this->user('agency', 'ROLE_COMPANY');
+        $company = new Company('free-agency', 'Agency', 'Travel'); $company->setCompanyType('agency'); $agency->setCompany($company);
+        $this->em->flush();
+        foreach ([$brand, $agency] as $owner) {
+            $this->client->loginUser($owner);
+            $this->write('POST', '/api/company/campaigns', $this->fields());
+            self::assertResponseStatusCodeSame(403);
+            self::assertSame(['compensationType'], $this->payload()['fields']);
+        }
+        $this->client->loginUser($brand);
+        $paid = array_replace($this->fields(), ['compensationType' => 'paid', 'budgetMin' => 100, 'budgetMax' => 200]);
+        $this->write('POST', '/api/company/campaigns', $paid);
+        self::assertResponseStatusCodeSame(201);
+        $this->write('PUT', '/api/company/campaigns/'.$this->payload()['data']['id'], $this->fields());
+        self::assertResponseStatusCodeSame(403);
+        self::assertSame(0, $this->em->getRepository(Campaign::class)->count(['compensationType' => 'voluntary']));
     }
 
     private function fields(): array

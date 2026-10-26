@@ -16,6 +16,7 @@ import {
   Users,
   Wrench,
   QrCode,
+  Send,
   LifeBuoy,
   CornerUpRight,
   LogIn,
@@ -170,6 +171,7 @@ const navigationItems = computed(() => {
       { route: 'admin-registrations', labelKey: 'adminDashboard.navRegistrations', icon: ClipboardCheck, group: 'admin-settings', badge: adminCounts.value?.approvals ?? props.pendingRegistrations },
       { route: 'admin-reports', labelKey: 'safety.reports', icon: Flag, group: 'admin-settings', badge: adminCounts.value?.reports },
       { route: 'admin-support', labelKey: 'support.adminTitle', icon: LifeBuoy, group: 'admin-settings', badge: adminCounts.value?.tickets },
+      { route: 'admin-invitations', labelKey: 'adminInvitations.nav', icon: Send, group: 'marketing' },
       { route: 'admin-qr', labelKey: 'adminQr.title', icon: QrCode, group: 'marketing' },
       { route: 'admin-redirects', labelKey: 'adminRedirects.title', icon: CornerUpRight, group: 'marketing' },
       {

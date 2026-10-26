@@ -344,7 +344,7 @@ function changeMode(nextMode) {
           <label v-if="mode === 'register'" class="auth-form__check">
             <input v-model="form.termsAccepted" type="checkbox" required />
             <I18nT keypath="legal.acceptTerms" tag="span">
-              <template #terms><LocalizedLink :to="{ name: 'terms-of-use' }" target="_blank">{{ t('legal.terms.title') }}</LocalizedLink></template>
+              <template #terms><LocalizedLink :to="{ name: 'terms-of-use' }" target="_blank">{{ t('legal.acceptTermsLink') }}</LocalizedLink></template>
             </I18nT>
           </label>
 
@@ -359,7 +359,7 @@ function changeMode(nextMode) {
           </button>
 
           <I18nT v-if="mode === 'register'" keypath="authScreen.privacyNotice" tag="p" class="auth-form__fine">
-            <template #privacy><LocalizedLink :to="{ name: 'privacy-policy' }">{{ t('legal.privacy.title') }}</LocalizedLink></template>
+            <template #privacy><LocalizedLink :to="{ name: 'privacy-policy' }">{{ t('legal.registrationPrivacyLink') }}</LocalizedLink></template>
           </I18nT>
 
           <p class="auth-form__switch">
@@ -372,7 +372,7 @@ function changeMode(nextMode) {
 
       <nav class="auth-panel__foot" :aria-label="t('app.footerLegal')">
         <LocalizedLink :to="{ name: 'imprint' }">{{ t('legal.imprint.title') }}</LocalizedLink>
-        <LocalizedLink :to="{ name: 'privacy-policy' }">{{ t('legal.privacy.title') }}</LocalizedLink>
+        <LocalizedLink :to="{ name: 'privacy-policy' }">{{ t('legal.registrationPrivacyLink') }}</LocalizedLink>
         <LocalizedLink :to="{ name: 'support' }">{{ t('support.label') }}</LocalizedLink>
       </nav>
     </section>

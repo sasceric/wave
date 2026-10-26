@@ -24,11 +24,7 @@ let disposed = false
 function previewUrl(item) {
   if (item.coverUrl) return item.coverUrl
   if (item.type === 'image') return item.url || ''
-  try {
-    const url = new URL(item.embedUrl)
-    const id = url.pathname.match(/^\/embed\/([A-Za-z0-9_-]{11})$/)?.[1]
-    if (id && ['www.youtube-nocookie.com', 'www.youtube.com'].includes(url.hostname)) return `https://i.ytimg.com/vi/${id}/hqdefault.jpg`
-  } catch { /* An unavailable video preview still has a play button. */ }
+  // Load the external video only after the visitor opens it.
   return ''
 }
 function updateActiveSlide() {

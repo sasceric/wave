@@ -52,10 +52,10 @@ test('portfolio filtering resets the slider and closes the previously selected m
   assert.equal(scrolls.at(-1).left, 0)
 })
 
-test('video previews use validated YouTube thumbnails and leave unsupported hosts without a player', async () => {
+test('video previews keep owned covers and do not contact YouTube before opening a video', async () => {
   const { state } = await gallery()
   assert.equal(state.previewUrl(items[0]), items[0].url)
-  assert.equal(state.previewUrl(items[3]), 'https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg')
+  assert.equal(state.previewUrl(items[3]), '')
   assert.equal(state.previewUrl({ ...items[3], coverUrl: '/media/owned-cover.webp' }), '/media/owned-cover.webp')
   assert.equal(state.previewUrl({ type: 'video', embedUrl: 'https://www.youtube.com.bad.example/embed/dQw4w9WgXcQ' }), '')
   assert.equal(state.previewUrl({ type: 'video', embedUrl: 'https://player.vimeo.com/video/123' }), '')

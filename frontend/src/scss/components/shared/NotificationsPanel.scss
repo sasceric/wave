@@ -52,6 +52,8 @@
   &__copy { display: grid; gap: 2px; min-width: 0; color: var(--ink); overflow-wrap: anywhere; }
   &__copy strong { font-weight: 600; }
   &__copy time { color: var(--muted-text); font-size: 12px; }
+  // Free campaign invitations say so before the creator opens them.
+  &__badge { justify-self: start; margin: 4px 0 2px; padding: 3px 9px; border: 1px solid rgba(164, 81, 58, .22); border-radius: var(--radius-pill); color: #a4513a; background: rgba(231, 150, 124, .16); font-size: 12px; font-weight: 600; line-height: 1.35; }
   &__unread { width: 9px; height: 9px; border-radius: 50%; background: var(--coral); }
   &__more { display: flex; justify-content: center; align-items: center; gap: 8px; width: calc(100% - 12px); min-height: 40px; margin: 6px; padding: 0 14px; border: 0; border-radius: var(--radius-pill); color: var(--forest); background: rgba(23, 61, 54, .07); font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; }
   &__more:hover:not(:disabled) { background: rgba(23, 61, 54, .12); }

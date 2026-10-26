@@ -191,6 +191,12 @@ final class WebPushNotificationSender
         if (in_array($notification->getType(), ['review_received', 'review_published'], true)) {
             return \App\Localization\ApiMessages::get($notification->getType(), $locale);
         }
+        $campaign = $notification->getCampaign();
+        if ($notification->getType() === 'campaign_invitation' && $campaign !== null) {
+            $badge = $campaign->isVoluntary() ? (\App\Account\MarketplaceEmailCopy::forLocale('campaign_invitation', $locale)['voluntaryBadge'] ?? null) : null;
+
+            return $this->trimPreview($campaign->getTitle().(is_string($badge) ? ' · '.$badge : ''));
+        }
         $conversation = $notification->getConversation();
         $sender = $notification->getActor();
         if ($conversation !== null && $sender !== null) {

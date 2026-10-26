@@ -99,9 +99,11 @@
           ]
         },
         {
-          "heading": "How information is used",
+          "heading": "Purposes and legal bases",
           "paragraphs": [
-            "We use information to provide accounts and marketplace features, display content you choose to make public, connect creators and companies, send service messages, prevent abuse, and keep Wave reliable and secure."
+            "Account registration, profiles, applications, offers, messages and requested support are processed to provide the service and perform our agreement with you. Required account details are necessary to create and secure an account; optional profile fields can be left blank.",
+            "Security, abuse prevention, moderation and limited profile-setup tips serve our legitimate interests in a safe, usable marketplace. Tips contain account setup guidance, stop after at most four messages or profile completion, and can be disabled. You may object to processing based on legitimate interests.",
+            "Newsletter, campaign alerts, analytics and advertising use separate opt-ins. You may withdraw consent at any time without affecting earlier lawful processing. We also process data where required by law, for example responding to a valid authority request. We do not make decisions with legal or similarly significant effects solely by automated processing."
           ]
         },
         {
@@ -111,17 +113,42 @@
           ]
         },
         {
-          "heading": "Service providers and retention",
+          "heading": "Providers and international processing",
           "paragraphs": [
-            "Wave runs on servers operated by Hetzner Online GmbH in Germany, which hold the database, files and backups. Emails (confirmations, notifications and the newsletter) are sent by Brevo (Brevo SAS, France), which receives the address, name and message content for that purpose. Providers receive only the data needed for their service. We do not sell personal information.",
-            "We keep account data while the account exists. When an account is deleted, personal data and owned files are removed, and backups are deleted automatically after 14 days. Application and email delivery logs are kept for 14 days. Shared collaboration and message history may remain available to other participants with the account anonymized. Some records may be kept longer where the law requires it. You can also request deletion at info{'@'}wave.ba."
+            "Hetzner Online GmbH hosts Wave’s database, files and recovery backups in Germany. Brevo (Brevo SAS, France) delivers emails using recipients’ addresses, names and message contents; its published database hosting locations are France, Germany and Belgium.",
+            "Cloudflare, Inc. provides proxy/CDN and security services. It processes network request data, including IP addresses, URLs and browser information, and may cache public resources. Its global network can process data outside Bosnia and Herzegovina and the EEA. Optional Google, Apple and Meta services may also involve international processing.",
+            "International transfers require a basis and safeguards under applicable law, which may include recognized adequacy decisions or contractual safeguards. Contact us for information about the applicable arrangements and how to obtain a copy. A provider’s EU headquarters alone does not mean all processing stays in the EU. We do not sell personal data."
+          ],
+          "links": [
+            {
+              "label": "Hetzner",
+              "url": "https://www.hetzner.com/legal/privacy-policy/"
+            },
+            {
+              "label": "Brevo",
+              "url": "https://www.brevo.com/legal/privacypolicy/"
+            },
+            {
+              "label": "Cloudflare",
+              "url": "https://www.cloudflare.com/privacypolicy/"
+            }
+          ]
+        },
+        {
+          "heading": "Retention and deletion",
+          "paragraphs": [
+            "Account and profile data are retained while the account is active. Deleting an account removes personal profile fields, owned files, subscriptions and access tokens from the live application. Shared messages and collaboration records can remain for other participants with account identifiers anonymized; message text you previously wrote is not automatically rewritten. Do not send unnecessary sensitive information.",
+            "Recovery backups rotate within 14 days of creation. Deleted data can remain in an older backup until it expires; backups are used for recovery rather than active account access. Application logs and encrypted email previews have a 14-day cleanup period. Completed or discarded queue jobs are removed after 30 days.",
+            "Brevo keeps its own email delivery records separately; Wave’s 14-day local-log rule does not set Brevo’s retention. Contact us about removal of provider-held records. Support, moderation, consent and shared collaboration records are retained only as necessary to resolve the matter, serve participants, meet legal obligations or establish/defend claims; necessity is assessed when a case closes and on deletion requests.",
+            "Withdrawing a newsletter subscription stops that subscription, while a minimal withdrawal record may be retained to respect your choice and demonstrate it. Existing subscriptions without recorded opt-in are not evidence of explicit consent."
           ]
         },
         {
           "heading": "Your choices and requests",
           "paragraphs": [
             "Where applicable, you may request access to, correction or deletion of your personal information, or ask about restriction, portability, or objection rights. Contact info{'@'}wave.ba. We may need to verify your request before acting.",
-            "If you believe that the processing of your personal data does not comply with applicable law, you can lodge a complaint with the Personal Data Protection Agency in Bosnia and Herzegovina or another competent supervisory authority."
+            "If you believe that the processing of your personal data does not comply with applicable law, you can lodge a complaint with the Personal Data Protection Agency in Bosnia and Herzegovina or another competent supervisory authority.",
+            "Send rights requests to info{'@'}wave.ba. We respond without undue delay, normally within 30 days; any lawful extension and its reasons will be explained. We request only proportionate information needed to verify identity. Accounts are for adults aged 18 or older."
           ],
           "links": [
             {
@@ -133,7 +160,7 @@
         {
           "heading": "External services",
           "paragraphs": [
-            "Wave serves fonts locally and may display privacy-enhanced YouTube videos added to profiles. Those providers may receive technical request data when your browser connects to their services. Google Analytics may process usage data only if you opt in.",
+            "Fonts are served by Wave. Video players connect to YouTube only after you choose to open/play a video. Google then receives technical request data and may use its own storage. Opening an external link connects you to that website under its own policies.",
             "If you choose Google or Apple sign-in, the selected provider processes authentication information under its own privacy terms.",
             "With separate Marketing consent, Meta Pixel may process technical browser, URL and registration data to measure advertising. Meta processes that data under its privacy policy. You can withdraw consent using Cookie preferences."
           ],
@@ -207,7 +234,8 @@
             "wave.registration-intent (local storage, Wave): the page you return to after registering. Necessary; removed after use or after 14 days.",
             "Service worker cache (Wave): app files for faster loading. Necessary; replaced with every update.",
             "_ga and _ga_… (cookies, Google Analytics): measuring visits. Only with analytics consent; last up to 180 days.",
-            "_fbp and _fbc (cookies, Meta Pixel): measuring ads. Only with marketing consent; Meta sets their lifetime, and Wave deletes them when you withdraw consent."
+            "_fbp and _fbc (cookies, Meta Pixel): measuring ads. Only with marketing consent; Meta sets their lifetime, and Wave deletes them when you withdraw consent.",
+            "Cloudflare may set necessary security cookies such as __cf_bm (normally 30 minutes) or cf_clearance (according to the configured challenge duration), if those security features are active. They are used for bot/challenge protection, independently of optional analytics or marketing."
           ]
         },
         {
@@ -238,9 +266,9 @@
           ]
         },
         {
-          "heading": "External fonts and video",
+          "heading": "Fonts and video",
           "paragraphs": [
-            "Interface fonts are served locally by Wave. When a profile video is displayed, your browser may connect to youtube-nocookie.com, operated by Google. These providers may process technical data or use their own browser storage; Wave does not control that storage."
+            "Fonts are served by Wave. Video players connect to YouTube only after you choose to open/play a video. Google then receives technical request data and may use its own storage. Opening an external link connects you to that website under its own policies."
           ],
           "links": [
             {
@@ -276,7 +304,8 @@
           "heading": "Platform role",
           "paragraphs": [
             "Wave provides profiles, campaigns, offers and communication for creators, brands and agencies. Users independently choose whether to collaborate. Wave is not their employer, representative or a party to their collaboration contract.",
-            "Wave does not process payments between users or provide escrow. Displaying an agreed amount does not confirm that it was paid."
+            "Wave does not process payments between users or provide escrow. Displaying an agreed amount does not confirm that it was paid.",
+            "If Wave is expressly identified as the client of its own campaign, the operator acts as that client under the separately agreed collaboration terms."
           ]
         },
         {
@@ -345,7 +374,9 @@
       ]
     },
     "acceptTerms": "I confirm I am at least 18 and accept the {terms}.",
-    "lastUpdated": "Updated: {date}"
+    "lastUpdated": "Updated: {date}",
+    "acceptTermsLink": "Terms of Use",
+    "registrationPrivacyLink": "Privacy policy"
   },
   "app": {
     "loading": "Loading…",
@@ -376,8 +407,8 @@
     "footerNewsletterPlaceholder": "Your email address",
     "footerNewsletterSubmit": "Sign up by email",
     "footerNewsletterNote": "We’ll email you to confirm your signup.",
-    "footerNewsletterSuccessTitle": "You’re subscribed",
-    "footerNewsletterSuccessMessage": "Thanks! You’ll receive an email shortly confirming your signup for Wave updates.",
+    "footerNewsletterSuccessTitle": "Check your email",
+    "footerNewsletterSuccessMessage": "We sent a link. Open it and confirm your signup to enable the newsletter.",
     "footerNewsletterError": "We couldn’t complete your signup. Please try again later.",
     "footerNewsletterClose": "Close",
     "footerQuickLinks": "Quick links",
@@ -1522,6 +1553,8 @@
     "creatorInquiryEmailTemplateHint": "Sent to the creator with the selected packages, proposed budget, and company message.",
     "creatorInquiryAcceptedEmailTemplate": "Collaboration inquiry accepted",
     "creatorInquiryAcceptedEmailTemplateHint": "Sent to the company when a creator accepts an inquiry.",
+    "campaignInvitationEmailTemplate": "Campaign invitation",
+    "campaignInvitationEmailTemplateHint": "Sent to a creator or agency when a company or Wave invites them to a campaign (also from Admin → Invitations).",
     "creatorHiredEmailTemplate": "Creator hired",
     "creatorHiredEmailTemplateHint": "Sent to the creator after they accept a campaign offer.",
     "unreadMessageReminderEmailTemplate": "Unread message reminder",
@@ -1621,7 +1654,14 @@
     "accountDeletedEmailTemplate": "Account deleted",
     "accountDeletedEmailTemplateHint": "Confirmation after a user deletes their own account.",
     "termsUpdatedEmailTemplate": "Updated Terms of Use",
-    "termsUpdatedEmailTemplateHint": "Notice to existing users when a new terms version is published."
+    "termsUpdatedEmailTemplateHint": "Notice to existing users when a new terms version is published.",
+    "subscriberStatus": "Subscription status",
+    "subscriptionStates": {
+      "subscribed": "Subscribed",
+      "unsubscribed": "Unsubscribed",
+      "unverified": "Legacy signup without consent record",
+      "pending": "Awaiting confirmation"
+    }
   },
   "api": {
     "invalidResponse": "Wave could not read the server response. Please try again.",
@@ -3523,7 +3563,9 @@
     "invalid": "This link is not valid or the account was deleted. Sign in and change your choice in Settings.",
     "toWave": "Go to Wave",
     "registerTitle": "Send me Wave news.",
-    "registerHint": "Unsubscribe in one click from any email."
+    "registerHint": "Unsubscribe in one click from any email.",
+    "confirmNewsletter": "Confirm Wave news signup",
+    "confirmNewsletterHint": "Select Confirm to receive the newsletter. You can unsubscribe at any time."
   },
   "profileGuide": {
     "title": "Profile guide",
@@ -3769,6 +3811,157 @@
           "text": "Clear campaigns and quick replies lead to repeat collaborations."
         }
       }
+    }
+  },
+  "adminInvitations": {
+    "nav": "Invitations",
+    "title": "Campaign invitations",
+    "intro": "Invite registered creators to a Wave campaign. Each creator gets a personal invitation in the app, and your message becomes the first message in the chat when they accept.",
+    "campaignStep": "Campaign",
+    "campaign": "Campaign",
+    "voluntaryCampaign": "Free campaign",
+    "paidCampaign": "Paid campaign",
+    "viewCampaign": "Open campaign",
+    "invitedCount": "invited: {count}",
+    "messageStep": "Message",
+    "resetMessage": "Restore default text",
+    "variables": "Variables",
+    "insert": "Insert:",
+    "message": "Invitation message",
+    "variablesHint": "{'{{'}name{'}}'} is replaced with the creator's name and {'{{'}companyName{'}}'} with the company name.",
+    "unknownVariables": "Unknown variables: {names}",
+    "preview": "Message preview",
+    "previewName": "Amina",
+    "creatorsStep": "Creators",
+    "creators": "Creators",
+    "searchCreators": "Search creators by name or city",
+    "selectAll": "All available ({count})",
+    "selectedCount": "Selected: {count}",
+    "totalCreators": "creators in total: {count}",
+    "clearSelection": "Clear selection",
+    "profileStrength": "Profile strength",
+    "noCreators": "No creators to show.",
+    "loadError": "The data could not be loaded.",
+    "sendError": "The invitations could not be sent.",
+    "status": {
+      "invited": "Invited",
+      "applied": "Applied"
+    },
+    "footerHint": "Creators who are already invited or have applied are skipped automatically.",
+    "send": "Send invitations ({count})",
+    "confirmTitle": "Send invitations ({count})?",
+    "confirmMessage": "Creators ({count}) will be invited to “{campaign}”. Invitations can't be withdrawn from this page.",
+    "sent": "Invitations sent: {count}.",
+    "sentWithSkipped": "Invitations sent: {count}. Skipped (already invited or applied): {skipped}.",
+    "noCampaignsTitle": "No open Wave campaign",
+    "noCampaigns": "Invitations are sent for open campaigns of the Wave company. Publish a campaign from your Wave account, then come back here.",
+    "createCampaign": "New campaign"
+  },
+  "emailTemplates": {
+    "intro": "Each template is one automatic email. Here you change the subject, wording and layout per language – Wave decides when it is sent and to whom.",
+    "templatesCount": "Templates",
+    "customCount": "Customized",
+    "search": "Search by name or event",
+    "filter": "Template filter",
+    "filters": {
+      "all": "All",
+      "custom": "Customized",
+      "default": "Default"
+    },
+    "noResults": "No templates match this search.",
+    "groups": {
+      "account": "Account and access",
+      "collaboration": "Campaigns and collaboration",
+      "profile": "Profile",
+      "credits": "Credits",
+      "contact": "Contact and news"
+    },
+    "recipients": {
+      "newUser": "New user",
+      "user": "User",
+      "formerUser": "Former user",
+      "allUsers": "All users",
+      "company": "Company",
+      "creator": "Creator",
+      "creatorOrAgency": "Creator or agency",
+      "creatorOrCompany": "Creator and company",
+      "participant": "Chat participant",
+      "team": "Wave team",
+      "subscriber": "Subscriber"
+    },
+    "frequency": {
+      "once": "Once",
+      "perRequest": "On request",
+      "everyEvent": "Every time",
+      "perVersion": "Once per version",
+      "oncePerConversation": "Once per conversation",
+      "dailyOrWeekly": "Daily or weekly",
+      "series": "Series of 4 emails",
+      "manual": "Manually, at the administrator’s request"
+    },
+    "whenSent": "When it is sent",
+    "recipient": "Recipient",
+    "frequencyLabel": "Frequency",
+    "language": "Template language",
+    "languageHint": "a dot means the language is customized",
+    "customizedDot": "customized",
+    "statusDefault": "Wave's default text",
+    "statusCustom": "Customized for {locale}",
+    "statusDirty": "Unsaved changes",
+    "editing": "Editing",
+    "tabs": {
+      "text": "Text",
+      "html": "HTML (advanced)"
+    },
+    "textHint": "Change the wording without touching code – the email layout stays the same. Names, links and data are filled in automatically.",
+    "noTextFields": "This email has no text you can change here. Use HTML.",
+    "htmlHint": "Change the HTML only if you want a different layout. Unknown variables and scripts can't be saved.",
+    "restoreLayout": "Restore default layout",
+    "restoreField": "Restore default",
+    "insert": "Insert:",
+    "preview": "Live preview",
+    "previewSample": "Sample data · {language}",
+    "device": "Screen size",
+    "devices": {
+      "desktop": "Desktop",
+      "mobile": "Mobile"
+    },
+    "from": "From",
+    "unsaved": "Unsaved changes for {locale}",
+    "allSaved": "Everything is saved · changes apply only to {locale}",
+    "reset": "Restore default",
+    "sendTest": "Send me a test",
+    "save": "Save for {locale}",
+    "testSent": "The test was sent to {email}.",
+    "testError": "The test could not be sent.",
+    "resetDone": "The default email for {locale} is back.",
+    "resetTitle": "Restore the default email?",
+    "resetMessage": "Your subject, text and layout changes for {locale} will be removed. Other languages stay as they are.",
+    "discardTitle": "Discard changes?",
+    "discardMessage": "You have unsaved changes in this template.",
+    "discard": "Discard",
+    "keepEditing": "Keep editing",
+    "fields": {
+      "preheader": "Inbox preview text",
+      "eyebrow": "Eyebrow",
+      "heading": "Email heading",
+      "message": "Message",
+      "buttonLabel": "Button text",
+      "footer": "Footer",
+      "firstLabel": "First row label",
+      "secondLabel": "Second row label",
+      "detailsLabel": "Details label",
+      "scoreLabel": "Profile strength label",
+      "stepsLabel": "Steps label",
+      "guideLabel": "Guide link text",
+      "campaignsLabel": "Campaigns label",
+      "settingsLabel": "Settings link text",
+      "unsubscribeLabel": "Unsubscribe text",
+      "roleLabel": "Role label",
+      "nameLabel": "Name label",
+      "emailLabel": "Email label",
+      "interestLabel": "Interest label",
+      "messageLabel": "Message label"
     }
   }
 }

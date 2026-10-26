@@ -65,6 +65,7 @@ const routeViews = {
   'admin-email-templates': adminDashboardView,
   'admin-subscribers': () => import('./views/AdminSubscribersView.vue'),
   'admin-qr': () => import('./views/AdminQrView.vue'),
+  'admin-invitations': () => import('./views/AdminInvitationsView.vue'),
   'admin-redirects': () => import('./views/AdminRedirectsView.vue'),
   'admin-tools': () => import('./views/AdminToolsView.vue'),
   imprint: legalView,
@@ -87,6 +88,7 @@ const adminSections = {
   'admin-subscribers': 'subscribers',
   'admin-tools': 'tools',
   'admin-qr': 'qr',
+  'admin-invitations': 'invitations',
   'admin-redirects': 'redirects',
 }
 

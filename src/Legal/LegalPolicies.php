@@ -8,7 +8,7 @@ use App\Entity\User;
 
 final class LegalPolicies
 {
-    public const VERSION = '2026-10-26';
+    public const VERSION = '2026-10-26.2';
 
     /** Date the current terms apply from, shared with the frontend (config/legal_documents.json). */
     public static function effectiveDate(): string
@@ -32,6 +32,15 @@ final class LegalPolicies
         return is_array($config) ? $config : [];
     }
 
+    /** Fingerprint of the immutable, localized documents associated with this version. */
+    public static function archiveHash(): string
+    {
+        $hash = hash_file('sha256', dirname(__DIR__, 2).'/config/legal/'.self::VERSION.'.json');
+        if ($hash === false) throw new \RuntimeException('The published legal archive is missing.');
+
+        return $hash;
+    }
+
     public static function accepted(array $payload): bool
     {
         return ($payload['termsAccepted'] ?? null) === true && ($payload['termsVersion'] ?? null) === self::VERSION;
@@ -42,7 +51,7 @@ final class LegalPolicies
         $at = gmdate(DATE_ATOM);
         $user->setTermsNoticeVersion(self::VERSION);
         $user->setLegalRecords([
-            'terms' => ['version' => self::VERSION, 'acceptedAt' => $at, 'locale' => $locale, 'source' => $source],
+            'terms' => ['version' => self::VERSION, 'archiveHash' => self::archiveHash(), 'acceptedAt' => $at, 'locale' => $locale, 'source' => $source],
             'newsletter' => self::emailRecord([], $user->isNewsletterEnabled(), $source, $locale),
         ]);
     }
@@ -53,6 +62,7 @@ final class LegalPolicies
         return array_merge($previous, [
             'enabled' => $enabled,
             'version' => self::VERSION,
+            'archiveHash' => self::archiveHash(),
             'locale' => $locale,
             'source' => $source,
             'updatedAt' => $at,

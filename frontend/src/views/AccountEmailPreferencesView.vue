@@ -18,11 +18,15 @@ const CATEGORY_FIELDS = { profile_tips: 'profileTips', newsletter: 'newsletter',
 const { t, locale } = useI18n()
 const route = useRoute()
 const router = useRouter()
-const signed = computed(() => typeof route.query.u === 'string' && typeof route.query.s === 'string' ? `u=${encodeURIComponent(route.query.u)}&s=${encodeURIComponent(route.query.s)}` : '')
+const signed = computed(() => {
+  const key = typeof route.query.n === 'string' ? 'n' : 'u'
+  return typeof route.query[key] === 'string' && typeof route.query.s === 'string' ? `${key}=${encodeURIComponent(route.query[key])}&s=${encodeURIComponent(route.query.s)}` : ''
+})
 const status = ref('pending')
 const error = ref('')
 const notice = ref('')
 const saving = ref(false)
+const confirmation = computed(() => typeof route.query.n === 'string' && route.query.confirm === '1' && !states.newsletter)
 const email = ref('')
 const states = reactive({ profileTips: true, newsletter: true, campaignAlerts: null })
 const unsubscribed = ref('')
@@ -30,7 +34,7 @@ const fields = computed(() => ['profileTips', 'newsletter', 'campaignAlerts'].fi
 
 function apply(data) {
   email.value = data.email || ''
-  states.profileTips = data.profileTips !== false
+  states.profileTips = typeof data.profileTips === 'boolean' ? data.profileTips : null
   states.newsletter = data.newsletter !== false
   states.campaignAlerts = typeof data.campaignAlerts === 'boolean' ? data.campaignAlerts : null
 }
@@ -88,10 +92,11 @@ function undo() {
       <span class="email-preferences__icon" :class="{ 'is-done': unsubscribed }" aria-hidden="true"><Check v-if="unsubscribed" :size="22" /><Mail v-else :size="22" /></span>
       <LoadingSkeleton v-if="status === 'pending'" :count="2" :label="t('emailPreferences.loading')" />
       <template v-else-if="status === 'ready'">
-        <h1>{{ unsubscribed ? t('emailPreferences.unsubscribedTitle') : t('emailPreferences.title') }}</h1>
+        <h1>{{ confirmation ? t('emailPreferences.confirmNewsletter') : unsubscribed ? t('emailPreferences.unsubscribedTitle') : t('emailPreferences.title') }}</h1>
+        <p v-if="confirmation">{{ t('emailPreferences.confirmNewsletterHint') }}</p>
         <p v-if="unsubscribed" class="email-preferences__lead">{{ t('emailPreferences.unsubscribedText', { name: t(`emailPreferences.${unsubscribed}`) }) }}</p>
         <p>{{ t('emailPreferences.intro', { email }) }}</p>
-        <div class="email-preferences__list">
+        <div v-if="!confirmation" class="email-preferences__list">
           <SwitchField
             v-for="key in fields"
             :key="key"
@@ -101,7 +106,7 @@ function undo() {
             :disabled="saving"
             @update:model-value="save({ [key]: $event === 1 })"
           />
-          <div class="email-preferences__always">
+          <div v-if="states.profileTips !== null" class="email-preferences__always">
             <strong>{{ t('emailPreferences.always') }}<span>{{ t('emailPreferences.alwaysTag') }}</span></strong>
             <small>{{ t('emailPreferences.alwaysHint') }}</small>
           </div>
@@ -109,6 +114,7 @@ function undo() {
         <StatusMessage v-if="error" variant="error">{{ error }}</StatusMessage>
         <p v-else-if="notice" class="email-preferences__notice" role="status">{{ notice }}</p>
         <div class="email-preferences__actions">
+          <button v-if="confirmation" class="button button--dark" type="button" :disabled="saving" @click="save({ newsletter: true })">{{ t('emailPreferences.confirmNewsletter') }}</button>
           <button v-if="unsubscribed" class="button button--tonal" type="button" :disabled="saving" @click="undo">{{ t('emailPreferences.undo', { name: t(`emailPreferences.${unsubscribed}`) }) }}</button>
           <LocalizedLink class="button button--dark" :to="{ name: currentUser ? 'account-dashboard' : 'home' }">{{ t(currentUser ? 'activation.backToOverview' : 'emailPreferences.toWave') }}<ArrowRight :size="16" aria-hidden="true" /></LocalizedLink>
         </div>

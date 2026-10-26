@@ -92,6 +92,10 @@ final class CampaignManagementController
         $data = JsonPayload::fromRequest($request);
         $invalidFields = [];
         $fields = $data === null ? null : $this->campaignFields($data, false, $invalidFields);
+        // Free (voluntary) campaigns are reserved for Wave's own campaigns.
+        if ($fields !== null && $fields['compensationType'] === Campaign::COMPENSATION_VOLUNTARY && !$user->hasRole('ROLE_ADMIN')) {
+            return new JsonResponse(['error' => ApiMessages::get('voluntary_campaign_admin_only', $locale), 'fields' => ['compensationType']], 403);
+        }
         $coverMedia = $data === null ? false : $this->ownedCoverMedia($data['coverMediaId'] ?? null, $user, $entityManager);
         if ($fields === null || $coverMedia === false) {
             if ($coverMedia === false) {
@@ -170,6 +174,11 @@ final class CampaignManagementController
         $invalidFields = [];
         if ($data !== null && !array_key_exists('compensationType', $data)) $data['compensationType'] = $campaign->getCompensationType();
         $fields = $data === null ? null : $this->campaignFields($data, true, $invalidFields);
+        // Existing free campaigns stay editable; switching to free needs an administrator.
+        if ($fields !== null && $fields['compensationType'] === Campaign::COMPENSATION_VOLUNTARY
+            && !$campaign->isVoluntary() && !$user->hasRole('ROLE_ADMIN')) {
+            return new JsonResponse(['error' => ApiMessages::get('voluntary_campaign_admin_only', $locale), 'fields' => ['compensationType']], 403);
+        }
         $coverMedia = $data === null
             ? false
             : (array_key_exists('coverMediaId', $data)

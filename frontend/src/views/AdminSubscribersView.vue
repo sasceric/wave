@@ -23,6 +23,7 @@ let requestId = 0
 
 const columns = computed(() => [
   { key: 'email', label: t('adminDashboard.email') },
+  { key: 'subscriptionStatus', label: t('adminDashboard.subscriberStatus') },
   { key: 'locale', label: t('adminDashboard.subscriberLanguage') },
   { key: 'subscribedAt', label: t('adminDashboard.subscriberSubscribedAt') },
 ])
@@ -144,6 +145,7 @@ onBeforeUnmount(() => { requestId++ })
           @page-size="pageSize = $event"
           @page="navigatePage"
         >
+          <template #cell-subscriptionStatus="{ value }">{{ t(`adminDashboard.subscriptionStates.${value}`) }}</template>
           <template #cell-locale="{ value }">{{ value.toUpperCase() }}</template>
           <template #cell-subscribedAt="{ value }">{{ formatDate(value) }}</template>
         </AdminReadOnlyTable>

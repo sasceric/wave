@@ -105,22 +105,24 @@ final class ContactController
             'interest' => $interestLabels[$interest],
             'message' => $message,
         ];
+        // Admin wording for labels; the visitor's own message and details are never replaced.
+        $variables = EmailTemplate::applyCopy($variables, array_diff_key($template?->getCopy() ?? [], array_flip(['role', 'name', 'email', 'interest', 'message'])));
         $email = (new Email())
             ->from(new Address($fromAddress, $fromName))
             ->to('info@wave.ba')
             ->replyTo(new Address($emailAddress, $name))
-            ->subject($template instanceof EmailTemplate ? $template->getSubject() : $copy['subject'])
+            ->subject($templates->renderSubject($template?->getSubject() ?? $copy['subject'], $variables))
             ->text(
-                "{$copy['roleLabel']}: {$roleLabels[$role]}\n"
-                ."{$copy['nameLabel']}: {$name}\n"
-                ."{$copy['emailLabel']}: {$emailAddress}\n"
-                ."{$copy['interestLabel']}: {$interestLabels[$interest]}\n\n"
-                ."{$copy['messageLabel']}:\n{$message}",
+                "{$variables['roleLabel']}: {$roleLabels[$role]}\n"
+                ."{$variables['nameLabel']}: {$name}\n"
+                ."{$variables['emailLabel']}: {$emailAddress}\n"
+                ."{$variables['interestLabel']}: {$interestLabels[$interest]}\n\n"
+                ."{$variables['messageLabel']}:\n{$message}",
             )
             ->html($templates->render(
                 'contact',
                 $variables,
-                $template instanceof EmailTemplate ? $template->getHtmlBody() : null,
+                $template?->getHtmlBody(),
             ));
 
         try {

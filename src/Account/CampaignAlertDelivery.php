@@ -56,10 +56,12 @@ final class CampaignAlertDelivery
                     'footer' => $copy['footer'], 'settingsUrl' => $settingsUrl, 'settingsLabel' => $copy['settings'],
                 ];
                 // Admins can edit this email per language (Admin → Email templates).
-                $custom = $this->db->fetchAssociative('SELECT subject, html_body FROM email_template WHERE template_key = ? AND locale = ?', ['campaign_alert', $locale]);
-                $email = new Email()->from(new Address($this->fromAddress, $this->fromName))->to(new Address($user['email'], EmailRecipient::cleanName($user['recipient_name'])))->subject($custom ? (string) $custom['subject'] : $copy['subject'])
-                    ->text($variables['greeting']."\n\n".$copy['message']."\n\n".$details."\n\n".$variables['footer'].' '.$settingsUrl)
-                    ->html($this->templates->render('campaign_alert', $variables, $custom ? (string) $custom['html_body'] : null));
+                $custom = $this->db->fetchAssociative('SELECT subject, html_body, copy_overrides FROM email_template WHERE template_key = ? AND locale = ?', ['campaign_alert', $locale]);
+                $overrides = $custom && is_string($custom['copy_overrides']) ? json_decode($custom['copy_overrides'], true) : null;
+                $variables = \App\Entity\EmailTemplate::applyCopy($variables, is_array($overrides) ? array_diff_key($overrides, ['campaigns' => true]) : null);
+                $email = new Email()->from(new Address($this->fromAddress, $this->fromName))->to(new Address($user['email'], EmailRecipient::cleanName($user['recipient_name'])))->subject($this->templates->renderSubject($custom && is_string($custom['subject']) ? $custom['subject'] : $copy['subject'], $variables))
+                    ->text($variables['greeting']."\n\n".$variables['message']."\n\n".$details."\n\n".$variables['footer'].' '.$settingsUrl)
+                    ->html($this->templates->render('campaign_alert', $variables, $custom && is_string($custom['html_body']) ? $custom['html_body'] : null));
                 $this->preferences->addUnsubscribeHeaders($email, $id, EmailPreferences::CAMPAIGN_ALERTS);
                 $this->transport->send($email);
             }

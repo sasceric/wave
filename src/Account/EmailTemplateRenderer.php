@@ -32,6 +32,7 @@ final class EmailTemplateRenderer
         'application_received' => 'marketplace_notification.html',
         'creator_inquiry_received' => 'marketplace_notification.html',
         'creator_inquiry_accepted' => 'marketplace_notification.html',
+        'campaign_invitation' => 'campaign_invitation.html',
         'creator_hired' => 'marketplace_notification.html',
         'unread_message_reminder' => 'marketplace_notification.html',
     ];
@@ -218,6 +219,24 @@ final class EmailTemplateRenderer
             'actionUrl',
             'footer',
         ],
+        'campaign_invitation' => [
+            'locale',
+            'preheader',
+            'eyebrow',
+            'heading',
+            'greeting',
+            'message',
+            'firstLabel',
+            'firstValue',
+            'secondLabel',
+            'secondValue',
+            'detailsLabel',
+            'details',
+            'buttonLabel',
+            'actionUrl',
+            'footer',
+            'compensation',
+        ],
         'creator_hired' => [
             'locale',
             'preheader',
@@ -288,6 +307,19 @@ final class EmailTemplateRenderer
         }
 
         return $html;
+    }
+
+    /** @param array<string, string> $variables */
+    public function renderSubject(string $source, array $variables): string
+    {
+        $subject = preg_replace_callback(
+            '/\{\{\s*([A-Za-z][A-Za-z0-9_]*)\s*\}\}/',
+            static fn (array $match): string => $variables[$match[1]] ?? $match[0],
+            $source,
+        );
+
+        // Dynamic values can contain line breaks; email headers must remain one line.
+        return trim((string) preg_replace('/[\x00-\x1F\x7F]+/', ' ', (string) $subject));
     }
 
     /** Upgrade only the original stock header; preserve custom copy and layouts. */

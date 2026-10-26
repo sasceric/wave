@@ -25,12 +25,16 @@ final class EmailPreferenceController
     public function oneClick(Request $request, EmailPreferences $preferences): JsonResponse
     {
         $locale = LocaleContext::fromRequest($request) ?? 'bs';
-        $userId = $preferences->verify($request->query->get('u'), $request->query->get('s'));
+        $subscriber = $request->query->has('n');
+        $userId = $subscriber
+            ? $preferences->verifySubscriber($request->query->get('n'), $request->query->get('s'))
+            : $preferences->verify($request->query->get('u'), $request->query->get('s'));
         $category = $request->query->get('c');
-        if ($userId === null || !in_array($category, EmailPreferences::CATEGORIES, true)) {
+        if ($userId === null || !in_array($category, EmailPreferences::CATEGORIES, true) || ($subscriber && $category !== EmailPreferences::NEWSLETTER)) {
             return new JsonResponse(['error' => ApiMessages::get('invalid_request', $locale)], 400, ['Cache-Control' => 'no-store']);
         }
-        $preferences->set($userId, $category, false);
+        if ($subscriber) $preferences->setSubscriber($userId, false);
+        else $preferences->set($userId, $category, false);
 
         return new JsonResponse(['data' => ['unsubscribed' => $category]], headers: ['Cache-Control' => 'no-store']);
     }
@@ -42,8 +46,11 @@ final class EmailPreferenceController
         if ($locale === null) {
             return new JsonResponse(['error' => ApiMessages::get('unsupported_language', 'bs')], 400);
         }
-        $userId = $preferences->verify($request->query->get('u'), $request->query->get('s'));
-        $states = $userId === null ? null : $preferences->states($userId);
+        $subscriber = $request->query->has('n');
+        $userId = $subscriber
+            ? $preferences->verifySubscriber($request->query->get('n'), $request->query->get('s'))
+            : $preferences->verify($request->query->get('u'), $request->query->get('s'));
+        $states = $userId === null ? null : ($subscriber ? $preferences->subscriberStates($userId) : $preferences->states($userId));
         if ($states === null) {
             return new JsonResponse(['error' => ApiMessages::get('invalid_request', $locale)], 404, ['Cache-Control' => 'no-store']);
         }
@@ -61,19 +68,23 @@ final class EmailPreferenceController
         if ($error = ApiAccess::requireCsrf($request, $csrf, $locale)) {
             return $error;
         }
-        $userId = $preferences->verify($request->query->get('u'), $request->query->get('s'));
-        if ($userId === null || $preferences->states($userId) === null) {
+        $subscriber = $request->query->has('n');
+        $userId = $subscriber
+            ? $preferences->verifySubscriber($request->query->get('n'), $request->query->get('s'))
+            : $preferences->verify($request->query->get('u'), $request->query->get('s'));
+        if ($userId === null || ($subscriber ? $preferences->subscriberStates($userId) : $preferences->states($userId)) === null) {
             return new JsonResponse(['error' => ApiMessages::get('invalid_request', $locale)], 404, ['Cache-Control' => 'no-store']);
         }
         $changes = $this->changes(JsonPayload::fromRequest($request));
-        if ($changes === null) {
+        if ($changes === null || ($subscriber && array_diff(array_keys($changes), [EmailPreferences::NEWSLETTER]) !== [])) {
             return new JsonResponse(['error' => ApiMessages::get('invalid_request', $locale)], 400);
         }
         foreach ($changes as $category => $enabled) {
-            $preferences->set($userId, $category, $enabled);
+            if ($subscriber) $preferences->setSubscriber($userId, $enabled);
+            else $preferences->set($userId, $category, $enabled);
         }
 
-        return new JsonResponse(['data' => $preferences->states($userId)], headers: ['Cache-Control' => 'private, no-store']);
+        return new JsonResponse(['data' => ($subscriber ? $preferences->subscriberStates($userId) : $preferences->states($userId))], headers: ['Cache-Control' => 'private, no-store']);
     }
 
     #[Route('/api/me/email-preferences', name: 'api_my_email_preferences', methods: ['PUT'])]
@@ -104,7 +115,13 @@ final class EmailPreferenceController
             $records['newsletter'] = \App\Legal\LegalPolicies::emailRecord($records['newsletter'] ?? [], $changes[EmailPreferences::NEWSLETTER], 'account_settings', $locale);
             $user->setLegalRecords($records);
         }
-        $entityManager->flush();
+        $entityManager->getConnection()->transactional(function () use ($entityManager, $changes, $preferences, $user): void {
+            $entityManager->flush();
+            if (($changes[EmailPreferences::NEWSLETTER] ?? null) === false) {
+                $preferences->set((int) $user->getId(), EmailPreferences::NEWSLETTER, false);
+                $entityManager->refresh($user);
+            }
+        });
 
         return new JsonResponse(['data' => UserResource::fromEntity($user, $locale)], headers: ['Cache-Control' => 'private, no-store']);
     }

@@ -23,6 +23,19 @@ class NewsletterSubscriber
     #[ORM\Column(name: 'subscribed_at', type: 'datetime_immutable')]
     private \DateTimeImmutable $subscribedAt;
 
+    #[ORM\Column(name: 'legal_records', type: 'json', nullable: true)]
+    private ?array $legalRecords = null;
+
+    public function getLegalRecords(): array
+    {
+        return $this->legalRecords ?? [];
+    }
+
+    public function setLegalRecords(array $records): void
+    {
+        $this->legalRecords = $records;
+    }
+
     public function __construct(string $email, string $locale)
     {
         $this->email = $email;

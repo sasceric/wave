@@ -99,9 +99,11 @@
           ]
         },
         {
-          "heading": "Wie wir Informationen verwenden",
+          "heading": "Zwecke und Rechtsgrundlagen",
           "paragraphs": [
-            "Wir verwenden Informationen, um Konten und Marktplatzfunktionen bereitzustellen, von dir veröffentlichte Inhalte anzuzeigen, Creator und Unternehmen zu verbinden, Servicenachrichten zu senden, Missbrauch zu verhindern und Wave zuverlässig und sicher zu betreiben."
+            "Registrierung, Profile, Bewerbungen, Angebote, Nachrichten und angeforderter Support dienen der Bereitstellung des Dienstes und der Vertragserfüllung. Pflichtangaben sind für die Eröffnung und Sicherung des Kontos erforderlich; optionale Profilfelder können leer bleiben.",
+            "Sicherheit, Missbrauchsschutz, Moderation und begrenzte Hinweise zur Profileinrichtung beruhen auf unserem berechtigten Interesse an einem sicheren, nutzbaren Marktplatz. Die Hinweise betreffen die Kontoeinrichtung, enden nach höchstens vier Nachrichten oder vollständigem Profil und lassen sich abschalten. Dieser Verarbeitung können Sie widersprechen.",
+            "Newsletter, Kampagnenhinweise, Analyse und Werbung haben getrennte freiwillige Anmeldungen. Einwilligungen können jederzeit ohne Auswirkung auf die vorherige rechtmäßige Verarbeitung widerrufen werden. Wir verarbeiten Daten auch zur Erfüllung gesetzlicher Pflichten, etwa gültiger Behördenanfragen. Entscheidungen mit rechtlichen oder ähnlich erheblichen Auswirkungen treffen wir nicht ausschließlich automatisiert."
           ]
         },
         {
@@ -111,17 +113,42 @@
           ]
         },
         {
-          "heading": "Dienstleister und Speicherdauer",
+          "heading": "Dienstleister und internationale Verarbeitung",
           "paragraphs": [
-            "Wave läuft auf Servern der Hetzner Online GmbH in Deutschland, auf denen Datenbank, Dateien und Sicherungen liegen. E-Mails (Bestätigungen, Benachrichtigungen und Newsletter) versendet Brevo (Brevo SAS, Frankreich), das dafür Adresse, Name und Nachrichteninhalt erhält. Anbieter erhalten nur die für ihren Dienst nötigen Daten. Wir verkaufen keine personenbezogenen Daten.",
-            "Kontodaten speichern wir, solange das Konto besteht. Nach dem Löschen eines Kontos werden personenbezogene Daten und eigene Dateien entfernt; Sicherungen werden nach 14 Tagen automatisch gelöscht. Anwendungs- und E-Mail-Versandprotokolle werden 14 Tage aufbewahrt. Gemeinsame Kooperations- und Nachrichtenverläufe können anderen Beteiligten mit anonymisiertem Konto erhalten bleiben. Manche Aufzeichnungen bewahren wir länger auf, wenn das Gesetz es verlangt. Eine Löschung kannst du auch unter info{'@'}wave.ba beantragen."
+            "Hetzner Online GmbH hostet die Wave-Datenbank, Dateien und Wiederherstellungssicherungen in Deutschland. Brevo (Brevo SAS, Frankreich) versendet E-Mails und erhält Adressen, Namen und Nachrichteninhalte; veröffentlichte Datenbankstandorte sind Frankreich, Deutschland und Belgien.",
+            "Cloudflare, Inc. stellt Proxy/CDN und Sicherheitsdienste bereit. Verarbeitet werden Anfragedaten einschließlich IP-Adressen, URLs und Browserdaten; öffentliche Ressourcen können zwischengespeichert werden. Das globale Netz kann Daten außerhalb von BiH und dem EWR verarbeiten. Auch optionale Dienste von Google, Apple und Meta können internationale Verarbeitung einschließen.",
+            "Internationale Übermittlungen benötigen eine Grundlage und Schutzmaßnahmen nach anwendbarem Recht, etwa anerkannte Angemessenheitsentscheidungen oder vertragliche Garantien. Informationen zu den geltenden Regelungen und eine Kopie können Sie bei uns anfragen. Ein EU-Sitz bedeutet nicht, dass sämtliche Verarbeitung in der EU bleibt. Wir verkaufen keine personenbezogenen Daten."
+          ],
+          "links": [
+            {
+              "label": "Hetzner",
+              "url": "https://www.hetzner.com/legal/privacy-policy/"
+            },
+            {
+              "label": "Brevo",
+              "url": "https://www.brevo.com/legal/privacypolicy/"
+            },
+            {
+              "label": "Cloudflare",
+              "url": "https://www.cloudflare.com/privacypolicy/"
+            }
+          ]
+        },
+        {
+          "heading": "Speicherung und Löschung",
+          "paragraphs": [
+            "Konto- und Profildaten bleiben während eines aktiven Kontos gespeichert. Die Kontolöschung entfernt persönliche Profilfelder, eigene Dateien, Abonnements und Zugriffstoken aus der aktiven Anwendung. Gemeinsame Nachrichten und Zusammenarbeitsverläufe können anderen Beteiligten mit anonymisiertem Konto erhalten bleiben; bereits geschriebene Texte werden nicht automatisch umgeschrieben. Senden Sie keine unnötigen sensiblen Daten.",
+            "Wiederherstellungssicherungen werden innerhalb von 14 Tagen nach Erstellung ausgetauscht. Gelöschte Daten können bis dahin in älteren Sicherungen verbleiben; diese dienen der Wiederherstellung, nicht dem aktiven Kontozugriff. Anwendungsprotokolle und verschlüsselte E-Mail-Vorschauen werden nach 14 Tagen bereinigt. Abgeschlossene oder verworfene Warteschlangenaufträge werden nach 30 Tagen gelöscht.",
+            "Brevo speichert eigene Zustellnachweise gesondert; Waves 14-Tage-Regel für lokale Protokolle bestimmt nicht Brevos Aufbewahrung. Zur Entfernung dortiger Daten kontaktieren Sie uns. Support-, Moderations-, Einwilligungs- und gemeinsame Zusammenarbeitsdaten bleiben nur so lange wie zur Fallbearbeitung, für Beteiligte, gesetzliche Pflichten oder Rechtsansprüche erforderlich; dies prüfen wir bei Fallabschluss und Löschanfragen.",
+            "Eine Newsletter-Abmeldung beendet das Abonnement; ein minimaler Nachweis kann zur Beachtung und zum Beleg Ihrer Wahl verbleiben. Frühere Anmeldungen ohne dokumentiertes Opt-in belegen keine ausdrückliche Einwilligung."
           ]
         },
         {
           "heading": "Deine Rechte und Anfragen",
           "paragraphs": [
             "Soweit anwendbar, kannst du Auskunft, Berichtigung oder Löschung deiner personenbezogenen Daten verlangen oder Fragen zu Einschränkung, Datenübertragbarkeit und Widerspruch stellen. Kontaktiere info{'@'}wave.ba. Vor der Bearbeitung müssen wir gegebenenfalls deine Identität prüfen.",
-            "Wenn Sie der Ansicht sind, dass die Verarbeitung Ihrer personenbezogenen Daten gegen geltendes Recht verstößt, können Sie sich bei der Datenschutzbehörde von Bosnien und Herzegowina oder einer anderen zuständigen Aufsichtsbehörde beschweren."
+            "Wenn Sie der Ansicht sind, dass die Verarbeitung Ihrer personenbezogenen Daten gegen geltendes Recht verstößt, können Sie sich bei der Datenschutzbehörde von Bosnien und Herzegowina oder einer anderen zuständigen Aufsichtsbehörde beschweren.",
+            "Rechteanfragen richten Sie an info{'@'}wave.ba. Wir antworten unverzüglich, in der Regel innerhalb von 30 Tagen; zulässige Verlängerungen begründen wir. Zur Identitätsprüfung verlangen wir nur angemessene Informationen. Konten sind Personen ab 18 Jahren vorbehalten."
           ],
           "links": [
             {
@@ -133,7 +160,7 @@
         {
           "heading": "Externe Dienste",
           "paragraphs": [
-            "Wave stellt Schriftarten lokal bereit und kann auf Profilen eingebundene YouTube-Videos im erweiterten Datenschutzmodus anzeigen. Wenn dein Browser diese Dienste aufruft, können deren Anbieter technische Anfragedaten erhalten. Google Analytics verarbeitet Nutzungsdaten nur mit deiner Zustimmung.",
+            "Schriften liefert Wave lokal. Videoplayer verbinden sich erst mit YouTube, wenn Sie ein Video öffnen/abspielen. Google erhält dann technische Anfragedaten und kann eigene Speicher verwenden. Externe Links führen zu Websites mit eigenen Regeln.",
             "Wenn du dich mit Google oder Apple anmeldest, verarbeitet der gewählte Anbieter die Anmeldedaten gemäß seinen eigenen Datenschutzbestimmungen.",
             "Mit gesonderter Marketingeinwilligung kann Meta Pixel technische Browser-, URL- und Registrierungsdaten zur Werbemessung verarbeiten. Meta verarbeitet diese Daten nach seiner Datenschutzrichtlinie. Du kannst deine Einwilligung in den Cookie-Einstellungen widerrufen."
           ],
@@ -207,7 +234,8 @@
             "wave.registration-intent (lokaler Speicher, Wave): die Seite, zu der du nach der Registrierung zurückkehrst. Notwendig; wird nach Verwendung oder nach 14 Tagen entfernt.",
             "Service-Worker-Cache (Wave): App-Dateien für schnelleres Laden. Notwendig; wird bei jedem Update ersetzt.",
             "_ga und _ga_… (Cookies, Google Analytics): Messung von Besuchen. Nur mit Einwilligung zur Analyse; höchstens 180 Tage.",
-            "_fbp und _fbc (Cookies, Meta Pixel): Messung von Werbung. Nur mit Einwilligung zu Marketing; die Laufzeit legt Meta fest, und Wave löscht sie, wenn du die Einwilligung widerrufst."
+            "_fbp und _fbc (Cookies, Meta Pixel): Messung von Werbung. Nur mit Einwilligung zu Marketing; die Laufzeit legt Meta fest, und Wave löscht sie, wenn du die Einwilligung widerrufst.",
+            "Cloudflare kann bei aktiven Sicherheitsfunktionen notwendige Cookies wie __cf_bm (normalerweise 30 Minuten) oder cf_clearance (je nach eingestellter Prüfdauer) setzen. Diese dienen dem Bot- und Prüfschutz, unabhängig von optionaler Analyse oder Werbung."
           ]
         },
         {
@@ -238,9 +266,9 @@
           ]
         },
         {
-          "heading": "Externe Schriftarten und Videos",
+          "heading": "Schriften und Videos",
           "paragraphs": [
-            "Die Schriftarten der Oberfläche werden lokal von Wave bereitgestellt. Wenn ein Profilvideo angezeigt wird, kann dein Browser eine Verbindung zu youtube-nocookie.com von Google herstellen. Diese Anbieter können technische Daten verarbeiten oder eigenen Browserspeicher verwenden, den Wave nicht kontrolliert."
+            "Schriften liefert Wave lokal. Videoplayer verbinden sich erst mit YouTube, wenn Sie ein Video öffnen/abspielen. Google erhält dann technische Anfragedaten und kann eigene Speicher verwenden. Externe Links führen zu Websites mit eigenen Regeln."
           ],
           "links": [
             {
@@ -276,7 +304,8 @@
           "heading": "Rolle der Plattform",
           "paragraphs": [
             "Wave bietet Profile, Kampagnen, Angebote und Kommunikation für Kreative, Marken und Agenturen. Nutzer entscheiden selbst über Kooperationen. Wave ist weder Arbeitgeber noch Vertreter oder Partei ihrer Kooperationsverträge.",
-            "Wave verarbeitet keine Zahlungen zwischen Nutzern und bietet keinen Treuhandservice. Ein angezeigter vereinbarter Betrag bestätigt keine Zahlung."
+            "Wave verarbeitet keine Zahlungen zwischen Nutzern und bietet keinen Treuhandservice. Ein angezeigter vereinbarter Betrag bestätigt keine Zahlung.",
+            "Ist Wave ausdrücklich Auftraggeber einer eigenen Kampagne, handelt der Betreiber als dieser Auftraggeber nach den gesondert vereinbarten Zusammenarbeitsbedingungen."
           ]
         },
         {
@@ -345,7 +374,9 @@
       ]
     },
     "acceptTerms": "Ich bestätige, dass ich mindestens 18 bin, und akzeptiere die {terms}.",
-    "lastUpdated": "Aktualisiert: {date}"
+    "lastUpdated": "Aktualisiert: {date}",
+    "acceptTermsLink": "Nutzungsbedingungen",
+    "registrationPrivacyLink": "Datenschutzerklärung"
   },
   "app": {
     "loading": "Wird geladen…",
@@ -376,8 +407,8 @@
     "footerNewsletterPlaceholder": "Deine E-Mail-Adresse",
     "footerNewsletterSubmit": "Per E-Mail anmelden",
     "footerNewsletterNote": "Du erhältst eine E-Mail zur Bestätigung deiner Anmeldung.",
-    "footerNewsletterSuccessTitle": "Du bist angemeldet",
-    "footerNewsletterSuccessMessage": "Danke! Du erhältst in Kürze eine E-Mail, die deine Anmeldung zu den Wave-Neuigkeiten bestätigt.",
+    "footerNewsletterSuccessTitle": "E-Mails prüfen",
+    "footerNewsletterSuccessMessage": "Wir haben einen Link gesendet. Öffne ihn und bestätige deine Anmeldung für den Newsletter.",
     "footerNewsletterError": "Deine Anmeldung konnte nicht abgeschlossen werden. Bitte versuche es später erneut.",
     "footerNewsletterClose": "Schließen",
     "footerQuickLinks": "Direktlinks",
@@ -1522,6 +1553,8 @@
     "creatorInquiryEmailTemplateHint": "Wird mit den ausgewählten Paketen, dem vorgeschlagenen Budget und der Nachricht des Unternehmens an den Creator gesendet.",
     "creatorInquiryAcceptedEmailTemplate": "Kooperationsanfrage angenommen",
     "creatorInquiryAcceptedEmailTemplateHint": "Wird an das Unternehmen gesendet, wenn ein Creator eine Anfrage annimmt.",
+    "campaignInvitationEmailTemplate": "Kampagneneinladung",
+    "campaignInvitationEmailTemplateHint": "Wird an Creator oder Agenturen gesendet, wenn ein Unternehmen oder Wave sie zu einer Kampagne einlädt (auch über Admin → Einladungen).",
     "creatorHiredEmailTemplate": "Creator engagiert",
     "creatorHiredEmailTemplateHint": "Wird an den Creator gesendet, nachdem er ein Kampagnenangebot angenommen hat.",
     "unreadMessageReminderEmailTemplate": "Erinnerung an ungelesene Nachrichten",
@@ -1621,7 +1654,14 @@
     "accountDeletedEmailTemplate": "Konto gelöscht",
     "accountDeletedEmailTemplateHint": "Bestätigung, nachdem jemand sein Konto selbst gelöscht hat.",
     "termsUpdatedEmailTemplate": "Neue Nutzungsbedingungen",
-    "termsUpdatedEmailTemplateHint": "Mitteilung an bestehende Nutzer, wenn eine neue Version der Bedingungen erscheint."
+    "termsUpdatedEmailTemplateHint": "Mitteilung an bestehende Nutzer, wenn eine neue Version der Bedingungen erscheint.",
+    "subscriberStatus": "Anmeldestatus",
+    "subscriptionStates": {
+      "subscribed": "Angemeldet",
+      "unsubscribed": "Abgemeldet",
+      "unverified": "Frühere Anmeldung ohne Einwilligungsnachweis",
+      "pending": "Bestätigung ausstehend"
+    }
   },
   "api": {
     "invalidResponse": "Wave konnte die Serverantwort nicht lesen. Bitte versuche es erneut.",
@@ -3523,7 +3563,9 @@
     "invalid": "Dieser Link ist ungültig oder das Konto wurde gelöscht. Melde dich an und ändere die Auswahl in den Einstellungen.",
     "toWave": "Zu Wave",
     "registerTitle": "Schickt mir Wave-Neuigkeiten.",
-    "registerHint": "Abmeldung mit einem Klick in jeder E-Mail."
+    "registerHint": "Abmeldung mit einem Klick in jeder E-Mail.",
+    "confirmNewsletter": "Anmeldung für Wave-Neuigkeiten bestätigen",
+    "confirmNewsletterHint": "Wähle Bestätigen, um den Newsletter zu erhalten. Du kannst dich jederzeit abmelden."
   },
   "profileGuide": {
     "title": "Profil-Leitfaden",
@@ -3769,6 +3811,157 @@
           "text": "Klare Kampagnen und schnelle Antworten führen zu weiteren Kooperationen."
         }
       }
+    }
+  },
+  "adminInvitations": {
+    "nav": "Einladungen",
+    "title": "Kampagneneinladungen",
+    "intro": "Lade registrierte Creator zu einer Wave-Kampagne ein. Jeder Creator erhält eine persönliche Einladung in der App, und deine Nachricht wird zur ersten Nachricht im Chat, sobald er annimmt.",
+    "campaignStep": "Kampagne",
+    "campaign": "Kampagne",
+    "voluntaryCampaign": "Kostenlose Kampagne",
+    "paidCampaign": "Bezahlte Kampagne",
+    "viewCampaign": "Kampagne öffnen",
+    "invitedCount": "eingeladen: {count}",
+    "messageStep": "Nachricht",
+    "resetMessage": "Standardtext wiederherstellen",
+    "variables": "Variablen",
+    "insert": "Einfügen:",
+    "message": "Einladungsnachricht",
+    "variablesHint": "{'{{'}name{'}}'} wird durch den Namen des Creators ersetzt, {'{{'}companyName{'}}'} durch den Firmennamen.",
+    "unknownVariables": "Unbekannte Variablen: {names}",
+    "preview": "Nachrichtenvorschau",
+    "previewName": "Amina",
+    "creatorsStep": "Creator",
+    "creators": "Creator",
+    "searchCreators": "Creator nach Name oder Stadt suchen",
+    "selectAll": "Alle verfügbaren ({count})",
+    "selectedCount": "Ausgewählt: {count}",
+    "totalCreators": "Creator insgesamt: {count}",
+    "clearSelection": "Auswahl aufheben",
+    "profileStrength": "Profilstärke",
+    "noCreators": "Keine Creator vorhanden.",
+    "loadError": "Die Daten konnten nicht geladen werden.",
+    "sendError": "Die Einladungen konnten nicht gesendet werden.",
+    "status": {
+      "invited": "Eingeladen",
+      "applied": "Beworben"
+    },
+    "footerHint": "Bereits eingeladene oder beworbene Creator werden automatisch übersprungen.",
+    "send": "Einladungen senden ({count})",
+    "confirmTitle": "Einladungen senden ({count})?",
+    "confirmMessage": "Creator ({count}) werden zu „{campaign}“ eingeladen. Einladungen lassen sich auf dieser Seite nicht zurückziehen.",
+    "sent": "Einladungen gesendet: {count}.",
+    "sentWithSkipped": "Einladungen gesendet: {count}. Übersprungen (bereits eingeladen oder beworben): {skipped}.",
+    "noCampaignsTitle": "Keine offene Wave-Kampagne",
+    "noCampaigns": "Einladungen werden für offene Kampagnen des Wave-Unternehmens gesendet. Veröffentliche eine Kampagne mit deinem Wave-Konto und komm dann hierher zurück.",
+    "createCampaign": "Neue Kampagne"
+  },
+  "emailTemplates": {
+    "intro": "Jede Vorlage ist eine automatische E-Mail. Hier änderst du Betreff, Text und Layout pro Sprache – wann und an wen sie gesendet wird, entscheidet Wave.",
+    "templatesCount": "Vorlagen",
+    "customCount": "Angepasst",
+    "search": "Nach Name oder Ereignis suchen",
+    "filter": "Vorlagenfilter",
+    "filters": {
+      "all": "Alle",
+      "custom": "Angepasst",
+      "default": "Standard"
+    },
+    "noResults": "Keine Vorlagen für diese Suche.",
+    "groups": {
+      "account": "Konto und Zugang",
+      "collaboration": "Kampagnen und Zusammenarbeit",
+      "profile": "Profil",
+      "credits": "Credits",
+      "contact": "Kontakt und Neuigkeiten"
+    },
+    "recipients": {
+      "newUser": "Neuer Nutzer",
+      "user": "Nutzer",
+      "formerUser": "Ehemaliger Nutzer",
+      "allUsers": "Alle Nutzer",
+      "company": "Unternehmen",
+      "creator": "Creator",
+      "creatorOrAgency": "Creator oder Agentur",
+      "creatorOrCompany": "Creator und Unternehmen",
+      "participant": "Chat-Teilnehmer",
+      "team": "Wave-Team",
+      "subscriber": "Abonnent"
+    },
+    "frequency": {
+      "once": "Einmal",
+      "perRequest": "Auf Anfrage",
+      "everyEvent": "Jedes Mal",
+      "perVersion": "Einmal pro Version",
+      "oncePerConversation": "Einmal pro Unterhaltung",
+      "dailyOrWeekly": "Täglich oder wöchentlich",
+      "series": "Reihe aus 4 E-Mails",
+      "manual": "Manuell auf Anforderung des Administrators"
+    },
+    "whenSent": "Wann sie gesendet wird",
+    "recipient": "Empfänger",
+    "frequencyLabel": "Häufigkeit",
+    "language": "Sprache der Vorlage",
+    "languageHint": "ein Punkt bedeutet, dass die Sprache angepasst ist",
+    "customizedDot": "angepasst",
+    "statusDefault": "Standardtext von Wave",
+    "statusCustom": "Angepasst für {locale}",
+    "statusDirty": "Ungespeicherte Änderungen",
+    "editing": "Bearbeiten",
+    "tabs": {
+      "text": "Text",
+      "html": "HTML (erweitert)"
+    },
+    "textHint": "Ändere die Formulierungen ohne Code – das Layout der E-Mail bleibt gleich. Namen, Links und Daten werden automatisch eingesetzt.",
+    "noTextFields": "Diese E-Mail hat keinen Text, den du hier ändern kannst. Nutze HTML.",
+    "htmlHint": "Ändere das HTML nur für ein anderes Layout. Unbekannte Variablen und Skripte können nicht gespeichert werden.",
+    "restoreLayout": "Standardlayout wiederherstellen",
+    "restoreField": "Standard wiederherstellen",
+    "insert": "Einfügen:",
+    "preview": "Live-Vorschau",
+    "previewSample": "Beispieldaten · {language}",
+    "device": "Bildschirmgröße",
+    "devices": {
+      "desktop": "Desktop",
+      "mobile": "Mobil"
+    },
+    "from": "Von",
+    "unsaved": "Ungespeicherte Änderungen für {locale}",
+    "allSaved": "Alles gespeichert · Änderungen gelten nur für {locale}",
+    "reset": "Standard wiederherstellen",
+    "sendTest": "Test an mich senden",
+    "save": "Für {locale} speichern",
+    "testSent": "Der Test wurde an {email} gesendet.",
+    "testError": "Der Test konnte nicht gesendet werden.",
+    "resetDone": "Die Standard-E-Mail für {locale} ist wiederhergestellt.",
+    "resetTitle": "Standard-E-Mail wiederherstellen?",
+    "resetMessage": "Deine Änderungen an Betreff, Text und Layout für {locale} werden gelöscht. Andere Sprachen bleiben unverändert.",
+    "discardTitle": "Änderungen verwerfen?",
+    "discardMessage": "Du hast ungespeicherte Änderungen in dieser Vorlage.",
+    "discard": "Verwerfen",
+    "keepEditing": "Weiter bearbeiten",
+    "fields": {
+      "preheader": "Vorschautext im Posteingang",
+      "eyebrow": "Überzeile",
+      "heading": "Überschrift der E-Mail",
+      "message": "Nachricht",
+      "buttonLabel": "Button-Text",
+      "footer": "Fußzeile",
+      "firstLabel": "Bezeichnung Zeile 1",
+      "secondLabel": "Bezeichnung Zeile 2",
+      "detailsLabel": "Bezeichnung Details",
+      "scoreLabel": "Bezeichnung Profilstärke",
+      "stepsLabel": "Bezeichnung Schritte",
+      "guideLabel": "Linktext Leitfaden",
+      "campaignsLabel": "Bezeichnung Kampagnen",
+      "settingsLabel": "Linktext Einstellungen",
+      "unsubscribeLabel": "Abmeldetext",
+      "roleLabel": "Bezeichnung Rolle",
+      "nameLabel": "Bezeichnung Name",
+      "emailLabel": "Bezeichnung E-Mail",
+      "interestLabel": "Bezeichnung Interesse",
+      "messageLabel": "Bezeichnung Nachricht"
     }
   }
 }

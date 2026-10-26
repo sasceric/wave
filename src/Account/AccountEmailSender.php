@@ -525,6 +525,20 @@ final class AccountEmailSender
         );
     }
 
+    /** Sent with every campaign invitation, from a brand or from Admin → Pozivnice. */
+    public function sendCampaignInvitation(User $recipient, string $campaignTitle, string $companyName, string $message, bool $voluntary): void
+    {
+        $locale = $this->normalizedLocale($recipient->getPreferredLocale());
+        $copy = $this->copyFor('campaign_invitation', $locale);
+        $this->sendMarketplaceEmail($recipient, 'campaign_invitation', 'account-invitations', [
+            'firstValue' => $campaignTitle,
+            'secondValue' => $companyName,
+            'details' => $message,
+            // Badge under the heading: free campaigns say so clearly.
+            'compensation' => $copy[$voluntary ? 'voluntaryBadge' : 'paidBadge'],
+        ], locale: $locale);
+    }
+
     public function sendCreatorHired(User $creator, string $companyName, string $campaignTitle): void
     {
         $this->sendMarketplaceEmail($creator, 'creator_hired', 'account-offers', [
@@ -610,6 +624,13 @@ final class AccountEmailSender
                 'firstValue' => 'Amina Creator',
                 'secondValue' => 'Summer campaign',
                 'details' => 'I would love to create a thoughtful story for this campaign.',
+            ];
+        } elseif ($template === 'campaign_invitation') {
+            $variables += [
+                'firstValue' => 'Predstavi Wave - rastimo zajedno',
+                'secondValue' => 'Wave.ba',
+                'details' => "Pozdrav Amina,\n\npozivamo te u našu kampanju.\n\nS poštovanjem,\nWave.ba",
+                'compensation' => $variables['voluntaryBadge'],
             ];
         } elseif ($template === 'creator_hired') {
             $variables += [
@@ -717,16 +738,20 @@ final class AccountEmailSender
         string $url,
         array $variables,
     ): void {
-        $variables['recipientName'] = $recipientName;
-        $variables['greeting'] = EmailRecipient::greeting($variables['greeting'], $recipientName);
         $customization = $this->entityManager->getRepository(EmailTemplate::class)->findOneBy([
             'templateKey' => $type,
             'locale' => $locale,
         ]);
+        $variables = EmailTemplate::applyCopy($variables, $customization?->getCopy());
+        $variables['recipientName'] = $recipientName;
+        $variables['greeting'] = EmailRecipient::greeting($variables['greeting'], $recipientName);
         $text = [
             $variables['greeting'],
             $variables['message'],
         ];
+        if (isset($variables['compensation']) && $variables['compensation'] !== '') {
+            $text[] = $variables['compensation'];
+        }
         foreach ([
             ['firstLabel', 'firstValue'],
             ['secondLabel', 'secondValue'],
@@ -747,12 +772,12 @@ final class AccountEmailSender
         $message = new Email()
             ->from(new Address($this->fromAddress, $this->fromName))
             ->to(new Address($email, $recipientName))
-            ->subject($customization instanceof EmailTemplate ? $customization->getSubject() : $subject)
+            ->subject($this->templates->renderSubject($customization?->getSubject() ?? $subject, $variables))
             ->text(implode("\n\n", $text))
             ->html($this->templates->render(
                 $type,
                 $variables,
-                $customization instanceof EmailTemplate ? $customization->getHtmlBody() : null,
+                $customization?->getHtmlBody(),
             ));
 
         if (in_array($type, ['verify', 'verification_reminder', 'reset'], true)) {

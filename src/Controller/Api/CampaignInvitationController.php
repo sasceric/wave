@@ -38,6 +38,7 @@ final class CampaignInvitationController
         Security $security,
         CsrfTokenManagerInterface $tokenManager,
         NotificationDelivery $notificationDelivery,
+        \App\Account\AccountEmailSender $emails,
     ): JsonResponse {
         $locale = LocaleContext::fromRequest($request);
         if (null === $locale) {
@@ -102,6 +103,7 @@ final class CampaignInvitationController
         $entityManager->persist($notification);
         $entityManager->flush();
         $notificationDelivery->deliver($notification);
+        $emails->sendCampaignInvitation($creatorOwner, $campaign->getTitle(), $campaign->getCompany()->getName(), $message, $campaign->isVoluntary());
 
         return new JsonResponse(['data' => CampaignInvitationResource::fromEntity($invitation, $locale, CampaignHiredCounts::forCampaign($entityManager, $invitation->getCampaign()))], 201);
     }

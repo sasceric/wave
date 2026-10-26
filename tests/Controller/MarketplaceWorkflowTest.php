@@ -1474,6 +1474,13 @@ final class MarketplaceWorkflowTest extends WebTestCase
             'message' => 'We would love to invite you to create a short video for this campaign.',
         ], $this->csrfToken());
         self::assertResponseStatusCodeSame(201);
+        self::assertEmailCount(1);
+        $invitationEmail = self::getMailerMessage();
+        self::assertInstanceOf(Email::class, $invitationEmail);
+        self::assertSame($creator->getOwner()->getEmail(), $invitationEmail->getTo()[0]->getAddress());
+        self::assertEmailHtmlBodyContains($invitationEmail, 'We would love to invite you to create a short video');
+        self::assertEmailHtmlBodyContains($invitationEmail, 'Plaćena saradnja');
+        self::assertStringContainsString('/racun/pozivi-kampanja', (string) $invitationEmail->getTextBody());
         $invitation = $this->payload()['data'];
         self::assertSame('pending', $invitation['status']);
         self::assertNull($invitation['conversationId']);

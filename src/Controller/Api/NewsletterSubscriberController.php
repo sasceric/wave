@@ -72,6 +72,14 @@ final class NewsletterSubscriberController
         }
 
         $subscriber = new NewsletterSubscriber($email, $locale);
+        $subscriber->setLegalRecords(['newsletter' => [
+            'enabled' => false,
+            'version' => \App\Legal\LegalPolicies::VERSION,
+            'archiveHash' => \App\Legal\LegalPolicies::archiveHash(),
+            'requestedAt' => gmdate(DATE_ATOM),
+            'locale' => $locale,
+            'source' => 'footer_signup',
+        ]]);
         $entityManager->persist($subscriber);
         $entityManager->flush();
 
@@ -128,6 +136,7 @@ final class NewsletterSubscriberController
                     'id' => $subscriber->getId(),
                     'email' => $subscriber->getEmail(),
                     'locale' => $subscriber->getLocale(),
+                    'subscriptionStatus' => $subscriber->getLegalRecords() === [] ? 'unverified' : (($subscriber->getLegalRecords()['newsletter']['enabled'] ?? false) ? 'subscribed' : (isset($subscriber->getLegalRecords()['newsletter']['withdrawnAt']) || isset($subscriber->getLegalRecords()['newsletter']['declinedAt']) ? 'unsubscribed' : 'pending')),
                     'subscribedAt' => $subscriber->getSubscribedAt()->format(DATE_ATOM),
                 ],
                 $subscribers,

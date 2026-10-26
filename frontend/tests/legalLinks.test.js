@@ -23,9 +23,11 @@ const render = new Function('Vue', compile(descriptor.template.content, { mode: 
 test('legal links resolve compiled locale URLs instead of rendering object Object', async () => {
   for (const locale of ['bs', 'hr', 'sr', 'sl', 'en', 'cnr', 'de']) {
     const { legal } = JSON.parse(await readFile(new URL(`../src/locales/${locale}.json`, import.meta.url), 'utf8'))
-    const i18n = createI18n({ legacy: false, locale, messages: { [locale]: { legal: precompile(legal) } } })
-    for (const [routeName, key] of [['privacy-policy', 'privacy'], ['cookie-policy', 'cookies']]) {
+    const i18n = createI18n({ legacy: false, locale, messages: { [locale]: { legal: precompile(legal), app: { footerLegal: 'Legal' } } } })
+    for (const [routeName, key] of [['privacy-policy', 'privacy'], ['cookie-policy', 'cookies'], ['terms-of-use', 'terms']]) {
       const { state } = await setupView('../src/views/LegalView.vue', {
+        '../../../config/legal_documents.json': { default: JSON.parse(await readFile(new URL('../../config/legal_documents.json', import.meta.url), 'utf8')) },
+        '../lib/api': { formatDate: value => value },
         'vue-i18n': { useI18n: () => i18n.global },
         'vue-router': { useRoute: () => ({ meta: { routeName } }) },
       })
