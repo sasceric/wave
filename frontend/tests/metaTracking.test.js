@@ -75,6 +75,28 @@ test('fresh SDK startup drains initialization and a real signup without getting 
   assert.equal(commands().length, 0)
 })
 
+test('each public PageView has a unique event ID in Pixel options, including a return visit, without duplicating metadata refreshes', async () => {
+  const { api, window } = await tracking()
+  api.setMarketingConsent(true)
+  api.trackMetaPageView('/kreatori')
+  const processed = loadSdk(window)
+  for (const path of ['/kreatori', '/kompanije', '/kreatori']) {
+    window.location = new URL(`https://wave.ba${path}`)
+    api.trackMetaPageView(path)
+    api.trackMetaPageView(path)
+  }
+  const events = processed.filter(args => args[2] === 'PageView')
+  assert.equal(events.length, 3)
+  assert.equal(new Set(events.map(args => args[4]?.eventID)).size, 3)
+  for (const event of events) {
+    assert.match(event[4].eventID, /^[a-f\d-]{36}$/)
+    assert.equal(event[0], 'trackSingle')
+    assert.equal(event[1], '123456789012345')
+    assert.deepEqual(Object.keys(event[3]), ['page_path'])
+    assert.equal(event[3].event_id, undefined, 'The ID belongs in Pixel options, not custom event data.')
+  }
+})
+
 test('withdrawal before SDK startup blocks initialization until consent is restored, without replaying a signup', async () => {
   for (const restoreBeforeLoad of [false, true]) {
     const { api, window, commands } = await tracking()

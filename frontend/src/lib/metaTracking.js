@@ -111,7 +111,9 @@ function sendPageView() {
   if (!currentPage || !consent || currentPage === lastPage) return
   const path = new URL(currentPage, window.location.origin).pathname
   if (path !== window.location.pathname || !initialize()) return
-  window.fbq('trackSingle', pixelId, 'PageView', { page_path: path })
+  // Each actual navigation gets its own key; a server copy must reuse this ID.
+  const eventId = window.crypto.randomUUID()
+  window.fbq('trackSingle', pixelId, 'PageView', { page_path: path }, { eventID: eventId })
   lastPage = currentPage
 }
 

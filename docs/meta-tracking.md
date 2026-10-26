@@ -71,7 +71,7 @@ attribution tags use ASCII slug values (`utm_source`, `utm_medium`, `utm_campaig
 
 | Event | Trigger | Parameters |
 | --- | --- | --- |
-| `PageView` | Resolved, indexable public SPA page, including navigation | `page_path` |
+| `PageView` | Resolved, indexable public SPA page, including navigation | `page_path`; random `eventID` in Pixel options |
 | `CompleteRegistration` | Successful email signup or Google/Apple signup completion response | `content_name`, `account_type`, `status=true`, `registration_method`, known `company_type` |
 
 The standard registration event targets this Pixel with `trackSingle`, includes a
@@ -92,6 +92,40 @@ These are registration events, not verified/approved/completed-profile events.
 Use Wave's existing admin activation milestones for registration quality, profile
 completion, approval and first real activity. This integration does not invent
 extra conversions for those stages.
+
+### Event IDs and the automatic Meta connection (checked 2026-10-26)
+
+Both browser events now provide a random UUID in Pixel's `eventID` options. Each
+actual public-page navigation, including returning to an earlier page, gets a new
+ID; repeated metadata refreshes do not emit another PageView. The ID is unrelated
+to account IDs, and does not change consent or which routes can be measured.
+
+The live Meta account has an **active Conversions API · Web-only** business-level
+connection. Meta's settings record its enrollment from Pixel creation on
+2026-10-21, with **Connect all owned datasets automatically** selected. This is
+separate from Wave's code, which contains no server event sender or CAPI token.
+
+Events Manager's PageView deduplication report showed 0% total coverage, with
+event IDs on 54.67% of browser events and 100% of the much smaller server volume.
+The debugging sample included `ob3_plugin-set_` IDs on both sides for some rows,
+alongside server-only rows and repeated copies. Therefore the sample does not
+support claiming that every browser/server ID differs or that no events arrive.
+These are historical/aggregated reports, not a live verification of this patch.
+
+The CompleteRegistration overview also includes Meta-hosted CAPI events, and its
+deduplication panel says deduplication has not been set up for that event. Wave
+already supplies a registration event ID, so the PageView change must not be
+described as fixing registration deduplication as well.
+
+Adding the missing PageView ID fixes browser key coverage only after deployment.
+It does **not** establish that Meta's automatic connection forwards that same ID,
+or make server event volume equal browser volume. Confirm newly received matching
+`event_name` and browser `eventID` / server `event_id` for the same action using
+Test Events and fresh debugging samples. Any future explicit server integration
+must reuse the browser ID, honor Marketing consent and avoid a second independent
+sender. Do not generate new server IDs for browser copies, send personal profile
+data to improve a score, or disconnect the business-wide connection without the
+owner's approval.
 
 ## Meta setup and verification after deployment
 
