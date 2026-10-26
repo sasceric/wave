@@ -2,6 +2,14 @@
 framework:
     secret: '%env(APP_SECRET)%'
 
+    # Bots and scanners request unknown paths or POST to pages; these are answered
+    # with 404/405 and are not application errors, so keep them out of the error log.
+    exceptions:
+        Symfony\Component\HttpKernel\Exception\NotFoundHttpException:
+            log_level: info
+        Symfony\Component\HttpKernel\Exception\MethodNotAllowedHttpException:
+            log_level: info
+
     # Note that the session will be started ONLY if you read or write from it.
     session:
         cookie_lifetime: 7776000
@@ -19,6 +27,23 @@ framework:
             policy: 'sliding_window'
             limit: 240
             interval: '1 minute'
+        # Public directory API (creators, companies, campaigns); see DirectoryRateLimitSubscriber.
+        wave_directory_visitor:
+            policy: sliding_window
+            limit: 120
+            interval: '1 minute'
+        wave_directory_member:
+            policy: sliding_window
+            limit: 600
+            interval: '1 minute'
+        wave_profile_views_visitor:
+            policy: sliding_window
+            limit: 500
+            interval: '24 hours'
+        wave_profile_views_member:
+            policy: sliding_window
+            limit: 3000
+            interval: '24 hours'
         wave_password_change:
             policy: sliding_window
             limit: 5

@@ -306,3 +306,26 @@ For dev CLI processing, override `wave.admin_worker.enabled: false` in
 and run the four consumers plus `app:scheduled-tasks dispatch` as needed.
 Tests default to direct delivery but queue integration tests exercise actual
 Doctrine transports in a disposable PostgreSQL database.
+
+## Directory scraping protection
+
+`DirectoryRateLimitSubscriber` limits the public JSON directory (`GET /api/creators`,
+`/api/companies`, `/api/campaigns` and their profile/review endpoints) per visitor:
+120 requests per minute and 500 profile views per 24 hours for anonymous visitors,
+600 per minute and 3,000 profiles for signed-in approved accounts. Over the limit the
+API answers 429 with `Retry-After`. HTML pages, sitemaps and robots.txt are never
+limited, so link previews and indexing of server-rendered metadata are unaffected.
+
+Search engines render profiles through these endpoints. A client over the limit is
+still served when `SearchCrawlerVerifier` confirms it by reverse and forward DNS
+(Googlebot, Bingbot, Applebot, Yandex); results are cached for a day per IP.
+User agents alone are never trusted.
+
+Limits are keyed by `Request::getClientIp()`. Behind a reverse proxy or Cloudflare,
+configure `SYMFONY_TRUSTED_PROXIES` so the real visitor address is used. Private or
+loopback addresses are never limited, so a misconfigured proxy cannot block every
+visitor, but it also disables the protection. Limited visitors are logged once per
+10 minutes as `directory.rate_limited` in the main log. robots.txt refuses known
+AI-training and data-resale crawlers (GPTBot, CCBot, Bytespider and others); search
+engine rules are unchanged.
+

@@ -2,3 +2,9 @@ framework:
     test: true
     session:
         storage_factory_id: session.storage.factory.mock_file
+    rate_limiter:
+        # Test suites browse the directory far faster than people do.
+        wave_directory_visitor: { policy: sliding_window, limit: 1000000, interval: '1 minute' }
+        wave_directory_member: { policy: sliding_window, limit: 1000000, interval: '1 minute' }
+        wave_profile_views_visitor: { policy: sliding_window, limit: 1000000, interval: '24 hours' }
+        wave_profile_views_member: { policy: sliding_window, limit: 1000000, interval: '24 hours' }

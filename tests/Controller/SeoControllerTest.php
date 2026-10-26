@@ -366,6 +366,11 @@ final class SeoControllerTest extends WebTestCase
         self::assertStringContainsString('Disallow: /en/account', $robots);
         self::assertStringContainsString('Disallow: /moderacija', $robots);
         self::assertStringContainsString('Sitemap: http://127.0.0.1:8000/sitemap.xml', $robots);
+        // AI-training crawlers are refused; search engines keep the general rules.
+        self::assertStringContainsString("User-agent: GPTBot\nDisallow: /\n", $robots);
+        self::assertStringContainsString("User-agent: CCBot\nDisallow: /\n", $robots);
+        self::assertStringNotContainsString('User-agent: Googlebot', $robots);
+        self::assertStringNotContainsString('User-agent: Bingbot', $robots);
     }
 
     public function testRenderedProfileHeadIncludesCanonicalHreflangAndPersonSchema(): void

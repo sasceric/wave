@@ -101,6 +101,12 @@ final class SitemapGenerator
         return $xml;
     }
 
+    private const BLOCKED_DATA_CRAWLERS = [
+        'GPTBot', 'ClaudeBot', 'anthropic-ai', 'CCBot', 'Google-Extended', 'Applebot-Extended',
+        'Bytespider', 'Meta-ExternalAgent', 'Amazonbot', 'cohere-ai', 'Diffbot', 'ImagesiftBot',
+        'omgili', 'Timpibot', 'DataForSeoBot',
+    ];
+
     public function robotsTxt(): string
     {
         $lines = [
@@ -145,6 +151,15 @@ final class SitemapGenerator
         ] as $legacyPath) {
             $lines[] = 'Disallow: '.$legacyPath;
         }
+        // Crawlers that collect content for AI training or data resale. Search engines
+        // (Googlebot, Bingbot, Applebot) keep the rules above; Google-Extended and
+        // Applebot-Extended only control AI training, not search indexing.
+        foreach (self::BLOCKED_DATA_CRAWLERS as $agent) {
+            $lines[] = '';
+            $lines[] = 'User-agent: '.$agent;
+            $lines[] = 'Disallow: /';
+        }
+        $lines[] = '';
         $lines[] = 'Sitemap: '.$this->siteOrigin->url('/sitemap.xml');
 
         return implode("\n", $lines)."\n";
