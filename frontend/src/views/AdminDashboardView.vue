@@ -163,6 +163,11 @@ const bulkApprovalConfirmationMessage = computed(() => {
 const currentRows = computed(() => listRows.value)
 const isProfileList = computed(() => ['creators', 'companies', 'registrations'].includes(section.value))
 function reviewProfile(row) { reviewRequest.value = { kind: section.value, id: row.id } }
+// Keep the list in step with actions taken in the review (e.g. a reminder sent).
+function patchReviewedRow(summary) {
+  const row = listRows.value.find((item) => item.accountId === summary.accountId)
+  if (row) Object.assign(row, { profileReminders: summary.profileReminders, profileStrength: summary.profileStrength })
+}
 function profileRoute(row) {
   const slug = row.profileSlug || row.slug
   if (!slug) return null
@@ -693,7 +698,7 @@ onMounted(updateCreatedAtClock)
         </section>
       </main>
     </div>
-    <AdminProfileReview :open="reviewRequest !== null" :kind="reviewRequest?.kind || section" :id="reviewRequest?.id || null" @update:open="!$event && (reviewRequest = null)" />
+    <AdminProfileReview :open="reviewRequest !== null" :kind="reviewRequest?.kind || section" :id="reviewRequest?.id || null" @update:open="!$event && (reviewRequest = null)" @updated="patchReviewedRow" />
     <ConfirmationModal
       :open="reminderRequest !== null"
       :title="t('adminProfiles.reminderConfirmTitle')"

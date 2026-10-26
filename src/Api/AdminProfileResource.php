@@ -41,6 +41,7 @@ final class AdminProfileResource
         if ($company === null || $company->getCompanyType() === 'agency' || $creator?->isAgencyProfile()) {
             $completion += ['works' => count($creator?->getPortfolio() ?? []), 'packages' => count($creator?->getPackages() ?? []), 'faqs' => count($creator?->getFaqs() ?? [])];
         }
+        $strength = $owner !== null ? \App\Account\ProfileStrength::forUser($owner)['score'] ?? null : null;
         $manageable = $owner !== null && !$owner->isDeleted() && !$owner->hasRole('ROLE_ADMIN') && !$owner->hasRole('ROLE_MODERATOR');
 
         return [
@@ -58,7 +59,47 @@ final class AdminProfileResource
             'profileImageUrl' => $media?->getUrl() ?? $imageUrl,
             'completion' => $completion,
             // Same 0–100 score the account sees on Pregled (null for staff and profiles without an account).
-            'profileStrength' => $owner !== null ? \App\Account\ProfileStrength::forUser($owner)['score'] ?? null : null,
+            'profileStrength' => $strength,
+            'profileReminders' => $owner !== null && !$owner->isDeleted() ? self::reminders($owner, $strength) : null,
+        ];
+    }
+
+    /** Profile completion emails (days 1, 4, 10, 21): what was sent, what is next, and what an admin may send now. */
+    private static function reminders(User $owner, ?int $score): array
+    {
+        $total = count(\App\Background\ProfileReminderBatch::SCHEDULE_DAYS);
+        $sent = min($total, $owner->getProfileReminderStage());
+        $log = $owner->getProfileReminderLog();
+        $stages = [];
+        foreach (range(1, $total) as $stage) {
+            $sends = array_values(array_filter($log, static fn (array $row): bool => (int) ($row['stage'] ?? 0) === $stage));
+            $last = $sends === [] ? null : $sends[count($sends) - 1];
+            $stages[] = [
+                'stage' => $stage,
+                'day' => \App\Background\ProfileReminderBatch::SCHEDULE_DAYS[$stage - 1],
+                // Emails sent before the history existed are known only from the stage counter.
+                'sent' => $stage <= $sent || $last !== null,
+                'sentAt' => $last['at'] ?? null,
+                'manual' => (bool) ($last['manual'] ?? false),
+                'sends' => count($sends),
+            ];
+        }
+        $eligible = $owner->isApproved() && $owner->isEmailVerified() && $owner->isProfileTipsEnabled() && $score !== null && $score < 100;
+
+        return [
+            'stages' => $stages,
+            'lastStage' => $sent > 0 ? $sent : null,
+            'nextStage' => $sent < $total ? $sent + 1 : null,
+            'nextAt' => $sent < $total ? $owner->getProfileReminderNextAt()?->format(DATE_ATOM) : null,
+            'tipsEnabled' => $owner->isProfileTipsEnabled(),
+            'status' => match (true) {
+                !$owner->isApproved() || !$owner->isEmailVerified() => 'pending_approval',
+                !$owner->isProfileTipsEnabled() => 'tips_disabled',
+                $score !== null && $score >= 100 => 'complete',
+                $sent >= $total => 'finished',
+                default => 'active',
+            },
+            'canSend' => $eligible,
         ];
     }
 

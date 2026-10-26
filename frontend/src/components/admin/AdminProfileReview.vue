@@ -13,9 +13,10 @@ import CreatorAudience from '../creators/CreatorAudience.vue'
 import CreatorWorks from '../creators/CreatorWorks.vue'
 import AgencyServiceCard from '../companies/AgencyServiceCard.vue'
 import AdminProfileIdentity from './AdminProfileIdentity.vue'
+import AdminProfileReminders from './AdminProfileReminders.vue'
 
 const props = defineProps({ open: Boolean, kind: { type: String, required: true }, id: { type: Number, default: null } })
-const emit = defineEmits(['update:open'])
+const emit = defineEmits(['update:open', 'updated'])
 const { t, locale } = useI18n()
 const data = ref(null), loading = ref(false), error = ref('')
 let generation = 0
@@ -53,6 +54,10 @@ watch([() => props.open, () => props.kind, () => props.id, locale], async () => 
   } catch (cause) { if (version === generation) error.value = cause.message }
   finally { if (version === generation) loading.value = false }
 }, { immediate: true })
+function reminderSent(summary) {
+  data.value = { ...data.value, ...summary }
+  emit('updated', summary)
+}
 watch(() => currentUser.value?.id, () => { ++generation; data.value = null; emit('update:open', false) })
 onBeforeUnmount(() => { ++generation })
 </script>
@@ -64,6 +69,7 @@ onBeforeUnmount(() => { ++generation })
     <div v-else-if="data" class="admin-profile-review">
       <AdminProfileIdentity :row="{ ...data, name }" />
       <dl class="admin-profile-review__facts"><div v-for="[label, value] in facts" :key="label"><dt>{{ label }}</dt><dd>{{ value }}</dd></div></dl>
+      <AdminProfileReminders v-if="data.profileReminders" :reminders="data.profileReminders" :kind="kind" :id="id" :strength="data.profileStrength ?? null" @updated="reminderSent" />
       <section><h3>{{ t('adminProfiles.filledData') }}</h3><dl class="admin-profile-review__checks"><div v-for="(count, key) in data.completion" :key="key"><dt>{{ t(`adminProfiles.sections.${key}`) }}</dt><dd>{{ count ? t('adminProfiles.filled') : t('adminProfiles.missing') }}<template v-if="['networks', 'services', 'works', 'packages', 'faqs'].includes(key)"> · {{ count }}</template></dd></div></dl></section>
       <RichTextContent v-if="profile.bio || profile.about" :html="profile.bio || profile.about" />
       <img v-if="profile.coverUrl" class="admin-profile-review__cover" :src="profile.coverUrl" :alt="t('account.companyCover')" loading="lazy" />

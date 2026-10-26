@@ -3080,7 +3080,34 @@
     "verificationTemplateTitle": "Opomnik za potrditev e-pošte",
     "verificationTemplateHint": "Ročni opomnik iz Odobritev z novo potrditveno povezavo.",
     "profileTipTemplateTitle": "Nasvet za popolnejši profil",
-    "profileTipTemplateHint": "Ročni nasvet iz Odobritev za boljšo predstavitev dela ali podjetja."
+    "profileTipTemplateHint": "Ročni nasvet iz Odobritev za boljšo predstavitev dela ali podjetja.",
+    "reminders": {
+      "title": "Sporočila za izpolnitev profila",
+      "email": "{n}. sporočilo · {day}. dan",
+      "sentOn": "Poslano {date}",
+      "sentEarlier": "Poslano",
+      "manual": "ročno",
+      "times": "{count}-krat",
+      "scheduled": "Načrtovano za {date}",
+      "notSent": "Ni poslano",
+      "again": "Znova pošlji {n}. sporočilo",
+      "sendNext": "Pošlji {n}. sporočilo zdaj",
+      "sending": "Pošiljanje …",
+      "sentNow": "{n}. sporočilo je poslano.",
+      "short": "Nasveti za profil: {sent}/{total}",
+      "status": {
+        "active": "V teku",
+        "finished": "Vsa 4 poslana",
+        "complete": "Profil izpolnjen",
+        "tips_disabled": "Izklopil/a nasvete",
+        "pending_approval": "Čaka odobritev"
+      },
+      "hint": {
+        "complete": "Profil je 100 % izpolnjen, nasvetov ne pošiljamo več.",
+        "tips_disabled": "Uporabnik je izklopil nasvete za profil, zato jih ne pošiljamo niti ročno.",
+        "pending_approval": "Nasveti se začnejo dan po odobritvi računa in potrditvi e-pošte."
+      }
+    }
   },
   "imageUpload": {
     "creator": "Priporočeno: 600 × 600 px (1:1). Obraz postavi na sredino in okoli njega pusti nekaj prostora.",

@@ -124,6 +124,46 @@ final class EmailPreferencesTest extends WebTestCase
         self::assertEmailCount(1);
     }
 
+    public function testAdminsSeeReminderHistoryAndCanRepeatOrAdvanceIt(): void
+    {
+        static::getContainer()->get('cache.rate_limiter')->clear();
+        $user = $this->creator();
+        $creatorId = $user->getCreator()?->getId();
+        $admin = new User('admin@example.test', 'ROLE_CREATOR');
+        $admin->setPassword('unused-test-hash');
+        $admin->setAdmin(true);
+        $this->em->persist($admin);
+        $this->em->flush();
+        $this->client->loginUser($admin, 'main');
+
+        $this->client->request('GET', '/api/admin/catalog/creators/'.$creatorId.'/profile?locale=en');
+        self::assertResponseIsSuccessful();
+        $reminders = $this->payload()['data']['profileReminders'];
+        self::assertSame(['active', null, 1], [$reminders['status'], $reminders['lastStage'], $reminders['nextStage']]);
+        self::assertCount(4, $reminders['stages']);
+
+        // Skipping ahead is refused; the next email can be sent early.
+        $this->json('POST', '/api/admin/catalog/creators/'.$creatorId.'/profile-reminders?locale=en', ['stage' => 3], $this->csrfToken());
+        self::assertResponseStatusCodeSame(400);
+        $this->json('POST', '/api/admin/catalog/creators/'.$creatorId.'/profile-reminders?locale=en', ['stage' => 1], $this->csrfToken());
+        self::assertResponseIsSuccessful();
+        self::assertEmailCount(1);
+        $reminders = $this->payload()['data']['profileReminders'];
+        self::assertSame([1, 2], [$reminders['lastStage'], $reminders['nextStage']]);
+        self::assertTrue($reminders['stages'][0]['sent']);
+        self::assertTrue($reminders['stages'][0]['manual']);
+        self::assertNotNull($reminders['stages'][0]['sentAt']);
+        self::assertNotNull($reminders['nextAt']);
+
+        // The same email once per day, and never after the person switched tips off.
+        $this->json('POST', '/api/admin/catalog/creators/'.$creatorId.'/profile-reminders?locale=en', ['stage' => 1], $this->csrfToken());
+        self::assertResponseStatusCodeSame(429);
+        $this->em->getConnection()->executeStatement('UPDATE wave_user SET profile_tips_enabled = FALSE WHERE id = ?', [$user->getId()]);
+        $this->json('POST', '/api/admin/catalog/creators/'.$creatorId.'/profile-reminders?locale=en', ['stage' => 2], $this->csrfToken());
+        self::assertResponseStatusCodeSame(400);
+        self::assertSame('This user switched profile tips off.', $this->payload()['error']);
+    }
+
     private function creator(): User
     {
         $user = new User('amina@example.test', 'ROLE_CREATOR');

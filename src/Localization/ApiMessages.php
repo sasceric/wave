@@ -6,6 +6,9 @@ final class ApiMessages
 {
     private const MESSAGES = [
         'bs' => [
+            'profile_tips_disabled' => 'Korisnik je isključio savjete za profil.',
+            'profile_already_complete' => 'Profil je već potpuno popunjen.',
+            'profile_reminder_unavailable' => 'Savjeti za profil šalju se tek kad je račun odobren i e-mail potvrđen.',
             'legal_terms_required' => 'Prihvati važeće Uslove korištenja i potvrdi da imaš najmanje 18 godina.',
             'campaign_voluntary' => 'Dobrovoljna saradnja — bez naknade',
             'campaign_compensation_locked' => 'Vrstu saradnje nije moguće promijeniti nakon prve prijave ili poziva.',
@@ -113,6 +116,9 @@ final class ApiMessages
             'newsletter_email_failed' => 'Potvrdni e-mail nije poslan. Pokušaj ponovo kasnije.',
         ],
         'hr' => [
+            'profile_tips_disabled' => 'Korisnik je isključio savjete za profil.',
+            'profile_already_complete' => 'Profil je već potpuno popunjen.',
+            'profile_reminder_unavailable' => 'Savjeti za profil šalju se tek kad je račun odobren i e-pošta potvrđena.',
             'legal_terms_required' => 'Prihvati važeće Uvjete korištenja i potvrdi da imaš najmanje 18 godina.',
             'campaign_voluntary' => 'Dobrovoljna suradnja — bez naknade',
             'campaign_compensation_locked' => 'Vrstu suradnje nije moguće promijeniti nakon prve prijave ili poziva.',
@@ -220,6 +226,9 @@ final class ApiMessages
             'newsletter_email_failed' => 'Potvrdna e-pošta nije poslana. Pokušaj ponovno kasnije.',
         ],
         'sr' => [
+            'profile_tips_disabled' => 'Korisnik je isključio savete za profil.',
+            'profile_already_complete' => 'Profil je već potpuno popunjen.',
+            'profile_reminder_unavailable' => 'Saveti za profil šalju se tek kad je nalog odobren i imejl potvrđen.',
             'legal_terms_required' => 'Prihvati važeće Uslove korišćenja i potvrdi da imaš najmanje 18 godina.',
             'campaign_voluntary' => 'Dobrovoljna saradnja — bez naknade',
             'campaign_compensation_locked' => 'Vrstu saradnje nije moguće promeniti nakon prve prijave ili poziva.',
@@ -327,6 +336,9 @@ final class ApiMessages
             'newsletter_email_failed' => 'Potvrdni e-mail nije poslat. Pokušaj ponovo kasnije.',
         ],
         'cnr' => [
+            'profile_tips_disabled' => 'Korisnik je isključio savjete za profil.',
+            'profile_already_complete' => 'Profil je već potpuno popunjen.',
+            'profile_reminder_unavailable' => 'Savjeti za profil šalju se tek kad je nalog odobren i e-mail potvrđen.',
             'legal_terms_required' => 'Prihvati važeće Uslove korišćenja i potvrdi da imaš najmanje 18 godina.',
             'campaign_voluntary' => 'Dobrovoljna saradnja — bez naknade',
             'campaign_compensation_locked' => 'Vrstu saradnje nije moguće promijeniti nakon prve prijave ili poziva.',
@@ -434,6 +446,9 @@ final class ApiMessages
             'newsletter_email_failed' => 'Potvrdni e-mail nije poslat. Pokušaj ponovo kasnije.',
         ],
         'sl' => [
+            'profile_tips_disabled' => 'Uporabnik je izklopil nasvete za profil.',
+            'profile_already_complete' => 'Profil je že v celoti izpolnjen.',
+            'profile_reminder_unavailable' => 'Nasveti za profil se pošiljajo šele, ko je račun odobren in e-pošta potrjena.',
             'legal_terms_required' => 'Sprejmite veljavne pogoje uporabe in potrdite starost najmanj 18 let.',
             'campaign_voluntary' => 'Prostovoljno sodelovanje — brez plačila',
             'campaign_compensation_locked' => 'Vrste sodelovanja po prvi prijavi ali povabilu ni mogoče spremeniti.',
@@ -541,6 +556,9 @@ final class ApiMessages
             'newsletter_email_failed' => 'Potrditvenega e-poštnega sporočila ni bilo mogoče poslati. Poskusi znova pozneje.',
         ],
         'en' => [
+            'profile_tips_disabled' => 'This user switched profile tips off.',
+            'profile_already_complete' => 'This profile is already complete.',
+            'profile_reminder_unavailable' => 'Profile tips are sent only after the account is approved and the email is verified.',
             'legal_terms_required' => 'Accept the current Terms of Use and confirm that you are at least 18.',
             'campaign_voluntary' => 'Voluntary collaboration — no fee',
             'campaign_compensation_locked' => 'The collaboration type cannot change after the first application or invitation.',

@@ -77,6 +77,10 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(type: 'datetime_immutable', nullable: true)]
     private ?\DateTimeImmutable $profileReminderNextAt = null;
 
+    /** @var list<array{stage: int, at: string, manual: bool}>|null Latest sends, newest last. */
+    #[ORM\Column(type: 'json', nullable: true)]
+    private ?array $profileReminderLog = null;
+
     #[ORM\Column(type: 'datetime_immutable', nullable: true)]
     private ?\DateTimeImmutable $deletedAt = null;
 
@@ -123,6 +127,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         $this->phone = $this->city = $this->countryCode = null;
         $this->role = 'ROLE_DELETED';
         $this->legalRecords = null;
+        $this->profileReminderLog = null;
         $this->approved = $this->emailVerified = $this->moderator = $this->admin = $this->notificationsEnabled = false;
         $this->hideMyAccount = true;
     }
@@ -248,6 +253,12 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function getProfileReminderNextAt(): ?\DateTimeImmutable
     {
         return $this->profileReminderNextAt;
+    }
+
+    /** @return list<array{stage: int, at: string, manual: bool}> */
+    public function getProfileReminderLog(): array
+    {
+        return $this->profileReminderLog ?? [];
     }
 
     public function setHideMyAccount(bool $hideMyAccount): void

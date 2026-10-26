@@ -92,8 +92,58 @@ final class ProfileReminderBatch
             $db->executeStatement('UPDATE wave_user SET profile_reminder_stage = ?, profile_reminder_next_at = ? WHERE id = ? AND profile_reminder_stage = ?', [$stage, $nextAt, $id, $stage + 1]);
             throw $error;
         }
+        $this->record($id, $stage + 1, false);
 
         return 1;
+    }
+
+    /**
+     * Admin "send now": repeat the last reminder or send the next one early.
+     * Returns an ApiMessages key when the email cannot be sent, null when it was sent.
+     */
+    public function sendManually(User $user, int $stage): ?string
+    {
+        if ($user->isDeleted() || !$user->isApproved() || !$user->isEmailVerified()) {
+            return 'profile_reminder_unavailable';
+        }
+        if (!$user->isProfileTipsEnabled()) {
+            return 'profile_tips_disabled';
+        }
+        $sent = $user->getProfileReminderStage();
+        if ($stage < 1 || $stage > count(self::SCHEDULE_DAYS) || ($stage !== $sent && $stage !== $sent + 1)) {
+            return 'invalid_request';
+        }
+        $locale = in_array($user->getPreferredLocale(), ProfileReminderEmailCopy::locales(), true) ? $user->getPreferredLocale() : 'bs';
+        $strength = ProfileStrength::forUser($user, $locale);
+        if ($strength === null || $strength['score'] >= 100) {
+            return 'profile_already_complete';
+        }
+        $db = $this->entityManager->getConnection();
+        if ($stage === $sent + 1) {
+            // Sending the next email early moves the automatic series on from today.
+            $following = $stage < count(self::SCHEDULE_DAYS)
+                ? $this->after(new \DateTimeImmutable('now', new \DateTimeZone('UTC')), self::SCHEDULE_DAYS[$stage] - self::SCHEDULE_DAYS[$stage - 1])
+                : null;
+            if ($db->executeStatement('UPDATE wave_user SET profile_reminder_stage = ?, profile_reminder_next_at = ? WHERE id = ? AND profile_reminder_stage = ?', [$stage, $following, $user->getId(), $sent]) !== 1) {
+                return 'invalid_request';
+            }
+        }
+        $this->send($user, $locale, $stage, $strength);
+        $this->record((int) $user->getId(), $stage, true);
+        $this->entityManager->refresh($user);
+
+        return null;
+    }
+
+    /** Keep the latest sends for the admin overview (bounded, newest last). */
+    private function record(int $id, int $stage, bool $manual): void
+    {
+        $db = $this->entityManager->getConnection();
+        $raw = $db->fetchOne('SELECT profile_reminder_log FROM wave_user WHERE id = ?', [$id]);
+        $log = is_string($raw) && $raw !== '' ? json_decode($raw, true) : null;
+        $log = is_array($log) ? $log : [];
+        $log[] = ['stage' => $stage, 'at' => gmdate(DATE_ATOM), 'manual' => $manual];
+        $db->executeStatement('UPDATE wave_user SET profile_reminder_log = ? WHERE id = ?', [json_encode(array_slice($log, -20), JSON_THROW_ON_ERROR), $id]);
     }
 
     /**

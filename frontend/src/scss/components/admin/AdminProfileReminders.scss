@@ -1,0 +1,45 @@
+// Profile completion emails in the admin profile review.
+.admin-profile-reminders {
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+  border: 1px solid var(--hairline);
+  border-radius: 14px;
+  background: var(--paper);
+
+  > header { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; }
+  h3 { margin: 0 !important; }
+
+  &__status {
+    padding: 3px 10px;
+    border-radius: 999px;
+    color: var(--forest);
+    background: rgba(23, 61, 54, .07);
+    font-size: 12px;
+    font-weight: 700;
+
+    &.is-tips_disabled, &.is-pending_approval { color: #8a6216; background: rgba(201, 161, 74, .16); }
+    &.is-complete { color: #2f7a52; background: rgba(79, 154, 114, .13); }
+  }
+
+  ol { display: grid; gap: 0; margin: 0; padding: 0; list-style: none; }
+  li { display: grid; grid-template-columns: 22px minmax(0, 1fr) auto; align-items: center; gap: 10px; padding: 8px 0; color: var(--muted-text); font-size: 13px; }
+  li + li { border-top: 1px solid var(--hairline); }
+  li.is-sent, li.is-sentEarlier { color: var(--ink); }
+
+  &__icon { display: grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; color: var(--muted-text); background: var(--surface); }
+  li.is-sent &__icon, li.is-sentEarlier &__icon { color: #fff; background: #2f7a52; }
+  li.is-scheduled &__icon { color: var(--forest); background: rgba(23, 61, 54, .1); }
+  &__label { font-weight: 600; }
+  &__when { text-align: right; font-variant-numeric: tabular-nums; }
+
+  &__actions { display: flex; flex-wrap: wrap; gap: 8px; .button { gap: 6px; } }
+  &__hint { margin: 0; color: var(--muted-text); font-size: 13px; }
+  &__notice { margin: 0; color: #2f7a52; font-size: 13px; font-weight: 600; }
+
+  @media (max-width: 500px) {
+    li { grid-template-columns: 22px minmax(0, 1fr); }
+    &__when { grid-column: 2; text-align: left; }
+    &__actions .button { flex: 1 1 100%; justify-content: center; }
+  }
+}

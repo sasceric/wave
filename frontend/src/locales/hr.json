@@ -3080,7 +3080,34 @@
     "verificationTemplateTitle": "Podsjetnik za potvrdu e-pošte",
     "verificationTemplateHint": "Ručni podsjetnik iz Odobrenja s novom poveznicom za potvrdu.",
     "profileTipTemplateTitle": "Savjet za potpuniji profil",
-    "profileTipTemplateHint": "Ručni savjet iz Odobrenja za bolje predstavljanje rada ili tvrtke."
+    "profileTipTemplateHint": "Ručni savjet iz Odobrenja za bolje predstavljanje rada ili tvrtke.",
+    "reminders": {
+      "title": "E-poruke za popunjavanje profila",
+      "email": "{n}. e-poruka · dan {day}",
+      "sentOn": "Poslana {date}",
+      "sentEarlier": "Poslana",
+      "manual": "ručno",
+      "times": "{count} puta",
+      "scheduled": "Zakazana za {date}",
+      "notSent": "Nije poslana",
+      "again": "Pošalji ponovno {n}. e-poruku",
+      "sendNext": "Pošalji {n}. e-poruku sada",
+      "sending": "Slanje…",
+      "sentNow": "{n}. e-poruka je poslana.",
+      "short": "Savjeti za profil: {sent}/{total}",
+      "status": {
+        "active": "U tijeku",
+        "finished": "Sve 4 poslane",
+        "complete": "Profil popunjen",
+        "tips_disabled": "Isključio/la savjete",
+        "pending_approval": "Čeka odobrenje"
+      },
+      "hint": {
+        "complete": "Profil je 100% popunjen, savjeti se više ne šalju.",
+        "tips_disabled": "Korisnik je isključio savjete za profil, pa ih ne šaljemo ni ručno.",
+        "pending_approval": "Savjeti počinju dan nakon odobrenja računa i potvrde e-pošte."
+      }
+    }
   },
   "imageUpload": {
     "creator": "Preporučeno: 600 × 600 px (1:1). Lice postavi u sredinu i ostavi malo prostora oko njega.",

@@ -103,7 +103,11 @@
     "invalid_reopening_message": "Schreibe eine Nachricht mit 10–1000 Zeichen.",
     "reopening_unavailable": "Das Gespräch kann derzeit nicht erneut geöffnet werden. Lade es neu. Die Kampagne muss offen sein.",
     "campaign_voluntary": "Freiwillige Zusammenarbeit — ohne Vergütung",
-    "campaign_compensation_locked": "Die Art der Zusammenarbeit kann nach der ersten Bewerbung oder Einladung nicht geändert werden."
+    "campaign_compensation_locked": "Die Art der Zusammenarbeit kann nach der ersten Bewerbung oder Einladung nicht geändert werden.",
+    "legal_terms_required": "Akzeptieren Sie die aktuellen Nutzungsbedingungen und bestätigen Sie, dass Sie mindestens 18 sind.",
+    "profile_tips_disabled": "Diese Person hat Profiltipps ausgeschaltet.",
+    "profile_already_complete": "Dieses Profil ist bereits vollständig.",
+    "profile_reminder_unavailable": "Profiltipps werden erst nach Freigabe des Kontos und Bestätigung der E-Mail gesendet."
   },
   "account": {
     "verify": {
@@ -305,6 +309,5 @@
     "view": "Kampagne ansehen",
     "footer": "Du erhältst diese Nachrichten, weil Kampagnenbenachrichtigungen aktiviert sind. Du kannst sie jederzeit in deiner Übersicht ändern oder deaktivieren.",
     "settings": "Kampagnenbenachrichtigungen verwalten"
-  },
-  "legal_terms_required": "Akzeptieren Sie die aktuellen Nutzungsbedingungen und bestätigen Sie, dass Sie mindestens 18 sind."
+  }
 }

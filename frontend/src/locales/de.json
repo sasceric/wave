@@ -3079,7 +3079,34 @@
     "verificationTemplateTitle": "Erinnerung zur E-Mail-Bestätigung",
     "verificationTemplateHint": "Manuelle Erinnerung aus Freigaben mit einem neuen Bestätigungslink.",
     "profileTipTemplateTitle": "Tipp zur Profilverbesserung",
-    "profileTipTemplateHint": "Manueller Tipp aus Freigaben zur Präsentation der Arbeit oder des Unternehmens."
+    "profileTipTemplateHint": "Manueller Tipp aus Freigaben zur Präsentation der Arbeit oder des Unternehmens.",
+    "reminders": {
+      "title": "E-Mails zur Profilvervollständigung",
+      "email": "E-Mail {n} · Tag {day}",
+      "sentOn": "Gesendet am {date}",
+      "sentEarlier": "Gesendet",
+      "manual": "manuell",
+      "times": "{count}-mal",
+      "scheduled": "Geplant für {date}",
+      "notSent": "Nicht gesendet",
+      "again": "E-Mail {n} erneut senden",
+      "sendNext": "E-Mail {n} jetzt senden",
+      "sending": "Wird gesendet …",
+      "sentNow": "E-Mail {n} wurde gesendet.",
+      "short": "Profiltipps: {sent}/{total}",
+      "status": {
+        "active": "Läuft",
+        "finished": "Alle 4 gesendet",
+        "complete": "Profil vollständig",
+        "tips_disabled": "Tipps ausgeschaltet",
+        "pending_approval": "Wartet auf Freigabe"
+      },
+      "hint": {
+        "complete": "Das Profil ist zu 100 % vollständig, daher werden keine Tipps mehr gesendet.",
+        "tips_disabled": "Diese Person hat Profiltipps ausgeschaltet, daher werden sie auch nicht manuell gesendet.",
+        "pending_approval": "Die Tipps beginnen am Tag nach Freigabe des Kontos und Bestätigung der E-Mail."
+      }
+    }
   },
   "imageUpload": {
     "creator": "Empfohlen: 600 × 600 px (1:1). Platziere dein Gesicht mittig und lasse etwas Platz darum.",
