@@ -264,6 +264,13 @@ final class OAuthController extends AbstractController
             return new JsonResponse(['error' => ApiMessages::get('invalid_request', $locale)], 400);
         }
 
+        if (!\App\Legal\LegalPolicies::accepted($data)) {
+            return new JsonResponse(['error' => ApiMessages::get('legal_terms_required', $locale), 'fields' => ['termsAccepted']], 400);
+        }
+        if (array_key_exists('newsletter', $data) && !is_bool($data['newsletter'])) {
+            return new JsonResponse(['error' => ApiMessages::get('invalid_registration', $locale)], 400);
+        }
+
         foreach (['phone', 'city', 'country', 'category'] as $field) {
             if (array_key_exists($field, $data) && !is_string($data[$field])) {
                 return new JsonResponse(['error' => ApiMessages::get('invalid_registration', $locale)], 400);
@@ -284,7 +291,7 @@ final class OAuthController extends AbstractController
         $name = is_string($data['name'] ?? null) ? trim($data['name']) : '';
         if ($type === 'creator') {
             $birthday = CreatorBirthday::parse($data['birthday'] ?? null);
-            if ($birthday === false) {
+            if ($birthday === false || ($birthday !== null && $birthday > new \DateTimeImmutable('-18 years today'))) {
                 return new JsonResponse(['error' => ApiMessages::get('invalid_birthday', $locale), 'fields' => ['birthday']], 400);
             }
             // Accept the previous payload while cached registration forms are still in use.
@@ -324,7 +331,7 @@ final class OAuthController extends AbstractController
         $user->setEmailVerified(true);
         $user->setApproved(false);
         $user->setHideMyAccount(true);
-        $user->setNewsletterEnabled(!is_bool($data['newsletter'] ?? null) || $data['newsletter']);
+        $user->setNewsletterEnabled($data['newsletter'] ?? false);
 
         if ($type === 'creator') {
             $categories = array_key_exists('categories', $data) ? $this->categoryList($data['categories']) : [];
@@ -362,6 +369,7 @@ final class OAuthController extends AbstractController
             $user->setCompany($company);
         }
 
+        \App\Legal\LegalPolicies::registration($user, $locale, 'social_registration');
         $entityManager->persist($user);
         $entityManager->persist(new OAuthIdentity($user, $pending['provider'], $pending['subject']));
         try {

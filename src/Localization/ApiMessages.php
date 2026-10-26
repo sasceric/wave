@@ -6,6 +6,7 @@ final class ApiMessages
 {
     private const MESSAGES = [
         'bs' => [
+            'legal_terms_required' => 'Prihvati važeće Uslove korištenja i potvrdi da imaš najmanje 18 godina.',
             'campaign_voluntary' => 'Dobrovoljna saradnja — bez naknade',
             'campaign_compensation_locked' => 'Vrstu saradnje nije moguće promijeniti nakon prve prijave ili poziva.',
             'discussion_reopening_requested' => 'Zatraženo je ponovno otvaranje razgovora za kampanju:',
@@ -112,6 +113,7 @@ final class ApiMessages
             'newsletter_email_failed' => 'Potvrdni e-mail nije poslan. Pokušaj ponovo kasnije.',
         ],
         'hr' => [
+            'legal_terms_required' => 'Prihvati važeće Uvjete korištenja i potvrdi da imaš najmanje 18 godina.',
             'campaign_voluntary' => 'Dobrovoljna suradnja — bez naknade',
             'campaign_compensation_locked' => 'Vrstu suradnje nije moguće promijeniti nakon prve prijave ili poziva.',
             'discussion_reopening_requested' => 'Zatraženo je ponovno otvaranje razgovora za kampanju:',
@@ -218,6 +220,7 @@ final class ApiMessages
             'newsletter_email_failed' => 'Potvrdna e-pošta nije poslana. Pokušaj ponovno kasnije.',
         ],
         'sr' => [
+            'legal_terms_required' => 'Prihvati važeće Uslove korišćenja i potvrdi da imaš najmanje 18 godina.',
             'campaign_voluntary' => 'Dobrovoljna saradnja — bez naknade',
             'campaign_compensation_locked' => 'Vrstu saradnje nije moguće promeniti nakon prve prijave ili poziva.',
             'discussion_reopening_requested' => 'Zatraženo je ponovno otvaranje razgovora za kampanju:',
@@ -324,6 +327,7 @@ final class ApiMessages
             'newsletter_email_failed' => 'Potvrdni e-mail nije poslat. Pokušaj ponovo kasnije.',
         ],
         'cnr' => [
+            'legal_terms_required' => 'Prihvati važeće Uslove korišćenja i potvrdi da imaš najmanje 18 godina.',
             'campaign_voluntary' => 'Dobrovoljna saradnja — bez naknade',
             'campaign_compensation_locked' => 'Vrstu saradnje nije moguće promijeniti nakon prve prijave ili poziva.',
             'discussion_reopening_requested' => 'Zatraženo je ponovno otvaranje razgovora za kampanju:',
@@ -430,6 +434,7 @@ final class ApiMessages
             'newsletter_email_failed' => 'Potvrdni e-mail nije poslat. Pokušaj ponovo kasnije.',
         ],
         'sl' => [
+            'legal_terms_required' => 'Sprejmite veljavne pogoje uporabe in potrdite starost najmanj 18 let.',
             'campaign_voluntary' => 'Prostovoljno sodelovanje — brez plačila',
             'campaign_compensation_locked' => 'Vrste sodelovanja po prvi prijavi ali povabilu ni mogoče spremeniti.',
             'discussion_reopening_requested' => 'Zahtevano je ponovno odprtje pogovora za kampanjo:',
@@ -536,6 +541,7 @@ final class ApiMessages
             'newsletter_email_failed' => 'Potrditvenega e-poštnega sporočila ni bilo mogoče poslati. Poskusi znova pozneje.',
         ],
         'en' => [
+            'legal_terms_required' => 'Accept the current Terms of Use and confirm that you are at least 18.',
             'campaign_voluntary' => 'Voluntary collaboration — no fee',
             'campaign_compensation_locked' => 'The collaboration type cannot change after the first application or invitation.',
             'discussion_reopening_requested' => 'Reopening discussion requested for:',

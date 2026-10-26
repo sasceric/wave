@@ -41,6 +41,8 @@ use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
 final class AccountDeletionTest extends WebTestCase
 {
+    use \Symfony\Bundle\FrameworkBundle\Test\MailerAssertionsTrait;
+
     private KernelBrowser $client;
     private EntityManagerInterface $em;
     private string $directory;
@@ -231,7 +233,13 @@ final class AccountDeletionTest extends WebTestCase
         $this->client->request('DELETE', '/api/me/account?locale=en', server: ['CONTENT_TYPE' => 'application/json'], content: '{"confirmed":true}');
         self::assertResponseStatusCodeSame(403);
         $this->write('DELETE', '/api/me/account', ['confirmed' => 'true']); self::assertResponseStatusCodeSame(400);
+        $address = $user->getEmail();
         $this->write('DELETE', '/api/me/account', ['confirmed' => true]); self::assertResponseIsSuccessful();
+        // The confirmation goes to the address the account had, after it is anonymized.
+        $confirmation = self::getMailerMessage();
+        self::assertInstanceOf(\Symfony\Component\Mime\Email::class, $confirmation);
+        self::assertSame($address, $confirmation->getTo()[0]->getAddress());
+        self::assertSame('Tvoj Wave račun je obrisan', $confirmation->getSubject());
         $this->client->request('GET', '/api/auth/me?locale=en');
         self::assertResponseStatusCodeSame(401);
         $this->client->request('GET', '/api/auth/session?locale=en');

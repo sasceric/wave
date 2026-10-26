@@ -358,6 +358,22 @@
     font-size: 13px;
   }
 
+  &__credit {
+    display: block;
+    margin-top: 4px;
+
+    a { color: var(--forest); font-weight: 600; text-decoration: none; }
+    a:hover, a:focus-visible { text-decoration: underline; }
+  }
+
+  &__heart {
+    display: inline-block;
+    margin-left: 4px;
+    color: var(--coral-text);
+    fill: currentColor;
+    vertical-align: -2px;
+  }
+
   &__quick-links {
     display: flex;
     flex-wrap: wrap;

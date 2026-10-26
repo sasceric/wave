@@ -1,4 +1,5 @@
 <script setup>
+import legalDocuments from '../../../../config/legal_documents.json'
 import AccountPage from './AccountPage.vue'
 import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
@@ -42,7 +43,8 @@ const form = reactive({
   password: '',
   accountType: route.query.accountType === 'company' ? 'company' : 'creator',
   name: '',
-  newsletter: true,
+  newsletter: false,
+  termsAccepted: false,
 })
 
 watch(() => [route.meta?.authMode, route.query.mode], ([authMode, queryMode]) => {
@@ -150,6 +152,8 @@ async function submit() {
       accountType: form.accountType,
       name: form.name.trim(),
       newsletter: form.newsletter,
+      termsAccepted: form.termsAccepted,
+      termsVersion: legalDocuments.version,
     })
   }
 
@@ -336,6 +340,13 @@ function changeMode(nextMode) {
               </template>
             </div>
           </div>
+
+          <label v-if="mode === 'register'" class="auth-form__check">
+            <input v-model="form.termsAccepted" type="checkbox" required />
+            <I18nT keypath="legal.acceptTerms" tag="span">
+              <template #terms><LocalizedLink :to="{ name: 'terms-of-use' }" target="_blank">{{ t('legal.terms.title') }}</LocalizedLink></template>
+            </I18nT>
+          </label>
 
           <label v-if="mode === 'register'" class="auth-form__check">
             <input v-model="form.newsletter" type="checkbox" />

@@ -100,6 +100,9 @@ final class EmailPreferenceController
         }
         if (array_key_exists(EmailPreferences::NEWSLETTER, $changes)) {
             $user->setNewsletterEnabled($changes[EmailPreferences::NEWSLETTER]);
+            $records = $user->getLegalRecords();
+            $records['newsletter'] = \App\Legal\LegalPolicies::emailRecord($records['newsletter'] ?? [], $changes[EmailPreferences::NEWSLETTER], 'account_settings', $locale);
+            $user->setLegalRecords($records);
         }
         $entityManager->flush();
 

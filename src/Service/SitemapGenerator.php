@@ -27,6 +27,7 @@ final class SitemapGenerator
             ['creators', []],
             ['companies', []],
             ['campaigns', []],
+            ['terms-of-use', []],
             ['imprint', []],
             ['privacy-policy', []],
             ['cookie-policy', []],

@@ -50,5 +50,6 @@
   "account-settings": "account.sidebarSettings",
   "search": "seo.searchTitle",
   "account-email-preferences": "emailPreferences.title",
-  "account-profile-guide": "profileGuide.title"
+  "account-profile-guide": "profileGuide.title",
+  "terms-of-use": "legal.terms.title"
 }

@@ -38,7 +38,8 @@
     "forgotPasswordTitle": "Pozabljeno geslo | Wave",
     "verifyEmailTitle": "Potrditev e-poštnega naslova | Wave",
     "resetPasswordTitle": "Novo geslo | Wave",
-    "messagesTitle": "Sporočila | Wave"
+    "messagesTitle": "Sporočila | Wave",
+    "termsDescription": "Pravila za račune, vsebino in sodelovanja na Waveu."
   },
   "legal": {
     "eyebrow": "PRAVNE INFORMACIJE",
@@ -87,6 +88,12 @@
       "intro": "To obvestilo pojasnjuje, katere podatke Wave uporablja za delovanje tržnice in kako se lahko glede njih obrnete na nas.",
       "sections": [
         {
+          "heading": "Upravljavec podatkov",
+          "paragraphs": [
+            "Upravljavec podatkov je UD SteelCode, Školska 10, 72000 Zenica, Bosna in Hercegovina. Za vprašanja o zasebnosti pišite na info{'@'}wave.ba."
+          ]
+        },
+        {
           "heading": "Podatki, ki jih obdelujemo",
           "paragraphs": [
             "Glede na vašo uporabo Wavea lahko to vključuje podatke o računu in stikih, podatke o profilih ustvarjalcev ali podjetij, kampanje, prijave, sporočila, samoporočane statistične podatke družbenih omrežij ter tehnične in varnostne dnevnike."
@@ -107,14 +114,21 @@
         {
           "heading": "Ponudniki storitev in hramba",
           "paragraphs": [
-            "Za gostovanje, pošiljanje e-pošte in varnost lahko uporabljamo ponudnike storitev. Prejmejo le podatke, ki jih potrebujejo za te storitve. Osebnih podatkov ne prodajamo.",
-            "Podatke hranimo, dokler so potrebni za zagotavljanje Wavea, zaščito storitve, reševanje sporov ali izpolnjevanje pravnih obveznosti. Zahtevo za izbris računa ali podatkov lahko pošljete na info{'@'}wave.ba; nekatere zapise bomo morda morali hraniti, kadar to zahteva zakon."
+            "Wave deluje na strežnikih podjetja Hetzner Online GmbH v Nemčiji, kjer so baza podatkov, datoteke in varnostne kopije. E-pošto (potrditve, obvestila in novice) pošilja Brevo (Brevo SAS, Francija), ki za to prejme naslov, ime in vsebino sporočila. Ponudniki prejmejo le podatke, potrebne za svojo storitev. Osebnih podatkov ne prodajamo.",
+            "Podatke računa hranimo, dokler račun obstaja. Po izbrisu računa se osebni podatki in lastne datoteke odstranijo, varnostne kopije pa se samodejno izbrišejo po 14 dneh. Dnevniki aplikacije in pošiljanja e-pošte se hranijo 14 dni. Skupna zgodovina sodelovanj in sporočil lahko ostane drugim udeležencem z anonimiziranim računom. Nekatere zapise lahko hranimo dlje, kadar to zahteva zakon. Zahtevo za izbris lahko pošlješ tudi na info{'@'}wave.ba."
           ]
         },
         {
           "heading": "Vaše pravice in zahteve",
           "paragraphs": [
-            "Kjer je to primerno, lahko zahtevate dostop do svojih osebnih podatkov, njihov popravek ali izbris ter informacije o omejitvi obdelave, prenosljivosti ali pravici do ugovora. Pišite na info{'@'}wave.ba. Pred ukrepanjem bomo morda morali preveriti vašo identiteto."
+            "Kjer je to primerno, lahko zahtevate dostop do svojih osebnih podatkov, njihov popravek ali izbris ter informacije o omejitvi obdelave, prenosljivosti ali pravici do ugovora. Pišite na info{'@'}wave.ba. Pred ukrepanjem bomo morda morali preveriti vašo identiteto.",
+            "Če menite, da obdelava vaših osebnih podatkov ni skladna z veljavnimi predpisi, lahko vložite pritožbo pri Agenciji za varstvo osebnih podatkov v Bosni in Hercegovini ali drugem pristojnem nadzornem organu."
+          ],
+          "links": [
+            {
+              "label": "Agencija za varstvo osebnih podatkov BiH",
+              "url": "https://www.azlp.ba/"
+            }
           ]
         },
         {
@@ -137,6 +151,22 @@
               "label": "Meta",
               "url": "https://www.facebook.com/privacy/policy/"
             }
+          ]
+        },
+        {
+          "heading": "E-pošta in vaše izbire",
+          "paragraphs": [
+            "Potrditve e-poštnega naslova, varnostna obvestila in servisna sporočila o računu ter sodelovanjih so del delovanja Wavea in niso odvisna od prijave na novice.",
+            "Nasveti za izpolnitev profila so za nove račune vključeni. Serija vsebuje največ štiri opomnike in se konča, ko je profil izpolnjen. Izključite jih lahko v nastavitvah e-pošte ali s povezavo za odjavo v sporočilu.",
+            "Wave novice boste prejemali samo, če se nanje prijavite. Novice in nasveti za profil imajo ločene nastavitve e-pošte. Prijava ni pogoj za odprtje ali uporabo računa; odjava je na voljo v nastavitvah e-pošte in v sporočilu."
+          ]
+        },
+        {
+          "heading": "Sporočila, povezave in obvestila",
+          "paragraphs": [
+            "Pogovori niso javni. Sporočila, odgovori in odzivi so prikazani udeležencem pogovora. Za prikaz predogleda povezave lahko Wave naloži javne podatke in sliko s povezane strani.",
+            "Potisna obvestila vključite z dovoljenjem na svoji napravi. Wave hrani podatke naročnine, potrebne za dostavo; obvestila lahko izključite v računu ali nastavitvah naprave.",
+            "Račun lahko izbrišete v nastavitvah. Osebni podatki in lastne datoteke se odstranijo v skladu s pravili brisanja; skupna zgodovina sodelovanj in sporočil lahko ostane dostopna drugim udeležencem z anonimiziranim računom."
           ]
         }
       ]
@@ -167,6 +197,18 @@
           "heading": "Upravljanje podatkov brskalnika",
           "paragraphs": [
             "Privolitev za analitiko ali trženje lahko spremeniš ali umakneš v nastavitvah piškotkov v nogi. Izbira se shrani v brskalniku. Izbris podatkov strani te lahko odjavi in ponovno prikaže obvestilo."
+          ]
+        },
+        {
+          "heading": "Seznam piškotkov in shrambe",
+          "paragraphs": [
+            "PHPSESSID (piškotek, Wave): prijava in zaščita dejanj v računu. Nujen; HttpOnly, SameSite=Lax; traja največ 90 dni.",
+            "wave-locale (lokalna shramba, Wave): izbrani jezik. Nujen; ostane, dokler ga ne izbrišeš.",
+            "wave-cookie-consent-v3 (lokalna shramba, Wave): tvoje izbire za analitiko in trženje, različica pravilnika in čas. Nujen; velja 180 dni, nato te znova vprašamo.",
+            "wave.registration-intent (lokalna shramba, Wave): stran, na katero se vrneš po registraciji. Nujen; izbriše se po uporabi ali po 14 dneh.",
+            "Predpomnilnik service workerja (Wave): datoteke aplikacije za hitrejše nalaganje. Nujen; zamenja se ob vsaki posodobitvi.",
+            "_ga in _ga_… (piškotki, Google Analytics): merjenje obiskov. Samo s privolitvijo za analitiko; trajajo največ 180 dni.",
+            "_fbp in _fbc (piškotki, Meta Pixel): merjenje oglasov. Samo s privolitvijo za trženje; trajanje določi Meta, Wave pa jih izbriše, ko privolitev prekličeš."
           ]
         },
         {
@@ -211,7 +253,99 @@
       ]
     },
     "marketingStorage": "Trženje",
-    "marketingStorageDescription": "Dovoli Meta Pixel za merjenje oglasov na Facebooku in Instagramu ter uspešnih registracij. Naloži se samo s privolitvijo."
+    "marketingStorageDescription": "Dovoli Meta Pixel za merjenje oglasov na Facebooku in Instagramu ter uspešnih registracij. Naloži se samo s privolitvijo.",
+    "managePreferences": "Prilagodi izbiro",
+    "alwaysActive": "Vedno aktivno",
+    "terms": {
+      "title": "Pogoji uporabe",
+      "intro": "Pravila za račune, vsebino in sodelovanja na Waveu.",
+      "sections": [
+        {
+          "heading": "Upravljavec in obseg",
+          "paragraphs": [
+            "Wave upravlja UD SteelCode, Školska 10, 72000 Zenica, Bosna in Hercegovina (ID 4320531730002; ID za DDV 320531730002). Kontakt: info{'@'}wave.ba. Ti pogoji urejajo platformo; obdelavo podatkov ločeno opisuje politika zasebnosti."
+          ]
+        },
+        {
+          "heading": "Račun in upravičenost",
+          "paragraphs": [
+            "Imetniki računov morajo biti stari najmanj 18 let in sposobni sklepati pogodbe. Zastopniki podjetij in agencij potrebujejo pooblastilo. Navajajte točne podatke, varujte prijavne podatke in se ne izdajajte za druge.",
+            "Wave lahko zahteva potrditev e-pošte in pregled profila. Odobritev ne jamči identitete, kakovosti dela, statistike občinstva ali sodelovanja."
+          ]
+        },
+        {
+          "heading": "Vloga platforme",
+          "paragraphs": [
+            "Wave omogoča profile, kampanje, ponudbe in komunikacijo ustvarjalcev, znamk in agencij. Uporabniki sami izberejo sodelovanje. Wave ni njihov delodajalec, zastopnik ali pogodbena stranka njihovega sodelovanja.",
+            "Wave ne obdeluje plačil med uporabniki in ne zagotavlja skrbniškega računa. Prikaz dogovorjenega zneska ni potrdilo o plačilu."
+          ]
+        },
+        {
+          "heading": "Dogovor, izvedba in odpoved",
+          "paragraphs": [
+            "Pred sprejemom ponudbe se dogovorite o obsegu, znesku/valuti, davkih, plačilu, rokih, popravkih, pravicah uporabe in odpovedi. Potrditev ponudbe zabeleži sprejem prikazanih pogojev in je lahko del pogodbe.",
+            "Prijava ali povabilo ne jamčita angažmaja. Spremembe, odpovedi, vračila in spore rešujejo udeleženci po dogovoru in veljavnem pravu. Odpoved v aplikaciji ne izniči samodejno že nastalih obveznosti."
+          ]
+        },
+        {
+          "heading": "Prostovoljna sodelovanja",
+          "paragraphs": [
+            "Prostovoljna kampanja nima dogovorjenega denarnega plačila. Udeležba je svobodna izbira in ne sme prikrivati plačanega dela. Jasno dogovorite darila, stroške in pričakovanja. Objava videa ali označitev Wavea ne prenese avtorskih pravic."
+          ]
+        },
+        {
+          "heading": "Cena in krediti",
+          "paragraphs": [
+            "Uporaba Wavea je trenutno brezplačna. Wave trenutno ne prodaja kreditov ali zaračunava samodejne naročnine. Promocijski krediti niso denar, depozit ali obljuba izplačila.",
+            "Pred plačljivimi funkcijami bomo objavili cene, pravila kreditov, davke, odpoved in potrošniške pravice. Plačilo zahteva jasno predhodno ponudbo in vaš sprejem; ti pogoji ne dovoljujejo prihodnjih bremenitev."
+          ]
+        },
+        {
+          "heading": "Vsebina in pravice",
+          "paragraphs": [
+            "Ohranite pravice do svoje vsebine. Zagotoviti morate pravice in dovoljenja za slike, videe, glasbo, znamke in prikazane osebe. Ne objavljajte zasebnih podatkov drugih brez ustrezne podlage.",
+            "Waveu dovoljujete neizključno shranjevanje, tehnično obdelavo in prikaz po izbrani vidnosti, vključno s sličicami in karticami za deljenje. Dovoljenje traja, kolikor je potrebno za prikaz in dovoljeno skupno zgodovino. Ločen oglas Wavea zahteva ločeno dovoljenje."
+          ]
+        },
+        {
+          "heading": "Oglaševanje in ravnanje",
+          "paragraphs": [
+            "Plačana, podarjena in druga promocijska sodelovanja označite po veljavnih pravilih in pravilih družbenega omrežja. Sama označitev znamke ni vedno dovolj.",
+            "Prepovedani so prevare, zavajajoči profili/statistika, nezakonita vsebina, kršitve pravic, nadlegovanje, neželena sporočila in nepooblaščen dostop. Podatkov drugih ne zbirajte nezakonito."
+          ]
+        },
+        {
+          "heading": "Ocene, prijave in moderiranje",
+          "paragraphs": [
+            "Ocene morajo opisovati resnična sodelovanja in spoštovati pravice drugih. Wave lahko omeji/odstrani vsebino, zavrne objavo ali začasno onemogoči račun zaradi varstva uporabnikov, teh pogojev ali zakona.",
+            "Uporabite prijavo v aplikaciji ali podporo. Za ugovor ali prijavo kršitve pravic pošljite vsebino, razloge in dokaze na info{'@'}wave.ba. Omogočili bomo pregled odločitve; nujni zaščitni ukrepi so lahko izvedeni pred obvestilom."
+          ]
+        },
+        {
+          "heading": "Zasebnost in prenehanje",
+          "paragraphs": [
+            "Vidnost ureja javni prikaz, ne more pa takoj odstraniti prenesenih ali indeksiranih kopij. Zaupnih informacij ne vnašajte v javna polja.",
+            "Račun izbrišite v nastavitvah ali nas kontaktirajte. Skupna zgodovina lahko ostane drugim udeležencem z anonimiziranim računom; omejitve in hrambo opisuje politika zasebnosti."
+          ]
+        },
+        {
+          "heading": "Odgovornost in obvezne pravice",
+          "paragraphs": [
+            "Odgovorni ste za svoje obveznosti do drugih. Wave si prizadeva za varno, dostopno storitev, ne jamči pa angažmajev, zaslužka, neprekinjenega delovanja ali izpolnitve tujih pogodb.",
+            "Nič ne izključuje odgovornosti, ki je ni dovoljeno izključiti, ali omejuje obveznih potrošniških pravic, varstva podatkov ali dostopa do pristojnih organov in sodišč."
+          ]
+        },
+        {
+          "heading": "Spremembe, pritožbe in pravo",
+          "paragraphs": [
+            "O bistvenih spremembah bomo jasno obvestili, navedli datum uporabe in po potrebi zahtevali nov sprejem. Spremembe za nazaj ne spreminjajo dogovora o sodelovanju.",
+            "Vprašanja/pritožbe pošljite na info{'@'}wave.ba ali podpori. Za razmerje z Waveom velja pravo BiH ob ohranitvi obveznega varstva po drugem veljavnem pravu. Izključna pristojnost v nasprotju z obveznimi pravili ni določena."
+          ]
+        }
+      ]
+    },
+    "acceptTerms": "Potrjujem, da sem star/a najmanj 18 let in sprejemam {terms}.",
+    "lastUpdated": "Posodobljeno: {date}"
   },
   "app": {
     "loading": "Nalaganje…",
@@ -313,7 +447,8 @@
     "homeTab": "Domov",
     "profileTab": "Profil",
     "installBrowserHint": "V meniju brskalnika izberi Namesti aplikacijo ali Dodaj na začetni zaslon.",
-    "installSafariHint": "V Safariju izberi Datoteka → Dodaj v Dock."
+    "installSafariHint": "V Safariju izberi Datoteka → Dodaj v Dock.",
+    "madeBy": "Z ljubeznijo izdelal {studio}"
   },
   "chatInteractions": {
     "actions": "Možnosti sporočila",
@@ -1482,7 +1617,11 @@
     "profileReminderEmailTemplate": "Nasveti za profil, {n}. sporočilo ({day}. dan)",
     "profileReminderEmailTemplateHint": "Pošlje se, dokler profil ni izpolnjen. Sprememba velja za ustvarjalce in podjetja.",
     "campaignAlertEmailTemplate": "Nove kampanje",
-    "campaignAlertEmailTemplateHint": "Pregled novih kampanj po kategorijah in državah ustvarjalca."
+    "campaignAlertEmailTemplateHint": "Pregled novih kampanj po kategorijah in državah ustvarjalca.",
+    "accountDeletedEmailTemplate": "Račun izbrisan",
+    "accountDeletedEmailTemplateHint": "Potrditev, ko uporabnik sam izbriše račun.",
+    "termsUpdatedEmailTemplate": "Novi pogoji uporabe",
+    "termsUpdatedEmailTemplateHint": "Obvestilo obstoječim uporabnikom, ko objavimo novo različico pogojev."
   },
   "api": {
     "invalidResponse": "Wave ni mogel prebrati odgovora strežnika. Poskusi znova.",
@@ -3345,7 +3484,7 @@
     "undo": "Vseeno želim: {name}",
     "invalid": "Ta povezava ni veljavna ali pa je bil račun izbrisan. Prijavi se in izbiro spremeni v Nastavitvah.",
     "toWave": "Na Wave",
-    "registerTitle": "Pošiljaj mi novice in nasvete Wave.",
+    "registerTitle": "Pošiljajte mi Wave novice.",
     "registerHint": "Odjava z enim klikom v vsakem sporočilu."
   },
   "profileGuide": {

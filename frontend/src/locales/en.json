@@ -38,7 +38,8 @@
     "forgotPasswordTitle": "Password recovery | Wave",
     "verifyEmailTitle": "Verify your email | Wave",
     "resetPasswordTitle": "Reset password | Wave",
-    "messagesTitle": "Messages | Wave"
+    "messagesTitle": "Messages | Wave",
+    "termsDescription": "Rules for accounts, content and collaborations on Wave."
   },
   "legal": {
     "eyebrow": "LEGAL",
@@ -86,6 +87,12 @@
       "intro": "This notice explains what information Wave uses to operate the marketplace and how you can contact us about it.",
       "sections": [
         {
+          "heading": "Who controls your data",
+          "paragraphs": [
+            "The data controller is UD SteelCode, Školska 10, 72000 Zenica, Bosnia and Herzegovina. For privacy questions, contact info{'@'}wave.ba."
+          ]
+        },
+        {
           "heading": "Information we handle",
           "paragraphs": [
             "Depending on how you use Wave, this can include account and contact details, creator or company profile information, campaigns, applications, messages, self-reported social metrics, and technical or security logs."
@@ -106,14 +113,21 @@
         {
           "heading": "Service providers and retention",
           "paragraphs": [
-            "We may use providers for hosting, email delivery, and security operations. They receive information only as needed to provide those services. We do not sell personal information.",
-            "We keep information while it is needed to provide Wave, protect the service, resolve disputes, or meet legal obligations. You may request account or data deletion by emailing info{'@'}wave.ba; some records may need to be retained where required by law."
+            "Wave runs on servers operated by Hetzner Online GmbH in Germany, which hold the database, files and backups. Emails (confirmations, notifications and the newsletter) are sent by Brevo (Brevo SAS, France), which receives the address, name and message content for that purpose. Providers receive only the data needed for their service. We do not sell personal information.",
+            "We keep account data while the account exists. When an account is deleted, personal data and owned files are removed, and backups are deleted automatically after 14 days. Application and email delivery logs are kept for 14 days. Shared collaboration and message history may remain available to other participants with the account anonymized. Some records may be kept longer where the law requires it. You can also request deletion at info{'@'}wave.ba."
           ]
         },
         {
           "heading": "Your choices and requests",
           "paragraphs": [
-            "Where applicable, you may request access to, correction or deletion of your personal information, or ask about restriction, portability, or objection rights. Contact info{'@'}wave.ba. We may need to verify your request before acting."
+            "Where applicable, you may request access to, correction or deletion of your personal information, or ask about restriction, portability, or objection rights. Contact info{'@'}wave.ba. We may need to verify your request before acting.",
+            "If you believe that the processing of your personal data does not comply with applicable law, you can lodge a complaint with the Personal Data Protection Agency in Bosnia and Herzegovina or another competent supervisory authority."
+          ],
+          "links": [
+            {
+              "label": "Personal Data Protection Agency of BiH",
+              "url": "https://www.azlp.ba/"
+            }
           ]
         },
         {
@@ -136,6 +150,22 @@
               "label": "Meta",
               "url": "https://www.facebook.com/privacy/policy/"
             }
+          ]
+        },
+        {
+          "heading": "Email and your choices",
+          "paragraphs": [
+            "Email verification, security notices and service messages about your account and collaborations are part of operating Wave and do not depend on a newsletter subscription.",
+            "Profile completion tips are enabled for new accounts. The series contains up to four reminders and stops when your profile is complete. You can turn them off in email settings or through the unsubscribe link in the message.",
+            "You receive Wave news (the newsletter) only if you opt in. Newsletter and profile tips have separate email settings. Subscribing is not required to create or use an account; you can unsubscribe in email settings or in the message itself."
+          ]
+        },
+        {
+          "heading": "Messages, links and notifications",
+          "paragraphs": [
+            "Conversations are not public. Messages, replies and reactions are shown to conversation participants. To display a link preview, Wave may fetch public metadata and an image from the linked website.",
+            "You enable push notifications by granting permission on your device. Wave stores the subscription details needed for delivery; you can disable notifications in your account or device settings.",
+            "You can delete your account in settings. Personal data and owned files are removed under the deletion policy; shared collaboration and message history may remain available to other participants with your account anonymized."
           ]
         }
       ]
@@ -166,6 +196,18 @@
           "heading": "Manage browser data",
           "paragraphs": [
             "Change or withdraw analytics or marketing consent using Cookie preferences in the footer. Your choice is saved in your browser. Clearing site data may sign you out and show this notice again."
+          ]
+        },
+        {
+          "heading": "Cookie and storage list",
+          "paragraphs": [
+            "PHPSESSID (cookie, Wave): signing in and protecting account actions. Necessary; HttpOnly, SameSite=Lax; lasts up to 90 days.",
+            "wave-locale (local storage, Wave): your chosen language. Necessary; kept until you clear it.",
+            "wave-cookie-consent-v3 (local storage, Wave): your analytics and marketing choices, the policy version and the time. Necessary; valid for 180 days, then we ask again.",
+            "wave.registration-intent (local storage, Wave): the page you return to after registering. Necessary; removed after use or after 14 days.",
+            "Service worker cache (Wave): app files for faster loading. Necessary; replaced with every update.",
+            "_ga and _ga_… (cookies, Google Analytics): measuring visits. Only with analytics consent; last up to 180 days.",
+            "_fbp and _fbc (cookies, Meta Pixel): measuring ads. Only with marketing consent; Meta sets their lifetime, and Wave deletes them when you withdraw consent."
           ]
         },
         {
@@ -210,7 +252,99 @@
       ]
     },
     "marketingStorage": "Marketing",
-    "marketingStorageDescription": "Allow Meta Pixel to measure Facebook and Instagram ads and successful registrations. It loads only after you opt in."
+    "marketingStorageDescription": "Allow Meta Pixel to measure Facebook and Instagram ads and successful registrations. It loads only after you opt in.",
+    "managePreferences": "Customize choices",
+    "alwaysActive": "Always active",
+    "terms": {
+      "title": "Terms of Use",
+      "intro": "Rules for accounts, content and collaborations on Wave.",
+      "sections": [
+        {
+          "heading": "Operator and scope",
+          "paragraphs": [
+            "Wave is operated by UD SteelCode, Školska 10, 72000 Zenica, Bosnia and Herzegovina (company ID 4320531730002; VAT ID 320531730002). Contact: info{'@'}wave.ba. These terms govern the platform; the privacy notice separately explains data processing."
+          ]
+        },
+        {
+          "heading": "Accounts and eligibility",
+          "paragraphs": [
+            "Account holders must be at least 18 and have legal capacity to contract. Company and agency representatives must be authorized to act for them. Provide accurate details, protect credentials and do not impersonate others.",
+            "Wave may require email verification and review profiles before approval. Approval does not guarantee identity, work quality, audience statistics or a collaboration."
+          ]
+        },
+        {
+          "heading": "Platform role",
+          "paragraphs": [
+            "Wave provides profiles, campaigns, offers and communication for creators, brands and agencies. Users independently choose whether to collaborate. Wave is not their employer, representative or a party to their collaboration contract.",
+            "Wave does not process payments between users or provide escrow. Displaying an agreed amount does not confirm that it was paid."
+          ]
+        },
+        {
+          "heading": "Agreements, delivery and cancellation",
+          "paragraphs": [
+            "Before accepting an offer, agree the scope, amount/currency, taxes, payment method, deadlines, revisions, usage rights and cancellation terms. Confirming an offer records acceptance of the displayed terms and may form part of your contract.",
+            "An application or invitation alone does not guarantee hiring. Participants resolve changes, cancellations, refunds and disputes under their agreement and applicable law. Cancelling in the app does not automatically extinguish existing legal or contractual obligations."
+          ]
+        },
+        {
+          "heading": "Voluntary collaborations",
+          "paragraphs": [
+            "A campaign marked voluntary has no agreed monetary fee. Participation is a choice and must not disguise paid work. Clearly agree gifts, expenses and other expectations. Publishing a video or tagging Wave does not transfer copyright."
+          ]
+        },
+        {
+          "heading": "Platform charges and credits",
+          "paragraphs": [
+            "Wave is currently free to use. Wave does not currently sell credits or charge an automatic subscription. Promotional credits are not money, a deposit or a promise of payment.",
+            "Before introducing paid features, we will publish prices, credit rules, taxes, termination and applicable consumer rights. A charge requires a clear prior offer and your acceptance; these terms do not authorize future charges."
+          ]
+        },
+        {
+          "heading": "Your content and rights",
+          "paragraphs": [
+            "You retain rights to your content. You must hold necessary rights and permissions for images, videos, music, brands and depicted people. Do not publish others’ private data without a proper basis.",
+            "You give Wave a non-exclusive permission to store, technically process and display content according to your visibility choices, including thumbnails and share cards. Permission lasts as needed for display and permitted shared history. Using content in a separate Wave advertisement requires separate permission."
+          ]
+        },
+        {
+          "heading": "Advertising and conduct",
+          "paragraphs": [
+            "Label paid, gifted and other promotional collaborations according to applicable law and social-platform rules. Merely tagging a brand may not be sufficient.",
+            "Fraud, misleading profiles/statistics, illegal content, rights violations, harassment, spam and unauthorized data access are prohibited. Do not use profiles or messages to unlawfully collect other people’s data."
+          ]
+        },
+        {
+          "heading": "Reviews, reports and moderation",
+          "paragraphs": [
+            "Reviews must describe genuine collaborations and respect others’ rights. Wave may restrict/remove content, refuse publication or suspend accounts to protect users, enforce these terms or meet legal obligations.",
+            "Report content using in-app tools or support. For moderation appeals or rights complaints, send the content, reasons and relevant evidence to info{'@'}wave.ba. We will provide a review; urgent protective measures may precede notification."
+          ]
+        },
+        {
+          "heading": "Privacy, messages and termination",
+          "paragraphs": [
+            "Visibility settings control public display but cannot immediately remove copies others downloaded or search engines indexed. Do not place confidential information in public fields.",
+            "Delete your account in settings or contact us. Shared history may remain accessible to other participants with an anonymized account; limits and retention are explained in the privacy notice."
+          ]
+        },
+        {
+          "heading": "Responsibility and mandatory rights",
+          "paragraphs": [
+            "You remain responsible for your commitments to other users. Wave works to maintain a safe, available service but does not promise hiring, earnings, uninterrupted availability or another user’s contract performance.",
+            "Nothing excludes liability that law does not allow us to exclude, or limits mandatory consumer/data-protection rights or access to competent authorities and courts."
+          ]
+        },
+        {
+          "heading": "Changes, complaints and governing law",
+          "paragraphs": [
+            "For material changes, we will provide clear notice and an effective date and request renewed acceptance where needed. Changes do not retrospectively alter an existing collaboration agreement.",
+            "Send questions/complaints to info{'@'}wave.ba or support. Bosnia and Herzegovina law governs your relationship with Wave, preserving mandatory protections available under other applicable law. These terms do not impose exclusive court jurisdiction contrary to mandatory rules."
+          ]
+        }
+      ]
+    },
+    "acceptTerms": "I confirm I am at least 18 and accept the {terms}.",
+    "lastUpdated": "Updated: {date}"
   },
   "app": {
     "loading": "Loading…",
@@ -312,7 +446,8 @@
     "homeTab": "Home",
     "profileTab": "Profile",
     "installBrowserHint": "In your browser menu, choose Install app or Add to Home Screen.",
-    "installSafariHint": "In Safari, choose File → Add to Dock."
+    "installSafariHint": "In Safari, choose File → Add to Dock.",
+    "madeBy": "Made with love by {studio}"
   },
   "chatInteractions": {
     "actions": "Message options",
@@ -1481,7 +1616,11 @@
     "profileReminderEmailTemplate": "Profile tips, email {n} (day {day})",
     "profileReminderEmailTemplateHint": "Sent while a profile is incomplete. Edits apply to creators and companies.",
     "campaignAlertEmailTemplate": "New campaigns",
-    "campaignAlertEmailTemplateHint": "Digest of new campaigns matching a creator’s categories and countries."
+    "campaignAlertEmailTemplateHint": "Digest of new campaigns matching a creator’s categories and countries.",
+    "accountDeletedEmailTemplate": "Account deleted",
+    "accountDeletedEmailTemplateHint": "Confirmation after a user deletes their own account.",
+    "termsUpdatedEmailTemplate": "Updated Terms of Use",
+    "termsUpdatedEmailTemplateHint": "Notice to existing users when a new terms version is published."
   },
   "api": {
     "invalidResponse": "Wave could not read the server response. Please try again.",
@@ -3344,7 +3483,7 @@
     "undo": "Keep receiving: {name}",
     "invalid": "This link is not valid or the account was deleted. Sign in and change your choice in Settings.",
     "toWave": "Go to Wave",
-    "registerTitle": "Send me Wave news and tips.",
+    "registerTitle": "Send me Wave news.",
     "registerHint": "Unsubscribe in one click from any email."
   },
   "profileGuide": {

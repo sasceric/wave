@@ -305,5 +305,6 @@
     "view": "Kampagne ansehen",
     "footer": "Du erhältst diese Nachrichten, weil Kampagnenbenachrichtigungen aktiviert sind. Du kannst sie jederzeit in deiner Übersicht ändern oder deaktivieren.",
     "settings": "Kampagnenbenachrichtigungen verwalten"
-  }
+  },
+  "legal_terms_required": "Akzeptieren Sie die aktuellen Nutzungsbedingungen und bestätigen Sie, dass Sie mindestens 18 sind."
 }

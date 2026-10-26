@@ -27,9 +27,9 @@ final class AccountActivationTest extends WebTestCase
     {
         foreach (['creator', 'company'] as $type) {
             $this->client->request('GET', '/api/auth/csrf'); $csrf = $this->payload()['csrfToken'];
-            $this->client->jsonRequest('POST', '/api/auth/register', ['email' => $type.'@example.test', 'password' => 'seven77', 'accountType' => $type, 'name' => 'Amina Studio'], ['HTTP_X_CSRF_TOKEN' => $csrf]);
+            $this->client->jsonRequest('POST', '/api/auth/register', ['email' => $type.'@example.test', 'password' => 'seven77', 'accountType' => $type, 'termsAccepted' => true, 'termsVersion' => \App\Legal\LegalPolicies::VERSION, 'name' => 'Amina Studio'], ['HTTP_X_CSRF_TOKEN' => $csrf]);
             self::assertResponseStatusCodeSame(400);
-            $this->client->jsonRequest('POST', '/api/auth/register', ['email' => $type.'@example.test', 'password' => 'eight888', 'accountType' => $type, 'name' => 'Amina Studio'], ['HTTP_X_CSRF_TOKEN' => $csrf]);
+            $this->client->jsonRequest('POST', '/api/auth/register', ['email' => $type.'@example.test', 'password' => 'eight888', 'accountType' => $type, 'termsAccepted' => true, 'termsVersion' => \App\Legal\LegalPolicies::VERSION, 'name' => 'Amina Studio'], ['HTTP_X_CSRF_TOKEN' => $csrf]);
             self::assertResponseStatusCodeSame(201);
             $data = $this->payload()['data'];
             self::assertFalse($data['profileComplete']); self::assertFalse($data['approved']); self::assertFalse($data['emailVerified']); self::assertSame(1, $data['hide_my_account']);

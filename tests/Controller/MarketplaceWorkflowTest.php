@@ -69,7 +69,7 @@ final class MarketplaceWorkflowTest extends WebTestCase
     {
         foreach (['creator', 'company'] as $type) {
             $this->jsonRequest('POST', '/api/auth/register', [
-                'accountType' => $type,
+                'accountType' => $type, 'termsAccepted' => true, 'termsVersion' => \App\Legal\LegalPolicies::VERSION,
                 'email' => $type.'-pending-image@example.test',
                 'password' => 'a-long-passphrase-for-wave',
                 'name' => 'Pending '.$type,
@@ -159,7 +159,7 @@ final class MarketplaceWorkflowTest extends WebTestCase
     {
         $csrf = $this->csrfToken();
         $this->jsonRequest('POST', '/api/auth/register', [
-            'accountType' => 'creator',
+            'accountType' => 'creator', 'termsAccepted' => true, 'termsVersion' => \App\Legal\LegalPolicies::VERSION,
             'email' => 'creator@example.test',
             'password' => 'a-long-passphrase-for-wave',
             'name' => 'Avery Creator',
@@ -943,7 +943,7 @@ final class MarketplaceWorkflowTest extends WebTestCase
     public function testInvalidCsrfAndDuplicateEmailAreRejected(): void
     {
         $this->jsonRequest('POST', '/api/auth/register', [
-            'accountType' => 'company',
+            'accountType' => 'company', 'termsAccepted' => true, 'termsVersion' => \App\Legal\LegalPolicies::VERSION,
             'email' => 'brand@example.test',
             'password' => 'a-long-passphrase-for-wave',
             'name' => 'Small Brand',
@@ -956,7 +956,7 @@ final class MarketplaceWorkflowTest extends WebTestCase
 
         $csrf = $this->csrfToken();
         $this->jsonRequest('POST', '/api/auth/register', [
-            'accountType' => 'company',
+            'accountType' => 'company', 'termsAccepted' => true, 'termsVersion' => \App\Legal\LegalPolicies::VERSION,
             'email' => 'brand@example.test',
             'password' => 'a-long-passphrase-for-wave',
             'name' => 'Small Brand',
@@ -974,7 +974,7 @@ final class MarketplaceWorkflowTest extends WebTestCase
         self::assertSame('BA', $registeredCompany->getCountryCode());
 
         $this->jsonRequest('POST', '/api/auth/register', [
-            'accountType' => 'company',
+            'accountType' => 'company', 'termsAccepted' => true, 'termsVersion' => \App\Legal\LegalPolicies::VERSION,
             'email' => 'brand@example.test',
             'password' => 'another-long-passphrase',
             'name' => 'Second Brand',
@@ -989,7 +989,7 @@ final class MarketplaceWorkflowTest extends WebTestCase
     public function testRegistrationRequiresIdentityAndCredentialsWhileProfileDetailsCanBeCompletedLater(): void
     {
         $creatorPayload = [
-            'accountType' => 'creator',
+            'accountType' => 'creator', 'termsAccepted' => true, 'termsVersion' => \App\Legal\LegalPolicies::VERSION,
             'email' => 'required-fields@example.test',
             'password' => 'a-long-passphrase-for-wave',
             'name' => 'Avery Creator',
@@ -1015,7 +1015,7 @@ final class MarketplaceWorkflowTest extends WebTestCase
         }
 
         $companyPayload = [
-            'accountType' => 'company',
+            'accountType' => 'company', 'termsAccepted' => true, 'termsVersion' => \App\Legal\LegalPolicies::VERSION,
             'email' => 'required-company-fields@example.test',
             'password' => 'a-long-passphrase-for-wave',
             'name' => 'Required Company',

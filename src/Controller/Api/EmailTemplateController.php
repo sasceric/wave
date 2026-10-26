@@ -43,6 +43,8 @@ final class EmailTemplateController
         'profile_reminder_3',
         'profile_reminder_4',
         'campaign_alert',
+        'account_deleted',
+        'terms_updated',
     ];
     #[Route('/api/admin/email-templates', name: 'api_admin_email_templates', methods: ['GET'])]
     public function list(

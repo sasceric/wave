@@ -75,6 +75,8 @@ final class EmailTemplateAdminControllerTest extends WebTestCase
                 'profile_reminder_3',
                 'profile_reminder_4',
                 'campaign_alert',
+                'account_deleted',
+                'terms_updated',
             ],
             array_column($this->payload()['data']['templates'], 'key'),
         );

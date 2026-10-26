@@ -15,7 +15,7 @@ function initializeGoogleAnalytics() {
   window.gtag = function () { window.dataLayer.push(arguments) }
   window.gtag('consent', 'default', { analytics_storage: 'denied', ad_storage: 'denied', ad_user_data: 'denied', ad_personalization: 'denied' })
   window.gtag('js', new Date())
-  window.gtag('config', measurementId, { send_page_view: false })
+  window.gtag('config', measurementId, { send_page_view: false, cookie_expires: 180 * 24 * 60 * 60, cookie_update: false, allow_google_signals: false, allow_ad_personalization_signals: false })
 
   const script = document.createElement('script')
   script.async = true

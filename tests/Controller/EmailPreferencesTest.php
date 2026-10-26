@@ -107,6 +107,23 @@ final class EmailPreferencesTest extends WebTestCase
         self::assertEmailCount(1);
     }
 
+    public function testTermsNoticeIsSentOncePerVersionAndOnlyWhenEnabled(): void
+    {
+        $user = $this->creator();
+        $batch = static::getContainer()->get(\App\Background\TermsNoticeBatch::class);
+        self::assertSame(0, $batch->run(false, false));
+        self::assertEmailCount(0);
+        self::assertSame(1, $batch->run(false, true));
+        self::assertEmailCount(1);
+        $email = self::getMailerMessage();
+        self::assertInstanceOf(Email::class, $email);
+        self::assertSame('We have updated the Wave Terms of Use', $email->getSubject());
+        self::assertEmailHtmlBodyContains($email, '/terms-of-use');
+        self::assertSame(\App\Legal\LegalPolicies::VERSION, $this->em->getConnection()->fetchOne('SELECT terms_notice_version FROM wave_user WHERE id = ?', [$user->getId()]));
+        self::assertSame(0, $batch->run(false, true));
+        self::assertEmailCount(1);
+    }
+
     private function creator(): User
     {
         $user = new User('amina@example.test', 'ROLE_CREATOR');

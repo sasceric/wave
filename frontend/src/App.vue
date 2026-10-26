@@ -1,8 +1,8 @@
 <script setup>
 import { computed, defineAsyncComponent, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { isNavigationFailure, NavigationFailureType, RouterView, useRoute, useRouter } from 'vue-router'
-import { useI18n } from 'vue-i18n'
-import { ArrowRight, Bell, LifeBuoy, Building2, ChevronRight, Download, Handshake, House, LogOut, Menu, Megaphone, MessageCircle, UserRound, UsersRound, X } from '@lucide/vue'
+import { I18nT, useI18n } from 'vue-i18n'
+import { ArrowRight, Bell, Heart, LifeBuoy, Building2, ChevronRight, Download, Handshake, House, LogOut, Menu, Megaphone, MessageCircle, UserRound, UsersRound, X } from '@lucide/vue'
 import { registerSW } from 'virtual:pwa-register'
 import LanguageSwitcher from './components/shared/LanguageSwitcher.vue'
 import HeaderCreatorSearch from './components/shared/HeaderCreatorSearch.vue'
@@ -1336,6 +1336,7 @@ async function signOut() {
                 </svg>
               </summary>
               <div class="site-footer__accordion-content">
+                <LocalizedLink :to="{ name: 'terms-of-use' }">{{ t('legal.terms.title') }}</LocalizedLink>
                 <LocalizedLink :to="{ name: 'imprint' }">{{ t('legal.imprint.title') }}</LocalizedLink>
                 <LocalizedLink :to="{ name: 'privacy-policy' }">{{ t('legal.privacy.title') }}</LocalizedLink>
                 <LocalizedLink :to="{ name: 'cookie-policy' }">{{ t('legal.cookies.title') }}</LocalizedLink>
@@ -1395,7 +1396,15 @@ async function signOut() {
           </div>
         </div>
         <div class="site-footer__bottom">
-          <span class="site-footer__copyright">{{ t('app.copyright', { year: currentYear }) }}</span>
+          <span class="site-footer__copyright">
+            {{ t('app.copyright', { year: currentYear }) }}
+            <span class="site-footer__credit">
+              <I18nT keypath="app.madeBy" tag="span">
+                <template #studio><a href="https://steelcode.dev" target="_blank" rel="noopener">SteelCode</a></template>
+              </I18nT>
+              <Heart class="site-footer__heart" :size="13" aria-hidden="true" />
+            </span>
+          </span>
           <nav class="site-footer__quick-links" :aria-label="t('app.footerQuickLinks')">
             <LocalizedLink to="/creators">{{ t('app.footerProfiles') }}</LocalizedLink>
             <LocalizedLink to="/campaigns">{{ t('app.campaigns') }}</LocalizedLink>

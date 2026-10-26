@@ -86,6 +86,19 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\OneToOne(mappedBy: 'owner', targetEntity: Company::class, cascade: ['persist', 'remove'])]
     private ?Company $company = null;
 
+    #[ORM\Column(type: 'json', nullable: true)]
+    private ?array $legalRecords = null;
+
+    /** Terms version this account was told about (by registration or the update email). */
+    #[ORM\Column(length: 20, nullable: true)]
+    private ?string $termsNoticeVersion = null;
+
+    public function getTermsNoticeVersion(): ?string { return $this->termsNoticeVersion; }
+    public function setTermsNoticeVersion(?string $version): void { $this->termsNoticeVersion = $version; }
+
+    public function getLegalRecords(): array { return $this->legalRecords ?? []; }
+    public function setLegalRecords(array $records): void { $this->legalRecords = $records; }
+
     public function __construct(string $email, string $role)
     {
         $this->email = mb_strtolower(trim($email));
@@ -109,6 +122,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         $this->password = bin2hex(random_bytes(64));
         $this->phone = $this->city = $this->countryCode = null;
         $this->role = 'ROLE_DELETED';
+        $this->legalRecords = null;
         $this->approved = $this->emailVerified = $this->moderator = $this->admin = $this->notificationsEnabled = false;
         $this->hideMyAccount = true;
     }

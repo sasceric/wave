@@ -79,6 +79,14 @@ const templateLabels = computed(() => ({
     title: t('adminDashboard.campaignAlertEmailTemplate'),
     description: t('adminDashboard.campaignAlertEmailTemplateHint'),
   },
+  account_deleted: {
+    title: t('adminDashboard.accountDeletedEmailTemplate'),
+    description: t('adminDashboard.accountDeletedEmailTemplateHint'),
+  },
+  terms_updated: {
+    title: t('adminDashboard.termsUpdatedEmailTemplate'),
+    description: t('adminDashboard.termsUpdatedEmailTemplateHint'),
+  },
 }))
 
 const selectedTemplate = computed(() => templates.value.find(({ key }) => key === selectedKey.value) ?? null)

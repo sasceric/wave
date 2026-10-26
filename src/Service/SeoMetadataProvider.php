@@ -93,6 +93,7 @@ final class SeoMetadataProvider
             'imprint' => 'imprintDescription',
             'privacy-policy' => 'privacyDescription',
             'cookie-policy' => 'cookiesDescription',
+            'terms-of-use' => 'termsDescription',
             default => 'privateDescription',
         };
         $title = $this->translation($locale, $titleKey);

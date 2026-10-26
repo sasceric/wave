@@ -679,9 +679,9 @@
   .profile-intro-video { display: inline-flex; justify-self: start; align-items: center; gap: 6px; margin: 0; color: var(--forest); font-size: 14px; font-weight: 600; }
   .profile-heading__actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 4px; .button { margin: 0; } }
 
-  // Availability sits in the meta row with a status dot.
+  // Show availability on the portrait, moving it to the meta row on mobile.
   .profile-heading__availability { display: inline-flex; align-items: center; gap: 6px; max-width: calc(100% - 24px); padding: 5px 11px; border: 1px solid var(--glass-edge); border-radius: var(--radius-pill); color: var(--ink); background: var(--glass-fill-strong); box-shadow: var(--glass-highlight); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); font-size: 13px; font-weight: 600; }
-  .profile-heading__availability-inline { display: none; align-items: center; gap: 6px; color: var(--ink); font-weight: 600; }
+  .profile-heading__meta .profile-heading__availability-inline { display: none; align-items: center; gap: 6px; color: var(--ink); font-weight: 600; }
   .profile-heading__availability-dot { flex: 0 0 8px; width: 8px; height: 8px; border-radius: 50%; background: #4f9a72; box-shadow: 0 0 0 3px rgba(79, 154, 114, .18); }
   .is-scheduled .profile-heading__availability-dot { background: var(--coral); box-shadow: 0 0 0 3px rgba(217, 131, 104, .2); }
   .is-busy .profile-heading__availability-dot { background: var(--secondary); box-shadow: none; }
@@ -719,7 +719,7 @@
     // Portrait beside the copy, as in the prototype's phone layout.
     .profile-heading__identity { grid-template-columns: 112px minmax(0, 1fr); align-items: start; gap: 16px; }
     .profile-heading__avatar { border-radius: 22px; .profile-heading__availability { display: none; } }
-    .profile-heading__availability-inline { display: inline-flex; }
+    .profile-heading__meta .profile-heading__availability-inline { display: inline-flex; }
     .profile-heading__copy { gap: 8px; }
     .profile-heading .eyebrow { font-size: 11px; line-height: 1.5; }
     .profile-heading h1 { font-size: 34px; }

@@ -110,6 +110,9 @@ final class AuthController extends AbstractController
                 return new JsonResponse(['error' => ApiMessages::get('invalid_registration', $locale)], 400);
             }
         }
+        if (!\App\Legal\LegalPolicies::accepted($data)) {
+            return new JsonResponse(['error' => ApiMessages::get('legal_terms_required', $locale), 'fields' => ['termsAccepted']], 400);
+        }
         // Wave news opt-in from the registration form; older cached forms omit it.
         if (array_key_exists('newsletter', $data) && !is_bool($data['newsletter'])) {
             return new JsonResponse(['error' => ApiMessages::get('invalid_registration', $locale)], 400);
@@ -124,7 +127,7 @@ final class AuthController extends AbstractController
         $name = is_string($data['name'] ?? null) ? trim($data['name']) : '';
         if ($type === 'creator') {
             $birthday = CreatorBirthday::parse($data['birthday'] ?? null);
-            if ($birthday === false) {
+            if ($birthday === false || ($birthday !== null && $birthday > new \DateTimeImmutable('-18 years today'))) {
                 return new JsonResponse(['error' => ApiMessages::get('invalid_birthday', $locale), 'fields' => ['birthday']], 400);
             }
             // Accept the previous payload while cached registration forms are still in use.
@@ -156,7 +159,7 @@ final class AuthController extends AbstractController
         $user->setEmailVerified(false);
         $user->setApproved(false);
         $user->setHideMyAccount(true);
-        $user->setNewsletterEnabled($data['newsletter'] ?? true);
+        $user->setNewsletterEnabled($data['newsletter'] ?? false);
         if ($type === 'creator') {
             $category = is_string($data['category'] ?? null) ? trim($data['category']) : '';
             $categories = !array_key_exists('categories', $data) && $category === '' ? [] : $this->categoryList($data['categories'] ?? [$category]);
@@ -195,6 +198,7 @@ final class AuthController extends AbstractController
             $user->setCompany($company);
         }
 
+        \App\Legal\LegalPolicies::registration($user, $locale, 'email_registration');
         $entityManager->persist($user);
         $entityManager->flush();
         $verificationToken = $actionTokens->issue($user, 'verify_email');

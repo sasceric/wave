@@ -106,7 +106,7 @@ final class MarketplaceSafetyTest extends WebTestCase
 
     public function testCompanyPasswordRegistrationDefaultsToBrandAndAcceptsAgency(): void
     {
-        $body = ['accountType' => 'company', 'name' => 'Demo company', 'password' => 'a-long-test-passphrase', 'industries' => ['Beauty'], 'country' => 'BA', 'city' => 'Sarajevo', 'phone' => '+38761123456'];
+        $body = ['accountType' => 'company', 'termsAccepted' => true, 'termsVersion' => \App\Legal\LegalPolicies::VERSION, 'name' => 'Demo company', 'password' => 'a-long-test-passphrase', 'industries' => ['Beauty'], 'country' => 'BA', 'city' => 'Sarajevo', 'phone' => '+38761123456'];
         foreach (['brand', 'agency'] as $type) {
             $this->write('POST', '/api/auth/register', $body + ['email' => $type.'@example.test'] + ($type === 'agency' ? ['companyType' => $type] : []));
             self::assertResponseStatusCodeSame(201);

@@ -116,6 +116,14 @@
     font-size: 14px;
   }
 
+  // The wrapper shows focus; keep the shared .form-field input focus ring off the inner field.
+  & &__search input:focus,
+  & &__search input:focus-visible {
+    border: 0;
+    outline: 0;
+    box-shadow: none;
+  }
+
   &__search input::placeholder {
     color: #9aa39d;
   }

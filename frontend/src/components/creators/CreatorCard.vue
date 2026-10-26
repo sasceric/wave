@@ -17,6 +17,7 @@ const props = defineProps({
 const { t } = useI18n()
 
 const primarySocial = computed(() => props.creator.socialProfiles?.[0] || null)
+const hasFollowerCount = computed(() => Number.isFinite(primarySocial.value?.followers) && primarySocial.value.followers >= 0)
 const socialIcon = computed(() => {
   const icons = {
     Instagram: Camera,
@@ -63,7 +64,7 @@ const startingPrice = computed(() => {
         <PresentationDemoBadge v-if="creator.isPresentationDemo" overlay />
       </div>
       <span
-        v-if="primarySocial"
+        v-if="hasFollowerCount"
         class="creator-card__metric"
         :aria-label="`${primarySocial.platform}: ${formatFollowers(primarySocial.followers)}`"
       >

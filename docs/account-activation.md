@@ -4,6 +4,13 @@
 
 The shorter signup collects account type, name, email and an eight-character minimum password. Google/Apple completion requires account type and name; the provider supplies the verified email. Previous complete registration payloads are still accepted. Contact information, categories/industries, company type, birthday and every existing profile tab remain in the account editor. No profile data is removed or rewritten by the migration.
 
+The registration checkbox controls only the newsletter and starts unchecked.
+Password/social signup default an omitted `newsletter` field to false and accept
+only boolean choices. Profile completion tips remain enabled independently and
+can be disabled later in email settings or through their unsubscribe link.
+Existing preferences are preserved. See the [legal/product review](legal/review-2026-10-26.md)
+for the consent and legal-document gaps that still need policy review.
+
 Login lands on `account-dashboard`, including incomplete accounts. Their overview shows email verification, contact/location and identity/category completion. Links open the existing editor with `tab` and a one-use `edit=1` query. The required-fields modal can return to the overview; marketplace routes and server approval/verification checks still apply. Portfolio, social profiles, offers and audience data remain optional. The existing admin approval process automatically reviews eligible accounts; there is no extra submission endpoint or fake submit action.
 
 Approved accounts see real activity/financial/review/credit statistics and a next action. The visibility switch calls the existing CSRF-protected visibility endpoint. Individual and bulk admin approval make newly approved creator and company profiles public automatically. Email verification and required profile completion remain prerequisites. Owners can hide their profiles afterward; repeating approval for an already approved account preserves that later visibility choice. Existing approved profiles are not republished by a backfill.

@@ -385,6 +385,50 @@ final class AccountEmailSender
         $this->send($user, null, $user->getPreferredLocale(), 'profile_tip', 'account');
     }
 
+    /** Sent after self-service deletion, to the address the account had (the user is already anonymized). */
+    public function sendAccountDeleted(string $email, string $name, string $locale): void
+    {
+        $locale = $this->normalizedLocale($locale);
+        $copy = $this->copyFor('account_deleted', $locale);
+        $url = rtrim($this->appBaseUrl, '/') . $this->localizedRoutePath('home', $locale);
+        $variables = $this->baseVariables($copy, $locale, $url);
+        $this->deliverTo($email, EmailRecipient::cleanName($name), 'account_deleted', $locale, $copy['subject'], $url, $variables);
+    }
+
+    /** Notice that new Terms of Use apply from $effectiveDate (Y-m-d). */
+    public function sendTermsUpdated(User $user, string $effectiveDate): void
+    {
+        $locale = $this->normalizedLocale($user->getPreferredLocale());
+        $copy = $this->termsCopy($locale, $effectiveDate);
+        $url = rtrim($this->appBaseUrl, '/') . $this->localizedRoutePath('terms-of-use', $locale);
+        $this->deliver($user, 'terms_updated', $locale, $copy['subject'], $url, $this->baseVariables($copy, $locale, $url));
+    }
+
+    /**
+     * @param array<string, string> $copy
+     * @return array<string, string>
+     */
+    private function baseVariables(array $copy, string $locale, string $url): array
+    {
+        unset($copy['subject']);
+
+        return $copy + [
+            'locale' => match ($locale) { 'sr' => 'sr-Latn', 'cnr' => 'cnr-Latn-ME', default => $locale },
+            'actionUrl' => $url,
+        ];
+    }
+
+    /** @return array<string, string> */
+    private function termsCopy(string $locale, string $effectiveDate): array
+    {
+        $date = \DateTimeImmutable::createFromFormat('!Y-m-d', $effectiveDate);
+        $label = $date instanceof \DateTimeImmutable ? $date->format('d.m.Y.') : $effectiveDate;
+        if ($locale === 'en' && $date instanceof \DateTimeImmutable) $label = $date->format('j F Y');
+        if ($locale === 'de' && $date instanceof \DateTimeImmutable) $label = $date->format('d.m.Y');
+
+        return array_map(static fn (string $value): string => str_replace('{date}', $label, $value), $this->copyFor('terms_updated', $locale));
+    }
+
     public function sendRegistrationReceived(User $user, string $locale): void
     {
         $this->send($user, null, $locale, 'registered', 'account-dashboard');
@@ -534,6 +578,9 @@ final class AccountEmailSender
 
     public function defaultSubject(string $template, string $locale): string
     {
+        if ($template === 'terms_updated') {
+            return $this->termsCopy($this->normalizedLocale($locale), \App\Legal\LegalPolicies::effectiveDate())['subject'];
+        }
         return $this->copyFor($template, $locale)['subject'];
     }
 
@@ -543,7 +590,9 @@ final class AccountEmailSender
     public function previewVariables(string $template, string $locale): array
     {
         $locale = $this->normalizedLocale($locale);
-        $variables = $this->copyFor($template, $locale);
+        $variables = $template === 'terms_updated'
+            ? $this->termsCopy($locale, \App\Legal\LegalPolicies::effectiveDate())
+            : $this->copyFor($template, $locale);
         unset($variables['subject']);
         $variables['locale'] = match ($locale) {
             'sr' => 'sr-Latn',
@@ -653,7 +702,21 @@ final class AccountEmailSender
         string $url,
         array $variables,
     ): void {
-        $recipientName = EmailRecipient::name($user);
+        $this->deliverTo($user->getEmail(), EmailRecipient::name($user), $type, $locale, $subject, $url, $variables);
+    }
+
+    /**
+     * @param array<string, string> $variables
+     */
+    private function deliverTo(
+        string $email,
+        string $recipientName,
+        string $type,
+        string $locale,
+        string $subject,
+        string $url,
+        array $variables,
+    ): void {
         $variables['recipientName'] = $recipientName;
         $variables['greeting'] = EmailRecipient::greeting($variables['greeting'], $recipientName);
         $customization = $this->entityManager->getRepository(EmailTemplate::class)->findOneBy([
@@ -683,7 +746,7 @@ final class AccountEmailSender
 
         $message = new Email()
             ->from(new Address($this->fromAddress, $this->fromName))
-            ->to(new Address($user->getEmail(), $recipientName))
+            ->to(new Address($email, $recipientName))
             ->subject($customization instanceof EmailTemplate ? $customization->getSubject() : $subject)
             ->text(implode("\n\n", $text))
             ->html($this->templates->render(
@@ -712,6 +775,9 @@ final class AccountEmailSender
                 $this->copyFor($template === 'verification_reminder' ? 'verify' : 'registered', $locale),
                 RegistrationReminderEmailCopy::forLocale($template, $locale),
             );
+        }
+        if (in_array($template, ['account_deleted', 'terms_updated'], true)) {
+            return AccountNoticeEmailCopy::forLocale($template, $locale) ?? throw new \InvalidArgumentException('Unknown account notice.');
         }
         if ($template === 'credit_code_assigned') {
             return CreditCodeEmailCopy::forLocale($locale);

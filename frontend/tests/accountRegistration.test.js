@@ -35,6 +35,8 @@ test('password registration passes its unverified account to the account screen'
   assert.equal(tracked[0][0], registered)
   assert.equal(tracked[0][1], 'email')
   assert.equal(requests[0].body.name, 'Test Creator')
+  assert.equal(requests[0].body.newsletter, false)
+  assert.equal('profileTips' in requests[0].body, false)
   assert.equal('firstName' in requests[0].body, false)
   assert.equal('lastName' in requests[0].body, false)
   assert.equal(view.emitted[0][0], 'authenticated')

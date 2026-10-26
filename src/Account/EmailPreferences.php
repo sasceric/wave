@@ -101,11 +101,23 @@ final class EmailPreferences
     {
         return match ($category) {
             self::PROFILE_TIPS => $this->db->executeStatement('UPDATE wave_user SET profile_tips_enabled = ? WHERE id = ? AND deleted_at IS NULL', [$enabled, $userId], [\Doctrine\DBAL\ParameterType::BOOLEAN, \Doctrine\DBAL\ParameterType::INTEGER]) > 0,
-            self::NEWSLETTER => $this->db->executeStatement('UPDATE wave_user SET newsletter_enabled = ? WHERE id = ? AND deleted_at IS NULL', [$enabled, $userId], [\Doctrine\DBAL\ParameterType::BOOLEAN, \Doctrine\DBAL\ParameterType::INTEGER]) > 0,
+            self::NEWSLETTER => $this->setNewsletter($userId, $enabled),
             // Alerts keep their categories and frequency; only delivery is switched.
             self::CAMPAIGN_ALERTS => $this->db->executeStatement('UPDATE campaign_alert_preference SET enabled = ? WHERE user_id = ?', [$enabled, $userId], [\Doctrine\DBAL\ParameterType::BOOLEAN, \Doctrine\DBAL\ParameterType::INTEGER]) > 0,
             default => throw new \InvalidArgumentException('Unknown email category.'),
         };
+    }
+
+    private function setNewsletter(int $userId, bool $enabled): bool
+    {
+        return $this->db->transactional(function () use ($userId, $enabled): bool {
+            $lock = $this->db->getDatabasePlatform() instanceof \Doctrine\DBAL\Platforms\PostgreSQLPlatform ? ' FOR UPDATE' : '';
+            $row = $this->db->fetchAssociative('SELECT legal_records, preferred_locale FROM wave_user WHERE id = ? AND deleted_at IS NULL'.$lock, [$userId]);
+            if ($row === false) return false;
+            $records = $row['legal_records'] === null ? [] : json_decode($row['legal_records'], true, flags: JSON_THROW_ON_ERROR);
+            $records['newsletter'] = \App\Legal\LegalPolicies::emailRecord($records['newsletter'] ?? [], $enabled, 'signed_email_preferences', $row['preferred_locale']);
+            return $this->db->executeStatement('UPDATE wave_user SET newsletter_enabled = ?, legal_records = ? WHERE id = ?', [$enabled, json_encode($records, JSON_THROW_ON_ERROR), $userId], [\Doctrine\DBAL\ParameterType::BOOLEAN, \Doctrine\DBAL\ParameterType::STRING, \Doctrine\DBAL\ParameterType::INTEGER]) > 0;
+        });
     }
 
     public static function maskedEmail(string $email): string

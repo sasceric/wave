@@ -33,11 +33,30 @@ final class EmailAccountFlowTest extends WebTestCase
         $schemaTool->createSchema($metadata);
     }
 
+    public function testRegistrationRequiresCurrentTermsAndAdultCreators(): void
+    {
+        $base = ['accountType' => 'creator', 'email' => 'terms@example.test', 'password' => 'a-long-passphrase-for-wave', 'name' => 'Terms Creator'];
+        foreach ([[], ['termsAccepted' => false, 'termsVersion' => \App\Legal\LegalPolicies::VERSION], ['termsAccepted' => true, 'termsVersion' => '2000-01-01']] as $terms) {
+            $this->jsonRequest('POST', '/api/auth/register', $base + $terms, $this->csrfToken());
+            self::assertResponseStatusCodeSame(400);
+            self::assertSame(['termsAccepted'], json_decode((string) $this->client->getResponse()->getContent(), true)['fields']);
+        }
+        $accepted = ['termsAccepted' => true, 'termsVersion' => \App\Legal\LegalPolicies::VERSION];
+        $this->jsonRequest('POST', '/api/auth/register', $base + $accepted + ['birthday' => (new \DateTimeImmutable('-17 years'))->format('Y-m-d')], $this->csrfToken());
+        self::assertResponseStatusCodeSame(400);
+        self::assertSame(['birthday'], json_decode((string) $this->client->getResponse()->getContent(), true)['fields']);
+        $this->jsonRequest('POST', '/api/auth/register', $base + $accepted, $this->csrfToken());
+        self::assertResponseStatusCodeSame(201);
+        $user = static::getContainer()->get(EntityManagerInterface::class)->getRepository(User::class)->findOneBy(['email' => 'terms@example.test']);
+        self::assertSame(\App\Legal\LegalPolicies::VERSION, $user?->getLegalRecords()['terms']['version'] ?? null);
+        self::assertFalse($user->isNewsletterEnabled());
+    }
+
     public function testRegistrationSendsSingleUseEmailVerificationLink(): void
     {
         $csrf = $this->csrfToken();
         $this->jsonRequest('POST', '/api/auth/register', [
-            'accountType' => 'creator',
+            'accountType' => 'creator', 'termsAccepted' => true, 'termsVersion' => \App\Legal\LegalPolicies::VERSION,
             'email' => 'verify@example.test',
             'password' => 'a-long-passphrase-for-wave',
             'firstName' => 'Verify',
@@ -51,6 +70,7 @@ final class EmailAccountFlowTest extends WebTestCase
 
         self::assertResponseStatusCodeSame(201);
         $registration = $this->payload();
+        self::assertSame(['profileTips' => true, 'newsletter' => false], $registration['data']['emailPreferences']);
         self::assertFalse($registration['data']['emailVerified']);
         self::assertFalse($registration['data']['approved']);
         self::assertEmailCount(1);
@@ -89,6 +109,19 @@ final class EmailAccountFlowTest extends WebTestCase
         self::assertFalse($verifiedUser->isApproved());
     }
 
+    public function testNewsletterChoiceDoesNotDisableProfileTips(): void
+    {
+        foreach ([false, true] as $newsletter) {
+            $this->jsonRequest('POST', '/api/auth/register', [
+                'accountType' => 'company', 'termsAccepted' => true, 'termsVersion' => \App\Legal\LegalPolicies::VERSION, 'name' => 'Example brand',
+                'email' => ($newsletter ? 'subscribed' : 'not-subscribed').'@example.test',
+                'password' => 'a-long-passphrase-for-wave', 'newsletter' => $newsletter,
+            ], $this->csrfToken());
+            self::assertResponseStatusCodeSame(201);
+            self::assertSame(['profileTips' => true, 'newsletter' => $newsletter], $this->payload()['data']['emailPreferences']);
+        }
+    }
+
     public function testPasswordRegistrationAfterDeletingGoogleAccountStartsUnverified(): void
     {
         $entityManager = static::getContainer()->get(EntityManagerInterface::class);
@@ -116,7 +149,7 @@ final class EmailAccountFlowTest extends WebTestCase
         self::assertSame(0, $entityManager->getRepository(OAuthIdentity::class)->count([]));
 
         $this->jsonRequest('POST', '/api/auth/register', [
-            'accountType' => 'creator',
+            'accountType' => 'creator', 'termsAccepted' => true, 'termsVersion' => \App\Legal\LegalPolicies::VERSION,
             'email' => 'recreated@example.test',
             'password' => 'a-long-passphrase-for-wave',
             'firstName' => 'Password',
@@ -146,7 +179,7 @@ final class EmailAccountFlowTest extends WebTestCase
     public function testPasswordResetResponseDoesNotRevealAccountAndChangesPassword(): void
     {
         $this->jsonRequest('POST', '/api/auth/register', [
-            'accountType' => 'creator',
+            'accountType' => 'creator', 'termsAccepted' => true, 'termsVersion' => \App\Legal\LegalPolicies::VERSION,
             'email' => 'reset@example.test',
             'password' => 'a-long-passphrase-for-wave',
             'firstName' => 'Reset',

@@ -35,12 +35,13 @@ final class OAuthRegistrationFlowTest extends WebTestCase
             $session = $this->client->getRequest()->getSession();
             $session->set('wave_oauth_registration', ['provider' => 'google', 'subject' => 'short-'.$type, 'email' => 'short-'.$type.'@example.test', 'accountType' => $type, 'createdAt' => time()]);
             $session->save();
-            $this->client->jsonRequest('POST', '/api/auth/oauth/complete?locale=en', ['accountType' => $type, 'name' => 'Amina Studio'], ['HTTP_X_CSRF_TOKEN' => $csrf]);
+            $this->client->jsonRequest('POST', '/api/auth/oauth/complete?locale=en', ['accountType' => $type, 'termsAccepted' => true, 'termsVersion' => \App\Legal\LegalPolicies::VERSION, 'name' => 'Amina Studio'], ['HTTP_X_CSRF_TOKEN' => $csrf]);
             self::assertResponseStatusCodeSame(201);
             self::assertTrue($this->payload()['data']['emailVerified']);
             self::assertFalse($this->payload()['data']['profileComplete']);
             self::assertFalse($this->payload()['data']['approved']);
             self::assertSame(1, $this->payload()['data']['hide_my_account']);
+            self::assertSame(['profileTips' => true, 'newsletter' => false], $this->payload()['data']['emailPreferences']);
         }
     }
 
@@ -52,12 +53,28 @@ final class OAuthRegistrationFlowTest extends WebTestCase
         $session->set('wave_oauth_registration', ['provider' => 'google', 'subject' => 'agency-owner', 'email' => 'agency@example.test', 'givenName' => 'Agency', 'familyName' => 'Owner', 'accountType' => 'company', 'createdAt' => time()]);
         $session->save();
         $this->client->jsonRequest('POST', '/api/auth/oauth/complete?locale=en', [
-            'accountType' => 'company', 'name' => 'Demo agency', 'companyType' => 'agency', 'industries' => ['Beauty'],
+            'accountType' => 'company', 'termsAccepted' => true, 'termsVersion' => \App\Legal\LegalPolicies::VERSION, 'name' => 'Demo agency', 'companyType' => 'agency', 'industries' => ['Beauty'],
+            'newsletter' => true,
             'country' => 'BA', 'city' => 'Sarajevo', 'phone' => '+38761123456',
         ], ['HTTP_X_CSRF_TOKEN' => $csrf]);
         self::assertResponseStatusCodeSame(201);
         self::assertSame('agency', $this->payload()['data']['profile']['companyType']);
+        self::assertSame(['profileTips' => true, 'newsletter' => true], $this->payload()['data']['emailPreferences']);
         self::assertFalse($this->payload()['data']['approved']);
+    }
+
+    public function testSocialSignupRejectsNonBooleanNewsletterConsent(): void
+    {
+        $this->client->request('GET', '/api/auth/csrf?locale=en');
+        $csrf = $this->payload()['csrfToken'];
+        $session = $this->client->getRequest()->getSession();
+        $session->set('wave_oauth_registration', ['provider' => 'google', 'subject' => 'invalid-newsletter', 'email' => 'invalid-newsletter@example.test', 'accountType' => 'creator', 'createdAt' => time()]);
+        $session->save();
+        $this->client->jsonRequest('POST', '/api/auth/oauth/complete?locale=en', [
+            'accountType' => 'creator', 'termsAccepted' => true, 'termsVersion' => \App\Legal\LegalPolicies::VERSION, 'name' => 'Example creator', 'newsletter' => 'true',
+        ], ['HTTP_X_CSRF_TOKEN' => $csrf]);
+        self::assertResponseStatusCodeSame(400);
+        self::assertNull(static::getContainer()->get(EntityManagerInterface::class)->getRepository(User::class)->findOneBy(['email' => 'invalid-newsletter@example.test']));
     }
 
     public function testGoogleRegistrationCollectsProfileAndCreatesPendingVerifiedAccount(): void
@@ -71,7 +88,7 @@ final class OAuthRegistrationFlowTest extends WebTestCase
             'email' => 'creator@example.test',
             'givenName' => 'Avery',
             'familyName' => 'Creator',
-            'accountType' => 'creator',
+            'accountType' => 'creator', 'termsAccepted' => true, 'termsVersion' => \App\Legal\LegalPolicies::VERSION,
             'createdAt' => time(),
         ]);
         $this->client->getRequest()->getSession()->save();
@@ -91,7 +108,8 @@ final class OAuthRegistrationFlowTest extends WebTestCase
                 'HTTP_X_CSRF_TOKEN' => $csrfToken,
             ],
             content: json_encode([
-                'accountType' => 'creator',
+                'accountType' => 'creator', 'termsAccepted' => true, 'termsVersion' => \App\Legal\LegalPolicies::VERSION,
+                'newsletter' => false,
                 'name' => 'Avery Creator',
                 'birthday' => '2000-02-29',
                 'phone' => '+387 61 123 456',
@@ -110,6 +128,8 @@ final class OAuthRegistrationFlowTest extends WebTestCase
         self::assertFalse($user->isApproved());
         self::assertTrue($user->isHideMyAccount());
         self::assertTrue($user->hasCompleteProfile());
+        self::assertFalse($user->isNewsletterEnabled());
+        self::assertTrue($user->isProfileTipsEnabled());
         self::assertSame('en', $user->getPreferredLocale());
         self::assertSame('Avery Creator', $user->getCreator()->getDisplayName());
         self::assertSame('2000-02-29', $user->getCreator()->getBirthday()->format('Y-m-d'));

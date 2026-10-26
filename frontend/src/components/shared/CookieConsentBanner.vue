@@ -1,23 +1,30 @@
 <script setup>
-import { ArrowRight } from '@lucide/vue'
-import { onBeforeUnmount, onMounted, ref } from 'vue'
+import legalDocuments from '../../../../config/legal_documents.json'
+import { ArrowRight, ChevronDown, ShieldCheck } from '@lucide/vue'
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import LocalizedLink from './LocalizedLink.vue'
+import SwitchField from './SwitchField.vue'
 import { setAnalyticsConsent } from '../../lib/privacyMetrics'
 import { setMarketingConsent } from '../../lib/metaTracking'
 
 const storageKey = 'wave-cookie-consent-v3'
+const consentLifetime = 180 * 24 * 60 * 60 * 1000
 const { t } = useI18n()
 const visible = ref(false)
 const analyticsAllowed = ref(false)
 const marketingAllowed = ref(false)
+const preferencesOpen = ref(false)
+const analyticsSwitch = computed({ get: () => Number(analyticsAllowed.value), set: value => { analyticsAllowed.value = value === 1 } })
+const marketingSwitch = computed({ get: () => Number(marketingAllowed.value), set: value => { marketingAllowed.value = value === 1 } })
 
 function readStoredConsent() {
   try {
     const current = JSON.parse(localStorage.getItem(storageKey) || 'null')
-    if (current?.version === 3 && typeof current.analytics === 'boolean' && typeof current.marketing === 'boolean') return current
-    const previous = JSON.parse(localStorage.getItem('wave-cookie-consent-v2') || 'null')
-    if (previous?.version === 2 && typeof previous.analytics === 'boolean') return { analytics: previous.analytics, marketing: false, legacy: true }
+    const savedAt = Date.parse(current?.updatedAt)
+    if (current?.version === 3 && current.policyVersion === legalDocuments.version
+      && Number.isFinite(savedAt) && savedAt <= Date.now() && Date.now() - savedAt < consentLifetime
+      && typeof current.analytics === 'boolean' && typeof current.marketing === 'boolean') return current
   } catch { /* Unavailable/corrupt storage never implies consent. */ }
   return null
 }
@@ -26,6 +33,7 @@ function restorePreferences() {
   const consent = readStoredConsent()
   analyticsAllowed.value = consent?.analytics ?? false
   marketingAllowed.value = consent?.marketing ?? false
+  preferencesOpen.value = false
   visible.value = !consent || Boolean(consent.legacy)
   setAnalyticsConsent(analyticsAllowed.value)
   setMarketingConsent(marketingAllowed.value)
@@ -39,12 +47,14 @@ function openPreferences() {
   const consent = readStoredConsent()
   analyticsAllowed.value = consent?.analytics ?? false
   marketingAllowed.value = consent?.marketing ?? false
+  preferencesOpen.value = true
   visible.value = true
 }
 
 function savePreferences(allowAnalytics, allowMarketing) {
   const consent = {
     version: 3,
+    policyVersion: legalDocuments.version,
     essential: true,
     analytics: allowAnalytics,
     marketing: allowMarketing,
@@ -80,36 +90,26 @@ defineExpose({ open: openPreferences })
     :aria-label="t('legal.cookieBannerTitle')"
   >
     <div class="cookie-banner__copy">
-      <span class="cookie-banner__eyebrow">{{ t('legal.cookieBannerEyebrow') }}</span>
-      <h2>{{ t('legal.cookieBannerTitle') }}</h2>
+      <header class="cookie-banner__header">
+        <span class="cookie-banner__icon"><ShieldCheck :size="22" aria-hidden="true" /></span>
+        <h2>{{ t('legal.cookieBannerTitle') }}</h2>
+      </header>
       <p>{{ t('legal.cookieBannerDescription') }}</p>
       <LocalizedLink :to="{ name: 'cookie-policy' }" class="cookie-banner__link">
         {{ t('legal.cookies.title') }}
         <ArrowRight class="link-arrow" :size="16" aria-hidden="true" />
       </LocalizedLink>
     </div>
-    <div class="cookie-banner__preferences">
+    <div v-if="preferencesOpen" id="wave-cookie-preferences" class="cookie-banner__preferences">
       <div class="cookie-banner__preference cookie-banner__preference--essential">
-        <span class="cookie-banner__check" aria-hidden="true">✓</span>
         <span>
           <strong>{{ t('legal.essentialStorage') }}</strong>
           <small>{{ t('legal.essentialStorageDescription') }}</small>
         </span>
+        <span class="cookie-banner__always">{{ t('legal.alwaysActive') }}</span>
       </div>
-      <label class="cookie-banner__preference">
-        <input v-model="analyticsAllowed" type="checkbox">
-        <span>
-          <strong>{{ t('legal.analyticsStorage') }}</strong>
-          <small>{{ t('legal.analyticsStorageDescription') }}</small>
-        </span>
-      </label>
-      <label class="cookie-banner__preference">
-        <input v-model="marketingAllowed" type="checkbox">
-        <span>
-          <strong>{{ t('legal.marketingStorage') }}</strong>
-          <small>{{ t('legal.marketingStorageDescription') }}</small>
-        </span>
-      </label>
+      <SwitchField v-model="analyticsSwitch" :label="t('legal.analyticsStorage')" :description="t('legal.analyticsStorageDescription')" />
+      <SwitchField v-model="marketingSwitch" :label="t('legal.marketingStorage')" :description="t('legal.marketingStorageDescription')" />
     </div>
     <div class="cookie-banner__actions">
       <button
@@ -122,16 +122,15 @@ defineExpose({ open: openPreferences })
       <button
         class="button button--outline cookie-banner__button"
         type="button"
-        @click="savePreferences(analyticsAllowed, marketingAllowed)"
-      >
-        {{ t('legal.savePreferences') }}
-      </button>
-      <button
-        class="button button--dark cookie-banner__button"
-        type="button"
         @click="savePreferences(true, true)"
       >
         {{ t('legal.acceptAll') }}
+      </button>
+      <button v-if="preferencesOpen" class="button button--dark cookie-banner__button cookie-banner__manage" type="button" @click="savePreferences(analyticsAllowed, marketingAllowed)">
+        {{ t('legal.savePreferences') }}
+      </button>
+      <button v-else class="button cookie-banner__button cookie-banner__manage" type="button" :aria-expanded="preferencesOpen" aria-controls="wave-cookie-preferences" @click="preferencesOpen = true">
+        {{ t('legal.managePreferences') }} <ChevronDown :size="16" aria-hidden="true" />
       </button>
     </div>
   </aside>

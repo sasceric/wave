@@ -70,6 +70,7 @@ const routeViews = {
   imprint: legalView,
   'privacy-policy': legalView,
   'cookie-policy': legalView,
+  'terms-of-use': legalView,
 }
 
 const adminSections = {

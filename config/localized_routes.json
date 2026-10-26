@@ -57,7 +57,8 @@
     "account-settings": "racun/postavke",
     "search": "pretraga",
     "account-email-preferences": "racun/e-mailovi",
-    "account-profile-guide": "racun/vodic-za-profil"
+    "account-profile-guide": "racun/vodic-za-profil",
+    "terms-of-use": "uslovi-koristenja"
   },
   "hr": {
     "login": "prijava",
@@ -117,7 +118,8 @@
     "account-settings": "racun/postavke",
     "search": "pretraga",
     "account-email-preferences": "racun/e-posta",
-    "account-profile-guide": "racun/vodic-za-profil"
+    "account-profile-guide": "racun/vodic-za-profil",
+    "terms-of-use": "uvjeti-koristenja"
   },
   "sr": {
     "login": "prijava",
@@ -177,7 +179,8 @@
     "account-settings": "nalog/podesavanja",
     "search": "pretraga",
     "account-email-preferences": "nalog/mejlovi",
-    "account-profile-guide": "nalog/vodic-za-profil"
+    "account-profile-guide": "nalog/vodic-za-profil",
+    "terms-of-use": "uslovi-koriscenja"
   },
   "cnr": {
     "login": "prijava",
@@ -237,7 +240,8 @@
     "account-settings": "nalog/podesavanja",
     "search": "pretraga",
     "account-email-preferences": "nalog/e-mailovi",
-    "account-profile-guide": "nalog/vodic-za-profil"
+    "account-profile-guide": "nalog/vodic-za-profil",
+    "terms-of-use": "uslovi-koriscenja"
   },
   "sl": {
     "login": "prijava",
@@ -297,7 +301,8 @@
     "account-settings": "racun/nastavitve",
     "search": "iskanje",
     "account-email-preferences": "racun/e-posta",
-    "account-profile-guide": "racun/vodnik-za-profil"
+    "account-profile-guide": "racun/vodnik-za-profil",
+    "terms-of-use": "pogoji-uporabe"
   },
   "en": {
     "login": "login",
@@ -357,7 +362,8 @@
     "account-settings": "account/settings",
     "search": "search",
     "account-email-preferences": "account/emails",
-    "account-profile-guide": "account/profile-guide"
+    "account-profile-guide": "account/profile-guide",
+    "terms-of-use": "terms-of-use"
   },
   "de": {
     "login": "anmelden",
@@ -417,6 +423,7 @@
     "account-settings": "konto/einstellungen",
     "search": "suche",
     "account-email-preferences": "konto/e-mails",
-    "account-profile-guide": "konto/profil-leitfaden"
+    "account-profile-guide": "konto/profil-leitfaden",
+    "terms-of-use": "nutzungsbedingungen"
   }
 }

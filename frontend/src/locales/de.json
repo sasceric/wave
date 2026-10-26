@@ -38,7 +38,8 @@
     "forgotPasswordTitle": "Passwort wiederherstellen | Wave",
     "verifyEmailTitle": "E-Mail bestätigen | Wave",
     "resetPasswordTitle": "Passwort zurücksetzen | Wave",
-    "messagesTitle": "Nachrichten | Wave"
+    "messagesTitle": "Nachrichten | Wave",
+    "termsDescription": "Regeln für Konten, Inhalte und Kooperationen auf Wave."
   },
   "legal": {
     "eyebrow": "RECHTLICHES",
@@ -86,6 +87,12 @@
       "intro": "Hier erfährst du, welche Informationen Wave für den Betrieb des Marktplatzes verwendet und wie du uns dazu kontaktieren kannst.",
       "sections": [
         {
+          "heading": "Wer Ihre Daten verarbeitet",
+          "paragraphs": [
+            "Verantwortlicher ist UD SteelCode, Školska 10, 72000 Zenica, Bosnien und Herzegowina. Bei Fragen zum Datenschutz schreiben Sie an info{'@'}wave.ba."
+          ]
+        },
+        {
           "heading": "Welche Informationen wir verarbeiten",
           "paragraphs": [
             "Je nach Nutzung können dazu Konto- und Kontaktdaten, Creator- oder Unternehmensprofile, Kampagnen, Bewerbungen, Nachrichten, selbst angegebene Social-Media-Kennzahlen sowie technische Protokolle und Sicherheitsprotokolle gehören."
@@ -106,14 +113,21 @@
         {
           "heading": "Dienstleister und Speicherdauer",
           "paragraphs": [
-            "Wir können Dienstleister für Hosting, E-Mail-Versand und Sicherheitsaufgaben einsetzen. Sie erhalten nur die für ihre Aufgaben notwendigen Informationen. Wir verkaufen keine personenbezogenen Daten.",
-            "Wir speichern Informationen, solange sie für den Betrieb von Wave, den Schutz des Dienstes, die Klärung von Streitfällen oder gesetzliche Pflichten erforderlich sind. Die Löschung deines Kontos oder deiner Daten kannst du unter info{'@'}wave.ba beantragen. Gesetzlich vorgeschriebene Aufbewahrungspflichten bleiben bestehen."
+            "Wave läuft auf Servern der Hetzner Online GmbH in Deutschland, auf denen Datenbank, Dateien und Sicherungen liegen. E-Mails (Bestätigungen, Benachrichtigungen und Newsletter) versendet Brevo (Brevo SAS, Frankreich), das dafür Adresse, Name und Nachrichteninhalt erhält. Anbieter erhalten nur die für ihren Dienst nötigen Daten. Wir verkaufen keine personenbezogenen Daten.",
+            "Kontodaten speichern wir, solange das Konto besteht. Nach dem Löschen eines Kontos werden personenbezogene Daten und eigene Dateien entfernt; Sicherungen werden nach 14 Tagen automatisch gelöscht. Anwendungs- und E-Mail-Versandprotokolle werden 14 Tage aufbewahrt. Gemeinsame Kooperations- und Nachrichtenverläufe können anderen Beteiligten mit anonymisiertem Konto erhalten bleiben. Manche Aufzeichnungen bewahren wir länger auf, wenn das Gesetz es verlangt. Eine Löschung kannst du auch unter info{'@'}wave.ba beantragen."
           ]
         },
         {
           "heading": "Deine Rechte und Anfragen",
           "paragraphs": [
-            "Soweit anwendbar, kannst du Auskunft, Berichtigung oder Löschung deiner personenbezogenen Daten verlangen oder Fragen zu Einschränkung, Datenübertragbarkeit und Widerspruch stellen. Kontaktiere info{'@'}wave.ba. Vor der Bearbeitung müssen wir gegebenenfalls deine Identität prüfen."
+            "Soweit anwendbar, kannst du Auskunft, Berichtigung oder Löschung deiner personenbezogenen Daten verlangen oder Fragen zu Einschränkung, Datenübertragbarkeit und Widerspruch stellen. Kontaktiere info{'@'}wave.ba. Vor der Bearbeitung müssen wir gegebenenfalls deine Identität prüfen.",
+            "Wenn Sie der Ansicht sind, dass die Verarbeitung Ihrer personenbezogenen Daten gegen geltendes Recht verstößt, können Sie sich bei der Datenschutzbehörde von Bosnien und Herzegowina oder einer anderen zuständigen Aufsichtsbehörde beschweren."
+          ],
+          "links": [
+            {
+              "label": "Datenschutzbehörde von Bosnien und Herzegowina",
+              "url": "https://www.azlp.ba/"
+            }
           ]
         },
         {
@@ -136,6 +150,22 @@
               "label": "Meta",
               "url": "https://www.facebook.com/privacy/policy/"
             }
+          ]
+        },
+        {
+          "heading": "E-Mails und Ihre Auswahl",
+          "paragraphs": [
+            "E-Mail-Bestätigungen, Sicherheitshinweise und Servicenachrichten zu Ihrem Konto und Ihren Kooperationen gehören zum Betrieb von Wave und sind unabhängig von einem Newsletter-Abonnement.",
+            "Tipps zur Vervollständigung des Profils sind für neue Konten aktiviert. Die Reihe umfasst höchstens vier Erinnerungen und endet, sobald Ihr Profil vollständig ist. Sie können sie in den E-Mail-Einstellungen oder über den Abmeldelink in der Nachricht ausschalten.",
+            "Wave-Neuigkeiten (den Newsletter) erhalten Sie nur, wenn Sie sich dafür anmelden. Newsletter und Profiltipps haben getrennte E-Mail-Einstellungen. Die Anmeldung ist keine Voraussetzung für die Erstellung oder Nutzung eines Kontos; Sie können sich in den E-Mail-Einstellungen oder in der Nachricht abmelden."
+          ]
+        },
+        {
+          "heading": "Nachrichten, Links und Benachrichtigungen",
+          "paragraphs": [
+            "Gespräche sind nicht öffentlich. Nachrichten, Antworten und Reaktionen werden den Gesprächsteilnehmern angezeigt. Für eine Linkvorschau kann Wave öffentliche Metadaten und ein Bild von der verlinkten Website abrufen.",
+            "Push-Benachrichtigungen aktivieren Sie durch die Erlaubnis auf Ihrem Gerät. Wave speichert die für die Zustellung erforderlichen Abonnementdaten; Benachrichtigungen können Sie im Konto oder in den Geräteeinstellungen ausschalten.",
+            "Sie können Ihr Konto in den Einstellungen löschen. Personenbezogene Daten und eigene Dateien werden gemäß den Löschregeln entfernt; die gemeinsame Kooperations- und Nachrichtenhistorie kann anderen Teilnehmern mit anonymisiertem Konto erhalten bleiben."
           ]
         }
       ]
@@ -166,6 +196,18 @@
           "heading": "Browserdaten verwalten",
           "paragraphs": [
             "Du kannst deine Analyse- oder Marketingeinwilligung über die Cookie-Einstellungen im Footer ändern oder widerrufen. Deine Wahl wird im Browser gespeichert. Das Löschen von Websitedaten kann dich abmelden und diesen Hinweis erneut anzeigen."
+          ]
+        },
+        {
+          "heading": "Liste der Cookies und Speicher",
+          "paragraphs": [
+            "PHPSESSID (Cookie, Wave): Anmeldung und Schutz von Kontoaktionen. Notwendig; HttpOnly, SameSite=Lax; höchstens 90 Tage.",
+            "wave-locale (lokaler Speicher, Wave): deine gewählte Sprache. Notwendig; bleibt, bis du ihn löschst.",
+            "wave-cookie-consent-v3 (lokaler Speicher, Wave): deine Auswahl für Analyse und Marketing, die Richtlinienversion und der Zeitpunkt. Notwendig; gilt 180 Tage, danach fragen wir erneut.",
+            "wave.registration-intent (lokaler Speicher, Wave): die Seite, zu der du nach der Registrierung zurückkehrst. Notwendig; wird nach Verwendung oder nach 14 Tagen entfernt.",
+            "Service-Worker-Cache (Wave): App-Dateien für schnelleres Laden. Notwendig; wird bei jedem Update ersetzt.",
+            "_ga und _ga_… (Cookies, Google Analytics): Messung von Besuchen. Nur mit Einwilligung zur Analyse; höchstens 180 Tage.",
+            "_fbp und _fbc (Cookies, Meta Pixel): Messung von Werbung. Nur mit Einwilligung zu Marketing; die Laufzeit legt Meta fest, und Wave löscht sie, wenn du die Einwilligung widerrufst."
           ]
         },
         {
@@ -210,7 +252,99 @@
       ]
     },
     "marketingStorage": "Marketing",
-    "marketingStorageDescription": "Erlaube Meta Pixel zur Messung von Facebook- und Instagram-Werbung und erfolgreichen Registrierungen. Es wird erst nach deiner Einwilligung geladen."
+    "marketingStorageDescription": "Erlaube Meta Pixel zur Messung von Facebook- und Instagram-Werbung und erfolgreichen Registrierungen. Es wird erst nach deiner Einwilligung geladen.",
+    "managePreferences": "Auswahl anpassen",
+    "alwaysActive": "Immer aktiv",
+    "terms": {
+      "title": "Nutzungsbedingungen",
+      "intro": "Regeln für Konten, Inhalte und Kooperationen auf Wave.",
+      "sections": [
+        {
+          "heading": "Betreiber und Geltung",
+          "paragraphs": [
+            "Wave wird von UD SteelCode, Školska 10, 72000 Zenica, Bosnien und Herzegowina betrieben (Unternehmens-ID 4320531730002; USt-ID 320531730002). Kontakt: info{'@'}wave.ba. Diese Bedingungen regeln die Plattform; die Datenschutzerklärung erläutert die Datenverarbeitung gesondert."
+          ]
+        },
+        {
+          "heading": "Konten und Voraussetzungen",
+          "paragraphs": [
+            "Kontoinhaber müssen mindestens 18 Jahre alt und vertragsfähig sein. Vertreter von Unternehmen/Agenturen benötigen eine Vertretungsbefugnis. Machen Sie korrekte Angaben, schützen Sie Zugangsdaten und täuschen Sie keine fremde Identität vor.",
+            "Wave kann E-Mail-Bestätigung und Profilprüfung verlangen. Eine Freigabe garantiert weder Identität, Arbeitsqualität, Reichweitenangaben noch eine Kooperation."
+          ]
+        },
+        {
+          "heading": "Rolle der Plattform",
+          "paragraphs": [
+            "Wave bietet Profile, Kampagnen, Angebote und Kommunikation für Kreative, Marken und Agenturen. Nutzer entscheiden selbst über Kooperationen. Wave ist weder Arbeitgeber noch Vertreter oder Partei ihrer Kooperationsverträge.",
+            "Wave verarbeitet keine Zahlungen zwischen Nutzern und bietet keinen Treuhandservice. Ein angezeigter vereinbarter Betrag bestätigt keine Zahlung."
+          ]
+        },
+        {
+          "heading": "Vereinbarungen, Leistung und Kündigung",
+          "paragraphs": [
+            "Vereinbaren Sie vor Annahme Umfang, Betrag/Währung, Steuern, Zahlung, Fristen, Korrekturen, Nutzungsrechte und Stornierung. Die Angebotsbestätigung dokumentiert die Annahme der angezeigten Bedingungen und kann Vertragsbestandteil sein.",
+            "Bewerbung oder Einladung garantieren keinen Auftrag. Beteiligte klären Änderungen, Stornierungen, Erstattungen und Streitigkeiten nach Vereinbarung und geltendem Recht. Eine Stornierung in der App beseitigt bestehende Pflichten nicht automatisch."
+          ]
+        },
+        {
+          "heading": "Freiwillige Kooperationen",
+          "paragraphs": [
+            "Als freiwillig markierte Kampagnen haben kein vereinbartes Geldhonorar. Die Teilnahme ist frei und darf bezahlte Arbeit nicht verschleiern. Geschenke, Auslagen und Erwartungen sind klar zu vereinbaren. Ein Video oder eine Wave-Markierung überträgt keine Urheberrechte."
+          ]
+        },
+        {
+          "heading": "Kosten und Credits",
+          "paragraphs": [
+            "Wave ist derzeit kostenlos. Wave verkauft derzeit keine Credits und berechnet kein automatisches Abonnement. Aktions-Credits sind weder Geld noch Einlagen oder Auszahlungsversprechen.",
+            "Vor kostenpflichtigen Funktionen veröffentlichen wir Preise, Credit-Regeln, Steuern, Kündigung und Verbraucherrechte. Eine Belastung erfordert ein klares vorheriges Angebot und Ihre Annahme; diese Bedingungen erlauben keine künftigen Belastungen."
+          ]
+        },
+        {
+          "heading": "Inhalte und Rechte",
+          "paragraphs": [
+            "Sie behalten die Rechte an Ihren Inhalten und benötigen erforderliche Rechte/Erlaubnisse für Bilder, Videos, Musik, Marken und abgebildete Personen. Veröffentlichen Sie private Daten anderer nur mit geeigneter Grundlage.",
+            "Sie gestatten Wave nicht ausschließlich die Speicherung, technische Verarbeitung und Anzeige gemäß Ihrer Sichtbarkeitswahl, einschließlich Vorschaubildern und Teilungskarten. Die Erlaubnis gilt für Anzeige und zulässige gemeinsame Historie. Separate Wave-Werbung benötigt eine gesonderte Erlaubnis."
+          ]
+        },
+        {
+          "heading": "Werbung und Verhalten",
+          "paragraphs": [
+            "Kennzeichnen Sie bezahlte, geschenkte und sonstige Werbekooperationen nach geltendem Recht und den Regeln des sozialen Netzwerks. Eine Markenmarkierung allein reicht nicht immer.",
+            "Betrug, irreführende Profile/Statistiken, rechtswidrige Inhalte, Rechtsverletzungen, Belästigung, Spam und unbefugter Datenzugriff sind verboten. Sammeln Sie Daten anderer nicht rechtswidrig."
+          ]
+        },
+        {
+          "heading": "Bewertungen, Meldungen und Moderation",
+          "paragraphs": [
+            "Bewertungen müssen echte Kooperationen beschreiben und Rechte anderer achten. Wave kann Inhalte beschränken/entfernen, Veröffentlichungen ablehnen oder Konten zum Schutz der Nutzer, zur Durchsetzung dieser Bedingungen oder gesetzlicher Pflichten sperren.",
+            "Nutzen Sie Meldetools oder Support. Für Einsprüche oder Rechtebeschwerden senden Sie Inhalt, Gründe und Belege an info{'@'}wave.ba. Wir ermöglichen eine Überprüfung; dringende Schutzmaßnahmen können vor der Benachrichtigung erfolgen."
+          ]
+        },
+        {
+          "heading": "Datenschutz und Beendigung",
+          "paragraphs": [
+            "Sichtbarkeitseinstellungen steuern die öffentliche Anzeige, entfernen jedoch heruntergeladene oder indexierte Kopien nicht sofort. Stellen Sie keine vertraulichen Angaben in öffentliche Felder.",
+            "Löschen Sie Ihr Konto in den Einstellungen oder kontaktieren Sie uns. Gemeinsame Historie kann anderen mit anonymisiertem Konto erhalten bleiben; Grenzen und Speicherfristen erläutert die Datenschutzerklärung."
+          ]
+        },
+        {
+          "heading": "Verantwortung und zwingende Rechte",
+          "paragraphs": [
+            "Sie bleiben für Ihre Verpflichtungen gegenüber anderen verantwortlich. Wave bemüht sich um einen sicheren, verfügbaren Dienst, verspricht aber keine Aufträge, Einnahmen, ununterbrochene Verfügbarkeit oder fremde Vertragserfüllung.",
+            "Zwingende Haftung, Verbraucher- und Datenschutzrechte sowie der Zugang zu zuständigen Behörden und Gerichten werden nicht ausgeschlossen oder eingeschränkt."
+          ]
+        },
+        {
+          "heading": "Änderungen, Beschwerden und Recht",
+          "paragraphs": [
+            "Wesentliche Änderungen werden mit Geltungsdatum klar angekündigt; falls nötig holen wir eine erneute Annahme ein. Bestehende Kooperationsvereinbarungen werden nicht rückwirkend geändert.",
+            "Fragen/Beschwerden richten Sie an info{'@'}wave.ba oder den Support. Für das Verhältnis zu Wave gilt das Recht von BiH unter Wahrung zwingenden Schutzes nach anderem anwendbaren Recht. Eine entgegen zwingenden Regeln ausschließliche Gerichtszuständigkeit wird nicht vereinbart."
+          ]
+        }
+      ]
+    },
+    "acceptTerms": "Ich bestätige, dass ich mindestens 18 bin, und akzeptiere die {terms}.",
+    "lastUpdated": "Aktualisiert: {date}"
   },
   "app": {
     "loading": "Wird geladen…",
@@ -312,7 +446,8 @@
     "homeTab": "Start",
     "profileTab": "Profil",
     "installBrowserHint": "Wähle im Browsermenü „App installieren“ oder „Zum Startbildschirm hinzufügen“.",
-    "installSafariHint": "Wähle in Safari Ablage → Zum Dock hinzufügen."
+    "installSafariHint": "Wähle in Safari Ablage → Zum Dock hinzufügen.",
+    "madeBy": "Mit Liebe gemacht von {studio}"
   },
   "chatInteractions": {
     "actions": "Nachrichtenoptionen",
@@ -1481,7 +1616,11 @@
     "profileReminderEmailTemplate": "Profiltipps, E-Mail {n} (Tag {day})",
     "profileReminderEmailTemplateHint": "Wird gesendet, solange ein Profil unvollständig ist. Änderungen gelten für Creator und Unternehmen.",
     "campaignAlertEmailTemplate": "Neue Kampagnen",
-    "campaignAlertEmailTemplateHint": "Übersicht neuer Kampagnen passend zu Kategorien und Ländern des Creators."
+    "campaignAlertEmailTemplateHint": "Übersicht neuer Kampagnen passend zu Kategorien und Ländern des Creators.",
+    "accountDeletedEmailTemplate": "Konto gelöscht",
+    "accountDeletedEmailTemplateHint": "Bestätigung, nachdem jemand sein Konto selbst gelöscht hat.",
+    "termsUpdatedEmailTemplate": "Neue Nutzungsbedingungen",
+    "termsUpdatedEmailTemplateHint": "Mitteilung an bestehende Nutzer, wenn eine neue Version der Bedingungen erscheint."
   },
   "api": {
     "invalidResponse": "Wave konnte die Serverantwort nicht lesen. Bitte versuche es erneut.",
@@ -3344,7 +3483,7 @@
     "undo": "Doch weiter erhalten: {name}",
     "invalid": "Dieser Link ist ungültig oder das Konto wurde gelöscht. Melde dich an und ändere die Auswahl in den Einstellungen.",
     "toWave": "Zu Wave",
-    "registerTitle": "Schick mir Wave-Neuigkeiten und Tipps.",
+    "registerTitle": "Schickt mir Wave-Neuigkeiten.",
     "registerHint": "Abmeldung mit einem Klick in jeder E-Mail."
   },
   "profileGuide": {
