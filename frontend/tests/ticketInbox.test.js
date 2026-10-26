@@ -116,7 +116,7 @@ test('support deep links survive login even while profile completion is pending'
     '../composables/useMarketplaceCatalog': { useMarketplaceCatalog: () => ({ categories: ref([]), error: ref('') }) },
     '../composables/useCampaignBookmarks': { useCampaignBookmarks: () => ({ bookmarks: ref([]), loadCampaignBookmarks: async () => {} }) },
     '../routePaths': { localizedPath: name => name === 'account-support' ? '/racun/tiketi' : '/admin/tiketi', localizedRouteName: (name, locale) => `${name}-${locale}` },
-    '../lib/api': { apiGet: async () => ({ data: [] }), apiRequest: async () => {}, formatMoney: () => '' },
+    '../lib/api': { apiGet: async () => ({ data: [] }), apiRequest: async () => {}, formatDate: () => '', formatMoney: () => '' },
   }, {}, { structuredClone })
   view.windowTarget.location = { origin: 'http://127.0.0.1:8012' }
   await view.state.loadDashboard({ id: 7, isAdmin: false, approved: false, emailVerified: false, profile: null })

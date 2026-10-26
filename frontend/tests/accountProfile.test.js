@@ -1,6 +1,10 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { ref } from 'vue'
+import * as vue from 'vue'
+import { readFile } from 'node:fs/promises'
+import { compile } from '@vue/compiler-dom'
+import { parse } from '@vue/compiler-sfc'
+import { renderToString } from 'vue/server-renderer'
 import { mergeCampaignActivity } from '../src/lib/campaignActivity.js'
 import { accountLanding } from '../src/lib/accountAccess.js'
 import { normalizeServices } from '../src/lib/agencyServices.js'
@@ -8,7 +12,9 @@ import { companyProfileBody, creatorProfileBody } from '../src/lib/profileDraft.
 import { normalizePresentation } from '../src/lib/creatorPresentation.js'
 import { setupView } from './setupView.js'
 
-async function setupAccount({ saveError = null, accountType = 'company', actionResponse = null } = {}) {
+const { ref } = vue
+
+async function setupAccount({ saveError = null, accountType = 'company', actionResponse = null, formatDate = () => '' } = {}) {
   const requests = []
   const scrolls = []
   const navigations = []
@@ -47,7 +53,7 @@ async function setupAccount({ saveError = null, accountType = 'company', actionR
         account.profile = { ...account.profile, ...options.body }
         return { data: account }
       },
-      formatDate: () => '', formatMoney: () => '',
+      formatDate, formatMoney: () => '',
     },
   }, {}, { structuredClone })
   view.windowTarget.scrollTo = (options) => scrolls.push(options)
@@ -55,6 +61,35 @@ async function setupAccount({ saveError = null, accountType = 'company', actionR
   await view.state.loadDashboard()
   return { ...view, requests, scrolls, account, navigations, wasBlurred: () => blurred }
 }
+
+test('opening applicant details renders an accepted offer with its delivery date', async () => {
+  const dates = []
+  const { state } = await setupAccount({ formatDate: value => { dates.push(value); return '01.12.2026' } })
+  const source = await readFile(new URL('../src/views/AccountView.vue', import.meta.url), 'utf8')
+  const { descriptor } = parse(source)
+  const dialog = descriptor.template.content.match(/<dialog\s+ref="applicantDialog"[\s\S]*?<\/dialog>/)[0]
+  const render = new Function('Vue', compile(dialog, { mode: 'function', prefixIdentifiers: true }).code)(vue)
+  const application = {
+    status: 'accepted', message: 'Application message',
+    creator: { id: 2, slug: 'hana', displayName: 'Hana', category: 'Beauty' },
+    campaign: { slug: 'wave', status: 'open', currency: 'BAM' },
+    offer: { id: 1, status: 'accepted', amount: 450, dueDate: '2026-12-01', message: 'Agreed scope' },
+  }
+  state.openApplicant(application)
+  assert.equal(vue.toRaw(state.selectedApplication.value), application)
+  const app = vue.createSSRApp({ setup: () => ({ ...state, t: (key, params) => params?.date ? `Rok isporuke: ${params.date}` : key }), render })
+  for (const name of ['X', 'ArrowRight', 'RichTextContent', 'StatusMessage', 'CampaignCancellationAction', 'CampaignCompensation']) {
+    app.component(name, { render: () => null })
+  }
+  app.component('RouterLink', { render() { return vue.h('a', this.$slots.default?.()) } })
+  const html = await renderToString(app)
+  assert.match(html, /Hana/)
+  assert.match(html, /Rok isporuke: 01\.12\.2026/)
+  assert.match(html, /Agreed scope/)
+  assert.deepEqual(dates, ['2026-12-01'])
+  state.closeApplicant()
+  assert.equal(state.selectedApplication.value, null)
+})
 
 test('Cancel restores nested profile details, tags and phone country without saving', async () => {
   const { state, requests } = await setupAccount()
