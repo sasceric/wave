@@ -32,7 +32,7 @@ import ProfileFaqFields from '../components/account/ProfileFaqFields.vue'
 import { normalizeServices } from '../lib/agencyServices'
 import AgencyProfileFields from '../components/companies/AgencyProfileFields.vue'
 import CreatorStudioPanel from '../components/account/CreatorStudioPanel.vue'
-import { normalizePresentation } from '../lib/creatorPresentation'
+import { normalizePresentation, workReferences } from '../lib/creatorPresentation'
 import { companyProfileBody, creatorProfileBody } from '../lib/profileDraft'
 import CreatorCampaignActivity from '../components/account/CreatorCampaignActivity.vue'
 import CompanyCampaignDetail from '../components/account/CompanyCampaignDetail.vue'
@@ -335,11 +335,12 @@ function incompleteProfileTab() {
   ))) {
     return 'social'
   }
-  if (profile.value.portfolio.some((item) => (
-    item.type === 'video'
-      ? !item.url.trim()
-      : !item.mediaId && !item.url.trim()
-  ))) {
+  if (profile.value.portfolio.some((item) => {
+    const references = workReferences(item)
+    return references.length === 0 || references.some((row) => (
+      !(row.type === 'image' && row.mediaId) && !row.url?.trim()
+    ))
+  })) {
     return 'portfolio'
   }
   if (profile.value.packages.some((packageItem) => (

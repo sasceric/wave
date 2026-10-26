@@ -9,7 +9,7 @@ import { mergeCampaignActivity } from '../src/lib/campaignActivity.js'
 import { accountLanding } from '../src/lib/accountAccess.js'
 import { normalizeServices } from '../src/lib/agencyServices.js'
 import { companyProfileBody, creatorProfileBody } from '../src/lib/profileDraft.js'
-import { normalizePresentation } from '../src/lib/creatorPresentation.js'
+import { emptyWork, normalizePresentation, workReferences } from '../src/lib/creatorPresentation.js'
 import { setupView } from './setupView.js'
 
 const { ref } = vue
@@ -38,7 +38,7 @@ async function setupAccount({ saveError = null, accountType = 'company', actionR
     '../composables/useCampaignBookmarks': { useCampaignBookmarks: () => ({ bookmarks: ref([]), loadCampaignBookmarks: async () => {} }) },
     '../lib/agencyServices': { normalizeServices },
     '../lib/profileDraft': { companyProfileBody, creatorProfileBody },
-    '../lib/creatorPresentation': { normalizePresentation },
+    '../lib/creatorPresentation': { normalizePresentation, workReferences },
     '../lib/campaignActivity': { mergeCampaignActivity },
     '../lib/accountAccess': { accountLanding },
     '../routePaths': { localizedRouteName: (name, locale) => `${name}-${locale}`, localizedPath: name => `/racun/${name}` },
@@ -50,7 +50,7 @@ async function setupAccount({ saveError = null, accountType = 'company', actionR
         requests.push({ path, ...options })
         if (saveError) throw new Error(saveError)
         if (actionResponse) return actionResponse
-        account.profile = { ...account.profile, ...options.body }
+        account.profile = { ...account.profile, ...JSON.parse(JSON.stringify(options.body)) }
         return { data: account }
       },
       formatDate, formatMoney: () => '',
@@ -174,6 +174,60 @@ test('Save uses the existing profile API and returns to saved details', async ()
   assert.equal(requests[0].method, 'PUT')
   assert.equal(requests[0].body.name, 'Updated company')
   assert.equal(state.profile.value.name, 'Updated company')
+  assert.equal(state.editingProfile.value, false)
+})
+
+for (const role of ['creator', 'agency']) {
+  for (const content of ['links', 'upload']) {
+    test(`${role} saves reference-only portfolio work with ${content} and no legacy media field`, async () => {
+      const { state, requests } = await setupAccount({ accountType: role === 'agency' ? 'company' : 'creator' })
+      if (role === 'agency') {
+        state.profile.value.companyType = 'agency'
+        state.profile.value.socialProfiles = []
+      }
+      state.startProfileEdit('portfolio')
+      const references = content === 'links'
+        ? [{ type: 'video', platform: 'TikTok', url: 'https://www.tiktok.com/@creator/video/123' }, { type: 'image', platform: 'Instagram', url: 'https://www.instagram.com/p/photo/' }]
+        : [{ type: 'image', platform: 'Instagram', mediaId: 12, imageUrl: '/media/work.webp', url: '' }]
+      state.profile.value.portfolio = [{ ...emptyWork(), title: 'Completed campaign work', source: 'wave', campaignId: 42, references }]
+      assert.equal(state.profile.value.portfolio[0].url, '')
+      assert.equal(state.profile.value.portfolio[0].mediaId, undefined)
+      await state.saveProfile()
+      assert.equal(requests.length, 1)
+      assert.equal(requests[0].path, '/me/profile')
+      assert.equal(requests[0].body.portfolio[0].campaignId, 42)
+      assert.equal(requests[0].body.portfolio[0].references.length, references.length)
+      if (content === 'links') assert.equal(requests[0].body.portfolio[0].references[0].url, references[0].url)
+      else assert.equal(requests[0].body.portfolio[0].references[0].mediaId, 12)
+      assert.equal(state.error.value, '')
+      assert.equal(state.editingProfile.value, false)
+    })
+  }
+}
+
+test('an old primary URL cannot hide an empty new reference row during save', async () => {
+  const { state, requests } = await setupAccount({ accountType: 'creator' })
+  state.startProfileEdit('portfolio')
+  state.profile.value.portfolio = [{ ...emptyWork(), title: 'Incomplete references', type: 'video', url: 'https://youtu.be/abcdefghijk' }]
+  await state.saveProfile()
+  assert.equal(requests.length, 0)
+  assert.equal(state.editingProfile.value, true)
+  assert.equal(state.accountTab.value, 'portfolio')
+  assert.equal(state.error.value, 'account.profileIncomplete')
+})
+
+test('existing video links and uploaded images still save through the reference editor', async () => {
+  const { state, requests } = await setupAccount({ accountType: 'creator' })
+  state.startProfileEdit('portfolio')
+  state.profile.value.portfolio = normalizePresentation({ portfolio: [
+    { id: 'legacy-video', type: 'video', title: 'Existing video', url: 'https://youtu.be/abcdefghijk' },
+    { id: 'legacy-image', type: 'image', title: 'Existing upload', mediaId: 12, url: '/media/work.webp' },
+  ] }).portfolio
+  await state.saveProfile()
+  assert.equal(requests.length, 1)
+  assert.equal(requests[0].body.portfolio[0].references[0].url, 'https://youtu.be/abcdefghijk')
+  assert.equal(requests[0].body.portfolio[1].references[0].mediaId, 12)
+  assert.equal(state.error.value, '')
   assert.equal(state.editingProfile.value, false)
 })
 
