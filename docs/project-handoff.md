@@ -816,3 +816,39 @@ sitemaps and public company campaign counts. Hidden campaigns retain direct-link
 access and collaboration/account history; their direct pages are noindex. Existing
 index-change subscribers invalidate dependent counts and search documents on save.
 Apply the migration before serving the new application code.
+
+## Listing ads (2026-10-27)
+
+Marketing → **Oglasi u listama** (`admin-listing-ads`) manages independent ad cards
+for the creators, companies and campaigns directories. `ListingAdController`
+exposes active cards via `GET /api/listing-ads/{kind}` and admin-only listing,
+creation and replacement via `/api/admin/listing-ads/{kind}[/{id}]`. Writes require
+CSRF. Cards support a one/two-space width, up to twelve repeated row/column
+placements, text, optional primary/secondary links and an optional owned `listing-ad` image. Five
+palette keys map to the existing brand tokens. A packaged Wave illustration is
+available as an alternative to an upload; arbitrary image URLs/HTML are not accepted.
+Uploaded images reuse processing/thumbnails, public authorization and unused-media
+protection. Even inactive ads retain their images until replaced.
+
+Positions refer to the four-column desktop grid and include ad spaces. Active
+placements cannot overlap, including concurrent admin writes (a PostgreSQL
+transaction advisory lock serializes changes per directory). A two-space card
+cannot start in position four. Drafts may plan the same positions. `listingAds.js`
+composes ads with loaded results without consuming/reordering directory records or
+changing pagination/counts/ranking. Later placements appear as results load.
+Two-column layouts finish a results row before a wide ad; one-column/list layouts
+stack cards. Empty directories show no ads. The existing registration prompt now
+sits after the grid so it cannot displace an explicitly positioned ad. Country and
+filtered creator listings share the creator ads.
+
+Migrations `Version20261027120000`, `Version20261027121000` and
+`Version20261027122000` install inactive examples on deployment: one repeated
+creator ad, one repeated company ad and three campaign cards. The illustrated
+upcoming-campaign teaser spans two spaces starting at
+row 1, position 2 (repeated at row 5, position 2); the coral campaign invitation
+occupies row 3, position 4, links to campaign creation and has a secondary support
+link. The teaser invites creators to prepare their profiles; the single-space
+reminder at row 2, position 4 links to settings for new-campaign emails. The seed
+migrations replace only untouched inactive starters and preserve admin edits;
+the final seeds are repeat-safe. No examples activate automatically. Production's existing
+migration step creates them; there is no separate seed command or tracking script.

@@ -3,7 +3,7 @@ import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { UsersRound, ArrowRight, LayoutGrid, List } from '@lucide/vue'
-import CardGrid from '../components/shared/CardGrid.vue'
+import ListingAdGrid from '../components/shared/ListingAdGrid.vue'
 import RegistrationPrompt from '../components/shared/RegistrationPrompt.vue'
 import CreatorCard from '../components/creators/CreatorCard.vue'
 import DirectoryToolbar from '../components/shared/DirectoryToolbar.vue'
@@ -189,14 +189,11 @@ watch([creators, locale], () => {
           </div>
         </div>
         <StatusMessage v-if="!loading && !error && !creators.length" variant="empty">{{ t(countryCode && !search && activeFilterCount === 0 ? 'regionalSeo.empty' : 'creatorsPage.empty') }}</StatusMessage>
-        <CardGrid v-if="creators.length || loading" kind="creator" layout="directory" :class="{ 'creator-directory__grid--list': layout === 'list' }" :aria-busy="loading">
-          <template v-for="(creator, index) in creators" :key="creator.id">
-            <CreatorCard :creator="creator" :image-sizes="layout === 'list' ? '(max-width: 760px) 50vw, 360px' : imageSizes" />
-            <RegistrationPrompt v-if="index === Math.min(3, creators.length - 1)" audience="company" />
-          </template>
-          <DirectorySkeletonCard v-for="index in loading ? (creators.length ? 2 : 8) : 0" :key="`loading-${index}`" kind="creator" />
-        </CardGrid>
-        <RegistrationPrompt v-if="!loading && !creators.length" audience="company" />
+        <ListingAdGrid v-if="creators.length || loading" kind="creators" :items="creators" :list="layout === 'list'" :class="{ 'creator-directory__grid--list': layout === 'list' }" :aria-busy="loading">
+          <template #default="{ item: creator }"><CreatorCard :creator="creator" :image-sizes="layout === 'list' ? '(max-width: 760px) 50vw, 360px' : imageSizes" /></template>
+          <template #loading><DirectorySkeletonCard v-for="index in loading ? (creators.length ? 2 : 8) : 0" :key="`loading-${index}`" kind="creator" /></template>
+        </ListingAdGrid>
+        <RegistrationPrompt v-if="!loading" audience="company" />
         <DirectoryLoadMore :loading="loading" :error="error" :has-more="hasMore" :count="creators.length" @load="loadMore" />
       </div>
     </div>

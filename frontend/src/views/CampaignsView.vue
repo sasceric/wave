@@ -5,7 +5,7 @@ import { computed, onMounted, onBeforeUnmount, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { Megaphone, ArrowRight, LayoutGrid, List } from '@lucide/vue'
-import CardGrid from '../components/shared/CardGrid.vue'
+import ListingAdGrid from '../components/shared/ListingAdGrid.vue'
 import RegistrationPrompt from '../components/shared/RegistrationPrompt.vue'
 import CampaignCard from '../components/campaigns/CampaignCard.vue'
 import DirectoryHero from '../components/shared/DirectoryHero.vue'
@@ -155,14 +155,11 @@ watch([campaigns, locale], () => {
           </div>
         </div>
         <StatusMessage v-if="!loading && !error && !campaigns.length" variant="empty">{{ t('campaignsPage.empty') }}</StatusMessage>
-        <CardGrid v-if="campaigns.length || loading" kind="campaign" layout="directory" :class="{ 'campaign-directory__grid--list': layout === 'list' }" :aria-busy="loading">
-          <template v-for="(campaign, index) in campaigns" :key="campaign.id">
-            <CampaignCard :campaign="campaign" :image-sizes="layout === 'list' ? '(max-width: 760px) 50vw, 360px' : imageSizes" />
-            <RegistrationPrompt v-if="index === Math.min(3, campaigns.length - 1)" audience="creator" />
-          </template>
-          <DirectorySkeletonCard v-for="index in loading ? (campaigns.length ? 2 : 8) : 0" :key="`loading-${index}`" kind="campaign" />
-        </CardGrid>
-        <RegistrationPrompt v-if="!loading && !campaigns.length" audience="creator" />
+        <ListingAdGrid v-if="campaigns.length || loading" kind="campaigns" :items="campaigns" :list="layout === 'list'" :class="{ 'campaign-directory__grid--list': layout === 'list' }" :aria-busy="loading">
+          <template #default="{ item: campaign }"><CampaignCard :campaign="campaign" :image-sizes="layout === 'list' ? '(max-width: 760px) 50vw, 360px' : imageSizes" /></template>
+          <template #loading><DirectorySkeletonCard v-for="index in loading ? (campaigns.length ? 2 : 8) : 0" :key="`loading-${index}`" kind="campaign" /></template>
+        </ListingAdGrid>
+        <RegistrationPrompt v-if="!loading" audience="creator" />
         <DirectoryLoadMore :loading="loading" :error="error" :has-more="hasMore" :count="campaigns.length" @load="loadMore" />
       </div>
     </div>

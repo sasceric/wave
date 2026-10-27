@@ -6,6 +6,9 @@ final class ApiMessages
 {
     private const MESSAGES = [
         'bs' => [
+            'listing_ad_invalid' => 'Provjeri polja. Dodaj naziv, naslov i važeća mjesta prikaza. Link mora biti lokalna putanja ili http(s) adresa; za link dodaj i tekst dugmeta.',
+            'listing_ad_overlap' => 'Mjesta se preklapaju. Odaberi slobodno mjesto ili deaktiviraj drugi oglas.',
+            'listing_ad_limit' => 'Ova lista već ima 100 oglasa.',
             'admin_self_change' => 'Ne možeš mijenjati vlastita administratorska prava.',
             'invitation_unknown_variable' => 'Poruka sadrži nepoznatu varijablu. Koristi samo {{name}} i {{companyName}}.',
             'voluntary_campaign_admin_only' => 'Besplatne kampanje može objaviti samo Wave administrator.',
@@ -119,6 +122,9 @@ final class ApiMessages
             'newsletter_email_failed' => 'Potvrdni e-mail nije poslan. Pokušaj ponovo kasnije.',
         ],
         'hr' => [
+            'listing_ad_invalid' => 'Provjeri polja. Dodaj naziv, naslov i važeća mjesta prikaza. Link mora biti lokalna putanja ili http(s) adresa; za link dodaj i tekst dugmeta.',
+            'listing_ad_overlap' => 'Mjesta se preklapaju. Odaberi slobodno mjesto ili deaktiviraj drugi oglas.',
+            'listing_ad_limit' => 'Ova lista već ima 100 oglasa.',
             'admin_self_change' => 'Ne možeš mijenjati vlastita administratorska prava.',
             'invitation_unknown_variable' => 'Poruka sadrži nepoznatu varijablu. Koristi samo {{name}} i {{companyName}}.',
             'voluntary_campaign_admin_only' => 'Besplatne kampanje može objaviti samo Wave administrator.',
@@ -232,6 +238,9 @@ final class ApiMessages
             'newsletter_email_failed' => 'Potvrdna e-pošta nije poslana. Pokušaj ponovno kasnije.',
         ],
         'sr' => [
+            'listing_ad_invalid' => 'Provjeri polja. Dodaj naziv, naslov i važeća mjesta prikaza. Link mora biti lokalna putanja ili http(s) adresa; za link dodaj i tekst dugmeta.',
+            'listing_ad_overlap' => 'Mjesta se preklapaju. Odaberi slobodno mjesto ili deaktiviraj drugi oglas.',
+            'listing_ad_limit' => 'Ova lista već ima 100 oglasa.',
             'admin_self_change' => 'Ne možeš da menjaš sopstvena administratorska prava.',
             'invitation_unknown_variable' => 'Poruka sadrži nepoznatu promenljivu. Koristi samo {{name}} i {{companyName}}.',
             'voluntary_campaign_admin_only' => 'Besplatne kampanje može da objavi samo Wave administrator.',
@@ -345,6 +354,9 @@ final class ApiMessages
             'newsletter_email_failed' => 'Potvrdni e-mail nije poslat. Pokušaj ponovo kasnije.',
         ],
         'cnr' => [
+            'listing_ad_invalid' => 'Provjeri polja. Dodaj naziv, naslov i važeća mjesta prikaza. Link mora biti lokalna putanja ili http(s) adresa; za link dodaj i tekst dugmeta.',
+            'listing_ad_overlap' => 'Mjesta se preklapaju. Odaberi slobodno mjesto ili deaktiviraj drugi oglas.',
+            'listing_ad_limit' => 'Ova lista već ima 100 oglasa.',
             'admin_self_change' => 'Ne možeš mijenjati sopstvena administratorska prava.',
             'invitation_unknown_variable' => 'Poruka sadrži nepoznatu varijablu. Koristi samo {{name}} i {{companyName}}.',
             'voluntary_campaign_admin_only' => 'Besplatne kampanje može objaviti samo Wave administrator.',
@@ -458,6 +470,9 @@ final class ApiMessages
             'newsletter_email_failed' => 'Potvrdni e-mail nije poslat. Pokušaj ponovo kasnije.',
         ],
         'sl' => [
+            'listing_ad_invalid' => 'Preveri polja. Dodaj ime, naslov in veljavna mesta. Povezava mora biti lokalna pot ali naslov http(s); dodaj tudi besedilo gumba.',
+            'listing_ad_overlap' => 'Mesta se prekrivajo. Izberi prosto mesto ali deaktiviraj drugi oglas.',
+            'listing_ad_limit' => 'Ta seznam že ima 100 oglasov.',
             'admin_self_change' => 'Svojih skrbniških pravic ne moreš spreminjati.',
             'invitation_unknown_variable' => 'Sporočilo vsebuje neznano spremenljivko. Uporabi samo {{name}} in {{companyName}}.',
             'voluntary_campaign_admin_only' => 'Brezplačne kampanje lahko objavi samo skrbnik Wave.',
@@ -571,6 +586,9 @@ final class ApiMessages
             'newsletter_email_failed' => 'Potrditvenega e-poštnega sporočila ni bilo mogoče poslati. Poskusi znova pozneje.',
         ],
         'en' => [
+            'listing_ad_invalid' => 'Check the fields. Add a name, headline and valid placements. Use a local path or http(s) URL and include a button label when linking.',
+            'listing_ad_overlap' => 'Placements overlap. Choose a free position or deactivate the other ad.',
+            'listing_ad_limit' => 'This directory already has 100 ads.',
             'admin_self_change' => 'You cannot change your own administrator rights.',
             'invitation_unknown_variable' => 'The message contains an unknown variable. Use only {{name}} and {{companyName}}.',
             'voluntary_campaign_admin_only' => 'Only a Wave administrator can publish free campaigns.',

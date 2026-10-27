@@ -163,6 +163,7 @@ const navigationItems = computed(() => {
   if (props.user?.isAdmin) {
     items.push(
       { route: 'admin', labelKey: 'adminDashboard.overviewPageTitle', icon: LayoutDashboard },
+      { route: 'admin-listing-ads', labelKey: 'listingAds.title', icon: LayoutDashboard, group: 'marketing' },
       { route: 'admin-homepage', labelKey: 'adminDashboard.navHomepage', icon: House, group: 'marketing' },
       { route: 'admin-creators', labelKey: 'adminDashboard.navCreators', icon: Users },
       { route: 'admin-companies', labelKey: 'adminDashboard.navCompanies', icon: Building2 },

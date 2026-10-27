@@ -51,5 +51,6 @@
   "search": "seo.searchTitle",
   "account-email-preferences": "emailPreferences.title",
   "account-profile-guide": "profileGuide.title",
-  "terms-of-use": "legal.terms.title"
+  "terms-of-use": "legal.terms.title",
+  "admin-listing-ads": "listingAds.title"
 }

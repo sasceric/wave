@@ -11,6 +11,7 @@ final class UnusedMediaCleanup
         NOT EXISTS (SELECT 1 FROM creator WHERE avatar_media_id = media.id)
         AND NOT EXISTS (SELECT 1 FROM company WHERE logo_media_id = media.id)
         AND NOT EXISTS (SELECT 1 FROM company WHERE cover_media_id = media.id)
+        AND NOT EXISTS (SELECT 1 FROM listing_ad WHERE image_id = media.id)
         AND NOT EXISTS (SELECT 1 FROM campaign WHERE cover_media_id = media.id)
         AND NOT EXISTS (SELECT 1 FROM creator_portfolio_media WHERE media_id = media.id)
         AND NOT EXISTS (SELECT 1 FROM marketplace_report_media WHERE media_id = media.id)

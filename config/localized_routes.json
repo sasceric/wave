@@ -59,7 +59,8 @@
     "search": "pretraga",
     "account-email-preferences": "racun/e-mailovi",
     "account-profile-guide": "racun/vodic-za-profil",
-    "terms-of-use": "uslovi-koristenja"
+    "terms-of-use": "uslovi-koristenja",
+    "admin-listing-ads": "admin/oglasi-u-listama"
   },
   "hr": {
     "login": "prijava",
@@ -121,7 +122,8 @@
     "search": "pretraga",
     "account-email-preferences": "racun/e-posta",
     "account-profile-guide": "racun/vodic-za-profil",
-    "terms-of-use": "uvjeti-koristenja"
+    "terms-of-use": "uvjeti-koristenja",
+    "admin-listing-ads": "admin/oglasi-u-listama"
   },
   "sr": {
     "login": "prijava",
@@ -183,7 +185,8 @@
     "search": "pretraga",
     "account-email-preferences": "nalog/mejlovi",
     "account-profile-guide": "nalog/vodic-za-profil",
-    "terms-of-use": "uslovi-koriscenja"
+    "terms-of-use": "uslovi-koriscenja",
+    "admin-listing-ads": "admin/oglasi-u-listama"
   },
   "cnr": {
     "login": "prijava",
@@ -245,7 +248,8 @@
     "search": "pretraga",
     "account-email-preferences": "nalog/e-mailovi",
     "account-profile-guide": "nalog/vodic-za-profil",
-    "terms-of-use": "uslovi-koriscenja"
+    "terms-of-use": "uslovi-koriscenja",
+    "admin-listing-ads": "admin/oglasi-u-listama"
   },
   "sl": {
     "login": "prijava",
@@ -307,7 +311,8 @@
     "search": "iskanje",
     "account-email-preferences": "racun/e-posta",
     "account-profile-guide": "racun/vodnik-za-profil",
-    "terms-of-use": "pogoji-uporabe"
+    "terms-of-use": "pogoji-uporabe",
+    "admin-listing-ads": "admin/oglasi-na-seznamih"
   },
   "en": {
     "login": "login",
@@ -369,7 +374,8 @@
     "search": "search",
     "account-email-preferences": "account/emails",
     "account-profile-guide": "account/profile-guide",
-    "terms-of-use": "terms-of-use"
+    "terms-of-use": "terms-of-use",
+    "admin-listing-ads": "admin/listing-ads"
   },
   "de": {
     "login": "anmelden",
@@ -431,6 +437,7 @@
     "search": "suche",
     "account-email-preferences": "konto/e-mails",
     "account-profile-guide": "konto/profil-leitfaden",
-    "terms-of-use": "nutzungsbedingungen"
+    "terms-of-use": "nutzungsbedingungen",
+    "admin-listing-ads": "admin/listenanzeigen"
   }
 }

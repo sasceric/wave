@@ -49,7 +49,7 @@ final class MediaStorage
         $absoluteDirectory = $this->storagePath . '/' . dirname($relativePath);
         $this->filesystem->mkdir($absoluteDirectory);
         $maxWidth = match ($folder->getSlug()) {
-            'company-cover', 'campaign-cover' => 1920,
+            'listing-ad', 'company-cover', 'campaign-cover' => 1920,
             'report-evidence' => 1600,
             default => 600,
         };

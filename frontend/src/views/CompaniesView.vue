@@ -6,7 +6,7 @@ import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { LayoutGrid, List, Sparkles } from '@lucide/vue'
 import { useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import CardGrid from '../components/shared/CardGrid.vue'
+import ListingAdGrid from '../components/shared/ListingAdGrid.vue'
 import RegistrationPrompt from '../components/shared/RegistrationPrompt.vue'
 import CompanyCard from '../components/companies/CompanyCard.vue'
 import DirectoryLoadMore from '../components/shared/DirectoryLoadMore.vue'
@@ -169,14 +169,11 @@ watch([companies, locale], () => {
           </div>
         </div>
         <StatusMessage v-if="!loading && !error && !companies.length" variant="empty">{{ t('companyDirectory.empty') }}</StatusMessage>
-        <CardGrid v-if="companies.length || loading" kind="company" layout="directory" :class="{ 'company-directory__grid--list': layout === 'list' }" :aria-busy="loading">
-          <template v-for="(company, index) in companies" :key="company.id">
-            <CompanyCard :company="company" />
-            <RegistrationPrompt v-if="index === Math.min(3, companies.length - 1)" audience="company" context="companyDirectory" />
-          </template>
-          <DirectorySkeletonCard v-for="index in loading ? (companies.length ? 3 : 6) : 0" :key="`loading-${index}`" kind="company" />
-        </CardGrid>
-        <RegistrationPrompt v-if="!loading && !companies.length" audience="company" context="companyDirectory" />
+        <ListingAdGrid v-if="companies.length || loading" kind="companies" :items="companies" :list="layout === 'list'" :class="{ 'company-directory__grid--list': layout === 'list' }" :aria-busy="loading">
+          <template #default="{ item: company }"><CompanyCard :company="company" /></template>
+          <template #loading><DirectorySkeletonCard v-for="index in loading ? (companies.length ? 2 : 8) : 0" :key="`loading-${index}`" kind="company" /></template>
+        </ListingAdGrid>
+        <RegistrationPrompt v-if="!loading" audience="company" context="companyDirectory" />
         <DirectoryLoadMore :loading="loading" :error="error" :has-more="hasMore" :count="companies.length" @load="loadMore" />
       </div>
     </div>

@@ -35,6 +35,7 @@ final class MediaController
     private const MAX_FILE_SIZE = 10_485_760;
 
     private const FOLDERS = [
+        'listing-ad' => ['name' => 'Listing ads', 'role' => 'ROLE_ADMIN'],
         'report-evidence' => ['name' => 'Private report evidence', 'role' => 'ROLE_CREATOR'],
         'creator-avatar' => ['name' => 'Creator avatars', 'role' => 'ROLE_CREATOR'],
         'creator-portfolio' => ['name' => 'Creator portfolio', 'role' => 'ROLE_CREATOR'],
@@ -162,7 +163,10 @@ final class MediaController
         if (!$media instanceof Media) {
             return new JsonResponse(['error' => ApiMessages::get('invalid_media', 'bs')], 404);
         }
-        $isPublic = $media->getOwner()->isApproved() && $this->isPublicMedia($media, $entityManager);
+        $publicOwner = $media->getFolder()->getSlug() === 'listing-ad'
+            ? $media->getOwner()->hasRole('ROLE_ADMIN')
+            : $media->getOwner()->isApproved();
+        $isPublic = $publicOwner && $this->isPublicMedia($media, $entityManager);
         $user = $security->getUser();
         if (!$isPublic
             && (!$user instanceof User
@@ -254,6 +258,9 @@ final class MediaController
 
     private function isPublicMedia(Media $media, EntityManagerInterface $entityManager): bool
     {
+        if ($media->getFolder()->getSlug() === 'listing-ad') {
+            return $entityManager->getRepository(\App\Entity\ListingAd::class)->count(['image' => $media, 'enabled' => true]) > 0;
+        }
         if ($media->getFolder()->getSlug() === 'creator-portfolio' && $media->getOwner()->getCreator()?->isAgencyProfile() && !$media->getOwner()->isAgency()) return false;
         $creatorAvatarCount = $entityManager->getRepository(Creator::class)->createQueryBuilder('creator')
             ->select('COUNT(creator.id)')

@@ -183,6 +183,7 @@ final class LocalizedRouteMap
             '/admin/subscribers' => 'admin-subscribers',
             '/admin/tools' => 'admin-tools',
             '/admin/credit-settings' => 'admin-credit-settings',
+            '/admin/listing-ads' => 'admin-listing-ads',
             '/admin/redirects' => 'admin-redirects',
             '/imprint' => 'imprint',
             '/impressum' => 'imprint',
