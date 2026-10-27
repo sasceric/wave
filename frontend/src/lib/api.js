@@ -1,4 +1,5 @@
 import i18n from '../i18n'
+import { actionFeedback } from './actionFeedback'
 
 let csrfToken = ''
 let sessionRequest = null
@@ -32,7 +33,19 @@ async function getCsrfToken(locale = i18n.global.locale.value) {
   csrfToken = payload.csrfToken
 }
 
-export async function apiRequest(path, { method = 'GET', body, locale, signal } = {}) {
+export async function apiRequest(path, { feedback, ...options } = {}) {
+  const method = options.method || 'GET'
+  try {
+    const payload = await request(path, options)
+    actionFeedback(path, method, feedback, payload)
+    return payload
+  } catch (error) {
+    actionFeedback(path, method, feedback, null, error)
+    throw error
+  }
+}
+
+async function request(path, { method = 'GET', body, locale, signal } = {}) {
   const unsafe = !['GET', 'HEAD', 'OPTIONS'].includes(method.toUpperCase())
   if (unsafe && (path.startsWith('/auth/') || ['/me/account', '/me/password'].includes(path))) {
     authenticationGeneration += 1
@@ -84,7 +97,18 @@ export async function apiRequest(path, { method = 'GET', body, locale, signal } 
   return payload
 }
 
-export async function apiUpload(path, file) {
+export async function apiUpload(path, file, { feedback } = {}) {
+  try {
+    const payload = await upload(path, file)
+    actionFeedback(path, 'POST', feedback, payload)
+    return payload
+  } catch (error) {
+    actionFeedback(path, 'POST', feedback, null, error)
+    throw error
+  }
+}
+
+async function upload(path, file) {
   if (!csrfToken) await getCsrfToken()
   const formData = new FormData()
   formData.append('file', file)

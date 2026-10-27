@@ -653,7 +653,12 @@ final class ProfileController
         }
 
         $media = $entityManager->getRepository(Media::class)->find($value);
-        if (!$media instanceof Media || $media->getOwner() !== $user || $media->getFolder()->getSlug() !== $folderSlug) {
+        $currentImage = match ($folderSlug) {
+            'creator-avatar' => $user->getCreator()?->getAvatarMedia(),
+            'company-logo' => $user->getCompany()?->getLogoMedia(),
+            default => null,
+        };
+        if (!$media instanceof Media || $media->getOwner() !== $user || ($media->getFolder()->getSlug() !== $folderSlug && $currentImage?->getId() !== $media->getId())) {
             return false;
         }
 

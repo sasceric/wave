@@ -38,55 +38,78 @@ final class HomepageController
             return new JsonResponse(['error' => ApiMessages::get('unsupported_language', 'bs')], 400);
         }
 
-        $mode = $entityManager->find(HomepageSettings::class, 1)?->getCreatorMode() ?? HomepageSettings::MODE_LATEST;
-        $rankingColumns = $recommendations->columns('creator');
-        $rankingJoins = $recommendations->joins('creator');
+        // All card data is loaded up front; sliding never gates crawlable links.
+        $mode = HomepageSettings::MODE_FEATURED;
+        $companiesSliderEnabled = $entityManager->find(HomepageSettings::class, 1)?->isCompaniesSliderEnabled() ?? false;
         $parameters = $recommendations->parameters();
         $visibility = $blocks->visible('u.id');
-        $featuredOnly = $mode === HomepageSettings::MODE_FEATURED ? ' WHERE featured = TRUE' : '';
-        $ids = $entityManager->getConnection()->fetchFirstColumn("SELECT id FROM (
-            SELECT c.id, $rankingColumns FROM creator c LEFT JOIN wave_user u ON u.id = c.owner_id $rankingJoins
-            WHERE c.agency_profile = FALSE AND (u.id IS NULL OR (u.approved = TRUE AND u.hide_my_account = FALSE)) AND $visibility
-        ) ranked$featuredOnly ORDER BY ".\App\Api\RecommendedProfiles::ORDER.' LIMIT 4', $parameters);
-        $creators = $ids === [] ? [] : $entityManager->getRepository(Creator::class)->findBy(['id' => $ids]);
-        $order = array_flip($ids);
-        usort($creators, static fn (Creator $a, Creator $b): int => $order[$a->getId()] <=> $order[$b->getId()]);
+        $profiles = [];
+        foreach (['creator' => Creator::class, 'company' => Company::class] as $kind => $entity) {
+            if ($kind === 'company' && !$companiesSliderEnabled) { $profiles[$kind] = []; continue; }
+            $rankingColumns = $recommendations->columns($kind);
+            $rankingJoins = $recommendations->joins($kind);
+            $eligible = $kind === 'creator' ? 'c.agency_profile = FALSE' : 'c.archived_profile = FALSE';
+            $ids = $entityManager->getConnection()->fetchFirstColumn("SELECT id FROM (
+                SELECT c.id, $rankingColumns FROM $kind c LEFT JOIN wave_user u ON u.id = c.owner_id $rankingJoins
+                WHERE $eligible AND c.featured = TRUE AND (c.featured_until IS NULL OR c.featured_until > :rankingNow)
+                    AND (u.id IS NULL OR (u.approved = TRUE AND u.hide_my_account = FALSE)) AND $visibility
+            ) ranked ORDER BY ".\App\Api\RecommendedProfiles::ORDER.' LIMIT 12', $parameters);
+            if ($ids === []) { $profiles[$kind] = []; continue; }
+            $media = $kind === 'creator' ? 'avatarMedia' : 'logoMedia';
+            $builder = $entityManager->getRepository($entity)->createQueryBuilder('profile')
+                ->leftJoin('profile.owner', 'owner')->leftJoin('profile.'.$media, 'media')
+                ->addSelect('owner', 'media')->where('profile.id IN (:ids)')->setParameter('ids', $ids);
+            if ($kind === 'company') $builder->leftJoin('profile.coverMedia', 'cover')->leftJoin('profile.industrySelections', 'industries')->addSelect('cover', 'industries');
+            $profiles[$kind] = $builder->getQuery()->getResult();
+            $order = array_flip($ids);
+            usort($profiles[$kind], static fn ($a, $b): int => $order[$a->getId()] <=> $order[$b->getId()]);
+        }
+        $creators = $profiles['creator'];
+        $companies = $profiles['company'];
         $categoryLabels = MarketplaceCategoryLabels::forLocale($entityManager, $locale);
-        $campaigns = $entityManager->getRepository(Campaign::class)->createQueryBuilder('campaign')
-            ->join('campaign.company', 'company')
-            ->leftJoin('company.owner', 'companyOwner')
-            ->andWhere('campaign.status = :status')
-            ->andWhere('campaign.listed = TRUE')
-            ->andWhere('campaign.closesAt >= :today')
-            ->andWhere($blocks->visible('companyOwner.id'))
-            ->andWhere('companyOwner.id IS NULL OR (companyOwner.approved = :approved AND companyOwner.hideMyAccount = :visible)')
-            ->setParameter('status', 'open')
-            ->setParameter('today', new \DateTimeImmutable('today'))
-            ->setParameter('approved', true)
-            ->setParameter('visible', false)
-            ->orderBy('campaign.featured', \SortDirection::Descending)
-            ->addOrderBy('campaign.publishedAt', \SortDirection::Descending)
-            ->addOrderBy('campaign.id', \SortDirection::Descending)
-            ->setMaxResults(4)
-            ->getQuery()
-            ->getResult();
+        $campaignVisibility = $blocks->visible('owner.id');
+        // Select IDs before collection joins so multi-industry companies cannot consume card slots.
+        $campaignIds = $entityManager->getConnection()->fetchFirstColumn("SELECT c.id FROM campaign c
+            JOIN company company ON company.id = c.company_id LEFT JOIN wave_user owner ON owner.id = company.owner_id
+            WHERE c.status = 'open' AND c.listed = TRUE AND c.featured = TRUE AND c.closes_at >= :today
+                AND (owner.id IS NULL OR (owner.approved = TRUE AND owner.hide_my_account = FALSE)) AND $campaignVisibility
+            ORDER BY COALESCE(c.featured_position, 2147483647) ASC, c.published_at DESC, c.id DESC LIMIT 12",
+            ['today' => (new \DateTimeImmutable('today'))->format('Y-m-d H:i:s')],
+        );
+        $campaigns = $campaignIds === [] ? [] : $entityManager->getRepository(Campaign::class)->createQueryBuilder('campaign')
+            ->join('campaign.company', 'company')->leftJoin('company.owner', 'companyOwner')
+            ->leftJoin('campaign.coverMedia', 'cover')->leftJoin('company.logoMedia', 'logo')
+            ->leftJoin('company.coverMedia', 'companyCover')->leftJoin('company.industrySelections', 'companyIndustries')
+            ->addSelect('company', 'companyOwner', 'cover', 'logo', 'companyCover', 'companyIndustries')
+            ->where('campaign.id IN (:ids)')->setParameter('ids', $campaignIds)->getQuery()->getResult();
+        $campaignOrder = array_flip($campaignIds);
+        usort($campaigns, static fn (Campaign $a, Campaign $b): int => $campaignOrder[$a->getId()] <=> $campaignOrder[$b->getId()]);
 
         $ratings = $feedback->summaries(array_values(array_filter(array_map(static fn (Creator $creator): ?int => $creator->getOwner()?->getId(), $creators))), 'provider');
+        $companyRatings = $feedback->companySummaries($companies);
+        $companyIds = array_map(static fn (Company $company): ?int => $company->getId(), $companies);
+        $campaignCounts = $companyIds === [] ? [] : $entityManager->getConnection()->fetchAllKeyValue(
+            "SELECT company_id, COUNT(*) FROM campaign WHERE company_id IN (?) AND status = 'open' AND listed = TRUE AND closes_at >= ? GROUP BY company_id",
+            [$companyIds, (new \DateTimeImmutable('today'))->format('Y-m-d H:i:s')], [\Doctrine\DBAL\ArrayParameterType::INTEGER, \Doctrine\DBAL\ParameterType::STRING],
+        );
         $hiredCounts = CampaignHiredCounts::forCampaigns($entityManager, $campaigns);
 
         return new JsonResponse([
             'data' => [
                 'creatorMode' => $mode,
+                'companiesSliderEnabled' => $companiesSliderEnabled,
                 'creators' => array_map(
                     static fn (Creator $creator): array => CreatorResource::fromEntity(
                         $creator,
                         $locale,
                         $categoryLabels[$creator->getCategory()] ?? null,
                         $categoryLabels,
+                        card: true,
                     ) + ['rating' => $ratings[$creator->getOwner()?->getId()] ?? ['average' => null, 'reviewCount' => 0, 'completedCampaigns' => 0]],
                     $creators,
                 ),
-                'campaigns' => array_map(static fn (Campaign $campaign): array => CampaignResource::fromEntity($campaign, $locale, categoryLabels: $categoryLabels, hiredCount: $hiredCounts[$campaign->getId()] ?? 0), $campaigns),
+                'companies' => array_map(static fn (Company $company): array => \App\Api\CompanyResource::fromEntity($company, $locale, (int) ($campaignCounts[$company->getId()] ?? 0), card: true, categoryLabels: $categoryLabels) + ['rating' => $companyRatings[$company->getOwner()?->getId()] ?? ['average' => null, 'reviewCount' => 0, 'completedCampaigns' => 0]], $companies),
+                'campaigns' => array_map(static fn (Campaign $campaign): array => CampaignResource::fromEntity($campaign, $locale, card: true, categoryLabels: $categoryLabels, hiredCount: $hiredCounts[$campaign->getId()] ?? 0), $campaigns),
             ],
         ]);
     }
@@ -134,6 +157,7 @@ final class HomepageController
                 'pendingRegistrations' => $entityManager->getRepository(User::class)->count(['role' => ['ROLE_CREATOR', 'ROLE_COMPANY'], 'admin' => false, 'moderator' => false, 'approved' => false]),
             ],
             'creatorMode' => $entityManager->find(HomepageSettings::class, 1)?->getCreatorMode() ?? HomepageSettings::MODE_LATEST,
+            'companiesSliderEnabled' => $entityManager->find(HomepageSettings::class, 1)?->isCompaniesSliderEnabled() ?? false,
         ];
         foreach (['creators', 'companies', 'campaigns', 'registrations'] as $kind) {
             $data[$kind] = $section === 'all' ? $catalog->page(new Request(), $kind, $locale)['data'] : [];
@@ -171,6 +195,8 @@ final class HomepageController
             return new JsonResponse(['error' => ApiMessages::get('invalid_request', $locale)], 400);
         }
 
+        $companiesSliderEnabled = $data['companiesSliderEnabled'] ?? null;
+        if (array_key_exists('companiesSliderEnabled', $data) && !is_bool($companiesSliderEnabled)) return new JsonResponse(['error' => ApiMessages::get('invalid_request', $locale)], 400);
         $creatorMode = $data['creatorMode'] ?? null;
         $creatorIds = self::idList($data['featuredCreatorIds'] ?? null);
         $companyIds = array_key_exists('featuredCompanyIds', $data)
@@ -194,6 +220,21 @@ final class HomepageController
             || count($campaigns) !== count($campaignIds)
         ) {
             return new JsonResponse(['error' => ApiMessages::get('invalid_request', $locale)], 400);
+        }
+
+        $positions = $data['featuredPositions'] ?? [];
+        if (!is_array($positions) || array_diff(array_keys($positions), ['creators', 'companies', 'campaigns']) !== []) {
+            return new JsonResponse(['error' => ApiMessages::get('invalid_request', $locale)], 400);
+        }
+        foreach (['creators' => $creatorIds, 'companies' => $companyIds ?? [], 'campaigns' => $campaignIds] as $kind => $ids) {
+            $values = $positions[$kind] ?? [];
+            if (!is_array($values) || count($values) > 1000) return new JsonResponse(['error' => ApiMessages::get('invalid_request', $locale)], 400);
+            foreach ($values as $id => $value) {
+                if ((string) (int) $id !== (string) $id || !in_array((int) $id, $ids, true)
+                    || ($value !== null && (!is_int($value) || $value < 1 || $value > 1000000))) {
+                    return new JsonResponse(['error' => ApiMessages::get('invalid_request', $locale)], 400);
+                }
+            }
         }
 
         $expirations = $data['featuredExpirations'] ?? [];
@@ -249,12 +290,19 @@ final class HomepageController
             }
         }
 
+        foreach (['creators' => $creators, 'companies' => $companies, 'campaigns' => $campaigns] as $kind => $items) {
+            foreach ($items as $item) {
+                if (array_key_exists($item->getId(), $positions[$kind] ?? [])) $item->setFeaturedPosition($positions[$kind][$item->getId()]);
+            }
+        }
+
         foreach ([...$creators, ...$companies, ...$campaigns] as $selected) {
             $selected->setFeatured(true);
         }
 
         $settings = $entityManager->find(HomepageSettings::class, 1) ?? new HomepageSettings();
         $settings->setCreatorMode($creatorMode);
+        if ($companiesSliderEnabled !== null) $settings->setCompaniesSliderEnabled($companiesSliderEnabled);
         $entityManager->persist($settings);
         $entityManager->flush();
 

@@ -15,7 +15,9 @@ async function client(locale = 'bs') {
   })
   const source = await readFile(new URL('../src/lib/api.js', import.meta.url), 'utf8')
   const module = new vm.SourceTextModule(source, { context })
-  await module.link(() => new vm.SyntheticModule(['default'], function () { this.setExport('default', i18n) }, { context }))
+  await module.link(specifier => specifier.includes('actionFeedback')
+    ? new vm.SyntheticModule(['actionFeedback'], function () { this.setExport('actionFeedback', () => {}) }, { context })
+    : new vm.SyntheticModule(['default'], function () { this.setExport('default', i18n) }, { context }))
   await module.evaluate()
   return { api: module.namespace, calls, i18n }
 }

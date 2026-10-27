@@ -113,7 +113,14 @@
     "voluntary_campaign_admin_only": "Kostenlose Kampagnen kann nur ein Wave-Administrator veröffentlichen.",
     "listing_ad_invalid": "Prüfe die Felder. Name, Überschrift und gültige Platzierungen sind erforderlich. Verwende einen lokalen Pfad oder eine http(s)-Adresse und bei Links einen Schaltflächentext.",
     "listing_ad_overlap": "Platzierungen überschneiden sich. Wähle einen freien Platz oder deaktiviere die andere Anzeige.",
-    "listing_ad_limit": "Dieses Verzeichnis hat bereits 100 Anzeigen."
+    "listing_ad_limit": "Dieses Verzeichnis hat bereits 100 Anzeigen.",
+    "account_type_change_requested": "Neuer Antrag auf Kontotypwechsel.",
+    "account_type_changed": "Dein Kontotyp wurde geändert. Prüfe dein Profil.",
+    "account_type_change_rejected": "Dein Antrag wurde abgelehnt. Die Antwort findest du in den Einstellungen.",
+    "account_type_invalid": "Prüfe die Angaben und den gewünschten Kontotyp.",
+    "account_type_pendingExists": "Ein Antrag wartet bereits auf Prüfung.",
+    "account_type_stale": "Der Antrag wurde bereits bearbeitet oder der Kontotyp geändert. Aktualisiere die Liste.",
+    "account_type_activeWork": "Schließe zuerst aktive Kampagnen und Kooperationen ab, die benötigte Funktionen verlieren würden."
   },
   "account": {
     "verify": {
@@ -388,5 +395,65 @@
     "useArtwork": "Wave-Illustration verwenden",
     "helpLabel": "Text des Zusatzlinks",
     "helpUrl": "Zusatzlink"
+  },
+  "actionFeedback": {
+    "label": "Aktionsmeldungen",
+    "dismiss": "Meldung schließen",
+    "success": "Aktion erfolgreich abgeschlossen.",
+    "failed": "Die Aktion ist fehlgeschlagen. Bitte versuche es erneut.",
+    "networkError": "Keine Verbindung zum Server. Prüfe deine Verbindung und versuche es erneut.",
+    "invalidForm": "Prüfe die markierten Felder vor dem Speichern."
+  },
+  "accountType": {
+    "title": "Kontotyp",
+    "request": "Kontotypwechsel beantragen",
+    "current": "Aktuell: {type}",
+    "creator": "Creator",
+    "brand": "Marke",
+    "agency": "Agentur",
+    "businessDetails": "Unternehmensdaten",
+    "privateHint": "Alle Felder sind optional. Nur Kontoinhaber und Administratoren sehen diese Angaben.",
+    "registrationId": "Unternehmens-ID",
+    "vatId": "Umsatzsteuer-ID",
+    "ownerFullName": "Vollständiger Name des Inhabers",
+    "hint": "Ein Administrator prüft deinen Antrag. Wir benachrichtigen dich, sobald sich dein Kontotyp ändert.",
+    "mergeHint": "Kompatible Profildaten, Beschreibungen, Bilder und soziale Links werden übernommen. Bestehende Arbeiten, Nachrichten, Bewertungen und Kooperationen bleiben erhalten. Unpassende Daten bleiben im Verlauf gespeichert.",
+    "target": "Gewünschter Kontotyp",
+    "profileName": "Profilname nach dem Wechsel",
+    "message": "Nachricht an den Administrator",
+    "send": "Antrag senden",
+    "sent": "Dein Antrag wurde an den Administrator gesendet.",
+    "save": "Angaben speichern",
+    "pending": "Prüfung ausstehend",
+    "approved": "Wechsel genehmigt",
+    "rejected": "Antrag abgelehnt",
+    "withdrawn": "Antrag zurückgezogen",
+    "withdraw": "Antrag zurückziehen",
+    "all": "Alle Anträge",
+    "adminTitle": "Kontotyp-Anträge",
+    "adminIntro": "Prüfe Anträge, übernimm kompatible Daten und benachrichtige den Inhaber über die Entscheidung.",
+    "account": "Konto",
+    "change": "Wechsel",
+    "status": "Status",
+    "createdAt": "Beantragt am",
+    "empty": "Keine Anträge mit diesem Status.",
+    "review": "Antrag prüfen",
+    "response": "Antwort an den Kontoinhaber",
+    "approve": "Wechsel genehmigen",
+    "reject": "Antrag ablehnen",
+    "approvalDone": "Kontotyp geändert. Der Inhaber wurde benachrichtigt.",
+    "rejectionDone": "Antrag abgelehnt. Der Inhaber wurde benachrichtigt.",
+    "activeWorkHint": "Schließe zuerst aktive Kampagnen oder Kooperationen ab, die nach dem Wechsel benötigte Funktionen verlieren würden. Gib bei Ablehnung einen kurzen Grund an.",
+    "invalid": "Prüfe die Angaben und den gewünschten Kontotyp.",
+    "pendingExists": "Ein Antrag wartet bereits auf Prüfung.",
+    "stale": "Der Antrag wurde bereits bearbeitet oder der Kontotyp geändert. Aktualisiere die Liste.",
+    "activeWork": "Schließe zuerst aktive Kampagnen und Kooperationen ab, die benötigte Funktionen verlieren würden."
+  },
+  "campaignChat": {
+    "notificationTypes": {
+      "account_type_change_requested": "Neuer Antrag auf Kontotypwechsel.",
+      "account_type_changed": "Dein Kontotyp wurde geändert. Prüfe dein Profil.",
+      "account_type_change_rejected": "Dein Antrag wurde abgelehnt. Die Antwort findest du in den Einstellungen."
+    }
   }
 }

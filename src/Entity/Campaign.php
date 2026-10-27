@@ -5,6 +5,7 @@ namespace App\Entity;
 use DateTimeImmutable;
 use Doctrine\ORM\Mapping as ORM;
 
+#[ORM\Index(name: 'idx_campaign_featured_position', columns: ['featured_position', 'id'], options: ['where' => 'featured = TRUE'])]
 #[ORM\Entity]
 #[ORM\Index(name: 'idx_campaign_directory_order', columns: ['status', 'featured', 'closes_at', 'id'])]
 #[ORM\Index(name: 'idx_campaign_directory_latest', columns: ['status', 'featured', 'published_at', 'id'])]
@@ -115,6 +116,9 @@ class Campaign
 
     public function isListed(): bool { return $this->listed; }
     public function setListed(bool $listed): void { $this->listed = $listed; }
+
+    #[ORM\Column(nullable: true)]
+    private ?int $featuredPosition = null;
 
     #[ORM\Column]
     private bool $featured;
@@ -305,9 +309,18 @@ class Campaign
         return $this->featured;
     }
 
+    public function getFeaturedPosition(): ?int { return $this->featuredPosition; }
+
+    public function setFeaturedPosition(?int $position): void
+    {
+        if ($position !== null && ($position < 1 || $position > 1000000)) throw new \InvalidArgumentException('Invalid featured position.');
+        $this->featuredPosition = $position;
+    }
+
     public function setFeatured(bool $featured): void
     {
         $this->featured = $featured;
+        if (!$featured) $this->featuredPosition = null;
     }
 
     public function getCompany(): Company

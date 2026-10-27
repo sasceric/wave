@@ -43,6 +43,7 @@ final class CampaignApplicationRangeTest extends WebTestCase
         $expected = [];
         foreach ([0 => 'fewerThan5', 4 => 'fewerThan5', 5 => 'upTo10', 10 => 'upTo10', 11 => '10to20', 20 => '10to20', 21 => '20to50', 50 => '20to50', 51 => '50plus', 1000 => '50plus'] as $count => $range) {
             $campaign = $this->campaign('range-'.$count);
+            $campaign->setFeatured(true);
             for ($index = 0; $index < $count; ++$index) {
                 $application = new Application($campaign, $this->creator('creator-'.$count.'-'.$index), 'A real submitted proposal for this campaign.');
                 if ($index % 2 === 1) $application->setStatus('rejected');

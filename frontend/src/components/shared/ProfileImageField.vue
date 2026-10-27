@@ -117,7 +117,7 @@ async function rollback(change) {
   if (!change?.uploadedMediaId) return
 
   try {
-    await apiRequest(`/media/${change.uploadedMediaId}`, { method: 'DELETE' })
+    await apiRequest(`/media/${change.uploadedMediaId}`, { method: 'DELETE', feedback: false })
   } catch (cause) {
     // A retry may find an upload that has already been cleaned up.
     if (cause.status !== 404) throw cause

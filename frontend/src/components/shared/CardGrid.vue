@@ -7,7 +7,7 @@ const props = defineProps({
 })
 
 const classes = computed(() => {
-  if (props.kind === 'company') return 'company-directory__grid'
+  if (props.kind === 'company') return props.layout === 'home' ? 'company-directory__grid company-grid--home' : 'company-directory__grid'
   const base = `${props.kind}-grid`
   if (props.layout === 'bookmarks') return `${base} account-bookmarks-grid`
   if (props.layout === 'home') return `${base} ${base}--home`

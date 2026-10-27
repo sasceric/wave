@@ -184,6 +184,7 @@ final class SeoMetadataProvider
             }
         } elseif ($name === 'company-profile') {
             $company = $this->entityManager->getRepository(Company::class)->createQueryBuilder('company')
+                ->andWhere('company.archivedProfile = false')
                 ->leftJoin('company.owner', 'owner')
                 ->andWhere('company.slug = :slug')
                 ->andWhere('owner.id IS NULL OR (owner.approved = :approved AND owner.hideMyAccount = :visible)')

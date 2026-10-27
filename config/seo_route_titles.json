@@ -52,5 +52,6 @@
   "account-email-preferences": "emailPreferences.title",
   "account-profile-guide": "profileGuide.title",
   "terms-of-use": "legal.terms.title",
-  "admin-listing-ads": "listingAds.title"
+  "admin-listing-ads": "listingAds.title",
+  "admin-account-types": "accountType.adminTitle"
 }

@@ -6,6 +6,7 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 
+#[ORM\Index(name: 'idx_company_featured_position', columns: ['featured_position', 'id'], options: ['where' => 'featured = TRUE'])]
 #[ORM\Entity]
 #[ORM\Table(name: 'company')]
 #[ORM\Index(name: 'idx_company_type', columns: ['company_type'])]
@@ -37,6 +38,31 @@ class Company
     #[ORM\Column(length: 100)]
     private string $industry;
 
+    #[ORM\Column(options: ['default' => false])]
+    private bool $archivedProfile = false;
+
+    public function isArchivedProfile(): bool { return $this->archivedProfile; }
+    public function setArchivedProfile(bool $archived): void { $this->archivedProfile = $archived; }
+
+    #[ORM\Column(length: 60, nullable: true)]
+    private ?string $registrationId = null;
+
+    #[ORM\Column(length: 60, nullable: true)]
+    private ?string $vatId = null;
+
+    #[ORM\Column(length: 120, nullable: true)]
+    private ?string $ownerFullName = null;
+
+    public function getRegistrationId(): ?string { return $this->registrationId; }
+    public function getVatId(): ?string { return $this->vatId; }
+    public function getOwnerFullName(): ?string { return $this->ownerFullName; }
+    public function setBusinessDetails(?string $registrationId, ?string $vatId, ?string $ownerFullName): void
+    {
+        $this->registrationId = $registrationId;
+        $this->vatId = $vatId;
+        $this->ownerFullName = $ownerFullName;
+    }
+
     #[ORM\Column(length: 20, options: ['default' => 'brand'])]
     private string $companyType = 'brand';
 
@@ -66,6 +92,9 @@ class Company
 
     #[ORM\Column]
     private bool $verified;
+
+    #[ORM\Column(nullable: true)]
+    private ?int $featuredPosition = null;
 
     #[ORM\Column(options: ['default' => false])]
     private bool $featured = false;
@@ -198,10 +227,18 @@ class Company
         return $this->featured && ($this->featuredUntil === null || $this->featuredUntil > \Symfony\Component\Clock\Clock::get()->now());
     }
 
+    public function getFeaturedPosition(): ?int { return $this->featuredPosition; }
+
+    public function setFeaturedPosition(?int $position): void
+    {
+        if ($position !== null && ($position < 1 || $position > 1000000)) throw new \InvalidArgumentException('Invalid featured position.');
+        $this->featuredPosition = $position;
+    }
+
     public function setFeatured(bool $featured): void
     {
         $this->featured = $featured;
-        if (!$featured) $this->featuredUntil = null;
+        if (!$featured) { $this->featuredUntil = null; $this->featuredPosition = null; }
     }
 
     public function isFeaturedConfigured(): bool { return $this->featured; }
@@ -257,6 +294,7 @@ class Company
         $this->logoMedia = $this->coverMedia = null;
         $this->socialLinks = [];
         $this->services = [];
+        $this->setBusinessDetails(null, null, null);
         $this->industrySelections->clear();
         $this->verified = $this->featured = false;
     }

@@ -23,8 +23,6 @@ const rows = ref([])
 const loading = ref(false)
 const busy = ref(false)
 const error = ref('')
-const formError = ref('')
-const notice = ref('')
 const open = ref(false)
 const draft = ref(emptyListingAd())
 const upload = ref(null)
@@ -57,35 +55,26 @@ async function load() {
 function edit(row) {
   draft.value = row ? JSON.parse(JSON.stringify(row)) : emptyListingAd(kind.value)
   savedDraft.value = JSON.stringify(draft.value)
-  formError.value = ''
-  notice.value = ''
   open.value = true
 }
 function close() {
   if (!busy.value && (!dirty.value || window.confirm(t('listingAds.leave')))) open.value = false
 }
-function failure(cause) {
-  return cause.code?.startsWith('listingAds.') ? t(cause.code) : cause.message
-}
 async function persist(row, editor = false) {
   if (busy.value) return
   busy.value = true
-  formError.value = ''
   error.value = ''
-  notice.value = ''
   const body = JSON.parse(JSON.stringify(row))
   try {
-    const response = await apiRequest(`/admin/listing-ads/${body.kind}${body.id ? `/${body.id}` : ''}`, { method: body.id ? 'PUT' : 'POST', body })
+    const response = await apiRequest(`/admin/listing-ads/${body.kind}${body.id ? `/${body.id}` : ''}`, { method: body.id ? 'PUT' : 'POST', body, feedback: { success: t('listingAds.saved') } })
     if (body.kind === kind.value) {
       const index = rows.value.findIndex(item => item.id === response.data.id)
       if (index < 0) rows.value.push(response.data)
       else rows.value[index] = response.data
     }
     if (editor) open.value = false
-    notice.value = t('listingAds.saved')
-  } catch (cause) {
-    if (editor) formError.value = failure(cause)
-    else error.value = failure(cause)
+  } catch {
+    // Keep the draft open and saved rows unchanged; the API shows the error toast.
   } finally { busy.value = false }
 }
 async function imageSelected(event) {
@@ -93,11 +82,10 @@ async function imageSelected(event) {
   event.target.value = ''
   if (!file || busy.value) return
   busy.value = true
-  formError.value = ''
   try {
     const { data } = await apiUpload('/media?folder=listing-ad', file)
     Object.assign(draft.value, { imageId: data.id, imageUrl: data.url, image: data.image, artwork: '' })
-  } catch (cause) { formError.value = cause.message }
+  } catch { /* The shared API displays upload failures. */ }
   finally { busy.value = false }
 }
 function resize(value) {
@@ -122,7 +110,6 @@ function addPlacement() {
         <section :key="kind" role="tabpanel" :aria-labelledby="`listing-ads-tab-${kind}`">
           <div class="listing-ads-admin__summary"><span>{{ t('listingAds.activeCount', { count: visibleCount }) }}</span><LocalizedLink :to="{ name: kind }" target="_blank" rel="noopener" class="text-link">{{ t('listingAds.openDirectory') }}<ArrowUpRight :size="16" aria-hidden="true" /></LocalizedLink></div>
           <StatusMessage v-if="error" variant="error">{{ error }}</StatusMessage>
-          <StatusMessage v-if="notice" variant="success">{{ notice }}</StatusMessage>
           <StatusMessage v-if="loading" variant="info">{{ t('adminDashboard.loading') }}</StatusMessage>
           <StatusMessage v-else-if="!rows.length" variant="empty">{{ t('listingAds.empty') }}</StatusMessage>
           <div v-else class="listing-ads-admin__cards">
@@ -135,7 +122,6 @@ function addPlacement() {
         </section>
       </main>
       <FormModal v-if="open" :open="open" :title="t(draft.id ? 'listingAds.edit' : 'listingAds.create')" :busy="busy" wide @update:open="!$event && close()" @submit="persist(draft, true)">
-        <StatusMessage v-if="formError" variant="error">{{ formError }}</StatusMessage>
         <fieldset class="listing-ads-admin__fieldset" :disabled="busy">
           <div class="listing-ads-admin__editor">
             <div class="listing-ads-admin__fields">
@@ -150,7 +136,7 @@ function addPlacement() {
               <button v-if="!draft.imageUrl" class="button button--tonal button--small" type="button" :disabled="busy" @click="Object.assign(draft, { artwork: 'campaign-invitation', imageId: null, image: null, imageUrl: '/images/listing-ads/create-campaign.svg' })">{{ t('listingAds.useArtwork') }}</button>
               <input ref="upload" class="sr-only" type="file" accept="image/jpeg,image/png,image/webp" tabindex="-1" :aria-label="t('listingAds.addImage')" @change="imageSelected" />
               <div class="listing-ads-admin__placement-head"><h3>{{ t('listingAds.placements') }}</h3><button type="button" class="button button--tonal button--small" :disabled="draft.placements.length >= 12 || busy" @click="addPlacement"><Plus :size="16" aria-hidden="true" />{{ t('listingAds.addPlacement') }}</button></div>
-              <div v-for="(place, index) in draft.placements" :key="index" class="listing-ads-admin__placement"><label><span>{{ t('listingAds.row') }}</span><input v-model.number="place.row" type="number" min="1" max="100" required /></label><SingleSelect v-model="place.column" :label="t('listingAds.column')" :options="Array.from({ length: 5 - draft.span }, (_, i) => ({ value: i + 1, label: String(i + 1) }))" :disabled="busy" /><button class="button button--outline" type="button" :disabled="busy || draft.placements.length === 1" :aria-label="t('listingAds.removePlacement')" @click="draft.placements.splice(index, 1)"><Trash2 :size="16" aria-hidden="true" /></button></div>
+              <div v-for="(place, index) in draft.placements" :key="index" class="listing-ads-admin__placement"><label><span>{{ t('listingAds.row') }}</span><input v-model.number="place.row" type="number" min="1" max="100" required /></label><SingleSelect v-model="place.column" :label="t('listingAds.column')" :options="Array.from({ length: 5 - draft.span }, (_, i) => ({ value: i + 1, label: String(i + 1) }))" :disabled="busy" /><button class="button button--outline listing-ads-admin__remove" type="button" :disabled="busy || draft.placements.length === 1" :aria-label="t('listingAds.removePlacement')" @click="draft.placements.splice(index, 1)"><Trash2 :size="21" aria-hidden="true" /></button></div>
               <p class="listing-ads-admin__hint">{{ t('listingAds.positionsHint') }}</p>
               <SwitchField :model-value="draft.enabled ? 1 : 0" :label="t('listingAds.active')" :description="t('listingAds.activeHint')" :disabled="busy" @update:model-value="draft.enabled = $event === 1" />
             </div>

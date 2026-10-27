@@ -68,6 +68,7 @@ final class AccountDeletion
                         $this->entityManager->remove($ticket);
                     }
                     foreach ([
+                        'account_type_request' => 'owner_id',
                         'wave_notification' => 'recipient_id',
                         'user_push_subscription' => 'user_id',
                         'user_action_token' => 'user_id',

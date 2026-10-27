@@ -188,7 +188,7 @@ final class WebPushNotificationSender
 
     private function bodyFor(Notification $notification, string $locale): string
     {
-        if (in_array($notification->getType(), ['review_received', 'review_published'], true)) {
+        if (in_array($notification->getType(), ['account_type_change_requested', 'account_type_changed', 'account_type_change_rejected', 'review_received', 'review_published'], true)) {
             return \App\Localization\ApiMessages::get($notification->getType(), $locale);
         }
         $campaign = $notification->getCampaign();
@@ -268,6 +268,8 @@ final class WebPushNotificationSender
         }
 
         return match ($notification->getType()) {
+            'account_type_change_requested' => $this->routes?->localizedPath('admin-account-types', $notification->getRecipient()->getPreferredLocale()) ?? '/admin/promjene-racuna',
+            'account_type_changed', 'account_type_change_rejected' => $this->routes?->localizedPath('account-settings', $notification->getRecipient()->getPreferredLocale()) ?? '/racun/postavke',
             'campaign_invitation', 'campaign_cancelled' => '/account/applications',
             'application_received', 'invitation_accepted', 'invitation_declined', 'offer_accepted', 'offer_declined' => '/account/campaigns',
             'application_shortlisted', 'application_rejected' => '/account/applications',

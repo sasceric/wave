@@ -13,7 +13,7 @@ async function homeSetup(user, unread = 0) {
   const setup = await setupView('../src/views/HomeView.vue', {
     '../composables/useCurrentUser': { currentUser },
     '../composables/useUnreadMessages': { unreadMessageCount: ref(unread) },
-    '../lib/api': { apiGet: async (...args) => { calls.push(args); return { data: { creatorMode: 'featured', creators: [{ id: 1 }], campaigns: [{ id: 2 }] } } } },
+    '../lib/api': { apiGet: async (...args) => { calls.push(args); return { data: { creatorMode: 'featured', creators: [{ id: 1 }], campaigns: [{ id: 2 }], companies: [{ id: 3 }], companiesSliderEnabled: false } } } },
     '../routePaths': { localizedPath: (name, locale) => `/${locale}/${name}` },
   })
   return { ...setup, calls }
@@ -27,6 +27,8 @@ test('homepage loads the existing homepage payload and keeps loading and error s
   assert.equal(state.creatorMode.value, 'featured')
   assert.equal(state.creators.value.length, 1)
   assert.equal(state.campaigns.value.length, 1)
+  assert.equal(state.companies.value[0].id, 3)
+  assert.equal(state.companiesSliderEnabled.value, false)
 })
 
 test('guest entry points keep the registration account type and campaign return path', async () => {

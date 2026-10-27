@@ -45,6 +45,7 @@ final class CompanyResource
             'featured' => $company->isFeatured(),
         ];
 
+        if (!$public) $resource['businessDetails'] = ['registrationId' => $company->getRegistrationId(), 'vatId' => $company->getVatId(), 'ownerFullName' => $company->getOwnerFullName()];
         $resource['ownerId'] = $company->getOwner()?->getId();
         if (!$card && ($company->getCompanyType() === 'agency' || !$public)) {
             $provider = $company->getOwner()?->getCreator();

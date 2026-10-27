@@ -100,9 +100,9 @@ test('account status requests bypass a cached verified account', async () => {
   })
   const source = await readFile(new URL('../src/lib/api.js', import.meta.url), 'utf8')
   const module = new vm.SourceTextModule(source, { context })
-  await module.link(() => new vm.SyntheticModule(['default'], function () {
-    this.setExport('default', { global: { locale: { value: 'bs' }, t: (key) => key } })
-  }, { context }))
+  await module.link(specifier => specifier.includes('actionFeedback')
+    ? new vm.SyntheticModule(['actionFeedback'], function () { this.setExport('actionFeedback', () => {}) }, { context })
+    : new vm.SyntheticModule(['default'], function () { this.setExport('default', { global: { locale: { value: 'bs' }, t: key => key } }) }, { context }))
   await module.evaluate()
   for (const endpoint of ['/auth/me', '/auth/session']) {
     const response = await module.namespace.apiGet(endpoint)

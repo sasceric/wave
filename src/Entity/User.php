@@ -182,6 +182,12 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this->email;
     }
 
+    public function switchAccountRole(string $role): void
+    {
+        if (!in_array($role, ['ROLE_CREATOR', 'ROLE_COMPANY'], true)) throw new \InvalidArgumentException('Invalid account role.');
+        $this->role = $role;
+    }
+
     public function getRoles(): array
     {
         $roles = [$this->role];

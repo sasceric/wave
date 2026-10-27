@@ -27,6 +27,7 @@ final class CreatorResource
                 'slug' => $creator->getSlug(),
             'publicUrlChangeAvailableAt' => $creator->getPublicUrlChangedAt()?->modify('+14 days')->format(DATE_ATOM),
                 'featured' => $creator->isFeatured(),
+                'city' => $creator->getCity(),
                 'displayName' => $owner?->isDeleted() ? ApiMessages::get('deleted_account', $locale) : $creator->getDisplayName(),
                 'deleted' => $owner?->isDeleted() ?? false,
                 'isPresentationDemo' => $owner?->isPresentationDemo() ?? false,

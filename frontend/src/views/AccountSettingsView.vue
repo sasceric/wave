@@ -5,6 +5,7 @@ import { useRouter } from 'vue-router'
 import { Ban, BookOpen, ChevronRight, Coins, LifeBuoy, LogOut, Mail, Smartphone, Star } from '@lucide/vue'
 import AccountPage from '../components/account/AccountPage.vue'
 import AccountSidebar from '../components/account/AccountSidebar.vue'
+import AccountTypeSettings from '../components/account/AccountTypeSettings.vue'
 import AccountDeletionAction from '../components/account/AccountDeletionAction.vue'
 import CampaignAlertSettings from '../components/account/CampaignAlertSettings.vue'
 import PasswordChangeAction from '../components/account/PasswordChangeAction.vue'
@@ -147,6 +148,8 @@ async function signOut() {
           </div>
         </div>
       </section>
+
+      <AccountTypeSettings />
 
       <section class="account-settings__group" aria-labelledby="settings-notifications">
         <h2 id="settings-notifications">{{ t('app.notifications') }}</h2>

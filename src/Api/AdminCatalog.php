@@ -117,7 +117,7 @@ final class AdminCatalog
         $builder = $this->query($kind);
         if ($kind === 'creators') $builder->andWhere('item.agencyProfile = false');
         return array_map(fn (object $item): array => $this->resource($item, $locale, $categoryLabels),
-            $builder->andWhere('item.featured = :featured')->setParameter('featured', true)->orderBy('item.id', \SortDirection::Ascending)->getQuery()->getResult());
+            $builder->andWhere('item.featured = :featured')->setParameter('featured', true)->addSelect('COALESCE(item.featuredPosition, 2147483647) AS HIDDEN featuredOrder')->orderBy('featuredOrder', \SortDirection::Ascending)->addOrderBy('item.id', \SortDirection::Ascending)->getQuery()->getResult());
     }
 
     private function query(string $kind): QueryBuilder
@@ -157,11 +157,12 @@ final class AdminCatalog
                 'avatarUrl' => $item->getAvatarMedia()?->getUrl() ?? $item->getAvatarUrl(),
                 'featured' => $item->isFeaturedConfigured(),
                 'featuredUntil' => $item->getFeaturedUntil()?->modify('-1 day')->format('Y-m-d'),
+                'featuredPosition' => $item->getFeaturedPosition(),
             ];
         }
         if ($item instanceof Company) {
             $resource = CompanyResource::fromEntity($item, $locale, card: true, categoryLabels: $categoryLabels);
-            return ['featured' => $item->isFeaturedConfigured(), 'featuredUntil' => $item->getFeaturedUntil()?->modify('-1 day')->format('Y-m-d')] + AdminProfileResource::summary($item) + $resource;
+            return ['featuredPosition' => $item->getFeaturedPosition(), 'featured' => $item->isFeaturedConfigured(), 'featuredUntil' => $item->getFeaturedUntil()?->modify('-1 day')->format('Y-m-d')] + AdminProfileResource::summary($item) + $resource;
         }
         if ($item instanceof Campaign) {
             return [
@@ -171,6 +172,7 @@ final class AdminCatalog
                 'status' => $item->getStatus(),
                 'listed' => $item->isListed(),
                 'featured' => $item->isFeatured(),
+                'featuredPosition' => $item->getFeaturedPosition(),
                 'coverImageUrl' => $item->getCoverMedia()?->getUrl(),
                 'coverImage' => MediaImageResource::fromEntity($item->getCoverMedia(), 96),
                 'company' => ['name' => $item->getCompany()->getName()],

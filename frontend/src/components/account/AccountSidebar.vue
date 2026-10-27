@@ -170,6 +170,7 @@ const navigationItems = computed(() => {
       { route: 'admin-campaigns', labelKey: 'adminDashboard.navCampaigns', icon: Megaphone },
       { route: 'admin-email-templates', labelKey: 'adminDashboard.navEmailTemplates', icon: Mail, group: 'marketing' },
       { route: 'admin-credit-settings', labelKey: 'credits.adminTitle', icon: Coins, group: 'admin-settings' },
+      { route: 'admin-account-types', labelKey: 'accountType.adminTitle', icon: Users, group: 'admin-settings' },
       { route: 'admin-tools', labelKey: 'adminTools.title', icon: Wrench, group: 'admin-settings' },
       { route: 'admin-registrations', labelKey: 'adminDashboard.navRegistrations', icon: ClipboardCheck, group: 'admin-settings', badge: adminCounts.value?.approvals ?? props.pendingRegistrations },
       { route: 'admin-reports', labelKey: 'safety.reports', icon: Flag, group: 'admin-settings', badge: adminCounts.value?.reports },

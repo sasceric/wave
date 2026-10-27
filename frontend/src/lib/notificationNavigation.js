@@ -14,6 +14,9 @@ export function notificationDestination(notification) {
     return { name: 'account-campaign-detail', params: { slug: notification.campaign.slug } }
   }
   const destinations = {
+    account_type_change_requested: 'admin-account-types',
+    account_type_changed: 'account-settings',
+    account_type_change_rejected: 'account-settings',
     application_received: 'account-campaigns',
     application_shortlisted: 'account-applications',
     application_rejected: 'account-applications',

@@ -65,7 +65,8 @@ test('rejected activation leaves the saved row unchanged and explains overlappin
   state.rows.value = [{ ...emptyListingAd(), id: 3 }]
   await state.persist({ ...state.rows.value[0], enabled: true })
   assert.equal(state.rows.value[0].enabled, false)
-  assert.equal(state.error.value, 'listingAds.overlap')
+  assert.equal(state.open.value, false)
+  assert.equal(state.error.value, '')
   assert.equal(state.busy.value, false)
 })
 

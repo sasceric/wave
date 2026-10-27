@@ -86,7 +86,7 @@ async function confirmReminder() {
 const query = ref(typeof route.query?.q === 'string' ? route.query.q : '')
 watch(() => route.query?.q, value => { query.value = typeof value === 'string' ? value : '' })
 const statusFilter = ref('all')
-const creatorMode = ref('latest')
+const creatorMode = ref('featured')
 const featuredCreatorIds = ref([])
 const featuredCompanyIds = ref([])
 const featuredCampaignIds = ref([])
@@ -115,13 +115,17 @@ const pageTitle = computed(() => t(
 ))
 
 const featuredExpirations = ref({ creators: {}, companies: {} })
+const companiesSliderEnabled = ref(false)
+const featuredPositions = ref({ creators: {}, companies: {}, campaigns: {} })
 const savedCuration = ref('')
 const curationSelections = computed(() => ({ creators: featuredCreatorIds.value, companies: featuredCompanyIds.value, campaigns: featuredCampaignIds.value }))
 const curationBody = computed(() => ({
-  creatorMode: creatorMode.value,
+  creatorMode: 'featured',
+  companiesSliderEnabled: companiesSliderEnabled.value,
   featuredCreatorIds: featuredCreatorIds.value,
   featuredCompanyIds: featuredCompanyIds.value,
   featuredCampaignIds: featuredCampaignIds.value,
+  featuredPositions: Object.fromEntries(['creators', 'companies', 'campaigns'].map(kind => [kind, Object.fromEntries(curationSelections.value[kind].map(id => [id, featuredPositions.value[kind][id] || null]))])),
   featuredExpirations: Object.fromEntries(['creators', 'companies'].map(kind => [kind, Object.fromEntries(curationSelections.value[kind].map(id => [id, featuredExpirations.value[kind][id] || null]))])),
 }))
 const curationDirty = computed(() => section.value === 'homepage' && Boolean(savedCuration.value) && JSON.stringify(curationBody.value) !== savedCuration.value)
@@ -133,6 +137,9 @@ function selectFeatured(kind, ids) {
 }
 function setFeaturedExpiry(kind, id, value) {
   if (!saving.value) featuredExpirations.value[kind][id] = value
+}
+function setFeaturedPosition(kind, id, value) {
+  if (!saving.value) featuredPositions.value[kind][id] = value
 }
 function warnCurationUnload(event) {
   if (!curationDirty.value) return
@@ -276,11 +283,13 @@ async function loadDashboard() {
     const { data } = await apiGet(`/admin/dashboard?section=${section.value}`)
     if (disposed || version !== dashboardVersion) return
     dashboard.value = data
-    creatorMode.value = data.creatorMode
+    creatorMode.value = 'featured'
+    companiesSliderEnabled.value = data.companiesSliderEnabled === true
     featuredCreatorIds.value = data.creators.filter(({ featured }) => featured).map(({ id }) => id)
     featuredCompanyIds.value = data.companies.filter(({ featured }) => featured).map(({ id }) => id)
     featuredCampaignIds.value = data.campaigns.filter(({ featured }) => featured).map(({ id }) => id)
     featuredExpirations.value = Object.fromEntries(['creators', 'companies'].map(kind => [kind, Object.fromEntries(data[kind].map(row => [row.id, row.featuredUntil || '']))]))
+    featuredPositions.value = Object.fromEntries(['creators', 'companies', 'campaigns'].map(kind => [kind, Object.fromEntries(data[kind].map(row => [row.id, row.featuredPosition ?? '']))]))
     savedCuration.value = JSON.stringify(curationBody.value)
     accessState.value = 'allowed'
     if (isList.value) await loadList()
@@ -562,6 +571,8 @@ onMounted(updateCreatedAtClock)
           :mode="creatorMode"
           :selections="curationSelections"
           :expirations="featuredExpirations"
+          :positions="featuredPositions"
+          :companies-slider-enabled="companiesSliderEnabled"
           :catalog="dashboard"
           :candidates="candidates"
           :busy="saving || loading"
@@ -569,6 +580,8 @@ onMounted(updateCreatedAtClock)
           @mode="!saving && (creatorMode = $event)"
           @select="selectFeatured"
           @expiry="setFeaturedExpiry"
+          @position="setFeaturedPosition"
+          @companies-slider="!saving && (companiesSliderEnabled = $event)"
           @search="searchCandidates"
           @load-more="loadCandidates"
           @save="saveCuration"

@@ -48,6 +48,7 @@ export function routeNameFromCanonicalPath(path) {
     '/moderation': 'moderation',
     '/admin': 'admin',
     '/admin/registrations': 'admin-registrations',
+    '/admin/promjene-racuna': 'admin-account-types',
     '/admin/oglasi-u-listama': 'admin-listing-ads',
     '/admin/pocetna-stranica': 'admin-homepage',
     '/admin/kreatori': 'admin-creators',

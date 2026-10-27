@@ -20,6 +20,7 @@ final class SearchDocuments
         if (!$entity) return [];
         $owner = $entity instanceof Campaign ? $entity->getCompany()->getOwner() : $entity->getOwner();
         if ($owner && (!$owner->isApproved() || $owner->isHideMyAccount() || $owner->isDeleted())) return [];
+        if ($entity instanceof Company && $entity->isArchivedProfile()) return [];
         if ($entity instanceof Creator && $entity->isAgencyProfile()) return [];
         if ($entity instanceof Campaign && (!$entity->isListed() || $entity->getStatus() !== 'open' || $entity->getClosesAt() < new \DateTimeImmutable('today'))) return [];
         $documents = [];

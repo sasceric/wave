@@ -8,14 +8,17 @@ import { useI18n } from 'vue-i18n'
 import WaveLogo from '../shared/WaveLogo.vue'
 import CardImage from '../shared/CardImage.vue'
 
-defineProps({ company: { type: Object, required: true } })
+defineProps({
+  company: { type: Object, required: true },
+  imageSizes: { type: String, default: '(max-width: 760px) calc(100vw - 36px), (max-width: 1150px) 35vw, 25vw' },
+})
 const { t } = useI18n()
 </script>
 
 <template>
   <article class="company-directory-card">
     <div class="company-directory-card__visual" aria-hidden="true">
-      <CardImage :image="company.coverImage" :src="company.coverUrl || '/images/company-cover.webp'" alt="" sizes="(max-width: 760px) calc(100vw - 36px), (max-width: 1150px) 35vw, 25vw" />
+      <CardImage :image="company.coverImage" :src="company.coverUrl || '/images/company-cover.webp'" alt="" :sizes="imageSizes" />
     </div>
     <div class="company-directory-card__body">
       <div class="company-directory-card__identity">

@@ -59,7 +59,7 @@ final class CampaignController
             }
             $cursorMode = $cursor->enabled($request);
             // A distinct key rejects old closing-date cursors after the ordering change.
-            $positionTypes = $sort === 'recommended' ? ['featured' => 'bool', 'published' => 'date', 'id' => 'int'] : ['date' => 'date', 'id' => 'int'];
+            $positionTypes = $sort === 'recommended' ? ['featured' => 'bool', 'feature_order' => 'int', 'published' => 'date', 'id' => 'int'] : ['date' => 'date', 'id' => 'int'];
             $position = $cursorMode ? $cursor->decode($request, 'campaign', $positionTypes) : null;
         } catch (\InvalidArgumentException) {
             return new JsonResponse(['error' => ApiMessages::get('invalid_request', $locale)], 400);
@@ -139,12 +139,13 @@ final class CampaignController
             WHERE " . implode(' AND ', $conditions);
         $connection = $entityManager->getConnection();
         $total = $position !== null ? null : (int) $connection->fetchOne('SELECT COUNT(*)' . $base, $params, $types);
-        $sql = 'SELECT c.id, c.featured, c.closes_at, c.published_at' . $base;
+        $featureOrder = 'CASE WHEN c.featured THEN COALESCE(c.featured_position, 2147483647) ELSE 2147483647 END';
+        $sql = "SELECT c.id, c.featured, $featureOrder AS feature_order, c.closes_at, c.published_at" . $base;
         if ($position !== null) {
             $sql .= match ($sort) {
                 'newest' => ' AND (c.published_at < :date OR (c.published_at = :date AND c.id < :id))',
                 'closing' => ' AND (c.closes_at > :date OR (c.closes_at = :date AND c.id > :id))',
-                default => ' AND (c.featured < :featured OR (c.featured = :featured AND (c.published_at < :published OR (c.published_at = :published AND c.id < :id))))',
+                default => " AND (c.featured < :featured OR (c.featured = :featured AND ($featureOrder > :feature_order OR ($featureOrder = :feature_order AND (c.published_at < :published OR (c.published_at = :published AND c.id < :id))))))",
             };
             $params += $position;
             if ($sort === 'recommended') {
@@ -154,7 +155,7 @@ final class CampaignController
         $sql .= ' ORDER BY ' . match ($sort) {
             'newest' => 'c.published_at DESC, c.id DESC',
             'closing' => 'c.closes_at ASC, c.id ASC',
-            default => 'c.featured DESC, c.published_at DESC, c.id DESC',
+            default => 'c.featured DESC, feature_order ASC, c.published_at DESC, c.id DESC',
         } . ' LIMIT :limit OFFSET :offset';
         $params += ['limit' => $limit + ($cursorMode ? 1 : 0), 'offset' => $cursorMode ? 0 : $offset];
         $types += ['limit' => \Doctrine\DBAL\ParameterType::INTEGER, 'offset' => \Doctrine\DBAL\ParameterType::INTEGER];
@@ -180,7 +181,7 @@ final class CampaignController
             $meta['nextCursor'] = !$hasMore || $last === null ? null : $cursor->encode($request, 'campaign', match ($sort) {
                 'newest' => ['date' => $last->getPublishedAt()->format('Y-m-d H:i:s'), 'id' => $last->getId()],
                 'closing' => ['date' => $last->getClosesAt()->format('Y-m-d H:i:s'), 'id' => $last->getId()],
-                default => ['featured' => $last->isFeatured(), 'published' => $last->getPublishedAt()->format('Y-m-d H:i:s'), 'id' => $last->getId()],
+                default => ['featured' => $last->isFeatured(), 'feature_order' => $last->isFeatured() ? ($last->getFeaturedPosition() ?? 2147483647) : 2147483647, 'published' => $last->getPublishedAt()->format('Y-m-d H:i:s'), 'id' => $last->getId()],
             });
         } else {
             $meta['offset'] = $offset;

@@ -43,8 +43,14 @@
   &__swatch--surface &__swatch { background: var(--surface); }
   &__placement-head h3, &__preview > h3 { margin: 0; font: 600 14px/1.4 'DM Sans', sans-serif; }
   &__placement-head button { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; }
-  &__placement { display: grid; grid-template-columns: 1fr 1fr 44px; gap: 12px; align-items: end; }
-  &__placement button.button { padding: 0; }
+  &__placement { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 48px; gap: 12px; align-items: start; }
+  &__placement > label, &__placement > .form-field { margin: 0; gap: 7px; }
+  &__placement > label > span, &__placement .single-select__label { font-size: 13px; line-height: 20px; }
+  &__placement input, &__placement .single-select__trigger { height: 48px; min-height: 48px; }
+  &__placement button.listing-ads-admin__remove { width: 48px; height: 48px; min-height: 48px; margin-top: 27px; padding: 0; border: 1px solid #b7353566; border-radius: 12px; color: #b73535; background: transparent; }
+  &__placement button.listing-ads-admin__remove:hover:not(:disabled) { background: #b735350a; border-color: #b73535; }
+  &__placement button.listing-ads-admin__remove svg { width: 21px; height: 21px; flex: none; }
+  &__placement button.listing-ads-admin__remove:disabled { opacity: .4; }
   &__preview { position: sticky; top: 0; display: grid; gap: 18px; background: var(--paper); border-radius: 20px; padding: 18px; min-width: 0; }
   &__preview > span { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .12em; color: var(--muted); }
   &__preview .listing-ad { grid-column: auto; }

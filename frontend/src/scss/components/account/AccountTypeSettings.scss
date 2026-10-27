@@ -1,0 +1,7 @@
+.account-type-settings {
+  &__status { display: grid; gap: 8px; padding: 18px; font-size: 13px; color: var(--muted-text); }
+  &__status strong { color: var(--forest); font-size: 14px; }
+  &__status p { margin: 0; white-space: pre-line; overflow-wrap: anywhere; }
+  &__status button { justify-self: start; margin-top: 4px; }
+  &__hint { margin: 0 4px; color: var(--muted-text); font-size: 13px; line-height: 1.6; }
+}

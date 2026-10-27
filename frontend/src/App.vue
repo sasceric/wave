@@ -4,6 +4,7 @@ import { isNavigationFailure, NavigationFailureType, RouterView, useRoute, useRo
 import { I18nT, useI18n } from 'vue-i18n'
 import { ArrowRight, Bell, Heart, LifeBuoy, Building2, ChevronRight, Download, Handshake, House, LogOut, Menu, Megaphone, MessageCircle, UserRound, UsersRound, X } from '@lucide/vue'
 import { registerSW } from 'virtual:pwa-register'
+import ActionToasts from './components/shared/ActionToasts.vue'
 import LanguageSwitcher from './components/shared/LanguageSwitcher.vue'
 import HeaderCreatorSearch from './components/shared/HeaderCreatorSearch.vue'
 import LocalizedLink from './components/shared/LocalizedLink.vue'
@@ -349,6 +350,7 @@ function accountResponseMismatch(recipientId, userId) {
   return true
 }
 
+let lastAccountTypeNotice = 0
 async function loadNotifications() {
   const userId = currentUser.value?.id
   if (!userId) return
@@ -364,6 +366,8 @@ async function loadNotifications() {
       return
     }
     if (accountResponseMismatch(response.userId, userId)) return
+    const changedType = response.data.find(item => item.type === 'account_type_changed' && item.id > lastAccountTypeNotice)
+    if (changedType) { lastAccountTypeNotice = changedType.id; void loadCurrentUser() }
     const refreshed = new Map(response.data.map(item => [item.id, item]))
     // Retain older pages only while the refreshed head overlaps the loaded range.
     // Otherwise five or more arrivals could leave an unseen gap above the old cursor.
@@ -1540,6 +1544,7 @@ async function signOut() {
         <span class="mobile-bottom-nav__label">{{ t('app.profileTab') }}</span>
       </LocalizedLink>
     </nav>
+    <ActionToasts />
   </div>
 </template>
 

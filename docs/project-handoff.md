@@ -852,3 +852,34 @@ reminder at row 2, position 4 links to settings for new-campaign emails. The see
 migrations replace only untouched inactive starters and preserve admin edits;
 the final seeds are repeat-safe. No examples activate automatically. Production's existing
 migration step creates them; there is no separate seed command or tracking script.
+
+## Action feedback and account changes (2026-10-27)
+
+`apiRequest`/`apiUpload` now display shared action toasts for mutation success and
+failure through `lib/actionFeedback.js` and `lib/toasts.js`. Normal reads,
+automatic read acknowledgements, profile view tracking, push subscription sync and
+the admin worker remain silent. Callers can set `feedback: false` or
+`feedback: { success: 'Localized message', error: false }`. Aborts are silent.
+`ActionToasts` renders in a manual popover inside the currently open native dialog
+(or body), keeping feedback above a scrolled modal without taking input focus.
+Messages are capped/deduplicated, dismissible, pause on hover/focus/hidden tabs and
+respect reduced motion. Form-validation failures also receive a toast. Ad actions
+use this shared feedback; persistent loading errors stay inline. Placement rows
+share 48px control heights and have a 21px red trash icon with a red border.
+
+`AccountTypeSettings` and `AdminAccountTypesView` implement reviewed account type
+changes and private company identification fields. See [account type changes](account-type-changes.md)
+for merge, history, notification and active-work constraints. New migration:
+`Version20261027160000`. No account changes automatically during deployment.
+
+
+### Homepage featured rails and positions (2026-10-27)
+
+Homepage returns at most twelve active featured creators, companies and campaigns
+per section. Admin homepage curation saves optional `featuredPositions` maps for
+all three kinds. Smaller positive numbers rank first, blanks follow normal
+recommendations, and explicit directory sorts remain unchanged. Recommended
+keyset cursors include the normalized position, avoiding gaps between batches.
+All cards/links render on initial data load, with native lazy responsive images
+and desktop/mobile CSS scroll rails; no new carousel dependency. Deploy migration
+`Version20261027170000`. See [profile ranking](profile-ranking.md).

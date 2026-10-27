@@ -186,7 +186,7 @@ final class AdminDashboardTest extends WebTestCase
         $this->client->request('GET', '/api/campaigns?locale=en');
         self::assertSame(['listing-old'], array_column($this->payload()['data'], 'slug'));
         $this->client->request('GET', '/api/homepage?locale=en');
-        self::assertSame(['listing-old'], array_column($this->payload()['data']['campaigns'], 'slug'));
+        self::assertSame([], array_column($this->payload()['data']['campaigns'], 'slug'));
         $this->client->request('GET', '/api/campaigns/filters?locale=en');
         self::assertSame([], $this->payload()['data']['countries']);
         $this->client->request('GET', '/api/campaigns/listing-new?locale=en');
@@ -287,7 +287,7 @@ final class AdminDashboardTest extends WebTestCase
         $this->client->request('GET', '/api/homepage?locale=en');
         self::assertResponseIsSuccessful();
         self::assertEqualsCanonicalizing(
-            ['latest-creator', 'featured-creator'],
+            [],
             array_column($this->payload()['data']['creators'], 'slug'),
         );
 

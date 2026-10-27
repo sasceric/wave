@@ -19,6 +19,12 @@ class HomepageSettings
     #[ORM\Column(length: 20, options: ['default' => self::MODE_LATEST])]
     private string $creatorMode = self::MODE_LATEST;
 
+    #[ORM\Column(options: ['default' => false])]
+    private bool $companiesSliderEnabled = false;
+
+    public function isCompaniesSliderEnabled(): bool { return $this->companiesSliderEnabled; }
+    public function setCompaniesSliderEnabled(bool $enabled): void { $this->companiesSliderEnabled = $enabled; }
+
     public function getId(): ?int
     {
         return $this->id;

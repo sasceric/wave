@@ -1,0 +1,11 @@
+.account-type-admin {
+  &__identity { display: flex; gap: 10px; align-items: center; }
+  &__identity img { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; }
+  &__identity > div { display: grid; gap: 4px; }
+  &__identity small { color: var(--muted-text); }
+  &__change { display: inline-flex; align-items: center; gap: 8px; white-space: nowrap; }
+  &__facts { display: grid; gap: 14px; margin: 0; }
+  &__facts div { display: grid; gap: 4px; }
+  &__facts dt { font-size: 12px; color: var(--muted-text); }
+  &__facts dd { margin: 0; font-size: 14px; white-space: pre-line; overflow-wrap: anywhere; }
+}

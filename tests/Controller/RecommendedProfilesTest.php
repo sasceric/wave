@@ -64,7 +64,7 @@ final class RecommendedProfilesTest extends WebTestCase
         self::assertSame(3, $baseline[2]['rating']['completedCampaigns']);
         self::assertNull($baseline[4]['rating']['average']);
         $homepage = $this->get('/api/homepage')['data']['creators'];
-        self::assertSame(array_slice(array_column($baseline, 'slug'), 0, 4), array_column($homepage, 'slug'));
+        self::assertSame(['featured'], array_column($homepage, 'slug'));
         $loaded = [];
         $cursor = null;
         do {
@@ -75,6 +75,57 @@ final class RecommendedProfilesTest extends WebTestCase
         self::assertSame(array_column($baseline, 'slug'), $loaded);
         $filtered = $this->get('/api/creators?sort=recommended&q=complete')['data'];
         self::assertSame(['complete'], array_column($filtered, 'slug'));
+    }
+
+    public function testPositionsChooseTwelveHomepageCardsWhileEveryFeaturedItemRemainsInDirectories(): void
+    {
+        for ($i = 1; $i <= 15; ++$i) {
+            $creator = $this->creator('ordered-creator-'.$i);
+            $company = $this->brand('ordered-company-'.$i);
+            $company->setIndustries(['Travel', 'Beauty', 'Fitness']);
+            $campaign = new Campaign('ordered-campaign-'.$i, 'Campaign '.$i, 'Summary', 'Brief', 'Travel', ['Instagram'], ['Video'], 100, 200, 'Zenica', 1, new \DateTimeImmutable('+7 days'), new \DateTimeImmutable('today'), $company);
+            foreach ([$creator, $company, $campaign] as $item) {
+                $item->setFeatured(true);
+                $item->setFeaturedPosition(16 - $i);
+            }
+            $this->em->persist($campaign);
+        }
+        $unpositioned = $this->creator('unpositioned');
+        $unpositioned->setFeatured(true);
+        $expired = $this->creator('expired-position');
+        $expired->setFeatured(true);
+        $expired->setFeaturedPosition(1);
+        $expired->setFeaturedUntil(new \DateTimeImmutable('2026-10-25 UTC'));
+        $hidden = $this->brand('hidden-position');
+        $hidden->setFeatured(true);
+        $hidden->setFeaturedPosition(1);
+        $hidden->getOwner()->setHideMyAccount(true);
+        $this->em->flush();
+        $initial = $this->get('/api/homepage')['data'];
+        self::assertFalse($initial['companiesSliderEnabled']);
+        self::assertSame([], $initial['companies']);
+        $settings = new \App\Entity\HomepageSettings();
+        $settings->setCompaniesSliderEnabled(true);
+        $this->em->persist($settings);
+        $this->em->flush();
+        $home = $this->get('/api/homepage')['data'];
+        foreach (['creator', 'company', 'campaign'] as $kind) {
+            $key = $kind === 'company' ? 'companies' : $kind.'s';
+            $expected = array_map(static fn (int $i): string => 'ordered-'.$kind.'-'.$i, range(15, 1));
+            self::assertSame(array_slice($expected, 0, 12), array_column($home[$key], 'slug'));
+            $loaded = [];
+            $cursor = null;
+            do {
+                $response = $this->get('/api/'.$key.'?sort=recommended&featured=true&pagination=cursor&limit=2'.($cursor ? '&cursor='.urlencode($cursor) : ''));
+                $loaded = [...$loaded, ...array_column($response['data'], 'slug')];
+                $cursor = $response['meta']['nextCursor'];
+            } while ($cursor);
+            if ($kind === 'creator') $expected[] = 'unpositioned';
+            self::assertSame($expected, $loaded);
+        }
+        self::assertArrayNotHasKey('portfolio', $home['creators'][0]);
+        self::assertArrayNotHasKey('description', $home['campaigns'][0]);
+        self::assertArrayNotHasKey('businessDetails', $home['companies'][0]);
     }
 
     public function testRotationIsRepeatableAndCursorKeepsItsDayAcrossMidnight(): void
@@ -185,10 +236,36 @@ final class RecommendedProfilesTest extends WebTestCase
         $bad['featuredExpirations']['creators'][$creatorId] = '2026-02-30';
         $this->client->jsonRequest('PUT', '/api/admin/homepage', $bad, ['HTTP_X_CSRF_TOKEN' => $token]);
         self::assertResponseStatusCodeSame(400);
+        foreach ([0, -1, 1.5, '2', true, 1000001] as $invalidPosition) {
+            $bad = $body;
+            $bad['featuredPositions'] = ['creators' => [$creatorId => $invalidPosition]];
+            $this->client->jsonRequest('PUT', '/api/admin/homepage', $bad, ['HTTP_X_CSRF_TOKEN' => $token]);
+            self::assertResponseStatusCodeSame(400);
+        }
+        foreach (['true', 1, null] as $invalidToggle) {
+            $bad = $body;
+            $bad['companiesSliderEnabled'] = $invalidToggle;
+            $this->client->jsonRequest('PUT', '/api/admin/homepage', $bad, ['HTTP_X_CSRF_TOKEN' => $token]);
+            self::assertResponseStatusCodeSame(400);
+        }
+        $body['companiesSliderEnabled'] = true;
+        $body['featuredPositions'] = ['creators' => [$creatorId => 2], 'companies' => [$companyId => 1]];
         $this->client->jsonRequest('PUT', '/api/admin/homepage', $body, ['HTTP_X_CSRF_TOKEN' => $token]);
         self::assertResponseIsSuccessful();
         self::assertTrue($this->get('/api/creators?sort=recommended')['data'][0]['featured']);
-        self::assertSame('2026-10-26', $this->get('/api/admin/dashboard?section=homepage')['data']['creators'][0]['featuredUntil']);
+        $saved = $this->get('/api/admin/dashboard?section=homepage')['data'];
+        self::assertSame('2026-10-26', $saved['creators'][0]['featuredUntil']);
+        self::assertTrue($saved['companiesSliderEnabled']);
+        self::assertTrue($this->get('/api/homepage')['data']['companiesSliderEnabled']);
+        self::assertSame(2, $saved['creators'][0]['featuredPosition']);
+        self::assertSame(1, $saved['companies'][0]['featuredPosition']);
+        $body['companiesSliderEnabled'] = false;
+        $this->client->jsonRequest('PUT', '/api/admin/homepage', $body, ['HTTP_X_CSRF_TOKEN' => $token]);
+        self::assertResponseIsSuccessful();
+        $hiddenCompanies = $this->get('/api/homepage')['data'];
+        self::assertFalse($hiddenCompanies['companiesSliderEnabled']);
+        self::assertSame([], $hiddenCompanies['companies']);
+        self::assertTrue($this->get('/api/companies?featured=true')['data'][0]['featured']);
         $this->clock->modify('+1 day');
         self::assertFalse($this->get('/api/creators?sort=recommended')['data'][0]['featured']);
         self::assertSame([], $this->get('/api/homepage')['data']['creators']);

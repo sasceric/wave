@@ -15,19 +15,23 @@ import SegmentedControl from '../components/shared/SegmentedControl.vue'
 import ShortcutTile from '../components/shared/ShortcutTile.vue'
 import StatusMessage from '../components/shared/StatusMessage.vue'
 import CampaignCard from '../components/campaigns/CampaignCard.vue'
+import CompanyCard from '../components/companies/CompanyCard.vue'
 import CreatorCard from '../components/creators/CreatorCard.vue'
 import { currentUser } from '../composables/useCurrentUser'
 import { unreadMessageCount } from '../composables/useUnreadMessages'
 import { apiGet } from '../lib/api'
-import { HOME_IMAGE_SIZES } from '../lib/listingImage'
+import { HOME_IMAGE_SIZES, HOME_COMPANY_IMAGE_SIZES } from '../lib/listingImage'
 import { rememberRegistrationIntent } from '../lib/registrationIntent'
 import { localizedPath } from '../routePaths'
 
 const { t, locale } = useI18n()
 const creators = ref([])
 const campaigns = ref([])
+const companies = ref([])
+const companiesSliderEnabled = ref(false)
 const creatorsError = ref('')
 const campaignsError = ref('')
+const companiesError = ref('')
 const loading = ref(true)
 const creatorMode = ref('latest')
 const contactOpen = ref(false)
@@ -117,14 +121,18 @@ async function loadHome() {
   loading.value = true
   creatorsError.value = ''
   campaignsError.value = ''
+  companiesError.value = ''
   try {
     const response = await apiGet('/homepage')
     creatorMode.value = response.data.creatorMode
     creators.value = response.data.creators
     campaigns.value = response.data.campaigns
+    companies.value = response.data.companies || []
+    companiesSliderEnabled.value = response.data.companiesSliderEnabled === true
   } catch (cause) {
     creatorsError.value = cause.message
     campaignsError.value = cause.message
+    companiesError.value = cause.message
   } finally {
     loading.value = false
   }
@@ -197,6 +205,26 @@ onMounted(loadHome)
       <CampaignCard v-for="campaign in campaigns" :key="campaign.id" :campaign="campaign" :image-sizes="HOME_IMAGE_SIZES" />
       <DirectorySkeletonCard v-for="index in loading && !campaigns.length ? 4 : 0" :key="`loading-${index}`" kind="campaign" />
       <span v-if="loading" class="sr-only" role="status">{{ t('home.loadingCampaigns') }}</span>
+    </CardRow>
+
+    <CardRow
+      v-if="companiesSliderEnabled"
+      class="home-row page-width"
+      kind="company"
+      :title="t('home.companiesRowTitle')"
+      :description="t('home.companiesRowText')"
+      link-to="/companies"
+      :link-label="t('home.allCompanies')"
+      :link-short-label="t('home.allCampaignsShort')"
+      :busy="loading"
+      :show-grid="!companiesError && Boolean(companies.length || loading)"
+    >
+      <template #status>
+        <StatusMessage v-if="companiesError" variant="error">{{ companiesError }}</StatusMessage>
+        <StatusMessage v-else-if="!loading && !companies.length" variant="empty">{{ t('home.emptyCompanies') }}</StatusMessage>
+      </template>
+      <CompanyCard v-for="company in companies" :key="company.id" :company="company" :image-sizes="HOME_COMPANY_IMAGE_SIZES" />
+      <DirectorySkeletonCard v-for="index in loading && !companies.length ? 4 : 0" :key="`company-loading-${index}`" kind="company" />
     </CardRow>
 
     <section v-if="!currentUser" class="home-hero home-hero--statement page-width" aria-labelledby="home-title">

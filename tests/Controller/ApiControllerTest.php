@@ -132,7 +132,7 @@ final class ApiControllerTest extends WebTestCase
         $payload = json_decode($this->client->getResponse()->getContent(), true, flags: JSON_THROW_ON_ERROR);
         $expected = array_column($payload['data']['creators'], 'slug');
         self::assertEqualsCanonicalizing(['highlight-new', 'highlight-old'], array_slice($expected, 0, 2));
-        self::assertEqualsCanonicalizing(['regular-new', 'regular-old'], array_slice($expected, 2));
+        self::assertCount(2, $expected);
         $slugs = [];
         $next = null;
         do {
@@ -142,7 +142,8 @@ final class ApiControllerTest extends WebTestCase
             $slugs = [...$slugs, ...array_column($payload['data'], 'slug')];
             $next = $payload['meta']['nextCursor'];
         } while ($next !== null && count($slugs) < 6);
-        self::assertSame($expected, $slugs);
+        self::assertSame($expected, array_slice($slugs, 0, 2));
+        self::assertEqualsCanonicalizing(['regular-new', 'regular-old'], array_slice($slugs, 2));
         $this->client->request('GET', '/api/creators?sort=newest&limit=4');
         self::assertResponseIsSuccessful();
         $payload = json_decode($this->client->getResponse()->getContent(), true, flags: JSON_THROW_ON_ERROR);
@@ -628,7 +629,7 @@ final class ApiControllerTest extends WebTestCase
         self::assertResponseIsSuccessful();
         $payload = json_decode($this->client->getResponse()->getContent(), true, flags: JSON_THROW_ON_ERROR);
         self::assertSame(
-            ['featured-new', 'featured-old', 'latest-one', 'latest-two'],
+            ['featured-new', 'featured-old'],
             array_column($payload['data']['campaigns'], 'slug'),
         );
     }

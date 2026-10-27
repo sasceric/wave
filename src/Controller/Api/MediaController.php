@@ -305,6 +305,7 @@ final class MediaController
             ->select('COUNT(company.id)')
             ->leftJoin('company.owner', 'owner')
             ->andWhere('(company.logoMedia = :media OR company.coverMedia = :media)')
+            ->andWhere('company.archivedProfile = false')
             ->andWhere('(owner.id IS NULL OR (owner.approved = :approved AND owner.hideMyAccount = :visible))')
             ->setParameter('media', $media)
             ->setParameter('approved', true)

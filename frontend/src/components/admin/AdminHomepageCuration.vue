@@ -2,6 +2,7 @@
 import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { Check, ExternalLink, Sparkles, X } from '@lucide/vue'
+import SwitchField from '../shared/SwitchField.vue'
 import ProfileTabs from '../shared/ProfileTabs.vue'
 import MultiSelect from '../shared/MultiSelect.vue'
 import DatePicker from '../shared/DatePicker.vue'
@@ -9,22 +10,20 @@ import LocalizedLink from '../shared/LocalizedLink.vue'
 import StatusMessage from '../shared/StatusMessage.vue'
 
 const props = defineProps({
-  mode: { type: String, required: true },
+  mode: { type: String, default: 'featured' },
+  companiesSliderEnabled: { type: Boolean, default: false },
   selections: { type: Object, required: true },
   expirations: { type: Object, required: true },
+  positions: { type: Object, required: true },
   catalog: { type: Object, required: true },
   candidates: { type: Object, required: true },
   busy: { type: Boolean, default: false },
   dirty: { type: Boolean, default: false },
 })
-const emit = defineEmits(['mode', 'select', 'expiry', 'search', 'load-more', 'save'])
+const emit = defineEmits(['select', 'expiry', 'position', 'companies-slider', 'search', 'load-more', 'save'])
 const { t } = useI18n()
 const active = ref('creators')
 const tabs = computed(() => ['creators', 'companies', 'campaigns'].map(key => ({ key, label: t(`adminDashboard.${key}`), count: props.selections[key].length })))
-const modes = computed(() => [
-  { key: 'latest', label: t('adminHome.recommendedMode') },
-  { key: 'featured', label: t('adminDashboard.featuredCreators') },
-])
 const selectedRows = computed(() => props.selections[active.value].map(id => props.catalog[active.value].find(row => row.id === id)).filter(Boolean))
 const candidateState = computed(() => props.candidates[active.value])
 const title = row => row.displayName || row.name || row.title
@@ -40,11 +39,8 @@ function route(row) {
 
 <template>
   <section class="admin-home">
-    <p class="admin-home__intro">{{ t('adminHome.intro') }}</p>
-    <div class="admin-home__mode">
-      <div><h2>{{ t('adminDashboard.creatorMode') }}</h2><p>{{ t('adminHome.modeHint') }}</p></div>
-      <ProfileTabs :model-value="mode" :items="modes" :label="t('adminDashboard.creatorMode')" id-prefix="homepage-mode" @update:model-value="emit('mode', $event)" />
-    </div>
+    <p class="admin-home__limit">{{ t('adminHome.homepageLimit') }}</p>
+    <SwitchField class="admin-home__visibility" :model-value="companiesSliderEnabled ? 1 : 0" :label="t('adminHome.companiesSlider')" :description="t('adminHome.companiesSliderHint')" :disabled="busy" @update:model-value="emit('companies-slider', $event === 1)" />
     <div class="admin-home__toolbar">
       <ProfileTabs v-model="active" :items="tabs" :label="t('adminHome.featuredSelection')" id-prefix="homepage-picks" />
     </div>
@@ -79,9 +75,15 @@ function route(row) {
           <img v-if="image(row)" :src="image(row)" alt="" />
           <span v-else class="admin-home__initial" aria-hidden="true">{{ title(row)?.charAt(0) }}</span>
           <div class="admin-home__identity"><strong>{{ title(row) }}</strong><span>{{ subtitle(row) }}</span><LocalizedLink :to="route(row)" target="_blank" rel="noopener">{{ t('adminHome.viewProfile') }}<ExternalLink :size="12" aria-hidden="true" /></LocalizedLink></div>
-          <div v-if="active !== 'campaigns'" class="admin-home__expiry">
-            <DatePicker :model-value="expirations[active]?.[row.id] || ''" :label="t('adminHome.until')" :placeholder="t('adminHome.noExpiry')" :disabled="busy" @update:model-value="emit('expiry', active, row.id, $event)" />
-            <button v-if="expirations[active]?.[row.id]" class="text-link" type="button" :disabled="busy" @click="emit('expiry', active, row.id, '')">{{ t('adminHome.noExpiry') }}</button>
+          <div class="admin-home__settings">
+            <label class="admin-home__position form-field">
+              <span>{{ t('adminHome.position') }}</span>
+              <input :value="positions[active]?.[row.id] ?? ''" type="number" min="1" max="1000000" step="1" :placeholder="t('adminHome.automaticPosition')" :disabled="busy" :aria-label="`${t('adminHome.position')}: ${title(row)}`" @input="emit('position', active, row.id, $event.target.value === '' ? '' : Number($event.target.value))" />
+            </label>
+            <div v-if="active !== 'campaigns'" class="admin-home__expiry">
+              <DatePicker :model-value="expirations[active]?.[row.id] || ''" :label="t('adminHome.until')" :placeholder="t('adminHome.noExpiry')" :disabled="busy" @update:model-value="emit('expiry', active, row.id, $event)" />
+              <button v-if="expirations[active]?.[row.id]" class="text-link" type="button" :disabled="busy" @click="emit('expiry', active, row.id, '')">{{ t('adminHome.noExpiry') }}</button>
+            </div>
           </div>
           <button class="admin-home__remove" type="button" :disabled="busy" :aria-label="t('adminDashboard.removeOption', { name: title(row) })" @click="emit('select', active, selections[active].filter(id => id !== row.id))"><X :size="18" aria-hidden="true" /></button>
         </article>

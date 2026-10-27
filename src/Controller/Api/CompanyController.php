@@ -78,7 +78,7 @@ final class CompanyController
         $rankingJoins = $sort === 'recommended' ? $recommendations->joins('company') : '';
         $baseSql = <<<SQL
             SELECT * FROM (
-                SELECT c.id, $rankingColumns, c.verified, c.name, c.company_type, c.industry, c.about,
+                SELECT c.id, c.archived_profile, $rankingColumns, c.verified, c.name, c.company_type, c.industry, c.about,
                     u.city, u.country_code,
                     COALESCE(i.available_campaign_count, (
                         SELECT COUNT(*) FROM campaign a
@@ -89,10 +89,10 @@ final class CompanyController
                 LEFT JOIN directory_index i ON i.kind = 'company' AND i.entity_id = c.id AND i.indexed_at >= :today
                 $rankingJoins
                 WHERE u.id IS NULL OR (u.approved = TRUE AND u.hide_my_account = FALSE)
-            ) ranked WHERE 1 = 1
+            ) ranked WHERE archived_profile = FALSE
             SQL;
         $countBaseSql = <<<'SQL'
-            SELECT c.id, (c.featured AND (c.featured_until IS NULL OR c.featured_until > :rankingNow)) AS featured, c.verified, c.name, c.company_type, c.industry, c.about,
+            SELECT c.id, c.archived_profile, (c.featured AND (c.featured_until IS NULL OR c.featured_until > :rankingNow)) AS featured, c.verified, c.name, c.company_type, c.industry, c.about,
                 u.city, u.country_code
             FROM company c
             LEFT JOIN wave_user u ON u.id = c.owner_id
@@ -178,6 +178,7 @@ final class CompanyController
         $pageIds = array_column($pageRows, 'id');
         $builder = $entityManager->getRepository(Company::class)->createQueryBuilder('company')
             ->leftJoin('company.owner', 'owner')
+            ->andWhere('company.archivedProfile = false')
             ->andWhere('owner.id IS NULL OR (owner.approved = :approved AND owner.hideMyAccount = :visible)')
             ->setParameter('approved', true)
             ->setParameter('visible', false);
@@ -187,7 +188,7 @@ final class CompanyController
             $builder->andWhere('company.id IN (:pageIds)')->setParameter('pageIds', $pageIds);
         }
         $total = $position !== null ? null : (int) $entityManager->getConnection()->fetchOne(
-            'SELECT COUNT(*) FROM (' . $countBaseSql . ') ranked WHERE 1 = 1' . $filterSql,
+            'SELECT COUNT(*) FROM (' . $countBaseSql . ') ranked WHERE archived_profile = FALSE' . $filterSql,
             $countParams,
             $countParameterTypes,
         );
@@ -272,14 +273,14 @@ final class CompanyController
         if ($locale === null) {
             return new JsonResponse(['error' => ApiMessages::get('unsupported_language', 'bs')], 400);
         }
-        $visible = " FROM company c LEFT JOIN wave_user u ON u.id = c.owner_id WHERE (u.id IS NULL OR (u.approved = TRUE AND u.hide_my_account = FALSE))";
+        $visible = " FROM company c LEFT JOIN wave_user u ON u.id = c.owner_id WHERE c.archived_profile = FALSE AND (u.id IS NULL OR (u.approved = TRUE AND u.hide_my_account = FALSE))";
         $visible .= ' AND '.$this->blocks->visible('u.id');
         $typeCounts = array_column($entityManager->getConnection()->fetchAllAssociative('SELECT c.company_type AS value, COUNT(*) AS count'.$visible.' GROUP BY c.company_type'), 'count', 'value');
         $rows = $entityManager->getConnection()->fetchAllAssociative(
             "SELECT selections.value, COUNT(DISTINCT c.id) AS count, MIN(c.id) AS id FROM company c
                 LEFT JOIN wave_user u ON u.id = c.owner_id
                 JOIN (SELECT company_id, value FROM company_industry UNION SELECT id, industry FROM company) selections ON selections.company_id = c.id
-                WHERE (u.id IS NULL OR (u.approved = TRUE AND u.hide_my_account = FALSE)) AND selections.value <> ''
+                WHERE c.archived_profile = FALSE AND (u.id IS NULL OR (u.approved = TRUE AND u.hide_my_account = FALSE)) AND selections.value <> ''
                 GROUP BY selections.value ORDER BY selections.value LIMIT 200",
         );
         $counts = array_column($rows, 'count', 'value');
@@ -326,6 +327,7 @@ final class CompanyController
             ->getOneOrNullResult();
         $owner = $company instanceof Company ? $company->getOwner() : null;
         if (!$company instanceof Company
+            || ($company->isArchivedProfile() && (!$security->getUser() instanceof \App\Entity\User || $security->getUser() !== $owner) && !$security->isGranted('ROLE_ADMIN'))
             || $owner?->isDeleted() === true
             || ($owner !== null && !$owner->isApproved() && !$security->isGranted('ROLE_ADMIN'))
             || ($owner !== null

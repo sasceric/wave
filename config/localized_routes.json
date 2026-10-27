@@ -60,7 +60,8 @@
     "account-email-preferences": "racun/e-mailovi",
     "account-profile-guide": "racun/vodic-za-profil",
     "terms-of-use": "uslovi-koristenja",
-    "admin-listing-ads": "admin/oglasi-u-listama"
+    "admin-listing-ads": "admin/oglasi-u-listama",
+    "admin-account-types": "admin/promjene-racuna"
   },
   "hr": {
     "login": "prijava",
@@ -123,7 +124,8 @@
     "account-email-preferences": "racun/e-posta",
     "account-profile-guide": "racun/vodic-za-profil",
     "terms-of-use": "uvjeti-koristenja",
-    "admin-listing-ads": "admin/oglasi-u-listama"
+    "admin-listing-ads": "admin/oglasi-u-listama",
+    "admin-account-types": "admin/promjene-racuna"
   },
   "sr": {
     "login": "prijava",
@@ -186,7 +188,8 @@
     "account-email-preferences": "nalog/mejlovi",
     "account-profile-guide": "nalog/vodic-za-profil",
     "terms-of-use": "uslovi-koriscenja",
-    "admin-listing-ads": "admin/oglasi-u-listama"
+    "admin-listing-ads": "admin/oglasi-u-listama",
+    "admin-account-types": "admin/promene-naloga"
   },
   "cnr": {
     "login": "prijava",
@@ -249,7 +252,8 @@
     "account-email-preferences": "nalog/e-mailovi",
     "account-profile-guide": "nalog/vodic-za-profil",
     "terms-of-use": "uslovi-koriscenja",
-    "admin-listing-ads": "admin/oglasi-u-listama"
+    "admin-listing-ads": "admin/oglasi-u-listama",
+    "admin-account-types": "admin/promjene-naloga"
   },
   "sl": {
     "login": "prijava",
@@ -312,7 +316,8 @@
     "account-email-preferences": "racun/e-posta",
     "account-profile-guide": "racun/vodnik-za-profil",
     "terms-of-use": "pogoji-uporabe",
-    "admin-listing-ads": "admin/oglasi-na-seznamih"
+    "admin-listing-ads": "admin/oglasi-na-seznamih",
+    "admin-account-types": "admin/spremembe-racuna"
   },
   "en": {
     "login": "login",
@@ -375,7 +380,8 @@
     "account-email-preferences": "account/emails",
     "account-profile-guide": "account/profile-guide",
     "terms-of-use": "terms-of-use",
-    "admin-listing-ads": "admin/listing-ads"
+    "admin-listing-ads": "admin/listing-ads",
+    "admin-account-types": "admin/account-type-requests"
   },
   "de": {
     "login": "anmelden",
@@ -438,6 +444,7 @@
     "account-email-preferences": "konto/e-mails",
     "account-profile-guide": "konto/profil-leitfaden",
     "terms-of-use": "nutzungsbedingungen",
-    "admin-listing-ads": "admin/listenanzeigen"
+    "admin-listing-ads": "admin/listenanzeigen",
+    "admin-account-types": "admin/kontotyp-anfragen"
   }
 }

@@ -49,6 +49,7 @@ final class SitemapGenerator
         }
         $companies = $this->entityManager->getRepository(Company::class)->createQueryBuilder('company')
             ->leftJoin('company.owner', 'owner')
+            ->andWhere('company.archivedProfile = false')
             ->andWhere('owner.id IS NULL OR (owner.approved = :approved AND owner.hideMyAccount = :visible)')
             ->setParameter('approved', true)
             ->setParameter('visible', false)

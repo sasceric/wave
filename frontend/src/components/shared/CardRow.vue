@@ -64,7 +64,7 @@ function scrollRail(direction) {
   if (!rail) return
   const card = rail.firstElementChild
   const gap = parseFloat(getComputedStyle(rail).columnGap) || 0
-  rail.scrollBy({ left: direction * ((card?.offsetWidth || rail.clientWidth) + gap), behavior: 'smooth' })
+  rail.scrollBy({ left: direction * ((card?.offsetWidth || rail.clientWidth) + gap), behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' })
 }
 
 watch(grid, component => attach(component?.$el ?? null), { flush: 'post' })
