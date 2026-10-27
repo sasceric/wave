@@ -17,6 +17,7 @@ import CookieConsentBanner from './components/shared/CookieConsentBanner.vue'
 import PullToRefresh from './components/shared/PullToRefresh.vue'
 import EmailVerificationNotice from './components/shared/EmailVerificationNotice.vue'
 import { logoutAccount } from './lib/pushSession'
+import { maintenanceState } from './composables/useMaintenance'
 import { currentUser, loadCurrentUser, setCurrentUser } from './composables/useCurrentUser'
 import { useAdminWorker } from './composables/useAdminWorker'
 import { unreadMessageCount } from './composables/useUnreadMessages'
@@ -43,6 +44,12 @@ const NotificationsPanel = defineAsyncComponent(() => import('./components/share
 const MessagesPanel = defineAsyncComponent(() => import('./components/shared/MessagesPanel.vue'))
 
 const route = useRoute()
+const maintenanceBlocked = computed(() => maintenanceState.value?.enabled && !maintenanceState.value?.bypass)
+function maintenanceRequired() {
+  maintenanceState.value = { enabled: true, bypass: false }
+  // Use the server document so an unsaved-form navigation guard cannot leave a blocked tab behind.
+  if (route.meta.routeName !== 'maintenance') window.location.replace(localizedPath('maintenance', locale.value))
+}
 const router = useRouter()
 useAdminWorker(currentUser, route)
 const { locale, t } = useI18n()
@@ -180,6 +187,10 @@ watch(() => route.fullPath, () => {
     void loadUnreadMessages()
   }
 })
+watch(maintenanceBlocked, (blocked, previous) => {
+  if (blocked) closeRealtime()
+  else if (previous && currentUser.value) { void loadNotifications(); void loadUnreadMessages(); void connectRealtime() }
+})
 watch(currentUser, (user, previousUser) => {
   mobileAccountSidebarOpen.value = false
   authMenuOpen.value = false
@@ -308,6 +319,7 @@ onMounted(() => {
   window.addEventListener('appinstalled', onAppInstalled)
   window.addEventListener('wave:conversations-updated', handleConversationsUpdated)
   window.addEventListener('wave:safety-changed', safetyChanged)
+  window.addEventListener('wave:maintenance', maintenanceRequired)
   window.addEventListener('wave:support-read', loadNotifications)
   window.addEventListener('wave:open-notifications', openSidebarNotifications)
   document.addEventListener('pointerdown', closeMobileMenuOnOutsideClick)
@@ -328,6 +340,7 @@ onBeforeUnmount(() => {
   window.removeEventListener('appinstalled', onAppInstalled)
   window.removeEventListener('wave:conversations-updated', handleConversationsUpdated)
   window.removeEventListener('wave:safety-changed', safetyChanged)
+  window.removeEventListener('wave:maintenance', maintenanceRequired)
   window.removeEventListener('wave:support-read', loadNotifications)
   window.removeEventListener('wave:open-notifications', openSidebarNotifications)
   pwaUpdates?.stop()
@@ -352,6 +365,7 @@ function accountResponseMismatch(recipientId, userId) {
 
 let lastAccountTypeNotice = 0
 async function loadNotifications() {
+  if (maintenanceBlocked.value) return
   const userId = currentUser.value?.id
   if (!userId) return
   const requestVersion = ++notificationsRequestVersion
@@ -440,6 +454,7 @@ function closeNotifications() {
 }
 
 async function loadUnreadMessages() {
+  if (maintenanceBlocked.value) return
   const userId = currentUser.value?.id
   if (!userId) {
     unreadMessageCount.value = 0
@@ -521,6 +536,7 @@ function toggleMobileNavigation() {
 }
 
 async function connectRealtime() {
+  if (maintenanceBlocked.value) return
   const userId = currentUser.value?.id
   if (!userId || realtimeSource || realtimeConnecting) return
   const connectionVersion = ++realtimeConnectionVersion
@@ -655,6 +671,7 @@ function scheduleRealtimeRetry() {
 }
 
 async function loadPushSettings() {
+  if (maintenanceBlocked.value) return
   const userId = currentUser.value?.id
   const version = ++pushSettingsVersion
   const isCurrent = () => version === pushSettingsVersion && currentUser.value?.id === userId
@@ -995,6 +1012,7 @@ async function signOut() {
 
 <template>
   <div
+    v-if="route.meta.routeName !== 'maintenance'"
     class="site-shell"
     :class="{
       'site-shell--mobile-chrome-hidden': mobileChromeHidden,
@@ -1213,6 +1231,9 @@ async function signOut() {
     />
 
     <main>
+      <aside v-if="maintenanceState?.enabled && currentUser?.isAdmin" class="maintenance-admin-banner" role="status">
+        <span>{{ t('maintenance.adminBanner') }}</span><LocalizedLink :to="{ name: 'account-settings' }">{{ t('account.sidebarSettings') }}<ArrowRight :size="15" aria-hidden="true" /></LocalizedLink>
+      </aside>
       <EmailVerificationNotice v-if="currentUser?.emailVerified === false" />
       <RouterView v-slot="{ Component }">
         <component :is="Component" v-if="Component" :key="`${currentUser?.id || 'guest'}-${safetyRevision}`" />
@@ -1546,6 +1567,7 @@ async function signOut() {
     </nav>
     <ActionToasts />
   </div>
+  <template v-else><RouterView /><ActionToasts /></template>
 </template>
 
 <style lang="scss" src="./scss/App.scss"></style>

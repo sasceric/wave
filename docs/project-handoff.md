@@ -883,3 +883,14 @@ keyset cursors include the normalized position, avoiding gaps between batches.
 All cards/links render on initial data load, with native lazy responsive images
 and desktop/mobile CSS scroll rails; no new carousel dependency. Deploy migration
 `Version20261027170000`. See [profile ranking](profile-ranking.md).
+
+### Maintenance mode (2026-10-27)
+
+Admin account Settings includes a platform maintenance toggle. Migration
+`Version20261027180000` adds off-by-default `PlatformSettings`. The maintenance
+subscriber checks actual admin access after the firewall, temporarily routes
+public documents to `/odrzavanje` and rejects public API operations with JSON
+503. The maintenance document uses the existing Vue build with 503/Retry-After
+and no-store; admins retain access and login/recovery paths remain available.
+Vue handles both navigation and maintenance responses in already-open tabs.
+No `UrlRedirect` records are created or changed. See [maintenance mode](maintenance-mode.md).

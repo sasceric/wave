@@ -120,7 +120,8 @@
     "account_type_invalid": "Prüfe die Angaben und den gewünschten Kontotyp.",
     "account_type_pendingExists": "Ein Antrag wartet bereits auf Prüfung.",
     "account_type_stale": "Der Antrag wurde bereits bearbeitet oder der Kontotyp geändert. Aktualisiere die Liste.",
-    "account_type_activeWork": "Schließe zuerst aktive Kampagnen und Kooperationen ab, die benötigte Funktionen verlieren würden."
+    "account_type_activeWork": "Schließe zuerst aktive Kampagnen und Kooperationen ab, die benötigte Funktionen verlieren würden.",
+    "maintenance_unavailable": "Wave wird gerade gewartet. Bitte versuche es in Kürze erneut."
   },
   "account": {
     "verify": {

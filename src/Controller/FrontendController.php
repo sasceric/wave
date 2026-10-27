@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Localization\ApiMessages;
 use App\Localization\LocaleContext;
 use App\Service\FrontendAssets;
+use App\Service\MaintenanceMode;
 use App\Service\SeoMetadataProvider;
 use App\Service\SiteOrigin;
 use App\Service\UrlRedirects;
@@ -27,7 +28,7 @@ final class FrontendController
 
     #[Route('/', name: 'frontend_home', methods: ['GET'])]
     #[Route('/{path}', name: 'frontend_route', requirements: ['path' => '.*'], methods: ['GET'], priority: -100)]
-    public function __invoke(Request $request, SeoMetadataProvider $seoMetadataProvider, SiteOrigin $siteOrigin, FrontendAssets $frontendAssets, UrlRedirects $redirects, Security $security): Response
+    public function __invoke(Request $request, SeoMetadataProvider $seoMetadataProvider, SiteOrigin $siteOrigin, FrontendAssets $frontendAssets, UrlRedirects $redirects, Security $security, MaintenanceMode $maintenance): Response
     {
         if (str_starts_with($request->getPathInfo(), '/api')) {
             $locale = LocaleContext::fromRequest($request) ?? 'bs';
@@ -35,7 +36,8 @@ final class FrontendController
             return new JsonResponse(['error' => ApiMessages::get('unknown_endpoint', $locale)], 404);
         }
 
-        if ($target = $redirects->resolve($request->getPathInfo(), $request->server->getString('QUERY_STRING'))) {
+        $maintenancePage = $request->getPathInfo() === '/odrzavanje';
+        if (!$maintenancePage && ($target = $redirects->resolve($request->getPathInfo(), $request->server->getString('QUERY_STRING')))) {
             return new RedirectResponse($target, Response::HTTP_MOVED_PERMANENTLY, ['Cache-Control' => 'no-store']);
         }
 
@@ -60,6 +62,10 @@ final class FrontendController
             throw new ServiceUnavailableHttpException(null, 'Unable to read the built Vue app.');
         }
 
+        $maintenanceResponse = $maintenancePage && $maintenance->enabled() && !$security->isGranted('ROLE_ADMIN');
+        $headers = ['Content-Type' => 'text/html; charset=UTF-8'];
+        if ($maintenancePage) $headers += ['Cache-Control' => 'private, no-store', 'X-Robots-Tag' => 'noindex, nofollow'];
+        if ($maintenanceResponse) $headers['Retry-After'] = '60';
         return new Response(
             $this->injectSeoMetadata(
                 $html,
@@ -69,8 +75,8 @@ final class FrontendController
                 $this->googleSiteVerification,
                 ($seo['homepageStyles'] ?? false) === true ? $frontendAssets->homepageStyles() : [],
             ),
-            $seo['canonical'] === null ? Response::HTTP_NOT_FOUND : Response::HTTP_OK,
-            ['Content-Type' => 'text/html; charset=UTF-8'],
+            $maintenanceResponse ? Response::HTTP_SERVICE_UNAVAILABLE : ($seo['canonical'] === null ? Response::HTTP_NOT_FOUND : Response::HTTP_OK),
+            $headers,
         );
     }
 

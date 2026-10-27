@@ -168,7 +168,7 @@ final class UrlRedirects
     private function publicPath(string $path, ?string $name): bool
     {
         if ($name !== null && ($name === 'account' || str_starts_with($name, 'account-') || $name === 'admin' || str_starts_with($name, 'admin-')
-            || in_array($name, ['login', 'register', 'forgot-password', 'messages', 'verify-email', 'reset-password', 'moderation', 'support-create', 'support-track'], true))) {
+            || in_array($name, ['maintenance', 'login', 'register', 'forgot-password', 'messages', 'verify-email', 'reset-password', 'moderation', 'support-create', 'support-track'], true))) {
             return false;
         }
         $unprefixed = preg_replace('~^/(?:hr|rs|me|si|en|de|sr|cnr|sl)(?=/)~', '', $path) ?? $path;

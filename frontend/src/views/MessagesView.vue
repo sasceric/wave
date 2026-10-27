@@ -1042,6 +1042,7 @@ async function sendMessage(event) {
         {
           method: 'POST',
           body: { creatorId: target.creatorId, message: body },
+          feedback: { success: false },
         },
       )
       if (!isCurrentSend()) return
@@ -1058,7 +1059,7 @@ async function sendMessage(event) {
     } else if (selectedInquiryId.value !== null) {
       const response = await apiRequest(
         `/me/inquiries/${selectedInquiryId.value}/messages`,
-        { method: 'POST', body: { body, replyToId } },
+        { method: 'POST', body: { body, replyToId }, feedback: { success: false } },
       )
       if (!isCurrentSend()) return
       mergeMessages([response.data])
@@ -1072,7 +1073,7 @@ async function sendMessage(event) {
     } else if (selectedConversationId.value !== null) {
       const response = await apiRequest(
         `/me/conversations/${selectedConversationId.value}/messages`,
-        { method: 'POST', body: { body, replyToId } },
+        { method: 'POST', body: { body, replyToId }, feedback: { success: false } },
       )
       if (!isCurrentSend()) return
       mergeMessages([response.data])

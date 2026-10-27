@@ -39,7 +39,9 @@
     "verifyEmailTitle": "Verify your email | Wave",
     "resetPasswordTitle": "Reset password | Wave",
     "messagesTitle": "Messages | Wave",
-    "termsDescription": "Rules for accounts, content and collaborations on Wave."
+    "termsDescription": "Rules for accounts, content and collaborations on Wave.",
+    "maintenanceTitle": "A short pause. A better Wave.",
+    "maintenanceDescription": "We’re improving Wave to make your next collaboration even simpler. We’ll be back soon. Thanks for your patience."
   },
   "legal": {
     "eyebrow": "LEGAL",
@@ -4128,5 +4130,26 @@
     "pendingExists": "A request is already awaiting review.",
     "stale": "This request was already reviewed or the account type changed. Refresh the list.",
     "activeWork": "First finish active campaigns and collaborations that would lose required tools after this change."
+  },
+  "maintenance": {
+    "settingsTitle": "Platform maintenance",
+    "toggle": "Maintenance mode",
+    "settingsHint": "Visitors see the maintenance page and their actions are temporarily paused. Admins keep access and can turn this mode off.",
+    "preview": "Preview maintenance page",
+    "enabledNotice": "Maintenance mode is on.",
+    "disabledNotice": "Maintenance mode is off.",
+    "status": "A short pause",
+    "eyebrow": "A LITTLE CARE, A BETTER WAVE",
+    "title": "A short pause.",
+    "titleEmphasis": "A better Wave.",
+    "description": "We’re improving Wave to make your next collaboration even simpler. We’ll be back soon. Thanks for your patience.",
+    "retry": "Check again",
+    "checking": "Checking…",
+    "contact": "Contact us",
+    "stillActive": "We’re still working on Wave. Please try again a little later.",
+    "adminBack": "Back to settings",
+    "footer": "Good collaborations deserve a little care.",
+    "adminLogin": "Admin sign-in",
+    "adminBanner": "Maintenance mode is on. Visitors cannot use Wave right now."
   }
 }

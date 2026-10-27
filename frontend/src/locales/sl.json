@@ -39,7 +39,9 @@
     "verifyEmailTitle": "Potrditev e-poštnega naslova | Wave",
     "resetPasswordTitle": "Novo geslo | Wave",
     "messagesTitle": "Sporočila | Wave",
-    "termsDescription": "Pravila za račune, vsebino in sodelovanja na Waveu."
+    "termsDescription": "Pravila za račune, vsebino in sodelovanja na Waveu.",
+    "maintenanceTitle": "Kratek premor. Boljši Wave.",
+    "maintenanceDescription": "Wave izboljšujemo, da bodo tvoja naslednja sodelovanja še preprostejša. Kmalu se vrnemo. Hvala za potrpljenje."
   },
   "legal": {
     "eyebrow": "PRAVNE INFORMACIJE",
@@ -4129,5 +4131,26 @@
     "pendingExists": "Zahteva že čaka na pregled.",
     "stale": "Zahteva je že obdelana ali pa se je vrsta računa spremenila. Osveži seznam.",
     "activeWork": "Najprej zaključi aktivne kampanje in sodelovanja, ki bi izgubila potrebna orodja."
+  },
+  "maintenance": {
+    "settingsTitle": "Vzdrževanje platforme",
+    "toggle": "Način vzdrževanja",
+    "settingsHint": "Obiskovalci vidijo stran za vzdrževanje, njihova dejanja pa so začasno ustavljena. Skrbniki ohranijo dostop in lahko ta način izklopijo.",
+    "preview": "Predogled strani za vzdrževanje",
+    "enabledNotice": "Način vzdrževanja je vklopljen.",
+    "disabledNotice": "Način vzdrževanja je izklopljen.",
+    "status": "Kratek premor",
+    "eyebrow": "PRIPRAVLJAMO IZBOLJŠAVE",
+    "title": "Kratek premor.",
+    "titleEmphasis": "Boljši Wave.",
+    "description": "Wave izboljšujemo, da bodo tvoja naslednja sodelovanja še preprostejša. Kmalu se vrnemo. Hvala za potrpljenje.",
+    "retry": "Preveri znova",
+    "checking": "Preverjamo…",
+    "contact": "Piši nam",
+    "stillActive": "Vzdrževanje še poteka. Poskusi znova malo pozneje.",
+    "adminBack": "Nazaj v nastavitve",
+    "footer": "Dobra sodelovanja si zaslužijo malo pozornosti.",
+    "adminLogin": "Prijava za skrbnike",
+    "adminBanner": "Način vzdrževanja je vklopljen. Obiskovalci trenutno ne morejo uporabljati Wavea."
   }
 }

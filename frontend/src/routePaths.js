@@ -27,6 +27,8 @@ export function localizedPath(name, locale, params = {}) {
 export function routeNameFromCanonicalPath(path) {
   const staticRoutes = {
     '/': 'home',
+    '/maintenance': 'maintenance',
+    '/odrzavanje': 'maintenance',
     '/account': 'account',
     '/login': 'login',
     '/register': 'register',

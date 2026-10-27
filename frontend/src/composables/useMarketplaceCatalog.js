@@ -1,7 +1,7 @@
-import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { onBeforeUnmount, onMounted, ref, toValue, watch } from 'vue'
 import { apiGet } from '../lib/api'
 
-export function useMarketplaceCatalog(locale, { includeFaqs = false, includeIndustries = false } = {}) {
+export function useMarketplaceCatalog(locale, { includeFaqs = false, includeIndustries = false, enabled = true } = {}) {
   const industries = ref([])
   const categories = ref([])
   const faqs = ref([])
@@ -11,8 +11,12 @@ export function useMarketplaceCatalog(locale, { includeFaqs = false, includeIndu
 
   async function load() {
     const currentRequestVersion = ++requestVersion
-    loading.value = true
     error.value = ''
+    if (!toValue(enabled)) {
+      loading.value = false
+      return
+    }
+    loading.value = true
 
     try {
       const requests = [apiGet('/marketplace/categories')]
@@ -38,7 +42,7 @@ export function useMarketplaceCatalog(locale, { includeFaqs = false, includeIndu
     }
   }
 
-  watch(locale, load)
+  watch([locale, () => toValue(enabled)], load)
   onMounted(load)
   onBeforeUnmount(() => {
     requestVersion += 1

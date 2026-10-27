@@ -5,6 +5,38 @@ import { test } from 'node:test'
 import * as vue from 'vue'
 import { setupView } from './setupView.js'
 
+test('chat messages and replies send quietly in both campaign and direct chats', async () => {
+  for (const kind of ['campaign', 'inquiry']) {
+    const requests = []
+    const { state } = await setupView('../src/views/MessagesView.vue', {
+      '../lib/api': {
+        apiGet: async () => {}, formatDate: () => '', formatMoney: () => '',
+        apiRequest: async (path, options) => {
+          requests.push({ path, ...options })
+          return { data: { id: 10, body: options.body.body, senderId: 1, createdAt: '2026-10-27T12:00:00Z' } }
+        },
+      },
+    })
+    if (kind === 'campaign') {
+      state.conversations.value = [{ id: 1, campaign: { status: 'open' } }]
+      state.selectedConversationId.value = 1
+    } else {
+      state.inquiries.value = [{ id: 1, status: 'accepted' }]
+      state.selectedInquiryId.value = 1
+    }
+    state.draft.value = 'My reply'
+    state.replyingTo.value = { id: 5 }
+    await state.sendMessage()
+    assert.equal(requests.length, 1)
+    assert.equal(requests[0].feedback.success, false)
+    assert.notEqual(requests[0].feedback.error, false)
+    assert.equal(requests[0].body.replyToId, 5)
+    assert.equal(state.conversationMessages.value[0].body, 'My reply')
+    assert.equal(state.draft.value, '')
+    assert.equal(state.error.value, '')
+  }
+})
+
 test('closed and finished campaigns block sending drafts, while open campaigns and direct inquiries can send', async () => {
   const requests = []
   const { state } = await setupView('../src/views/MessagesView.vue', {

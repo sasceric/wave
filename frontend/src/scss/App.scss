@@ -857,3 +857,10 @@
     }
   }
 }
+
+
+.maintenance-admin-banner {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 8px 20px;
+  padding: 12px 24px; border-bottom: 1px solid #d5806440; background: #d5806415; color: var(--forest); font-size: 13px;
+  a { display: inline-flex; align-items: center; gap: 5px; color: inherit; font-weight: 600; text-decoration: none; }
+}

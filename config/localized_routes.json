@@ -61,7 +61,8 @@
     "account-profile-guide": "racun/vodic-za-profil",
     "terms-of-use": "uslovi-koristenja",
     "admin-listing-ads": "admin/oglasi-u-listama",
-    "admin-account-types": "admin/promjene-racuna"
+    "admin-account-types": "admin/promjene-racuna",
+    "maintenance": "odrzavanje"
   },
   "hr": {
     "login": "prijava",
@@ -125,7 +126,8 @@
     "account-profile-guide": "racun/vodic-za-profil",
     "terms-of-use": "uvjeti-koristenja",
     "admin-listing-ads": "admin/oglasi-u-listama",
-    "admin-account-types": "admin/promjene-racuna"
+    "admin-account-types": "admin/promjene-racuna",
+    "maintenance": "odrzavanje"
   },
   "sr": {
     "login": "prijava",
@@ -189,7 +191,8 @@
     "account-profile-guide": "nalog/vodic-za-profil",
     "terms-of-use": "uslovi-koriscenja",
     "admin-listing-ads": "admin/oglasi-u-listama",
-    "admin-account-types": "admin/promene-naloga"
+    "admin-account-types": "admin/promene-naloga",
+    "maintenance": "odrzavanje"
   },
   "cnr": {
     "login": "prijava",
@@ -253,7 +256,8 @@
     "account-profile-guide": "nalog/vodic-za-profil",
     "terms-of-use": "uslovi-koriscenja",
     "admin-listing-ads": "admin/oglasi-u-listama",
-    "admin-account-types": "admin/promjene-naloga"
+    "admin-account-types": "admin/promjene-naloga",
+    "maintenance": "odrzavanje"
   },
   "sl": {
     "login": "prijava",
@@ -317,7 +321,8 @@
     "account-profile-guide": "racun/vodnik-za-profil",
     "terms-of-use": "pogoji-uporabe",
     "admin-listing-ads": "admin/oglasi-na-seznamih",
-    "admin-account-types": "admin/spremembe-racuna"
+    "admin-account-types": "admin/spremembe-racuna",
+    "maintenance": "odrzavanje"
   },
   "en": {
     "login": "login",
@@ -381,7 +386,8 @@
     "account-profile-guide": "account/profile-guide",
     "terms-of-use": "terms-of-use",
     "admin-listing-ads": "admin/listing-ads",
-    "admin-account-types": "admin/account-type-requests"
+    "admin-account-types": "admin/account-type-requests",
+    "maintenance": "odrzavanje"
   },
   "de": {
     "login": "anmelden",
@@ -445,6 +451,7 @@
     "account-profile-guide": "konto/profil-leitfaden",
     "terms-of-use": "nutzungsbedingungen",
     "admin-listing-ads": "admin/listenanzeigen",
-    "admin-account-types": "admin/kontotyp-anfragen"
+    "admin-account-types": "admin/kontotyp-anfragen",
+    "maintenance": "odrzavanje"
   }
 }

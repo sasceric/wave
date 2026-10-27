@@ -67,7 +67,11 @@ const companyTypes = computed(() => companyTypeOptions(t))
 const typeOptions = computed(() => creatorTypeOptions(t))
 const route = useRoute()
 const router = useRouter()
-const { categories, industries: catalogIndustries, error: catalogError } = useMarketplaceCatalog(locale, { includeIndustries: true })
+const { categories, industries: catalogIndustries, error: catalogError } = useMarketplaceCatalog(locale, {
+  includeIndustries: true,
+  // Sign-in/recovery must not depend on public APIs, including during maintenance.
+  enabled: () => !route.meta.authMode,
+})
 const companyIndustryOptions = computed(() => {
   const options = catalogIndustries?.value || []
   return [...options, ...(profile.value?.industries || []).filter((value) => !options.some((option) => option.value === value)).map((value) => ({ value, label: profile.value.industryLabels?.[profile.value.industries.indexOf(value)] || value }))]

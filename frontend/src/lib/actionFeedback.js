@@ -16,7 +16,7 @@ export function hasActionFeedback(path, method = 'GET', feedback) {
 }
 
 export function actionFeedback(path, method, feedback, payload, error = null) {
-  if (!hasActionFeedback(path, method, feedback) || error?.name === 'AbortError') return
+  if (!hasActionFeedback(path, method, feedback) || error?.name === 'AbortError' || error?.code === 'maintenance') return
   const settings = feedback && typeof feedback === 'object' ? feedback : {}
   if (error) {
     if (settings.error === false) return

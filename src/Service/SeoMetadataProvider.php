@@ -72,10 +72,11 @@ final class SeoMetadataProvider
             || str_starts_with($name, 'account-')
             || $name === 'admin'
             || str_starts_with($name, 'admin-')
-            || in_array($name, ['login', 'register', 'forgot-password', 'support-create', 'support-track', 'messages', 'verify-email', 'reset-password', 'moderation'], true);
+            || in_array($name, ['maintenance', 'login', 'register', 'forgot-password', 'support-create', 'support-track', 'messages', 'verify-email', 'reset-password', 'moderation'], true);
         $titleKey = match ($name) {
             'support', 'support-create', 'support-track' => 'supportTitle',
             'home' => 'homeTitle',
+            'maintenance' => 'maintenanceTitle',
             'creators', 'creator-profile' => 'creatorsTitle',
             'companies', 'company-profile' => 'companiesTitle',
             'campaigns', 'campaign-detail' => 'campaignsTitle',
@@ -87,6 +88,7 @@ final class SeoMetadataProvider
         $descriptionKey = match ($name) {
             'support', 'support-create', 'support-track' => 'supportDescription',
             'home' => 'homeDescription',
+            'maintenance' => 'maintenanceDescription',
             'creators', 'creator-profile' => 'creatorsDescription',
             'companies', 'company-profile' => 'companiesDescription',
             'campaigns', 'campaign-detail' => 'campaignsDescription',
@@ -121,6 +123,11 @@ final class SeoMetadataProvider
         $indexable = !$private && !$searchResults;
         if ($name === 'search') $description = $this->catalogs[$locale]['seo']['searchDescription'];
         $contentHtml = null;
+        if ($name === 'maintenance') {
+            $copy = $this->catalogs[$locale]['maintenance'];
+            $escape = static fn (string $text): string => htmlspecialchars($text, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+            $contentHtml = '<main><h1>'.$escape($copy['title']).'</h1><p>'.$escape($copy['description']).'</p></main>';
+        }
 
         if ($name === 'country-creators') {
             $copy = $regionalCopy['countries'][$countryCode];

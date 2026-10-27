@@ -6,6 +6,7 @@ final class ApiMessages
 {
     private const MESSAGES = [
         'bs' => [
+            'maintenance_unavailable' => 'Wave je trenutno na održavanju. Pokušaj ponovo uskoro.',
             'account_type_change_requested' => 'Novi zahtjev za promjenu vrste računa.',
             'account_type_changed' => 'Vrsta tvog računa je promijenjena. Pregledaj svoj profil.',
             'account_type_change_rejected' => 'Zahtjev za promjenu vrste računa je odbijen. Pogledaj odgovor u postavkama.',
@@ -129,6 +130,7 @@ final class ApiMessages
             'newsletter_email_failed' => 'Potvrdni e-mail nije poslan. Pokušaj ponovo kasnije.',
         ],
         'hr' => [
+            'maintenance_unavailable' => 'Wave je trenutačno na održavanju. Pokušaj ponovno uskoro.',
             'account_type_change_requested' => 'Novi zahtjev za promjenu vrste računa.',
             'account_type_changed' => 'Vrsta tvog računa je promijenjena. Pregledaj svoj profil.',
             'account_type_change_rejected' => 'Zahtjev za promjenu vrste računa je odbijen. Pogledaj odgovor u postavkama.',
@@ -252,6 +254,7 @@ final class ApiMessages
             'newsletter_email_failed' => 'Potvrdna e-pošta nije poslana. Pokušaj ponovno kasnije.',
         ],
         'sr' => [
+            'maintenance_unavailable' => 'Wave je trenutno na održavanju. Pokušaj ponovo uskoro.',
             'account_type_change_requested' => 'Novi zahtev za promenu vrste naloga.',
             'account_type_changed' => 'Vrsta tvog naloga je promenjena. Pregledaj svoj profil.',
             'account_type_change_rejected' => 'Zahtev za promenu vrste naloga je odbijen. Pogledaj odgovor u podešavanjima.',
@@ -375,6 +378,7 @@ final class ApiMessages
             'newsletter_email_failed' => 'Potvrdni e-mail nije poslat. Pokušaj ponovo kasnije.',
         ],
         'cnr' => [
+            'maintenance_unavailable' => 'Wave je trenutno na održavanju. Pokušaj ponovo uskoro.',
             'account_type_change_requested' => 'Novi zahtjev za promjenu vrste naloga.',
             'account_type_changed' => 'Vrsta tvog naloga je promijenjena. Pregledaj svoj profil.',
             'account_type_change_rejected' => 'Zahtjev za promjenu vrste naloga je odbijen. Pogledaj odgovor u postavkama.',
@@ -498,6 +502,7 @@ final class ApiMessages
             'newsletter_email_failed' => 'Potvrdni e-mail nije poslat. Pokušaj ponovo kasnije.',
         ],
         'sl' => [
+            'maintenance_unavailable' => 'Wave je trenutno v vzdrževanju. Kmalu poskusi znova.',
             'account_type_change_requested' => 'Nova zahteva za spremembo vrste računa.',
             'account_type_changed' => 'Vrsta tvojega računa je spremenjena. Preglej svoj profil.',
             'account_type_change_rejected' => 'Zahteva za spremembo vrste računa je zavrnjena. Odgovor je v nastavitvah.',
@@ -621,6 +626,7 @@ final class ApiMessages
             'newsletter_email_failed' => 'Potrditvenega e-poštnega sporočila ni bilo mogoče poslati. Poskusi znova pozneje.',
         ],
         'en' => [
+            'maintenance_unavailable' => 'Wave is temporarily down for maintenance. Please try again soon.',
             'account_type_change_requested' => 'New account type change request.',
             'account_type_changed' => 'Your account type has changed. Review your profile.',
             'account_type_change_rejected' => 'Your account type change request was rejected. See the response in settings.',

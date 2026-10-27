@@ -40,8 +40,15 @@ export async function apiRequest(path, { feedback, ...options } = {}) {
     actionFeedback(path, method, feedback, payload)
     return payload
   } catch (error) {
+    notifyMaintenance(error)
     actionFeedback(path, method, feedback, null, error)
     throw error
+  }
+}
+
+function notifyMaintenance(error) {
+  if (error?.code === 'maintenance' && typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent('wave:maintenance'))
   }
 }
 
@@ -62,7 +69,7 @@ async function request(path, { method = 'GET', body, locale, signal } = {}) {
     method,
     headers,
     credentials: 'same-origin',
-    cache: path.startsWith('/auth/') ? 'no-store' : 'default',
+    cache: path.startsWith('/auth/') || path === '/maintenance' ? 'no-store' : 'default',
     signal,
     body: body === undefined ? undefined : multipart ? body : JSON.stringify(body),
   })
@@ -103,6 +110,7 @@ export async function apiUpload(path, file, { feedback } = {}) {
     actionFeedback(path, 'POST', feedback, payload)
     return payload
   } catch (error) {
+    notifyMaintenance(error)
     actionFeedback(path, 'POST', feedback, null, error)
     throw error
   }
@@ -134,6 +142,7 @@ async function upload(path, file) {
     if (response.status === 403) csrfToken = ''
     const error = new Error(payload.error || i18n.global.t('api.requestFailed', { status: response.status }))
     error.status = response.status
+    error.code = typeof payload.code === 'string' ? payload.code : null
     throw error
   }
 

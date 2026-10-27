@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { localeNames, setLocale } from './i18n'
 import { defaultLocale, localizedPath, localizedRouteName, routeSegments, localePrefixes, isSharedRoute, legacyLocalizedDetailPath } from './routePaths'
+import { loadMaintenance, maintenanceDestination, maintenanceState } from './composables/useMaintenance'
 import { ensureCurrentUser } from './composables/useCurrentUser'
 import { accountAccessRedirect, accountLanding } from './lib/accountAccess'
 import { resolvePublicRedirect } from './lib/publicRedirects'
@@ -25,6 +26,7 @@ const routeViews = {
   'admin-support': () => import('./views/TicketInboxView.vue'),
   'account-support': () => import('./views/TicketInboxView.vue'),
   home: () => import('./views/HomeView.vue'),
+  maintenance: () => import('./views/MaintenanceView.vue'),
   'country-creators': () => import('./views/CountryCreatorsView.vue'),
   'seo-guides': () => import('./views/SeoGuidesView.vue'),
   'seo-guide': () => import('./views/SeoGuidesView.vue'),
@@ -144,6 +146,7 @@ const localizedRoutes = Object.entries(routeSegments).flatMap(([locale, routes])
 ))
 
 const legacyPaths = [
+  ['/maintenance', 'maintenance'],
   ['/account', 'account'],
   ['/login', 'login'],
   ['/register', 'register'],
@@ -245,6 +248,11 @@ router.beforeEach(async (to, from) => {
   }
   let user
   try { user = await ensureCurrentUser() } catch { /* The page API retains its access/error checks. */ }
+  let maintenance = maintenanceState.value
+  try { maintenance = await loadMaintenance() } catch { /* Server access checks still enforce maintenance; offline pages remain usable. */ }
+  const maintenanceGate = maintenanceDestination(to, maintenance)
+  if (maintenanceGate) return { ...maintenanceGate, name: localizedRouteName(maintenanceGate.name, navigationLocale) }
+  if (to.meta.routeName === 'maintenance') return
   if (['account', 'account-dashboard', 'login', 'register'].includes(to.meta.routeName) && !to.query.bookmark) {
     const pendingReturn = registrationReturn(user)
     if (pendingReturn) return pendingReturn

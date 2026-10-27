@@ -39,7 +39,9 @@
     "verifyEmailTitle": "E-Mail bestätigen | Wave",
     "resetPasswordTitle": "Passwort zurücksetzen | Wave",
     "messagesTitle": "Nachrichten | Wave",
-    "termsDescription": "Regeln für Konten, Inhalte und Kooperationen auf Wave."
+    "termsDescription": "Regeln für Konten, Inhalte und Kooperationen auf Wave.",
+    "maintenanceTitle": "Eine kurze Pause. Ein besseres Wave.",
+    "maintenanceDescription": "Wir verbessern Wave, damit deine nächste Kooperation noch einfacher wird. Wir sind bald zurück. Danke für deine Geduld."
   },
   "legal": {
     "eyebrow": "RECHTLICHES",
@@ -4128,5 +4130,26 @@
     "pendingExists": "Ein Antrag wartet bereits auf Prüfung.",
     "stale": "Der Antrag wurde bereits bearbeitet oder der Kontotyp geändert. Aktualisiere die Liste.",
     "activeWork": "Schließe zuerst aktive Kampagnen und Kooperationen ab, die benötigte Funktionen verlieren würden."
+  },
+  "maintenance": {
+    "settingsTitle": "Plattformwartung",
+    "toggle": "Wartungsmodus",
+    "settingsHint": "Besucher sehen die Wartungsseite und ihre Aktionen werden vorübergehend pausiert. Administratoren behalten Zugriff und können diesen Modus ausschalten.",
+    "preview": "Wartungsseite ansehen",
+    "enabledNotice": "Der Wartungsmodus ist eingeschaltet.",
+    "disabledNotice": "Der Wartungsmodus ist ausgeschaltet.",
+    "status": "Eine kurze Pause",
+    "eyebrow": "WIR VERBESSERN WAVE",
+    "title": "Eine kurze Pause.",
+    "titleEmphasis": "Ein besseres Wave.",
+    "description": "Wir verbessern Wave, damit deine nächste Kooperation noch einfacher wird. Wir sind bald zurück. Danke für deine Geduld.",
+    "retry": "Erneut prüfen",
+    "checking": "Wird geprüft…",
+    "contact": "Schreib uns",
+    "stillActive": "Die Wartung läuft noch. Bitte versuche es etwas später erneut.",
+    "adminBack": "Zurück zu den Einstellungen",
+    "footer": "Gute Kooperationen verdienen etwas Aufmerksamkeit.",
+    "adminLogin": "Anmeldung für Administratoren",
+    "adminBanner": "Der Wartungsmodus ist eingeschaltet. Besucher können Wave derzeit nicht nutzen."
   }
 }

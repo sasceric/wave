@@ -154,6 +154,7 @@ final class LocalizedRouteMap
     private function resolveLegacyEnglishPath(string $path): ?array
     {
         $legacyRoutes = [
+            '/maintenance' => 'maintenance',
             '/account' => 'account',
             '/login' => 'login',
             '/register' => 'register',

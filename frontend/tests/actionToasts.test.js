@@ -85,5 +85,17 @@ test('server placement errors, custom save messages and aborts produce exactly t
   actionFeedback('/admin/listing-ads/campaigns/3', 'PUT', { success: 'Oglas je sačuvan.' }, null, error)
   actionFeedback('/admin/listing-ads/campaigns/3', 'PUT', { success: 'Oglas je sačuvan.' }, {})
   actionFeedback('/me/profile', 'PUT', undefined, null, { name: 'AbortError' })
+  actionFeedback('/me/profile', 'PUT', undefined, null, { code: 'maintenance', message: 'Maintenance' })
   assert.deepEqual(calls, [[error.message, 'error'], ['Oglas je sačuvan.', 'success']])
+})
+
+test('chat sends can suppress success toasts while still reporting failed sends', async () => {
+  const { actionFeedback, calls } = await feedback()
+  const settings = { success: false }
+  actionFeedback('/me/conversations/1/messages', 'POST', settings, { message: 'Sent' })
+  actionFeedback('/me/inquiries/2/messages', 'POST', settings, {})
+  actionFeedback('/company/campaigns/example/conversations', 'POST', settings, {})
+  assert.equal(calls.length, 0)
+  actionFeedback('/me/conversations/1/messages', 'POST', settings, null, new Error('Message could not be sent'))
+  assert.deepEqual(calls, [['Message could not be sent', 'error']])
 })

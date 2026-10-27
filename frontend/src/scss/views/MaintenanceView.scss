@@ -1,0 +1,61 @@
+.maintenance-page {
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+  padding: 36px max(24px, calc((100vw - 1160px) / 2));
+  background: var(--paper);
+  color: var(--forest);
+  &__header, &__footer { display: flex; align-items: center; justify-content: space-between; gap: 20px; }
+  &__header .wordmark { width: 126px; }
+  &__status { display: inline-flex; align-items: center; gap: 9px; padding: 10px 14px; border: 1px solid var(--hairline); border-radius: 24px; background: var(--card); font-size: 12px; }
+  &__status > span { width: 7px; height: 7px; border-radius: 50%; background: var(--coral); box-shadow: 0 0 0 4px #d5806420; }
+  &__main { flex: 1; display: grid; grid-template-columns: .9fr 1.1fr; align-items: center; gap: 80px; padding-block: 64px; }
+  &__copy { max-width: 550px; }
+  &__eyebrow { margin: 0 0 20px; color: var(--coral-text); font-size: 11px; font-weight: 600; letter-spacing: .16em; text-transform: uppercase; }
+  h1 { margin: 0; font-family: var(--serif); font-size: clamp(42px, 5vw, 68px); font-weight: 400; line-height: 1.08; letter-spacing: -.025em; text-wrap: balance; }
+  h1 em { display: block; color: var(--coral-text); font-weight: 400; }
+  &__description { max-width: 44ch; margin: 24px 0 30px; color: var(--muted-text); font-size: 16px; line-height: 1.75; }
+  &__actions { display: flex; flex-wrap: wrap; align-items: center; gap: 20px; }
+  &__actions .button { display: inline-flex; gap: 9px; align-items: center; min-height: 48px; font-size: 14px; }
+  &__contact, &__admin { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; color: var(--forest); font-size: 14px; font-weight: 600; text-decoration: none; }
+  &__admin { margin-top: 22px; }
+  &__contact:hover, &__admin:hover { text-decoration: underline; text-underline-offset: 4px; }
+  &__hint { margin: 18px 0 0; color: var(--muted-text); font-size: 13px; line-height: 1.6; }
+  &__footer { padding-top: 24px; border-top: 1px solid var(--hairline); color: var(--muted-text); font-size: 12px; line-height: 1.5; }
+  &__footer button { padding: 10px 0 10px 14px; border: 0; background: transparent; color: var(--muted-text); font: inherit; cursor: pointer; }
+  button:focus-visible, a:focus-visible { outline: 2px solid var(--forest); outline-offset: 4px; border-radius: 8px; }
+  &__art { position: relative; width: 100%; max-width: 440px; aspect-ratio: 1; border-radius: 50%; background: radial-gradient(circle, #dfe6dc 0, #e9ebe280 50%, transparent 71%); }
+  &__orbit { position: absolute; inset: 9%; border: 1px dashed #a7b5a780; border-radius: 50%; }
+  &__tool { position: absolute; inset: 31%; display: grid; place-items: center; border: 8px solid var(--paper); border-radius: 34%; color: var(--paper); background: var(--forest); box-shadow: 0 20px 45px #173d361a; transform: rotate(-8deg); }
+  &__tile { position: absolute; display: grid; align-content: center; gap: 10px; width: 46%; height: 34%; padding: 24px; border: 1px solid #fff; border-radius: 22px; background: var(--card); box-shadow: 0 14px 36px #173d3610; }
+  &__tile > span { height: 6px; border-radius: 4px; background: #d5ddd2; }
+  &__tile > span:last-child { width: 60%; }
+  &__tile--back { top: 16%; left: 3%; transform: rotate(-13deg); }
+  &__tile--front { right: 1%; bottom: 15%; transform: rotate(11deg); }
+  &__tile--front svg { color: var(--coral-text); }
+  &__spark { position: absolute; width: 14px; height: 14px; border-radius: 50%; background: var(--coral); }
+  &__spark--one { right: 13%; top: 14%; }
+  &__spark--two { left: 20%; bottom: 10%; width: 8px; height: 8px; background: #809e88; }
+}
+@media (max-width: 760px) {
+  .maintenance-page {
+    padding: 24px 24px max(24px, env(safe-area-inset-bottom));
+    &__header { gap: 12px; }
+    &__header .wordmark { width: 104px; }
+    &__status { padding: 8px 11px; font-size: 11px; }
+    &__main { grid-template-columns: minmax(0, 1fr); align-content: center; gap: 16px; padding-block: 30px 42px; }
+    &__art { max-width: 260px; width: 75%; margin-inline: auto; }
+    &__tool { border-width: 5px; }
+    &__tool svg { width: 32px; height: 32px; }
+    &__tile { padding: 18px; border-radius: 16px; gap: 6px; }
+    &__tile > span { height: 4px; }
+    &__tile--front svg { width: 20px; height: 20px; }
+    &__copy { text-align: center; }
+    &__eyebrow { margin-bottom: 14px; }
+    h1 { font-size: clamp(35px, 10vw, 46px); }
+    &__description { margin: 20px auto 24px; font-size: 14px; line-height: 1.7; }
+    &__actions { justify-content: center; gap: 12px 20px; }
+    &__footer { align-items: flex-start; gap: 12px; font-size: 11px; }
+    &__footer button { flex-shrink: 0; padding-top: 0; text-align: right; }
+  }
+}
