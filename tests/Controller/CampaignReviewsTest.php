@@ -446,6 +446,103 @@ final class CampaignReviewsTest extends WebTestCase
         self::assertResponseStatusCodeSame(403);
     }
 
+    public function testAdminCanEditOnlyTheirOwnReviewWithoutChangingPublicationOrNotifications(): void
+    {
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $this->companyUser->setAdmin(true);
+        $em->flush();
+        $this->client->loginUser($this->companyUser);
+        $this->requestReview(['rating' => 3, 'comment' => 'Original feedback from the administrator.']);
+        self::assertResponseStatusCodeSame(201);
+        $original = $this->payload()['data']['own'];
+        self::assertTrue($this->payload()['data']['canEditOwn']);
+        $this->requestReview(['rating' => 5, 'comment' => 'Updated feedback from the administrator.'], 'PATCH');
+        self::assertResponseIsSuccessful();
+        self::assertSame($original['id'], $this->payload()['data']['own']['id']);
+        self::assertSame($original['createdAt'], $this->payload()['data']['own']['createdAt']);
+        $this->client->request('GET', '/api/creators/review-creator/reviews');
+        self::assertSame([], $this->payload()['data']);
+        self::assertSame(0, $this->payload()['summary']['reviewCount']);
+
+        $this->client->loginUser($this->creatorUser);
+        $this->requestReview(['rating' => 4, 'comment' => 'The creator reviews their company partner.']);
+        self::assertResponseStatusCodeSame(201);
+        $other = $this->payload()['data']['own'];
+        self::assertFalse($this->payload()['data']['canEditOwn']);
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $em->getConnection()->update('campaign', ['finished_at' => (new DateTimeImmutable('-15 days'))->format('Y-m-d H:i:s')], ['id' => $this->application->getCampaign()->getId()]);
+        $this->client->loginUser($this->companyUser);
+        // Author, recipient and review identifiers supplied by a client cannot select somebody else's review.
+        $this->requestReview(['rating' => 2, 'comment' => 'Corrected administrator feedback after the deadline.', 'id' => $other['id'], 'authorId' => $this->creatorUser->getId(), 'recipientId' => $this->companyUser->getId()], 'PATCH');
+        self::assertResponseIsSuccessful();
+        self::assertSame(2, $this->payload()['data']['own']['rating']);
+        self::assertSame($original['createdAt'], $this->payload()['data']['own']['createdAt']);
+        self::assertSame($other, $this->payload()['data']['received']);
+        self::assertFalse($this->payload()['data']['canReview']);
+        $this->client->request('GET', '/api/creators/review-creator/reviews');
+        self::assertSame(2, $this->payload()['data'][0]['rating']);
+        self::assertEquals(2.0, $this->payload()['summary']['average']);
+        $this->client->request('GET', '/api/me/safety/reviews');
+        self::assertSame(2, $this->payload()['data'][0]['given']['rating']);
+        self::assertSame(4, $this->payload()['data'][0]['received']['rating']);
+        $db = static::getContainer()->get(EntityManagerInterface::class)->getConnection();
+        self::assertSame(2, (int) $db->fetchOne('SELECT COUNT(*) FROM campaign_review'));
+        self::assertSame(2, (int) $db->fetchOne('SELECT COUNT(*) FROM wave_notification'));
+    }
+
+    public function testReviewEditingRejectsNonAdminsOtherAdminsMissingCsrfAndInvalidFields(): void
+    {
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $this->companyUser->setAdmin(true);
+        $this->stranger->setAdmin(true);
+        $this->creatorUser->setModerator(true);
+        $em->persist(new CampaignReview($this->application, $this->creatorUser, $this->companyUser, 4, 'Original creator feedback to preserve.'));
+        $em->persist(new CampaignReview($this->application, $this->companyUser, $this->creatorUser, 5, 'Original administrator feedback to preserve.'));
+        $em->flush();
+        $valid = ['rating' => 2, 'comment' => 'An update which must be authorized.'];
+        $url = '/api/me/applications/'.$this->application->getId().'/review';
+        $this->client->jsonRequest('PATCH', $url, $valid);
+        self::assertResponseStatusCodeSame(403);
+        $this->client->loginUser($this->creatorUser);
+        $this->requestReview($valid, 'PATCH');
+        self::assertResponseStatusCodeSame(403);
+        $this->client->loginUser($this->stranger);
+        $this->requestReview($valid, 'PATCH');
+        self::assertResponseStatusCodeSame(404);
+        $this->client->loginUser($this->companyUser);
+        $this->client->jsonRequest('PATCH', $url, $valid);
+        self::assertResponseStatusCodeSame(403);
+        foreach ([['rating' => 0], ['rating' => 6], ['rating' => 4.5], ['comment' => 'short'], ['comment' => str_repeat('x', 2001)]] as $invalid) {
+            $this->requestReview(array_replace($valid, $invalid), 'PATCH');
+            self::assertResponseStatusCodeSame(400);
+        }
+        $this->client->request('GET', $url);
+        self::assertSame(5, $this->payload()['data']['own']['rating']);
+        self::assertSame('Original administrator feedback to preserve.', $this->payload()['data']['own']['comment']);
+        self::assertSame(4, $this->payload()['data']['received']['rating']);
+    }
+
+    public function testAdminCannotCreateAReviewThroughEditingOrEditADeletedCollaboration(): void
+    {
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $this->companyUser->setAdmin(true);
+        $em->persist(new CampaignReview($this->application, $this->creatorUser, $this->companyUser, 4, 'Only the creator has submitted feedback.'));
+        $em->flush();
+        $this->client->loginUser($this->companyUser);
+        $valid = ['rating' => 5, 'comment' => 'Administrator feedback for completed work.'];
+        $this->requestReview($valid, 'PATCH');
+        self::assertResponseStatusCodeSame(409);
+        $this->requestReview($valid);
+        self::assertResponseStatusCodeSame(201);
+        $db = static::getContainer()->get(EntityManagerInterface::class)->getConnection();
+        $db->update('wave_user', ['deleted_at' => gmdate('Y-m-d H:i:s')], ['id' => $this->creatorUser->getId()]);
+        $this->requestReview(array_replace($valid, ['rating' => 1]), 'PATCH');
+        self::assertResponseStatusCodeSame(409);
+        $this->client->request('GET', '/api/me/applications/'.$this->application->getId().'/review');
+        self::assertFalse($this->payload()['data']['canEditOwn']);
+        self::assertSame(5, $this->payload()['data']['own']['rating']);
+    }
+
     private function user(string $email, string $role): User
     {
         $em = static::getContainer()->get(EntityManagerInterface::class);
@@ -462,11 +559,11 @@ final class CampaignReviewsTest extends WebTestCase
         return new Campaign('campaign-'.bin2hex(random_bytes(5)), 'Campaign review test', 'Campaign summary', 'Campaign description', 'Travel', ['Instagram'], ['Post'], 100, 500, 'Sarajevo', 1, new DateTimeImmutable('+1 month'), new DateTimeImmutable(), $company, status: $status, currency: $currency);
     }
 
-    private function requestReview(array $data): void
+    private function requestReview(array $data, string $method = 'POST'): void
     {
         $this->client->request('GET', '/api/auth/csrf');
         $csrf = $this->payload()['csrfToken'];
-        $this->client->jsonRequest('POST', '/api/me/applications/'.$this->application->getId().'/review', $data, ['HTTP_X_CSRF_TOKEN' => $csrf]);
+        $this->client->jsonRequest($method, '/api/me/applications/'.$this->application->getId().'/review', $data, ['HTTP_X_CSRF_TOKEN' => $csrf]);
     }
 
     private function payload(): array

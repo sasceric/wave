@@ -2503,7 +2503,10 @@
   "reviews": {
     "title": "Reviews",
     "action": "Review collaboration",
-    "policy": "Leave feedback within 14 days of confirmed completion of your engagement. Reviews become public when both sides submit or the deadline passes. Submitted reviews cannot be edited.",
+    "policy": "Leave feedback within 14 days of confirmed completion of your engagement. Reviews become public when both sides submit or the deadline passes.",
+    "editOwn": "Edit your review",
+    "editHint": "Only admins can edit reviews they wrote. Editing preserves the original date and publication rules.",
+    "saveEdit": "Save changes",
     "rating": "Average rating",
     "comment": "Your experience",
     "placeholder": "Describe the collaboration (at least 10 characters)",

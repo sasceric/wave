@@ -2504,7 +2504,10 @@
   "reviews": {
     "title": "Recenzije",
     "action": "Recenzija saradnje",
-    "policy": "Ocijeni saradnju u roku od 14 dana nakon potvrđenog završetka svog angažmana. Recenzije su javne kada ih obje strane pošalju ili nakon isteka roka. Poslana recenzija se ne može mijenjati.",
+    "policy": "Ocijeni saradnju u roku od 14 dana nakon potvrđenog završetka svog angažmana. Recenzije su javne kada ih obje strane pošalju ili nakon isteka roka.",
+    "editOwn": "Uredi svoju recenziju",
+    "editHint": "Samo administratori mogu urediti recenzije koje su sami napisali. Izmjena ne mijenja datum ni pravila objave.",
+    "saveEdit": "Sačuvaj izmjene",
     "rating": "Prosečna ocena",
     "comment": "Tvoje iskustvo",
     "placeholder": "Opiši saradnju (najmanje 10 znakova)",

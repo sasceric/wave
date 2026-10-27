@@ -79,6 +79,12 @@ class CampaignReview
         return $this->comment;
     }
 
+    public function edit(int $rating, string $comment): void
+    {
+        $this->rating = $rating;
+        $this->comment = $comment;
+    }
+
     public function getCreatedAt(): DateTimeImmutable
     {
         return $this->createdAt;

@@ -2503,7 +2503,10 @@
   "reviews": {
     "title": "Bewertungen",
     "action": "Zusammenarbeit bewerten",
-    "policy": "Bewerte die Zusammenarbeit innerhalb von 14 Tagen nach dem bestätigten Abschluss deines Auftrags. Bewertungen werden öffentlich, sobald beide Seiten sie abgegeben haben oder die Frist abläuft. Abgegebene Bewertungen können nicht bearbeitet werden.",
+    "policy": "Bewerte die Zusammenarbeit innerhalb von 14 Tagen nach dem bestätigten Abschluss deines Auftrags. Bewertungen werden öffentlich, sobald beide Seiten sie abgegeben haben oder die Frist abläuft.",
+    "editOwn": "Eigene Bewertung bearbeiten",
+    "editHint": "Nur Administratoren können selbst verfasste Bewertungen bearbeiten. Datum und Veröffentlichungsregeln bleiben erhalten.",
+    "saveEdit": "Änderungen speichern",
     "rating": "Durchschnittliche Bewertung",
     "comment": "Deine Erfahrung",
     "placeholder": "Beschreibe die Zusammenarbeit (mindestens 10 Zeichen)",

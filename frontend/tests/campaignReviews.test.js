@@ -93,3 +93,91 @@ test('password mismatches do not send; failures retain the form and success eras
   assert.equal(state.fields.newPassword, '')
   assert.equal(state.fields.confirmPassword, '')
 })
+
+test('admin editing prefills only their own review and saves through PATCH', async () => {
+  const own = { rating: 3, comment: 'Original administrator review.' }
+  const received = { rating: 1, comment: 'Other participant feedback.' }
+  const requests = []
+  const { state, emitted } = await setupView('../src/components/reviews/ReviewAction.vue', {
+    '../../lib/api': {
+      apiGet: async () => ({ data: { canReview: false, canEditOwn: true, own, received } }),
+      apiRequest: async (path, options) => {
+        requests.push([path, options])
+        return { data: { canReview: false, canEditOwn: true, own: options.body, received } }
+      },
+      formatDate: () => '',
+    },
+  }, { applicationId: 19, editOnOpen: true })
+  await state.show()
+  assert.equal(state.editing.value, true)
+  assert.equal(state.rating.value, 3)
+  assert.equal(state.comment.value, own.comment)
+  state.rating.value = 5
+  state.comment.value = 'Corrected administrator review.'
+  await state.submit()
+  assert.equal(requests.length, 1)
+  assert.equal(requests[0][0], '/me/applications/19/review')
+  assert.equal(requests[0][1].method, 'PATCH')
+  assert.equal(state.state.value.own.rating, 5)
+  assert.equal(state.state.value.received.comment, received.comment)
+  assert.equal(state.editing.value, false)
+  assert.equal(emitted[0][0], 'saved')
+})
+
+test('an edit failure preserves the draft and prevents duplicate saves', async () => {
+  let fail
+  const requests = []
+  const { state } = await setupView('../src/components/reviews/ReviewAction.vue', {
+    '../../lib/api': {
+      apiGet: async () => ({ data: { canEditOwn: true, own: { rating: 4, comment: 'Original feedback text.' } } }),
+      apiRequest: (path, options) => { requests.push([path, options]); return new Promise((resolve, reject) => { fail = reject }) },
+      formatDate: () => '',
+    },
+  }, { applicationId: 20 })
+  await state.show()
+  state.edit()
+  state.comment.value = 'Keep my corrected review for retry.'
+  const pending = state.submit()
+  await state.submit()
+  assert.equal(requests.length, 1)
+  fail(new Error('Could not save'))
+  await pending
+  assert.equal(state.error.value, 'Could not save')
+  assert.equal(state.editing.value, true)
+  assert.equal(state.open.value, true)
+  assert.equal(state.comment.value, 'Keep my corrected review for retry.')
+  assert.equal(state.state.value.own.comment, 'Original feedback text.')
+})
+
+test('existing reviews without admin edit permission cannot enter edit mode or send', async () => {
+  let requests = 0
+  const { state } = await setupView('../src/components/reviews/ReviewAction.vue', {
+    '../../lib/api': {
+      apiGet: async () => ({ data: { canReview: false, canEditOwn: false, own: { rating: 4, comment: 'Submitted ordinary user review.' } } }),
+      apiRequest: async () => { requests++ }, formatDate: () => '',
+    },
+  }, { applicationId: 21, editOnOpen: true })
+  await state.show()
+  state.edit()
+  await state.submit()
+  assert.equal(state.editing.value, false)
+  assert.equal(requests, 0)
+})
+
+test('My reviews only opens the editor for an admin-authored review', async () => {
+  const { state, currentUser } = await setupView('../src/views/AdminSafetyView.vue', {
+    '../lib/api': { apiRequest: async () => ({}), apiGet: async () => ({ data: [], meta: { total: 0, page: 1 } }), formatDate: () => '' },
+    'vue-router': { useRoute: () => ({ meta: { routeName: 'account-reviews' } }) },
+  })
+  const row = { id: 37, given: { rating: 4, comment: 'Own review' } }
+  state.editReview(row)
+  assert.equal(state.editingReview.value, null)
+  currentUser.value = { id: 1, isAdmin: true }
+  await nextTick()
+  state.editReview({ id: 38, received: { rating: 5 } })
+  assert.equal(state.editingReview.value, null)
+  state.view(row)
+  state.editReview(row)
+  assert.equal(state.editingReview.value, 37)
+  assert.equal(state.selected.value, null)
+})

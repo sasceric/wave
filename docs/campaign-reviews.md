@@ -8,7 +8,7 @@ invitation does not qualify: the application must have an accepted offer.
 Feedback consists of 1–5 whole stars and 10–2,000 characters of plain text.
 The window lasts 14 days from `Offer.workCompletedAt`, falling back to
 `Campaign.finishedAt` for legacy finished work. Finishing the overall campaign later does
-not restart an individual review window. Reviews are immutable and
+not restart an individual review window. Submitted reviews can only be edited by their own author when that author is an administrator, and
 remain hidden until both participants submit or the window expires. Both the
 public list and average use the same publication condition, so an unpublished
 score cannot be inferred from the average or review count. Publication is evaluated
@@ -87,3 +87,9 @@ SQLite and isolated PostgreSQL. Frontend tests cover draft handling, duplicate
 submissions, stale account responses and password field cleanup.
 
 Review submission creates a private notification for the other participant. The notification opens the exact collaboration’s review dialog from the company campaign detail or creator applications page; it does not include the hidden score or comment. Once the counterpart has already reviewed, the notification explains that both reviews are public. Migration `Version20261013120000` adds this collaboration link. Company campaign actions offer Close and Finish with confirmation; closing stops applications but preserves work/chat for hired participants. Confirming an individual engagement starts its review deadline; finishing the overall campaign requires all hires to be completed or cancelled. Applicant biographies use the shared sanitized rich-text renderer.
+
+## Editing your own review as an administrator
+
+Administrators can edit only the rating and comment of reviews they authored, from My reviews or the collaboration review dialog. PATCH `/api/me/applications/{id}/review` requires CSRF, an approved and verified participant, the actual admin role and an existing review by that participant. Other users cannot edit submitted reviews; administrators cannot edit the other participant’s review. Deleted or blocked collaborations remain read-only.
+
+Editing an existing review is allowed after the original 14-day submission window. It preserves the review ID, author, recipient, creation date and double-blind publication rules, updates public averages when published, and does not send a new-review notification. No database migration is needed.

@@ -117,6 +117,7 @@ final class CollaborationFeedback
 
         return [
             'canReview' => $this->eligible($application) && $own === null && $this->deadline($application) > new DateTimeImmutable(),
+            'canEditOwn' => $user->hasRole('ROLE_ADMIN') && $own !== null && $this->eligible($application),
             'deadline' => $this->deadline($application)?->format(DATE_ATOM),
             'own' => $own,
             'received' => $received,

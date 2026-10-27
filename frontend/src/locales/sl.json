@@ -2504,7 +2504,10 @@
   "reviews": {
     "title": "Ocene",
     "action": "Ocena sodelovanja",
-    "policy": "Oceni sodelovanje v 14 dneh po potrjenem zaključku svojega dela. Ocene postanejo javne, ko jih oddasta obe strani ali ko poteče rok. Oddane ocene ni mogoče urejati.",
+    "policy": "Oceni sodelovanje v 14 dneh po potrjenem zaključku svojega dela. Ocene postanejo javne, ko jih oddasta obe strani ali ko poteče rok.",
+    "editOwn": "Uredi svojo oceno",
+    "editHint": "Samo skrbniki lahko uredijo ocene, ki so jih sami napisali. Urejanje ne spremeni datuma ali pravil objave.",
+    "saveEdit": "Shrani spremembe",
     "rating": "Povprečna ocena",
     "comment": "Tvoja izkušnja",
     "placeholder": "Opiši sodelovanje (najmanj 10 znakov)",

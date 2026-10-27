@@ -2,7 +2,8 @@
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import { ArrowRight, Eye, ShieldOff } from '@lucide/vue'
+import { ArrowRight, Eye, Pencil, ShieldOff } from '@lucide/vue'
+import ReviewAction from '../components/reviews/ReviewAction.vue'
 import AdminPage from '../components/admin/AdminPage.vue'
 import AdminDataTable from '../components/admin/AdminDataTable.vue'
 import AdminRowActions from '../components/admin/AdminRowActions.vue'
@@ -31,6 +32,7 @@ const busy = ref(false)
 const error = ref('')
 const formError = ref('')
 const selected = ref(null)
+const editingReview = ref(null)
 const unblocking = ref(null)
 const preview = ref(null)
 const status = ref('')
@@ -67,6 +69,11 @@ async function load(change) {
   finally { if (current === revision) loading.value = false }
 }
 function view(row) { selected.value = row; status.value = row.status || ''; response.value = row.response || ''; formError.value = '' }
+function editReview(row) {
+  if (!personal.value || section.value !== 'reviews' || !currentUser.value?.isAdmin || !row.given) return
+  selected.value = null
+  editingReview.value = row.id
+}
 async function save() {
   if (busy.value || !selected.value || !['processing', 'resolved', 'dismissed'].includes(status.value)) return
   busy.value = true; formError.value = ''
@@ -81,7 +88,7 @@ async function unblock() {
   catch (cause) { error.value = cause.message; unblocking.value = null }
   finally { busy.value = false }
 }
-watch(() => [section.value, personal.value, currentUser.value?.id, locale.value], () => { ++revision; page.value = 1; rows.value = []; selected.value = null; preview.value = null; unblocking.value = null; q.value = ''; filter.value = 'all'; options.value = { limit: 25, sort: 'createdAt', direction: 'desc' }; load() }, { immediate: true })
+watch(() => [section.value, personal.value, currentUser.value?.id, locale.value], () => { ++revision; page.value = 1; rows.value = []; selected.value = null; editingReview.value = null; preview.value = null; unblocking.value = null; q.value = ''; filter.value = 'all'; options.value = { limit: 25, sort: 'createdAt', direction: 'desc' }; load() }, { immediate: true })
 watch([q, filter], () => { ++revision; clearTimeout(timer); timer = setTimeout(() => { page.value = 1; load() }, 250) })
 onBeforeUnmount(() => { ++revision; clearTimeout(timer) })
 </script>
@@ -102,7 +109,19 @@ onBeforeUnmount(() => { ++revision; clearTimeout(timer) })
           <template #cell-received="{ value }"><template v-if="value?.rating"><strong>{{ value.rating }} / 5</strong><small class="admin-safety__excerpt">{{ value.comment }}</small></template><span v-else class="admin-safety__secondary">{{ t(value ? 'safety.statuses.pending' : 'safety.noReview') }}</span></template>
           <template #cell-given="{ value }"><template v-if="value"><strong>{{ value.rating }} / 5</strong><small class="admin-safety__excerpt">{{ value.comment }}</small></template><span v-else class="admin-safety__secondary">{{ t('safety.noReview') }}</span></template>
           <template #cell-status="{ value }"><span class="admin-safety__status">{{ t(`safety.statuses.${value}`) }}</span></template>
-          <template #actions="{ row }"><AdminRowActions :label="`${t('adminDashboard.actions')}: ${section === 'blocks' ? row.counterpart : row.name}`"><button v-if="section !== 'blocks'" type="button" class="admin-row-actions__item" role="menuitem" @click="view(row)"><Eye :size="15" aria-hidden="true" />{{ t('safety.details') }}</button><button v-else type="button" class="admin-row-actions__item" role="menuitem" :disabled="busy" @click="unblocking = row"><ShieldOff :size="15" aria-hidden="true" />{{ t('safety.unblock') }}</button></AdminRowActions></template>
+          <template #actions="{ row }">
+            <AdminRowActions :label="`${t('adminDashboard.actions')}: ${section === 'blocks' ? row.counterpart : row.name}`">
+              <button v-if="section !== 'blocks'" type="button" class="admin-row-actions__item" role="menuitem" @click="view(row)">
+                <Eye :size="15" aria-hidden="true" />{{ t('safety.details') }}
+              </button>
+              <button v-if="personal && section === 'reviews' && currentUser.isAdmin && row.given" type="button" class="admin-row-actions__item" role="menuitem" @click="editReview(row)">
+                <Pencil :size="15" aria-hidden="true" />{{ t('reviews.editOwn') }}
+              </button>
+              <button v-if="section === 'blocks'" type="button" class="admin-row-actions__item" role="menuitem" :disabled="busy" @click="unblocking = row">
+                <ShieldOff :size="15" aria-hidden="true" />{{ t('safety.unblock') }}
+              </button>
+            </AdminRowActions>
+          </template>
         </AdminDataTable>
       </main>
     </div>
@@ -110,8 +129,15 @@ onBeforeUnmount(() => { ++revision; clearTimeout(timer) })
     <FormModal :open="Boolean(selected)" :title="t(section === 'reviews' ? 'reviews.title' : 'safety.reportDetails')" :busy="busy" @update:open="!$event && (selected = null)" @submit="save">
       <template v-if="selected"><p><strong>{{ selected.name }}</strong><template v-if="section === 'reports'"> <ArrowRight class="link-arrow" :size="16" aria-hidden="true" /> {{ selected.target_name }}</template></p><template v-if="section === 'reviews'"><p>{{ selected.campaign }}</p><div class="admin-safety__review-pair"><section v-for="side in ['received', 'given']" :key="side"><h3>{{ t(`safety.${side}Review`) }}</h3><template v-if="selected[side]?.rating"><strong>{{ selected[side].rating }} / 5</strong><p class="admin-safety__text">{{ selected[side].comment }}</p></template><p v-else>{{ t(selected[side] ? 'safety.statuses.pending' : 'safety.noReview') }}</p></section></div></template><template v-else><p>{{ t(`safety.categories.${selected.category}`) }} · {{ t(`safety.reasons.${selected.reason}`) }}</p><p class="admin-safety__text">{{ selected.description || '—' }}</p><div v-if="selected.attachments?.length" class="admin-safety__evidence"><button v-for="file in selected.attachments" :key="file.id" type="button" class="button button--outline" @click="preview = file">{{ file.name }}</button></div><p><small>#{{ selected.id.slice(0, 8).toUpperCase() }}</small></p><SingleSelect v-model="status" :label="t('safety.status')" required :disabled="busy || ['resolved','dismissed'].includes(selected.status)" :options="['received','processing','resolved','dismissed'].map(value => ({ value, label: t(`safety.statuses.${value}`) }))" /><label><span>{{ t('safety.response') }}</span><textarea v-model="response" maxlength="1000" :minlength="status === 'processing' ? undefined : 10" :required="['resolved','dismissed'].includes(status)" :disabled="busy || ['resolved','dismissed'].includes(selected.status)" /></label></template></template>
       <StatusMessage v-if="formError" variant="error">{{ formError }}</StatusMessage>
-      <template #actions="{ close }"><button class="button button--outline" type="button" :disabled="busy" @click="close">{{ t('safety.close') }}</button><button v-if="section === 'reports' && !['resolved','dismissed'].includes(selected?.status)" class="button button--dark" type="submit" :disabled="busy || status === 'received'">{{ t('safety.save') }}</button></template>
+      <template #actions="{ close }">
+        <button class="button button--outline" type="button" :disabled="busy" @click="close">{{ t('safety.close') }}</button>
+        <button v-if="personal && section === 'reviews' && currentUser?.isAdmin && selected?.given" class="button button--dark" type="button" @click="editReview(selected)">
+          <Pencil :size="15" aria-hidden="true" />{{ t('reviews.editOwn') }}
+        </button>
+        <button v-if="section === 'reports' && !['resolved','dismissed'].includes(selected?.status)" class="button button--dark" type="submit" :disabled="busy || status === 'received'">{{ t('safety.save') }}</button>
+      </template>
     </FormModal>
+    <ReviewAction v-if="editingReview" :key="editingReview" :application-id="editingReview" auto-open hide-trigger edit-on-open @closed="editingReview = null" @saved="load()" />
     <ImagePreviewModal :open="Boolean(preview)" :title="preview?.name || ''" :src="preview ? `/api/media/${preview.id}/file` : ''" :close-label="t('safety.close')" @update:open="!$event && (preview = null)" />
     <ConfirmationModal :open="Boolean(unblocking)" :title="t('safety.unblock')" :message="t('safety.unblockHint')" :confirm-label="t('safety.unblock')" :cancel-label="t('safety.cancel')" :loading="busy" @update:open="!$event && (unblocking = null)" @confirm="unblock" />
   </AdminPage>
