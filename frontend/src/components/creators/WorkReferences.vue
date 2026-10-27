@@ -3,10 +3,17 @@ import { Image, Video, ArrowRight } from '@lucide/vue'
 import { useI18n } from 'vue-i18n'
 import PortfolioGallery from '../shared/PortfolioGallery.vue'
 import { referenceImage } from '../../lib/creatorPresentation'
-defineProps({ items: { type: Array, required: true }, name: { type: String, required: true } })
+const props = defineProps({ items: { type: Array, required: true }, name: { type: String, required: true }, coverUrl: { type: String, default: '' } })
 const { t } = useI18n()
 const hostname = url => { try { return new URL(url, 'https://wave.ba').hostname.replace(/^www\./, '') } catch { return '' } }
-function preview(row, index) { return { ...row, id: `reference-${index}`, url: referenceImage(row) || row.url } }
+function preview(row, index) {
+  return {
+    ...row,
+    id: `reference-${index}`,
+    url: referenceImage(row) || row.url,
+    coverUrl: row.coverUrl || (index === 0 && row.type === 'video' ? props.coverUrl : ''),
+  }
+}
 </script>
 
 <template>

@@ -800,3 +800,19 @@ title, summary, brief, client/agency, completion date and platform from the
 selected campaign. It leaves the creator's contribution and uploaded media for
 the creator to enter. `CreatorPresentationProfileTest` covers creator and agency
 completion on open campaigns, saving, foreign/unfinished work and block filtering.
+
+### Campaign listing visibility (2026-10-27)
+
+Migration `Version20261027090000` adds `campaign.listed`, defaulting to true for
+existing and new campaigns. Admin Kampanje uses the existing paginated table,
+creation date (the immutable `publishedAt`), newest-first default and sortable date
+column. Campaign identities reuse the shared thumbnail/placeholder component.
+The row menu calls the admin-only, CSRF-protected
+`PUT /api/admin/catalog/campaigns/{id}/visibility` with a boolean `listed`.
+
+Hiding is independent of open/closed/finished status. It removes a campaign from
+public directory/homepage results, country facets, public search, campaign alerts,
+sitemaps and public company campaign counts. Hidden campaigns retain direct-link
+access and collaboration/account history; their direct pages are noindex. Existing
+index-change subscribers invalidate dependent counts and search documents on save.
+Apply the migration before serving the new application code.

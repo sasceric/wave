@@ -110,6 +110,12 @@ class Campaign
     #[ORM\Column(nullable: true)]
     private ?DateTimeImmutable $finishedAt = null;
 
+    #[ORM\Column(options: ['default' => true])]
+    private bool $listed = true;
+
+    public function isListed(): bool { return $this->listed; }
+    public function setListed(bool $listed): void { $this->listed = $listed; }
+
     #[ORM\Column]
     private bool $featured;
 

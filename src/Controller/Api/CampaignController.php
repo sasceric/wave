@@ -68,7 +68,7 @@ final class CampaignController
         $card = $request->query->getString('view') === 'card';
         $params = ['status' => 'open', 'today' => (new \DateTimeImmutable('today'))->format('Y-m-d H:i:s')];
         $types = [];
-        $conditions = [$this->blocks->visible('owner.id'), 'c.status = :status', 'c.closes_at >= :today', '(owner.id IS NULL OR (owner.approved = TRUE AND owner.hide_my_account = FALSE))'];
+        $conditions = [$this->blocks->visible('owner.id'), 'c.status = :status', 'c.listed = TRUE', 'c.closes_at >= :today', '(owner.id IS NULL OR (owner.approved = TRUE AND owner.hide_my_account = FALSE))'];
         $query = trim($request->query->getString('q'));
         if ($query !== '') {
             $conditions[] = "(i.search_text LIKE :query OR (i.id IS NULL AND (LOWER(c.title) LIKE :query OR LOWER(c.summary) LIKE :query OR LOWER(c.description) LIKE :query OR LOWER(c.category) LIKE :query OR LOWER(c.city) LIKE :query OR LOWER(c.country_code) LIKE :query OR LOWER(CAST(c.categories AS TEXT)) LIKE :query)) OR LOWER(company.name) LIKE :query OR LOWER(company.industry) LIKE :query)";
@@ -212,7 +212,7 @@ final class CampaignController
         }
         $rows = $entityManager->getConnection()->fetchAllAssociative("SELECT c.country_code AS value, COUNT(*) AS count FROM campaign c
             JOIN company ON company.id = c.company_id LEFT JOIN wave_user owner ON owner.id = company.owner_id
-            WHERE c.status = 'open' AND c.closes_at >= :today AND c.country_code IS NOT NULL
+            WHERE c.status = 'open' AND c.listed = TRUE AND c.closes_at >= :today AND c.country_code IS NOT NULL
             AND (owner.id IS NULL OR (owner.approved = TRUE AND owner.hide_my_account = FALSE))
             GROUP BY c.country_code ORDER BY c.country_code", ['today' => (new \DateTimeImmutable('today'))->format('Y-m-d H:i:s')]);
 

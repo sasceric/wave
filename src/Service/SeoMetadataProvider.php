@@ -223,6 +223,7 @@ final class SeoMetadataProvider
             if (!$campaign instanceof Campaign || $campaign->getClosesAt() < new DateTimeImmutable('today')) {
                 return $this->notFoundMetadata($locale);
             } else {
+                $indexable = $indexable && $campaign->isListed();
                 $translation = $campaign->getTranslations()[$locale] ?? [];
                 $title = $this->formatTranslation(
                     $locale,

@@ -64,6 +64,7 @@ final class SitemapGenerator
             ->join('campaign.company', 'company')
             ->leftJoin('company.owner', 'companyOwner')
             ->andWhere('campaign.status = :status')
+            ->andWhere('campaign.listed = TRUE')
             ->andWhere('campaign.closesAt >= :today')
             ->andWhere('companyOwner.id IS NULL OR (companyOwner.approved = :approved AND companyOwner.hideMyAccount = :visible)')
             ->setParameter('status', 'open')

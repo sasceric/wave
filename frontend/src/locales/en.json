@@ -3098,6 +3098,14 @@
     "publicReviewsTitle": "Collaborations and reviews",
     "publicReviewsHint": "Experiences from both sides of a collaboration."
   },
+  "adminCampaigns": {
+    "visibility": "Public listing",
+    "visible": "Shown",
+    "hidden": "Hidden from listings",
+    "show": "Show in listings",
+    "hide": "Hide from listings",
+    "visibilitySaved": "Campaign listing visibility saved."
+  },
   "adminProfiles": {
     "createdAt": "Created",
     "createdAtFormat": "{date} at {time}",

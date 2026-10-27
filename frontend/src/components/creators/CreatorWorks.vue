@@ -62,7 +62,7 @@ const selected = ref(null)
               {{ formatDate(selected.projectDate) }}
             </span>
           </div>
-          <WorkReferences :items="workReferences(selected)" :name="name" />
+          <WorkReferences :items="workReferences(selected)" :name="name" :cover-url="selected.coverUrl || ''" />
           <p v-if="selected.summary && selected.summary !== selected.title && selected.summary !== selected.client" class="work-detail__summary">{{ selected.summary }}</p>
           <div v-if="selected.brief || selected.contribution" class="work-detail__sections">
             <section v-if="selected.brief">

@@ -182,6 +182,19 @@ async function changeVisibility(row) {
   finally { visibilitySaving.value = false }
 }
 
+async function changeCampaignListing(row) {
+  if (visibilitySaving.value || section.value !== 'campaigns') return
+  visibilitySaving.value = true; error.value = ''; notice.value = ''
+  try {
+    const { data } = await apiRequest(`/admin/catalog/campaigns/${row.id}/visibility`, { method: 'PUT', body: { listed: !row.listed } })
+    if (disposed || section.value !== 'campaigns') return
+    const current = listRows.value.find(item => item.id === row.id)
+    if (current) Object.assign(current, data)
+    notice.value = t('adminCampaigns.visibilitySaved')
+  } catch (cause) { if (!disposed && section.value === 'campaigns') error.value = cause.message || t('adminDashboard.saveError') }
+  finally { visibilitySaving.value = false }
+}
+
 const tableColumns = computed(() => {
   const createdColumn = { key: 'createdAt', label: t('adminProfiles.createdAt'), sortable: true, defaultSort: true }
   const columns = {
@@ -219,6 +232,7 @@ const tableColumns = computed(() => {
       { key: 'title', label: t('adminDashboard.campaign'), sortable: true },
       createdColumn,
       { key: 'company.name', label: t('adminDashboard.company'), sortable: true },
+      { key: 'listed', label: t('adminCampaigns.visibility') },
       { key: 'status', label: t('adminDashboard.status'), sortable: true },
     ],
   }
@@ -600,6 +614,8 @@ onMounted(updateCreatedAtClock)
                 </select>
               </label>
             </template>
+            <template #cell-title="{ row }"><AdminProfileIdentity :row="row" campaign /></template>
+            <template #cell-listed="{ value }"><span class="admin-profile-visibility" :class="{ 'is-visible': value }">{{ t(value ? 'adminCampaigns.visible' : 'adminCampaigns.hidden') }}</span></template>
             <template #cell-displayName="{ row }"><AdminProfileIdentity :row="row" /></template>
             <template #cell-name="{ row }"><AdminProfileIdentity :row="row" /></template>
             <template #cell-createdAt="{ value }"><AdminCreatedAt :value="value" :now="createdAtNow" /></template>
@@ -630,6 +646,9 @@ onMounted(updateCreatedAtClock)
                 </button>
                 <button v-if="isProfileList && (section !== 'registrations' || !row.approved)" class="admin-row-actions__item" type="button" role="menuitem" :disabled="sendingReminder || !row.accountId || !row.email || !row.canChangeVisibility" :title="!row.accountId ? t('adminProfiles.noAccount') : undefined" @click="requestReminder(row, 'profile')">
                   <ClipboardList :size="15" aria-hidden="true" />{{ t('adminProfiles.profileTip') }}
+                </button>
+                <button v-if="section === 'campaigns'" class="admin-row-actions__item" type="button" role="menuitem" :disabled="visibilitySaving" @click="changeCampaignListing(row)">
+                  <EyeOff v-if="row.listed" :size="15" aria-hidden="true" /><Eye v-else :size="15" aria-hidden="true" />{{ t(row.listed ? 'adminCampaigns.hide' : 'adminCampaigns.show') }}
                 </button>
                 <button v-if="isProfileList" class="admin-row-actions__item" type="button" role="menuitem" :disabled="visibilitySaving || !row.canChangeVisibility || (!row.publicVisible && !row.canShowProfile)" :title="!row.canChangeVisibility ? t('adminProfiles.noAccount') : !row.publicVisible && !row.canShowProfile ? t('adminProfiles.showRequirements') : undefined" @click="changeVisibility(row)">
                   <EyeOff v-if="row.publicVisible" :size="15" aria-hidden="true" /><Eye v-else :size="15" aria-hidden="true" />{{ t(row.publicVisible ? 'adminProfiles.hide' : 'adminProfiles.show') }}

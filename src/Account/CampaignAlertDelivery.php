@@ -93,7 +93,7 @@ final class CampaignAlertDelivery
     public function matches(int $id, string $since, string $until, array $categories, array $countries): array
     {
         $params = ['id' => $id, 'since' => $since, 'until' => $until, 'today' => gmdate('Y-m-d')];
-        $conditions = ["c.status = 'open'", 'c.closes_at >= :today', 'c.published_at > :since', 'c.published_at <= :until', 'u.approved = TRUE', 'u.email_verified = TRUE', 'u.deleted_at IS NULL', 'u.hide_my_account = FALSE', 'u.presentation_demo_key IS NULL',
+        $conditions = ["c.status = 'open'", 'c.listed = TRUE', 'c.closes_at >= :today', 'c.published_at > :since', 'c.published_at <= :until', 'u.approved = TRUE', 'u.email_verified = TRUE', 'u.deleted_at IS NULL', 'u.hide_my_account = FALSE', 'u.presentation_demo_key IS NULL',
             'NOT EXISTS (SELECT 1 FROM user_block b WHERE b.cleared_at IS NULL AND ((b.blocker_id = :id AND b.blocked_id = u.id) OR (b.blocked_id = :id AND b.blocker_id = u.id)))',
             'NOT EXISTS (SELECT 1 FROM campaign_application a JOIN creator r ON r.id = a.creator_id WHERE a.campaign_id = c.id AND r.owner_id = :id)'];
         if ($categories !== []) {

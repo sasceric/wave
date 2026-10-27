@@ -56,6 +56,7 @@ final class HomepageController
             ->join('campaign.company', 'company')
             ->leftJoin('company.owner', 'companyOwner')
             ->andWhere('campaign.status = :status')
+            ->andWhere('campaign.listed = TRUE')
             ->andWhere('campaign.closesAt >= :today')
             ->andWhere($blocks->visible('companyOwner.id'))
             ->andWhere('companyOwner.id IS NULL OR (companyOwner.approved = :approved AND companyOwner.hideMyAccount = :visible)')

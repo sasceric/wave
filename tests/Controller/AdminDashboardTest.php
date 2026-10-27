@@ -131,6 +131,92 @@ final class AdminDashboardTest extends WebTestCase
         self::assertNull($data[array_key_last($data)]['createdAt']);
     }
 
+    public function testAdminCanHideCampaignListingsWithoutClosingOrRemovingDirectAccess(): void
+    {
+        $em = self::getContainer()->get(EntityManagerInterface::class);
+        $admin = new User('listing-admin@example.test', 'ROLE_COMPANY');
+        $admin->setPassword('unused');
+        $admin->setAdmin(true);
+        $owner = new User('listing-owner@example.test', 'ROLE_COMPANY');
+        $owner->setPassword('unused');
+        $owner->setApproved(true);
+        $owner->setEmailVerified(true);
+        $owner->setHideMyAccount(false);
+        $company = new Company('listing-brand', 'Listing Brand', 'Travel');
+        $owner->setCompany($company);
+        $folder = new \App\Entity\MediaFolder('campaign-cover', 'Campaign covers');
+        $cover = new \App\Entity\Media($folder, $owner, 'cover.webp', 'campaign-listing-test.webp', 'image/webp', 123);
+        $cover->setDimensions(600, 400);
+        $old = new Campaign('listing-old', 'Listing old', 'Listing summary', 'Listing description', 'Travel', ['Instagram'], ['Post'], 100, 200, 'Sarajevo', 1, new \DateTimeImmutable('+1 year'), new \DateTimeImmutable('-2 days'), $company);
+        $new = new Campaign('listing-new', 'Listing new', 'Listing summary', 'Listing description', 'Travel', ['Instagram'], ['Post'], 100, 200, 'Sarajevo', 1, new \DateTimeImmutable('+1 year'), new \DateTimeImmutable('-1 day'), $company, coverMedia: $cover, countryCode: 'BA');
+        foreach ([$admin, $owner, $folder, $cover, $old, $new] as $item) $em->persist($item);
+        $em->flush();
+        $url = '/api/admin/catalog/campaigns/'.$new->getId().'/visibility?locale=en';
+        $this->client->request('PUT', $url);
+        self::assertResponseStatusCodeSame(401);
+        $this->client->loginUser($owner);
+        $this->client->jsonRequest('PUT', $url, ['listed' => false]);
+        self::assertResponseStatusCodeSame(403);
+        $this->client->loginUser($admin);
+        $this->client->jsonRequest('PUT', $url, ['listed' => false]);
+        self::assertResponseStatusCodeSame(403);
+        $this->client->request('GET', '/api/admin/catalog/campaigns?locale=en');
+        self::assertResponseIsSuccessful();
+        $rows = $this->payload()['data'];
+        self::assertSame(['listing-new', 'listing-old'], array_column($rows, 'slug'));
+        self::assertTrue($rows[0]['listed']);
+        self::assertSame($cover->getUrl(), $rows[0]['coverImageUrl']);
+        self::assertNotNull($rows[0]['coverImage']);
+        self::assertNull($rows[1]['coverImageUrl']);
+        self::assertNotEmpty($rows[0]['createdAt']);
+        $this->client->request('GET', '/api/auth/csrf');
+        $csrf = ['HTTP_X_CSRF_TOKEN' => $this->payload()['csrfToken']];
+        foreach (['false', 0, null] as $invalid) {
+            $this->client->jsonRequest('PUT', $url, ['listed' => $invalid], $csrf);
+            self::assertResponseStatusCodeSame(400);
+        }
+        $this->client->jsonRequest('PUT', '/api/admin/catalog/campaigns/999999/visibility?locale=en', ['listed' => false], $csrf);
+        self::assertResponseStatusCodeSame(404);
+        $this->client->jsonRequest('PUT', $url, ['listed' => false], $csrf);
+        self::assertResponseIsSuccessful();
+        self::assertFalse($this->payload()['data']['listed']);
+        $this->client->request('GET', '/api/admin/catalog/campaigns?locale=en');
+        self::assertFalse($this->payload()['data'][0]['listed']);
+        self::assertSame('open', $this->payload()['data'][0]['status']);
+        $this->client->request('GET', '/api/campaigns?locale=en');
+        self::assertSame(['listing-old'], array_column($this->payload()['data'], 'slug'));
+        $this->client->request('GET', '/api/homepage?locale=en');
+        self::assertSame(['listing-old'], array_column($this->payload()['data']['campaigns'], 'slug'));
+        $this->client->request('GET', '/api/campaigns/filters?locale=en');
+        self::assertSame([], $this->payload()['data']['countries']);
+        $this->client->request('GET', '/api/campaigns/listing-new?locale=en');
+        self::assertResponseIsSuccessful();
+        self::assertFalse($this->payload()['data']['listed']);
+        self::assertSame('open', $this->payload()['data']['status']);
+        $em = self::getContainer()->get(EntityManagerInterface::class);
+        $documents = self::getContainer()->get(\App\Search\SearchDocuments::class);
+        self::assertSame([], $documents->build('campaign', $new->getId(), ['en' => []], 'en'));
+        $search = self::getContainer()->get(\App\Search\DatabaseSearch::class)->search('Listing', 'en', 'campaigns', 1, false);
+        self::assertSame(['listing-old'], array_column($search['data'], 'slug'));
+        $alerts = self::getContainer()->get(\App\Account\CampaignAlertDelivery::class)->matches($admin->getId(), '2000-01-01', '2100-01-01', [], []);
+        self::assertSame(['listing-old'], array_column($alerts, 'slug'));
+        $xml = self::getContainer()->get(\App\Service\SitemapGenerator::class)->generate();
+        self::assertStringNotContainsString('/listing-new', $xml);
+        self::assertStringContainsString('/listing-old', $xml);
+        $metadata = self::getContainer()->get(\App\Service\SeoMetadataProvider::class)->forPath('/kampanje/listing-new');
+        self::assertTrue($metadata['noindex']);
+        $this->client->loginUser($owner);
+        $this->client->request('GET', '/api/me/campaigns?locale=en');
+        self::assertResponseIsSuccessful();
+        self::assertCount(2, $this->payload()['data']);
+        $this->client->loginUser($admin);
+        $this->client->request('GET', '/api/auth/csrf');
+        $this->client->jsonRequest('PUT', $url, ['listed' => true], ['HTTP_X_CSRF_TOKEN' => $this->payload()['csrfToken']]);
+        self::assertResponseIsSuccessful();
+        $this->client->request('GET', '/api/campaigns?locale=en');
+        self::assertCount(2, $this->payload()['data']);
+    }
+
     public function testAdminCanCurateHomepageAndNonAdminCannotAccessDashboard(): void
     {
         $entityManager = static::getContainer()->get(EntityManagerInterface::class);

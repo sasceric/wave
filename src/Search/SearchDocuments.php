@@ -21,7 +21,7 @@ final class SearchDocuments
         $owner = $entity instanceof Campaign ? $entity->getCompany()->getOwner() : $entity->getOwner();
         if ($owner && (!$owner->isApproved() || $owner->isHideMyAccount() || $owner->isDeleted())) return [];
         if ($entity instanceof Creator && $entity->isAgencyProfile()) return [];
-        if ($entity instanceof Campaign && ($entity->getStatus() !== 'open' || $entity->getClosesAt() < new \DateTimeImmutable('today'))) return [];
+        if ($entity instanceof Campaign && (!$entity->isListed() || $entity->getStatus() !== 'open' || $entity->getClosesAt() < new \DateTimeImmutable('today'))) return [];
         $documents = [];
         foreach ($onlyLocale === null ? $this->routes->locales() : [$onlyLocale] as $locale) {
             $categories = $labels[$locale];

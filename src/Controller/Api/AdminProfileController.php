@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Controller\Api;
 
 use App\Api\{AdminProfileResource, ApiAccess, JsonPayload, MarketplaceCategoryLabels};
-use App\Entity\{Company, Creator, User};
+use App\Entity\{Campaign, Company, Creator, User};
 use App\Localization\{ApiMessages, LocaleContext};
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\SecurityBundle\Security;
@@ -15,6 +15,24 @@ use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
 
 final class AdminProfileController
 {
+    #[Route('/api/admin/catalog/campaigns/{id}/visibility', requirements: ['id' => '\d+'], methods: ['PUT'])]
+    public function campaignVisibility(int $id, Request $request, Security $security, EntityManagerInterface $em, CsrfTokenManagerInterface $csrf): JsonResponse
+    {
+        $locale = LocaleContext::fromRequest($request);
+        if ($locale === null) return new JsonResponse(['error' => ApiMessages::get('unsupported_language', 'bs')], 400);
+        $admin = ApiAccess::requireRole($security, 'ROLE_ADMIN', $locale);
+        if ($admin instanceof JsonResponse) return $admin;
+        if ($error = ApiAccess::requireCsrf($request, $csrf, $locale)) return $error;
+        $listed = JsonPayload::fromRequest($request)['listed'] ?? null;
+        if (!is_bool($listed)) return new JsonResponse(['error' => ApiMessages::get('invalid_request', $locale)], 400);
+        $campaign = $em->find(Campaign::class, $id);
+        if (!$campaign instanceof Campaign) return $this->missing($locale);
+        $campaign->setListed($listed);
+        $em->flush();
+
+        return new JsonResponse(['data' => ['id' => $id, 'listed' => $campaign->isListed()]], headers: ['Cache-Control' => 'private, no-store']);
+    }
+
     #[Route('/api/admin/catalog/{kind}/{id}/profile', requirements: ['kind' => 'creators|companies|registrations', 'id' => '\d+'], methods: ['GET'])]
     #[Route('/api/admin/catalog/{kind}/{id}/visibility', requirements: ['kind' => 'creators|companies|registrations', 'id' => '\d+'], methods: ['PUT'])]
     public function profile(string $kind, int $id, Request $request, Security $security, EntityManagerInterface $em, CsrfTokenManagerInterface $csrf): JsonResponse

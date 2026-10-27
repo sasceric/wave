@@ -169,8 +169,10 @@ final class AdminCatalog
                 'slug' => $item->getSlug(),
                 'title' => $item->getTitle(),
                 'status' => $item->getStatus(),
+                'listed' => $item->isListed(),
                 'featured' => $item->isFeatured(),
                 'coverImageUrl' => $item->getCoverMedia()?->getUrl(),
+                'coverImage' => MediaImageResource::fromEntity($item->getCoverMedia(), 96),
                 'company' => ['name' => $item->getCompany()->getName()],
             ];
         }

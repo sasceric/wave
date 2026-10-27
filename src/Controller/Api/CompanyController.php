@@ -82,7 +82,7 @@ final class CompanyController
                     u.city, u.country_code,
                     COALESCE(i.available_campaign_count, (
                         SELECT COUNT(*) FROM campaign a
-                        WHERE a.company_id = c.id AND a.status = 'open' AND a.closes_at >= :today
+                        WHERE a.company_id = c.id AND a.status = 'open' AND a.listed = TRUE AND a.closes_at >= :today
                     )) AS campaign_count
                 FROM company c
                 LEFT JOIN wave_user u ON u.id = c.owner_id
@@ -217,6 +217,7 @@ final class CompanyController
                 ->addSelect('COUNT(campaign.id) AS availableCampaignCount')
                 ->andWhere('IDENTITY(campaign.company) IN (:companyIds)')
                 ->andWhere('campaign.status = :availableStatus')
+                ->andWhere('campaign.listed = TRUE')
                 ->andWhere('campaign.closesAt >= :availableToday')
                 ->groupBy('companyId')
                 ->setParameter('companyIds', $companyIds)

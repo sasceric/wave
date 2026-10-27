@@ -3098,6 +3098,14 @@
     "publicReviewsTitle": "Zusammenarbeit und Bewertungen",
     "publicReviewsHint": "Erfahrungen von beiden Seiten der Zusammenarbeit."
   },
+  "adminCampaigns": {
+    "visibility": "Öffentliche Liste",
+    "visible": "Angezeigt",
+    "hidden": "Aus Listen ausgeblendet",
+    "show": "In Listen anzeigen",
+    "hide": "Aus Listen ausblenden",
+    "visibilitySaved": "Sichtbarkeit der Kampagne in Listen gespeichert."
+  },
   "adminProfiles": {
     "createdAt": "Erstellt",
     "createdAtFormat": "{date} um {time}",

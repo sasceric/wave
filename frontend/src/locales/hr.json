@@ -3099,6 +3099,14 @@
     "publicReviewsTitle": "Suradnje i recenzije",
     "publicReviewsHint": "Iskustva s obje strane suradnje."
   },
+  "adminCampaigns": {
+    "visibility": "Na javnom popisu",
+    "visible": "Prikazana",
+    "hidden": "Skrivena s popisa",
+    "show": "Prikaži na popisu",
+    "hide": "Sakrij s popisa",
+    "visibilitySaved": "Vidljivost kampanje na popisu je spremljena."
+  },
   "adminProfiles": {
     "createdAt": "Kreirano",
     "createdAtFormat": "{date} u {time}",

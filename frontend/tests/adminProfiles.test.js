@@ -124,3 +124,31 @@ test('private admin review ignores old responses after switching profiles, closi
   assert.equal(state.safeLink('javascript:alert(1)'), null)
   assert.equal(state.safeLink('https://example.test/a'), 'https://example.test/a')
 })
+
+test('campaign listing visibility saves independently from campaign status and retains the row on failure', async () => {
+  const requests = []
+  const { state } = await setupView('../src/views/AdminDashboardView.vue', {
+    'vue-router': { useRoute: () => ({ meta: { adminSection: 'campaigns' }, query: {} }) },
+    '../lib/api': { apiGet: async () => ({}), formatMoney: String, apiRequest: (path, options) => new Promise((resolve, reject) => requests.push({ path, options, resolve, reject })) },
+  })
+  state.listRows.value = [{ id: 7, title: 'Campaign', status: 'open', listed: true }]
+  const row = state.listRows.value[0]
+  assert.ok(state.tableColumns.value.some(column => column.key === 'listed'))
+  assert.equal(state.tableColumns.value.find(column => column.defaultSort)?.key, 'createdAt')
+  const hiding = state.changeCampaignListing(row)
+  assert.equal(requests[0].path, '/admin/catalog/campaigns/7/visibility')
+  assert.equal(requests[0].options.body.listed, false)
+  assert.equal(row.listed, true)
+  await state.changeCampaignListing(row)
+  assert.equal(requests.length, 1)
+  requests[0].resolve({ data: { id: 7, listed: false } })
+  await hiding
+  assert.equal(row.listed, false)
+  assert.equal(row.status, 'open')
+  const showing = state.changeCampaignListing(row)
+  assert.equal(requests[1].options.body.listed, true)
+  requests[1].reject(new Error('Save failed'))
+  await showing
+  assert.equal(row.listed, false)
+  assert.equal(state.error.value, 'Save failed')
+})
