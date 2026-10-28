@@ -264,7 +264,7 @@ final class CreatorController
 
     private static function followersSql(string $column): string
     {
-        return "(SELECT COALESCE(MAX(CASE WHEN profile->>'followers' ~ '^[0-9]{1,10}$' THEN LEAST((profile->>'followers')::BIGINT, 2147483647) ELSE 0 END), 0) FROM jsonb_array_elements(CAST($column AS jsonb)) profile)";
+        return \App\Account\SocialAudience::followersSql($column);
     }
 
     #[Route('/api/creators/filters', name: 'api_creators_filters', methods: ['GET'], priority: 10)]

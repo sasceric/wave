@@ -73,6 +73,22 @@ final class CachedSitemapTest extends TestCase
         }
     }
 
+    public function testCachedPartsContainAllPublicProfileGuides(): void
+    {
+        $sitemap = $this->sitemap(new Filesystem());
+        $sitemap->generate();
+        self::assertSame($this->directory.'/sitemap.xml', $sitemap->index());
+        $parts = '';
+        foreach (glob($this->directory.'/*-*.xml') as $path) $parts .= file_get_contents($path);
+        $routes = new LocalizedRouteMap(dirname(__DIR__, 2));
+        foreach ($routes->locales() as $locale) {
+            foreach (['creator', 'agency', 'brand'] as $kind) {
+                self::assertStringContainsString($routes->localizedPath('profile-guide-'.$kind, $locale).'</loc>', $parts);
+            }
+        }
+        self::assertStringNotContainsString('?type=', $parts);
+    }
+
     private function sitemap(Filesystem $filesystem): CachedSitemap
     {
         $db = $this->createStub(Connection::class);

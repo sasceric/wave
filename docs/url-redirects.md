@@ -70,7 +70,7 @@ same aliases before removal. Redirects commit in the deletion transaction.
 Existing administrator-edited or disabled rules are preserved. Changing
 visibility/approval or closing a campaign creates no deletion redirect. Shared
 history and participant access retain their existing deletion policy; API and
-account URLs are never redirected. A generated deletion rule that would create a
+private account URLs are never redirected (the public profile guides below are an explicit exception). A generated deletion rule that would create a
 cycle is saved disabled for administrator review without blocking deletion.
 
 Incoming query parameters are ignored by default; the optional transfer setting
@@ -133,3 +133,34 @@ Search Console. Google may continue displaying old URLs/titles until it recrawls
 Validation: the full isolated PostgreSQL backend suite, all frontend tests,
 PHPStan, ESLint and the production build passed. A read-only desktop/mobile preview
 with demo rows checked selection, confirmation, sorting and fixed action columns.
+
+## Public profile guide URLs (2026-10-28)
+
+Each guide has a public, audience-specific URL. Bosnian paths are:
+
+- `/racun/vodic-za-profil/kreator`
+- `/racun/vodic-za-profil/agencija`
+- `/racun/vodic-za-profil/brend`
+
+The seven locale maps use `profile-guide-creator`, `profile-guide-agency` and
+`profile-guide-brand`. The URL determines the content for guests and signed-in
+accounts alike. Audience tabs are ordinary links. Profile strength cards and
+profile reminder emails link straight to the matching guide. Canonical URLs,
+language alternates, server-readable guide text and both sitemap generators use
+these paths. Robots rules allow only the public guide namespace inside otherwise private
+account paths. Cached sitemap indexes refresh through the existing sitemap task.
+
+Migration `Version20261028100000` seeds 28 rows in `url_redirect`: the old base
+path and its three `?type=creator|agency|brand` URLs in each language. Base URLs
+without a supported type go to the creator guide. Old locale prefixes resolve to
+their current counterparts. Query-specific rules take precedence over the base
+rule; unrelated tracking parameters are discarded by default. Admins can change
+or disable these rules in the existing Redirects table. An explicitly disabled
+query rule does not fall through to the base rule. HTTP GET/HEAD requests return
+301s; SPA navigation uses the same resolver.
+
+Query-bearing sources are permitted only for the retired profile-guide type
+selector. Other private account routes and arbitrary query sources remain
+protected. Redirect validation follows these specific rules when detecting
+loops. The migration preserves existing rules and is repeatable. Rollback removes
+only unchanged generated rules. Deploy the migration and API/SPA together.

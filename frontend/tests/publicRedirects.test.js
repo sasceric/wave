@@ -48,3 +48,12 @@ test('private pages never request redirects and failed or unsafe lookups do not 
   const failed = await fixture(null, true)
   assert.equal(await failed.resolve({ meta: {}, fullPath: '/unknown' }), undefined)
 })
+
+test('the old public profile-guide selector uses table redirects while other account pages stay protected', async () => {
+  const { resolve, requests } = await fixture({ data: { targetPath: '/racun/vodic-za-profil/agencija' } })
+  const target = await resolve({ meta: { routeName: 'account-profile-guide' }, fullPath: '/racun/vodic-za-profil?type=agency' })
+  assert.equal(target.path, '/racun/vodic-za-profil/agencija')
+  assert.equal(requests.length, 1)
+  assert.equal(await resolve({ meta: { routeName: 'account-settings' }, fullPath: '/racun/postavke' }), undefined)
+  assert.equal(requests.length, 1)
+})

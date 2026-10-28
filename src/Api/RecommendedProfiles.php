@@ -9,8 +9,8 @@ use Symfony\Component\Clock\Clock;
 /** One SQL ranking contract for discovery and homepage picks, with a cursor-pinned UTC day. */
 final class RecommendedProfiles
 {
-    public const POSITION_TYPES = ['featured' => 'bool', 'feature_order' => 'int', 'quality' => 'int', 'jobs' => 'int', 'strength' => 'int', 'rotation' => 'string', 'id' => 'int', 'asOf' => 'date'];
-    public const ORDER = 'featured DESC, feature_order ASC, quality DESC, jobs DESC, strength DESC, rotation ASC, id ASC';
+    public const POSITION_TYPES = ['featured' => 'bool', 'feature_order' => 'int', 'quality' => 'int', 'jobs' => 'int', 'strength' => 'int', 'rank_followers' => 'int', 'rotation' => 'string', 'id' => 'int', 'asOf' => 'date'];
+    public const ORDER = 'featured DESC, feature_order ASC, quality DESC, jobs DESC, strength DESC, rank_followers DESC, rotation ASC, id ASC';
 
     public function __construct(private readonly CollaborationFeedback $feedback) {}
 
@@ -24,11 +24,12 @@ final class RecommendedProfiles
     public function columns(string $kind): string
     {
         $strength = $kind === 'creator' ? ProfileStrengthSql::creator() : ProfileStrengthSql::company();
+        $followers = $kind === 'creator' ? \App\Account\SocialAudience::followersSql('c.social_profiles') : '0';
         // Prior: three reviews at 4/5. One perfect review cannot outweigh a long strong track record.
         return "(c.featured AND (c.featured_until IS NULL OR c.featured_until > :rankingNow)) AS featured,
             CASE WHEN c.featured AND (c.featured_until IS NULL OR c.featured_until > :rankingNow) THEN COALESCE(c.featured_position, 2147483647) ELSE 2147483647 END AS feature_order,
             CASE WHEN feedback.count > 0 THEN FLOOR(1000000.0 * (feedback.total + 12) / (feedback.count + 3))::integer ELSE 0 END AS quality,
-            completed.count AS jobs, $strength AS strength, md5(:rankingDay || ':$kind:' || c.id::text) COLLATE \"C\" AS rotation";
+            completed.count AS jobs, $strength AS strength, $followers AS rank_followers, md5(:rankingDay || ':$kind:' || c.id::text) COLLATE \"C\" AS rotation";
     }
 
     public function joins(string $kind): string
@@ -59,7 +60,7 @@ final class RecommendedProfiles
     {
         $equals = [];
         $parts = [];
-        foreach (['featured' => '<', 'feature_order' => '>', 'quality' => '<', 'jobs' => '<', 'strength' => '<', 'rotation' => '>', 'id' => '>'] as $column => $operator) {
+        foreach (['featured' => '<', 'feature_order' => '>', 'quality' => '<', 'jobs' => '<', 'strength' => '<', 'rank_followers' => '<', 'rotation' => '>', 'id' => '>'] as $column => $operator) {
             $comparison = $column === 'rotation' ? 'rotation COLLATE "C"' : $column;
             $parts[] = '('.implode(' AND ', [...$equals, "$comparison $operator :$column"]).')';
             $equals[] = "$comparison = :$column";
@@ -69,6 +70,6 @@ final class RecommendedProfiles
 
     public function position(array $row, array $parameters): array
     {
-        return ['featured' => (bool) $row['featured'], 'feature_order' => (int) $row['feature_order'], 'quality' => (int) $row['quality'], 'jobs' => (int) $row['jobs'], 'strength' => (int) $row['strength'], 'rotation' => $row['rotation'], 'id' => (int) $row['id'], 'asOf' => $parameters['rankingNow']];
+        return ['featured' => (bool) $row['featured'], 'feature_order' => (int) $row['feature_order'], 'quality' => (int) $row['quality'], 'jobs' => (int) $row['jobs'], 'strength' => (int) $row['strength'], 'rank_followers' => (int) $row['rank_followers'], 'rotation' => $row['rotation'], 'id' => (int) $row['id'], 'asOf' => $parameters['rankingNow']];
     }
 }

@@ -10,7 +10,8 @@ existing behavior.
 2. Review quality adjusted for the number of public reviews.
 3. Number of distinct completed campaigns.
 4. Profile strength, descending from 100 to 0.
-5. A deterministic daily rotation for profiles equal on all preceding values,
+5. Largest single-platform follower count for creators, descending.
+6. A deterministic daily rotation for profiles equal on all preceding values,
    then the profile ID as a final tie-breaker.
 
 Review quality uses a prior of three reviews at 4/5:
@@ -30,6 +31,16 @@ measures completeness, not verified ability. `ProfileStrengthSql` projects the
 checklist into PostgreSQL so ordering happens before pagination. Ranking queries
 do not fetch every entity into PHP. Visibility, blocking, search and filters
 still apply before ranking, including to featured profiles.
+
+Creator follower counts use the maximum saved count across all social platforms,
+not the first platform or the sum. The card badge shows that platform and its
+matching icon. Missing/invalid counts are omitted from badges and contribute zero
+to ranking. Counts are self-reported; they only break ties after review quality,
+completed work and profile strength. Company ranking keeps its existing order.
+The follower value is part of the signed recommendation cursor, so pagination
+uses the same order as the initial page and homepage picks. No migration or
+background worker is needed; reload already-open lists after deployment to start
+with a cursor using the updated ranking fields.
 
 Rotation changes at midnight UTC. Signed recommendation cursors retain the
 first page's UTC timestamp and day, so continuing the same traversal after

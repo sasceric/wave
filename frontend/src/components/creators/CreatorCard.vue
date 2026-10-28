@@ -4,7 +4,9 @@ import RatingSummary from '../reviews/RatingSummary.vue'
 import '../../scss/components/creators/CreatorCard.scss'
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { Camera, CirclePlay, MapPin, Music2, UsersRound } from '@lucide/vue'
+import { MapPin } from '@lucide/vue'
+import SocialPlatformIcon from '../shared/SocialPlatformIcon.vue'
+import { largestSocialProfile } from '../../lib/socialAudience'
 import RouterLink from '../shared/LocalizedLink.vue'
 import { formatFollowers, formatMoney } from '../../lib/api'
 import CardImage from '../shared/CardImage.vue'
@@ -16,17 +18,8 @@ const props = defineProps({
 })
 const { t } = useI18n()
 
-const primarySocial = computed(() => props.creator.socialProfiles?.[0] || null)
+const primarySocial = computed(() => largestSocialProfile(props.creator.socialProfiles))
 const hasFollowerCount = computed(() => Number.isFinite(primarySocial.value?.followers) && primarySocial.value.followers >= 0)
-const socialIcon = computed(() => {
-  const icons = {
-    Instagram: Camera,
-    TikTok: Music2,
-    YouTube: CirclePlay,
-  }
-
-  return icons[primarySocial.value?.platform] || UsersRound
-})
 const categories = computed(() => (
   props.creator.categoryLabels?.length
     ? props.creator.categoryLabels
@@ -68,7 +61,7 @@ const startingPrice = computed(() => {
         class="creator-card__metric"
         :aria-label="`${primarySocial.platform}: ${formatFollowers(primarySocial.followers)}`"
       >
-        <component :is="socialIcon" :size="14" stroke-width="2" aria-hidden="true" />
+        <SocialPlatformIcon :platform="primarySocial.platform || ''" :size="14" />
         {{ formatFollowers(primarySocial.followers) }}
       </span>
     </div>

@@ -128,6 +128,43 @@ final class RecommendedProfilesTest extends WebTestCase
         self::assertArrayNotHasKey('businessDetails', $home['companies'][0]);
     }
 
+    public function testLargestAudienceBreaksRankingTiesWithoutOverridingFeaturedPositionsOrEarlierSignals(): void
+    {
+        $first = $this->creator('position-first', [['platform' => 'Instagram', 'followers' => 10]]);
+        $first->setFeatured(true);
+        $first->setFeaturedPosition(1);
+        $second = $this->creator('position-second', [['platform' => 'TikTok', 'followers' => 1000000]]);
+        $second->setFeatured(true);
+        $second->setFeaturedPosition(2);
+        $third = $this->creator('unpositioned-large', [['platform' => 'YouTube', 'followers' => 5000000]]);
+        $third->setFeatured(true);
+        $fourth = $this->creator('unpositioned-small', [['platform' => 'Instagram', 'followers' => 10000]]);
+        $fourth->setFeatured(true);
+        $this->creator('largest-single', [['platform' => 'Instagram', 'followers' => 10000], ['platform' => 'TikTok', 'followers' => 20000]]);
+        $this->creator('larger-sum', [['platform' => 'Instagram', 'followers' => 15000], ['platform' => 'TikTok', 'followers' => 15000]]);
+        $this->creator('missing-count', [['platform' => 'TikTok', 'followers' => null]]);
+        $reviewed = $this->creator('reviewed', [['platform' => 'Instagram', 'followers' => 5]]);
+        $this->job($this->brand('ranking-client'), $reviewed, 5);
+        $strong = $this->creator('strong-profile', [['platform' => 'Instagram', 'followers' => 2]]);
+        $strong->setPortfolio([[], [], []]);
+        $this->em->flush();
+        $expected = ['position-first', 'position-second', 'unpositioned-large', 'unpositioned-small', 'reviewed', 'strong-profile', 'largest-single', 'larger-sum', 'missing-count'];
+        $rows = $this->get('/api/creators?sort=recommended&view=card')['data'];
+        self::assertSame($expected, array_column($rows, 'slug'));
+        self::assertSame([['platform' => 'TikTok', 'followers' => 20000]], $rows[6]['socialProfiles']);
+        $home = $this->get('/api/homepage')['data']['creators'];
+        self::assertSame(array_slice($expected, 0, 4), array_column($home, 'slug'));
+        self::assertSame([['platform' => 'TikTok', 'followers' => 1000000]], $home[1]['socialProfiles']);
+        $loaded = [];
+        $cursor = null;
+        do {
+            $response = $this->get('/api/creators?sort=recommended&view=card&pagination=cursor&limit=1'.($cursor ? '&cursor='.urlencode($cursor) : ''));
+            $loaded = [...$loaded, ...array_column($response['data'], 'slug')];
+            $cursor = $response['meta']['nextCursor'];
+        } while ($cursor);
+        self::assertSame($expected, $loaded);
+    }
+
     public function testRotationIsRepeatableAndCursorKeepsItsDayAcrossMidnight(): void
     {
         for ($i = 0; $i < 8; ++$i) $this->creator('equal-'.$i);
@@ -276,12 +313,12 @@ final class RecommendedProfilesTest extends WebTestCase
         self::assertTrue($this->get('/api/admin/dashboard?section=homepage')['data']['creators'][0]['featured']);
     }
 
-    private function creator(string $slug): Creator
+    private function creator(string $slug, array $socialProfiles = []): Creator
     {
         $user = new User($slug.'@example.test', 'ROLE_CREATOR');
         $user->setPassword('unused');
         $user->setApproved(true);
-        $creator = new Creator($slug, $slug, 'Travel', 'Zenica', '', []);
+        $creator = new Creator($slug, $slug, 'Travel', 'Zenica', '', $socialProfiles);
         $user->setCreator($creator);
         $this->em->persist($user);
         return $creator;

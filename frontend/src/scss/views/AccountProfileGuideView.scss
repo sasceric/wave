@@ -26,7 +26,10 @@
     border-radius: var(--radius-pill);
     background: var(--surface);
 
-    button {
+    a {
+      display: inline-flex;
+      align-items: center;
+      text-decoration: none;
       min-height: 36px;
       padding: 0 14px;
       border: 0;
@@ -38,8 +41,8 @@
       font-weight: 600;
       cursor: pointer;
     }
-    button[aria-pressed="true"] { color: var(--forest); background: var(--card); box-shadow: 0 1px 3px rgba(23, 61, 54, .12); }
-    button:focus-visible { outline: 2px solid var(--forest); outline-offset: 2px; }
+    a[aria-current="page"] { color: var(--forest); background: var(--card); box-shadow: 0 1px 3px rgba(23, 61, 54, .12); }
+    a:focus-visible { outline: 2px solid var(--forest); outline-offset: 2px; }
   }
 
   &__doc { display: grid; justify-items: center; gap: 28px; }

@@ -153,7 +153,7 @@ final class ProfileReminderBatch
     {
         $id = (int) $user->getId();
         $name = EmailRecipient::name($user);
-        $variables = $this->variables($locale, $strength['kind'] === 'creator' ? 'creator' : 'company', $stage, $strength['score'], $strength['missing'], $name, [
+        $variables = $this->variables($locale, $strength['kind'], $stage, $strength['score'], $strength['missing'], $name, [
             'unsubscribeUrl' => $this->preferences->pageUrl($id, EmailPreferences::PROFILE_TIPS, $locale),
             'settingsUrl' => $this->preferences->pageUrl($id, null, $locale),
         ]);
@@ -200,13 +200,13 @@ final class ProfileReminderBatch
      * @param array{unsubscribeUrl: string, settingsUrl: string} $links
      * @return array<string, string>
      */
-    private function variables(string $locale, string $audience, int $stage, int $score, array $missing, string $name, array $links): array
+    private function variables(string $locale, string $kind, int $stage, int $score, array $missing, string $name, array $links): array
     {
         $locale = in_array($locale, ProfileReminderEmailCopy::locales(), true) ? $locale : 'bs';
         $steps = $this->steps($locale);
         $missing = array_slice($missing, 0, 2);
         $first = $steps[$missing[0]['key'] ?? '']['title'] ?? '';
-        $copy = ProfileReminderEmailCopy::forStage($locale, $audience, $stage, $score, $first);
+        $copy = ProfileReminderEmailCopy::forStage($locale, $kind === 'creator' ? 'creator' : 'company', $stage, $score, $first);
         $lines = array_map(static fn (array $step): string => '• '.($steps[$step['key']]['title'] ?? $step['key']).' (+'.$step['points'].'%)'
             .(isset($steps[$step['key']]['why']) ? "\n".$steps[$step['key']]['why'] : ''), $missing);
 
@@ -218,7 +218,7 @@ final class ProfileReminderBatch
             'scoreLabel' => $copy['scoreLabel'], 'score' => (string) $score, 'firstStep' => $first,
             'stepsLabel' => $copy['stepsLabel'], 'steps' => implode("\n\n", $lines),
             'buttonLabel' => $copy['buttonLabel'], 'actionUrl' => $this->preferences->routeUrl('account-dashboard', $locale),
-            'guideLabel' => $copy['guideLabel'], 'guideUrl' => $this->preferences->routeUrl('account-profile-guide', $locale),
+            'guideLabel' => $copy['guideLabel'], 'guideUrl' => $this->preferences->routeUrl('profile-guide-'.$kind, $locale),
             'footer' => $copy['footer'],
             'unsubscribeLabel' => $copy['unsubscribeLabel'], 'unsubscribeUrl' => $links['unsubscribeUrl'],
             'settingsLabel' => $copy['settingsLabel'], 'settingsUrl' => $links['settingsUrl'],

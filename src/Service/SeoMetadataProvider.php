@@ -123,6 +123,17 @@ final class SeoMetadataProvider
         $indexable = !$private && !$searchResults;
         if ($name === 'search') $description = $this->catalogs[$locale]['seo']['searchDescription'];
         $contentHtml = null;
+        if (in_array($name, ['profile-guide-creator', 'profile-guide-agency', 'profile-guide-brand'], true)) {
+            $kind = substr($name, strlen('profile-guide-'));
+            $copy = $this->catalogs[$locale]['profileGuide'][$kind];
+            $description = $copy['lead'];
+            $escape = static fn (string $text): string => htmlspecialchars($text, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+            $contentHtml = '<main><h1>'.$escape($copy['title']).'</h1><p>'.$escape($copy['lead']).'</p><ul>';
+            foreach ($copy['notes'] as $note) {
+                $contentHtml .= '<li><strong>'.$escape($note['title']).'</strong> '.$escape($note['text']).'</li>';
+            }
+            $contentHtml .= '</ul></main>';
+        }
         if ($name === 'maintenance') {
             $copy = $this->catalogs[$locale]['maintenance'];
             $escape = static fn (string $text): string => htmlspecialchars($text, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');

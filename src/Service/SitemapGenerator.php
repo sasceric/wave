@@ -27,6 +27,9 @@ final class SitemapGenerator
             ['creators', []],
             ['companies', []],
             ['campaigns', []],
+            ['profile-guide-creator', []],
+            ['profile-guide-agency', []],
+            ['profile-guide-brand', []],
             ['terms-of-use', []],
             ['imprint', []],
             ['privacy-policy', []],
@@ -121,6 +124,9 @@ final class SitemapGenerator
             'Disallow: /api/admin/',
         ];
         foreach ($this->routeMap->locales() as $locale) {
+            // This public guide namespace sits inside otherwise private account paths.
+            // It includes legacy URLs so crawlers can follow their permanent redirects.
+            $lines[] = 'Allow: '.$this->routeMap->localizedPath('account-profile-guide', $locale);
             foreach ([
                 'account',
                 'login',

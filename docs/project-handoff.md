@@ -771,8 +771,10 @@ No CAPI token or server forwarding is part of this integration.
 ### Recommended profiles and homepage curation (2026-10-26)
 
 `RecommendedProfiles` supplies the PostgreSQL recommendation order for public
-directories and homepage creators: active featured status, review quality adjusted
-for volume, completed campaigns, profile strength, then daily tie rotation. Signed
+directories and homepage creators: active featured status and position, review quality adjusted
+for volume, completed campaigns, profile strength, largest single-platform creator audience,
+then daily tie rotation. `SocialAudience` shares the audience selection with card
+resources and follower sorting; creator badges use `SocialPlatformIcon`. Signed
 cursors pin the rotation day. `AdminHomepageCuration.vue` replaces the homepage
 multiselects with tabbed selected rows, the shared searchable `MultiSelect` and optional creator /
 company feature end dates. Migration `20261026180000` adds those dates; expiry is

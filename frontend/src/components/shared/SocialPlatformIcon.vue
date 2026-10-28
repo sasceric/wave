@@ -1,6 +1,6 @@
 <script setup>
 import { computed } from 'vue'
-import { Globe } from '@lucide/vue'
+import { Globe, Podcast, Radio } from '@lucide/vue'
 import instagram from '../../../../public/images/instagram.svg?url'
 import tiktok from '../../../../public/images/tiktok.svg?url'
 import youtube from '../../../../public/images/youtube.svg?url'
@@ -12,6 +12,8 @@ const iconStyle = computed(() => ({ '--social-icon': `url(${JSON.stringify(icons
 </script>
 <template>
   <span v-if="icons[platform]" class="social-platform-icon" :style="iconStyle" aria-hidden="true"></span>
+  <Radio v-else-if="platform === 'Twitch'" :size="size" aria-hidden="true" />
+  <Podcast v-else-if="platform === 'Spotify'" :size="size" aria-hidden="true" />
   <Globe v-else :size="size" aria-hidden="true" />
 </template>
 <style lang="scss" src="../../scss/components/shared/SocialPlatformIcon.scss"></style>

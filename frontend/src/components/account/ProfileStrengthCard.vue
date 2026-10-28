@@ -81,7 +81,7 @@ const done = (key) => strength.value?.steps.find((step) => step.key === key)?.do
         <template v-if="strength.next">{{ t('profileStrength.toNext', { points: strength.next - strength.score, level: t(`profileStrength.levels.${strength.level + 1}`) }) }}</template>
         {{ t(`profileStrength.why.${audienceKey}`) }}
       </p>
-      <LocalizedLink class="profile-strength__guide" :to="{ name: 'account-profile-guide' }"><FileText :size="15" aria-hidden="true" />{{ t('profileGuide.cardLink') }}</LocalizedLink>
+      <LocalizedLink class="profile-strength__guide" :to="{ name: `profile-guide-${kind}` }"><FileText :size="15" aria-hidden="true" />{{ t('profileGuide.cardLink') }}</LocalizedLink>
     </div>
 
     <div class="profile-strength__steps">

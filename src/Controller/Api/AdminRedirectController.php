@@ -97,7 +97,7 @@ final class AdminRedirectController
             return $this->invalid($locale);
         }
         try {
-            $source = $this->redirects->path(trim($data['sourcePath']));
+            $source = $this->redirects->source(trim($data['sourcePath']));
             $target = $this->redirects->target(trim($data['targetPath']));
             $this->redirects->validate($source, $target, $data['enabled'], $id);
             $row ??= new UrlRedirect($source, $target);

@@ -22,6 +22,7 @@ final class CreatorResource
         $categories = $creator->getCategories();
         $categoryLabel ??= $categoryLabels[$creator->getCategory()] ?? null;
         if ($card) {
+            $primarySocial = \App\Account\SocialAudience::largest($creator->getSocialProfiles());
             return [
                 'id' => $creator->getId(),
                 'slug' => $creator->getSlug(),
@@ -37,7 +38,7 @@ final class CreatorResource
                 'categoryLabels' => array_map(static fn (string $category): string => $categoryLabels[$category] ?? $category, $categories),
                 'avatarUrl' => $creator->getAvatarMedia()?->getUrl() ?? $creator->getAvatarUrl(),
                 'avatarImage' => MediaImageResource::fromEntity($creator->getAvatarMedia()),
-                'socialProfiles' => array_map(static fn (array $profile): array => array_intersect_key($profile, array_flip(['platform', 'followers'])), array_slice($creator->getSocialProfiles(), 0, 1)),
+                'socialProfiles' => $primarySocial === null ? [] : [array_intersect_key($primarySocial, array_flip(['platform', 'followers']))],
                 'packages' => array_map(static fn (array $package): array => ['price' => $package['price'] ?? null, 'currency' => $package['currency'] ?? 'BAM'], $creator->getPackages()),
             ];
         }

@@ -2,7 +2,7 @@ import { apiGet } from './api'
 
 export async function resolvePublicRedirect(route, timeoutMs = 5000) {
   const name = route.meta?.routeName || ''
-  if (name === 'account' || name.startsWith('account-') || name === 'admin' || name.startsWith('admin-')
+  if (name === 'account' || name.startsWith('account-') && name !== 'account-profile-guide' || name === 'admin' || name.startsWith('admin-')
     || ['maintenance', 'login', 'register', 'forgot-password', 'messages', 'verify-email', 'reset-password', 'moderation', 'support-create', 'support-track'].includes(name)) return
   const controller = new AbortController()
   const timer = setTimeout(() => controller.abort(), timeoutMs)

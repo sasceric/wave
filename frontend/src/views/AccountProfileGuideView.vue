@@ -1,7 +1,7 @@
 <script setup>
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useRoute, useRouter } from 'vue-router'
+import { useRoute } from 'vue-router'
 import { ArrowLeft, Check, Download, Lightbulb, ThumbsDown, ThumbsUp } from '@lucide/vue'
 import AccountPage from '../components/account/AccountPage.vue'
 import LocalizedLink from '../components/shared/LocalizedLink.vue'
@@ -15,9 +15,8 @@ const KINDS = ['creator', 'agency', 'brand']
 const IMAGES = { creator: '/images/home-faq-creator-480.webp', agency: '/images/how-it-works-company.webp', brand: '/images/companies-hero.webp' }
 const { t } = useI18n()
 const route = useRoute()
-const router = useRouter()
 const ownKind = computed(() => profileKind(currentUser.value))
-const kind = computed(() => KINDS.includes(route.query.type) ? route.query.type : ownKind.value || 'creator')
+const kind = computed(() => KINDS.find(type => route.meta.routeName === `profile-guide-${type}`) || 'creator')
 const strength = computed(() => ownKind.value === kind.value ? profileStrength(currentUser.value) : null)
 const doneKeys = computed(() => new Set(strength.value?.steps.filter((step) => step.done).map((step) => step.key) || []))
 const steps = computed(() => profileSteps(kind.value))
@@ -35,9 +34,6 @@ const looks = computed(() => items('look', 4, ['title', 'text']))
 const chips = computed(() => t(copy('sampleChips')).split(';').map((chip) => chip.trim()).filter(Boolean))
 const audienceKey = computed(() => kind.value === 'brand' ? 'creators' : 'brands')
 
-function choose(type) {
-  void router.replace({ query: { ...route.query, type } })
-}
 function download() {
   window.print()
 }
@@ -52,9 +48,9 @@ function download() {
         <p>{{ t('profileGuide.intro') }}</p>
       </div>
       <div class="profile-guide__controls">
-        <div class="profile-guide__types" role="group" :aria-label="t('profileGuide.typeLabel')">
-          <button v-for="type in KINDS" :key="type" type="button" :aria-pressed="kind === type" @click="choose(type)">{{ t(`profileGuide.types.${type}`) }}</button>
-        </div>
+        <nav class="profile-guide__types" :aria-label="t('profileGuide.typeLabel')">
+          <LocalizedLink v-for="type in KINDS" :key="type" :to="{ name: `profile-guide-${type}` }" :aria-current="kind === type ? 'page' : undefined">{{ t(`profileGuide.types.${type}`) }}</LocalizedLink>
+        </nav>
         <button class="button button--dark" type="button" @click="download"><Download :size="16" aria-hidden="true" />{{ t('profileGuide.download') }}</button>
       </div>
     </header>

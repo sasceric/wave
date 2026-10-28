@@ -348,7 +348,12 @@ final class SeoControllerTest extends WebTestCase
         self::assertStringContainsString('<loc>http://127.0.0.1:8000/en/cookies</loc>', $xml);
         self::assertStringContainsString('href="http://127.0.0.1:8000/politika-privatnosti"', $xml);
         self::assertStringNotContainsString('closed-brief', $xml);
-        self::assertStringNotContainsString('/account', $xml);
+        preg_match_all('~<loc>([^<]+)</loc>~', $xml, $locations);
+        $routes = static::getContainer()->get(\App\Localization\LocalizedRouteMap::class);
+        foreach ($locations[1] as $location) {
+            $name = $routes->resolve(parse_url($location, PHP_URL_PATH))['name'] ?? '';
+            self::assertFalse($name === 'account' || str_starts_with($name, 'account-'), $location);
+        }
         self::assertStringNotContainsString('/api/', $xml);
     }
 

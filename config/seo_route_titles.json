@@ -51,6 +51,9 @@
   "search": "seo.searchTitle",
   "account-email-preferences": "emailPreferences.title",
   "account-profile-guide": "profileGuide.title",
+  "profile-guide-creator": "profileGuide.creator.title",
+  "profile-guide-agency": "profileGuide.agency.title",
+  "profile-guide-brand": "profileGuide.brand.title",
   "terms-of-use": "legal.terms.title",
   "admin-listing-ads": "listingAds.title",
   "admin-account-types": "accountType.adminTitle"

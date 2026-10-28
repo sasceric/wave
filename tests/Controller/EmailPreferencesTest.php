@@ -93,6 +93,7 @@ final class EmailPreferencesTest extends WebTestCase
         self::assertSame('amina@example.test', $email->getTo()[0]->getAddress());
         self::assertSame(\App\Account\ProfileReminderEmailCopy::forStage('en', 'creator', 1, 0, 'Add a profile photo')['subject'].' · 0% · Add a profile photo', $email->getSubject());
         self::assertEmailHtmlBodyContains($email, 'Custom reminder');
+        self::assertEmailHtmlBodyContains($email, '/en/account/profile-guide/creator');
         self::assertStringContainsString('/api/email/unsubscribe?u='.$user->getId(), $email->getHeaders()->get('List-Unsubscribe')?->getBodyAsString() ?? '');
         self::assertSame('List-Unsubscribe=One-Click', $email->getHeaders()->get('List-Unsubscribe-Post')?->getBodyAsString());
         self::assertSame(1, (int) $db->fetchOne('SELECT profile_reminder_stage FROM wave_user WHERE id = ?', [$user->getId()]));
@@ -122,6 +123,26 @@ final class EmailPreferencesTest extends WebTestCase
         self::assertSame(\App\Legal\LegalPolicies::VERSION, $this->em->getConnection()->fetchOne('SELECT terms_notice_version FROM wave_user WHERE id = ?', [$user->getId()]));
         self::assertSame(0, $batch->run(false, true));
         self::assertEmailCount(1);
+    }
+
+    public function testCompanyRemindersLinkDirectlyToTheMatchingPublicGuide(): void
+    {
+        $batch = static::getContainer()->get(ProfileReminderBatch::class);
+        foreach (['agency', 'brand'] as $index => $kind) {
+            $user = new User($kind.'@example.test', 'ROLE_COMPANY');
+            $user->setPassword('unused');
+            $company = new \App\Entity\Company('guide-'.$kind, 'Guide '.$kind, 'Beauty');
+            $company->setCompanyType($kind);
+            $user->setCompany($company);
+            $this->em->persist($user);
+            $this->em->persist($company);
+            $this->em->flush();
+            $batch->send($user, 'bs', 1, ['kind' => $kind, 'score' => 0, 'level' => 1, 'missing' => [['key' => 'logo', 'points' => 15]]]);
+            $email = self::getMailerMessage($index);
+            self::assertInstanceOf(Email::class, $email);
+            self::assertEmailHtmlBodyContains($email, '/racun/vodic-za-profil/'.($kind === 'agency' ? 'agencija' : 'brend'));
+            self::assertStringNotContainsString('?type=', $email->getHtmlBody());
+        }
     }
 
     public function testAdminsSeeReminderHistoryAndCanRepeatOrAdvanceIt(): void

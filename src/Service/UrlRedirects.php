@@ -78,14 +78,28 @@ final class UrlRedirects
         return $this->path($path).($query !== null && $query !== '' ? '?'.$query : '');
     }
 
+    /** Only the retired public profile-guide selector accepts a query-specific source. */
+    public function source(string $source): string
+    {
+        if (strlen($source) > 500) throw new \InvalidArgumentException('Redirect source is too long.');
+        [$path, $query] = array_pad(explode('?', $source, 2), 2, null);
+        $path = $this->path($path);
+        if ($query === null) return $path;
+        if (preg_match('/^type=(creator|agency|brand)$/D', $query) !== 1
+            || ($this->routes->resolve($path)['name'] ?? null) !== 'account-profile-guide') {
+            throw new \InvalidArgumentException('Query-specific sources are limited to legacy profile guides.');
+        }
+        return $path.'?'.$query;
+    }
+
     public function validate(string $source, string $target, bool $enabled, ?int $id = null): void
     {
         $existing = $this->find($source);
         if ($existing !== null && $existing->getId() !== $id) {
             throw new \InvalidArgumentException('A redirect already exists for this path.');
         }
-        $path = explode('?', $target, 2)[0];
-        if ($path === $source) {
+        [$path, $query] = array_pad(explode('?', $target, 2), 2, null);
+        if ($path === $source || $target === $source) {
             throw new \InvalidArgumentException('A redirect cannot point to itself.');
         }
         if (!$enabled) {
@@ -93,12 +107,13 @@ final class UrlRedirects
         }
         $seen = [$source => true];
         for ($i = 0; $i < 64; ++$i) {
-            if (isset($seen[$path])) {
+            $key = $this->lookupKey($path, $query);
+            if (isset($seen[$key])) {
                 throw new \InvalidArgumentException('Redirect loop.');
             }
-            $seen[$path] = true;
-            $next = $this->find($path, true);
-            if ($next === null) {
+            $seen[$key] = true;
+            $next = $this->matching($path, $query);
+            if ($next === null || !$next->isEnabled()) {
                 $route = $this->routes->resolve($path);
                 if ($route !== null && $this->routes->isShared($route['name'])) {
                     $canonical = $this->routes->localizedPath($route['name'], 'bs', $route['params']);
@@ -107,7 +122,7 @@ final class UrlRedirects
                 return;
             }
             if ($id !== null && $next->getId() === $id) return;
-            $path = explode('?', $next->getTargetPath(), 2)[0];
+            [$path, $query] = array_pad(explode('?', $next->getTargetPath(), 2), 2, null);
         }
         throw new \InvalidArgumentException('Redirect chain is too long.');
     }
@@ -138,12 +153,13 @@ final class UrlRedirects
         $seen = [];
         $location = null;
         for ($i = 0; $i < 64; ++$i) {
-            if (isset($seen[$path])) {
+            $key = $this->lookupKey($path, $query);
+            if (isset($seen[$key])) {
                 return null;
             }
-            $seen[$path] = true;
-            $redirect = $this->find($path, true);
-            if ($redirect === null) {
+            $seen[$key] = true;
+            $redirect = $this->matching($path, $query);
+            if ($redirect === null || !$redirect->isEnabled()) {
                 $route = $this->routes->resolve($path);
                 if ($route !== null && $this->routes->isShared($route['name'])) {
                     $canonical = $this->routes->localizedPath($route['name'], 'bs', $route['params']);
@@ -167,6 +183,9 @@ final class UrlRedirects
 
     private function publicPath(string $path, ?string $name): bool
     {
+        if (in_array($name, ['account-profile-guide', 'profile-guide-creator', 'profile-guide-agency', 'profile-guide-brand'], true)) {
+            return true;
+        }
         if ($name !== null && ($name === 'account' || str_starts_with($name, 'account-') || $name === 'admin' || str_starts_with($name, 'admin-')
             || in_array($name, ['maintenance', 'login', 'register', 'forgot-password', 'messages', 'verify-email', 'reset-password', 'moderation', 'support-create', 'support-track'], true))) {
             return false;
@@ -175,6 +194,22 @@ final class UrlRedirects
 
         return preg_match('~^/(?:api|admin|account|racun|messages|poruke|q|assets|build|images|media|uploads|fonts|_profiler|_wdt)(?:/|$)~', $unprefixed) !== 1
             && !str_contains($path, '.');
+    }
+
+    private function lookupKey(string $path, ?string $query): string
+    {
+        if (($this->routes->resolve($path)['name'] ?? null) === 'account-profile-guide') {
+            parse_str($query ?? '', $parameters);
+            $type = $parameters['type'] ?? null;
+            if (is_string($type) && in_array($type, ['creator', 'agency', 'brand'], true)) return $path.'?type='.$type;
+        }
+        return $path;
+    }
+
+    private function matching(string $path, ?string $query): ?UrlRedirect
+    {
+        $key = $this->lookupKey($path, $query);
+        return ($key !== $path ? $this->find($key) : null) ?? $this->find($path);
     }
 
     private function find(string $path, bool $enabledOnly = false): ?UrlRedirect

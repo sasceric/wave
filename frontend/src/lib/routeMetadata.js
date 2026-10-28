@@ -19,5 +19,8 @@ export function routeMetadata(route, locale, t, authenticated = false) {
             || (known ? 'privateDescription' : 'notFoundDescription')
   const searchPage = name === 'search' || (['creators', 'companies', 'campaigns'].includes(name) && Boolean(route.query?.q?.trim?.()))
   const loadingProfile = ['creator-profile', 'company-profile', 'campaign-detail'].includes(name)
+  if (['profile-guide-creator', 'profile-guide-agency', 'profile-guide-brand'].includes(name)) {
+    return { title: t(`profileGuide.${name.slice('profile-guide-'.length)}.title`), description: t(`profileGuide.${name.slice('profile-guide-'.length)}.lead`), noindex: false, analyticsReady: true }
+  }
   return { title: t(key), description: t(`seo.${description}`), noindex: privatePage || !known || loadingProfile || searchPage, robots: searchPage ? 'noindex, follow' : undefined, analyticsReady: !loadingProfile && name !== 'maintenance' }
 }

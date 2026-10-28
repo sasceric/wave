@@ -9,6 +9,25 @@ use PHPUnit\Framework\TestCase;
 
 final class CreatorResourceTest extends TestCase
 {
+    public function testCardsChooseTheLargestSingleAudienceAndKeepPrivateSocialDetailsOut(): void
+    {
+        $profiles = [
+            ['platform' => 'Instagram', 'followers' => 10000, 'handle' => 'instagram-name'],
+            ['platform' => 'TikTok', 'followers' => 20000, 'handle' => 'tiktok-name'],
+            ['platform' => 'YouTube', 'followers' => null],
+        ];
+        $creator = new Creator('audience', 'Audience', 'Travel', 'Sarajevo', '', $profiles);
+        self::assertSame([['platform' => 'TikTok', 'followers' => 20000]], CreatorResource::fromEntity($creator, 'bs', card: true)['socialProfiles']);
+        self::assertSame($profiles, $creator->getSocialProfiles());
+        self::assertCount(3, CreatorResource::fromEntity($creator, 'bs')['socialProfiles']);
+        foreach ([[], [['platform' => 'Instagram', 'followers' => null]], [['platform' => 'YouTube', 'followers' => 'not a count']]] as $missing) {
+            $creator = new Creator('missing', 'Missing', 'Travel', 'Sarajevo', '', $missing);
+            self::assertSame([], CreatorResource::fromEntity($creator, 'bs', card: true)['socialProfiles']);
+        }
+        self::assertSame(['platform' => 'Instagram', 'followers' => 0], \App\Account\SocialAudience::largest([['platform' => 'Instagram', 'followers' => 0]]));
+        self::assertSame(1200, \App\Account\SocialAudience::largest([['followers' => null], ['followers' => '1200']])['followers']);
+    }
+
     public function testDemoCreatorCopyIsLocalizedForEverySupportedLocale(): void
     {
         $translations = DemoTranslations::creator('maya-chen');
