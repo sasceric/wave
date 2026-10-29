@@ -8,7 +8,7 @@ use App\Entity\User;
 
 final class LegalPolicies
 {
-    public const VERSION = '2026-10-26.2';
+    public const VERSION = '2026-10-29';
 
     /** Date the current terms apply from, shared with the frontend (config/legal_documents.json). */
     public static function effectiveDate(): string

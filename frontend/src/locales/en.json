@@ -115,6 +115,13 @@
           ]
         },
         {
+          "heading": "Data exchanged between users",
+          "paragraphs": [
+            "Each user processes personal data received from other users, such as names, contact details, delivery addresses, photos or videos, as an independent controller and is responsible for it under applicable law. Wave only transmits and stores this data to operate the platform.",
+            "Use the data you receive only for the agreed collaboration, do not pass it to third parties without a legal basis, and delete it when it is no longer needed. Wave is not responsible for its processing outside the platform."
+          ]
+        },
+        {
           "heading": "Providers and international processing",
           "paragraphs": [
             "Hetzner Online GmbH hosts Wave’s database, files and recovery backups in Germany. Brevo (Brevo SAS, France) delivers emails using recipients’ addresses, names and message contents; its published database hosting locations are France, Germany and Belgium.",
@@ -292,7 +299,8 @@
         {
           "heading": "Operator and scope",
           "paragraphs": [
-            "Wave is operated by UD SteelCode, Školska 10, 72000 Zenica, Bosnia and Herzegovina (company ID 4320531730002; VAT ID 320531730002). Contact: info{'@'}wave.ba. These terms govern the platform; the privacy notice separately explains data processing."
+            "Wave is operated by UD SteelCode, Školska 10, 72000 Zenica, Bosnia and Herzegovina (company ID 4320531730002; VAT ID 320531730002). Contact: info{'@'}wave.ba. These terms govern the platform; the privacy notice separately explains data processing.",
+            "By registering for or using the platform, you accept these terms in the version in force at that time. If you do not accept them, do not use Wave."
           ]
         },
         {
@@ -314,7 +322,17 @@
           "heading": "Agreements, delivery and cancellation",
           "paragraphs": [
             "Before accepting an offer, agree the scope, amount/currency, taxes, payment method, deadlines, revisions, usage rights and cancellation terms. Confirming an offer records acceptance of the displayed terms and may form part of your contract.",
-            "An application or invitation alone does not guarantee hiring. Participants resolve changes, cancellations, refunds and disputes under their agreement and applicable law. Cancelling in the app does not automatically extinguish existing legal or contractual obligations."
+            "An application or invitation alone does not guarantee hiring. Participants resolve changes, cancellations, refunds and disputes under their agreement and applicable law. Cancelling in the app does not automatically extinguish existing legal or contractual obligations.",
+            "Each user is responsible for reporting income, issuing invoices, and paying taxes, contributions and other obligations arising from their collaborations. Wave does not calculate, withhold or report taxes on behalf of users."
+          ]
+        },
+        {
+          "heading": "Content exchanged between users",
+          "paragraphs": [
+            "Creators, brands and agencies exchange videos, photos, texts, files, links and other materials independently, at their own risk and under their own agreements. Wave is not a participant in their conversations or agreements, does not review exchanged content, and is not responsible for its accuracy, legality, quality, delay or loss, or for how the other party uses it.",
+            "Usage rights for exchanged content (where, for how long and for what purposes it may be used) are set by the users’ agreement, not by Wave. Whoever sends content confirms that they hold the necessary rights and consents, including the consent of every person who can be seen or heard in it and, for minors, the consent of a parent or guardian.",
+            "Do not send malicious files or links. Wave does not guarantee that other users’ files and links are safe, so open them with care. Keep copies of your work outside Wave; Wave is not a long-term storage service.",
+            "Users resolve disputes about delivery, quality, payment or rights between themselves. Wave may help through reports and moderation but is not a mediator or arbitrator. Wave discloses user data to third parties only where the law requires it, for example following a valid request from a competent authority."
           ]
         },
         {
@@ -342,7 +360,8 @@
           "paragraphs": [
             "Label paid, gifted and other promotional collaborations according to applicable law and social-platform rules. Merely tagging a brand may not be sufficient.",
             "Fraud, misleading profiles/statistics, illegal content, rights violations, harassment, spam and unauthorized data access are prohibited. Do not use profiles or messages to unlawfully collect other people’s data.",
-            "Automated collection of Wave content (scraping, crawling or bulk copying of profiles, campaigns and contacts) without our written permission is prohibited. Search engines indexing public pages in line with robots.txt are excepted."
+            "Automated collection of Wave content (scraping, crawling or bulk copying of profiles, campaigns and contacts) without our written permission is prohibited. Search engines indexing public pages in line with robots.txt are excepted.",
+            "Campaigns for alcohol, tobacco and e-cigarettes, gambling, medicines and food supplements, financial services and crypto-assets, as well as political advertising, must comply with specific regulations. The campaign owner is responsible for compliance. Wave may decline or remove such campaigns."
           ]
         },
         {
@@ -363,6 +382,8 @@
           "heading": "Responsibility and mandatory rights",
           "paragraphs": [
             "You remain responsible for your commitments to other users. Wave works to maintain a safe, available service but does not promise hiring, earnings, uninterrupted availability or another user’s contract performance.",
+            "To the extent permitted by law, Wave is not liable for indirect or consequential loss, loss of profit, loss of data, the conduct of other users, or content exchanged between users. Wave’s total liability to a user is limited to the amount the user paid Wave in the previous 12 months, and in any case at least 100 KM. These limits do not apply to damage caused intentionally or through gross negligence, or to injury to life, body or health.",
+            "If a third party or authority brings a claim against Wave because of your content, your collaboration or your breach of these terms, you will compensate Wave for the resulting loss and reasonable costs, including legal costs, to the extent that you are responsible.",
             "Nothing excludes liability that law does not allow us to exclude, or limits mandatory consumer/data-protection rights or access to competent authorities and courts."
           ]
         },
@@ -371,6 +392,13 @@
           "paragraphs": [
             "For material changes, we will provide clear notice and an effective date and request renewed acceptance where needed. Changes do not retrospectively alter an existing collaboration agreement.",
             "Send questions/complaints to info{'@'}wave.ba or support. Bosnia and Herzegovina law governs your relationship with Wave, preserving mandatory protections available under other applicable law. These terms do not impose exclusive court jurisdiction contrary to mandatory rules."
+          ]
+        },
+        {
+          "heading": "Final provisions",
+          "paragraphs": [
+            "Wave is not liable for delays or interruptions caused by circumstances beyond its reasonable control, such as natural disasters, internet outages or attacks on infrastructure.",
+            "If any provision proves invalid, the remaining provisions stay in effect. These terms, together with the privacy policy and cookie policy, form the entire agreement between you and Wave on the use of the platform. Wave may transfer its rights and obligations under these terms to a legal successor with notice to users."
           ]
         }
       ]
@@ -486,6 +514,9 @@
   "chatInteractions": {
     "actions": "Message options",
     "reply": "Reply",
+    "copy": "Copy",
+    "copied": "Message copied.",
+    "copyFailed": "The message could not be copied.",
     "heart": "Add heart",
     "removeHeart": "Remove heart",
     "you": "You",

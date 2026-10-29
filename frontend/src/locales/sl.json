@@ -116,6 +116,13 @@
           ]
         },
         {
+          "heading": "Podatki, ki si jih izmenjujejo uporabniki",
+          "paragraphs": [
+            "Osebne podatke, ki jih uporabniki prejmejo drug od drugega, kot so ime, kontakt, naslov za dostavo, fotografije ali videoposnetki, vsak uporabnik obdeluje kot samostojni upravljavec in zanje odgovarja po veljavni zakonodaji. Wave te podatke le prenaša in hrani za delovanje platforme.",
+            "Prejete podatke uporabljajte samo za dogovorjeno sodelovanje, jih brez pravne podlage ne posredujte tretjim osebam in jih izbrišite, ko niso več potrebni. Wave ne odgovarja za njihovo obdelavo zunaj platforme."
+          ]
+        },
+        {
           "heading": "Ponudniki in mednarodna obdelava",
           "paragraphs": [
             "Hetzner Online GmbH v Nemčiji gosti podatkovno zbirko, datoteke in varnostne kopije Wave. Brevo (Brevo SAS, Francija) dostavlja e-pošto ter prejme naslove, imena in vsebino; objavljene lokacije njegovih zbirk so Francija, Nemčija in Belgija.",
@@ -293,7 +300,8 @@
         {
           "heading": "Upravljavec in obseg",
           "paragraphs": [
-            "Wave upravlja UD SteelCode, Školska 10, 72000 Zenica, Bosna in Hercegovina (ID 4320531730002; ID za DDV 320531730002). Kontakt: info{'@'}wave.ba. Ti pogoji urejajo platformo; obdelavo podatkov ločeno opisuje politika zasebnosti."
+            "Wave upravlja UD SteelCode, Školska 10, 72000 Zenica, Bosna in Hercegovina (ID 4320531730002; ID za DDV 320531730002). Kontakt: info{'@'}wave.ba. Ti pogoji urejajo platformo; obdelavo podatkov ločeno opisuje politika zasebnosti.",
+            "Z registracijo oziroma uporabo platforme sprejemate te pogoje v različici, ki velja v tistem trenutku. Če jih ne sprejemate, Wavea ne uporabljajte."
           ]
         },
         {
@@ -315,7 +323,17 @@
           "heading": "Dogovor, izvedba in odpoved",
           "paragraphs": [
             "Pred sprejemom ponudbe se dogovorite o obsegu, znesku/valuti, davkih, plačilu, rokih, popravkih, pravicah uporabe in odpovedi. Potrditev ponudbe zabeleži sprejem prikazanih pogojev in je lahko del pogodbe.",
-            "Prijava ali povabilo ne jamčita angažmaja. Spremembe, odpovedi, vračila in spore rešujejo udeleženci po dogovoru in veljavnem pravu. Odpoved v aplikaciji ne izniči samodejno že nastalih obveznosti."
+            "Prijava ali povabilo ne jamčita angažmaja. Spremembe, odpovedi, vračila in spore rešujejo udeleženci po dogovoru in veljavnem pravu. Odpoved v aplikaciji ne izniči samodejno že nastalih obveznosti.",
+            "Vsak uporabnik sam odgovarja za prijavo dohodka, izdajo računov, davke, prispevke in druge obveznosti iz svojega sodelovanja. Wave ne obračunava, ne zadržuje in ne prijavlja davkov v imenu uporabnikov."
+          ]
+        },
+        {
+          "heading": "Izmenjava vsebin med uporabniki",
+          "paragraphs": [
+            "Ustvarjalci, znamke in agencije videoposnetke, fotografije, besedila, datoteke, povezave in druga gradiva izmenjujejo samostojno, na lastno odgovornost in po medsebojnem dogovoru. Wave ni udeleženec njihovih pogovorov in dogovorov, izmenjanih vsebin ne preverja in ne odgovarja za njihovo točnost, zakonitost, kakovost, zamudo ali izgubo niti za to, kako jih uporablja druga stran.",
+            "Pravice uporabe izmenjanih vsebin (kje, kako dolgo in za katere namene se smejo uporabljati) določa dogovor uporabnikov, ne Wave. Kdor pošlje vsebino, potrjuje, da ima potrebne pravice in privolitve, vključno s privolitvijo vsake osebe, ki je v vsebini vidna ali slišna, za mladoletne osebe pa s privolitvijo staršev ali skrbnika.",
+            "Ne pošiljajte zlonamernih datotek ali povezav. Wave ne jamči, da so datoteke in povezave drugih uporabnikov varne, zato jih odpirajte previdno. Kopije svojega dela hranite tudi zunaj Wavea; Wave ni storitev za trajno hrambo.",
+            "Spore o izvedbi, kakovosti, plačilu ali pravicah rešujejo uporabniki med seboj. Wave lahko pomaga s prijavami in moderiranjem, ni pa posrednik ali razsodnik. Podatke o uporabnikih Wave tretjim osebam razkrije le, kadar to zahteva zakon, na primer na podlagi veljavne zahteve pristojnega organa."
           ]
         },
         {
@@ -343,7 +361,8 @@
           "paragraphs": [
             "Plačana, podarjena in druga promocijska sodelovanja označite po veljavnih pravilih in pravilih družbenega omrežja. Sama označitev znamke ni vedno dovolj.",
             "Prepovedani so prevare, zavajajoči profili/statistika, nezakonita vsebina, kršitve pravic, nadlegovanje, neželena sporočila in nepooblaščen dostop. Podatkov drugih ne zbirajte nezakonito.",
-            "Samodejno zbiranje vsebin z Wave (scraping, crawling ali množično kopiranje profilov, kampanj in stikov) brez našega pisnega dovoljenja ni dovoljeno. Izjema so iskalniki, ki javne strani indeksirajo v skladu z robots.txt."
+            "Samodejno zbiranje vsebin z Wave (scraping, crawling ali množično kopiranje profilov, kampanj in stikov) brez našega pisnega dovoljenja ni dovoljeno. Izjema so iskalniki, ki javne strani indeksirajo v skladu z robots.txt.",
+            "Kampanje za alkohol, tobak in elektronske cigarete, igre na srečo, zdravila in prehranska dopolnila, finančne storitve in kriptovalute ter politično oglaševanje morajo upoštevati posebne predpise. Za njihovo skladnost odgovarja naročnik kampanje. Wave lahko takšne kampanje zavrne ali odstrani."
           ]
         },
         {
@@ -364,6 +383,8 @@
           "heading": "Odgovornost in obvezne pravice",
           "paragraphs": [
             "Odgovorni ste za svoje obveznosti do drugih. Wave si prizadeva za varno, dostopno storitev, ne jamči pa angažmajev, zaslužka, neprekinjenega delovanja ali izpolnitve tujih pogodb.",
+            "Kolikor to dopušča zakon, Wave ne odgovarja za posredno ali posledično škodo, izgubljeni dobiček, izgubo podatkov, ravnanje drugih uporabnikov ali vsebine, ki si jih uporabniki izmenjujejo. Skupna odgovornost Wavea do uporabnika je omejena na znesek, ki ga je uporabnik plačal Waveu v zadnjih 12 mesecih, najmanj pa na 100 KM. Te omejitve ne veljajo za škodo, povzročeno namenoma ali iz hude malomarnosti, niti za poškodbo življenja, telesa ali zdravja.",
+            "Če tretja oseba ali organ uveljavlja zahtevek proti Waveu zaradi vaše vsebine, vašega sodelovanja ali kršitve teh pogojev, boste Waveu povrnili nastalo škodo in razumne stroške, vključno s stroški pravnega varstva, v obsegu, v katerem ste za to odgovorni.",
             "Nič ne izključuje odgovornosti, ki je ni dovoljeno izključiti, ali omejuje obveznih potrošniških pravic, varstva podatkov ali dostopa do pristojnih organov in sodišč."
           ]
         },
@@ -372,6 +393,13 @@
           "paragraphs": [
             "O bistvenih spremembah bomo jasno obvestili, navedli datum uporabe in po potrebi zahtevali nov sprejem. Spremembe za nazaj ne spreminjajo dogovora o sodelovanju.",
             "Vprašanja/pritožbe pošljite na info{'@'}wave.ba ali podpori. Za razmerje z Waveom velja pravo BiH ob ohranitvi obveznega varstva po drugem veljavnem pravu. Izključna pristojnost v nasprotju z obveznimi pravili ni določena."
+          ]
+        },
+        {
+          "heading": "Končne določbe",
+          "paragraphs": [
+            "Wave ne odgovarja za zamudo ali prekinitev storitve zaradi okoliščin zunaj razumnega nadzora, kot so naravne nesreče, izpadi interneta ali napadi na infrastrukturo.",
+            "Če se katera določba izkaže za neveljavno, ostale ostanejo v veljavi. Ti pogoji skupaj s politiko zasebnosti in politiko piškotkov tvorijo celoten dogovor med vami in Waveom o uporabi platforme. Wave lahko pravice in obveznosti iz teh pogojev prenese na pravnega naslednika z obvestilom uporabnikom."
           ]
         }
       ]
@@ -487,6 +515,9 @@
   "chatInteractions": {
     "actions": "Možnosti sporočila",
     "reply": "Odgovori",
+    "copy": "Kopiraj",
+    "copied": "Sporočilo je kopirano.",
+    "copyFailed": "Sporočila ni mogoče kopirati.",
     "heart": "Dodaj srček",
     "removeHeart": "Odstrani srček",
     "you": "Ti",

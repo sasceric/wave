@@ -65,6 +65,20 @@ test('long press opens actions and motion cancels the press timer', async () => 
   assert.equal(opened, 1)
 })
 
+test('copy puts the message text on the clipboard and confirms it', async () => {
+  const copied = []
+  const toasts = []
+  const { state } = await setupView(
+    '../src/components/messages/ChatMessageBubble.vue',
+    { '../../lib/toasts': { actionToasts: { notify: (message, type) => toasts.push(type) } } },
+    { message: { id: 1, body: 'Pozdrav, evo brief-a' } },
+    { navigator: { clipboard: { writeText: async text => { copied.push(text) } } } },
+  )
+  await state.copyText()
+  assert.deepEqual(copied, ['Pozdrav, evo brief-a'])
+  assert.deepEqual(toasts, ['success'])
+})
+
 test('reply sends the original message ID and clears it only after a successful send', async () => {
   const requests = []
   const { state } = await setupView('../src/views/MessagesView.vue', {

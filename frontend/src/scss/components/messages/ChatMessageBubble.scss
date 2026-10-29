@@ -12,6 +12,12 @@
   transition: transform .16s ease;
   -webkit-touch-callout: none;
 
+  // Touch: a long press opens the message menu (with Copy) instead of native text selection.
+  @media (hover: none) {
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
   &.is-mine { align-items: flex-end; }
   &.has-hearts { margin-bottom: 14px; }
   &.is-swiping { transition: none; }

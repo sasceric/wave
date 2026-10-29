@@ -115,6 +115,13 @@
           ]
         },
         {
+          "heading": "Zwischen Nutzern ausgetauschte Daten",
+          "paragraphs": [
+            "Personenbezogene Daten, die Nutzer voneinander erhalten, etwa Namen, Kontaktdaten, Lieferadressen, Fotos oder Videos, verarbeitet jeder Nutzer als eigenständiger Verantwortlicher und haftet dafür nach geltendem Recht. Wave übermittelt und speichert diese Daten nur für den Betrieb der Plattform.",
+            "Verwenden Sie erhaltene Daten nur für die vereinbarte Kooperation, geben Sie sie nicht ohne Rechtsgrundlage an Dritte weiter und löschen Sie sie, wenn sie nicht mehr benötigt werden. Wave haftet nicht für ihre Verarbeitung außerhalb der Plattform."
+          ]
+        },
+        {
           "heading": "Dienstleister und internationale Verarbeitung",
           "paragraphs": [
             "Hetzner Online GmbH hostet die Wave-Datenbank, Dateien und Wiederherstellungssicherungen in Deutschland. Brevo (Brevo SAS, Frankreich) versendet E-Mails und erhält Adressen, Namen und Nachrichteninhalte; veröffentlichte Datenbankstandorte sind Frankreich, Deutschland und Belgien.",
@@ -292,7 +299,8 @@
         {
           "heading": "Betreiber und Geltung",
           "paragraphs": [
-            "Wave wird von UD SteelCode, Školska 10, 72000 Zenica, Bosnien und Herzegowina betrieben (Unternehmens-ID 4320531730002; USt-ID 320531730002). Kontakt: info{'@'}wave.ba. Diese Bedingungen regeln die Plattform; die Datenschutzerklärung erläutert die Datenverarbeitung gesondert."
+            "Wave wird von UD SteelCode, Školska 10, 72000 Zenica, Bosnien und Herzegowina betrieben (Unternehmens-ID 4320531730002; USt-ID 320531730002). Kontakt: info{'@'}wave.ba. Diese Bedingungen regeln die Plattform; die Datenschutzerklärung erläutert die Datenverarbeitung gesondert.",
+            "Mit der Registrierung bzw. Nutzung der Plattform akzeptieren Sie diese Bedingungen in der jeweils gültigen Fassung. Wenn Sie sie nicht akzeptieren, nutzen Sie Wave bitte nicht."
           ]
         },
         {
@@ -314,7 +322,17 @@
           "heading": "Vereinbarungen, Leistung und Kündigung",
           "paragraphs": [
             "Vereinbaren Sie vor Annahme Umfang, Betrag/Währung, Steuern, Zahlung, Fristen, Korrekturen, Nutzungsrechte und Stornierung. Die Angebotsbestätigung dokumentiert die Annahme der angezeigten Bedingungen und kann Vertragsbestandteil sein.",
-            "Bewerbung oder Einladung garantieren keinen Auftrag. Beteiligte klären Änderungen, Stornierungen, Erstattungen und Streitigkeiten nach Vereinbarung und geltendem Recht. Eine Stornierung in der App beseitigt bestehende Pflichten nicht automatisch."
+            "Bewerbung oder Einladung garantieren keinen Auftrag. Beteiligte klären Änderungen, Stornierungen, Erstattungen und Streitigkeiten nach Vereinbarung und geltendem Recht. Eine Stornierung in der App beseitigt bestehende Pflichten nicht automatisch.",
+            "Jeder Nutzer ist selbst für die Meldung von Einkünften, die Rechnungsstellung sowie Steuern, Abgaben und sonstige Pflichten aus seinen Kooperationen verantwortlich. Wave berechnet, behält oder meldet keine Steuern im Namen der Nutzer."
+          ]
+        },
+        {
+          "heading": "Austausch von Inhalten zwischen Nutzern",
+          "paragraphs": [
+            "Kreative, Marken und Agenturen tauschen Videos, Fotos, Texte, Dateien, Links und andere Materialien selbstständig, auf eigene Verantwortung und nach ihren eigenen Vereinbarungen aus. Wave ist an ihren Gesprächen und Vereinbarungen nicht beteiligt, prüft ausgetauschte Inhalte nicht und haftet nicht für deren Richtigkeit, Rechtmäßigkeit, Qualität, Verzögerung oder Verlust oder dafür, wie die andere Seite sie verwendet.",
+            "Die Nutzungsrechte an ausgetauschten Inhalten (wo, wie lange und zu welchen Zwecken sie verwendet werden dürfen) bestimmt die Vereinbarung der Nutzer, nicht Wave. Wer Inhalte sendet, bestätigt, über die erforderlichen Rechte und Einwilligungen zu verfügen, einschließlich der Einwilligung jeder Person, die im Inhalt zu sehen oder zu hören ist, und bei Minderjährigen der Einwilligung der Eltern oder des Vormunds.",
+            "Senden Sie keine schädlichen Dateien oder Links. Wave garantiert nicht, dass Dateien und Links anderer Nutzer sicher sind; öffnen Sie sie daher mit Vorsicht. Bewahren Sie Kopien Ihrer Arbeit auch außerhalb von Wave auf; Wave ist kein Dienst zur dauerhaften Speicherung.",
+            "Streitigkeiten über Leistung, Qualität, Zahlung oder Rechte klären die Nutzer untereinander. Wave kann über Meldungen und Moderation unterstützen, ist aber weder Vermittler noch Schiedsstelle. Nutzerdaten gibt Wave nur an Dritte weiter, wenn das Gesetz es verlangt, etwa auf ein gültiges Ersuchen einer zuständigen Behörde."
           ]
         },
         {
@@ -342,7 +360,8 @@
           "paragraphs": [
             "Kennzeichnen Sie bezahlte, geschenkte und sonstige Werbekooperationen nach geltendem Recht und den Regeln des sozialen Netzwerks. Eine Markenmarkierung allein reicht nicht immer.",
             "Betrug, irreführende Profile/Statistiken, rechtswidrige Inhalte, Rechtsverletzungen, Belästigung, Spam und unbefugter Datenzugriff sind verboten. Sammeln Sie Daten anderer nicht rechtswidrig.",
-            "Das automatisierte Sammeln von Inhalten auf Wave (Scraping, Crawling oder massenhaftes Kopieren von Profilen, Kampagnen und Kontakten) ist ohne unsere schriftliche Genehmigung untersagt. Ausgenommen sind Suchmaschinen, die öffentliche Seiten gemäß robots.txt indexieren."
+            "Das automatisierte Sammeln von Inhalten auf Wave (Scraping, Crawling oder massenhaftes Kopieren von Profilen, Kampagnen und Kontakten) ist ohne unsere schriftliche Genehmigung untersagt. Ausgenommen sind Suchmaschinen, die öffentliche Seiten gemäß robots.txt indexieren.",
+            "Kampagnen für Alkohol, Tabak und E-Zigaretten, Glücksspiel, Arzneimittel und Nahrungsergänzungsmittel, Finanzdienstleistungen und Kryptowerte sowie politische Werbung müssen besondere Vorschriften einhalten. Für deren Einhaltung ist der Auftraggeber der Kampagne verantwortlich. Wave kann solche Kampagnen ablehnen oder entfernen."
           ]
         },
         {
@@ -363,6 +382,8 @@
           "heading": "Verantwortung und zwingende Rechte",
           "paragraphs": [
             "Sie bleiben für Ihre Verpflichtungen gegenüber anderen verantwortlich. Wave bemüht sich um einen sicheren, verfügbaren Dienst, verspricht aber keine Aufträge, Einnahmen, ununterbrochene Verfügbarkeit oder fremde Vertragserfüllung.",
+            "Soweit gesetzlich zulässig, haftet Wave nicht für mittelbare Schäden oder Folgeschäden, entgangenen Gewinn, Datenverlust, das Verhalten anderer Nutzer oder zwischen Nutzern ausgetauschte Inhalte. Die Gesamthaftung von Wave gegenüber einem Nutzer ist auf den Betrag begrenzt, den der Nutzer in den letzten 12 Monaten an Wave gezahlt hat, mindestens jedoch auf 100 KM. Diese Beschränkungen gelten nicht für vorsätzlich oder grob fahrlässig verursachte Schäden und nicht für Verletzungen des Lebens, des Körpers oder der Gesundheit.",
+            "Macht ein Dritter oder eine Behörde wegen Ihrer Inhalte, Ihrer Kooperation oder eines Verstoßes gegen diese Bedingungen Ansprüche gegen Wave geltend, ersetzen Sie Wave den entstandenen Schaden und angemessene Kosten, einschließlich Rechtsverfolgungskosten, soweit Sie dafür verantwortlich sind.",
             "Zwingende Haftung, Verbraucher- und Datenschutzrechte sowie der Zugang zu zuständigen Behörden und Gerichten werden nicht ausgeschlossen oder eingeschränkt."
           ]
         },
@@ -371,6 +392,13 @@
           "paragraphs": [
             "Wesentliche Änderungen werden mit Geltungsdatum klar angekündigt; falls nötig holen wir eine erneute Annahme ein. Bestehende Kooperationsvereinbarungen werden nicht rückwirkend geändert.",
             "Fragen/Beschwerden richten Sie an info{'@'}wave.ba oder den Support. Für das Verhältnis zu Wave gilt das Recht von BiH unter Wahrung zwingenden Schutzes nach anderem anwendbaren Recht. Eine entgegen zwingenden Regeln ausschließliche Gerichtszuständigkeit wird nicht vereinbart."
+          ]
+        },
+        {
+          "heading": "Schlussbestimmungen",
+          "paragraphs": [
+            "Wave haftet nicht für Verzögerungen oder Unterbrechungen aufgrund von Umständen außerhalb seiner zumutbaren Kontrolle, etwa Naturereignissen, Internetausfällen oder Angriffen auf die Infrastruktur.",
+            "Sollte eine Bestimmung unwirksam sein, bleiben die übrigen wirksam. Diese Bedingungen bilden zusammen mit der Datenschutzerklärung und der Cookie-Richtlinie die gesamte Vereinbarung zwischen Ihnen und Wave über die Nutzung der Plattform. Wave kann Rechte und Pflichten aus diesen Bedingungen nach Mitteilung an die Nutzer auf einen Rechtsnachfolger übertragen."
           ]
         }
       ]
@@ -486,6 +514,9 @@
   "chatInteractions": {
     "actions": "Nachrichtenoptionen",
     "reply": "Antworten",
+    "copy": "Kopieren",
+    "copied": "Nachricht kopiert.",
+    "copyFailed": "Die Nachricht konnte nicht kopiert werden.",
     "heart": "Herz hinzufügen",
     "removeHeart": "Herz entfernen",
     "you": "Du",

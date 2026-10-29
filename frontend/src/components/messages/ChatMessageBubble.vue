@@ -1,8 +1,9 @@
 <script setup>
 import { computed, onBeforeUnmount, ref } from 'vue'
-import { Heart, MoreVertical, Pencil, Reply, Trash2 } from '@lucide/vue'
+import { Copy, Heart, MoreVertical, Pencil, Reply, Trash2 } from '@lucide/vue'
 import { useI18n } from 'vue-i18n'
 import ActionMenu from '../shared/ActionMenu.vue'
+import { actionToasts } from '../../lib/toasts'
 
 const props = defineProps({
   message: { type: Object, required: true },
@@ -64,6 +65,34 @@ function openMenu(event) {
   actionMenu.value?.openMenu()
 }
 function reply() { emit('reply', props.message) }
+function legacyCopy(text) {
+  const field = document.createElement('textarea')
+  field.value = text
+  field.setAttribute('readonly', '')
+  field.style.cssText = 'position:fixed;top:0;left:0;opacity:0;pointer-events:none'
+  document.body.append(field)
+  field.select()
+  field.setSelectionRange(0, text.length)
+  const copied = document.execCommand('copy')
+  field.remove()
+  if (!copied) throw new Error('copy failed')
+}
+async function copyText() {
+  const text = props.message.body || ''
+  if (!text) return
+  try {
+    if (navigator.clipboard?.writeText) await navigator.clipboard.writeText(text)
+    else legacyCopy(text)
+    actionToasts.notify(t('chatInteractions.copied'), 'success')
+  } catch {
+    try {
+      legacyCopy(text)
+      actionToasts.notify(t('chatInteractions.copied'), 'success')
+    } catch {
+      actionToasts.notify(t('chatInteractions.copyFailed'), 'error')
+    }
+  }
+}
 function heart() { emit('heart', props.message) }
 function handleClick(event) {
   if (!longPressOpened) return
@@ -87,6 +116,7 @@ onBeforeUnmount(cancelGesture)
         <ActionMenu ref="actionMenu" :label="t('chatInteractions.actions')" :restore-on-select="false">
           <template #trigger><MoreVertical :size="18" aria-hidden="true" /></template>
           <button type="button" role="menuitem" class="action-menu__item" @click="reply"><Reply :size="17" aria-hidden="true" />{{ t('chatInteractions.reply') }}</button>
+          <button v-if="message.body" type="button" role="menuitem" class="action-menu__item" @click="copyText"><Copy :size="17" aria-hidden="true" />{{ t('chatInteractions.copy') }}</button>
           <button v-if="canModify" type="button" role="menuitem" class="action-menu__item" @click="emit('edit', message)"><Pencil :size="17" aria-hidden="true" />{{ t('chatInteractions.edit') }}</button>
           <button v-if="canModify" type="button" role="menuitem" class="action-menu__item action-menu__item--danger" @click="emit('delete', message)"><Trash2 :size="17" aria-hidden="true" />{{ t('chatInteractions.delete') }}</button>
         </ActionMenu>
