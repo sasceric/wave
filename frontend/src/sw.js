@@ -49,6 +49,9 @@ self.addEventListener('push', (event) => {
         body: payload.body || 'You have a new notification.',
         icon: '/pwa-192.png',
         badge: '/pwa-192.png',
+        // Never silent: the phone plays its notification sound; Android also vibrates.
+        silent: false,
+        vibrate: [180, 80, 180],
         data: { url: payload.url || '/', userId: payload.userId },
       }),
       self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((windows) => {

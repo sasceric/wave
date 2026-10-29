@@ -436,7 +436,8 @@ final class AccountEmailSender
 
     public function sendApproval(User $user, string $locale): void
     {
-        $this->send($user, null, $locale, 'approval', 'account');
+        // Brands and agencies get the company welcome (first campaign tip); creators get the creator one.
+        $this->send($user, null, $locale, $user->hasRole('ROLE_COMPANY') ? 'approval_company' : 'approval', 'account');
     }
 
     public function sendApplicationReceived(
@@ -749,6 +750,18 @@ final class AccountEmailSender
             $variables['greeting'],
             $variables['message'],
         ];
+        if (isset($variables['welcomeTitle'], $variables['androidUrl'], $variables['iphoneUrl'])) {
+            array_push(
+                $text,
+                $variables['welcomeTitle'] . "\n" . $variables['welcome'] . "\n" . $variables['invite'],
+                $variables['tipsTitle'],
+                '1. ' . $variables['installTitle'] . "\n" . $variables['installText'] . "\n"
+                    . $variables['androidLabel'] . ': ' . $variables['androidUrl'] . "\n"
+                    . $variables['iphoneLabel'] . ': ' . $variables['iphoneUrl'],
+                '2. ' . $variables['notificationsTitle'] . "\n" . $variables['notificationsText'],
+                '3. ' . $variables['stepTitle'] . "\n" . $variables['stepText'],
+            );
+        }
         if (isset($variables['compensation']) && $variables['compensation'] !== '') {
             $text[] = $variables['compensation'];
         }
@@ -795,6 +808,18 @@ final class AccountEmailSender
     private function copyFor(string $template, string $locale): array
     {
         $locale = $this->normalizedLocale($locale);
+        if ($template === 'approval' || $template === 'approval_company') {
+            return array_replace($this->stockCopy('approval', $locale), ApprovalWelcomeEmailCopy::forLocale($template, $locale));
+        }
+
+        return $this->stockCopy($template, $locale);
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    private function stockCopy(string $template, string $locale): array
+    {
         if (in_array($template, ['verification_reminder', 'profile_tip'], true)) {
             return array_replace(
                 $this->copyFor($template === 'verification_reminder' ? 'verify' : 'registered', $locale),

@@ -75,6 +75,7 @@ final class EmailTemplateAdminControllerTest extends WebTestCase
                 'campaign_alert',
                 'account_deleted',
                 'terms_updated',
+                'approval_company',
             ],
             array_column($this->payload()['data']['templates'], 'key'),
         );
@@ -201,6 +202,10 @@ final class EmailTemplateAdminControllerTest extends WebTestCase
             self::assertSame($reminderSubjects[$locale], $templates[10]['subject']);
             self::assertContains('details', $templates[6]['variables']);
             self::assertSame($locale, $templates[10]['locale']);
+            $company = array_values(array_filter($templates, static fn (array $row): bool => $row['key'] === 'approval_company'))[0];
+            $creator = array_values(array_filter($templates, static fn (array $row): bool => $row['key'] === 'approval'))[0];
+            self::assertNotSame($creator['preview']['stepTitle'], $company['preview']['stepTitle'], 'Companies get the first-campaign tip.');
+            self::assertContains('stepText', array_column($company['text'], 'key'));
         }
 
         $htmlBody = '<html><body><h1>{{heading}}</h1><p>{{recipientName}}</p><a href="{{actionUrl}}">{{buttonLabel}}</a></body></html>';

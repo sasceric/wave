@@ -409,6 +409,10 @@ final class AdminDashboardTest extends WebTestCase
         self::assertInstanceOf(Email::class, $approvalEmail);
         self::assertEmailSubjectContains($approvalEmail, 'Your Wave account has been approved');
         self::assertEmailTextBodyContains($approvalEmail, 'now publicly visible');
+        self::assertEmailTextBodyContains($approvalEmail, 'Install Wave as an app');
+        self::assertEmailTextBodyContains($approvalEmail, 'Complete your profile');
+        self::assertEmailHtmlBodyContains($approvalEmail, \App\Account\ApprovalWelcomeEmailCopy::IPHONE_URL);
+        self::assertEmailHtmlBodyContains($approvalEmail, \App\Account\ApprovalWelcomeEmailCopy::ANDROID_URL);
         self::assertTrue($entityManager->getRepository(User::class)->find($creatorUser->getId())->isApproved());
         self::assertFalse($entityManager->getRepository(User::class)->find($creatorUser->getId())->isHideMyAccount());
         $this->client->request(

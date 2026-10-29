@@ -89,7 +89,7 @@ final class WebPushNotificationSender
                         'url' => $this->targetFor($notification),
                         'badgeCount' => $badgeCount,
                     ], JSON_THROW_ON_ERROR),
-                    ['TTL' => 86400],
+                    ['TTL' => 86400, 'urgency' => 'high'],
                 );
             } catch (\ErrorException|\Random\RandomException $exception) {
                 $this->logger->warning('Unable to send a Wave Web Push notification.', [
@@ -145,7 +145,7 @@ final class WebPushNotificationSender
             throw new \Symfony\Component\Messenger\Exception\UnrecoverableMessageHandlingException('Web Push credentials are not configured.');
         }
         $webPush = $this->createWebPush();
-        $report = $webPush->sendOneNotification(Subscription::create(['endpoint' => $subscription->getEndpoint(), 'keys' => ['p256dh' => $subscription->getPublicKey(), 'auth' => $subscription->getAuthToken()], 'contentEncoding' => 'aes128gcm']), json_encode(['userId' => (int) $payload['userId'], 'title' => $payload['title'], 'body' => \App\Localization\DisplayDate::text($payload['body']), 'url' => $payload['url'], 'badgeCount' => $this->unreadInboxCounter->total($subscription->getUser())], JSON_THROW_ON_ERROR), ['TTL' => 86400]);
+        $report = $webPush->sendOneNotification(Subscription::create(['endpoint' => $subscription->getEndpoint(), 'keys' => ['p256dh' => $subscription->getPublicKey(), 'auth' => $subscription->getAuthToken()], 'contentEncoding' => 'aes128gcm']), json_encode(['userId' => (int) $payload['userId'], 'title' => $payload['title'], 'body' => \App\Localization\DisplayDate::text($payload['body']), 'url' => $payload['url'], 'badgeCount' => $this->unreadInboxCounter->total($subscription->getUser())], JSON_THROW_ON_ERROR), ['TTL' => 86400, 'urgency' => 'high']);
         if ($report->isSubscriptionExpired()) {
             $this->entityManager->remove($subscription);
             $this->entityManager->flush();

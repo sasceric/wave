@@ -49,6 +49,7 @@ final class EmailTemplateController
         'campaign_alert',
         'account_deleted',
         'terms_updated',
+        'approval_company',
     ];
     /** Text variables admins can reword without HTML ("Tekst" tab). */
     private const TEXT_KEYS = [
@@ -56,6 +57,7 @@ final class EmailTemplateController
         'firstLabel', 'secondLabel', 'detailsLabel', 'scoreLabel', 'stepsLabel', 'guideLabel',
         'campaignsLabel', 'settingsLabel', 'unsubscribeLabel',
         'roleLabel', 'nameLabel', 'emailLabel', 'interestLabel', 'messageLabel',
+        ...\App\Account\ApprovalWelcomeEmailCopy::TEXT_KEYS,
     ];
     /** Text that is data, or that changes per email, stays out of the "Tekst" tab. */
     private const TEXT_EXCLUDED = [
