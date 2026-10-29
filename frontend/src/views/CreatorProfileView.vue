@@ -31,6 +31,7 @@ import { CREATOR_PLACEHOLDER } from '../lib/marketplace'
 import { formatAverageRating, startingPackagePrice } from '../lib/profileStats'
 import { getSeoOrigin, updateSeo } from '../lib/seo'
 import { localizedPath } from '../routePaths'
+import { creatorLandingPages } from '../lib/regionalSeo'
 
 const route = useRoute()
 const creator = ref(null)
@@ -145,6 +146,26 @@ const profileStats = computed(() => {
     { key: 'rating', label: t('publicProfile.rating'), value: average, hint: t('studio.reviewCount', { count: rating.reviewCount || 0 }) },
   ]
 })
+
+function profileDetails(value) {
+  const type = value.creatorTypes?.[0] ? t(`creatorTypes.options.${value.creatorTypes[0]}`) : ''
+  return [type, String(value.city || '').split(',')[0].trim()].filter(Boolean).join(', ')
+}
+
+// City, area and UGC type link to their country landing pages once those have enough creators.
+const landingPages = ref([])
+const landing = computed(() => creatorLandingPages(landingPages.value, creator.value?.countryCode, creator.value))
+const landingPath = (item) => item ? localizedPath('country-topic', locale.value, { country: item.country, topic: item.slug }) : ''
+watch(() => creator.value?.countryCode, async (country) => {
+  landingPages.value = []
+  if (!country) return
+  try {
+    const response = await apiGet(`/creators/landing-pages?country=${encodeURIComponent(country)}`, { locale: locale.value })
+    if (creator.value?.countryCode === country) landingPages.value = Array.isArray(response.data) ? response.data : []
+  } catch {
+    // Optional links: the profile works without them.
+  }
+}, { immediate: true })
 
 const categoryLabel = computed(() => (
   creator.value?.categoryLabel
@@ -425,8 +446,9 @@ watch(
     updateSeo({
       route,
       locale: locale.value,
-      title: t('seo.creatorProfileTitle', { name: value.displayName }),
-      description: value.structuredData?.description || value.bio,
+      // Same as SeoMetadataProvider: "Name — UGC kreator, Sarajevo | Wave".
+      title: profileDetails(value) ? t('seo.creatorProfileTitleDetails', { name: value.displayName, details: profileDetails(value) }) : t('seo.creatorProfileTitle', { name: value.displayName }),
+      description: value.structuredData?.description || value.bio || (profileDetails(value) ? t('seo.creatorProfileDescription', { name: value.displayName, details: profileDetails(value) }) : undefined),
       image,
       noindex: value.indexable === false,
       mainEntity: value.structuredData || {
@@ -664,13 +686,14 @@ onBeforeUnmount(() => { ++profileGeneration; packageDescriptionObserver?.disconn
               </span>
             </div>
             <div class="profile-heading__copy">
-              <p class="eyebrow">{{ categoryLabel }}</p>
+              <p class="eyebrow"><RouterLink v-if="landing.category" class="profile-heading__landing" :to="landingPath(landing.category)">{{ categoryLabel }}</RouterLink><template v-else>{{ categoryLabel }}</template></p>
               <h1>{{ creator.displayName }}</h1>
               <p v-if="creator.tagline" class="profile-tagline">{{ creator.tagline }}</p>
               <div class="profile-heading__meta">
                 <span v-if="creator.city">
                   <MapPin :size="15" aria-hidden="true" />
-                  {{ creator.city }}
+                  <RouterLink v-if="landing.city" class="profile-heading__landing" :to="landingPath(landing.city)">{{ creator.city }}</RouterLink>
+                  <template v-else>{{ creator.city }}</template>
                 </span>
                 <RatingSummary :rating="creator.rating" profile />
                 <span v-if="availabilityLabel" class="profile-heading__availability-inline" :class="availabilityClass">
@@ -679,7 +702,10 @@ onBeforeUnmount(() => { ++profileGeneration; packageDescriptionObserver?.disconn
                 </span>
               </div>
               <div v-if="creator.creatorTypes?.length || creator.presentation?.languages?.length" class="profile-presentation-pills">
-                <span v-for="type in creator.creatorTypes" :key="type">{{ t(`creatorTypes.options.${type}`) }}</span>
+                <template v-for="type in creator.creatorTypes" :key="type">
+                  <RouterLink v-if="type === 'ugc-creator' && landing.ugc" class="profile-heading__landing" :to="landingPath(landing.ugc)">{{ t(`creatorTypes.options.${type}`) }}</RouterLink>
+                  <span v-else>{{ t(`creatorTypes.options.${type}`) }}</span>
+                </template>
                 <span v-for="code in creator.presentation?.languages || []" :key="code">
                   {{ languageOptions(locale, t).find(item => item.value === code)?.label || code }}
                 </span>

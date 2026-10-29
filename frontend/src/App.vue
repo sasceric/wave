@@ -12,6 +12,7 @@ import WaveLogo from './components/shared/WaveLogo.vue'
 import ProfileAvatar from './components/shared/ProfileAvatar.vue'
 import WaveWordmark from './components/shared/WaveWordmark.vue'
 import FooterNewsletterSignup from './components/shared/FooterNewsletterSignup.vue'
+import FooterPopularLinks from './components/shared/FooterPopularLinks.vue'
 import SkeletonBlock from './components/shared/SkeletonBlock.vue'
 import CookieConsentBanner from './components/shared/CookieConsentBanner.vue'
 import PullToRefresh from './components/shared/PullToRefresh.vue'
@@ -1338,6 +1339,7 @@ async function signOut() {
                 <LocalizedLink :to="{ name: 'how-it-works' }">
                   {{ t('home.howItWorks') }}
                 </LocalizedLink>
+                <FooterPopularLinks />
               </div>
             </details>
           </nav>

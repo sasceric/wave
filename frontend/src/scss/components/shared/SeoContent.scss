@@ -449,6 +449,20 @@
   }
 }
 
+// Links to landing pages of one country (area, UGC, city), under the country or a landing page.
+.seo-topic-links {
+  display: grid;
+  gap: 8px 40px;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  margin-top: 28px;
+
+  h2 { margin: 0 0 10px; color: var(--forest); font-family: var(--serif); font-size: 22px; font-weight: 400; }
+  ul { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+  a { display: inline-flex; align-items: center; gap: 6px; color: var(--forest); font-weight: 600; text-underline-offset: 4px; }
+  a:hover { color: var(--ink); }
+  &__all { grid-column: 1 / -1; margin: 6px 0 0; }
+}
+
 .seo-country-links > div {
   display: flex;
   flex-wrap: wrap;

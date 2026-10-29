@@ -56,5 +56,6 @@
   "profile-guide-brand": "profileGuide.brand.title",
   "terms-of-use": "legal.terms.title",
   "admin-listing-ads": "listingAds.title",
-  "admin-account-types": "accountType.adminTitle"
+  "admin-account-types": "accountType.adminTitle",
+  "admin-emails": "adminBroadcast.title"
 }

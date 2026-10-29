@@ -4,20 +4,20 @@
     "shortBadge": "Prototype"
   },
   "meta": {
-    "title": "Wave — creator and brand partnerships",
-    "description": "A place for creators and brands to find the right partners."
+    "title": "Influencers and UGC creators in the Balkans | Wave",
+    "description": "Wave connects brands with influencers and UGC creators from Bosnia and Herzegovina and the region. Post a campaign or find a creator for Instagram and TikTok."
   },
   "seo": {
     "searchTitle": "Search | Wave",
     "searchDescription": "Search creators, campaigns and companies.",
-    "homeTitle": "Wave — creator and brand partnerships",
-    "homeDescription": "A place for creators and brands to find the right partners.",
-    "creatorsTitle": "Influencer and UGC creator directory | Wave",
-    "creatorsDescription": "Find influencers and UGC creators for brand collaborations. Filter by country, topic and platform, then compare portfolios and Instagram, TikTok and YouTube packages.",
-    "companiesTitle": "Companies partnering with creators | Wave",
-    "companiesDescription": "Meet companies on Wave and explore brands looking for creative partners.",
-    "campaignsTitle": "Creator campaigns | Wave",
-    "campaignsDescription": "Browse open campaigns and find opportunities to collaborate with brands.",
+    "homeTitle": "Influencers and UGC creators in the Balkans | Wave",
+    "homeDescription": "Wave connects brands with influencers and UGC creators from Bosnia and Herzegovina and the region. Post a campaign or find a creator for Instagram and TikTok.",
+    "creatorsTitle": "Influencers and UGC creators from the Balkans | Wave",
+    "creatorsDescription": "Find influencers and UGC creators to collaborate with. Filter by country, category and platform and compare portfolios and packages.",
+    "companiesTitle": "Brands and agencies looking for influencers | Wave",
+    "companiesDescription": "See the brands and agencies on Wave that are looking for influencers and UGC creators, their campaigns and collaboration reviews.",
+    "campaignsTitle": "Open campaigns for influencers and UGC creators | Wave",
+    "campaignsDescription": "Apply to brand campaigns for Instagram, TikTok and YouTube. New opportunities for influencers and UGC creators in the region.",
     "creatorProfileTitle": "{name} — creator profile | Wave",
     "companyProfileTitle": "{name} — company profile | Wave",
     "campaignProfileTitle": "{name} — campaign | Wave",
@@ -41,7 +41,10 @@
     "messagesTitle": "Messages | Wave",
     "termsDescription": "Rules for accounts, content and collaborations on Wave.",
     "maintenanceTitle": "A short pause. A better Wave.",
-    "maintenanceDescription": "We’re improving Wave to make your next collaboration even simpler. We’ll be back soon. Thanks for your patience."
+    "maintenanceDescription": "We’re improving Wave to make your next collaboration even simpler. We’ll be back soon. Thanks for your patience.",
+    "creatorProfileTitleDetails": "{name} — {details} | Wave",
+    "creatorProfileDescription": "{name} · {details}. See the portfolio, channels and collaboration packages on Wave.",
+    "companyProfileTitleDetails": "{name} — {details} | Wave"
   },
   "legal": {
     "eyebrow": "LEGAL",
@@ -1710,7 +1713,9 @@
       "unsubscribed": "Unsubscribed",
       "unverified": "Legacy signup without consent record",
       "pending": "Awaiting confirmation"
-    }
+    },
+    "adminBroadcastEmailTemplate": "Send emails",
+    "adminBroadcastEmailTemplateHint": "Layout of messages from Admin → Send emails. You write the text for each send."
   },
   "api": {
     "invalidResponse": "Wave could not read the server response. Please try again.",
@@ -2115,31 +2120,36 @@
         "name": "Bosnia and Herzegovina",
         "title": "Influencers in Bosnia and Herzegovina for brand collaborations",
         "description": "Find influencers and UGC creators in Bosnia and Herzegovina. Explore Instagram, TikTok and YouTube profiles, portfolios and collaboration packages on Wave.",
-        "intro": "Looking for a creator for your brand? This directory lists public creator profiles in Bosnia and Herzegovina. Compare their content, channels and packages before proposing a collaboration."
+        "intro": "Looking for a creator for your brand? This directory lists public creator profiles in Bosnia and Herzegovina. Compare their content, channels and packages before proposing a collaboration.",
+        "in": "in Bosnia and Herzegovina"
       },
       "HR": {
         "name": "Croatia",
         "title": "Influencers in Croatia for brand collaborations",
         "description": "Find influencers and UGC creators in Croatia. Explore Instagram, TikTok and YouTube profiles, portfolios and collaboration packages on Wave.",
-        "intro": "Looking for a creator for your brand? This directory lists public creator profiles in Croatia. Compare their content, channels and packages before proposing a collaboration."
+        "intro": "Looking for a creator for your brand? This directory lists public creator profiles in Croatia. Compare their content, channels and packages before proposing a collaboration.",
+        "in": "in Croatia"
       },
       "RS": {
         "name": "Serbia",
         "title": "Influencers in Serbia for brand collaborations",
         "description": "Find influencers and UGC creators in Serbia. Explore Instagram, TikTok and YouTube profiles, portfolios and collaboration packages on Wave.",
-        "intro": "Looking for a creator for your brand? This directory lists public creator profiles in Serbia. Compare their content, channels and packages before proposing a collaboration."
+        "intro": "Looking for a creator for your brand? This directory lists public creator profiles in Serbia. Compare their content, channels and packages before proposing a collaboration.",
+        "in": "in Serbia"
       },
       "ME": {
         "name": "Montenegro",
         "title": "Influencers in Montenegro for brand collaborations",
         "description": "Find influencers and UGC creators in Montenegro. Explore Instagram, TikTok and YouTube profiles, portfolios and collaboration packages on Wave.",
-        "intro": "Looking for a creator for your brand? This directory lists public creator profiles in Montenegro. Compare their content, channels and packages before proposing a collaboration."
+        "intro": "Looking for a creator for your brand? This directory lists public creator profiles in Montenegro. Compare their content, channels and packages before proposing a collaboration.",
+        "in": "in Montenegro"
       },
       "SI": {
         "name": "Slovenia",
         "title": "Influencers in Slovenia for brand collaborations",
         "description": "Find influencers and UGC creators in Slovenia. Explore Instagram, TikTok and YouTube profiles, portfolios and collaboration packages on Wave.",
-        "intro": "Looking for a creator for your brand? This directory lists public creator profiles in Slovenia. Compare their content, channels and packages before proposing a collaboration."
+        "intro": "Looking for a creator for your brand? This directory lists public creator profiles in Slovenia. Compare their content, channels and packages before proposing a collaboration.",
+        "in": "in Slovenia"
       }
     },
     "guides": {
@@ -2263,8 +2273,8 @@
       "relatedIntro": "Explore guides for your profile, services and working with brands."
     },
     "howItWorks": {
-      "title": "How Wave works",
-      "intro": "Wave connects creators and companies through profiles, service packages and campaigns. Choose the path that fits your role.",
+      "title": "How influencer collaborations work on Wave",
+      "intro": "A brand posts a campaign, creators apply, and you chat, hire and leave a review, all in one place. Using Wave is free.",
       "creators": {
         "title": "For creators",
         "guides": "Guides for creators",
@@ -2336,6 +2346,55 @@
       "nextGuides": "Next guides",
       "helpTitle": "Need help?",
       "helpText": "Ask us anything about collaborations, campaigns or your profile."
+    },
+    "topics": {
+      "byCategory": "By category",
+      "byCity": "By city",
+      "popular": "Popular",
+      "allIn": "All creators {in}",
+      "categories": {
+        "beauty": {
+          "title": "Beauty and cosmetics influencers {in}",
+          "description": "Find beauty influencers and UGC creators {in} for cosmetics, skincare and make-up. See profiles, portfolios and packages.",
+          "intro": "Looking for a creator for cosmetics, skincare or make-up? Here are the public profiles of creators {in} who focus on beauty. Compare their channels, content examples and packages, then send an inquiry or invite them to a campaign."
+        },
+        "fashion": {
+          "title": "Fashion influencers {in}",
+          "description": "Find fashion influencers and UGC creators {in} for clothing, footwear and accessories. See profiles, portfolios and packages.",
+          "intro": "For a fashion brand, style, photo quality and a trend-aware audience matter. Here are creators {in} who publish fashion content, with portfolios and packages for Instagram and TikTok."
+        },
+        "food": {
+          "title": "Food influencers and recipe creators {in}",
+          "description": "Find food influencers {in} for restaurants, food products and recipes. See profiles, portfolios and packages.",
+          "intro": "Restaurants, cafés and food brands are best presented through recipes, tastings and short videos. Here are creators {in} who make food and drink content."
+        },
+        "lifestyle": {
+          "title": "Lifestyle influencers {in}",
+          "description": "Find lifestyle influencers and UGC creators {in} for home, family and everyday products. See profiles and packages.",
+          "intro": "Lifestyle creators present products through everyday life: home, family, work and free time. Here are creators {in} whose content their audience finds personal and convincing."
+        },
+        "travel": {
+          "title": "Travel influencers {in}",
+          "description": "Find travel influencers {in} for hotels, travel agencies and destinations. See profiles, portfolios and packages.",
+          "intro": "Hotels, apartments, travel agencies and destinations need creators who can convey the feel of a place. Here are creators {in} who publish travel content."
+        },
+        "wellness": {
+          "title": "Wellness and fitness influencers {in}",
+          "description": "Find wellness and fitness influencers {in} for gyms, healthy food and self-care. See profiles, portfolios and packages.",
+          "intro": "For gyms, wellness centres and healthy products, an audience that trusts the creator matters. Here are creators {in} who publish content about health, sport and well-being."
+        }
+      },
+      "ugc": {
+        "label": "UGC creators",
+        "title": "UGC creators {in} for video and photo content",
+        "description": "Find UGC creators {in} who shoot authentic video and photo content for your ads, online shop and social media.",
+        "intro": "UGC creators produce content that the brand publishes on its own channels and in ads, whatever the creator’s follower count. Here are UGC creators {in}: see examples, packages and turnaround times, then send them an inquiry."
+      },
+      "city": {
+        "title": "Influencers {in} for collaborations",
+        "description": "Find influencers and UGC creators {in}. See Instagram, TikTok and YouTube profiles, portfolios and collaboration packages on Wave.",
+        "intro": "Local creators know their audience and their city best. Here are the public profiles of creators {in}: compare content, channels and packages, then send an inquiry or invite them to a campaign."
+      }
     }
   },
   "support": {
@@ -4188,5 +4247,56 @@
     "footer": "Good collaborations deserve a little care.",
     "adminLogin": "Admin sign-in",
     "adminBanner": "Maintenance mode is on. Visitors cannot use Wave right now."
+  },
+  "adminBroadcast": {
+    "nav": "Send emails",
+    "title": "Send emails",
+    "intro": "Write one message and send it to all users, newsletter subscribers, selected accounts or addresses you type in. Every recipient gets a personal email.",
+    "contentStep": "Message",
+    "subject": "Email subject",
+    "heading": "Heading in the email",
+    "message": "Message text",
+    "buttonLabel": "Button text",
+    "buttonUrl": "Button link",
+    "buttonUrlHint": "The link must start with https://, or enter {'{{'}profileUrl{'}}'} for each recipient’s profile.",
+    "insert": "Insert:",
+    "variables": "Variables",
+    "variablesHint": "{'{{'}name{'}}'} is the recipient’s name and {'{{'}profileUrl{'}}'} the link to their Wave profile.",
+    "unknownVariables": "Unknown variables: {names}",
+    "reset": "Restore default message",
+    "preview": "Preview",
+    "previewName": "Amina",
+    "audienceStep": "Recipients",
+    "audienceAll": "All users",
+    "audienceAllHint": "Every active account with a confirmed email address. Use it for account and platform notices, not for promotions.",
+    "audienceNewsletter": "Newsletter",
+    "audienceNewsletterHint": "Only people who subscribed to Wave news. The email includes an unsubscribe link.",
+    "audienceUsers": "Pick accounts",
+    "audienceUsersHint": "Choose accounts from the list.",
+    "audienceEmails": "Typed addresses",
+    "audienceEmailsHint": "Type an address and press Enter. Existing users get a personal email.",
+    "role": "Account type",
+    "roleAll": "All",
+    "roleCreators": "Creators",
+    "roleCompanies": "Brands and agencies",
+    "users": "Accounts",
+    "usersPlaceholder": "Choose accounts",
+    "searchUsers": "Search name or email",
+    "noUsers": "No accounts match this search.",
+    "emails": "Email addresses",
+    "emailsPlaceholder": "name{'@'}example.com then Enter",
+    "emailsInvalid": "Invalid addresses: {emails}",
+    "emailsLimit": "At most {count} addresses.",
+    "recipients": "Recipients: {count}",
+    "footerHint": "Send yourself a test first and check how the email looks.",
+    "sendTest": "Send me a test",
+    "testSent": "The test was sent to {email}.",
+    "send": "Send ({count})",
+    "confirmTitle": "Send the email to {count} addresses?",
+    "confirmMessage": "“{subject}” will go to {count} recipients. Sending cannot be undone.",
+    "sent": "The email is queued for {count} recipients.",
+    "sentWithSkipped": "The email is queued for {count} recipients. Skipped: {skipped}.",
+    "loadError": "Recipient data could not be loaded.",
+    "sendError": "The email was not sent."
   }
 }

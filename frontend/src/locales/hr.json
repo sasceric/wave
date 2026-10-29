@@ -4,20 +4,20 @@
     "shortBadge": "Prototip"
   },
   "meta": {
-    "title": "Wave — suradnje kreatora i brendova",
-    "description": "Mjesto gdje kreatori i brendovi pronalaze prave partnere."
+    "title": "Influenceri i UGC kreatori u regiji za suradnju | Wave",
+    "description": "Wave povezuje brendove s influencerima i UGC kreatorima iz Hrvatske, BiH i regije. Objavite kampanju ili pronađite kreatora za Instagram i TikTok."
   },
   "seo": {
     "searchTitle": "Pretraga | Wave",
     "searchDescription": "Pretraga kreatora, kampanja i tvrtki.",
-    "homeTitle": "Wave — suradnje kreatora i brendova",
-    "homeDescription": "Mjesto gdje kreatori i brendovi pronalaze prave partnere.",
-    "creatorsTitle": "Popis influencera i UGC kreatora | Wave",
-    "creatorsDescription": "Pronađi influencere i UGC kreatore za suradnju. Filtriraj po zemlji, području i platformi te usporedi portfolio i pakete za Instagram, TikTok i YouTube.",
-    "companiesTitle": "Tvrtke koje surađuju s kreatorima | Wave",
-    "companiesDescription": "Upoznajte tvrtke na Waveu i istražite brendove koji traže kreativne partnere.",
-    "campaignsTitle": "Kampanje za kreatore | Wave",
-    "campaignsDescription": "Pregledajte otvorene kampanje i pronađite prilike za suradnju s brendovima.",
+    "homeTitle": "Influenceri i UGC kreatori u regiji za suradnju | Wave",
+    "homeDescription": "Wave povezuje brendove s influencerima i UGC kreatorima iz Hrvatske, BiH i regije. Objavite kampanju ili pronađite kreatora za Instagram i TikTok.",
+    "creatorsTitle": "Influenceri i UGC kreatori iz Hrvatske i regije | Wave",
+    "creatorsDescription": "Pronađite influencere i UGC kreatore za suradnju. Filtrirajte po zemlji, području i platformi te usporedite portfolio i pakete.",
+    "companiesTitle": "Brendovi i agencije koji traže influencere | Wave",
+    "companiesDescription": "Pogledajte brendove i agencije koji na Waveu traže influencere i UGC kreatore, njihove kampanje i recenzije suradnji.",
+    "campaignsTitle": "Otvorene kampanje za influencere i UGC kreatore | Wave",
+    "campaignsDescription": "Prijavite se na kampanje brendova za Instagram, TikTok i YouTube. Nove prilike za influencere i UGC kreatore u regiji.",
     "creatorProfileTitle": "{name} — profil kreatora | Wave",
     "companyProfileTitle": "{name} — profil tvrtke | Wave",
     "campaignProfileTitle": "{name} — kampanja | Wave",
@@ -41,7 +41,10 @@
     "messagesTitle": "Poruke | Wave",
     "termsDescription": "Pravila za račune, sadržaj i suradnje na Waveu.",
     "maintenanceTitle": "Mala pauza. Bolji Wave.",
-    "maintenanceDescription": "Trenutačno uređujemo Wave kako bi tvoje sljedeće suradnje bile još jednostavnije. Vraćamo se uskoro. Hvala na strpljenju."
+    "maintenanceDescription": "Trenutačno uređujemo Wave kako bi tvoje sljedeće suradnje bile još jednostavnije. Vraćamo se uskoro. Hvala na strpljenju.",
+    "creatorProfileTitleDetails": "{name} — {details} | Wave",
+    "creatorProfileDescription": "{name} · {details}. Pogledajte portfolio, kanale i pakete suradnje na Waveu.",
+    "companyProfileTitleDetails": "{name} — {details} | Wave"
   },
   "legal": {
     "eyebrow": "PRAVNE INFORMACIJE",
@@ -1711,7 +1714,9 @@
       "unsubscribed": "Odjavljen/a",
       "unverified": "Ranija prijava bez zapisa pristanka",
       "pending": "Čeka potvrdu"
-    }
+    },
+    "adminBroadcastEmailTemplate": "Slanje e-mailova",
+    "adminBroadcastEmailTemplateHint": "Izgled poruka iz Admin → Slanje e-mailova. Tekst pišete pri svakom slanju."
   },
   "api": {
     "invalidResponse": "Wave nije uspio pročitati odgovor poslužitelja. Pokušaj ponovno.",
@@ -2116,31 +2121,36 @@
         "name": "Bosna i Hercegovina",
         "title": "Influenceri u Bosni i Hercegovini za suradnju",
         "description": "Pronađi influencere i UGC kreatore u Bosni i Hercegovini. Pregledaj Instagram, TikTok i YouTube profile, portfelj i pakete suradnje na Waveu.",
-        "intro": "Tražiš kreatora za svoj brend? Ovaj popis prikazuje javne profile kreatora u Bosni i Hercegovini. Usporedi njihov sadržaj, kanale i pakete prije nego što predložiš suradnju."
+        "intro": "Tražiš kreatora za svoj brend? Ovaj popis prikazuje javne profile kreatora u Bosni i Hercegovini. Usporedi njihov sadržaj, kanale i pakete prije nego što predložiš suradnju.",
+        "in": "u Bosni i Hercegovini"
       },
       "HR": {
         "name": "Hrvatska",
         "title": "Influenceri u Hrvatskoj za suradnju",
         "description": "Pronađi influencere i UGC kreatore u Hrvatskoj. Pregledaj Instagram, TikTok i YouTube profile, portfelj i pakete suradnje na Waveu.",
-        "intro": "Tražiš kreatora za svoj brend? Ovaj popis prikazuje javne profile kreatora u Hrvatskoj. Usporedi njihov sadržaj, kanale i pakete prije nego što predložiš suradnju."
+        "intro": "Tražiš kreatora za svoj brend? Ovaj popis prikazuje javne profile kreatora u Hrvatskoj. Usporedi njihov sadržaj, kanale i pakete prije nego što predložiš suradnju.",
+        "in": "u Hrvatskoj"
       },
       "RS": {
         "name": "Srbija",
         "title": "Influenceri u Srbiji za suradnju",
         "description": "Pronađi influencere i UGC kreatore u Srbiji. Pregledaj Instagram, TikTok i YouTube profile, portfelj i pakete suradnje na Waveu.",
-        "intro": "Tražiš kreatora za svoj brend? Ovaj popis prikazuje javne profile kreatora u Srbiji. Usporedi njihov sadržaj, kanale i pakete prije nego što predložiš suradnju."
+        "intro": "Tražiš kreatora za svoj brend? Ovaj popis prikazuje javne profile kreatora u Srbiji. Usporedi njihov sadržaj, kanale i pakete prije nego što predložiš suradnju.",
+        "in": "u Srbiji"
       },
       "ME": {
         "name": "Crna Gora",
         "title": "Influenceri u Crnoj Gori za suradnju",
         "description": "Pronađi influencere i UGC kreatore u Crnoj Gori. Pregledaj Instagram, TikTok i YouTube profile, portfelj i pakete suradnje na Waveu.",
-        "intro": "Tražiš kreatora za svoj brend? Ovaj popis prikazuje javne profile kreatora u Crnoj Gori. Usporedi njihov sadržaj, kanale i pakete prije nego što predložiš suradnju."
+        "intro": "Tražiš kreatora za svoj brend? Ovaj popis prikazuje javne profile kreatora u Crnoj Gori. Usporedi njihov sadržaj, kanale i pakete prije nego što predložiš suradnju.",
+        "in": "u Crnoj Gori"
       },
       "SI": {
         "name": "Slovenija",
         "title": "Influenceri u Sloveniji za suradnju",
         "description": "Pronađi influencere i UGC kreatore u Sloveniji. Pregledaj Instagram, TikTok i YouTube profile, portfelj i pakete suradnje na Waveu.",
-        "intro": "Tražiš kreatora za svoj brend? Ovaj popis prikazuje javne profile kreatora u Sloveniji. Usporedi njihov sadržaj, kanale i pakete prije nego što predložiš suradnju."
+        "intro": "Tražiš kreatora za svoj brend? Ovaj popis prikazuje javne profile kreatora u Sloveniji. Usporedi njihov sadržaj, kanale i pakete prije nego što predložiš suradnju.",
+        "in": "u Sloveniji"
       }
     },
     "guides": {
@@ -2264,8 +2274,8 @@
       "relatedIntro": "Istraži vodiče za svoj profil, usluge i suradnju s brendovima."
     },
     "howItWorks": {
-      "title": "Kako funkcioniše Wave",
-      "intro": "Wave povezuje kreatore i tvrtke kroz profile, pakete usluga i kampanje. Izaberi put koji odgovara tvojoj ulozi.",
+      "title": "Kako funkcionira suradnja s influencerima",
+      "intro": "Brend objavi kampanju, kreatori se prijave, a vi razgovarate, angažirate i ostavite recenziju, sve na jednom mjestu. Korištenje je besplatno.",
       "creators": {
         "title": "Za kreatore",
         "guides": "Vodiči za kreatore",
@@ -2337,6 +2347,55 @@
       "nextGuides": "Sljedeći vodiči",
       "helpTitle": "Trebaš pomoć?",
       "helpText": "Pitaj nas bilo što o suradnji, kampanjama ili profilu."
+    },
+    "topics": {
+      "byCategory": "Po području",
+      "byCity": "Po gradu",
+      "popular": "Popularno",
+      "allIn": "Svi kreatori {in}",
+      "categories": {
+        "beauty": {
+          "title": "Influenceri za ljepotu i kozmetiku {in}",
+          "description": "Pronađite beauty influencere i UGC kreatore {in} za kozmetiku, njegu i šminku. Pogledajte profile, portfolio i pakete suradnje.",
+          "intro": "Tražite kreatora za kozmetiku, njegu kože ili šminku? Ovdje su javni profili kreatora {in} koji se bave ljepotom. Usporedite njihove kanale, primjere sadržaja i pakete, pa pošaljite upit ili ih pozovite u kampanju."
+        },
+        "fashion": {
+          "title": "Modni influenceri {in}",
+          "description": "Pronađite modne influencere i UGC kreatore {in} za odjeću, obuću i modne dodatke. Pogledajte profile, portfolio i pakete suradnje.",
+          "intro": "Za modni brend važni su stil, kvaliteta fotografija i publika koja prati trendove. Ovdje su kreatori {in} koji objavljuju modni sadržaj, s portfoliom i paketima za Instagram i TikTok."
+        },
+        "food": {
+          "title": "Food influenceri i kreatori recepata {in}",
+          "description": "Pronađite food influencere {in} za restorane, prehrambene proizvode i recepte. Pogledajte profile, portfolio i pakete suradnje.",
+          "intro": "Restorani, kafići i prehrambeni brendovi najbolje se predstavljaju kroz recepte, degustacije i kratke videozapise. Ovdje su kreatori {in} koji rade sadržaj o hrani i piću."
+        },
+        "lifestyle": {
+          "title": "Lifestyle influenceri {in}",
+          "description": "Pronađite lifestyle influencere i UGC kreatore {in} za proizvode za dom, obitelj i svakodnevicu. Pogledajte profile i pakete.",
+          "intro": "Lifestyle kreatori predstavljaju proizvode kroz svakodnevicu: dom, obitelj, posao i slobodno vrijeme. Ovdje su kreatori {in} čiji sadržaj publika doživljava kao osoban i uvjerljiv."
+        },
+        "travel": {
+          "title": "Travel influenceri {in}",
+          "description": "Pronađite travel influencere {in} za hotele, turističke agencije i destinacije. Pogledajte profile, portfolio i pakete suradnje.",
+          "intro": "Hoteli, apartmani, turističke agencije i destinacije trebaju kreatore koji znaju prenijeti doživljaj mjesta. Ovdje su kreatori {in} koji objavljuju sadržaj o putovanjima."
+        },
+        "wellness": {
+          "title": "Wellness i fitness influenceri {in}",
+          "description": "Pronađite wellness i fitness influencere {in} za teretane, zdravu prehranu i njegu. Pogledajte profile, portfolio i pakete suradnje.",
+          "intro": "Za teretane, wellness centre i zdrave proizvode važna je publika koja vjeruje kreatoru. Ovdje su kreatori {in} koji objavljuju sadržaj o zdravlju, sportu i dobrom osjećaju."
+        }
+      },
+      "ugc": {
+        "label": "UGC kreatori",
+        "title": "UGC kreatori {in} za video i foto sadržaj",
+        "description": "Pronađite UGC kreatore {in} koji snimaju autentične video i foto sadržaje za vaše oglase, web trgovinu i društvene mreže.",
+        "intro": "UGC kreatori snimaju sadržaj koji brend objavljuje na svojim kanalima i u oglasima, bez obzira na broj pratitelja kreatora. Ovdje su UGC kreatori {in}: pogledajte primjere, pakete i rokove, pa im pošaljite upit."
+      },
+      "city": {
+        "title": "Influenceri {in} za suradnju",
+        "description": "Pronađite influencere i UGC kreatore {in}. Pogledajte Instagram, TikTok i YouTube profile, portfolio i pakete suradnje na Waveu.",
+        "intro": "Lokalni kreatori najbolje poznaju svoju publiku i grad. Ovdje su javni profili kreatora {in}: usporedite sadržaj, kanale i pakete, pa im pošaljite upit ili ih pozovite u kampanju."
+      }
     }
   },
   "support": {
@@ -4189,5 +4248,56 @@
     "footer": "Dobre suradnje zaslužuju malo pažnje.",
     "adminLogin": "Prijava za administratore",
     "adminBanner": "Režim održavanja je uključen. Posjetitelji trenutačno ne mogu koristiti Wave."
+  },
+  "adminBroadcast": {
+    "nav": "Slanje e-mailova",
+    "title": "Slanje e-mailova",
+    "intro": "Napišite jednu poruku i pošaljite je svim korisnicima, pretplatnicima na newsletter, odabranim računima ili adresama koje upišete. Svaki primatelj dobiva osobni e-mail.",
+    "contentStep": "Poruka",
+    "subject": "Naslov e-maila (subject)",
+    "heading": "Naslov u e-mailu",
+    "message": "Tekst poruke",
+    "buttonLabel": "Tekst gumba",
+    "buttonUrl": "Poveznica gumba",
+    "buttonUrlHint": "Poveznica mora počinjati s https://, ili upišite {'{{'}profileUrl{'}}'} za profil svakog primatelja.",
+    "insert": "Umetni:",
+    "variables": "Varijable",
+    "variablesHint": "{'{{'}name{'}}'} je ime primatelja, a {'{{'}profileUrl{'}}'} poveznica na njegov Wave profil.",
+    "unknownVariables": "Nepoznate varijable: {names}",
+    "reset": "Vrati zadanu poruku",
+    "preview": "Pregled",
+    "previewName": "Amina",
+    "audienceStep": "Primatelji",
+    "audienceAll": "Svi korisnici",
+    "audienceAllHint": "Svi aktivni računi s potvrđenom adresom e-pošte. Koristite za obavijesti o računu i platformi, ne za reklame.",
+    "audienceNewsletter": "Newsletter",
+    "audienceNewsletterHint": "Samo oni koji su se prijavili na Wave novosti. E-mail sadrži poveznicu za odjavu.",
+    "audienceUsers": "Ručni odabir",
+    "audienceUsersHint": "Odaberite račune s popisa.",
+    "audienceEmails": "Upisane adrese",
+    "audienceEmailsHint": "Upišite adresu i pritisnite Enter. Postojeći korisnici dobivaju osobni e-mail.",
+    "role": "Vrsta računa",
+    "roleAll": "Svi",
+    "roleCreators": "Kreatori",
+    "roleCompanies": "Brendovi i agencije",
+    "users": "Računi",
+    "usersPlaceholder": "Odaberite račune",
+    "searchUsers": "Pretražite ime ili e-mail",
+    "noUsers": "Nema računa za ovu pretragu.",
+    "emails": "Adrese e-pošte",
+    "emailsPlaceholder": "ime{'@'}primjer.hr pa Enter",
+    "emailsInvalid": "Neispravne adrese: {emails}",
+    "emailsLimit": "Najviše {count} adresa.",
+    "recipients": "Primatelja: {count}",
+    "footerHint": "Prvo pošaljite test sebi i provjerite kako e-mail izgleda.",
+    "sendTest": "Pošalji test meni",
+    "testSent": "Test je poslan na {email}.",
+    "send": "Pošalji ({count})",
+    "confirmTitle": "Poslati e-mail na {count} adresa?",
+    "confirmMessage": "„{subject}\" će primiti {count} primatelja. Slanje se ne može poništiti.",
+    "sent": "E-mail je stavljen u red za slanje: {count} primatelja.",
+    "sentWithSkipped": "E-mail je stavljen u red za slanje: {count} primatelja. Preskočeno: {skipped}.",
+    "loadError": "Podaci o primateljima nisu se učitali.",
+    "sendError": "E-mail nije poslan."
   }
 }

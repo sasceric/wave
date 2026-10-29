@@ -591,6 +591,43 @@ final class AccountEmailSender
         ]);
     }
 
+    /**
+     * Admin → Slanje e-mailova. The content is the admin's (already personalised); the footer
+     * follows the recipient's language and kind: account, newsletter subscriber or typed address.
+     *
+     * @param array{subject: string, heading: string, message: string, buttonLabel: string, buttonUrl: string} $content
+     */
+    public function sendBroadcast(string $email, string $name, string $locale, array $content, string $kind, string $settingsUrl, ?string $oneClickUrl): void
+    {
+        $locale = $this->normalizedLocale($locale);
+        $copy = $this->copyFor('admin_broadcast', $locale);
+        $customization = $this->entityManager->getRepository(EmailTemplate::class)->findOneBy(['templateKey' => 'admin_broadcast', 'locale' => $locale]);
+        $copy = EmailTemplate::applyCopy($copy, $customization?->getCopy());
+        $variables = [
+            'locale' => match ($locale) { 'sr' => 'sr-Latn', 'cnr' => 'cnr-Latn-ME', default => $locale },
+            'preheader' => mb_substr(trim(preg_replace('/\s+/u', ' ', $content['message']) ?? ''), 0, 140),
+            'heading' => $content['heading'],
+            'message' => $content['message'],
+            'buttonLabel' => $content['buttonLabel'],
+            'actionUrl' => $content['buttonUrl'],
+            'footer' => $copy[match ($kind) { 'newsletter' => 'footerNewsletter', 'external' => 'footerExternal', default => 'footer' }],
+            'settingsLabel' => $copy[match ($kind) { 'newsletter' => 'unsubscribeLabel', 'external' => 'siteLabel', default => 'settingsLabel' }],
+            'settingsUrl' => $settingsUrl,
+            'recipientName' => $name,
+        ];
+        $message = new Email()
+            ->from(new Address($this->fromAddress, $this->fromName))
+            ->to($name === '' ? new Address($email) : new Address($email, $name))
+            ->subject($this->templates->renderSubject($content['subject'], $variables))
+            ->text(implode("\n\n", [$content['message'], $content['buttonLabel'].":\n".$content['buttonUrl'], $variables['footer']."\n".$variables['settingsLabel'].': '.$settingsUrl]))
+            ->html($this->templates->render('admin_broadcast', $variables, $customization?->getHtmlBody()));
+        if ($oneClickUrl !== null) {
+            $message->getHeaders()->addTextHeader('List-Unsubscribe', '<'.$oneClickUrl.'>');
+            $message->getHeaders()->addTextHeader('List-Unsubscribe-Post', 'List-Unsubscribe=One-Click');
+        }
+        $this->mailer->send($message);
+    }
+
     public function defaultSubject(string $template, string $locale): string
     {
         if ($template === 'terms_updated') {
@@ -633,6 +670,8 @@ final class AccountEmailSender
                 'details' => "Pozdrav Amina,\n\npozivamo te u našu kampanju.\n\nS poštovanjem,\nWave.ba",
                 'compensation' => $variables['voluntaryBadge'],
             ];
+        } elseif ($template === 'admin_broadcast') {
+            $variables['settingsUrl'] = 'https://wave.ba/example-email-settings';
         } elseif ($template === 'creator_hired') {
             $variables += [
                 'firstValue' => 'Summer campaign',
@@ -808,6 +847,9 @@ final class AccountEmailSender
     private function copyFor(string $template, string $locale): array
     {
         $locale = $this->normalizedLocale($locale);
+        if ($template === 'admin_broadcast') {
+            return AdminBroadcastEmailCopy::forLocale($locale);
+        }
         if ($template === 'approval' || $template === 'approval_company') {
             return array_replace($this->stockCopy('approval', $locale), ApprovalWelcomeEmailCopy::forLocale($template, $locale));
         }

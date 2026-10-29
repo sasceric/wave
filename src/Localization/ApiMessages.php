@@ -6,6 +6,8 @@ final class ApiMessages
 {
     private const MESSAGES = [
         'bs' => [
+            'broadcast_invalid_email' => 'Jedna od adresa nije ispravna e-mail adresa.',
+            'broadcast_unknown_variable' => 'Poruka sadrži nepoznatu varijablu. Koristite samo {{name}} i {{profileUrl}}.',
             'maintenance_unavailable' => 'Wave je trenutno na održavanju. Pokušaj ponovo uskoro.',
             'account_type_change_requested' => 'Novi zahtjev za promjenu vrste računa.',
             'account_type_changed' => 'Vrsta tvog računa je promijenjena. Pregledaj svoj profil.',
@@ -130,6 +132,8 @@ final class ApiMessages
             'newsletter_email_failed' => 'Potvrdni e-mail nije poslan. Pokušaj ponovo kasnije.',
         ],
         'hr' => [
+            'broadcast_invalid_email' => 'Jedna od adresa nije ispravna adresa e-pošte.',
+            'broadcast_unknown_variable' => 'Poruka sadrži nepoznatu varijablu. Koristite samo {{name}} i {{profileUrl}}.',
             'maintenance_unavailable' => 'Wave je trenutačno na održavanju. Pokušaj ponovno uskoro.',
             'account_type_change_requested' => 'Novi zahtjev za promjenu vrste računa.',
             'account_type_changed' => 'Vrsta tvog računa je promijenjena. Pregledaj svoj profil.',
@@ -254,6 +258,8 @@ final class ApiMessages
             'newsletter_email_failed' => 'Potvrdna e-pošta nije poslana. Pokušaj ponovno kasnije.',
         ],
         'sr' => [
+            'broadcast_invalid_email' => 'Jedna od adresa nije ispravna e-mail adresa.',
+            'broadcast_unknown_variable' => 'Poruka sadrži nepoznatu promenljivu. Koristite samo {{name}} i {{profileUrl}}.',
             'maintenance_unavailable' => 'Wave je trenutno na održavanju. Pokušaj ponovo uskoro.',
             'account_type_change_requested' => 'Novi zahtev za promenu vrste naloga.',
             'account_type_changed' => 'Vrsta tvog naloga je promenjena. Pregledaj svoj profil.',
@@ -378,6 +384,8 @@ final class ApiMessages
             'newsletter_email_failed' => 'Potvrdni e-mail nije poslat. Pokušaj ponovo kasnije.',
         ],
         'cnr' => [
+            'broadcast_invalid_email' => 'Jedna od adresa nije ispravna e-mail adresa.',
+            'broadcast_unknown_variable' => 'Poruka sadrži nepoznatu varijablu. Koristite samo {{name}} i {{profileUrl}}.',
             'maintenance_unavailable' => 'Wave je trenutno na održavanju. Pokušaj ponovo uskoro.',
             'account_type_change_requested' => 'Novi zahtjev za promjenu vrste naloga.',
             'account_type_changed' => 'Vrsta tvog naloga je promijenjena. Pregledaj svoj profil.',
@@ -502,6 +510,8 @@ final class ApiMessages
             'newsletter_email_failed' => 'Potvrdni e-mail nije poslat. Pokušaj ponovo kasnije.',
         ],
         'sl' => [
+            'broadcast_invalid_email' => 'Eden od naslovov ni veljaven e-poštni naslov.',
+            'broadcast_unknown_variable' => 'Sporočilo vsebuje neznano spremenljivko. Uporabite samo {{name}} in {{profileUrl}}.',
             'maintenance_unavailable' => 'Wave je trenutno v vzdrževanju. Kmalu poskusi znova.',
             'account_type_change_requested' => 'Nova zahteva za spremembo vrste računa.',
             'account_type_changed' => 'Vrsta tvojega računa je spremenjena. Preglej svoj profil.',
@@ -626,6 +636,8 @@ final class ApiMessages
             'newsletter_email_failed' => 'Potrditvenega e-poštnega sporočila ni bilo mogoče poslati. Poskusi znova pozneje.',
         ],
         'en' => [
+            'broadcast_invalid_email' => 'One of the addresses is not a valid email address.',
+            'broadcast_unknown_variable' => 'The message contains an unknown variable. Use only {{name}} and {{profileUrl}}.',
             'maintenance_unavailable' => 'Wave is temporarily down for maintenance. Please try again soon.',
             'account_type_change_requested' => 'New account type change request.',
             'account_type_changed' => 'Your account type has changed. Review your profile.',

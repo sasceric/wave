@@ -123,7 +123,7 @@ export function updateSeo({
     for (const alternateLocale of Object.keys(routeSegments)) {
       const link = document.createElement('link')
       link.rel = 'alternate'
-      link.hreflang = (routeName === 'country-creators' ? regionalLanguageTags : hreflangTags)[alternateLocale]
+      link.hreflang = (['country-creators', 'country-topic'].includes(routeName) ? regionalLanguageTags : hreflangTags)[alternateLocale]
       link.href = new URL(localizedPath(routeName, alternateLocale, route.params), origin).href
       link.dataset.waveHreflang = 'true'
       document.head.append(link)
@@ -201,7 +201,7 @@ export function updateSeo({
   }
   const page = {
     '@context': 'https://schema.org',
-    '@type': ['creators', 'companies', 'campaigns', 'country-creators', 'seo-guides', 'creator-guides'].includes(routeName)
+    '@type': ['creators', 'companies', 'campaigns', 'country-creators', 'country-topic', 'seo-guides', 'creator-guides'].includes(routeName)
       ? 'CollectionPage'
       : ['creator-profile', 'company-profile'].includes(routeName)
         ? 'ProfilePage'

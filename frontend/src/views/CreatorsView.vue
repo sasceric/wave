@@ -26,9 +26,10 @@ import { PRESENTATION_PLATFORMS as SOCIAL_PLATFORMS } from '../lib/creatorPresen
 import { creatorTypeOptions } from '../lib/creatorTypes'
 import { updateSeo, getSeoOrigin } from '../lib/seo'
 import { localizedPath } from '../routePaths'
-import { countryCodeForSlug } from '../lib/regionalSeo'
+import { countryCodeForSlug, topicCopy, topicForSlug, topics as landingTopics } from '../lib/regionalSeo'
+import CountryTopicLinks from '../components/shared/CountryTopicLinks.vue'
 
-const props = defineProps({ countryCode: { type: String, default: '' } })
+const props = defineProps({ countryCode: { type: String, default: '' }, topic: { type: Object, default: null } })
 
 const { t, locale } = useI18n()
 const route = useRoute()
@@ -36,13 +37,16 @@ const search = ref(queryString(route.query.q))
 const selectedCategories = ref([])
 const selectedCreatorTypes = ref([])
 const typeOptions = computed(() => creatorTypeOptions(t))
-const creatorTypes = computed(() => encodeSelection(selectedCreatorTypes.value))
+const creatorTypes = computed(() => encodeSelection(props.topic?.kind === 'type' ? [...new Set([props.topic.key, ...selectedCreatorTypes.value])] : selectedCreatorTypes.value))
 const selectedPlatforms = ref(normalizePlatform(route.query.platform))
 const selectedCountries = ref([])
-const categories = computed(() => encodeSelection(selectedCategories.value))
+const categories = computed(() => encodeSelection(props.topic?.kind === 'category' ? [...new Set([props.topic.key, ...selectedCategories.value])] : selectedCategories.value))
 const platforms = computed(() => encodeSelection(selectedPlatforms.value))
 const countries = computed(() => encodeSelection(props.countryCode ? [props.countryCode] : selectedCountries.value))
 const city = ref('')
+// A city landing page always lists that city; the field stays available for other cities on other pages.
+const cityFilter = computed(() => props.topic?.kind === 'city' ? props.topic.city.name : city.value)
+const landing = computed(() => props.countryCode && props.topic ? topicCopy(t, locale.value, props.countryCode, props.topic) : null)
 const audience = ref('')
 const ageRange = ref([18, 70])
 const ageFiltered = computed(() => ageRange.value[0] !== 18 || ageRange.value[1] !== 70)
@@ -57,7 +61,7 @@ const facetError = ref('')
 let facetVersion = 0
 let disposed = false
 const catalog = useMarketplaceCatalog(locale)
-const { items: creators, total, loading, error, hasMore, loadMore } = useInfiniteDirectory('/creators', locale, { q: search, categories, creatorTypes, platforms, countries, city, audience, ageMin, ageMax, sort }, props.countryCode ? 24 : 30)
+const { items: creators, total, loading, error, hasMore, loadMore } = useInfiniteDirectory('/creators', locale, { q: search, categories, creatorTypes, platforms, countries, city: cityFilter, audience, ageMin, ageMax, sort }, props.countryCode ? 24 : 30)
 const platformOptions = SOCIAL_PLATFORMS.map((value) => ({ value, label: value }))
 const countryOptions = computed(() => {
   const names = new Intl.DisplayNames([locale.value === 'cnr' ? 'bs' : locale.value === 'sr' ? 'sr-Latn' : locale.value], { type: 'region' })
@@ -81,13 +85,16 @@ watch(() => route.query.q, (value) => { search.value = queryString(value) })
 watch(() => route.query.platform, (value) => { selectedPlatforms.value = normalizePlatform(value) })
 watch(locale, loadFacets)
 watch([locale, facets, facetsLoaded, facetError, creators], () => {
-  if (!props.countryCode || route.meta.routeName !== 'country-creators' || countryCodeForSlug(route.params.country) !== props.countryCode || (!facetsLoaded.value && !facetError.value)) return
+  if (!props.countryCode || !['country-creators', 'country-topic'].includes(route.meta.routeName) || countryCodeForSlug(route.params.country) !== props.countryCode || (!facetsLoaded.value && !facetError.value)) return
+  if (route.meta.routeName === 'country-topic' && (loading.value || topicForSlug(props.countryCode, route.params.topic)?.slug !== props.topic?.slug)) return
   updateSeo({
     route,
     locale: locale.value,
-    title: `${t(`regionalSeo.countries.${props.countryCode}.title`)} | Wave`,
-    description: t(`regionalSeo.countries.${props.countryCode}.description`),
-    noindex: Boolean(facetError.value) || !facets.value.countries.some(country => country.value === props.countryCode && country.count > 0),
+    title: `${landing.value?.title || t(`regionalSeo.countries.${props.countryCode}.title`)} | Wave`,
+    description: landing.value?.description || t(`regionalSeo.countries.${props.countryCode}.description`),
+    // Landing pages need a few creators before they are worth indexing (config/seo_topics.json minCreators).
+    noindex: Boolean(facetError.value) || Boolean(error.value) || !facets.value.countries.some(country => country.value === props.countryCode && country.count > 0)
+      || (Boolean(props.topic) && total.value < landingTopics.minCreators),
     mainEntity: { '@type': 'ItemList', itemListElement: creators.value.map((creator, index) => ({ '@type': 'ListItem', position: index + 1, name: creator.displayName, url: new URL(localizedPath('creator-profile', locale.value, { slug: creator.slug }), getSeoOrigin()).href })) },
   })
 }, { flush: 'post' })
@@ -133,9 +140,10 @@ watch([creators, locale], () => {
   <section class="page-width creator-directory">
     <DirectoryHero class="creator-directory__hero">
       <p class="eyebrow">{{ t(countryCode ? 'regionalSeo.eyebrow' : 'creatorsPage.eyebrow') }}</p>
-      <h1 v-if="countryCode">{{ t(`regionalSeo.countries.${countryCode}.title`) }}</h1>
+      <h1 v-if="landing">{{ landing.title }}</h1>
+      <h1 v-else-if="countryCode">{{ t(`regionalSeo.countries.${countryCode}.title`) }}</h1>
       <h1 v-else>{{ t('creatorsPage.headlineLead') }} <em v-if="t('creatorsPage.headlineEmphasis')">{{ t('creatorsPage.headlineEmphasis') }}</em></h1>
-      <p>{{ countryCode ? t(`regionalSeo.countries.${countryCode}.intro`) : t('creatorsPage.description') }}</p>
+      <p>{{ landing ? landing.intro : countryCode ? t(`regionalSeo.countries.${countryCode}.intro`) : t('creatorsPage.description') }}</p>
       <template #art>
         <DirectoryHeroCollage main-image="https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&amp;fit=crop&amp;w=640&amp;q=85" secondary-image="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&amp;fit=crop&amp;w=240&amp;q=85" detail-image="/images/companies-hero.webp">
           <UsersRound :size="26" /><span>{{ t('creatorDirectory.heroBadge') }}</span><ArrowRight :size="17" />
@@ -144,7 +152,7 @@ watch([creators, locale], () => {
     </DirectoryHero>
 
     <DirectoryToolbar v-model:search="search" v-model:filters-open="filtersOpen" :search-label="t('creatorsPage.searchLabel')" :search-placeholder="t('creatorsPage.search')" :filters-label="t('companyDirectory.filterButton')" filters-id="creator-filters" :active-filter-count="activeFilterCount" :control-columns="2">
-      <DirectorySearch v-model="city" :icon="false" :placeholder="t('companyDirectory.locationPlaceholder')" :label="t('companyDirectory.cityLabel')" />
+      <DirectorySearch v-if="topic?.kind !== 'city'" v-model="city" :icon="false" :placeholder="t('companyDirectory.locationPlaceholder')" :label="t('companyDirectory.cityLabel')" />
       <SingleSelect v-model="sort" :options="sortOptions" :label="t('creatorDirectory.sortLabel')" :show-label="false" />
     </DirectoryToolbar>
 
@@ -202,6 +210,7 @@ watch([creators, locale], () => {
       <p>{{ t('regionalSeo.selectBody') }}</p>
       <h2>{{ t('regionalSeo.processTitle') }}</h2>
       <p>{{ t('regionalSeo.processBody') }}</p>
+      <CountryTopicLinks :country-code="countryCode" :current="topic?.slug || ''" />
     </section>
   </section>
 </template>

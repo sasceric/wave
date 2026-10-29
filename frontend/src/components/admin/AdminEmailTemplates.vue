@@ -62,6 +62,10 @@ const templateLabels = computed(() => ({
     title: t('adminDashboard.approvalCompanyEmailTemplate'),
     description: t('adminDashboard.approvalCompanyEmailTemplateHint'),
   },
+  admin_broadcast: {
+    title: t('adminDashboard.adminBroadcastEmailTemplate'),
+    description: t('adminDashboard.adminBroadcastEmailTemplateHint'),
+  },
   contact: {
     title: t('adminDashboard.contactEmailTemplate'),
     description: t('adminDashboard.contactEmailTemplateHint'),

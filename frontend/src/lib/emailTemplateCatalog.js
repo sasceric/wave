@@ -24,6 +24,7 @@ export const EMAIL_TEMPLATE_CATALOG = {
   credit_code_assigned: { group: 'credits', recipient: 'user', frequency: 'perRequest' },
   contact: { group: 'contact', recipient: 'team', frequency: 'everyEvent' },
   subscribed: { group: 'contact', recipient: 'subscriber', frequency: 'once' },
+  admin_broadcast: { group: 'contact', recipient: 'allUsers', frequency: 'manual' },
 }
 
 export function templateMeta(key) {

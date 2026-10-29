@@ -46,7 +46,13 @@ final class SitemapGenerator
             ->getQuery()
             ->getResult();
         foreach ($creators as $creator) {
-            if ($creator instanceof Creator) {
+            // Profiles with neither a bio nor a photo are thin pages Google tends not to index; they
+            // stay reachable and join the sitemap as soon as either is added.
+            if (!$creator instanceof Creator) {
+                continue;
+            }
+            $thin = trim(strip_tags($creator->getBio())) === '' && $creator->getAvatarMedia() === null && !$creator->getAvatarUrl();
+            if (!$thin) {
                 $pages[] = ['creator-profile', ['slug' => $creator->getSlug()]];
             }
         }

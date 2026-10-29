@@ -10,6 +10,7 @@ import {
   House,
   LayoutDashboard,
   Mail,
+  MailPlus,
   Megaphone,
   MessageCircle,
   UserRound,
@@ -176,6 +177,7 @@ const navigationItems = computed(() => {
       { route: 'admin-reports', labelKey: 'safety.reports', icon: Flag, group: 'admin-settings', badge: adminCounts.value?.reports },
       { route: 'admin-support', labelKey: 'support.adminTitle', icon: LifeBuoy, group: 'admin-settings', badge: adminCounts.value?.tickets },
       { route: 'admin-invitations', labelKey: 'adminInvitations.nav', icon: Send, group: 'marketing' },
+      { route: 'admin-emails', labelKey: 'adminBroadcast.nav', icon: MailPlus, group: 'marketing' },
       { route: 'admin-qr', labelKey: 'adminQr.title', icon: QrCode, group: 'marketing' },
       { route: 'admin-redirects', labelKey: 'adminRedirects.title', icon: CornerUpRight, group: 'marketing' },
       {

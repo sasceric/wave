@@ -4,20 +4,20 @@
     "shortBadge": "Prototyp"
   },
   "meta": {
-    "title": "Wave — Kooperationen zwischen Creatorn und Marken",
-    "description": "Der Ort, an dem Creator und Marken die passenden Partner finden."
+    "title": "Influencer und UGC-Creator auf dem Balkan | Wave",
+    "description": "Wave verbindet Marken mit Influencern und UGC-Creatorn aus Bosnien und Herzegowina und der Region. Kampagne veröffentlichen oder Creator für Instagram und TikTok finden."
   },
   "seo": {
     "searchTitle": "Suche | Wave",
     "searchDescription": "Suche nach Creatorn, Kampagnen und Unternehmen.",
-    "homeTitle": "Wave — Kooperationen zwischen Creatorn und Marken",
-    "homeDescription": "Der Ort, an dem Creator und Marken die passenden Partner finden.",
-    "creatorsTitle": "Influencer und UGC-Creator entdecken | Wave",
-    "creatorsDescription": "Finde Influencer und UGC-Creator für Markenkooperationen. Filtere nach Land, Thema und Plattform und vergleiche Portfolios sowie Pakete für Instagram, TikTok und YouTube.",
-    "companiesTitle": "Unternehmen, die mit Creatorn zusammenarbeiten | Wave",
-    "companiesDescription": "Entdecke Unternehmen auf Wave und Marken, die kreative Partner suchen.",
-    "campaignsTitle": "Kampagnen für Creator | Wave",
-    "campaignsDescription": "Entdecke offene Kampagnen und neue Möglichkeiten für Markenkooperationen.",
+    "homeTitle": "Influencer und UGC-Creator auf dem Balkan | Wave",
+    "homeDescription": "Wave verbindet Marken mit Influencern und UGC-Creatorn aus Bosnien und Herzegowina und der Region. Kampagne veröffentlichen oder Creator für Instagram und TikTok finden.",
+    "creatorsTitle": "Influencer und UGC-Creator vom Balkan | Wave",
+    "creatorsDescription": "Finden Sie Influencer und UGC-Creator für Kooperationen. Filtern Sie nach Land, Bereich und Plattform und vergleichen Sie Portfolios und Pakete.",
+    "companiesTitle": "Marken und Agenturen, die Influencer suchen | Wave",
+    "companiesDescription": "Sehen Sie Marken und Agenturen auf Wave, die Influencer und UGC-Creator suchen, ihre Kampagnen und Bewertungen von Kooperationen.",
+    "campaignsTitle": "Offene Kampagnen für Influencer und UGC-Creator | Wave",
+    "campaignsDescription": "Bewerben Sie sich auf Kampagnen von Marken für Instagram, TikTok und YouTube. Neue Kooperationen für Influencer und UGC-Creator in der Region.",
     "creatorProfileTitle": "{name} — Creator-Profil | Wave",
     "companyProfileTitle": "{name} — Unternehmensprofil | Wave",
     "campaignProfileTitle": "{name} — Kampagne | Wave",
@@ -41,7 +41,10 @@
     "messagesTitle": "Nachrichten | Wave",
     "termsDescription": "Regeln für Konten, Inhalte und Kooperationen auf Wave.",
     "maintenanceTitle": "Eine kurze Pause. Ein besseres Wave.",
-    "maintenanceDescription": "Wir verbessern Wave, damit deine nächste Kooperation noch einfacher wird. Wir sind bald zurück. Danke für deine Geduld."
+    "maintenanceDescription": "Wir verbessern Wave, damit deine nächste Kooperation noch einfacher wird. Wir sind bald zurück. Danke für deine Geduld.",
+    "creatorProfileTitleDetails": "{name} — {details} | Wave",
+    "creatorProfileDescription": "{name} · {details}. Portfolio, Kanäle und Kooperationspakete auf Wave ansehen.",
+    "companyProfileTitleDetails": "{name} — {details} | Wave"
   },
   "legal": {
     "eyebrow": "RECHTLICHES",
@@ -1710,7 +1713,9 @@
       "unsubscribed": "Abgemeldet",
       "unverified": "Frühere Anmeldung ohne Einwilligungsnachweis",
       "pending": "Bestätigung ausstehend"
-    }
+    },
+    "adminBroadcastEmailTemplate": "E-Mails senden",
+    "adminBroadcastEmailTemplateHint": "Layout der Nachrichten aus Admin → E-Mails senden. Den Text schreiben Sie bei jedem Versand."
   },
   "api": {
     "invalidResponse": "Wave konnte die Serverantwort nicht lesen. Bitte versuche es erneut.",
@@ -2115,31 +2120,36 @@
         "name": "Bosnien und Herzegowina",
         "title": "Influencer in Bosnien und Herzegowina für Markenkooperationen",
         "description": "Finde Influencer und UGC-Creator in Bosnien und Herzegowina. Entdecke Instagram-, TikTok- und YouTube-Profile, Portfolios und Kooperationspakete auf Wave.",
-        "intro": "Du suchst einen Creator für deine Marke? Dieses Verzeichnis zeigt öffentliche Creator-Profile aus Bosnien und Herzegowina. Vergleiche Inhalte, Kanäle und Pakete, bevor du eine Kooperation vorschlägst."
+        "intro": "Du suchst einen Creator für deine Marke? Dieses Verzeichnis zeigt öffentliche Creator-Profile aus Bosnien und Herzegowina. Vergleiche Inhalte, Kanäle und Pakete, bevor du eine Kooperation vorschlägst.",
+        "in": "in Bosnien und Herzegowina"
       },
       "HR": {
         "name": "Kroatien",
         "title": "Influencer in Kroatien für Markenkooperationen",
         "description": "Finde Influencer und UGC-Creator in Kroatien. Entdecke Instagram-, TikTok- und YouTube-Profile, Portfolios und Kooperationspakete auf Wave.",
-        "intro": "Du suchst einen Creator für deine Marke? Dieses Verzeichnis zeigt öffentliche Creator-Profile aus Kroatien. Vergleiche Inhalte, Kanäle und Pakete, bevor du eine Kooperation vorschlägst."
+        "intro": "Du suchst einen Creator für deine Marke? Dieses Verzeichnis zeigt öffentliche Creator-Profile aus Kroatien. Vergleiche Inhalte, Kanäle und Pakete, bevor du eine Kooperation vorschlägst.",
+        "in": "in Kroatien"
       },
       "RS": {
         "name": "Serbien",
         "title": "Influencer in Serbien für Markenkooperationen",
         "description": "Finde Influencer und UGC-Creator in Serbien. Entdecke Instagram-, TikTok- und YouTube-Profile, Portfolios und Kooperationspakete auf Wave.",
-        "intro": "Du suchst einen Creator für deine Marke? Dieses Verzeichnis zeigt öffentliche Creator-Profile aus Serbien. Vergleiche Inhalte, Kanäle und Pakete, bevor du eine Kooperation vorschlägst."
+        "intro": "Du suchst einen Creator für deine Marke? Dieses Verzeichnis zeigt öffentliche Creator-Profile aus Serbien. Vergleiche Inhalte, Kanäle und Pakete, bevor du eine Kooperation vorschlägst.",
+        "in": "in Serbien"
       },
       "ME": {
         "name": "Montenegro",
         "title": "Influencer in Montenegro für Markenkooperationen",
         "description": "Finde Influencer und UGC-Creator in Montenegro. Entdecke Instagram-, TikTok- und YouTube-Profile, Portfolios und Kooperationspakete auf Wave.",
-        "intro": "Du suchst einen Creator für deine Marke? Dieses Verzeichnis zeigt öffentliche Creator-Profile aus Montenegro. Vergleiche Inhalte, Kanäle und Pakete, bevor du eine Kooperation vorschlägst."
+        "intro": "Du suchst einen Creator für deine Marke? Dieses Verzeichnis zeigt öffentliche Creator-Profile aus Montenegro. Vergleiche Inhalte, Kanäle und Pakete, bevor du eine Kooperation vorschlägst.",
+        "in": "in Montenegro"
       },
       "SI": {
         "name": "Slowenien",
         "title": "Influencer in Slowenien für Markenkooperationen",
         "description": "Finde Influencer und UGC-Creator in Slowenien. Entdecke Instagram-, TikTok- und YouTube-Profile, Portfolios und Kooperationspakete auf Wave.",
-        "intro": "Du suchst einen Creator für deine Marke? Dieses Verzeichnis zeigt öffentliche Creator-Profile aus Slowenien. Vergleiche Inhalte, Kanäle und Pakete, bevor du eine Kooperation vorschlägst."
+        "intro": "Du suchst einen Creator für deine Marke? Dieses Verzeichnis zeigt öffentliche Creator-Profile aus Slowenien. Vergleiche Inhalte, Kanäle und Pakete, bevor du eine Kooperation vorschlägst.",
+        "in": "in Slowenien"
       }
     },
     "guides": {
@@ -2263,8 +2273,8 @@
       "relatedIntro": "Entdecke Ratgeber zu deinem Profil, deinen Leistungen und der Zusammenarbeit mit Marken."
     },
     "howItWorks": {
-      "title": "So funktioniert Wave",
-      "intro": "Wave verbindet Creator und Unternehmen über Profile, Leistungspakete und Kampagnen. Wähle den Weg, der zu deiner Rolle passt.",
+      "title": "So funktionieren Kooperationen mit Influencern",
+      "intro": "Eine Marke veröffentlicht eine Kampagne, Creator bewerben sich, und Sie schreiben, beauftragen und bewerten, alles an einem Ort. Die Nutzung ist kostenlos.",
       "creators": {
         "title": "Für Creator",
         "guides": "Ratgeber für Creator",
@@ -2336,6 +2346,55 @@
       "nextGuides": "Weitere Leitfäden",
       "helpTitle": "Brauchst du Hilfe?",
       "helpText": "Frag uns alles zu Kooperationen, Kampagnen oder deinem Profil."
+    },
+    "topics": {
+      "byCategory": "Nach Bereich",
+      "byCity": "Nach Stadt",
+      "popular": "Beliebt",
+      "allIn": "Alle Creator {in}",
+      "categories": {
+        "beauty": {
+          "title": "Beauty- und Kosmetik-Influencer {in}",
+          "description": "Finden Sie Beauty-Influencer und UGC-Creator {in} für Kosmetik, Hautpflege und Make-up. Profile, Portfolios und Pakete ansehen.",
+          "intro": "Sie suchen Creator für Kosmetik, Hautpflege oder Make-up? Hier finden Sie öffentliche Profile von Creatorn {in}, die sich mit Beauty beschäftigen. Vergleichen Sie Kanäle, Beispiele und Pakete und senden Sie eine Anfrage oder laden Sie sie in eine Kampagne ein."
+        },
+        "fashion": {
+          "title": "Mode-Influencer {in}",
+          "description": "Finden Sie Mode-Influencer und UGC-Creator {in} für Kleidung, Schuhe und Accessoires. Profile, Portfolios und Pakete ansehen.",
+          "intro": "Für eine Modemarke zählen Stil, Bildqualität und ein trendbewusstes Publikum. Hier finden Sie Creator {in}, die Modeinhalte veröffentlichen, mit Portfolios und Paketen für Instagram und TikTok."
+        },
+        "food": {
+          "title": "Food-Influencer und Rezept-Creator {in}",
+          "description": "Finden Sie Food-Influencer {in} für Restaurants, Lebensmittel und Rezepte. Profile, Portfolios und Pakete ansehen.",
+          "intro": "Restaurants, Cafés und Lebensmittelmarken präsentieren sich am besten mit Rezepten, Verkostungen und kurzen Videos. Hier finden Sie Creator {in}, die Inhalte über Essen und Getränke erstellen."
+        },
+        "lifestyle": {
+          "title": "Lifestyle-Influencer {in}",
+          "description": "Finden Sie Lifestyle-Influencer und UGC-Creator {in} für Produkte rund um Zuhause, Familie und Alltag. Profile und Pakete ansehen.",
+          "intro": "Lifestyle-Creator zeigen Produkte im Alltag: Zuhause, Familie, Arbeit und Freizeit. Hier finden Sie Creator {in}, deren Inhalte ihr Publikum als persönlich und glaubwürdig erlebt."
+        },
+        "travel": {
+          "title": "Reise-Influencer {in}",
+          "description": "Finden Sie Reise-Influencer {in} für Hotels, Reisebüros und Destinationen. Profile, Portfolios und Pakete ansehen.",
+          "intro": "Hotels, Ferienwohnungen, Reisebüros und Destinationen brauchen Creator, die das Gefühl eines Ortes vermitteln. Hier finden Sie Creator {in}, die Reiseinhalte veröffentlichen."
+        },
+        "wellness": {
+          "title": "Wellness- und Fitness-Influencer {in}",
+          "description": "Finden Sie Wellness- und Fitness-Influencer {in} für Fitnessstudios, gesunde Ernährung und Pflege. Profile und Pakete ansehen.",
+          "intro": "Für Fitnessstudios, Wellnesszentren und gesunde Produkte zählt ein Publikum, das dem Creator vertraut. Hier finden Sie Creator {in}, die über Gesundheit, Sport und Wohlbefinden berichten."
+        }
+      },
+      "ugc": {
+        "label": "UGC-Creator",
+        "title": "UGC-Creator {in} für Video- und Fotoinhalte",
+        "description": "Finden Sie UGC-Creator {in}, die authentische Video- und Fotoinhalte für Ihre Anzeigen, Ihren Onlineshop und Social Media erstellen.",
+        "intro": "UGC-Creator erstellen Inhalte, die die Marke auf eigenen Kanälen und in Anzeigen veröffentlicht, unabhängig von der Followerzahl. Hier finden Sie UGC-Creator {in}: Beispiele, Pakete und Lieferzeiten ansehen und eine Anfrage senden."
+      },
+      "city": {
+        "title": "Influencer {in} für Kooperationen",
+        "description": "Finden Sie Influencer und UGC-Creator {in}. Instagram-, TikTok- und YouTube-Profile, Portfolios und Kooperationspakete auf Wave ansehen.",
+        "intro": "Lokale Creator kennen ihr Publikum und ihre Stadt am besten. Hier finden Sie öffentliche Profile von Creatorn {in}: Inhalte, Kanäle und Pakete vergleichen und eine Anfrage senden oder in eine Kampagne einladen."
+      }
     }
   },
   "support": {
@@ -4188,5 +4247,56 @@
     "footer": "Gute Kooperationen verdienen etwas Aufmerksamkeit.",
     "adminLogin": "Anmeldung für Administratoren",
     "adminBanner": "Der Wartungsmodus ist eingeschaltet. Besucher können Wave derzeit nicht nutzen."
+  },
+  "adminBroadcast": {
+    "nav": "E-Mails senden",
+    "title": "E-Mails senden",
+    "intro": "Schreiben Sie eine Nachricht und senden Sie sie an alle Nutzer, Newsletter-Abonnenten, ausgewählte Konten oder eingegebene Adressen. Jeder Empfänger erhält eine persönliche E-Mail.",
+    "contentStep": "Nachricht",
+    "subject": "Betreff",
+    "heading": "Überschrift in der E-Mail",
+    "message": "Nachrichtentext",
+    "buttonLabel": "Button-Text",
+    "buttonUrl": "Button-Link",
+    "buttonUrlHint": "Der Link muss mit https:// beginnen, oder geben Sie {'{{'}profileUrl{'}}'} für das Profil jedes Empfängers ein.",
+    "insert": "Einfügen:",
+    "variables": "Variablen",
+    "variablesHint": "{'{{'}name{'}}'} ist der Name des Empfängers, {'{{'}profileUrl{'}}'} der Link zu seinem Wave-Profil.",
+    "unknownVariables": "Unbekannte Variablen: {names}",
+    "reset": "Standardnachricht wiederherstellen",
+    "preview": "Vorschau",
+    "previewName": "Amina",
+    "audienceStep": "Empfänger",
+    "audienceAll": "Alle Nutzer",
+    "audienceAllHint": "Alle aktiven Konten mit bestätigter E-Mail-Adresse. Für Hinweise zu Konto und Plattform, nicht für Werbung.",
+    "audienceNewsletter": "Newsletter",
+    "audienceNewsletterHint": "Nur Personen, die die Wave-Neuigkeiten abonniert haben. Die E-Mail enthält einen Abmeldelink.",
+    "audienceUsers": "Konten auswählen",
+    "audienceUsersHint": "Wählen Sie Konten aus der Liste.",
+    "audienceEmails": "Eingegebene Adressen",
+    "audienceEmailsHint": "Adresse eingeben und Enter drücken. Bestehende Nutzer erhalten eine persönliche E-Mail.",
+    "role": "Kontotyp",
+    "roleAll": "Alle",
+    "roleCreators": "Creator",
+    "roleCompanies": "Marken und Agenturen",
+    "users": "Konten",
+    "usersPlaceholder": "Konten auswählen",
+    "searchUsers": "Name oder E-Mail suchen",
+    "noUsers": "Keine Konten für diese Suche.",
+    "emails": "E-Mail-Adressen",
+    "emailsPlaceholder": "name{'@'}beispiel.de und Enter",
+    "emailsInvalid": "Ungültige Adressen: {emails}",
+    "emailsLimit": "Höchstens {count} Adressen.",
+    "recipients": "Empfänger: {count}",
+    "footerHint": "Senden Sie sich zuerst einen Test und prüfen Sie die E-Mail.",
+    "sendTest": "Test an mich senden",
+    "testSent": "Der Test wurde an {email} gesendet.",
+    "send": "Senden ({count})",
+    "confirmTitle": "E-Mail an {count} Adressen senden?",
+    "confirmMessage": "„{subject}\" geht an {count} Empfänger. Der Versand kann nicht rückgängig gemacht werden.",
+    "sent": "Die E-Mail ist für {count} Empfänger in der Warteschlange.",
+    "sentWithSkipped": "Die E-Mail ist für {count} Empfänger in der Warteschlange. Übersprungen: {skipped}.",
+    "loadError": "Empfängerdaten konnten nicht geladen werden.",
+    "sendError": "Die E-Mail wurde nicht gesendet."
   }
 }

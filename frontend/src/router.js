@@ -31,6 +31,7 @@ const routeViews = {
   home: () => import('./views/HomeView.vue'),
   maintenance: () => import('./views/MaintenanceView.vue'),
   'country-creators': () => import('./views/CountryCreatorsView.vue'),
+  'country-topic': () => import('./views/CountryCreatorsView.vue'),
   'seo-guides': () => import('./views/SeoGuidesView.vue'),
   'seo-guide': () => import('./views/SeoGuidesView.vue'),
   'creator-guides': () => import('./views/SeoGuidesView.vue'),
@@ -73,6 +74,7 @@ const routeViews = {
   'admin-subscribers': () => import('./views/AdminSubscribersView.vue'),
   'admin-qr': () => import('./views/AdminQrView.vue'),
   'admin-invitations': () => import('./views/AdminInvitationsView.vue'),
+  'admin-emails': () => import('./views/AdminBroadcastView.vue'),
   'admin-redirects': () => import('./views/AdminRedirectsView.vue'),
   'admin-tools': () => import('./views/AdminToolsView.vue'),
   imprint: legalView,
@@ -98,6 +100,7 @@ const adminSections = {
   'admin-tools': 'tools',
   'admin-qr': 'qr',
   'admin-invitations': 'invitations',
+  'admin-emails': 'emails',
   'admin-redirects': 'redirects',
 }
 

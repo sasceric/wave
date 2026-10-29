@@ -88,9 +88,9 @@ final class LocalizedRouteMap
         $alternates = [];
         foreach ($this->locales() as $locale) {
             $language = match ($locale) {
-                'bs' => $routeName === 'country-creators' ? 'bs-BA' : 'bs',
-                'hr' => $routeName === 'country-creators' ? 'hr-HR' : 'hr',
-                'sl' => $routeName === 'country-creators' ? 'sl-SI' : 'sl',
+                'bs' => in_array($routeName, ['country-creators', 'country-topic'], true) ? 'bs-BA' : 'bs',
+                'hr' => in_array($routeName, ['country-creators', 'country-topic'], true) ? 'hr-HR' : 'hr',
+                'sl' => in_array($routeName, ['country-creators', 'country-topic'], true) ? 'sl-SI' : 'sl',
                 'sr' => 'sr-RS',
                 'cnr' => 'sr-ME',
                 default => $locale,

@@ -1,0 +1,43 @@
+{
+  "minCreators": 3,
+  "categories": {
+    "ljepota": "beauty",
+    "moda": "fashion",
+    "hrana": "food",
+    "zivotni-stil": "lifestyle",
+    "putovanja": "travel",
+    "wellness": "wellness"
+  },
+  "creatorTypes": {
+    "ugc-kreatori": "ugc-creator"
+  },
+  "cities": {
+    "BA": {
+      "sarajevo": { "name": "Sarajevo", "aliases": ["sarajevo", "ilidza", "ilidža"], "in": { "bhs": "u Sarajevu", "sl": "v Sarajevu" } },
+      "banja-luka": { "name": "Banja Luka", "aliases": ["banja luka", "banjaluka", "banja-luka"], "in": { "bhs": "u Banjoj Luci", "sl": "v Banjaluki" } },
+      "mostar": { "name": "Mostar", "aliases": ["mostar"], "in": { "bhs": "u Mostaru", "sl": "v Mostarju" } },
+      "tuzla": { "name": "Tuzla", "aliases": ["tuzla"], "in": { "bhs": "u Tuzli", "sl": "v Tuzli" } },
+      "zenica": { "name": "Zenica", "aliases": ["zenica"], "in": { "bhs": "u Zenici", "sl": "v Zenici" } },
+      "bihac": { "name": "Bihać", "aliases": ["bihac", "bihać"], "in": { "bhs": "u Bihaću", "sl": "v Bihaću" } }
+    },
+    "HR": {
+      "zagreb": { "name": "Zagreb", "aliases": ["zagreb"], "in": { "bhs": "u Zagrebu", "sl": "v Zagrebu" } },
+      "split": { "name": "Split", "aliases": ["split"], "in": { "bhs": "u Splitu", "sl": "v Splitu" } },
+      "rijeka": { "name": "Rijeka", "aliases": ["rijeka"], "in": { "bhs": "u Rijeci", "sl": "na Reki" } },
+      "osijek": { "name": "Osijek", "aliases": ["osijek"], "in": { "bhs": "u Osijeku", "sl": "v Osijeku" } }
+    },
+    "RS": {
+      "beograd": { "name": "Beograd", "aliases": ["beograd", "belgrade"], "in": { "bhs": "u Beogradu", "sl": "v Beogradu" } },
+      "novi-sad": { "name": "Novi Sad", "aliases": ["novi sad", "novi-sad"], "in": { "bhs": "u Novom Sadu", "sl": "v Novem Sadu" } },
+      "nis": { "name": "Niš", "aliases": ["nis", "niš"], "in": { "bhs": "u Nišu", "sl": "v Nišu" } }
+    },
+    "ME": {
+      "podgorica": { "name": "Podgorica", "aliases": ["podgorica"], "in": { "bhs": "u Podgorici", "sl": "v Podgorici" } },
+      "budva": { "name": "Budva", "aliases": ["budva"], "in": { "bhs": "u Budvi", "sl": "v Budvi" } }
+    },
+    "SI": {
+      "ljubljana": { "name": "Ljubljana", "aliases": ["ljubljana"], "in": { "bhs": "u Ljubljani", "sl": "v Ljubljani" } },
+      "maribor": { "name": "Maribor", "aliases": ["maribor"], "in": { "bhs": "u Mariboru", "sl": "v Mariboru" } }
+    }
+  }
+}

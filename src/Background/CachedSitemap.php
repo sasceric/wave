@@ -130,7 +130,7 @@ final class CachedSitemap
             $upper = (int) $this->connection->fetchOne('SELECT COALESCE(MAX(id), 0) FROM ' . $kind);
             do {
                 $join = $kind === 'campaign' ? 'JOIN company c ON c.id = e.company_id LEFT JOIN wave_user u ON u.id = c.owner_id' : 'LEFT JOIN wave_user u ON u.id = e.owner_id';
-                $filter = $kind === 'campaign' ? " AND e.status = 'open' AND e.listed = TRUE AND e.closes_at >= ?" : ($kind === 'creator' ? ' AND e.agency_profile = FALSE' : ' AND e.archived_profile = FALSE');
+                $filter = $kind === 'campaign' ? " AND e.status = 'open' AND e.listed = TRUE AND e.closes_at >= ?" : ($kind === 'creator' ? " AND e.agency_profile = FALSE AND (TRIM(COALESCE(e.bio, '')) <> '' OR e.avatar_url IS NOT NULL OR e.avatar_media_id IS NOT NULL)" : ' AND e.archived_profile = FALSE');
                 $params = [$after, $upper];
                 if ($kind === 'campaign') {
                     $params[] = (new \DateTimeImmutable('today'))->format('Y-m-d H:i:s');

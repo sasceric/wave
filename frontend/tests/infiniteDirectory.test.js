@@ -223,7 +223,7 @@ test('country creator pages retain their country when filters are cleared and us
     '../lib/api': { apiGet: async () => ({ data: { countries: available ? [{ value: 'BA', count: 1 }] : [] } }) },
     '../lib/creatorPresentation': { PRESENTATION_PLATFORMS: ['Instagram', 'TikTok', 'YouTube', 'Twitch', 'Spotify'] },
     '../lib/seo': { updateSeo: value => metadata.push(value), getSeoOrigin: () => 'https://wave.ba' },
-    '../lib/regionalSeo': { countryCodeForSlug: slug => slug === 'bosna-i-hercegovina' ? 'BA' : null },
+    '../lib/regionalSeo': { countryCodeForSlug: slug => slug === 'bosna-i-hercegovina' ? 'BA' : null, topicCopy: () => null, topicForSlug: () => null, topics: { minCreators: 3 } },
     '../routePaths': { localizedPath: (name, locale, params) => `/kreatori/${params.slug}` },
   }, { countryCode: 'BA' })
   assert.equal(filters.countries.value, '["BA"]')

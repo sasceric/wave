@@ -26,6 +26,7 @@ final class EmailTemplateRenderer
         'registered' => 'account_action.html',
         'approval' => 'approval_welcome.html',
         'approval_company' => 'approval_welcome.html',
+        'admin_broadcast' => 'admin_broadcast.html',
         'account_deleted' => 'account_action.html',
         'terms_updated' => 'account_action.html',
         'contact' => 'contact.html',
@@ -39,6 +40,7 @@ final class EmailTemplateRenderer
     ];
 
     private const REQUIRED_VARIABLES = [
+        'admin_broadcast' => ['locale', 'preheader', 'heading', 'message', 'buttonLabel', 'actionUrl', 'footer', 'settingsLabel', 'settingsUrl'],
         'verification_reminder' => ['locale', 'preheader', 'eyebrow', 'heading', 'greeting', 'message', 'buttonLabel', 'actionUrl', 'expiration', 'security', 'fallback', 'footer'],
         'profile_tip' => ['locale', 'preheader', 'eyebrow', 'heading', 'greeting', 'message', 'buttonLabel', 'actionUrl', 'expiration', 'security', 'fallback', 'footer'],
         'profile_reminder' => ['locale', 'preheader', 'eyebrow', 'heading', 'greeting', 'message', 'scoreLabel', 'score', 'stepsLabel', 'steps', 'buttonLabel', 'actionUrl', 'guideLabel', 'guideUrl', 'footer', 'unsubscribeLabel', 'unsubscribeUrl', 'settingsLabel', 'settingsUrl', 'firstStep', 'subject'],

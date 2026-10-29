@@ -99,6 +99,7 @@ final class CreatorResource
             'deleted' => $owner?->isDeleted() ?? false,
                 'isPresentationDemo' => $owner?->isPresentationDemo() ?? false,
             'creatorTypes' => $creator->getCreatorTypes(),
+            'countryCode' => strtoupper((string) $owner?->getCountryCode()),
             'presentation' => $creator->getPresentation(),
             'category' => $translation['category'] ?? $creator->getCategory(),
             'categoryLabel' => $categoryLabel ?? ($translation['category'] ?? $creator->getCategory()),

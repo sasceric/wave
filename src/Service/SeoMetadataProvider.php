@@ -61,9 +61,11 @@ final class SeoMetadataProvider
         $locale = $route['locale'];
         $name = $route['name'];
         $params = $route['params'];
-        $countryCode = $name === 'country-creators' ? $this->regionalContent->countryCode($params['country']) : null;
-        $regionalCopy = in_array($name, ['country-creators', 'seo-guides', 'seo-guide', 'creator-guides', 'creator-guide', 'how-it-works'], true) ? $this->regionalContent->catalog($locale) : [];
-        if (($name === 'country-creators' && $countryCode === null)
+        $countryCode = in_array($name, ['country-creators', 'country-topic'], true) ? $this->regionalContent->countryCode($params['country']) : null;
+        $topic = $name === 'country-topic' && $countryCode !== null ? $this->regionalContent->topic($countryCode, $params['topic']) : null;
+        $regionalCopy = in_array($name, ['country-creators', 'country-topic', 'seo-guides', 'seo-guide', 'creator-guides', 'creator-guide', 'how-it-works'], true) ? $this->regionalContent->catalog($locale) : [];
+        if ((in_array($name, ['country-creators', 'country-topic'], true) && $countryCode === null)
+            || ($name === 'country-topic' && $topic === null)
             || ($name === 'seo-guide' && !isset($regionalCopy['guides'][$params['guide']]))
             || ($name === 'creator-guide' && !isset($regionalCopy['creatorGuides']['guides'][$params['guide']]))) {
             return $this->notFoundMetadata($locale);
@@ -156,6 +158,22 @@ final class SeoMetadataProvider
                 ], $creators, array_keys($creators)),
             ];
             $contentHtml = $this->regionalContent->html($name, $locale, $params, $this->routeMap, $creators);
+        } elseif ($name === 'country-topic' && $topic !== null) {
+            $copy = $this->regionalContent->topicCopy($locale, $countryCode, $topic);
+            $title = $copy['title'].' | Wave';
+            $description = $copy['description'];
+            $listing = $this->regionalContent->topicCreators($countryCode, $topic);
+            $indexable = $indexable && $this->regionalContent->topicIndexable($countryCode, $topic);
+            $entitySchema = [
+                '@type' => 'ItemList',
+                'itemListElement' => array_map(fn (array $creator, int $index): array => [
+                    '@type' => 'ListItem',
+                    'position' => $index + 1,
+                    'name' => $creator['name'],
+                    'url' => $this->siteOrigin->url($this->routeMap->localizedPath('creator-profile', $locale, ['slug' => $creator['slug']])),
+                ], $listing['creators'], array_keys($listing['creators'])),
+            ];
+            $contentHtml = $this->regionalContent->html($name, $locale, $params, $this->routeMap, $listing['creators']);
         } elseif ($name === 'how-it-works') {
             $title = $regionalCopy['howItWorks']['title'].' | Wave';
             $description = $regionalCopy['howItWorks']['intro'];
@@ -189,13 +207,12 @@ final class SeoMetadataProvider
                 return $this->notFoundMetadata($locale);
             } else {
                 $translation = $creator->getTranslations()[$locale] ?? [];
-                $title = $this->formatTranslation(
-                    $locale,
-                    'creatorProfileTitle',
-                    '{name} — Wave',
-                    ['{name}' => $creator->getDisplayName()],
-                );
-                $description = $this->plainDescription($translation['bio'] ?? $creator->getBio(), $description);
+                $details = $this->creatorDetails($locale, $creator->getCreatorTypes(), $creator->getCity());
+                $title = $details === ''
+                    ? $this->formatTranslation($locale, 'creatorProfileTitle', '{name} — Wave', ['{name}' => $creator->getDisplayName()])
+                    : $this->formatTranslation($locale, 'creatorProfileTitleDetails', '{name} — {details} | Wave', ['{name}' => $creator->getDisplayName(), '{details}' => $details]);
+                $fallback = $details === '' ? $description : $this->formatTranslation($locale, 'creatorProfileDescription', '{name} · {details}.', ['{name}' => $creator->getDisplayName(), '{details}' => $details]);
+                $description = $this->plainDescription($translation['bio'] ?? $creator->getBio(), $fallback);
                 $image = $this->absoluteUrl($creator->getAvatarMedia()?->getUrl() ?? $creator->getAvatarUrl())
                     ?? $image;
                 $entitySchema = $this->profileSchema->creator($creator, $locale);
@@ -215,12 +232,11 @@ final class SeoMetadataProvider
                 return $this->notFoundMetadata($locale);
             } else {
                 $translation = $company->getTranslations()[$locale] ?? [];
-                $title = $this->formatTranslation(
-                    $locale,
-                    'companyProfileTitle',
-                    '{name} — Wave',
-                    ['{name}' => $company->getName()],
-                );
+                // Same label as the company API (and so the browser title): category label, translation, raw value.
+                $industry = trim((string) (\App\Api\MarketplaceCategoryLabels::forLocale($this->entityManager, $locale)[$company->getIndustry()] ?? $translation['industry'] ?? $company->getIndustry()));
+                $title = $industry === ''
+                    ? $this->formatTranslation($locale, 'companyProfileTitle', '{name} — Wave', ['{name}' => $company->getName()])
+                    : $this->formatTranslation($locale, 'companyProfileTitleDetails', '{name} — {details} | Wave', ['{name}' => $company->getName(), '{details}' => $industry]);
                 $description = $this->plainDescription($company->getAbout() ?? '', $translation['industry'] ?? $company->getIndustry());
                 $image = $this->absoluteUrl($company->getLogoMedia()?->getUrl() ?? $company->getLogoUrl())
                     ?? $image;
@@ -360,7 +376,7 @@ final class SeoMetadataProvider
         $page = [
             '@context' => 'https://schema.org',
             '@type' => match ($routeName) {
-                'creators', 'companies', 'campaigns', 'country-creators', 'seo-guides', 'creator-guides' => 'CollectionPage',
+                'creators', 'companies', 'campaigns', 'country-creators', 'country-topic', 'seo-guides', 'creator-guides' => 'CollectionPage',
                 'creator-profile', 'company-profile' => 'ProfilePage',
                 'support' => 'ContactPage',
                 default => 'WebPage',
@@ -454,6 +470,15 @@ final class SeoMetadataProvider
         }
 
         return trim(preg_replace('/\s*[|—–-]\s*Wave$/iu', '', $title) ?? $title).' | Wave';
+    }
+
+    /** "UGC kreator, Sarajevo": the first creator type and the city, as shown in profile titles. */
+    private function creatorDetails(string $locale, array $creatorTypes, string $city): string
+    {
+        $labels = $this->catalogs[$locale]['creatorTypes']['options'] ?? [];
+        $type = isset($creatorTypes[0]) && is_string($labels[$creatorTypes[0]] ?? null) ? $labels[$creatorTypes[0]] : '';
+
+        return implode(', ', array_filter([$type, trim(explode(',', $city)[0])], static fn (string $part): bool => $part !== ''));
     }
 
     private function formatTranslation(string $locale, string $key, string $fallback, array $replacements): string

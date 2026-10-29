@@ -398,7 +398,7 @@ final class SeoControllerTest extends WebTestCase
         self::assertStringContainsString('<html lang="bs">', $html);
         self::assertStringContainsString('name="wave:origin" content="http://127.0.0.1:8000"', $html);
         self::assertStringNotContainsString('rel="preload" as="image"', $html);
-        self::assertStringContainsString('<title>Maya Chen — profil kreatora | Wave</title>', $html);
+        self::assertStringContainsString('<title>Maya Chen — Los Angeles | Wave</title>', $html);
         self::assertStringContainsString('rel="canonical" href="http://127.0.0.1:8000/kreatori/maya-chen"', $html);
         self::assertStringContainsString('property="og:image" content="http://127.0.0.1:8000/images/share.webp"', $html);
         self::assertStringContainsString('"@type":"Person"', $html);
@@ -588,5 +588,62 @@ final class SeoControllerTest extends WebTestCase
         self::assertResponseStatusCodeSame(404);
         self::assertStringContainsString('name="robots" content="noindex, nofollow"', $this->client->getResponse()->getContent());
         self::assertStringNotContainsString('rel="canonical"', $this->client->getResponse()->getContent());
+    }
+
+    public function testLandingPagesNeedEnoughCreatorsAndAreLinkedFromTheCountryPageAndSitemap(): void
+    {
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        foreach ([['amina', 'Sarajevo', ['ugc-creator']], ['lejla', 'Ilidža', []], ['sara', 'Sarajevo, BiH', ['ugc-creator']], ['mia', 'Mostar', ['ugc-creator']]] as [$slug, $city, $types]) {
+            $owner = new User($slug.'@example.test', 'ROLE_CREATOR');
+            $owner->setPassword('test-only-unused-hash');
+            $owner->setCountryCode('BA');
+            $owner->setApproved(true);
+            $creator = new Creator($slug, ucfirst($slug), 'Beauty', $city, 'Beauty and skincare videos.', []);
+            $creator->setCategories(['Beauty']);
+            $creator->setCreatorTypes($types);
+            $owner->setCreator($creator);
+            $em->persist($owner);
+            $em->persist($creator);
+        }
+        $em->flush();
+
+        $crawler = $this->client->request('GET', '/influenseri/bosna-i-hercegovina/ljepota');
+        self::assertResponseIsSuccessful();
+        self::assertSame('Influenseri za ljepotu i kozmetiku u Bosni i Hercegovini | Wave', $crawler->filter('title')->text());
+        self::assertSame('index, follow', $crawler->filter('meta[name="robots"]')->attr('content'));
+        self::assertSame('http://127.0.0.1:8000/influenseri/bosna-i-hercegovina/ljepota', $crawler->filter('link[rel="canonical"]')->attr('href'));
+        self::assertSame('http://127.0.0.1:8000/hr/influenceri/bosna-i-hercegovina/ljepota', $crawler->filter('link[hreflang="hr-HR"]')->attr('href'));
+        self::assertCount(1, $crawler->filter('#app h1'));
+        self::assertCount(4, $crawler->filter('#app a[href^="/kreatori/"]'));
+        self::assertCount(1, $crawler->filter('#app a[href="/influenseri/bosna-i-hercegovina/sarajevo"]'), 'Sarajevo and Ilidža count as one city page.');
+        self::assertCount(1, $crawler->filter('#app a[href="/influenseri/bosna-i-hercegovina/ugc-kreatori"]'));
+        self::assertCount(0, $crawler->filter('#app a[href="/influenseri/bosna-i-hercegovina/mostar"]'), 'One creator is not enough for a page.');
+
+        $crawler = $this->client->request('GET', '/en/influencers/bosna-i-hercegovina/sarajevo');
+        self::assertSame('Influencers in Sarajevo for collaborations | Wave', $crawler->filter('title')->text());
+        self::assertCount(3, $crawler->filter('#app a[href^="/kreatori/"]'));
+
+        $crawler = $this->client->request('GET', '/influenseri/bosna-i-hercegovina/mostar');
+        self::assertResponseIsSuccessful();
+        self::assertStringContainsString('noindex', (string) $crawler->filter('meta[name="robots"]')->attr('content'));
+        $this->client->request('GET', '/influenseri/bosna-i-hercegovina/nepostojeca-tema');
+        self::assertResponseStatusCodeSame(404);
+        $this->client->request('GET', '/influenseri/bosna-i-hercegovina/zagreb');
+        self::assertResponseStatusCodeSame(404);
+
+        $crawler = $this->client->request('GET', '/influenseri/bosna-i-hercegovina');
+        self::assertCount(1, $crawler->filter('#app a[href="/influenseri/bosna-i-hercegovina/ljepota"]'));
+
+        $this->client->request('GET', '/api/creators/landing-pages?country=BA&locale=bs');
+        self::assertResponseIsSuccessful();
+        $topics = json_decode($this->client->getResponse()->getContent(), true, flags: JSON_THROW_ON_ERROR)['data'];
+        self::assertSame(['ljepota', 'ugc-kreatori', 'sarajevo'], array_column($topics, 'slug'));
+        self::assertSame([4, 3, 3], array_column($topics, 'count'));
+
+        $this->client->request('GET', '/sitemap.xml');
+        $xml = $this->client->getResponse()->getContent();
+        self::assertStringContainsString('/influenseri/bosna-i-hercegovina/ljepota</loc>', $xml);
+        self::assertStringContainsString('/influenseri/bosna-i-hercegovina/sarajevo</loc>', $xml);
+        self::assertStringNotContainsString('/influenseri/bosna-i-hercegovina/mostar</loc>', $xml);
     }
 }

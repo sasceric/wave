@@ -111,7 +111,7 @@ watch(
     updateSeo({
       route,
       locale: locale.value,
-      title: t('seo.companyProfileTitle', { name: value.name }),
+      title: value.industry ? t('seo.companyProfileTitleDetails', { name: value.name, details: value.industry }) : t('seo.companyProfileTitle', { name: value.name }),
       description: value.structuredData?.description || value.industry,
       image: logo,
       noindex: value.indexable === false,

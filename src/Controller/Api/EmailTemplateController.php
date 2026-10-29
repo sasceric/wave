@@ -50,6 +50,7 @@ final class EmailTemplateController
         'account_deleted',
         'terms_updated',
         'approval_company',
+        'admin_broadcast',
     ];
     /** Text variables admins can reword without HTML ("Tekst" tab). */
     private const TEXT_KEYS = [
@@ -63,6 +64,8 @@ final class EmailTemplateController
     private const TEXT_EXCLUDED = [
         'contact' => ['message'],
         'profile_reminder' => ['preheader', 'eyebrow', 'heading', 'message'],
+        // Written per send in Admin → Slanje e-mailova.
+        'admin_broadcast' => ['preheader', 'heading', 'message', 'buttonLabel'],
     ];
     private const MULTILINE_KEYS = ['message', 'footer'];
 

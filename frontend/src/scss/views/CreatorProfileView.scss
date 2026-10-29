@@ -675,7 +675,9 @@
   .profile-heading h1 { margin: 0; color: var(--forest); font-family: var(--serif); font-size: 60px; font-weight: 400; letter-spacing: -.015em; line-height: 1; overflow-wrap: anywhere; text-wrap: balance; }
   .profile-tagline { max-width: 52ch; margin: 0; color: var(--muted-text); font-family: inherit; font-size: 19px; line-height: 1.45; text-wrap: balance; }
   .profile-heading__meta { display: flex; flex-wrap: wrap; gap: 8px 16px; margin: 0; color: var(--muted-text); font-size: 14px; > span { display: inline-flex; align-items: center; gap: 6px; } strong { color: var(--ink); } }
-  .profile-presentation-pills { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; span { padding: 4px 11px; border-radius: var(--radius-pill); background: var(--surface); color: var(--ink); font-size: 13px; } }
+  .profile-presentation-pills { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; span, a { padding: 4px 11px; border-radius: var(--radius-pill); background: var(--surface); color: var(--ink); font-size: 13px; } }
+  // City, area and UGC type link to their landing pages (internal links for search).
+  .profile-heading__landing { color: inherit; text-decoration: underline; text-decoration-color: color-mix(in srgb, currentColor 35%, transparent); text-underline-offset: 3px; &:hover { text-decoration-color: currentColor; } }
   .profile-intro-video { display: inline-flex; justify-self: start; align-items: center; gap: 6px; margin: 0; color: var(--forest); font-size: 14px; font-weight: 600; }
   .profile-heading__actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 4px; .button { margin: 0; } }
 
