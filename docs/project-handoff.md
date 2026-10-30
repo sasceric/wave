@@ -66,6 +66,7 @@ Cloudflare location headers are accepted only from allowlisted edge peers; see
 | API endpoints and workflows | `src/Controller/Api/` |
 | JSON serialization and request/access helpers | `src/Api/`; especially `ApiAccess.php`, `JsonPayload.php`, and domain `*Resource.php` files |
 | Database model | `src/Entity/`, `migrations/` |
+| Manual pre-approval emails and profile preparation | `RegistrationReminderController.php`, `ProfilePreparationEmailCopy.php`, `templates/emails/profile_preparation.html`; [account activation](account-activation.md) |
 | Registration, login, verification, password reset | `AuthController.php`, `src/Security/SessionAuthenticator.php`, `src/Account/` |
 | Google and Apple login | `OAuthController.php`, `src/OAuth/` |
 | Applications, shortlisting, and offers | `MarketplaceWorkflowController.php` |
@@ -88,6 +89,7 @@ Cloudflare location headers are accepted only from allowlisted edge peers; see
 | Service worker and app shell | `frontend/src/sw.js`, `frontend/vite.config.js`, `frontend/src/App.vue` |
 | Tests | `tests/Controller/` plus API, OAuth, service, command, and migration tests |
 | Deployment and server jobs | `.github/workflows/deploy-production.yml`, `docs/deployment.md`, `docs/server-operations.md`, `docs/mercure-server-setup.md` |
+| Admin collaboration overview and activity counts | `src/Admin/Collaborations.php`, `AdminCollaborationsController.php`, `AdminCollaborationsView.vue`; [report semantics and charts](admin-collaborations.md) |
 | Admin operational tools | `AdminToolsController.php`, `Background/TaskRegistry.php`, `Background/AdminWorker.php`, `QueueInspector.php`, `AdminLogReader.php`, `frontend/src/views/AdminToolsView.vue` |
 | Admin QR links | `AdminQrController.php`, `src/Controller/QrRedirectController.php`, `src/Entity/QrLink.php`, `frontend/src/views/AdminQrView.vue`; `docs/admin-qr-codes.md` |
 | Environment configuration | `config/packages/dev/`, `prod/`, `test/`; `docs/environment-configuration.md` |

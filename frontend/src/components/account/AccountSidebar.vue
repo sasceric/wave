@@ -168,6 +168,7 @@ const navigationItems = computed(() => {
       { route: 'admin-homepage', labelKey: 'adminDashboard.navHomepage', icon: House, group: 'marketing' },
       { route: 'admin-creators', labelKey: 'adminDashboard.navCreators', icon: Users },
       { route: 'admin-companies', labelKey: 'adminDashboard.navCompanies', icon: Building2 },
+      { route: 'admin-collaborations', labelKey: 'adminCollaborations.title', icon: Handshake },
       { route: 'admin-campaigns', labelKey: 'adminDashboard.navCampaigns', icon: Megaphone },
       { route: 'admin-email-templates', labelKey: 'adminDashboard.navEmailTemplates', icon: Mail, group: 'marketing' },
       { route: 'admin-credit-settings', labelKey: 'credits.adminTitle', icon: Coins, group: 'admin-settings' },

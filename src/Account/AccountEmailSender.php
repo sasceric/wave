@@ -380,6 +380,11 @@ final class AccountEmailSender
         $this->send($user, $token, $user->getPreferredLocale(), 'verification_reminder', 'verify-email');
     }
 
+    public function sendPreApproval(User $user): void
+    {
+        $this->send($user, null, $user->getPreferredLocale(), 'pre_approval', 'account');
+    }
+
     public function sendProfileTip(User $user): void
     {
         $this->send($user, null, $user->getPreferredLocale(), 'profile_tip', 'account');
@@ -813,6 +818,11 @@ final class AccountEmailSender
                 $text[] = $variables[$label] . ":\n" . $variables[$value];
             }
         }
+        if (isset($variables['stepsTitle'])) {
+            $text[] = $variables['stepsTitle'];
+            foreach (['image', 'bio', 'social'] as $step) $text[] = $variables[$step.'Title']."\n".$variables[$step.'Text'];
+            $text[] = $variables['nextTitle']."\n".$variables['nextText'];
+        }
         $text[] = $variables['buttonLabel'] . ":\n" . $url;
         foreach (['expiration', 'security'] as $optionalField) {
             if (isset($variables[$optionalField])) {
@@ -852,6 +862,10 @@ final class AccountEmailSender
         }
         if ($template === 'approval' || $template === 'approval_company') {
             return array_replace($this->stockCopy('approval', $locale), ApprovalWelcomeEmailCopy::forLocale($template, $locale));
+        }
+
+        if (in_array($template, ['registered', 'profile_tip', 'pre_approval'], true)) {
+            return array_replace($this->stockCopy('registered', $locale), ProfilePreparationEmailCopy::forLocale($template, $locale));
         }
 
         return $this->stockCopy($template, $locale);

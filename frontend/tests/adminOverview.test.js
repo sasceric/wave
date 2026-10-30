@@ -19,10 +19,10 @@ test('overview uses bounded periods and drops stale responses when changing peri
   pending[0].resolve({ userId: 1, data: { days: 30 } })
   await new Promise(resolve => setImmediate(resolve))
   assert.equal(state.statistics.value, null)
-  pending[1].resolve({ userId: 1, data: { days: 7, series: [{ creators: 2, campaigns: 0 }] } })
+  pending[1].resolve({ userId: 1, data: { days: 7, series: [{ date: '2026-10-01', creators: 2, campaigns: 0 }] } })
   await new Promise(resolve => setImmediate(resolve))
   assert.equal(state.statistics.value.days, 7)
-  assert.equal(state.maximum.value, 4)
+  assert.deepEqual(Array.from(state.growthChart.value.datasets[0].data), [2])
   state.statistics.value.profileCompletion = { total: 5, networks: 2, works: 3, packages: 1, complete: 1 }
   assert.deepEqual(Array.from(state.profileCompletionRows.value, row => [row.key, row.count, row.rate]), [
     ['networks', 2, 40], ['works', 3, 60], ['packages', 1, 20], ['complete', 1, 20],
@@ -64,6 +64,4 @@ test('overview time buckets preserve actual totals and keep long periods legible
   assert.equal(growth.at(-1).creators, 90)
   assert.equal(growth.at(-1).campaigns, 45)
   assert.equal(rows.at(-1).creators, 1)
-  assert.equal(charts.overviewCurve([], 'creators', 4), '')
-  assert.equal(charts.overviewScale(0), 4)
 })

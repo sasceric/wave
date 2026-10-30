@@ -21,6 +21,7 @@ const routeViews = {
   'profile-guide-agency': () => import('./views/AccountProfileGuideView.vue'),
   'profile-guide-brand': () => import('./views/AccountProfileGuideView.vue'),
   'account-reviews': () => import('./views/AdminSafetyView.vue'),
+  'admin-collaborations': () => import('./views/AdminCollaborationsView.vue'),
   'admin-reports': () => import('./views/AdminSafetyView.vue'),
   'account-blocks': () => import('./views/AdminSafetyView.vue'),
   support: () => import('./views/SupportView.vue'),
@@ -84,6 +85,7 @@ const routeViews = {
 }
 
 const adminSections = {
+  'admin-collaborations': 'collaborations',
   'admin-reports': 'reports',
   'admin-support': 'support',
   'admin-credit-settings': 'credits',

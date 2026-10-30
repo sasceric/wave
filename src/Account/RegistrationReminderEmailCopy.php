@@ -7,6 +7,7 @@ final class RegistrationReminderEmailCopy
     /** @return array<string, string> */
     public static function forLocale(string $template, string $locale): array
     {
+        if (in_array($template, ['profile_tip', 'pre_approval'], true)) return ProfilePreparationEmailCopy::forLocale($template, $locale);
         $copy = [
             'bs' => [
                 'verification_reminder' => [
@@ -14,16 +15,6 @@ final class RegistrationReminderEmailCopy
                     'heading' => 'Potvrdi e-mail adresu.',
                     'message' => 'Tvoj Wave račun još čeka potvrdu e-mail adrese. Klikni na dugme ispod kako bismo mogli nastaviti s pregledom registracije.',
                     'preheader' => 'Potvrdi e-mail adresu.',
-                ],
-                'profile_tip' => [
-                    'subject' => 'Predstavi se bolje na Waveu',
-                    'heading' => 'Tvoj profil zaslužuje pažnju.',
-                    'message' => 'Jasan opis, profilna slika ili logo i relevantni primjeri pomažu drugima da upoznaju tvoj rad ili kompaniju. Dodaj društvene mreže, usluge ili pakete ako ih nudiš i želiš podijeliti.',
-                    'buttonLabel' => 'Uredi profil',
-                    'expiration' => 'Dodatni sadržaj profila je opcionalan. Za odobrenje su potrebni potvrđena e-mail adresa i popunjeni obavezni podaci.',
-                    'security' => 'Svoj profil možeš ažurirati u bilo kojem trenutku na svom Wave računu.',
-                    'preheader' => 'Tvoj profil zaslužuje pažnju.',
-                    'eyebrow' => 'Uredi profil',
                 ],
             ],
             'hr' => [
@@ -33,16 +24,6 @@ final class RegistrationReminderEmailCopy
                     'message' => 'Tvoj Wave račun još čeka potvrdu adrese e-pošte. Klikni na gumb ispod kako bismo mogli nastaviti s pregledom registracije.',
                     'preheader' => 'Potvrdi adresu e-pošte.',
                 ],
-                'profile_tip' => [
-                    'subject' => 'Predstavi se bolje na Waveu',
-                    'heading' => 'Tvoj profil zaslužuje pažnju.',
-                    'message' => 'Jasan opis, profilna slika ili logotip i relevantni primjeri pomažu drugima upoznati tvoj rad ili tvrtku. Dodaj društvene mreže, usluge ili pakete ako ih nudiš i želiš podijeliti.',
-                    'buttonLabel' => 'Uredi profil',
-                    'expiration' => 'Dodatni sadržaj profila nije obvezan. Za odobrenje su potrebni potvrđena adresa e-pošte i popunjeni obvezni podaci.',
-                    'security' => 'Svoj profil možeš ažurirati u bilo kojem trenutku na svom Wave računu.',
-                    'preheader' => 'Tvoj profil zaslužuje pažnju.',
-                    'eyebrow' => 'Uredi profil',
-                ],
             ],
             'sr' => [
                 'verification_reminder' => [
@@ -50,16 +31,6 @@ final class RegistrationReminderEmailCopy
                     'heading' => 'Potvrdi e-mail adresu.',
                     'message' => 'Tvoj Wave nalog još čeka potvrdu e-mail adrese. Klikni na dugme ispod kako bismo mogli da nastavimo sa pregledom registracije.',
                     'preheader' => 'Potvrdi e-mail adresu.',
-                ],
-                'profile_tip' => [
-                    'subject' => 'Predstavi se bolje na Waveu',
-                    'heading' => 'Tvoj profil zaslužuje pažnju.',
-                    'message' => 'Jasan opis, profilna slika ili logo i relevantni primeri pomažu drugima da upoznaju tvoj rad ili kompaniju. Dodaj društvene mreže, usluge ili pakete ako ih nudiš i želiš da ih podeliš.',
-                    'buttonLabel' => 'Uredi profil',
-                    'expiration' => 'Dodatni sadržaj profila je opcionalan. Za odobrenje su potrebni potvrđena e-mail adresa i popunjeni obavezni podaci.',
-                    'security' => 'Svoj profil možeš da ažuriraš u bilo kom trenutku na svom Wave nalogu.',
-                    'preheader' => 'Tvoj profil zaslužuje pažnju.',
-                    'eyebrow' => 'Uredi profil',
                 ],
             ],
             'cnr' => [
@@ -69,16 +40,6 @@ final class RegistrationReminderEmailCopy
                     'message' => 'Tvoj Wave nalog još čeka potvrdu e-mail adrese. Klikni na dugme ispod kako bismo mogli da nastavimo s pregledom registracije.',
                     'preheader' => 'Potvrdi e-mail adresu.',
                 ],
-                'profile_tip' => [
-                    'subject' => 'Predstavi se bolje na Waveu',
-                    'heading' => 'Tvoj profil zaslužuje pažnju.',
-                    'message' => 'Jasan opis, profilna slika ili logo i relevantni primjeri pomažu drugima da upoznaju tvoj rad ili kompaniju. Dodaj društvene mreže, usluge ili pakete ako ih nudiš i želiš da ih podijeliš.',
-                    'buttonLabel' => 'Uredi profil',
-                    'expiration' => 'Dodatni sadržaj profila je opcionalan. Za odobrenje su potrebni potvrđena e-mail adresa i popunjeni obavezni podaci.',
-                    'security' => 'Svoj profil možeš da ažuriraš u bilo kojem trenutku na svom Wave nalogu.',
-                    'preheader' => 'Tvoj profil zaslužuje pažnju.',
-                    'eyebrow' => 'Uredi profil',
-                ],
             ],
             'sl' => [
                 'verification_reminder' => [
@@ -86,16 +47,6 @@ final class RegistrationReminderEmailCopy
                     'heading' => 'Potrdi e-poštni naslov.',
                     'message' => 'Tvoj račun Wave še čaka na potrditev e-poštnega naslova. Klikni spodnji gumb, da lahko nadaljujemo pregled registracije.',
                     'preheader' => 'Potrdi e-poštni naslov.',
-                ],
-                'profile_tip' => [
-                    'subject' => 'Predstavi se bolje na Waveu',
-                    'heading' => 'Tvoj profil si zasluži pozornost.',
-                    'message' => 'Jasen opis, profilna slika ali logotip in ustrezni primeri pomagajo drugim spoznati tvoje delo ali podjetje. Dodaj družbena omrežja, storitve ali pakete, če jih ponujaš in želiš deliti.',
-                    'buttonLabel' => 'Uredi profil',
-                    'expiration' => 'Dodatna vsebina profila ni obvezna. Za odobritev sta potrebna potrjen e-poštni naslov in izpolnjeni obvezni podatki.',
-                    'security' => 'Svoj profil lahko kadar koli posodobiš v svojem računu Wave.',
-                    'preheader' => 'Tvoj profil si zasluži pozornost.',
-                    'eyebrow' => 'Uredi profil',
                 ],
             ],
             'en' => [
@@ -105,16 +56,6 @@ final class RegistrationReminderEmailCopy
                     'message' => 'Your Wave account is still waiting for email verification. Click the button below so we can continue reviewing your registration.',
                     'preheader' => 'Confirm your email address.',
                 ],
-                'profile_tip' => [
-                    'subject' => 'Make your Wave profile stand out',
-                    'heading' => 'Give your profile a little attention.',
-                    'message' => 'A clear description, profile photo or logo and relevant examples help others understand your work or company. Add social links, services or packages if you offer them and wish to share them.',
-                    'buttonLabel' => 'Edit profile',
-                    'expiration' => 'Additional profile content is optional. Approval requires a verified email address and completed mandatory fields.',
-                    'security' => 'You can update your profile at any time in your Wave account.',
-                    'preheader' => 'Give your profile a little attention.',
-                    'eyebrow' => 'Edit profile',
-                ],
             ],
             'de' => [
                 'verification_reminder' => [
@@ -122,16 +63,6 @@ final class RegistrationReminderEmailCopy
                     'heading' => 'Bestätige deine E-Mail-Adresse.',
                     'message' => 'Dein Wave-Konto wartet noch auf die Bestätigung deiner E-Mail-Adresse. Klicke unten, damit wir deine Registrierung weiter prüfen können.',
                     'preheader' => 'Bestätige deine E-Mail-Adresse.',
-                ],
-                'profile_tip' => [
-                    'subject' => 'Präsentiere dein Wave-Profil besser',
-                    'heading' => 'Dein Profil verdient Aufmerksamkeit.',
-                    'message' => 'Eine klare Beschreibung, ein Profilbild oder Logo und passende Beispiele helfen anderen, deine Arbeit oder dein Unternehmen kennenzulernen. Ergänze soziale Netzwerke, Leistungen oder Pakete, wenn du sie anbietest und teilen möchtest.',
-                    'buttonLabel' => 'Profil bearbeiten',
-                    'expiration' => 'Zusätzliche Profilinhalte sind optional. Zur Freigabe brauchst du eine bestätigte E-Mail-Adresse und ausgefüllte Pflichtfelder.',
-                    'security' => 'Du kannst dein Profil jederzeit in deinem Wave-Konto aktualisieren.',
-                    'preheader' => 'Dein Profil verdient Aufmerksamkeit.',
-                    'eyebrow' => 'Profil bearbeiten',
                 ],
             ],
         ];

@@ -67,7 +67,8 @@
     "terms-of-use": "uslovi-koristenja",
     "admin-listing-ads": "admin/oglasi-u-listama",
     "admin-account-types": "admin/promjene-racuna",
-    "maintenance": "odrzavanje"
+    "maintenance": "odrzavanje",
+    "admin-collaborations": "admin/saradnje"
   },
   "hr": {
     "login": "prijava",
@@ -137,7 +138,8 @@
     "terms-of-use": "uvjeti-koristenja",
     "admin-listing-ads": "admin/oglasi-u-listama",
     "admin-account-types": "admin/promjene-racuna",
-    "maintenance": "odrzavanje"
+    "maintenance": "odrzavanje",
+    "admin-collaborations": "admin/suradnje"
   },
   "sr": {
     "login": "prijava",
@@ -207,7 +209,8 @@
     "terms-of-use": "uslovi-koriscenja",
     "admin-listing-ads": "admin/oglasi-u-listama",
     "admin-account-types": "admin/promene-naloga",
-    "maintenance": "odrzavanje"
+    "maintenance": "odrzavanje",
+    "admin-collaborations": "admin/saradnje"
   },
   "cnr": {
     "login": "prijava",
@@ -277,7 +280,8 @@
     "terms-of-use": "uslovi-koriscenja",
     "admin-listing-ads": "admin/oglasi-u-listama",
     "admin-account-types": "admin/promjene-naloga",
-    "maintenance": "odrzavanje"
+    "maintenance": "odrzavanje",
+    "admin-collaborations": "admin/saradnje"
   },
   "sl": {
     "login": "prijava",
@@ -347,7 +351,8 @@
     "terms-of-use": "pogoji-uporabe",
     "admin-listing-ads": "admin/oglasi-na-seznamih",
     "admin-account-types": "admin/spremembe-racuna",
-    "maintenance": "odrzavanje"
+    "maintenance": "odrzavanje",
+    "admin-collaborations": "admin/sodelovanja"
   },
   "en": {
     "login": "login",
@@ -417,7 +422,8 @@
     "terms-of-use": "terms-of-use",
     "admin-listing-ads": "admin/listing-ads",
     "admin-account-types": "admin/account-type-requests",
-    "maintenance": "odrzavanje"
+    "maintenance": "odrzavanje",
+    "admin-collaborations": "admin/collaborations"
   },
   "de": {
     "login": "anmelden",
@@ -487,6 +493,7 @@
     "terms-of-use": "nutzungsbedingungen",
     "admin-listing-ads": "admin/listenanzeigen",
     "admin-account-types": "admin/kontotyp-anfragen",
-    "maintenance": "odrzavanje"
+    "maintenance": "odrzavanje",
+    "admin-collaborations": "admin/zusammenarbeiten"
   }
 }

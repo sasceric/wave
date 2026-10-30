@@ -87,7 +87,7 @@ test('required profile fields emit replacements rather than modifying parent pro
 test('admin page responses cannot overwrite a more recent sort or page request', async () => {
   const requests = []
   const { state } = await setupView('../src/views/AdminDashboardView.vue', {
-    'vue-router': { useRoute: () => ({ meta: { adminSection: 'creators' } }) },
+    'vue-router': { useRoute: () => ({ meta: { adminSection: 'creators' }, query: {} }) },
     '../lib/api': { formatMoney: (value) => String(value), apiGet: (path) => new Promise((resolve) => requests.push({ path, resolve })), apiRequest: async () => {} },
   }, {}, { setTimeout, clearTimeout })
   const first = state.loadList({ page: 2, limit: 25, sort: 'displayName', direction: 'asc' })
@@ -105,7 +105,7 @@ test('admin page responses cannot overwrite a more recent sort or page request',
 test('homepage search and candidate paging preserve existing featured IDs when saving', async () => {
   let saved
   const { state } = await setupView('../src/views/AdminDashboardView.vue', {
-    'vue-router': { useRoute: () => ({ meta: { adminSection: 'homepage' } }) },
+    'vue-router': { useRoute: () => ({ meta: { adminSection: 'homepage' }, query: {} }) },
     '../lib/api': {
       formatMoney: (value) => String(value),
       apiGet: async (path) => {
@@ -158,4 +158,20 @@ test('read-only tables distinguish known totals from loaded pages when the API h
   props.hasMore = false
   await vue.nextTick()
   assert.equal(state.knownTotal.value, true)
+})
+
+test('company campaign links keep the exact company filter through sorting and paging', async () => {
+  const paths = []
+  const route = vue.reactive({ meta: { adminSection: 'campaigns' }, query: { companyId: '42', companyLabel: 'Studio' } })
+  const { state } = await setupView('../src/views/AdminDashboardView.vue', {
+    'vue-router': { useRoute: () => route },
+    '../lib/api': { formatMoney: String, apiGet: async path => { paths.push(path); return { data: [], meta: { page: 1, total: 0 } } }, apiRequest: async () => {} },
+  }, {}, { setTimeout, clearTimeout })
+  await state.loadList({ page: 2, limit: 25, sort: 'title', direction: 'asc' })
+  assert.equal(new URLSearchParams(paths.at(-1).split('?')[1]).get('companyId'), '42')
+  assert.doesNotMatch(paths.at(-1), /companyLabel=/)
+  route.query = {}
+  await vue.nextTick()
+  await state.loadList()
+  assert.equal(new URLSearchParams(paths.at(-1).split('?')[1]).has('companyId'), false)
 })

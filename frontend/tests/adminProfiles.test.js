@@ -152,3 +152,26 @@ test('campaign listing visibility saves independently from campaign status and r
   assert.equal(row.listed, false)
   assert.equal(state.error.value, 'Save failed')
 })
+
+for (const section of ['registrations', 'creators', 'companies']) {
+  test(`${section} pre-approval action requires confirmation and targets only pending account owners`, async () => {
+    const requests = []
+    const { state } = await setupView('../src/views/AdminDashboardView.vue', {
+      'vue-router': { useRoute: () => ({ meta: { adminSection: section }, query: {} }) },
+      '../lib/api': { apiGet: async () => ({}), formatMoney: String, apiRequest: async (path, options) => { requests.push({ path, options }); return {} } },
+    })
+    const row = { id: 5, accountId: 42, email: 'pending@example.test', approved: false, canChangeVisibility: true }
+    state.requestReminder({ ...row, approved: true }, 'pre_approval')
+    assert.equal(state.reminderRequest.value, null)
+    state.requestReminder({ ...row, canChangeVisibility: false }, 'pre_approval')
+    assert.equal(state.reminderRequest.value, null)
+    state.requestReminder(row, 'pre_approval')
+    assert.equal(requests.length, 0)
+    assert.equal(state.reminderTemplate(state.reminderRequest.value.kind), 'pre_approval')
+    await state.confirmReminder()
+    assert.equal(requests.length, 1)
+    assert.equal(requests[0].path, `/admin/registrations/${section === 'registrations' ? 5 : 42}/reminder`)
+    assert.equal(requests[0].options.body.kind, 'pre_approval')
+    assert.equal(state.reminderRequest.value, null)
+  })
+}

@@ -77,6 +77,7 @@ final class EmailTemplateAdminControllerTest extends WebTestCase
                 'terms_updated',
                 'approval_company',
                 'admin_broadcast',
+                'pre_approval',
             ],
             array_column($this->payload()['data']['templates'], 'key'),
         );
@@ -122,12 +123,12 @@ final class EmailTemplateAdminControllerTest extends WebTestCase
             'en' => 'Confirm your email address.',
         ];
         $registeredSubjects = [
-            'bs' => 'Tvoja Wave registracija čeka pregled',
-            'hr' => 'Tvoja Wave registracija čeka pregled',
-            'sr' => 'Tvoja Wave registracija čeka pregled',
-            'cnr' => 'Tvoja Wave registracija čeka pregled',
-            'sl' => 'Tvoja registracija v Wave čaka na pregled',
-            'en' => 'Your Wave registration is awaiting review',
+            'bs' => 'Dobro došao/la u Wave — pripremi profil za prve saradnje',
+            'hr' => 'Dobro došao/la u Wave — pripremi profil za prve suradnje',
+            'sr' => 'Dobro došao/la u Wave — pripremi profil za prve saradnje',
+            'cnr' => 'Dobro došao/la u Wave — pripremi profil za prve saradnje',
+            'sl' => 'Dobrodošli v Wave — pripravi profil za prva sodelovanja',
+            'en' => 'Welcome to Wave — get ready for your first collaborations',
         ];
         $approvalSubjects = [
             'bs' => 'Tvoj Wave račun je odobren',

@@ -51,6 +51,7 @@ final class EmailTemplateController
         'terms_updated',
         'approval_company',
         'admin_broadcast',
+        'pre_approval',
     ];
     /** Text variables admins can reword without HTML ("Tekst" tab). */
     private const TEXT_KEYS = [
@@ -59,6 +60,7 @@ final class EmailTemplateController
         'campaignsLabel', 'settingsLabel', 'unsubscribeLabel',
         'roleLabel', 'nameLabel', 'emailLabel', 'interestLabel', 'messageLabel',
         ...\App\Account\ApprovalWelcomeEmailCopy::TEXT_KEYS,
+        ...\App\Account\ProfilePreparationEmailCopy::LAYOUT_KEYS,
     ];
     /** Text that is data, or that changes per email, stays out of the "Tekst" tab. */
     private const TEXT_EXCLUDED = [
@@ -67,7 +69,7 @@ final class EmailTemplateController
         // Written per send in Admin → Slanje e-mailova.
         'admin_broadcast' => ['preheader', 'heading', 'message', 'buttonLabel'],
     ];
-    private const MULTILINE_KEYS = ['message', 'footer'];
+    private const MULTILINE_KEYS = ['message', 'footer', 'imageText', 'bioText', 'socialText', 'nextText'];
 
     #[Route('/api/admin/email-templates', name: 'api_admin_email_templates', methods: ['GET'])]
     public function list(

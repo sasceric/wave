@@ -138,7 +138,7 @@ final class OAuthRegistrationFlowTest extends WebTestCase
         self::assertEmailCount(1);
         $registrationEmail = self::getMailerMessage();
         self::assertInstanceOf(Email::class, $registrationEmail);
-        self::assertEmailSubjectContains($registrationEmail, 'Your Wave registration is awaiting review');
+        self::assertEmailSubjectContains($registrationEmail, 'Welcome to Wave — get ready for your first collaborations');
 
         $this->client->request('GET', '/api/auth/me?locale=en');
         self::assertResponseIsSuccessful();

@@ -210,12 +210,56 @@ final class RegistrationReminderTest extends WebTestCase
         self::assertResponseIsSuccessful();
     }
 
+    public function testPreApprovalSendsTheRequiredChecklistWithoutChangingAccountStateAndHasADailyLimit(): void
+    {
+        $this->client->loginUser($this->admin);
+        $this->send('pre_approval');
+        self::assertResponseIsSuccessful();
+        self::assertEmailCount(1);
+        $message = self::getMailerMessage();
+        self::assertInstanceOf(Email::class, $message);
+        self::assertSame('Three things before we approve your Wave profile', $message->getSubject());
+        self::assertEmailHtmlBodyContains($message, 'Pending Creator');
+        self::assertEmailHtmlBodyContains($message, 'Your photo or logo');
+        self::assertEmailHtmlBodyContains($message, 'Your story, briefly');
+        self::assertEmailHtmlBodyContains($message, 'Your social profiles');
+        self::assertEmailTextBodyContains($message, 'We will not approve a profile without them.');
+        self::assertEmailTextBodyContains($message, 'Aim for 100% completion.');
+        self::assertEmailHtmlBodyContains($message, '/en/account');
+        self::assertSame(0, (int) $this->em->getConnection()->fetchOne('SELECT COUNT(*) FROM user_action_token'));
+        self::assertFalse($this->pending->isApproved()); self::assertFalse($this->pending->isEmailVerified());
+        $this->send('pre_approval'); self::assertResponseStatusCodeSame(429);
+        $this->pending = $this->em->find(User::class, $this->pending->getId());
+        $this->pending->setApproved(true); $this->em->flush();
+        $this->send('pre_approval'); self::assertResponseStatusCodeSame(400);
+    }
+
+    public function testPreApprovalUsesThePendingCompanyOwnersLanguageAndPreservesEditedTemplates(): void
+    {
+        $company = new User('pre-approval-company@example.test', 'ROLE_COMPANY');
+        $company->setPassword('unused'); $company->setPreferredLocale('bs'); $company->setApproved(false);
+        $company->setCompany(new Company('pre-approval-company', 'Nova kompanija', 'Beauty'));
+        $this->em->persist($company);
+        $this->em->persist(new EmailTemplate('pre_approval', 'bs', 'Pripremi {{recipientName}}', '<html><body>{{recipientName}} <h1>{{heading}}</h1><p>{{imageText}}</p><a href="{{actionUrl}}">{{buttonLabel}}</a></body></html>'));
+        $this->em->flush(); $this->client->loginUser($this->admin);
+        $this->client->request('GET', '/api/auth/csrf');
+        $csrf = json_decode((string) $this->client->getResponse()->getContent(), true)['csrfToken'];
+        $this->client->jsonRequest('POST', '/api/admin/registrations/'.$company->getId().'/reminder?locale=en', ['kind' => 'pre_approval'], ['HTTP_X_CSRF_TOKEN' => $csrf]);
+        self::assertResponseIsSuccessful();
+        $message = self::getMailerMessage(); self::assertInstanceOf(Email::class, $message);
+        self::assertSame('Pripremi Nova kompanija', $message->getSubject());
+        self::assertSame($company->getEmail(), $message->getTo()[0]->getAddress());
+        self::assertEmailHtmlBodyContains($message, 'Pokaži nam šta te izdvaja.');
+        self::assertEmailHtmlBodyContains($message, '/racun');
+        self::assertFalse($company->isApproved());
+    }
+
     public function testBothDefaultRemindersRenderInEverySupportedLanguage(): void
     {
         $sender = self::getContainer()->get(AccountEmailSender::class);
         $renderer = self::getContainer()->get(EmailTemplateRenderer::class);
         foreach (['bs', 'hr', 'sr', 'sl', 'en', 'cnr', 'de'] as $locale) {
-            foreach (['verification_reminder', 'profile_tip'] as $template) {
+            foreach (['verification_reminder', 'profile_tip', 'pre_approval', 'registered'] as $template) {
                 $variables = $sender->previewVariables($template, $locale);
                 $html = $renderer->render($template, $variables);
                 self::assertNotSame('', $sender->defaultSubject($template, $locale));

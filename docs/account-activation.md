@@ -11,7 +11,7 @@ can be disabled later in email settings or through their unsubscribe link.
 Existing preferences are preserved. See the [legal/product review](legal/review-2026-10-26.md)
 for the consent and legal-document gaps that still need policy review.
 
-Login lands on `account-dashboard`, including incomplete accounts. Their overview shows email verification, contact/location and identity/category completion. Links open the existing editor with `tab` and a one-use `edit=1` query. The required-fields modal can return to the overview; marketplace routes and server approval/verification checks still apply. Portfolio, social profiles, offers and audience data remain optional. The existing admin approval process automatically reviews eligible accounts; there is no extra submission endpoint or fake submit action.
+Login lands on `account-dashboard`, including incomplete accounts. Their overview shows email verification, contact/location and identity/category completion. Links open the existing editor with `tab` and a one-use `edit=1` query. The required-fields modal can return to the overview; marketplace routes and server approval/verification checks still apply. Portfolio, offers and audience data remain optional. Social links, a bio/description and a profile photo/logo are requested by the manual pre-approval review policy; they are not new signup fields or an automatic approval gate. The existing admin approval process automatically reviews eligible accounts; there is no extra submission endpoint or fake submit action.
 
 Approved accounts see real activity/financial/review/credit statistics and a next action. The visibility switch calls the existing CSRF-protected visibility endpoint. Individual and bulk admin approval make newly approved creator and company profiles public automatically. Email verification and required profile completion remain prerequisites. Owners can hide their profiles afterward; repeating approval for an already approved account preserves that later visibility choice. Existing approved profiles are not republished by a backfill.
 
@@ -39,17 +39,23 @@ the session endpoint confirms verification, including after returning from the
 email app. The activation checklist shares the same resend composable, which
 coalesces simultaneous sends and discards responses after an account switch.
 
-Approvals row actions include **Remind to verify email** for unverified accounts
-and **Send profile tip** for any pending account. Creator and company lists also
+Approvals row actions include **Remind to verify email** for unverified accounts,
+**Send pre-approval checklist** for pending accounts and **Send profile tip**.
+Creator and company lists also offer the pre-approval checklist for pending account
+owners. It explains that social links, a bio/description and a profile photo/logo
+are needed before manual approval; it leaves approval and verification untouched.
+As requested, administrators keep control of approval rather than adding a new
+automatic content gate. Creator and company lists also
 offer **Send profile tip** for their linked account owners, including approved
 accounts. Profiles without an account cannot receive a reminder. Both use the
 existing confirmation modal, showing the destination before sending. The modal links to the corresponding
 editable email template. These are manual actions, not an automated email campaign.
 
-`POST /api/admin/registrations/{id}/reminder` accepts `kind=verification|profile`,
+`POST /api/admin/registrations/{id}/reminder` accepts `kind=verification|profile|pre_approval`,
 requires an administrator session and CSRF, and rejects deleted, staff,
 or otherwise ineligible recipients. Verification reminders additionally reject
-approved or already verified accounts; profile tips also support approved accounts.
+approved or already verified accounts; pre-approval checklists reject approved accounts.
+Profile tips also support approved accounts.
 Each recipient/type is limited to one send
 per 24 hours through `wave_registration_reminder`. Verification also shares the
 normal per-address resend limiter. A verification reminder issues a new single-use
@@ -60,10 +66,16 @@ metadata suppresses queued emails once their link is invalidated by successful
 verification. Token cleanup retains verification links. A profile tip cannot
 verify or approve an account and does not issue a token.
 
-The `verification_reminder` and `profile_tip` templates appear in the existing
-email editor. They reuse `account_action.html`, Wave branding, escaped variables,
-`recipientName`, and the recipient's saved language. The tip explains that extra
-profile content is optional; the existing approval prerequisites stay intact.
+The `pre_approval`, `profile_tip` and `registered` templates use the responsive
+`profile_preparation.html` layout: a three-step photo/bio/social checklist and a
+clearly labelled 100% completion goal. The registration-pending and profile-tip
+copy encourages building a useful portfolio without promising jobs or automatic
+approval. The pre-approval copy states the manual review requirements explicitly.
+All seven languages are editable in the existing email editor, including checklist
+headings and text. Saved subject/HTML/copy customizations remain authoritative.
+Plain-text emails include the same checklist and requirements. Verification
+reminders keep `account_action.html` and their existing security-token behavior.
+All use escaped variables, `recipientName` and the recipient's saved language.
 Sending uses the existing mail queue. Migration `Version20261022140000` makes
 token expiry nullable and removes the expiry from retained verification links
 for unverified, active accounts. Already

@@ -39,6 +39,7 @@ let leaveDecision = null
 
 const templateLabels = computed(() => ({
   verification_reminder: { title: t('adminProfiles.verificationTemplateTitle'), description: t('adminProfiles.verificationTemplateHint') },
+  pre_approval: { title: t('adminProfiles.preApprovalTemplateTitle'), description: t('adminProfiles.preApprovalTemplateHint') },
   profile_tip: { title: t('adminProfiles.profileTipTemplateTitle'), description: t('adminProfiles.profileTipTemplateHint') },
   credit_code_assigned: { title: t('credits.assignmentEmailTitle'), description: t('credits.assignmentEmailHint') },
   credits_activated: { title: t('credits.emailTitle'), description: t('credits.emailHint') },

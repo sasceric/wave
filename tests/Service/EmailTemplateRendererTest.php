@@ -19,7 +19,7 @@ final class EmailTemplateRendererTest extends TestCase
     public function testEveryDefaultLayoutUsesTheActualBrandArtwork(): void
     {
         $renderer = new EmailTemplateRenderer(new SiteOrigin('https://wave.ba'));
-        foreach (['verify', 'verification_reminder', 'profile_tip', 'reset', 'registered', 'approval', 'contact', 'subscribed', 'campaign_alert', 'application_received', 'creator_inquiry_received', 'creator_inquiry_accepted', 'creator_hired', 'unread_message_reminder', 'credits_activated', 'credit_code_assigned'] as $key) {
+        foreach (['verify', 'verification_reminder', 'pre_approval', 'profile_tip', 'reset', 'registered', 'approval', 'contact', 'subscribed', 'campaign_alert', 'application_received', 'creator_inquiry_received', 'creator_inquiry_accepted', 'creator_hired', 'unread_message_reminder', 'credits_activated', 'credit_code_assigned'] as $key) {
             $html = $renderer->getDefaultHtml($key);
             self::assertStringContainsString('src="https://wave.ba/images/email/wave-icon-v1.png"', $html, $key);
             self::assertStringContainsString('src="https://wave.ba/images/email/wave-logo-v1.png"', $html, $key);

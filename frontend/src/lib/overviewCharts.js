@@ -15,24 +15,3 @@ export function cumulativeOverviewSeries(series) {
   let campaigns = 0
   return series.map(row => ({ ...row, creators: creators += row.creators || 0, campaigns: campaigns += row.campaigns || 0 }))
 }
-
-export function overviewScale(maximum) {
-  if (maximum <= 4) return 4
-  const step = 10 ** Math.floor(Math.log10(maximum))
-  return Math.ceil(maximum / step) * step
-}
-
-// Horizontal control points stay inside each interval's values, avoiding
-// invented peaks or negative counts between cumulative observations.
-export function overviewCurve(series, key, maximum) {
-  if (!series.length) return ''
-  const points = series.map((row, index) => ({ x: 42 + index / Math.max(1, series.length - 1) * 536, y: 174 - row[key] / maximum * 142 }))
-  let path = `M ${points[0].x} ${points[0].y}`
-  for (let index = 1; index < points.length; index++) {
-    const previous = points[index - 1]
-    const point = points[index]
-    const middle = (previous.x + point.x) / 2
-    path += ` C ${middle} ${previous.y}, ${middle} ${point.y}, ${point.x} ${point.y}`
-  }
-  return path
-}

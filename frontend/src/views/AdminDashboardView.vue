@@ -19,6 +19,7 @@ import AdminDataTable from '../components/admin/AdminDataTable.vue'
 import AdminEmailTemplates from '../components/admin/AdminEmailTemplates.vue'
 import AdminRowActions from '../components/admin/AdminRowActions.vue'
 import AdminProfileIdentity from '../components/admin/AdminProfileIdentity.vue'
+import AdminCollaborationCounts from '../components/admin/AdminCollaborationCounts.vue'
 import AdminCreatedAt from '../components/admin/AdminCreatedAt.vue'
 import AdminProfileCompletion from '../components/admin/AdminProfileCompletion.vue'
 import AdminProfileReview from '../components/admin/AdminProfileReview.vue'
@@ -55,7 +56,8 @@ function updateCreatedAtClock() {
   createdAtNow.value = Date.now()
   createdAtTimer = window.setTimeout(updateCreatedAtClock, 60_000 - Date.now() % 60_000)
 }
-const reminderLabel = kind => t(kind === 'verification' ? 'adminProfiles.verificationReminder' : 'adminProfiles.profileTip')
+const reminderLabel = kind => t(kind === 'verification' ? 'adminProfiles.verificationReminder' : kind === 'pre_approval' ? 'adminProfiles.preApproval' : 'adminProfiles.profileTip')
+const reminderTemplate = kind => ({ verification: 'verification_reminder', pre_approval: 'pre_approval', profile: 'profile_tip' })[kind]
 const reminderConfirmation = computed(() => reminderRequest.value ? t('adminProfiles.reminderConfirm', {
   email: reminderRequest.value.email,
   type: reminderLabel(reminderRequest.value.kind),
@@ -63,6 +65,7 @@ const reminderConfirmation = computed(() => reminderRequest.value ? t('adminProf
 
 function requestReminder(row, kind) {
   const accountId = section.value === 'registrations' ? row.id : row.accountId
+  if (kind === 'pre_approval' && (row.approved || !row.canChangeVisibility)) return
   if (!sendingReminder.value && accountId && row.email) reminderRequest.value = { id: accountId, email: row.email, kind }
 }
 
@@ -217,6 +220,7 @@ const tableColumns = computed(() => {
     ],
     creators: [
       { key: 'displayName', label: t('adminDashboard.creator'), sortable: true },
+      { key: 'activity', label: t('adminCollaborations.activity') },
       createdColumn,
       { key: 'category', label: t('adminDashboard.category'), sortable: true },
       { key: 'completion', label: t('adminProfiles.filledData') },
@@ -227,6 +231,7 @@ const tableColumns = computed(() => {
     ],
     companies: [
       { key: 'name', label: t('adminDashboard.company'), sortable: true },
+      { key: 'activity', label: t('adminCollaborations.activity') },
       createdColumn,
       { key: 'industry', label: t('adminDashboard.industry'), sortable: true },
       { key: 'completion', label: t('adminProfiles.filledData') },
@@ -237,6 +242,7 @@ const tableColumns = computed(() => {
     ],
     campaigns: [
       { key: 'title', label: t('adminDashboard.campaign'), sortable: true },
+      { key: 'activity', label: t('adminCollaborations.activity') },
       createdColumn,
       { key: 'company.name', label: t('adminDashboard.company'), sortable: true },
       { key: 'listed', label: t('adminCampaigns.visibility') },
@@ -315,6 +321,7 @@ async function loadList(options = listOptions.value) {
   error.value = ''
   const params = new URLSearchParams({ ...options, q: query.value.trim(), verified: statusFilter.value })
   if (!options.sort) params.delete('sort')
+  if (section.value === 'campaigns' && typeof route.query.companyId === 'string') params.set('companyId', route.query.companyId)
   try {
     const response = await apiGet(`/admin/catalog/${section.value}?${params}`)
     if (disposed || version !== listVersion) return
@@ -505,7 +512,7 @@ async function confirmBulkApproval() {
   }
 }
 
-watch([locale, section], () => {
+watch([locale, section, () => route.query.companyId], () => {
   reviewRequest.value = null
   reminderRequest.value = null
   query.value = typeof route.query?.q === 'string' ? route.query.q : ''
@@ -614,6 +621,7 @@ onMounted(updateCreatedAtClock)
               </button>
             </template>
             <template #toolbar>
+              <LocalizedLink v-if="section === 'campaigns' && route.query.companyId" class="button button--outline" :to="{ name: 'admin-campaigns' }">{{ route.query.companyLabel }} · {{ t('adminCollaborations.clear') }}</LocalizedLink>
               <label class="admin-dashboard__search">
                 <span class="sr-only">{{ t('adminDashboard.search') }}</span>
                 <input v-model="query" type="search" :placeholder="t('adminDashboard.search')" />
@@ -631,6 +639,7 @@ onMounted(updateCreatedAtClock)
             <template #cell-listed="{ value }"><span class="admin-profile-visibility" :class="{ 'is-visible': value }">{{ t(value ? 'adminCampaigns.visible' : 'adminCampaigns.hidden') }}</span></template>
             <template #cell-displayName="{ row }"><AdminProfileIdentity :row="row" /></template>
             <template #cell-name="{ row }"><AdminProfileIdentity :row="row" /></template>
+            <template #cell-activity="{ row }"><AdminCollaborationCounts :row="row" :kind="section" /></template>
             <template #cell-createdAt="{ value }"><AdminCreatedAt :value="value" :now="createdAtNow" /></template>
             <template #cell-completion="{ row }"><AdminProfileCompletion :row="row" @review="reviewProfile(row)" /></template>
             <template #cell-publicVisible="{ row }"><span class="admin-profile-visibility" :class="{ 'is-visible': row.publicVisible }">{{ t(row.publicVisible ? 'adminProfiles.visible' : row.accountId && !row.approved ? 'adminDashboard.pending' : 'adminProfiles.hidden') }}</span></template>
@@ -656,6 +665,9 @@ onMounted(updateCreatedAtClock)
                 </button>
                 <button v-if="section === 'registrations' && !row.approved && !row.emailVerified" class="admin-row-actions__item" type="button" role="menuitem" :disabled="sendingReminder" @click="requestReminder(row, 'verification')">
                   <Mail :size="15" aria-hidden="true" />{{ t('adminProfiles.verificationReminder') }}
+                </button>
+                <button v-if="isProfileList && !row.approved && row.canChangeVisibility" class="admin-row-actions__item" type="button" role="menuitem" :disabled="sendingReminder || !row.accountId || !row.email" @click="requestReminder(row, 'pre_approval')">
+                  <Mail :size="15" aria-hidden="true" />{{ t('adminProfiles.preApproval') }}
                 </button>
                 <button v-if="isProfileList && (section !== 'registrations' || !row.approved)" class="admin-row-actions__item" type="button" role="menuitem" :disabled="sendingReminder || !row.accountId || !row.email || !row.canChangeVisibility" :title="!row.accountId ? t('adminProfiles.noAccount') : undefined" @click="requestReminder(row, 'profile')">
                   <ClipboardList :size="15" aria-hidden="true" />{{ t('adminProfiles.profileTip') }}
@@ -695,8 +707,9 @@ onMounted(updateCreatedAtClock)
       @update:open="!$event && !sendingReminder && (reminderRequest = null)"
       @confirm="confirmReminder"
     >
+      <p v-if="reminderRequest?.kind === 'pre_approval'">{{ t('adminProfiles.preApprovalHint') }}</p>
       <p>{{ t('adminProfiles.reminderLimit') }}</p>
-      <LocalizedLink :to="{ name: 'admin-email-templates', query: { template: reminderRequest?.kind === 'verification' ? 'verification_reminder' : 'profile_tip' } }">{{ t('adminProfiles.editReminderTemplates') }}</LocalizedLink>
+      <LocalizedLink :to="{ name: 'admin-email-templates', query: { template: reminderTemplate(reminderRequest?.kind) } }">{{ t('adminProfiles.editReminderTemplates') }}</LocalizedLink>
     </ConfirmationModal>
     <ConfirmationModal
       :open="adminRequest !== null"

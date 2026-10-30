@@ -43,7 +43,7 @@ final class RegistrationReminderController
 
         $payload = JsonPayload::fromRequest($request);
         $kind = $payload['kind'] ?? null;
-        if (!in_array($kind, ['verification', 'profile'], true)) {
+        if (!in_array($kind, ['verification', 'profile', 'pre_approval'], true)) {
             return new JsonResponse(['error' => ApiMessages::get('invalid_request', $locale)], 400);
         }
         $user = $entityManager->find(User::class, $id);
@@ -52,6 +52,10 @@ final class RegistrationReminderController
             return new JsonResponse(['error' => ApiMessages::get('invalid_request', $locale)], 404);
         }
         if ($kind === 'verification' && ($user->isApproved() || $user->isEmailVerified())) {
+            return new JsonResponse(['error' => ApiMessages::get('invalid_request', $locale)], 400);
+        }
+
+        if ($kind === 'pre_approval' && $user->isApproved()) {
             return new JsonResponse(['error' => ApiMessages::get('invalid_request', $locale)], 400);
         }
 
@@ -73,6 +77,8 @@ final class RegistrationReminderController
             if ($kind === 'verification') {
                 $token = $tokens->issue($user, 'verify_email');
                 $emails->sendVerificationReminder($user, $token);
+            } elseif ($kind === 'pre_approval') {
+                $emails->sendPreApproval($user);
             } else {
                 $emails->sendProfileTip($user);
             }

@@ -22,7 +22,7 @@ final class AdminCatalog
         'registrations' => User::class,
     ];
 
-    public function __construct(private readonly EntityManagerInterface $entityManager, private readonly CollaborationFeedback $feedback)
+    public function __construct(private readonly EntityManagerInterface $entityManager, private readonly CollaborationFeedback $feedback, private readonly \App\Admin\Collaborations $collaborations)
     {
     }
 
@@ -67,6 +67,11 @@ final class AdminCatalog
             }
             $builder->andWhere('item.verified = :verified')->setParameter('verified', $verified === 'true');
         }
+        if ($kind === 'campaigns' && $request->query->has('companyId')) {
+            $companyId = $request->query->getString('companyId');
+            if (!preg_match('/^[1-9][0-9]{0,9}$/D', $companyId) || (int) $companyId > 2147483647) throw new \InvalidArgumentException('Invalid company.');
+            $builder->andWhere('company.id = :companyId')->setParameter('companyId', (int) $companyId);
+        }
         $total = (int) (clone $builder)->select('COUNT(item.id)')->getQuery()->getSingleScalarResult();
         $page = min($page, max(1, (int) ceil($total / $limit)));
         $sortDirection = $direction === 'ASC' ? \SortDirection::Ascending : \SortDirection::Descending;
@@ -82,6 +87,11 @@ final class AdminCatalog
         $ratings = $this->feedback->summaries($ids);
         $totals = $this->feedback->financialTotals($ids, $kind === 'creators');
         $rows = array_map(fn (object $item): array => $this->resource($item, $locale, $categoryLabels), $items);
+        $activity = $this->collaborations->counts($kind, array_column($rows, 'id'));
+        foreach ($rows as &$row) {
+            if (isset($activity[$row['id']])) $row['activity'] = $activity[$row['id']];
+        }
+        unset($row);
         $accountIds = $kind === 'registrations' ? array_map(static fn (User $user): ?int => $user->getId(), $items) : ($kind === 'companies' ? $ids : []);
         $registeredAt = $accountIds === [] ? [] : $this->entityManager->getConnection()->fetchAllKeyValue(
             "SELECT user_id, occurred_at FROM account_milestone WHERE stage = 'registered' AND user_id IN (?)",

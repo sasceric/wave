@@ -3,12 +3,13 @@ import { computed, onBeforeUnmount, onMounted, ref, useId, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { ArrowUpRight, CalendarDays, Check, ClipboardCheck, Flag, LifeBuoy, Megaphone, Send, Users, Building2, UserRoundCheck, Activity, Share2, Images, Package } from '@lucide/vue'
 import SingleSelect from '../shared/SingleSelect.vue'
+import AdminChart from './AdminChart.vue'
 import LocalizedLink from '../shared/LocalizedLink.vue'
 import LoadingSkeleton from '../shared/LoadingSkeleton.vue'
 import StatusMessage from '../shared/StatusMessage.vue'
 import { currentUser, loadCurrentUser } from '../../composables/useCurrentUser'
 import { apiGet, formatDate } from '../../lib/api'
-import { bucketOverviewSeries, cumulativeOverviewSeries, overviewCurve, overviewScale } from '../../lib/overviewCharts'
+import { bucketOverviewSeries, cumulativeOverviewSeries } from '../../lib/overviewCharts'
 
 const props = defineProps({ metrics: { type: Object, default: () => ({}) } })
 const { t, locale } = useI18n()
@@ -89,29 +90,25 @@ const activity = [
 ]
 const buckets = computed(() => bucketOverviewSeries(statistics.value?.series || []))
 const growth = computed(() => cumulativeOverviewSeries(statistics.value?.series || []))
-const activityMaximum = computed(() => overviewScale(Math.max(0, ...buckets.value.flatMap(row => [row.applications, row.invitations]))))
-const maximum = computed(() => overviewScale(Math.max(0, ...growth.value.flatMap(row => [row.creators, row.campaigns]))))
-const barStep = computed(() => 536 / Math.max(1, buckets.value.length))
-const barWidth = computed(() => Math.min(22, barStep.value * .27))
-const activeBucket = ref(null)
-watch(statistics, () => { activeBucket.value = null })
-function shortDate(date) { return formatDate(date).slice(0, 5) }
-function curve(key) { return overviewCurve(growth.value, key, maximum.value) }
-function area(key) { return growth.value.length > 1 ? `${curve(key)} L 578 174 L 42 174 Z` : '' }
+function shortDate(date) { return new Intl.DateTimeFormat(locale.value === 'cnr' ? 'sr-Latn-ME' : locale.value, { day: '2-digit', month: '2-digit', timeZone: 'UTC' }).format(new Date(`${date}T00:00:00Z`)) }
+const activityChart = computed(() => ({
+  labels: buckets.value.map(row => `${shortDate(row.from)} — ${shortDate(row.to)}`),
+  datasets: [
+    { label: t('overview.applications'), data: buckets.value.map(row => row.applications), backgroundColor: 'var(--forest)', borderRadius: 5, maxBarThickness: 24 },
+    { label: t('overview.invitations'), data: buckets.value.map(row => row.invitations), backgroundColor: 'var(--secondary)', borderRadius: 5, maxBarThickness: 24 },
+  ],
+}))
+const growthChart = computed(() => ({
+  labels: growth.value.map(row => shortDate(row.date)),
+  datasets: [
+    { label: t('overview.creators'), data: growth.value.map(row => row.creators), borderColor: 'var(--forest)', backgroundColor: '#173d3612', fill: true, tension: 0.15, cubicInterpolationMode: 'monotone', pointRadius: 0, pointHitRadius: 12, borderWidth: 2 },
+    { label: t('overview.campaigns'), data: growth.value.map(row => row.campaigns), borderColor: 'var(--coral)', borderDash: [4, 3], tension: 0.15, cubicInterpolationMode: 'monotone', pointRadius: 0, pointHitRadius: 12, borderWidth: 2 },
+  ],
+}))
 const statusColors = { open: 'var(--forest)', closed: 'var(--secondary)', finished: 'var(--coral)', cancelled: 'var(--surface)' }
 const statusRows = computed(() => Object.entries(statistics.value?.campaignStatuses || {}).map(([key, count]) => ({ key, count, color: statusColors[key] })))
 const campaignTotal = computed(() => statusRows.value.reduce((total, row) => total + row.count, 0))
-const statusArcs = computed(() => {
-  const circumference = 2 * Math.PI * 68
-  let offset = 0
-  return statusRows.value.map(row => {
-    const length = campaignTotal.value ? row.count / campaignTotal.value * circumference : 0
-    const visible = Math.max(0, length - 4)
-    const arc = { ...row, offset: -offset, dash: `${visible} ${circumference - visible}` }
-    offset += length
-    return arc
-  }).filter(row => row.count > 0)
-})
+const statusChart = computed(() => ({ labels: statusRows.value.map(row => t(`account.${row.key}`)), datasets: [{ data: statusRows.value.map(row => row.count), backgroundColor: statusRows.value.map(row => row.color), borderWidth: 0, spacing: 3, hoverOffset: 4 }] }))
 const attentionTotal = computed(() => Object.values(statistics.value?.attention || {}).reduce((total, count) => total + count, 0))
 </script>
 
@@ -171,18 +168,7 @@ const attentionTotal = computed(() => Object.values(statistics.value?.attention 
         <article class="wave-overview__card wave-overview__activity">
           <header class="wave-overview__card-header"><div><span class="wave-overview__eyebrow">{{ t('overview.activity') }}</span><h2>{{ t('overview.applicationsAndInvites') }}</h2></div><span class="wave-overview__pill">{{ t('overview.days', { count: statistics.days }) }}</span></header>
           <div class="wave-overview__legend"><span><i class="is-forest"></i>{{ t('overview.applications') }}</span><span><i class="is-secondary"></i>{{ t('overview.invitations') }}</span></div>
-          <div class="wave-overview__plot">
-            <div v-if="activeBucket" class="wave-overview__tooltip" role="status"><strong>{{ shortDate(activeBucket.from) }} — {{ shortDate(activeBucket.to) }}</strong><span>{{ t('overview.applications') }}: {{ activeBucket.applications }}</span><span>{{ t('overview.invitations') }}: {{ activeBucket.invitations }}</span></div>
-            <svg class="wave-overview__chart" viewBox="0 0 600 208" role="img" :aria-label="t('overview.activityChartDescription', { applications: statistics.totals.applications, invitations: statistics.totals.invitations })">
-              <g v-for="step in [0, 1, 2]" :key="step" class="wave-overview__axis"><line x1="42" x2="578" :y1="174 - step * 71" :y2="174 - step * 71" /><text x="30" :y="178 - step * 71" text-anchor="end">{{ activityMaximum * step / 2 }}</text></g>
-              <g v-for="(bucket, index) in buckets" :key="bucket.from" tabindex="0" :aria-label="`${formatDate(bucket.from)} – ${formatDate(bucket.to)}: ${t('overview.applications')} ${bucket.applications}, ${t('overview.invitations')} ${bucket.invitations}`" @mouseenter="activeBucket = bucket" @mouseleave="activeBucket = null" @focus="activeBucket = bucket" @blur="activeBucket = null">
-                <rect :x="42 + index * barStep" y="26" :width="barStep" height="148" fill="transparent" />
-                <rect :x="42 + index * barStep + barStep / 2 - barWidth - 2" :y="174 - bucket.applications / activityMaximum * 142" :width="barWidth" :height="bucket.applications / activityMaximum * 142" rx="4" class="wave-overview__bar wave-overview__bar--forest" />
-                <rect :x="42 + index * barStep + barStep / 2 + 2" :y="174 - bucket.invitations / activityMaximum * 142" :width="barWidth" :height="bucket.invitations / activityMaximum * 142" rx="4" class="wave-overview__bar wave-overview__bar--secondary" />
-                <text v-if="buckets.length <= 7 || index % 2 === 0 || index === buckets.length - 1" :x="42 + index * barStep + barStep / 2" y="200" text-anchor="middle" class="wave-overview__date">{{ shortDate(bucket.from) }}</text>
-              </g>
-            </svg>
-          </div>
+          <AdminChart type="bar" :data="activityChart" :label="t('overview.activityChartDescription', { applications: statistics.totals.applications, invitations: statistics.totals.invitations })" />
           <div class="wave-overview__activity-summary"><div v-for="item in activity" :key="item.key"><span><component :is="item.icon" :size="13" aria-hidden="true" />{{ t(`overview.${item.key}`) }}</span><strong>{{ statistics.totals[item.key] }}</strong></div></div>
           <p class="wave-overview__footnote">{{ t('overview.hiresHint') }} · UTC</p>
           <details class="wave-overview__data"><summary>{{ t('overview.showData') }}</summary><div><table><caption class="sr-only">{{ t('overview.activity') }}</caption><thead><tr><th>{{ t('hiring.activityDate') }}</th><th>{{ t('overview.applications') }}</th><th>{{ t('overview.invitations') }}</th></tr></thead><tbody><tr v-for="day in statistics.series" :key="day.date"><td>{{ formatDate(day.date) }}</td><td>{{ day.applications }}</td><td>{{ day.invitations }}</td></tr></tbody></table></div></details>
@@ -190,7 +176,7 @@ const attentionTotal = computed(() => Object.values(statistics.value?.attention 
         <article class="wave-overview__card wave-overview__statuses">
           <header class="wave-overview__card-header"><div><span class="wave-overview__eyebrow">{{ t('overview.campaigns') }}</span><h2>{{ t('overview.statuses') }}</h2></div><Megaphone :size="18" aria-hidden="true" /></header>
           <div class="wave-overview__donut" role="img" :aria-label="statusRows.map(row => `${t(`account.${row.key}`)}: ${row.count}`).join(', ')">
-            <svg viewBox="0 0 180 180" aria-hidden="true"><circle cx="90" cy="90" r="68" fill="none" stroke="var(--paper)" stroke-width="17" /><circle v-for="arc in statusArcs" :key="arc.key" cx="90" cy="90" r="68" fill="none" :stroke="arc.color" stroke-width="17" :stroke-dasharray="arc.dash" :stroke-dashoffset="arc.offset" transform="rotate(-90 90 90)" /></svg>
+            <AdminChart type="doughnut" :data="statusChart" :height="180" :label="statusRows.map(row => `${t(`account.${row.key}`)}: ${row.count}`).join(', ')" />
             <div><strong>{{ campaignTotal }}</strong><span>{{ t('adminDashboard.campaigns') }}</span></div>
           </div>
           <ul class="wave-overview__status-legend"><li v-for="row in statusRows" :key="row.key"><span><i :style="{ background: row.color }"></i>{{ t(`account.${row.key}`) }}</span><strong>{{ row.count }}</strong><small>{{ campaignTotal ? Math.round(row.count / campaignTotal * 100) : 0 }}%</small></li></ul>
@@ -199,14 +185,7 @@ const attentionTotal = computed(() => Object.values(statistics.value?.attention 
         <article class="wave-overview__card wave-overview__growth">
           <header class="wave-overview__card-header"><div><span class="wave-overview__eyebrow">{{ t('overview.growth') }}</span><h2>{{ t('overview.growthTitle') }}</h2></div><Activity :size="18" aria-hidden="true" /></header>
           <div class="wave-overview__growth-totals"><span><i class="is-forest"></i><strong>{{ statistics.totals.creators }}</strong>{{ t('overview.creators') }}</span><span><i class="is-coral"></i><strong>{{ statistics.totals.campaigns }}</strong>{{ t('overview.campaigns') }}</span></div>
-          <svg class="wave-overview__chart wave-overview__chart--growth" viewBox="0 0 600 208" role="img" :aria-label="t('overview.chartDescription', { creators: statistics.totals.creators, campaigns: statistics.totals.campaigns })">
-            <defs><linearGradient :id="`${chartId}-growth`" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="var(--forest)" stop-opacity=".15" /><stop offset="100%" stop-color="var(--forest)" stop-opacity="0" /></linearGradient></defs>
-            <g v-for="step in [0, 1, 2]" :key="step" class="wave-overview__axis"><line x1="42" x2="578" :y1="174 - step * 71" :y2="174 - step * 71" /><text x="30" :y="178 - step * 71" text-anchor="end">{{ maximum * step / 2 }}</text></g>
-            <path :d="area('creators')" :fill="`url(#${chartId}-growth)`" />
-            <path :d="curve('creators')" class="wave-overview__curve wave-overview__curve--forest" />
-            <path :d="curve('campaigns')" class="wave-overview__curve wave-overview__curve--coral" />
-            <text x="42" y="200" class="wave-overview__date">{{ shortDate(statistics.from) }}</text><text x="578" y="200" text-anchor="end" class="wave-overview__date">{{ shortDate(statistics.to) }}</text>
-          </svg>
+          <AdminChart type="line" :data="growthChart" :height="180" :label="t('overview.chartDescription', { creators: statistics.totals.creators, campaigns: statistics.totals.campaigns })" />
           <p class="wave-overview__footnote">{{ t('overview.cumulativeHint') }}</p>
           <details class="wave-overview__data"><summary>{{ t('overview.showData') }}</summary><div><table><caption class="sr-only">{{ t('overview.cumulativeHint') }}</caption><thead><tr><th>{{ t('hiring.activityDate') }}</th><th>{{ t('overview.creators') }}</th><th>{{ t('overview.campaigns') }}</th></tr></thead><tbody><tr v-for="day in growth" :key="day.date"><td>{{ formatDate(day.date) }}</td><td>{{ day.creators }}</td><td>{{ day.campaigns }}</td></tr></tbody></table></div></details>
         </article>
