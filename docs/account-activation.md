@@ -87,6 +87,37 @@ verification templates should be checked for hardcoded 24-hour expiry wording.
 See [email delivery](email-delivery.md) for Focused/Other sorting and authentication
 checks. Neither reminder delivery nor inbox placement is guaranteed by queueing.
 
+### Returning an account to pending approval
+
+Approved creator and company rows offer **Return to pending approval**. The admin
+confirms the account and recipient before POST `/api/admin/registrations/{id}/unapprove`.
+The endpoint requires an administrator and CSRF, rejects staff/deleted accounts,
+locks the user row and changes `approved=false` and `hide_my_account=true`.
+The profile then appears in Approvals instead of the approved catalog. Existing
+profile data, email verification, slugs and shared collaboration history remain.
+Normal approval can publish the profile again after the administrator reviews it.
+
+The `approval_revoked` template is editable in the email editor in all seven locales.
+It explains the return to pending and asks for photo/logo, bio, social profiles and
+creator types; company accounts receive a company-type tip instead. A repeat call
+on an already pending account is a no-op and does not send another email. The
+approval change and production mail job are transactional; a transport failure
+rolls the change back. No account is automatically reapproved based on completion.
+
+### Plain profile names
+
+`PlainProfileName` applies Unicode NFKC to creator and company names. This converts
+pasted mathematical bold/italic font variants into normal letters while keeping
+real accents and scripts. Registration, OAuth creation and profile edits normalize
+before validation/storage. Profile inputs normalize on blur, and entity getters
+also display historical names plainly before the migration runs.
+
+Migration `Version20261030150000` normalizes existing creator/company names without
+changing IDs, slugs, or URLs. It skips unusually expanding values over the existing
+120-character storage limit instead of truncating them. It does not reconstruct
+previous decorative variants on rollback. Apply it through the normal deploy;
+refresh the search index through the existing indexing workflow after data backfills.
+
 ## Opt-in campaign emails
 
 `GET/PUT /api/me/campaign-alerts` is creator-only, owner-scoped and non-cacheable. PUT requires CSRF and validates category values, country codes, daily/weekly frequency and an explicit boolean opt-in. No preference row means disabled. These emails are independently opted into, separate from device notifications.

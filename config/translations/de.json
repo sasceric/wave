@@ -123,7 +123,8 @@
     "account_type_activeWork": "Schließe zuerst aktive Kampagnen und Kooperationen ab, die benötigte Funktionen verlieren würden.",
     "maintenance_unavailable": "Wave wird gerade gewartet. Bitte versuche es in Kürze erneut.",
     "broadcast_invalid_email": "Eine der Adressen ist keine gültige E-Mail-Adresse.",
-    "broadcast_unknown_variable": "Die Nachricht enthält eine unbekannte Variable. Verwenden Sie nur {{name}} und {{profileUrl}}."
+    "broadcast_unknown_variable": "Die Nachricht enthält eine unbekannte Variable. Verwenden Sie nur {{name}} und {{profileUrl}}.",
+    "unapproval_email_failed": "Die E-Mail mit Hinweisen konnte nicht gesendet werden. Der Kontostatus wurde nicht geändert. Bitte versuche es erneut."
   },
   "account": {
     "verify": {

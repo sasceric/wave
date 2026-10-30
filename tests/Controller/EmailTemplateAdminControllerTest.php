@@ -78,6 +78,7 @@ final class EmailTemplateAdminControllerTest extends WebTestCase
                 'approval_company',
                 'admin_broadcast',
                 'pre_approval',
+                'approval_revoked',
             ],
             array_column($this->payload()['data']['templates'], 'key'),
         );

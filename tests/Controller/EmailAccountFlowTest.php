@@ -33,6 +33,25 @@ final class EmailAccountFlowTest extends WebTestCase
         $schemaTool->createSchema($metadata);
     }
 
+    public function testDecorativeProfileNamesAreNormalizedAtRegistrationAndEditingWithoutChangingSlugs(): void
+    {
+        $this->jsonRequest('POST', '/api/auth/register', [
+            'accountType' => 'creator', 'termsAccepted' => true, 'termsVersion' => \App\Legal\LegalPolicies::VERSION,
+            'email' => 'plain-name@example.test', 'password' => 'a-long-passphrase-for-wave', 'name' => '𝐀𝐦𝐢𝐥𝐚 Čačić',
+        ], $this->csrfToken());
+        self::assertResponseStatusCodeSame(201);
+        self::assertSame('Amila Čačić', $this->payload()['data']['profile']['displayName']);
+        $slug = $this->payload()['data']['profile']['slug'];
+        $profile = ['displayName' => '𝐀𝐦𝐢𝐥𝐚 Šehić', 'category' => 'Travel', 'bio' => '', 'tags' => [], 'avatarUrl' => null];
+        $this->jsonRequest('PUT', '/api/me/profile', $profile, $this->csrfToken()); self::assertResponseIsSuccessful();
+        self::assertSame('Amila Šehić', $this->payload()['data']['displayName']);
+        self::assertSame($slug, $this->payload()['data']['slug']);
+        $db = static::getContainer()->get('doctrine')->getConnection();
+        self::assertSame('Amila Šehić', $db->fetchOne('SELECT display_name FROM creator WHERE slug = ?', [$slug]));
+        $profile['displayName'] = str_repeat('ﬃ', 50);
+        $this->jsonRequest('PUT', '/api/me/profile', $profile, $this->csrfToken()); self::assertResponseStatusCodeSame(400);
+    }
+
     public function testRegistrationRequiresCurrentTermsAndAdultCreators(): void
     {
         $base = ['accountType' => 'creator', 'email' => 'terms@example.test', 'password' => 'a-long-passphrase-for-wave', 'name' => 'Terms Creator'];

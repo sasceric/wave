@@ -6,6 +6,7 @@ export const EMAIL_TEMPLATE_CATALOG = {
   verify: { group: 'account', recipient: 'newUser', frequency: 'perRequest' },
   verification_reminder: { group: 'account', recipient: 'newUser', frequency: 'manual' },
   pre_approval: { group: 'account', recipient: 'newUser', frequency: 'manual' },
+  approval_revoked: { group: 'account', recipient: 'creatorOrCompany', frequency: 'manual' },
   reset: { group: 'account', recipient: 'user', frequency: 'perRequest' },
   registered: { group: 'account', recipient: 'newUser', frequency: 'once' },
   approval: { group: 'account', recipient: 'creator', frequency: 'once' },

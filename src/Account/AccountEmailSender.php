@@ -380,6 +380,15 @@ final class AccountEmailSender
         $this->send($user, $token, $user->getPreferredLocale(), 'verification_reminder', 'verify-email');
     }
 
+    public function sendApprovalRevoked(User $user): void
+    {
+        $locale = $this->normalizedLocale($user->getPreferredLocale());
+        $copy = array_replace($this->stockCopy('registered', $locale), ApprovalRevokedEmailCopy::forLocale($locale, $user->hasRole('ROLE_COMPANY')));
+        $url = rtrim($this->appBaseUrl, '/') . $this->localizedRoutePath('account', $locale);
+        $variables = $this->baseVariables($copy, $locale, $url);
+        $this->deliver($user, 'approval_revoked', $locale, $copy['subject'], $url, $variables);
+    }
+
     public function sendPreApproval(User $user): void
     {
         $this->send($user, null, $user->getPreferredLocale(), 'pre_approval', 'account');
@@ -821,6 +830,7 @@ final class AccountEmailSender
         if (isset($variables['stepsTitle'])) {
             $text[] = $variables['stepsTitle'];
             foreach (['image', 'bio', 'social'] as $step) $text[] = $variables[$step.'Title']."\n".$variables[$step.'Text'];
+            if (isset($variables['profileTypeTitle'], $variables['profileTypeText'])) $text[] = $variables['profileTypeTitle']."\n".$variables['profileTypeText'];
             $text[] = $variables['nextTitle']."\n".$variables['nextText'];
         }
         $text[] = $variables['buttonLabel'] . ":\n" . $url;
@@ -864,6 +874,7 @@ final class AccountEmailSender
             return array_replace($this->stockCopy('approval', $locale), ApprovalWelcomeEmailCopy::forLocale($template, $locale));
         }
 
+        if ($template === 'approval_revoked') return array_replace($this->stockCopy('registered', $locale), ApprovalRevokedEmailCopy::forLocale($locale));
         if (in_array($template, ['registered', 'profile_tip', 'pre_approval'], true)) {
             return array_replace($this->stockCopy('registered', $locale), ProfilePreparationEmailCopy::forLocale($template, $locale));
         }

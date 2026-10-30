@@ -175,3 +175,24 @@ for (const section of ['registrations', 'creators', 'companies']) {
     assert.equal(state.reminderRequest.value, null)
   })
 }
+
+for (const section of ['registrations', 'creators', 'companies']) {
+  test(`${section} unapproval confirms before changing the linked account and blocks duplicate requests`, async () => {
+    const requests = []
+    const { state } = await setupView('../src/views/AdminDashboardView.vue', {
+      'vue-router': { useRoute: () => ({ meta: { adminSection: section }, query: {} }) },
+      '../lib/api': { apiGet: async () => ({ data: { creators: [], companies: [], campaigns: [] } }), formatMoney: String, apiRequest: (path, options) => new Promise((resolve, reject) => requests.push({ path, options, resolve, reject })) },
+    })
+    const row = { id: 5, accountId: 42, displayName: 'Creator', email: 'creator@example.test', approved: true, canChangeVisibility: true }
+    state.requestUnapproval({ ...row, approved: false }); assert.equal(state.unapprovalRequest.value, null)
+    state.requestUnapproval({ ...row, canChangeVisibility: false }); assert.equal(state.unapprovalRequest.value, null)
+    state.requestUnapproval(row); assert.equal(requests.length, 0)
+    const pending = state.confirmUnapproval(); await state.confirmUnapproval()
+    assert.equal(requests.length, 1)
+    assert.equal(requests[0].path, `/admin/registrations/${section === 'registrations' ? 5 : 42}/unapprove`)
+    requests[0].reject(new Error('Email unavailable'))
+    await pending
+    assert.equal(state.error.value, 'Email unavailable'); assert.equal(state.notice.value, '')
+    assert.equal(state.unapprovalRequest.value, null); assert.equal(state.unapproving.value, false)
+  })
+}

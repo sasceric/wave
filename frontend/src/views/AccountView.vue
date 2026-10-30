@@ -1,4 +1,5 @@
 <script setup>
+import { plainProfileName } from '../lib/plainProfileName'
 import CampaignCompensation from '../components/campaigns/CampaignCompensation.vue'
 import { accountLanding } from '../lib/accountAccess'
 import { registrationReturn } from '../lib/registrationIntent'
@@ -1020,7 +1021,7 @@ onMounted(loadDashboard)
             <div class="form-grid profile-edit-basics">
               <label class="form-field form-field--wide">
                 <span>{{ t('auth.name') }}</span>
-                <input v-model.trim="profile.displayName" required minlength="1" maxlength="120" autocomplete="name" />
+                <input v-model.trim="profile.displayName" @blur="profile.displayName = plainProfileName(profile.displayName)" required minlength="1" maxlength="120" autocomplete="name" />
               </label>
               <MultiSelect
                 v-model="profile.creatorTypes"
@@ -1160,7 +1161,7 @@ onMounted(loadDashboard)
             <label class="form-field">
               <span>{{ t('account.companyName') }}</span>
               <input
-                v-model.trim="profile.name"
+                v-model.trim="profile.name" @blur="profile.name = plainProfileName(profile.name)"
                 required
                 maxlength="120"
                 autocomplete="organization"

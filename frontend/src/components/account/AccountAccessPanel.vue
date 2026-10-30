@@ -1,4 +1,5 @@
 <script setup>
+import { plainProfileName } from '../../lib/plainProfileName'
 import legalDocuments from '../../../../config/legal_documents.json'
 import AccountPage from './AccountPage.vue'
 import { computed, onMounted, reactive, ref, watch } from 'vue'
@@ -278,7 +279,7 @@ function changeMode(nextMode) {
                 <Building2 v-if="form.accountType === 'company'" :size="16" aria-hidden="true" />
                 <UserRound v-else :size="16" aria-hidden="true" />
                 <input
-                  v-model.trim="form.name"
+                  v-model.trim="form.name" @blur="form.name = plainProfileName(form.name)"
                   required
                   minlength="2"
                   maxlength="120"

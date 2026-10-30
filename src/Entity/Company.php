@@ -124,7 +124,7 @@ class Company
     ) {
         $this->industrySelections = new ArrayCollection();
         $this->slug = $slug;
-        $this->name = $name;
+        $this->name = \App\Account\PlainProfileName::normalize($name);
         $this->industry = $industry;
         $this->logoUrl = $logoUrl;
         $this->verified = $verified;
@@ -144,7 +144,7 @@ class Company
 
     public function getName(): string
     {
-        return $this->name;
+        return \App\Account\PlainProfileName::normalize($this->name);
     }
 
     public function getCompanyType(): string { return $this->companyType; }
@@ -280,7 +280,7 @@ class Company
 
     public function updateProfile(string $name, string $industry, ?string $logoUrl, ?string $about): void
     {
-        $this->name = $name;
+        $this->name = \App\Account\PlainProfileName::normalize($name);
         $this->industry = $industry;
         $this->logoUrl = $logoUrl;
         $this->about = $about;

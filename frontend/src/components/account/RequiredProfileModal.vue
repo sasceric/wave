@@ -1,4 +1,5 @@
 <script setup>
+import { plainProfileName } from '../../lib/plainProfileName'
 import { companyTypeOptions } from '../../lib/companyTypes'
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
@@ -62,7 +63,7 @@ onBeforeUnmount(() => {
         <template v-if="user.accountType === 'creator'">
           <label class="form-field">
             <span>{{ t('auth.name') }}</span>
-            <input v-model.trim="profile.displayName" required minlength="2" maxlength="120" autocomplete="name" autofocus />
+            <input v-model.trim="profile.displayName" @blur="profile.displayName = plainProfileName(profile.displayName)" required minlength="2" maxlength="120" autocomplete="name" autofocus />
           </label>
           <MultiSelect required
             v-model="profile.categories"
@@ -79,7 +80,7 @@ onBeforeUnmount(() => {
         <template v-else>
           <label class="form-field">
             <span>{{ t('account.companyName') }}</span>
-            <input v-model.trim="profile.name" required minlength="2" maxlength="120" autocomplete="organization" autofocus />
+            <input v-model.trim="profile.name" @blur="profile.name = plainProfileName(profile.name)" required minlength="2" maxlength="120" autocomplete="organization" autofocus />
           </label>
           <SingleSelect v-model="profile.companyType" :label="t('companyTypes.label')" :options="companyTypes" required />
           <MultiSelect required

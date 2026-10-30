@@ -3294,7 +3294,14 @@
     "preApproval": "Send pre-approval checklist",
     "preApprovalHint": "Tell the user to add social profiles, a bio/description and a profile photo or logo before approval. The account stays pending.",
     "preApprovalTemplateTitle": "Profile preparation for approval",
-    "preApprovalTemplateHint": "Manual message from Approvals, Creators or Companies for an account awaiting approval."
+    "preApprovalTemplateHint": "Manual message from Approvals, Creators or Companies for an account awaiting approval.",
+    "unapprove": "Return to pending approval",
+    "unapproveTitle": "Return this account to pending?",
+    "unapproveConfirm": "The account “{name}” will return to pending approval and be hidden from public listings. Instructions will be emailed to {email}.",
+    "unapproveHint": "The email requests a photo/logo, bio, social profiles and the appropriate creator type. Saved data stays intact, and approval remains a manual admin decision.",
+    "unapproved": "“{name}” is back in pending approval. The instructions email has been queued.",
+    "unapprovedTemplateTitle": "Account awaiting approval again",
+    "unapprovedTemplateHint": "Sent after an admin returns an approved account to pending because its profile is incomplete."
   },
   "imageUpload": {
     "creator": "Recommended: 600 × 600 px (1:1). Center your face and leave some space around it.",
@@ -4108,7 +4115,9 @@
       "socialTitle": "Social profiles heading",
       "socialText": "Social profiles text",
       "nextTitle": "Next step heading",
-      "nextText": "Next step text"
+      "nextText": "Next step text",
+      "profileTypeTitle": "Profile type heading",
+      "profileTypeText": "Profile type text"
     }
   },
   "adminHome": {

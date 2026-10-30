@@ -3295,7 +3295,14 @@
     "preApproval": "Pošlji pripravo na odobritev",
     "preApprovalHint": "Uporabnika obvesti, da mora pred odobritvijo dodati družbena omrežja, biografijo/opis in profilno fotografijo ali logotip. Račun ostane v čakanju.",
     "preApprovalTemplateTitle": "Priprava profila na odobritev",
-    "preApprovalTemplateHint": "Ročno sporočilo iz Odobritev, Ustvarjalcev ali Podjetij za račun, ki še ni odobren."
+    "preApprovalTemplateHint": "Ročno sporočilo iz Odobritev, Ustvarjalcev ali Podjetij za račun, ki še ni odobren.",
+    "unapprove": "Vrni v čakanje na odobritev",
+    "unapproveTitle": "Vrniti račun v čakanje?",
+    "unapproveConfirm": "Račun »{name}« bo vrnjen v čakanje in skrit z javnih seznamov. Obvestilo z navodili bo poslano na {email}.",
+    "unapproveHint": "E-pošta zahteva fotografijo/logotip, opis, družbena omrežja in ustrezno vrsto ustvarjalca. Shranjeni podatki ostanejo, ponovna odobritev pa ostaja ročna odločitev skrbnika.",
+    "unapproved": "Račun »{name}« je vrnjen v čakanje. E-pošta z navodili je predana v pošiljanje.",
+    "unapprovedTemplateTitle": "Račun ponovno čaka na odobritev",
+    "unapprovedTemplateHint": "Obvestilo po tem, ko skrbnik vrne odobren račun v čakanje zaradi nepopolnega profila."
   },
   "imageUpload": {
     "creator": "Priporočeno: 600 × 600 px (1:1). Obraz postavi na sredino in okoli njega pusti nekaj prostora.",
@@ -4109,7 +4116,9 @@
       "socialTitle": "Naslov: družbena omrežja",
       "socialText": "Besedilo: družbena omrežja",
       "nextTitle": "Naslov naslednjega koraka",
-      "nextText": "Besedilo naslednjega koraka"
+      "nextText": "Besedilo naslednjega koraka",
+      "profileTypeTitle": "Naslov: vrsta profila",
+      "profileTypeText": "Besedilo: vrsta profila"
     }
   },
   "adminHome": {

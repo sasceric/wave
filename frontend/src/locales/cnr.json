@@ -3295,7 +3295,14 @@
     "preApproval": "Pošalji pripremu za odobrenje",
     "preApprovalHint": "Obavijesti korisnika da prije odobrenja mora dodati društvene mreže, biografiju/opis i profilnu fotografiju ili logo. Nalog ostaje na čekanju.",
     "preApprovalTemplateTitle": "Priprema profila za odobrenje",
-    "preApprovalTemplateHint": "Ručna poruka iz Odobrenja, Kreatora ili Kompanija za nalog koji još nije odobren."
+    "preApprovalTemplateHint": "Ručna poruka iz Odobrenja, Kreatora ili Kompanija za nalog koji još nije odobren.",
+    "unapprove": "Vrati na čekanje odobrenja",
+    "unapproveTitle": "Vratiti nalog na čekanje?",
+    "unapproveConfirm": "Nalog „{name}” biće vraćen na čekanje i skriven iz javnih lista. Obavještenje s uputstvima biće poslato na {email}.",
+    "unapproveHint": "E-mail traži fotografiju/logo, opis, društvene mreže i odgovarajuću vrstu kreatora. Sačuvani podaci ostaju, a ponovno odobrenje ostaje ručna odluka administratora.",
+    "unapproved": "Nalog „{name}” je vraćen na čekanje. E-mail s uputstvima je predat na slanje.",
+    "unapprovedTemplateTitle": "Nalog ponovo čeka odobrenje",
+    "unapprovedTemplateHint": "Obavještenje nakon što administrator vrati odobren nalog na čekanje zbog nedopunjenog profila."
   },
   "imageUpload": {
     "creator": "Preporučeno: 600 × 600 px (1:1). Lice postavi u sredinu i ostavi malo prostora oko njega.",
@@ -4109,7 +4116,9 @@
       "socialTitle": "Naslov: društvene mreže",
       "socialText": "Tekst: društvene mreže",
       "nextTitle": "Naslov sljedećeg koraka",
-      "nextText": "Tekst sljedećeg koraka"
+      "nextText": "Tekst sljedećeg koraka",
+      "profileTypeTitle": "Naslov: vrsta profila",
+      "profileTypeText": "Tekst: vrsta profila"
     }
   },
   "adminHome": {

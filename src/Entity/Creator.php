@@ -129,7 +129,7 @@ class Creator
         ?DateTimeImmutable $createdAt = null,
     ) {
         $this->slug = $slug;
-        $this->displayName = $displayName;
+        $this->displayName = \App\Account\PlainProfileName::normalize($displayName);
         $this->category = $category;
         $this->city = $this->owner === null ? $city : null;
         $this->bio = $bio;
@@ -165,7 +165,7 @@ class Creator
 
     public function getDisplayName(): string
     {
-        return $this->displayName;
+        return \App\Account\PlainProfileName::normalize($this->displayName);
     }
 
     public function getCategory(): string
@@ -381,7 +381,7 @@ class Creator
         array $categories,
         array $faqs,
     ): void {
-        $this->displayName = $displayName;
+        $this->displayName = \App\Account\PlainProfileName::normalize($displayName);
         $this->category = $categories[0] ?? $category;
         $this->categories = $categories;
         $this->city = $this->owner === null ? $city : null;

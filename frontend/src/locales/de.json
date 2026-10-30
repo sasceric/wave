@@ -3294,7 +3294,14 @@
     "preApproval": "Checkliste vor Freigabe senden",
     "preApprovalHint": "Bitte die Person, vor der Freigabe soziale Profile, eine Beschreibung und ein Profilfoto oder Logo zu ergänzen. Das Konto bleibt in Prüfung.",
     "preApprovalTemplateTitle": "Profil auf Freigabe vorbereiten",
-    "preApprovalTemplateHint": "Manuelle Nachricht aus Freigaben, Creators oder Unternehmen für ein noch nicht freigegebenes Konto."
+    "preApprovalTemplateHint": "Manuelle Nachricht aus Freigaben, Creators oder Unternehmen für ein noch nicht freigegebenes Konto.",
+    "unapprove": "Zurück in die Freigabeprüfung",
+    "unapproveTitle": "Konto zurück in die Prüfung?",
+    "unapproveConfirm": "Das Konto „{name}“ wird wieder zur Freigabe vorgelegt und aus öffentlichen Listen ausgeblendet. Hinweise werden an {email} gesendet.",
+    "unapproveHint": "Die E-Mail bittet um Foto/Logo, Beschreibung, soziale Profile und passende Creator-Typen. Gespeicherte Daten bleiben erhalten. Die erneute Freigabe erfolgt manuell durch einen Administrator.",
+    "unapproved": "„{name}“ wartet erneut auf Freigabe. Die E-Mail mit Hinweisen wurde zum Versand übergeben.",
+    "unapprovedTemplateTitle": "Konto wartet erneut auf Freigabe",
+    "unapprovedTemplateHint": "Nachricht, wenn ein Administrator ein freigegebenes Konto wegen eines unvollständigen Profils zurück in die Prüfung versetzt."
   },
   "imageUpload": {
     "creator": "Empfohlen: 600 × 600 px (1:1). Platziere dein Gesicht mittig und lasse etwas Platz darum.",
@@ -4108,7 +4115,9 @@
       "socialTitle": "Überschrift: soziale Profile",
       "socialText": "Text: soziale Profile",
       "nextTitle": "Überschrift des nächsten Schritts",
-      "nextText": "Text des nächsten Schritts"
+      "nextText": "Text des nächsten Schritts",
+      "profileTypeTitle": "Überschrift: Profiltyp",
+      "profileTypeText": "Text: Profiltyp"
     }
   },
   "adminHome": {

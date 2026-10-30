@@ -11,6 +11,7 @@ import {
   ShieldCheck,
   ShieldOff,
   Trash2,
+  UserRoundX,
 } from '@lucide/vue'
 import { onBeforeRouteLeave, onBeforeRouteUpdate, useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
@@ -40,6 +41,8 @@ const loading = ref(false)
 const saving = ref(false)
 const deleting = ref(false)
 const approving = ref(false)
+const unapproving = ref(false)
+const unapprovalRequest = ref(null)
 const adminRequest = ref(null)
 const adminSaving = ref(false)
 const error = ref('')
@@ -450,6 +453,31 @@ async function confirmDelete() {
   }
 }
 
+function requestUnapproval(row) {
+  const id = section.value === 'registrations' ? row.id : row.accountId
+  if (unapproving.value || !row.approved || !row.canChangeVisibility || !id) return
+  unapprovalRequest.value = { id, name: row.displayName || row.name || row.email, email: row.email }
+}
+
+async function confirmUnapproval() {
+  const request = unapprovalRequest.value
+  if (!request || unapproving.value) return
+  const adminId = currentUser.value?.id
+  unapproving.value = true
+  error.value = ''; notice.value = ''
+  try {
+    await apiRequest(`/admin/registrations/${request.id}/unapprove`, { method: 'POST' })
+    if (disposed || currentUser.value?.id !== adminId) return
+    await loadDashboard()
+    notice.value = t('adminProfiles.unapproved', { name: request.name })
+  } catch (cause) {
+    if (!disposed && currentUser.value?.id === adminId) error.value = cause.message || t('adminDashboard.saveError')
+  } finally {
+    unapproving.value = false
+    unapprovalRequest.value = null
+  }
+}
+
 async function approveRegistration(registration) {
   if (approving.value) return
   approving.value = true
@@ -515,6 +543,7 @@ async function confirmBulkApproval() {
 watch([locale, section, () => route.query.companyId], () => {
   reviewRequest.value = null
   reminderRequest.value = null
+  unapprovalRequest.value = null
   query.value = typeof route.query?.q === 'string' ? route.query.q : ''
   statusFilter.value = 'all'
   listVersion++
@@ -663,6 +692,9 @@ onMounted(updateCreatedAtClock)
                 <button v-if="section === 'registrations' && !row.approved" class="admin-row-actions__item" type="button" role="menuitem" :disabled="approving || !row.emailVerified || !row.profileComplete" :title="!row.emailVerified || !row.profileComplete ? t('adminProfiles.showRequirements') : undefined" @click="approveRegistration(row)">
                   <Check :size="15" aria-hidden="true" />{{ t('adminDashboard.approve') }}
                 </button>
+                <button v-if="isProfileList && row.approved && row.canChangeVisibility" class="admin-row-actions__item admin-row-actions__item--danger" type="button" role="menuitem" :disabled="unapproving" @click="requestUnapproval(row)">
+                  <UserRoundX :size="15" aria-hidden="true" />{{ t('adminProfiles.unapprove') }}
+                </button>
                 <button v-if="section === 'registrations' && !row.approved && !row.emailVerified" class="admin-row-actions__item" type="button" role="menuitem" :disabled="sendingReminder" @click="requestReminder(row, 'verification')">
                   <Mail :size="15" aria-hidden="true" />{{ t('adminProfiles.verificationReminder') }}
                 </button>
@@ -697,6 +729,19 @@ onMounted(updateCreatedAtClock)
       </main>
     </div>
     <AdminProfileReview :open="reviewRequest !== null" :kind="reviewRequest?.kind || section" :id="reviewRequest?.id || null" @update:open="!$event && (reviewRequest = null)" @updated="patchReviewedRow" />
+    <ConfirmationModal
+      :open="unapprovalRequest !== null"
+      :title="t('adminProfiles.unapproveTitle')"
+      :message="t('adminProfiles.unapproveConfirm', { name: unapprovalRequest?.name || '', email: unapprovalRequest?.email || '' })"
+      :confirm-label="t('adminProfiles.unapprove')"
+      :cancel-label="t('adminDashboard.cancelAction')"
+      :loading="unapproving"
+      @update:open="!$event && !unapproving && (unapprovalRequest = null)"
+      @confirm="confirmUnapproval"
+    >
+      <p>{{ t('adminProfiles.unapproveHint') }}</p>
+      <LocalizedLink :to="{ name: 'admin-email-templates', query: { template: 'approval_revoked' } }">{{ t('adminProfiles.editReminderTemplates') }}</LocalizedLink>
+    </ConfirmationModal>
     <ConfirmationModal
       :open="reminderRequest !== null"
       :title="t('adminProfiles.reminderConfirmTitle')"

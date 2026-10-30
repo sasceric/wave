@@ -140,6 +140,7 @@ final class AuthController extends AbstractController
                 $name = $firstName.' '.$lastName;
             }
         }
+        $name = \App\Account\PlainProfileName::normalize($name);
         if (mb_strlen($name) < 2 || mb_strlen($name) > 120) {
             return new JsonResponse(['error' => ApiMessages::get('invalid_registration', $locale)], 400);
         }

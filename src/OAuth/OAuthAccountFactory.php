@@ -29,7 +29,7 @@ final class OAuthAccountFactory
         if ($name === '') {
             $name = strstr($identity['email'], '@', true) ?: $identity['email'];
         }
-        $name = mb_substr($name, 0, 120);
+        $name = mb_substr(\App\Account\PlainProfileName::normalize($name), 0, 120);
         if (mb_strlen($name) < 2) {
             $name = $accountType === 'creator' ? 'Wave creator' : 'Wave company';
         }

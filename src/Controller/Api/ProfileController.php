@@ -321,7 +321,7 @@ final class ProfileController
         if (!is_string($data[$key] ?? null)) {
             return null;
         }
-        $value = trim($data[$key]);
+        $value = in_array($key, ['displayName', 'name'], true) ? \App\Account\PlainProfileName::normalize($data[$key]) : trim($data[$key]);
 
         return mb_strlen($value) >= $minLength && mb_strlen($value) <= $maxLength ? $value : null;
     }
