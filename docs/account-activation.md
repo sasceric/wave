@@ -113,7 +113,10 @@ before validation/storage. Profile inputs normalize on blur, and entity getters
 also display historical names plainly before the migration runs.
 
 Migration `Version20261030150000` normalizes existing creator/company names without
-changing IDs, slugs, or URLs. It skips unusually expanding values over the existing
+changing IDs, slugs, or URLs. Follow-up repair `Version20261030160000` applies the
+same idempotent backfill when the original version is already recorded as executed;
+normal deployments run the new version without modifying migration history.
+It skips unusually expanding values over the existing
 120-character storage limit instead of truncating them. It does not reconstruct
 previous decorative variants on rollback. Apply it through the normal deploy;
 refresh the search index through the existing indexing workflow after data backfills.

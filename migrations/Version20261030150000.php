@@ -14,6 +14,9 @@ final class Version20261030150000 extends AbstractMigration
     public function up(Schema $schema): void
     {
         foreach (['creator' => 'display_name', 'company' => 'name'] as $table => $column) {
+            // SQL-only migration planning can supply a partial schema without live tables.
+            // There is no existing name data to backfill unless the source column exists.
+            if (!$schema->hasTable($table) || !$schema->getTable($table)->hasColumn($column)) continue;
             foreach ($this->connection->iterateAssociative("SELECT id, $column AS name FROM $table") as $row) {
                 $name = trim(\Normalizer::normalize($row['name'], \Normalizer::FORM_KC) ?: $row['name']);
                 if ($name !== $row['name'] && mb_strlen($name) <= 120) {
