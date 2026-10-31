@@ -47,7 +47,7 @@ final class EmailTemplateRenderer
         'profile_tip' => ['locale', 'preheader', 'eyebrow', 'heading', 'greeting', 'message', 'buttonLabel', 'actionUrl', 'expiration', 'security', 'fallback', 'footer', ...ProfilePreparationEmailCopy::LAYOUT_KEYS],
         'approval_revoked' => ['locale', 'preheader', 'eyebrow', 'heading', 'greeting', 'message', 'buttonLabel', 'actionUrl', 'expiration', 'security', 'fallback', 'footer', ...ProfilePreparationEmailCopy::LAYOUT_KEYS, ...ApprovalRevokedEmailCopy::LAYOUT_KEYS],
         'pre_approval' => ['locale', 'preheader', 'eyebrow', 'heading', 'greeting', 'message', 'buttonLabel', 'actionUrl', 'expiration', 'security', 'fallback', 'footer', ...ProfilePreparationEmailCopy::LAYOUT_KEYS],
-        'profile_reminder' => ['locale', 'preheader', 'eyebrow', 'heading', 'greeting', 'message', 'scoreLabel', 'score', 'stepsLabel', 'steps', 'buttonLabel', 'actionUrl', 'guideLabel', 'guideUrl', 'footer', 'unsubscribeLabel', 'unsubscribeUrl', 'settingsLabel', 'settingsUrl', 'firstStep', 'subject'],
+        'profile_reminder' => ['locale', 'preheader', 'eyebrow', 'heading', 'greeting', 'message', 'scoreLabel', 'score', 'scoreRemaining', 'stepsLabel', 'steps', 'buttonLabel', 'actionUrl', 'guideLabel', 'guideUrl', 'footer', 'unsubscribeLabel', 'unsubscribeUrl', 'settingsLabel', 'settingsUrl', 'firstStep', 'subject'],
         'campaign_alert' => ['locale', 'preheader', 'eyebrow', 'heading', 'greeting', 'message', 'campaignsLabel', 'campaigns', 'buttonLabel', 'actionUrl', 'footer', 'settingsLabel', 'settingsUrl'],
         'credit_code_assigned' => ['locale', 'preheader', 'eyebrow', 'heading', 'greeting', 'message', 'name', 'amount', 'code', 'firstLabel', 'firstValue', 'secondLabel', 'secondValue', 'detailsLabel', 'details', 'buttonLabel', 'actionUrl', 'footer'],
         'credits_activated' => ['locale', 'preheader', 'eyebrow', 'heading', 'greeting', 'message', 'firstLabel', 'firstValue', 'secondLabel', 'secondValue', 'detailsLabel', 'details', 'applicationLabel', 'campaignLabel', 'buttonLabel', 'actionUrl', 'footer'],
@@ -333,6 +333,12 @@ final class EmailTemplateRenderer
         if (!isset(self::TEMPLATES[$template])) {
             throw new InvalidArgumentException(sprintf('Unknown email template "%s".', $template));
         }
+        if ($template === 'profile_reminder' && isset($variables['score'])) {
+            // Derive both widths from the displayed score, including for saved templates.
+            $score = max(0, min(100, (int) $variables['score']));
+            $variables['score'] = (string) $score;
+            $variables['scoreRemaining'] = (string) (100 - $score);
+        }
         foreach (self::REQUIRED_VARIABLES[$template] as $name) {
             if (!isset($variables[$name]) || !is_string($variables[$name])) {
                 throw new InvalidArgumentException(sprintf('Email template variable "%s" must be a string.', $name));
@@ -372,7 +378,7 @@ final class EmailTemplateRenderer
         return trim((string) preg_replace('/[\x00-\x1F\x7F]+/', ' ', (string) $subject));
     }
 
-    /** Upgrade only the original stock header; preserve custom copy and layouts. */
+    /** Upgrade known stock markup; preserve custom copy and layouts. */
     public function prepareHtml(string $source): string
     {
         $pattern = '~<!-- wave:brand -->|<table role="presentation" cellspacing="0" cellpadding="0" border="0">\s*<tr>\s*<td[^>]*background-color:\s*#e7967c[^>]*>w</td>\s*<td[^>]*>wave</td>\s*</tr>\s*</table>~';
@@ -391,7 +397,17 @@ final class EmailTemplateRenderer
             throw new RuntimeException('Could not prepare the email brand header.');
         }
 
-        return $html;
+        // Older saved copies of the stock reminder also need explicit complementary
+        // widths. Empty cells avoid a minimum text width at 0% and 100%.
+        return str_replace([
+            'style="width:100%;border-radius:999px;background-color:#e8ebe5;"',
+            '<td width="{{score}}%" style="height:8px;line-height:8px;font-size:0;border-radius:999px;background-color:#173c35;">&nbsp;</td>',
+            '<td style="height:8px;line-height:8px;font-size:0;">&nbsp;</td>',
+        ], [
+            'style="width:100%;table-layout:fixed;border-radius:999px;background-color:#e8ebe5;"',
+            '<td width="{{score}}%" style="width:{{score}}%;height:8px;padding:0;line-height:0;font-size:0;border-radius:999px;background-color:#173c35;"></td>',
+            '<td width="{{scoreRemaining}}%" style="width:{{scoreRemaining}}%;height:8px;padding:0;line-height:0;font-size:0;"></td>',
+        ], $html);
     }
 
     public function getDefaultHtml(string $template): string

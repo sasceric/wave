@@ -3272,12 +3272,12 @@
         "finished": "Alle 4 gesendet",
         "complete": "Profil vollständig",
         "tips_disabled": "Tipps ausgeschaltet",
-        "pending_approval": "Wartet auf Freigabe"
+        "pending_verification": "Wartet auf E-Mail-Bestätigung"
       },
       "hint": {
         "complete": "Das Profil ist zu 100 % vollständig, daher werden keine Tipps mehr gesendet.",
         "tips_disabled": "Diese Person hat Profiltipps ausgeschaltet, daher werden sie auch nicht manuell gesendet.",
-        "pending_approval": "Die Tipps beginnen am Tag nach Freigabe des Kontos und Bestätigung der E-Mail."
+        "pending_verification": "Die Tipps beginnen am Tag nach der E-Mail-Bestätigung, auch für Konten, die auf Freigabe warten."
       }
     },
     "admin": {

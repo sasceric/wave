@@ -5,9 +5,11 @@ namespace App\Tests\Controller;
 use App\Account\EmailPreferences;
 use App\Background\ProfileReminderBatch;
 use App\Entity\Creator;
+use App\Entity\Company;
 use App\Entity\User;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Tools\SchemaTool;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Bundle\FrameworkBundle\Test\MailerAssertionsTrait;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
@@ -108,6 +110,69 @@ final class EmailPreferencesTest extends WebTestCase
         self::assertEmailCount(1);
     }
 
+    #[DataProvider('pendingAccountKinds')]
+    public function testPendingAccountsReceiveAllFourRemindersWithoutBeingApproved(string $kind): void
+    {
+        if ($kind === 'creator') {
+            $user = $this->creator();
+        } else {
+            $user = new User($kind.'@example.test', 'ROLE_COMPANY');
+            $user->setPassword('unused');
+            $company = new Company('pending-'.$kind, 'Pending '.$kind, 'Beauty');
+            $company->setCompanyType($kind);
+            $user->setCompany($company);
+            $this->em->persist($user);
+        }
+        $user->setApproved(false);
+        $user->setEmailVerified(true);
+        $this->em->flush();
+        $db = $this->em->getConnection();
+        $batch = static::getContainer()->get(ProfileReminderBatch::class);
+        self::assertSame(0, $batch->run(false));
+        self::assertNotNull($db->fetchOne('SELECT profile_reminder_next_at FROM wave_user WHERE id = ?', [$user->getId()]));
+        foreach (range(1, 4) as $stage) {
+            $db->executeStatement('UPDATE wave_user SET profile_reminder_next_at = ? WHERE id = ?', [gmdate('Y-m-d H:i:s', time() - 60), $user->getId()]);
+            self::assertSame(1, $batch->run(false));
+            self::assertEmailCount($stage);
+            self::assertSame($stage, (int) $db->fetchOne('SELECT profile_reminder_stage FROM wave_user WHERE id = ?', [$user->getId()]));
+            self::assertFalse($user->isApproved());
+            self::assertSame(0, $batch->run(false));
+        }
+        self::assertNull($db->fetchOne('SELECT profile_reminder_next_at FROM wave_user WHERE id = ?', [$user->getId()]));
+        // Subsequent approval must not restart a series already delivered while pending.
+        $user->setApproved(true);
+        $this->em->flush();
+        self::assertSame(0, $batch->run(false));
+        self::assertEmailCount(4);
+    }
+
+    public static function pendingAccountKinds(): iterable
+    {
+        yield 'creator' => ['creator'];
+        yield 'brand' => ['brand'];
+        yield 'agency' => ['agency'];
+    }
+
+    public function testPendingUnverifiedAndUnsubscribedAccountsDoNotReceiveTheSeries(): void
+    {
+        $user = $this->creator();
+        $user->setApproved(false);
+        $user->setEmailVerified(false);
+        $this->em->flush();
+        $batch = static::getContainer()->get(ProfileReminderBatch::class);
+        $reminders = \App\Api\AdminProfileResource::summary($user)['profileReminders'];
+        self::assertSame('pending_verification', $reminders['status']);
+        self::assertFalse($reminders['canSend']);
+        self::assertSame(0, $batch->run(false));
+        self::assertSame('profile_reminder_unavailable', $batch->sendManually($user, 1));
+        $user->setEmailVerified(true);
+        $user->setProfileTipsEnabled(false);
+        $this->em->flush();
+        self::assertSame(0, $batch->run(false));
+        self::assertSame('profile_tips_disabled', $batch->sendManually($user, 1));
+        self::assertEmailCount(0);
+    }
+
     public function testTermsNoticeIsSentOncePerVersionAndOnlyWhenEnabled(): void
     {
         $user = $this->creator();
@@ -145,10 +210,13 @@ final class EmailPreferencesTest extends WebTestCase
         }
     }
 
-    public function testAdminsSeeReminderHistoryAndCanRepeatOrAdvanceIt(): void
+    #[DataProvider('approvalStates')]
+    public function testAdminsSeeReminderHistoryAndCanRepeatOrAdvanceIt(bool $approved): void
     {
         static::getContainer()->get('cache.rate_limiter')->clear();
         $user = $this->creator();
+        $user->setApproved($approved);
+        $this->em->flush();
         $creatorId = $user->getCreator()?->getId();
         $admin = new User('admin@example.test', 'ROLE_CREATOR');
         $admin->setPassword('unused-test-hash');
@@ -183,6 +251,12 @@ final class EmailPreferencesTest extends WebTestCase
         $this->json('POST', '/api/admin/catalog/creators/'.$creatorId.'/profile-reminders?locale=en', ['stage' => 2], $this->csrfToken());
         self::assertResponseStatusCodeSame(400);
         self::assertSame('This user switched profile tips off.', $this->payload()['error']);
+    }
+
+    public static function approvalStates(): iterable
+    {
+        yield 'approved' => [true];
+        yield 'awaiting approval' => [false];
     }
 
     private function creator(): User

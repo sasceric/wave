@@ -266,6 +266,13 @@ final class RegistrationReminderTest extends WebTestCase
                 self::assertStringContainsString('wave-logo-v1.png', $html);
                 self::assertStringNotContainsString('{{', $html);
                 self::assertStringContainsString('Amina Kovač', $html);
+                if (in_array($template, ['registered', 'pre_approval'], true)) {
+                    $required = \App\Account\ProfilePreparationEmailCopy::forLocale('pre_approval', $locale)['expiration'];
+                    self::assertSame($required, $variables['expiration']);
+                    self::assertStringContainsString(htmlspecialchars($required, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'), $html);
+                    self::assertLessThan(strpos($html, $variables['imageTitle']), strpos($html, htmlspecialchars($required, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')));
+                    self::assertNotSame(\App\Account\ProfilePreparationEmailCopy::forLocale('profile_tip', $locale)['stepsTitle'], $variables['stepsTitle']);
+                }
                 if ($template === 'verification_reminder') {
                     self::assertStringNotContainsString('24', $variables['expiration']);
                     self::assertSame($sender->previewVariables('verify', $locale)['expiration'], $variables['expiration']);

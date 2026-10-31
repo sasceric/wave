@@ -50,7 +50,27 @@
     details[open] { flex-basis: 100%; p { max-width: 850px; margin-top: 8px; } summary > svg:last-child { transform: rotate(180deg); } }
   }
   &__hint { color: var(--muted-text); font-size: 12px; line-height: 1.6; margin: 14px 0 22px; }
-  .admin-table__filters { align-items: end; > .single-select, > .date-picker { min-width: 140px; width: 160px; margin: 0; } .single-select__trigger { min-height: 38px; } }
+  .admin-table__filters {
+    align-items: end;
+    > .single-select, > .date-picker {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      min-width: 140px;
+      width: 160px;
+      margin: 0;
+      > label, > .single-select__label { margin: 0; font-size: 12px; line-height: 18px; }
+    }
+    .single-select__trigger, .date-picker .dp--input, .admin-dashboard__search {
+      box-sizing: border-box;
+      height: 44px;
+      min-height: 44px;
+      border-radius: 12px;
+      font-size: 14px;
+      line-height: 20px;
+    }
+    .admin-dashboard__search input { font-size: 14px; }
+  }
   small { display: block; margin-top: 5px; font-size: 11px; color: var(--muted-text); }
   &__subject { display: block; max-width: 280px; overflow-wrap: anywhere; }
   &__status {

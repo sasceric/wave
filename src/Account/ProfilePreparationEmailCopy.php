@@ -309,6 +309,20 @@ final class ProfilePreparationEmailCopy
         ];
         $locale = isset($common[$locale]) ? $locale : 'bs';
         if (!isset($templates[$locale][$template])) throw new \InvalidArgumentException('Unknown profile preparation template.');
-        return $common[$locale] + $templates[$locale][$template];
+        $copy = $common[$locale] + $templates[$locale][$template];
+        if (in_array($template, ['registered', 'pre_approval'], true)) {
+            $copy['stepsTitle'] = match ($locale) {
+                'hr' => 'Tri obvezna uvjeta za odobrenje',
+                'sr' => 'Tri obavezna uslova za odobrenje',
+                'cnr' => 'Tri obavezna uslova za odobrenje',
+                'sl' => 'Trije obvezni pogoji za odobritev',
+                'en' => 'Three requirements for approval',
+                'de' => 'Drei Voraussetzungen für die Freigabe',
+                default => 'Tri obavezna uslova za odobrenje',
+            };
+            $copy['expiration'] = $templates[$locale]['pre_approval']['expiration'];
+        }
+
+        return $copy;
     }
 }

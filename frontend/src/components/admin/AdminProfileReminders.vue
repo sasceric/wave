@@ -74,7 +74,7 @@ async function send(stage) {
         <Send :size="15" aria-hidden="true" />{{ t(busy === next ? 'adminProfiles.reminders.sending' : 'adminProfiles.reminders.sendNext', { n: next }) }}
       </button>
     </div>
-    <p v-else-if="['complete', 'tips_disabled', 'pending_approval'].includes(reminders.status)" class="admin-profile-reminders__hint">{{ t(`adminProfiles.reminders.hint.${reminders.status}`) }}</p>
+    <p v-else-if="['complete', 'tips_disabled', 'pending_verification'].includes(reminders.status)" class="admin-profile-reminders__hint">{{ t(`adminProfiles.reminders.hint.${reminders.status}`) }}</p>
     <StatusMessage v-if="error" variant="error">{{ error }}</StatusMessage>
     <p v-else-if="notice" class="admin-profile-reminders__notice" role="status">{{ notice }}</p>
   </section>

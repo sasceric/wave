@@ -3273,12 +3273,12 @@
         "finished": "Sva 4 poslata",
         "complete": "Profil popunjen",
         "tips_disabled": "Isključio/la savete",
-        "pending_approval": "Čeka odobrenje"
+        "pending_verification": "Čeka potvrdu imejla"
       },
       "hint": {
         "complete": "Profil je 100% popunjen, saveti se više ne šalju.",
         "tips_disabled": "Korisnik je isključio savete za profil, pa ih ne šaljemo ni ručno.",
-        "pending_approval": "Saveti počinju dan posle odobrenja naloga i potvrde imejla."
+        "pending_verification": "Saveti počinju dan posle potvrde imejla, i za naloge koji čekaju odobrenje."
       }
     },
     "admin": {

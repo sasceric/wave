@@ -10,6 +10,33 @@ use PHPUnit\Framework\TestCase;
 
 final class EmailTemplateRendererTest extends TestCase
 {
+    public function testProfileProgressUsesTheDisplayedPercentageIncludingSavedStockLayouts(): void
+    {
+        $renderer = new EmailTemplateRenderer(new SiteOrigin('https://wave.ba'));
+        $legacy = '<p>Keep custom wording</p><table role="presentation" width="100%" style="width:100%;border-radius:999px;background-color:#e8ebe5;"><tr>'
+            .'<td width="{{score}}%" style="height:8px;line-height:8px;font-size:0;border-radius:999px;background-color:#173c35;">&nbsp;</td>'
+            .'<td style="height:8px;line-height:8px;font-size:0;">&nbsp;</td></tr></table>';
+        foreach ([0, 35, 50, 85, 100] as $score) {
+            $variables = array_fill_keys($renderer->variables('profile_reminder'), 'Example');
+            $variables['score'] = (string) $score;
+            foreach ([null, $legacy] as $source) {
+                $html = $renderer->render('profile_reminder', $variables, $source);
+                $document = new \DOMDocument();
+                @$document->loadHTML($html);
+                $xpath = new \DOMXPath($document);
+                $fill = $xpath->query('//td[@width="'.$score.'%" and contains(@style,"background-color:#173c35")]');
+                self::assertSame(1, $fill->length);
+                self::assertStringContainsString('width:'.$score.'%;', $fill->item(0)->getAttribute('style'));
+                self::assertSame('', trim($fill->item(0)->textContent));
+                self::assertStringContainsString('table-layout:fixed', $html);
+                self::assertSame(1, $xpath->query('//td[@width="'.(100 - $score).'%" and not(contains(@style,"background-color:#173c35"))]')->length);
+                self::assertStringNotContainsString('{{', $html);
+                if ($source !== null) self::assertStringContainsString('Keep custom wording', $html);
+            }
+        }
+        self::assertSame($renderer->prepareHtml($legacy), $renderer->prepareHtml($renderer->prepareHtml($legacy)));
+    }
+
     public function testSubjectVariablesCannotIntroduceHeaderLineBreaks(): void
     {
         $renderer = new EmailTemplateRenderer(new SiteOrigin('https://wave.ba'));

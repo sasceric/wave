@@ -18,7 +18,8 @@ use Symfony\Component\Mime\Email;
 
 /**
  * Four profile tips emails while a profile is incomplete: 1, 4, 10 and 21 days after an
- * approved account is first seen. The series stops at 100% or when tips are switched off.
+ * email-verified account is first seen, including accounts awaiting approval.
+ * The series stops at 100% or when tips are switched off.
  */
 final class ProfileReminderBatch
 {
@@ -45,7 +46,7 @@ final class ProfileReminderBatch
         $db = $this->entityManager->getConnection();
         $now = new \DateTimeImmutable('now', new \DateTimeZone('UTC'));
         $rows = $db->fetchAllAssociative(
-            "SELECT id, profile_reminder_stage, profile_reminder_next_at FROM wave_user WHERE deleted_at IS NULL AND approved = TRUE AND email_verified = TRUE AND profile_tips_enabled = TRUE AND admin = FALSE AND moderator = FALSE AND presentation_demo_key IS NULL AND role IN ('ROLE_CREATOR', 'ROLE_COMPANY') AND profile_reminder_stage < ? AND (profile_reminder_next_at IS NULL OR profile_reminder_next_at <= ?) ORDER BY id LIMIT ".self::BATCH,
+            "SELECT id, profile_reminder_stage, profile_reminder_next_at FROM wave_user WHERE deleted_at IS NULL AND email_verified = TRUE AND profile_tips_enabled = TRUE AND admin = FALSE AND moderator = FALSE AND presentation_demo_key IS NULL AND role IN ('ROLE_CREATOR', 'ROLE_COMPANY') AND profile_reminder_stage < ? AND (profile_reminder_next_at IS NULL OR profile_reminder_next_at <= ?) ORDER BY id LIMIT ".self::BATCH,
             [count(self::SCHEDULE_DAYS), $now->format('Y-m-d H:i:s')],
         );
         $sent = 0;
@@ -65,7 +66,7 @@ final class ProfileReminderBatch
         $id = (int) $row['id'];
         $stage = (int) $row['profile_reminder_stage'];
         $nextAt = $row['profile_reminder_next_at'];
-        // First time an approved account is seen: start its series from now.
+        // First time an email-verified account is seen: start its series from now.
         if ($nextAt === null) {
             $db->executeStatement('UPDATE wave_user SET profile_reminder_next_at = ? WHERE id = ? AND profile_reminder_next_at IS NULL', [$this->after($now, self::SCHEDULE_DAYS[$stage] - ($stage > 0 ? self::SCHEDULE_DAYS[$stage - 1] : 0)), $id]);
 
@@ -103,7 +104,7 @@ final class ProfileReminderBatch
      */
     public function sendManually(User $user, int $stage): ?string
     {
-        if ($user->isDeleted() || !$user->isApproved() || !$user->isEmailVerified()) {
+        if ($user->isDeleted() || !$user->isEmailVerified()) {
             return 'profile_reminder_unavailable';
         }
         if (!$user->isProfileTipsEnabled()) {

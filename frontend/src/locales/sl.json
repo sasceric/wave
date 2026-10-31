@@ -3273,12 +3273,12 @@
         "finished": "Vsa 4 poslana",
         "complete": "Profil izpolnjen",
         "tips_disabled": "Izklopil/a nasvete",
-        "pending_approval": "Čaka odobritev"
+        "pending_verification": "Čaka potrditev e-pošte"
       },
       "hint": {
         "complete": "Profil je 100 % izpolnjen, nasvetov ne pošiljamo več.",
         "tips_disabled": "Uporabnik je izklopil nasvete za profil, zato jih ne pošiljamo niti ročno.",
-        "pending_approval": "Nasveti se začnejo dan po odobritvi računa in potrditvi e-pošte."
+        "pending_verification": "Nasveti se začnejo dan po potrditvi e-pošte, tudi za račune, ki čakajo na odobritev."
       }
     },
     "admin": {

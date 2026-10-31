@@ -70,7 +70,8 @@ The `pre_approval`, `profile_tip` and `registered` templates use the responsive
 `profile_preparation.html` layout: a three-step photo/bio/social checklist and a
 clearly labelled 100% completion goal. The registration-pending and profile-tip
 copy encourages building a useful portfolio without promising jobs or automatic
-approval. The pre-approval copy states the manual review requirements explicitly.
+approval. Registration-pending and pre-approval emails prominently state that a
+photo/logo, bio/description and social links are mandatory before manual approval.
 All seven languages are editable in the existing email editor, including checklist
 headings and text. Saved subject/HTML/copy customizations remain authoritative.
 Plain-text emails include the same checklist and requirements. Verification

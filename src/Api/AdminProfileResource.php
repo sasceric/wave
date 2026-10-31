@@ -88,7 +88,7 @@ final class AdminProfileResource
                 'sends' => count($sends),
             ];
         }
-        $eligible = $owner->isApproved() && $owner->isEmailVerified() && $owner->isProfileTipsEnabled() && $score !== null && $score < 100;
+        $eligible = $owner->isEmailVerified() && $owner->isProfileTipsEnabled() && $score !== null && $score < 100;
 
         return [
             'stages' => $stages,
@@ -97,7 +97,7 @@ final class AdminProfileResource
             'nextAt' => $sent < $total ? $owner->getProfileReminderNextAt()?->format(DATE_ATOM) : null,
             'tipsEnabled' => $owner->isProfileTipsEnabled(),
             'status' => match (true) {
-                !$owner->isApproved() || !$owner->isEmailVerified() => 'pending_approval',
+                !$owner->isEmailVerified() => 'pending_verification',
                 !$owner->isProfileTipsEnabled() => 'tips_disabled',
                 $score !== null && $score >= 100 => 'complete',
                 $sent >= $total => 'finished',
