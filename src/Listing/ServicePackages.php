@@ -80,8 +80,8 @@ final class ServicePackages
                 $row = $this->row($creator, $package, $labels);
                 if ($row === null) continue;
                 if ($query !== '' && !str_contains(mb_strtolower($row['title'].' '.$row['creator']['displayName'].' '.implode(' ', $row['creator']['categoryLabels'])), $query)) continue;
-                if (isset($filters['minPrice']) && $filters['minPrice'] !== null && ($row['price'] === null || $row['price'] < $filters['minPrice'])) continue;
-                if (isset($filters['maxPrice']) && $filters['maxPrice'] !== null && ($row['price'] === null || $row['price'] > $filters['maxPrice'])) continue;
+                if (isset($filters['minPrice']) && ($row['price'] === null || $row['price'] < $filters['minPrice'])) continue;
+                if (isset($filters['maxPrice']) && ($row['price'] === null || $row['price'] > $filters['maxPrice'])) continue;
                 $row['position'] = $position;
                 $rows[] = $row;
                 if ($filters['onePerCreator'] ?? false) break;
