@@ -1194,7 +1194,7 @@
 }
 
 // Campaign editor in steps.
-.campaign-steps {
+.campaign-editor-steps {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 8px;
@@ -1322,7 +1322,7 @@
 }
 
 @include breakpoints.down(760px) {
-  .campaign-steps {
+  .campaign-editor-steps {
     gap: 6px;
 
     button {

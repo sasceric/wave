@@ -1383,15 +1383,15 @@ onMounted(loadDashboard)
               {{ t('account.cancelEdit') }}
             </RouterLink>
           </header>
-          <ol class="campaign-steps" :aria-label="t('account.campaignStepsLabel')">
+          <ol class="campaign-editor-steps" :aria-label="t('account.campaignStepsLabel')">
             <li v-for="(step, index) in CAMPAIGN_STEPS" :key="step" :class="{ 'is-current': campaignStep === index, 'is-done': index < campaignStep || (index <= campaignMaxStep && index !== campaignStep) }">
               <button type="button" :disabled="index > campaignMaxStep + 1" :aria-current="campaignStep === index ? 'step' : undefined" @click="goCampaignStep(index)">
-                <span class="campaign-steps__number" aria-hidden="true"><Check v-if="index < campaignStep" :size="14" /><template v-else>{{ index + 1 }}</template></span>
-                <span class="campaign-steps__label">{{ t(`account.campaignSteps.${step}`) }}</span>
+                <span class="campaign-editor-steps__number" aria-hidden="true"><Check v-if="index < campaignStep" :size="14" /><template v-else>{{ index + 1 }}</template></span>
+                <span class="campaign-editor-steps__label">{{ t(`account.campaignSteps.${step}`) }}</span>
               </button>
             </li>
           </ol>
-          <p class="campaign-steps__counter">{{ t('account.campaignStepCounter', { current: campaignStep + 1, total: CAMPAIGN_STEPS.length }) }} · <strong>{{ t(`account.campaignSteps.${CAMPAIGN_STEPS[campaignStep]}`) }}</strong></p>
+          <p class="campaign-editor-steps__counter">{{ t('account.campaignStepCounter', { current: campaignStep + 1, total: CAMPAIGN_STEPS.length }) }} · <strong>{{ t(`account.campaignSteps.${CAMPAIGN_STEPS[campaignStep]}`) }}</strong></p>
           <form ref="campaignFormElement" v-form-validation class="form-stack campaign-step-form" @submit.prevent="submitCampaignStep">
             <template v-if="campaignStep === 0">
             <label class="form-field"><span>{{ t('account.campaignTitle') }}</span><input v-model.trim="campaignForm.title" required minlength="5" maxlength="160" /></label>
