@@ -11,10 +11,12 @@ import DirectoryToolbar from '../components/shared/DirectoryToolbar.vue'
 import DirectoryLoadMore from '../components/shared/DirectoryLoadMore.vue'
 import LocalizedLink from '../components/shared/LocalizedLink.vue'
 import SingleSelect from '../components/shared/SingleSelect.vue'
+import SkeletonBlock from '../components/shared/SkeletonBlock.vue'
 import StatusMessage from '../components/shared/StatusMessage.vue'
 import ServicePackageCard from '../components/services/ServicePackageCard.vue'
 import ServiceTypeChips from '../components/services/ServiceTypeChips.vue'
 import ServicePackageSheet from '../components/services/ServicePackageSheet.vue'
+import ServicePackageSkeleton from '../components/services/ServicePackageSkeleton.vue'
 import { currentUser } from '../composables/useCurrentUser'
 import { apiGet } from '../lib/api'
 import { localizedPath, localizedRouteName } from '../routePaths'
@@ -29,6 +31,9 @@ const items = ref([])
 const counts = ref(null)
 const total = ref(0)
 const loading = ref(false)
+// Load more keeps the list; a filter change replaces it, so show placeholders instead of stale cards.
+const appending = ref(false)
+const refreshing = computed(() => loading.value && !appending.value)
 const error = ref('')
 const filters = ref(readQuery())
 const filtersOpen = ref(false)
@@ -61,6 +66,7 @@ const campaignLink = computed(() => (currentUser.value?.accountType === 'company
 async function load(append = false) {
   const id = ++request
   loading.value = true
+  appending.value = append
   error.value = ''
   const query = new URLSearchParams({ limit: String(PAGE_SIZE), offset: String(append ? items.value.length : 0) })
   for (const [key, value] of Object.entries(filters.value)) if (value) query.set(key, value)
@@ -145,11 +151,15 @@ onMounted(() => {
       </div>
 
       <div class="services-page__results">
-        <p class="services-page__count" aria-live="polite">{{ t('services.count', { count: total }, total) }}</p>
-        <StatusMessage v-if="error && !items.length" variant="error">{{ error }}</StatusMessage>
+        <p class="services-page__count" aria-live="polite">
+          <SkeletonBlock v-if="refreshing" width="96px" />
+          <template v-else>{{ t('services.count', { count: total }, total) }}</template>
+        </p>
+        <StatusMessage v-if="error && !items.length && !loading" variant="error">{{ error }}</StatusMessage>
         <StatusMessage v-else-if="!loading && !items.length" variant="empty">{{ t('services.empty') }}</StatusMessage>
         <ul class="service-grid" :aria-busy="loading">
-          <li v-for="item in items" :key="`${item.creator.slug}-${item.id}`"><ServicePackageCard :item="item" @open="selected = $event" /></li>
+          <li v-for="item in refreshing ? [] : items" :key="`${item.creator.slug}-${item.id}`"><ServicePackageCard :item="item" @open="selected = $event" /></li>
+          <li v-for="index in loading ? (appending ? 4 : 8) : 0" :key="`loading-${index}`"><ServicePackageSkeleton /></li>
         </ul>
         <ServicePackageSheet :item="selected" @close="selected = null" />
         <DirectoryLoadMore v-if="items.length" :loading="loading" :has-more="hasMore" :error="error" :count="items.length" @load="load(true)" />

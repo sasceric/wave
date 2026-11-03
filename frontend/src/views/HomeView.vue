@@ -46,7 +46,7 @@ const siteFaqItems = computed(() => Array.from({ length: 5 }, (_, index) => ({
 })))
 const greetingName = computed(() => currentUser.value?.profile?.displayName || currentUser.value?.profile?.name || currentUser.value?.name || '')
 const isCompany = computed(() => currentUser.value?.accountType === 'company')
-const showBrandServices = computed(() => (currentUser.value?.isAdmin || currentUser.value?.accountType !== 'creator') && servicePackages.value.length > 0)
+const showBrandServices = computed(() => (currentUser.value?.isAdmin || currentUser.value?.accountType !== 'creator') && (loading.value || servicePackages.value.length > 0))
 const shortcuts = computed(() => {
   const messages = {
     key: 'messages',
@@ -215,6 +215,7 @@ onMounted(loadHome)
       v-if="showBrandServices"
       class="home-row page-width"
       :packages="servicePackages"
+      :loading="loading"
     />
 
     <CardRow
