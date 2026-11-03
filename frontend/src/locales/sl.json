@@ -1130,6 +1130,7 @@
     "companyName": "Naziv podjetja",
     "companyNamePlaceholder": "Npr. Studio Jadran",
     "phone": "Telefonska številka",
+    "phoneOptional": "Telefonska številka (neobvezno)",
     "phonePlaceholder": "Številka brez klicne številke",
     "phoneCountry": "Klicna številka države",
     "searchPhoneCountry": "Išči državo ali klicno številko",
@@ -1299,7 +1300,8 @@
       "creatorCount": "Število ustvarjalcev mora biti med 1 in 100.",
       "closesAt": "Izberite datum zaključka po današnjem in v roku enega leta.",
       "status": "Izberite veljavno stanje kampanje.",
-      "coverMediaId": "Naslovna slika ni veljavna. Znova jo naložite ali odstranite."
+      "coverMediaId": "Naslovna slika ni veljavna. Znova jo naložite ali odstranite.",
+      "city": "Mesta imajo lahko največ 500 znakov, do 30 mest."
     },
     "actionSaved": "Sprememba je shranjena.",
     "status": "Stanje kampanje",
@@ -1481,7 +1483,30 @@
       "done": "Sodelovanje je zaključeno",
       "declined": "Sodelovanje ni bilo dogovorjeno"
     },
-    "applicantNextStep": "Naslednji korak"
+    "applicantNextStep": "Naslednji korak",
+    "campaignSteps": {
+      "basics": "Osnovno",
+      "audience": "Kdo in kje",
+      "deliverables": "Naloge",
+      "compensation": "Plačilo in rok",
+      "review": "Pregled in objava"
+    },
+    "campaignStepsLabel": "Koraki kampanje",
+    "campaignStepCounter": "Korak {current} od {total}",
+    "campaignNext": "Naprej: {step}",
+    "campaignBack": "Nazaj",
+    "campaignAllCities": "Vsa mesta",
+    "campaignAllCitiesHint": "Kampanja je odprta za ustvarjalce iz cele države: {country}.",
+    "campaignChosenCountry": "izbrana država",
+    "campaignSomeCitiesHint": "Kampanja je samo za ustvarjalce iz izbranih mest.",
+    "campaignCities": "Mesta",
+    "campaignCitiesPlaceholder": "npr. Ljubljana, Maribor",
+    "campaignCitiesHint": "Vpiši mesto in pritisni Enter ali vejico (,), da dodaš več mest.",
+    "campaignCitiesRequired": "Dodaj vsaj eno mesto ali vklopi »Vsa mesta«.",
+    "campaignCitiesLimit": "Dodaš lahko največ 30 mest.",
+    "campaignCityTooLong": "Ime mesta ima lahko največ 80 znakov.",
+    "campaignLocation": "Lokacija",
+    "campaignEditStep": "Uredi"
   },
   "moderation": {
     "eyebrow": "Wave katalog",

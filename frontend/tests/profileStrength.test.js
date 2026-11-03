@@ -77,8 +77,10 @@ test('plain text helpers round-trip quick editor text', () => {
   assert.equal(htmlToPlainText(html), 'First <line>\nnext\n\nSecond & last')
 })
 
-test('profile request body requires a phone', () => {
-  assert.throws(() => profileRequestBody(creator(), { displayName: 'A' }), (error) => error.code === 'phone')
+test('the phone is optional in the profile request body, but an entered one must be valid', () => {
+  const draft = { displayName: 'A', phone: '', categories: ['Beauty'], creatorTypes: [], city: 'Zenica', countryCode: 'BA', bio: '', tagline: '', faqs: [], portfolio: [], packages: [], socialProfiles: [], presentation: {} }
+  assert.equal(profileRequestBody(creator(), draft).phone, '')
+  assert.throws(() => profileRequestBody(creator(), { displayName: 'A', phone: '12', countryCode: 'BA' }), (error) => error.code === 'phone')
 })
 
 test('the quick editor draft clones a reactive session user', async () => {

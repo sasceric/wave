@@ -342,7 +342,7 @@ final class CampaignManagementController
         }
         $categories = $this->stringList($data['categories'] ?? null, 10, 80);
         $category = $categories[0] ?? null;
-        $city = $this->text($data, 'city', 2, 120);
+        $city = self::cities(array_key_exists('cities', $data) ? $data['cities'] : ($data['city'] ?? null));
         $countryCode = is_string($data['countryCode'] ?? null) ? strtoupper(trim($data['countryCode'])) : null;
         if ($countryCode !== null && !\App\Account\CountryCode::isSupported($countryCode)) {
             $countryCode = null;
@@ -373,7 +373,7 @@ final class CampaignManagementController
             $invalidFields[] = 'categories';
         }
         if ($city === null) {
-            $invalidFields[] = 'city';
+            $invalidFields[] = array_key_exists('cities', $data) ? 'cities' : 'city';
         }
         if ($countryCode === null) {
             $invalidFields[] = 'countryCode';
@@ -424,6 +424,32 @@ final class CampaignManagementController
         }
 
         return compact('title', 'summary', 'description', 'category', 'categories', 'city', 'countryCode', 'channels', 'deliverables', 'budgetMin', 'budgetMax', 'compensationType', 'currency', 'creatorCount', 'closesAt', 'status');
+    }
+
+    /**
+     * JSON list of cities; an empty list means all cities in the chosen country.
+     * Older clients may still send a comma-separated city string.
+     * @return list<string>|null
+     */
+    private static function cities(mixed $value): ?array
+    {
+        if (is_string($value)) $value = \App\Account\CampaignCities::fromLegacy($value);
+        if (!is_array($value) || !array_is_list($value) || count($value) > 30) return null;
+        $cities = [];
+        foreach ($value as $part) {
+            if (!is_string($part)) return null;
+            $city = trim(preg_replace('/\s+/u', ' ', $part) ?? '');
+            if ($city === '') {
+                continue;
+            }
+            if (mb_strlen($city) > 80) {
+                return null;
+            }
+            // First letter always uppercase: "mostar" → "Mostar".
+            $city = mb_strtoupper(mb_substr($city, 0, 1)).mb_substr($city, 1);
+            $cities[mb_strtolower($city)] ??= $city;
+        }
+        return array_values($cities);
     }
 
     private function text(array $data, string $key, int $minimum, int $maximum): ?string

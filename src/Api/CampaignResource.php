@@ -27,7 +27,9 @@ final class CampaignResource
             'compensationType' => $campaign->getCompensationType(),
             'budgetMax' => $campaign->getBudgetMax(),
             'currency' => $campaign->getCurrency(),
+            // Keep city as display text for existing cards, emails and older clients.
             'city' => $campaign->getCity(),
+            'cities' => $campaign->getCities(),
             'countryCode' => $campaign->getCountryCode(),
             'categories' => $campaign->getCategories(),
             'categoryLabels' => array_map(static fn (string $category): string => $categoryLabels[$category] ?? $category, $campaign->getCategories()),

@@ -326,16 +326,38 @@ test('a failed upload rollback never claims that the profile was saved', async (
 
 test('campaign Save sends separate city, country, areas and deliverables', async () => {
   const { state, requests } = await setupAccount()
-  state.campaignForm.value.city = 'Zagreb'
+  state.campaignForm.value.allCities = false
+  state.campaignForm.value.cities = ['Zagreb']
   state.campaignForm.value.countryCode = 'HR'
   state.campaignForm.value.categories = ['Food', 'Travel']
   state.campaignForm.value.deliverables = ['1 video', '3 photos']
   await state.saveCampaign()
-  assert.equal(requests[0].body.city, 'Zagreb')
+  assert.deepEqual(Array.from(requests[0].body.cities), ['Zagreb'])
   assert.equal(requests[0].body.countryCode, 'HR')
   assert.deepEqual(Array.from(requests[0].body.categories), ['Food', 'Travel'])
   assert.deepEqual(Array.from(requests[0].body.deliverables), ['1 video', '3 photos'])
   assert.ok(!('location' in requests[0].body))
+})
+
+test('campaign cities: JSON lists round-trip and older free-text locations remain editable', async () => {
+  const { state, requests } = await setupAccount()
+  state.campaignForm.value.countryCode = 'BA'
+  await state.saveCampaign()
+  assert.deepEqual(Array.from(requests[0].body.cities), [])
+  state.setCampaignForm({ ...requests[0].body, id: 5, closesAt: '2026-12-01', channels: [], deliverables: [], categories: ['Food'], cities: undefined, city: 'Sarajevo, Mostar' })
+  assert.equal(state.campaignForm.value.allCities, false)
+  assert.deepEqual(Array.from(state.campaignForm.value.cities), ['Sarajevo', 'Mostar'])
+  state.setCampaignForm({ ...requests[0].body, id: 5, closesAt: '2026-12-01', channels: [], deliverables: [], categories: ['Food'], cities: undefined, city: 'Svi' })
+  assert.equal(state.campaignForm.value.allCities, true)
+  assert.equal(state.campaignStep.value, 0)
+  const cities = ['Čačak', 'Washington, D.C.']
+  state.setCampaignForm({ ...requests[0].body, id: 5, closesAt: '2026-12-01', channels: [], deliverables: [], categories: ['Food'], cities, city: 'Older display label' })
+  assert.equal(state.campaignForm.value.allCities, false)
+  assert.deepEqual(Array.from(state.campaignForm.value.cities), cities)
+  state.campaignForm.value.cities.push('Zenica')
+  assert.deepEqual(cities, ['Čačak', 'Washington, D.C.'])
+  await state.saveCampaign()
+  assert.deepEqual(Array.from(requests.at(-1).body.cities), ['Čačak', 'Washington, D.C.', 'Zenica'])
 })
 
 test('successful password or social authentication navigates to overview including incomplete profiles using the setup checklist', async () => {

@@ -83,8 +83,9 @@ class Campaign
     #[ORM\Column(length: 3, options: ['default' => 'BAM'])]
     private string $currency = 'BAM';
 
-    #[ORM\Column(length: 120)]
-    private string $city;
+    /** @var list<string> An empty list means every city in the country. */
+    #[ORM\Column(type: 'json', options: ['default' => '[]'])]
+    private array $city;
 
     #[ORM\Column(length: 2, nullable: true)]
     private ?string $countryCode = null;
@@ -144,7 +145,7 @@ class Campaign
         array $deliverables,
         int $budgetMin,
         int $budgetMax,
-        string $city,
+        string|array $city,
         int $creatorCount,
         DateTimeImmutable $closesAt,
         DateTimeImmutable $publishedAt,
@@ -171,7 +172,7 @@ class Campaign
         $this->budgetMin = $budgetMin;
         $this->budgetMax = $budgetMax;
         $this->currency = $currency;
-        $this->city = $city;
+        $this->city = is_array($city) ? array_values($city) : \App\Account\CampaignCities::fromLegacy($city);
         $this->creatorCount = $creatorCount;
         $this->closesAt = $closesAt;
         $this->publishedAt = $publishedAt;
@@ -248,6 +249,12 @@ class Campaign
     }
 
     public function getCity(): string
+    {
+        return implode(', ', $this->city);
+    }
+
+    /** @return list<string> */
+    public function getCities(): array
     {
         return $this->city;
     }
@@ -357,7 +364,7 @@ class Campaign
         array $deliverables,
         int $budgetMin,
         int $budgetMax,
-        string $city,
+        string|array $city,
         int $creatorCount,
         DateTimeImmutable $closesAt,
         string $status,
@@ -377,7 +384,7 @@ class Campaign
         $this->deliverables = $deliverables;
         $this->budgetMin = $budgetMin;
         $this->budgetMax = $budgetMax;
-        $this->city = $city;
+        $this->city = is_array($city) ? array_values($city) : \App\Account\CampaignCities::fromLegacy($city);
         $this->creatorCount = $creatorCount;
         $this->closesAt = $closesAt;
         $this->setStatus($status);

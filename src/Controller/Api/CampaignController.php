@@ -71,7 +71,7 @@ final class CampaignController
         $conditions = [$this->blocks->visible('owner.id'), 'c.status = :status', 'c.listed = TRUE', 'c.closes_at >= :today', '(owner.id IS NULL OR (owner.approved = TRUE AND owner.hide_my_account = FALSE))'];
         $query = trim($request->query->getString('q'));
         if ($query !== '') {
-            $conditions[] = "(i.search_text LIKE :query OR (i.id IS NULL AND (LOWER(c.title) LIKE :query OR LOWER(c.summary) LIKE :query OR LOWER(c.description) LIKE :query OR LOWER(c.category) LIKE :query OR LOWER(c.city) LIKE :query OR LOWER(c.country_code) LIKE :query OR LOWER(CAST(c.categories AS TEXT)) LIKE :query)) OR LOWER(company.name) LIKE :query OR LOWER(company.industry) LIKE :query)";
+            $conditions[] = "(i.search_text LIKE :query OR (i.id IS NULL AND (LOWER(c.title) LIKE :query OR LOWER(c.summary) LIKE :query OR LOWER(c.description) LIKE :query OR LOWER(c.category) LIKE :query OR EXISTS (SELECT 1 FROM json_array_elements_text(c.city) AS location(name) WHERE LOWER(location.name) LIKE :query) OR LOWER(c.country_code) LIKE :query OR LOWER(CAST(c.categories AS TEXT)) LIKE :query)) OR LOWER(company.name) LIKE :query OR LOWER(company.industry) LIKE :query)";
             $params['query'] = '%' . mb_strtolower($query) . '%';
         }
         $category = trim($request->query->getString('category'));
@@ -98,7 +98,8 @@ final class CampaignController
         }
         $city = trim($request->query->getString('city'));
         if ($city !== '') {
-            $conditions[] = "LOWER(c.city) LIKE :city ESCAPE '!'";
+            // Campaigns open to every city in their country match any city filter.
+            $conditions[] = "(json_array_length(c.city) = 0 OR EXISTS (SELECT 1 FROM json_array_elements_text(c.city) AS location(name) WHERE LOWER(location.name) LIKE :city ESCAPE '!'))";
             $params['city'] = '%' . strtr(mb_strtolower($city), ['!' => '!!', '%' => '!%', '_' => '!_']) . '%';
         }
         if ($countries !== []) {

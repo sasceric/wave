@@ -480,6 +480,20 @@ fallbacks, lazy loading, skeletons and 30-item cursor batches.
 Campaign filters use existing `categories` (with the primary `category` fallback), `channels`, `city`, `countryCode`, `currency`,
 `budgetMin` and `budgetMax` fields. Areas come from the shared admin catalog.
 City and country filter the campaign’s own geography. Country choices come from visible, open campaigns through `/api/campaigns/filters`. The `countries` parameter accepts a JSON array of ISO country codes.
+
+Campaign cities are stored as a JSON list in `campaign.city`. API reads expose
+`cities` for editing and keep `city` as a joined display label for existing cards,
+emails and clients. New writes send `cities`; legacy comma-separated `city` writes
+remain accepted. An empty list means all cities in the selected country. City
+filters include those country-wide campaigns, and search decodes JSON values so
+accented city names work in both indexed and database search.
+`Version20261103140000` converts existing single-city/comma-separated text and
+whole-country labels to JSON without changing campaign IDs or URLs. Follow-up
+`Version20261103150000` performs the same conversion for databases that already
+recorded the earlier text-only version. Both preserve already-converted JSON.
+These migrations are irreversible because original separators and country-wide
+labels cannot be reconstructed reliably.
+
 Budget ranges overlap the offered range and require a selected currency. Sorting
 supports recommended (featured, then closing date), newest, and closing soon,
 with stable ID tie-breaks. Signed cursors bind every filter and sort. The API

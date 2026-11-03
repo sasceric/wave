@@ -23,7 +23,7 @@ final class AdminProfileResource
         $profile = $company ?? $creator;
         $media = $company !== null ? $company->getLogoMedia() : $creator?->getAvatarMedia();
         $imageUrl = $company !== null ? $company->getLogoUrl() : $creator?->getAvatarUrl();
-        $contact = $owner !== null && trim($owner->getPhone() ?? '') !== '' && trim($owner->getCity() ?? '') !== '' && preg_match('/^[A-Z]{2}$/', $owner->getCountryCode() ?? '') === 1;
+        $contact = $owner !== null && trim($owner->getCity() ?? '') !== '' && preg_match('/^[A-Z]{2}$/', $owner->getCountryCode() ?? '') === 1;
         $identity = $company !== null
             ? mb_strlen(trim($company->getName())) >= 2 && mb_strlen(trim($company->getIndustry())) >= 2
             : $creator !== null && mb_strlen(trim($creator->getDisplayName())) >= 2 && array_filter($creator->getCategories(), static fn (string $value): bool => trim($value) !== '') !== [];

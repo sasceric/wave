@@ -110,7 +110,8 @@ onBeforeUnmount(() => {
         <PhoneNumberField
           v-model="profile.phone"
           :country-code="phoneCountry"
-          :label="t('auth.phone')"
+          optional
+          :label="t('auth.phoneOptional')"
           :placeholder="t('auth.phonePlaceholder')"
           :country-label="t('auth.phoneCountry')"
           :country-placeholder="t('auth.selectCountry')"

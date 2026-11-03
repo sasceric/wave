@@ -1129,6 +1129,7 @@
     "companyName": "Company name",
     "companyNamePlaceholder": "e.g. North Shore Studio",
     "phone": "Phone number",
+    "phoneOptional": "Phone number (optional)",
     "phonePlaceholder": "Number without country code",
     "phoneCountry": "Country calling code",
     "searchPhoneCountry": "Search by country or calling code",
@@ -1298,7 +1299,8 @@
       "creatorCount": "Creator count must be between 1 and 100.",
       "closesAt": "Choose a closing date after today and within one year.",
       "status": "Choose a valid campaign status.",
-      "coverMediaId": "The cover image is invalid. Upload it again or remove it."
+      "coverMediaId": "The cover image is invalid. Upload it again or remove it.",
+      "city": "Cities can have up to 500 characters, up to 30 cities."
     },
     "actionSaved": "Your change was saved.",
     "status": "Campaign status",
@@ -1480,7 +1482,30 @@
       "done": "Collaboration completed",
       "declined": "No collaboration agreed"
     },
-    "applicantNextStep": "Next step"
+    "applicantNextStep": "Next step",
+    "campaignSteps": {
+      "basics": "Basics",
+      "audience": "Who and where",
+      "deliverables": "Tasks",
+      "compensation": "Pay and deadline",
+      "review": "Review and publish"
+    },
+    "campaignStepsLabel": "Campaign steps",
+    "campaignStepCounter": "Step {current} of {total}",
+    "campaignNext": "Next: {step}",
+    "campaignBack": "Back",
+    "campaignAllCities": "All cities",
+    "campaignAllCitiesHint": "The campaign is open to creators from the whole country: {country}.",
+    "campaignChosenCountry": "the chosen country",
+    "campaignSomeCitiesHint": "The campaign is only for creators from the chosen cities.",
+    "campaignCities": "Cities",
+    "campaignCitiesPlaceholder": "e.g. Sarajevo, Mostar",
+    "campaignCitiesHint": "Type a city and press Enter or a comma (,) to add more cities.",
+    "campaignCitiesRequired": "Add at least one city or turn on “All cities”.",
+    "campaignCitiesLimit": "You can add up to 30 cities.",
+    "campaignCityTooLong": "A city name can have up to 80 characters.",
+    "campaignLocation": "Location",
+    "campaignEditStep": "Edit"
   },
   "moderation": {
     "eyebrow": "Wave catalogue",

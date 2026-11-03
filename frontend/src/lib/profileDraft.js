@@ -30,7 +30,8 @@ export function profilePhoneCountry(profile) {
 
 export function normalizedProfilePhone(profile, country = profilePhoneCountry(profile)) {
   const entered = (profile.phone || '').trim()
-  return entered ? formatInternationalPhoneNumber(entered, country) : null
+  // Optional: an empty number is saved as empty, an entered one must be valid (null).
+  return entered ? formatInternationalPhoneNumber(entered, country) : ''
 }
 
 // Creator profiles replace every collection on save, so the body is always complete.
@@ -73,7 +74,7 @@ export function companyProfileBody(profile, { phone, agency = profile.companyTyp
 
 export function profileRequestBody(user, profile, options = {}) {
   const phone = options.phone ?? normalizedProfilePhone(profile)
-  if (!phone) {
+  if (phone === null) {
     const error = new Error('phone')
     error.code = 'phone'
     throw error

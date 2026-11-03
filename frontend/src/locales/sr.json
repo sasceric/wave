@@ -1130,6 +1130,7 @@
     "companyName": "Naziv kompanije",
     "companyNamePlaceholder": "Npr. Studio Jadran",
     "phone": "Broj telefona",
+    "phoneOptional": "Broj telefona (opciono)",
     "phonePlaceholder": "Broj bez pozivnog broja",
     "phoneCountry": "Pozivni broj države",
     "searchPhoneCountry": "Pretraži državu ili pozivni broj",
@@ -1299,7 +1300,8 @@
       "creatorCount": "Broj kreatora mora biti između 1 i 100.",
       "closesAt": "Izaberi datum zatvaranja posle današnjeg, u roku od godinu dana.",
       "status": "Izaberi ispravan status kampanje.",
-      "coverMediaId": "Naslovna slika nije ispravna. Ponovo je otpremi ili ukloni."
+      "coverMediaId": "Naslovna slika nije ispravna. Ponovo je otpremi ili ukloni.",
+      "city": "Gradovi mogu imati najviše 500 znakova, do 30 gradova."
     },
     "actionSaved": "Promena je sačuvana.",
     "status": "Status kampanje",
@@ -1481,7 +1483,30 @@
       "done": "Saradnja je završena",
       "declined": "Saradnja nije dogovorena"
     },
-    "applicantNextStep": "Sledeći korak"
+    "applicantNextStep": "Sledeći korak",
+    "campaignSteps": {
+      "basics": "Osnovno",
+      "audience": "Ko i gde",
+      "deliverables": "Zadaci",
+      "compensation": "Naknada i rok",
+      "review": "Pregled i objava"
+    },
+    "campaignStepsLabel": "Koraci kampanje",
+    "campaignStepCounter": "Korak {current} od {total}",
+    "campaignNext": "Dalje: {step}",
+    "campaignBack": "Nazad",
+    "campaignAllCities": "Svi gradovi",
+    "campaignAllCitiesHint": "Kampanja je otvorena kreatorima iz cele zemlje: {country}.",
+    "campaignChosenCountry": "izabrana država",
+    "campaignSomeCitiesHint": "Kampanja je samo za kreatore iz izabranih gradova.",
+    "campaignCities": "Gradovi",
+    "campaignCitiesPlaceholder": "npr. Beograd, Novi Sad",
+    "campaignCitiesHint": "Upiši grad i pritisni Enter ili zarez (,) da dodaš više gradova.",
+    "campaignCitiesRequired": "Dodaj bar jedan grad ili uključi „Svi gradovi”.",
+    "campaignCitiesLimit": "Možeš dodati najviše 30 gradova.",
+    "campaignCityTooLong": "Naziv grada može imati najviše 80 znakova.",
+    "campaignLocation": "Lokacija",
+    "campaignEditStep": "Uredi"
   },
   "moderation": {
     "eyebrow": "Wave katalog",

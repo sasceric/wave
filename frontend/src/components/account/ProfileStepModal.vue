@@ -139,7 +139,7 @@ async function save() {
     if (!saved && image?.uploadedMediaId) {
       try { await imageField.value?.rollback(image) } catch { /* The upload is removed by the scheduled media cleanup. */ }
     }
-    error.value = cause.code === 'phone' ? t('profileStrength.phoneMissing') : cause.message
+    error.value = cause.code === 'phone' ? t('auth.phoneInvalid') : cause.message
   } finally {
     busy.value = false
   }

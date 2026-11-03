@@ -29,6 +29,9 @@ final class DirectoryIndexer
 
                     return;
                 }
+                if ($kind === 'campaign') {
+                    $row['city'] = implode(' ', json_decode($row['city'], true, flags: JSON_THROW_ON_ERROR));
+                }
                 $tags = $kind === 'creator' ? json_decode($row['tags'], true, flags: JSON_THROW_ON_ERROR) : [];
                 $profiles = $kind === 'creator' ? json_decode($row['social_profiles'], true, flags: JSON_THROW_ON_ERROR) : [];
                 $platforms = array_values(array_unique(array_map(static fn ($profile): string => mb_strtolower((string) ($profile['platform'] ?? '')), $profiles)));

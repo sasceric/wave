@@ -12,6 +12,8 @@ const props = defineProps({
   maxTags: { type: Number, default: 0 },
   maxLength: { type: Number, default: 0 },
   disabled: { type: Boolean, default: false },
+  // A comma also confirms a tag, and pasted "a, b" becomes several tags.
+  commaSeparated: { type: Boolean, default: false },
 })
 const emit = defineEmits(['update:modelValue'])
 const id = `tag-input-${useId()}`
@@ -23,6 +25,10 @@ const atLimit = computed(() => props.maxTags > 0 && props.modelValue.length >= p
 
 function commitTag() {
   if (props.disabled || composing.value) return
+  if (props.commaSeparated && draft.value.includes(',')) {
+    commitParts(`${draft.value},`)
+    return
+  }
   const tag = draft.value.trim()
   if (!tag) {
     draft.value = ''
@@ -44,6 +50,29 @@ function commitTag() {
   clearError()
 }
 
+function commitParts(text) {
+  const parts = text.split(',')
+  const rest = parts.pop()
+  let tags = [...props.modelValue]
+  for (const part of parts) {
+    const tag = part.trim()
+    if (!tag || tags.some((value) => value.normalize('NFC').toLowerCase() === tag.normalize('NFC').toLowerCase())) continue
+    if ((props.maxTags > 0 && tags.length >= props.maxTags) || (props.maxLength > 0 && Array.from(tag).length > props.maxLength)) {
+      error.value = props.maxTags > 0 && tags.length >= props.maxTags ? props.limitLabel : props.tooLongLabel
+      input.value?.setCustomValidity(error.value)
+      break
+    }
+    tags = [...tags, tag]
+  }
+  if (tags.length !== props.modelValue.length) emit('update:modelValue', tags)
+  draft.value = rest.trim() ? rest.trimStart() : ''
+}
+
+function handleInput() {
+  clearError()
+  if (props.commaSeparated && !composing.value && draft.value.includes(',')) commitParts(draft.value)
+}
+
 function clearError() {
   error.value = ''
   input.value?.setCustomValidity('')
@@ -51,7 +80,13 @@ function clearError() {
 
 function handleKeydown(event) {
   // Enter confirms IME text first; it must not create a partial tag.
-  if (event.key !== 'Enter' || event.isComposing || composing.value || event.keyCode === 229) return
+  if (event.isComposing || composing.value || event.keyCode === 229) return
+  if (props.commaSeparated && event.key === ',') {
+    event.preventDefault()
+    commitTag()
+    return
+  }
+  if (event.key !== 'Enter') return
   event.preventDefault()
   commitTag()
 }
@@ -91,7 +126,7 @@ function removeTag(index) {
         :aria-describedby="error ? `${id}-error` : undefined"
         autocomplete="off"
         enterkeyhint="enter"
-        @input="clearError"
+        @input="handleInput"
         @keydown="handleKeydown"
         @blur="commitTag"
         @compositionstart="composing = true"

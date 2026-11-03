@@ -289,8 +289,8 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     public function hasCompleteProfile(): bool
     {
-        if (trim($this->phone ?? '') === ''
-            || trim($this->city ?? '') === ''
+        // The phone number is optional; city and country are still required.
+        if (trim($this->city ?? '') === ''
             || preg_match('/^[A-Z]{2}$/', $this->countryCode ?? '') !== 1
         ) {
             return false;

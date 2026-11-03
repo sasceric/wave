@@ -115,7 +115,8 @@ final class AdminProfileReviewTest extends WebTestCase
             $owner = $this->em->find(User::class, $owner->getId());
             $owner->setApproved($state !== 'pending');
             $owner->setEmailVerified($state !== 'unverified');
-            $owner->setPhone($state === 'incomplete' ? null : '+38761123456');
+            // The phone is optional; a missing city still makes the profile incomplete.
+            $owner->setCity($state === 'incomplete' ? null : 'Sarajevo');
             $this->em->flush();
             $this->client->jsonRequest('PUT', $url, ['hideMyAccount' => false], ['HTTP_X_CSRF_TOKEN' => $csrf]);
             self::assertResponseStatusCodeSame(400);

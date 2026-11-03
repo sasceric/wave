@@ -1129,6 +1129,7 @@
     "companyName": "Unternehmensname",
     "companyNamePlaceholder": "Z. B. North Shore Studio",
     "phone": "Telefonnummer",
+    "phoneOptional": "Telefonnummer (optional)",
     "phonePlaceholder": "Nummer ohne Ländervorwahl",
     "phoneCountry": "Ländervorwahl",
     "searchPhoneCountry": "Nach Land oder Vorwahl suchen",
@@ -1298,7 +1299,8 @@
       "creatorCount": "Die Anzahl der Creator muss zwischen 1 und 100 liegen.",
       "closesAt": "Wähle einen Bewerbungsschluss nach heute und innerhalb eines Jahres.",
       "status": "Wähle einen gültigen Kampagnenstatus.",
-      "coverMediaId": "Das Titelbild ist ungültig. Lade es erneut hoch oder entferne es."
+      "coverMediaId": "Das Titelbild ist ungültig. Lade es erneut hoch oder entferne es.",
+      "city": "Städte dürfen höchstens 500 Zeichen haben, bis zu 30 Städte."
     },
     "actionSaved": "Deine Änderung wurde gespeichert.",
     "status": "Kampagnenstatus",
@@ -1480,7 +1482,30 @@
       "done": "Zusammenarbeit abgeschlossen",
       "declined": "Keine Zusammenarbeit vereinbart"
     },
-    "applicantNextStep": "Nächster Schritt"
+    "applicantNextStep": "Nächster Schritt",
+    "campaignSteps": {
+      "basics": "Grundlagen",
+      "audience": "Wer und wo",
+      "deliverables": "Aufgaben",
+      "compensation": "Vergütung und Frist",
+      "review": "Prüfen und veröffentlichen"
+    },
+    "campaignStepsLabel": "Kampagnenschritte",
+    "campaignStepCounter": "Schritt {current} von {total}",
+    "campaignNext": "Weiter: {step}",
+    "campaignBack": "Zurück",
+    "campaignAllCities": "Alle Städte",
+    "campaignAllCitiesHint": "Die Kampagne ist für Creator aus dem ganzen Land offen: {country}.",
+    "campaignChosenCountry": "das gewählte Land",
+    "campaignSomeCitiesHint": "Die Kampagne ist nur für Creator aus den gewählten Städten.",
+    "campaignCities": "Städte",
+    "campaignCitiesPlaceholder": "z. B. Wien, Graz",
+    "campaignCitiesHint": "Stadt eingeben und Enter oder ein Komma (,) drücken, um mehrere Städte hinzuzufügen.",
+    "campaignCitiesRequired": "Füge mindestens eine Stadt hinzu oder aktiviere „Alle Städte“.",
+    "campaignCitiesLimit": "Du kannst bis zu 30 Städte hinzufügen.",
+    "campaignCityTooLong": "Ein Städtename darf höchstens 80 Zeichen haben.",
+    "campaignLocation": "Ort",
+    "campaignEditStep": "Bearbeiten"
   },
   "moderation": {
     "eyebrow": "Wave-Katalog",

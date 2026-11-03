@@ -21,12 +21,17 @@ final class CampaignGeographyMigrationTest extends KernelTestCase
         $tool->createSchema($em->getMetadataFactory()->getAllMetadata());
         $company = new Company('migration-brand', 'Brand', 'Food');
         $em->persist($company);
-        foreach (['country' => 'Croatia', 'city' => 'Zenica', 'combined' => 'Sarajevo, Bosnia and Herzegovina', 'unknown' => 'United States & Canada'] as $slug => $place) {
+        $places = ['country' => 'Croatia', 'city' => 'Zenica', 'combined' => 'Sarajevo, Bosnia and Herzegovina', 'unknown' => 'United States & Canada'];
+        foreach ($places as $slug => $place) {
             $em->persist(new Campaign($slug, $slug, 'Summary', 'Brief', 'Food', ['Instagram'], ['1 post'], 100, 200, $place, 1, new \DateTimeImmutable('+7 days'), new \DateTimeImmutable('today'), $company));
         }
         $em->flush();
         $db = $em->getConnection();
         $db->executeStatement('ALTER TABLE campaign RENAME COLUMN city TO location');
+        // Recreate the historical free-text storage rather than today's JSON mapping.
+        $db->executeStatement('ALTER TABLE campaign ALTER COLUMN location DROP DEFAULT');
+        $db->executeStatement('ALTER TABLE campaign ALTER COLUMN location TYPE VARCHAR(120) USING location::text');
+        foreach ($places as $slug => $place) $db->update('campaign', ['location' => $place], ['slug' => $slug]);
         $db->executeStatement('ALTER TABLE campaign DROP COLUMN country_code');
         $db->executeStatement('ALTER TABLE campaign DROP COLUMN categories');
         require_once dirname(__DIR__, 2).'/migrations/Version20261007050000.php';
@@ -43,6 +48,11 @@ final class CampaignGeographyMigrationTest extends KernelTestCase
             ['slug' => 'unknown', 'city' => 'United States & Canada', 'country_code' => null],
         ], $rows);
         self::assertArrayNotHasKey('location', $db->createSchemaManager()->listTableColumns('campaign'));
+        // Bring the historical result forward before hydrating with the current entity.
+        require_once dirname(__DIR__, 2).'/migrations/Version20261103140000.php';
+        $cities = new \DoctrineMigrations\Version20261103140000($db, new NullLogger());
+        $cities->up(new Schema());
+        foreach ($cities->getSql() as $query) $db->executeStatement($query->getStatement());
         $em->clear();
         self::assertSame(['Food'], $em->getRepository(Campaign::class)->findOneBy(['slug' => 'country'])->getCategories());
     }

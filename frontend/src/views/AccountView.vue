@@ -19,7 +19,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { parsePhoneNumberFromString } from 'libphonenumber-js/min'
 import RouterLink from '../components/shared/LocalizedLink.vue'
 import { I18nT, useI18n } from 'vue-i18n'
-import { ArrowRight, ArrowLeft, Eye, ExternalLink, FileText, Plus, Trash2, UserRound, X } from '@lucide/vue'
+import { ArrowRight, ArrowLeft, Check, Eye, ExternalLink, FileText, Plus, Trash2, UserRound, X } from '@lucide/vue'
 import AccountAccessPanel from '../components/account/AccountAccessPanel.vue'
 import AccountSidebar from '../components/account/AccountSidebar.vue'
 import AccountWorkTabs from '../components/account/AccountWorkTabs.vue'
@@ -43,6 +43,8 @@ import MultiSelect from '../components/shared/MultiSelect.vue'
 import DatePicker from '../components/shared/DatePicker.vue'
 import { dateOnly } from '../lib/datePicker'
 import TagInput from '../components/shared/TagInput.vue'
+import SwitchField from '../components/shared/SwitchField.vue'
+import { validateForm } from '../directives/formValidation'
 import MediaUploadField from '../components/shared/MediaUploadField.vue'
 import SingleSelect from '../components/shared/SingleSelect.vue'
 import PhoneNumberField from '../components/shared/PhoneNumberField.vue'
@@ -172,6 +174,22 @@ const compensationOptions = computed(() => [
   ...(user.value?.isAdmin || editingCampaign.value?.compensationType === 'voluntary' ? [{ value: 'voluntary', label: t('compensation.voluntaryLabel') }] : []),
 ])
 const campaignForm = ref(emptyCampaign())
+// Campaign editor steps: basics, audience and place, tasks, compensation, review.
+const CAMPAIGN_STEPS = ['basics', 'audience', 'deliverables', 'compensation', 'review']
+const CAMPAIGN_FIELD_STEPS = { title: 0, summary: 0, description: 0, coverMediaId: 0, categories: 1, category: 1, city: 1, cities: 1, countryCode: 1, channels: 1, deliverables: 2 }
+const campaignStep = ref(0)
+const campaignMaxStep = ref(0)
+const campaignFormElement = ref(null)
+const campaignCitiesError = ref('')
+const campaignAllCities = computed({
+  get: () => (campaignForm.value.allCities ? 1 : 0),
+  set: (value) => { campaignForm.value.allCities = value === 1; campaignCitiesError.value = '' },
+})
+const campaignCountryName = computed(() => countryOptions.value.find(option => option.value === campaignForm.value.countryCode)?.label || '')
+const campaignPlaceLabel = computed(() => {
+  const cities = campaignForm.value.allCities ? t('account.campaignAllCities') : campaignForm.value.cities.join(', ')
+  return [cities, campaignCountryName.value].filter(Boolean).join(' · ')
+})
 const applicantDialog = ref(null)
 const selectedApplication = ref(null)
 let noticeTimeout = null
@@ -241,7 +259,8 @@ function emptyCampaign() {
     compensationType: 'paid',
     budgetMax: 800,
     currency: 'BAM',
-    city: '',
+    allCities: true,
+    cities: [],
     countryCode: '',
     creatorCount: 3,
     closesAt: deadline.toISOString().slice(0, 10),
@@ -313,8 +332,7 @@ function incompleteProfileTab() {
     && (!profile.value.displayName.trim()
       || profile.value.categories.length === 0
       || !profile.value.city.trim()
-      || !profile.value.countryCode
-      || !profile.value.phone.trim())
+      || !profile.value.countryCode)
   ) {
     return 'about'
   }
@@ -322,8 +340,7 @@ function incompleteProfileTab() {
     && (!profile.value.name.trim()
       || !(profile.value.industries || []).length
       || !profile.value.city.trim()
-      || !profile.value.countryCode
-      || !profile.value.phone.trim())
+      || !profile.value.countryCode)
   ) {
     return 'about'
   }
@@ -620,10 +637,11 @@ async function saveProfile() {
   notice.value = ''
   const isCreator = user.value.accountType === 'creator'
   const enteredPhone = profile.value.phone.trim()
+  // The phone number is optional; only a number that was entered must be valid.
   const normalizedPhone = enteredPhone
     ? formatInternationalPhoneNumber(enteredPhone, profilePhoneCountry.value)
-    : null
-  if (!normalizedPhone) {
+    : ''
+  if (normalizedPhone === null) {
     error.value = t('auth.phoneInvalid')
     busy.value = false
     return
@@ -687,12 +705,27 @@ function addCompanySocialLink() {
 
 
 
+// Older campaigns stored a free-text city; "Svi", "BiH" and similar mean the whole country.
+const ALL_CITIES_TEXT = /^(svi|sve|svi gradovi|svi gradovi u bih|cijela bih|cela bih|cijela bosna i hercegovina|bih|all|all cities|alle|vsi|vsa mesta)$/i
+
+function campaignCities(city) {
+  if (Array.isArray(city)) return { allCities: city.length === 0, cities: [...city] }
+  const text = (city || '').trim()
+  if (!text || ALL_CITIES_TEXT.test(text)) return { allCities: true, cities: [] }
+  return { allCities: false, cities: [...new Set(text.split(',').map(part => part.trim()).filter(Boolean))] }
+}
+
 function setCampaignForm(campaign = null) {
+  campaignStep.value = 0
+  campaignCitiesError.value = ''
   if (!campaign) {
     editingCampaignId.value = null
+    campaignMaxStep.value = 0
     campaignForm.value = emptyCampaign()
     return
   }
+  // Every step of a saved campaign is already filled in.
+  campaignMaxStep.value = CAMPAIGN_STEPS.length - 1
   editingCampaignId.value = campaign.id
   campaignForm.value = {
     title: campaign.title,
@@ -707,7 +740,7 @@ function setCampaignForm(campaign = null) {
     compensationType: campaign.compensationType || 'paid',
     budgetMax: campaign.budgetMax,
     currency: campaign.currency || 'BAM',
-    city: campaign.city || '',
+    ...campaignCities(campaign.cities ?? campaign.city),
     countryCode: campaign.countryCode || '',
     creatorCount: campaign.creatorCount,
     closesAt: campaign.closesAt.slice(0, 10),
@@ -717,6 +750,30 @@ function setCampaignForm(campaign = null) {
 
 function cancelCampaignEditing() {
   setCampaignForm()
+}
+
+function validateCampaignStep() {
+  if (campaignFormElement.value && !validateForm(campaignFormElement.value)) return false
+  if (campaignStep.value === 1 && !campaignForm.value.allCities && !campaignForm.value.cities.length) {
+    campaignCitiesError.value = t('account.campaignCitiesRequired')
+    return false
+  }
+  return true
+}
+
+async function goCampaignStep(step) {
+  if (step === campaignStep.value || step < 0 || step >= CAMPAIGN_STEPS.length) return
+  // Moving forward checks the current step first; going back never blocks.
+  if (step > campaignStep.value && (step > campaignMaxStep.value + 1 || !validateCampaignStep())) return
+  campaignStep.value = step
+  campaignMaxStep.value = Math.max(campaignMaxStep.value, step)
+  await nextTick()
+  campaignFormElement.value?.closest('section')?.scrollIntoView({ block: 'start', behavior: 'smooth' })
+}
+
+function submitCampaignStep() {
+  if (campaignStep.value < CAMPAIGN_STEPS.length - 1) goCampaignStep(campaignStep.value + 1)
+  else saveCampaign()
 }
 
 async function saveCampaign() {
@@ -736,7 +793,7 @@ async function saveCampaign() {
     budgetMin: campaignForm.value.compensationType === 'voluntary' ? 0 : Number(campaignForm.value.budgetMin),
     budgetMax: campaignForm.value.compensationType === 'voluntary' ? 0 : Number(campaignForm.value.budgetMax),
     currency: campaignForm.value.currency,
-    city: campaignForm.value.city,
+    cities: campaignForm.value.allCities ? [] : [...campaignForm.value.cities],
     countryCode: campaignForm.value.countryCode,
     creatorCount: Number(campaignForm.value.creatorCount),
     closesAt: campaignForm.value.closesAt,
@@ -764,6 +821,9 @@ async function saveCampaign() {
     error.value = fieldErrors.length
       ? `${cause.message} ${fieldErrors.join(' ')}`
       : cause.message
+    // Show the step that holds the first field the server rejected.
+    const steps = (cause.fields || []).map(field => CAMPAIGN_FIELD_STEPS[field] ?? 3)
+    if (steps.length) campaignStep.value = Math.min(...steps)
   } finally {
     busy.value = false
   }
@@ -1106,7 +1166,8 @@ onMounted(loadDashboard)
               <PhoneNumberField
                 v-model="profile.phone"
                 v-model:country-code="profilePhoneCountry"
-                :label="t('auth.phone')"
+                optional
+                :label="t('auth.phoneOptional')"
                 :placeholder="t('auth.phonePlaceholder')"
                 :country-label="t('auth.phoneCountry')"
                 :country-placeholder="t('auth.selectCountry')"
@@ -1202,7 +1263,8 @@ onMounted(loadDashboard)
             <PhoneNumberField
               v-model="profile.phone"
               v-model:country-code="profilePhoneCountry"
-              :label="t('auth.phone')"
+              optional
+              :label="t('auth.phoneOptional')"
               :placeholder="t('auth.phonePlaceholder')"
               :country-label="t('auth.phoneCountry')"
               :country-placeholder="t('auth.selectCountry')"
@@ -1321,7 +1383,17 @@ onMounted(loadDashboard)
               {{ t('account.cancelEdit') }}
             </RouterLink>
           </header>
-          <form v-form-validation class="form-stack" @submit.prevent="saveCampaign">
+          <ol class="campaign-steps" :aria-label="t('account.campaignStepsLabel')">
+            <li v-for="(step, index) in CAMPAIGN_STEPS" :key="step" :class="{ 'is-current': campaignStep === index, 'is-done': index < campaignStep || (index <= campaignMaxStep && index !== campaignStep) }">
+              <button type="button" :disabled="index > campaignMaxStep + 1" :aria-current="campaignStep === index ? 'step' : undefined" @click="goCampaignStep(index)">
+                <span class="campaign-steps__number" aria-hidden="true"><Check v-if="index < campaignStep" :size="14" /><template v-else>{{ index + 1 }}</template></span>
+                <span class="campaign-steps__label">{{ t(`account.campaignSteps.${step}`) }}</span>
+              </button>
+            </li>
+          </ol>
+          <p class="campaign-steps__counter">{{ t('account.campaignStepCounter', { current: campaignStep + 1, total: CAMPAIGN_STEPS.length }) }} · <strong>{{ t(`account.campaignSteps.${CAMPAIGN_STEPS[campaignStep]}`) }}</strong></p>
+          <form ref="campaignFormElement" v-form-validation class="form-stack campaign-step-form" @submit.prevent="submitCampaignStep">
+            <template v-if="campaignStep === 0">
             <label class="form-field"><span>{{ t('account.campaignTitle') }}</span><input v-model.trim="campaignForm.title" required minlength="5" maxlength="160" /></label>
             <label class="form-field"><span>{{ t('account.summary') }}</span><input v-model.trim="campaignForm.summary" required minlength="10" maxlength="220" /></label>
             <div class="form-field"><span>{{ t('account.description') }}</span><RichTextEditor v-model="campaignForm.description" :label="t('account.description')" :placeholder="t('account.campaignDescriptionPlaceholder')" required :minlength="20" :maxlength="8000" /></div>
@@ -1335,7 +1407,8 @@ onMounted(loadDashboard)
                 @uploaded="campaignForm.coverImageUrl = $event.url"
               />
             </div>
-            <div class="form-grid">
+            </template>
+            <template v-else-if="campaignStep === 1">
               <MultiSelect v-model="campaignForm.categories" :label="t('auth.category')" :options="categories" :placeholder="t('categories.all')" :search-placeholder="t('creatorDirectory.searchCategories')" :remove-label="t('account.remove')" required />
               <SearchableSelect
                 v-model="campaignForm.countryCode"
@@ -1346,8 +1419,14 @@ onMounted(loadDashboard)
                 :no-results-label="t('auth.noCountriesFound')"
                 required
               />
-              <label class="form-field"><span>{{ t('auth.city') }}</span><input v-model.trim="campaignForm.city" required minlength="1" maxlength="120" /></label>
-            </div>
+              <div class="campaign-cities">
+                <SwitchField v-model="campaignAllCities" :label="t('account.campaignAllCities')" :description="campaignForm.allCities ? t('account.campaignAllCitiesHint', { country: campaignCountryName || t('account.campaignChosenCountry') }) : t('account.campaignSomeCitiesHint')" />
+                <template v-if="!campaignForm.allCities">
+                  <TagInput v-model="campaignForm.cities" comma-separated :label="t('account.campaignCities')" :placeholder="t('account.campaignCitiesPlaceholder')" :remove-label="t('account.remove')" :max-tags="30" :max-length="80" :limit-label="t('account.campaignCitiesLimit')" :too-long-label="t('account.campaignCityTooLong')" @update:model-value="campaignCitiesError = ''" />
+                  <p class="campaign-cities__hint">{{ t('account.campaignCitiesHint') }}</p>
+                  <small v-if="campaignCitiesError" class="validation-error" role="alert">{{ campaignCitiesError }}</small>
+                </template>
+              </div>
             <MultiSelect
               v-model="campaignForm.channels"
               :options="CAMPAIGN_PLATFORMS.map(value => ({ value, label: value }))"
@@ -1358,6 +1437,8 @@ onMounted(loadDashboard)
               :remove-label="t('account.remove')"
               required
             />
+            </template>
+            <template v-else-if="campaignStep === 2">
             <AccountProfileCard :title="t('account.deliverables')" :icon="FileText">
               <div class="campaign-deliverables">
                 <div v-for="(item, index) in campaignForm.deliverables" :key="index" class="form-field campaign-deliverables__item">
@@ -1379,6 +1460,8 @@ onMounted(loadDashboard)
                 <button class="profile-editor__add" type="button" :disabled="campaignForm.deliverables.length >= 10" @click="campaignForm.deliverables.push('')"><Plus :size="16" aria-hidden="true" />{{ t('account.addDeliverable') }}</button>
               </div>
             </AccountProfileCard>
+            </template>
+            <template v-else-if="campaignStep === 3">
             <SingleSelect v-if="compensationOptions.length > 1" v-model="campaignForm.compensationType" :disabled="Boolean(editingCampaign?.appliedCreatorIds?.length || editingCampaign?.invitedCreatorIds?.length || ['finished', 'cancelled'].includes(editingCampaign?.status))" :label="t('compensation.type')" :options="compensationOptions" required />
             <StatusMessage v-if="campaignForm.compensationType === 'voluntary'">{{ t('compensation.voluntaryHint') }}</StatusMessage>
             <p v-if="editingCampaign?.appliedCreatorIds?.length || editingCampaign?.invitedCreatorIds?.length" class="muted">{{ t('compensation.locked') }}</p>
@@ -1391,9 +1474,25 @@ onMounted(loadDashboard)
             </div>
             <SingleSelect v-if="editingCampaignId" :disabled="['finished', 'cancelled'].includes(editingCampaign?.status)" v-model="campaignForm.status" :label="t('account.status')" :options="[{ value: 'open', label: t('account.open') }, { value: 'closed', label: t('account.closed') }, { value: 'finished', label: t('account.finished') }, ...(editingCampaign?.status === 'cancelled' ? [{ value: 'cancelled', label: t('account.cancelled') }] : [])]" />
             <StatusMessage v-if="editingCampaignId && campaignForm.status === 'finished'" variant="info">{{ t('reviews.finishHint') }}</StatusMessage>
-            <CreditActionNotice v-if="!editingCampaignId" action="campaign" />
-            <div class="button-row">
-              <button class="button button--dark" type="submit" :disabled="busy || !user.emailVerified || !user.approved">
+            </template>
+            <template v-else>
+              <dl class="campaign-review">
+                <div><dt>{{ t('account.campaignTitle') }}</dt><dd>{{ campaignForm.title }}</dd><button type="button" class="campaign-review__edit" @click="goCampaignStep(0)">{{ t('account.campaignEditStep') }}</button></div>
+                <div><dt>{{ t('auth.category') }}</dt><dd>{{ campaignForm.categories.map(value => categories.find(option => option.value === value)?.label || value).join(', ') }}</dd><button type="button" class="campaign-review__edit" @click="goCampaignStep(1)">{{ t('account.campaignEditStep') }}</button></div>
+                <div><dt>{{ t('account.campaignLocation') }}</dt><dd>{{ campaignPlaceLabel }}</dd><button type="button" class="campaign-review__edit" @click="goCampaignStep(1)">{{ t('account.campaignEditStep') }}</button></div>
+                <div><dt>{{ t('account.channels') }}</dt><dd>{{ campaignForm.channels.join(', ') }}</dd><button type="button" class="campaign-review__edit" @click="goCampaignStep(1)">{{ t('account.campaignEditStep') }}</button></div>
+                <div><dt>{{ t('account.deliverables') }}</dt><dd>{{ campaignForm.deliverables.filter(Boolean).join(', ') }}</dd><button type="button" class="campaign-review__edit" @click="goCampaignStep(2)">{{ t('account.campaignEditStep') }}</button></div>
+                <div><dt>{{ t('compensation.type') }}</dt><dd><template v-if="campaignForm.compensationType === 'voluntary'">{{ t('compensation.voluntaryLabel') }}</template><template v-else>{{ campaignForm.budgetMin }} – {{ campaignForm.budgetMax }} {{ campaignForm.currency }}</template> · {{ t('account.creatorCount') }}: {{ campaignForm.creatorCount }} · {{ t('account.closesAt') }}: {{ formatDate(campaignForm.closesAt) }}</dd><button type="button" class="campaign-review__edit" @click="goCampaignStep(3)">{{ t('account.campaignEditStep') }}</button></div>
+              </dl>
+              <CreditActionNotice v-if="!editingCampaignId" action="campaign" />
+            </template>
+            <div class="button-row campaign-step-form__actions">
+              <button v-if="campaignStep > 0" class="button button--outline" type="button" @click="goCampaignStep(campaignStep - 1)"><ArrowLeft :size="16" aria-hidden="true" />{{ t('account.campaignBack') }}</button>
+              <button v-if="campaignStep < CAMPAIGN_STEPS.length - 1" class="button button--dark" type="submit">
+                {{ t('account.campaignNext', { step: t(`account.campaignSteps.${CAMPAIGN_STEPS[campaignStep + 1]}`) }) }}
+                <ArrowRight class="link-arrow" :size="16" aria-hidden="true" />
+              </button>
+              <button v-else class="button button--dark" type="submit" :disabled="busy || !user.emailVerified || !user.approved">
                 {{ editingCampaignId ? t('account.updateCampaign') : t('account.publish') }}
                 <ArrowRight class="link-arrow" :size="16" aria-hidden="true" />
               </button>
