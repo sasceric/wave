@@ -1,0 +1,51 @@
+@use '../../breakpoints';
+
+.service-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+
+  @include breakpoints.down(760px) {
+    flex-wrap: nowrap;
+    margin-inline: -16px;
+    padding-inline: 16px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+}
+
+.service-chips__chip {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 6px;
+  min-height: 36px;
+  padding: 0 14px;
+  color: var(--forest);
+  font: inherit;
+  font-size: .84rem;
+  font-weight: 600;
+  background: var(--card);
+  border: 1px solid rgba(23, 61, 54, .16);
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background .2s var(--ease-standard), color .2s var(--ease-standard);
+
+  text-decoration: none;
+
+  &[aria-pressed='true'],
+  &[aria-current='page'] {
+    color: #fffdf8;
+    background: var(--forest);
+    border-color: var(--forest);
+  }
+
+  &:focus-visible { outline: 3px solid var(--forest); outline-offset: 2px; }
+}
+
+.service-chips__count { font-weight: 500; opacity: .65; }
+
+@include breakpoints.down(760px) {
+  .service-chips { gap: 6px; }
+  .service-chips__chip { gap: 4px; min-height: 34px; padding: 0 12px; font-size: .8rem; }
+}

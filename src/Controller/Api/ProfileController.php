@@ -727,6 +727,13 @@ final class ProfileController
             ];
         }
 
+        // At most one featured package: the first one marked wins.
+        $featuredSeen = false;
+        foreach ($packages as $index => $package) {
+            if (($package['featured'] ?? false) && !$featuredSeen) { $featuredSeen = true; continue; }
+            $packages[$index]['featured'] = false;
+        }
+
         return $packages;
     }
 

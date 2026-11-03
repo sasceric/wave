@@ -122,8 +122,11 @@ final class CachedSitemap
     private function pages(): \Generator
     {
         yield from $this->regionalContent->extraPages();
-        foreach (['home', 'creators', 'companies', 'campaigns', 'profile-guide-creator', 'profile-guide-agency', 'profile-guide-brand', 'imprint', 'privacy-policy', 'cookie-policy', 'terms-of-use'] as $route) {
+        foreach (['home', 'creators', 'companies', 'campaigns', 'services', 'profile-guide-creator', 'profile-guide-agency', 'profile-guide-brand', 'imprint', 'privacy-policy', 'cookie-policy', 'terms-of-use'] as $route) {
             yield [$route, []];
+        }
+        foreach (\App\Listing\ServicePackages::PAGE_SLUGS as $slug) {
+            yield ['services-type', ['type' => $slug]];
         }
         foreach (['creator' => 'creator-profile', 'company' => 'company-profile', 'campaign' => 'campaign-detail'] as $kind => $route) {
             $after = 0;

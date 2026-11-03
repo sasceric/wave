@@ -44,12 +44,13 @@ onBeforeUnmount(() => {
 
 <template>
   <div ref="toolbarAnchor" class="directory-toolbar-anchor" aria-hidden="true"></div>
-  <section ref="toolbar" class="directory-toolbar" :class="{ 'is-sticky': toolbarSticky }" :aria-label="filtersLabel">
+  <section ref="toolbar" class="directory-toolbar" :class="{ 'is-sticky': toolbarSticky, 'directory-toolbar--extra': $slots.extra }" :aria-label="filtersLabel">
     <DirectorySearch :model-value="props.search" :label="searchLabel" :placeholder="searchPlaceholder" @update:model-value="emit('update:search', $event)" />
     <button class="directory-toolbar__filter-trigger" type="button" :aria-label="filtersLabel" :aria-expanded="filtersOpen" :aria-controls="filtersId" @click="emit('update:filtersOpen', true)">
       <SlidersHorizontal :size="21" aria-hidden="true" /><strong v-if="activeFilterCount">{{ activeFilterCount }}</strong>
     </button>
     <div class="directory-toolbar__controls" :style="{ '--control-columns': controlColumns }"><slot /></div>
+    <div v-if="$slots.extra" class="directory-toolbar__extra"><slot name="extra" /></div>
   </section>
 </template>
 

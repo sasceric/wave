@@ -26,5 +26,9 @@
   "country-topic": {
     "route": "creators",
     "label": "app.creatorsNav"
+  },
+  "services-type": {
+    "route": "services",
+    "label": "services.title"
   }
 }

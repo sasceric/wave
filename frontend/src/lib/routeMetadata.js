@@ -1,5 +1,6 @@
 import titles from '../../../config/seo_route_titles.json'
 import { routeSegments } from '../routePaths'
+import { serviceTypeForSlug } from './serviceTypes'
 
 export function routeMetadata(route, locale, t, authenticated = false) {
   const name = route.meta.routeName
@@ -15,10 +16,16 @@ export function routeMetadata(route, locale, t, authenticated = false) {
     : name?.startsWith('creator') || name === 'creators' ? 'creatorsDescription'
       : name === 'companies' || name === 'company-profile' ? 'companiesDescription'
         : name === 'campaigns' || name === 'campaign-detail' ? 'campaignsDescription'
+          : name === 'services' ? 'servicesDescription'
           : ({ imprint: 'imprintDescription', 'privacy-policy': 'privacyDescription', 'cookie-policy': 'cookiesDescription', support: 'supportDescription' })[name]
             || (known ? 'privateDescription' : 'notFoundDescription')
   const searchPage = name === 'search' || (['creators', 'companies', 'campaigns'].includes(name) && Boolean(route.query?.q?.trim?.()))
   const loadingProfile = ['creator-profile', 'company-profile', 'campaign-detail'].includes(name)
+  if (name === 'services-type') {
+    const type = serviceTypeForSlug(route.params?.type)
+    if (!type) return { title: t('seo.notFoundTitle'), description: t('seo.notFoundDescription'), noindex: true, analyticsReady: true }
+    return { title: `${t(`services.typePages.${type}.title`)} | Wave`, description: t(`services.typePages.${type}.description`), noindex: false, analyticsReady: true }
+  }
   if (['profile-guide-creator', 'profile-guide-agency', 'profile-guide-brand'].includes(name)) {
     return { title: t(`profileGuide.${name.slice('profile-guide-'.length)}.title`), description: t(`profileGuide.${name.slice('profile-guide-'.length)}.lead`), noindex: false, analyticsReady: true }
   }

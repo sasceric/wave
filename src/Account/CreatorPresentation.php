@@ -112,12 +112,33 @@ final class CreatorPresentation
 
         return [
             'mode' => $mode,
+            'featured' => ($data['featured'] ?? false) === true,
+            'serviceType' => isset($data['serviceType']) && $data['serviceType'] !== '' ? self::choice($data['serviceType'], self::SERVICE_TYPES) : self::serviceType($data),
             'priceMode' => self::choice($data['priceMode'] ?? (isset($data['price']) ? 'fixed' : 'agreement'), ['fixed', 'from', 'agreement']),
             'deliveryDays' => self::integer($data['deliveryDays'] ?? null, 1, 365),
             'revisions' => self::integer($data['revisions'] ?? null, 0, 100),
             'usage' => $usage, 'usageDays' => $usage === 'ads' ? $days : null,
             'deliverables' => self::deliverables($data['deliverables'] ?? []),
         ];
+    }
+
+    public const SERVICE_TYPES = ['ugc', 'instagram', 'tiktok', 'photo', 'other'];
+
+    /** Stored type, or a best guess for packages saved before creators chose one. */
+    public static function serviceType(array $package): string
+    {
+        $type = $package['serviceType'] ?? null;
+        if (is_string($type) && in_array($type, self::SERVICE_TYPES, true)) return $type;
+        $title = mb_strtolower((string) ($package['title'] ?? ''));
+        foreach (['ugc' => 'ugc', 'tiktok' => 'tiktok', 'foto' => 'photo', 'photo' => 'photo', 'instagram' => 'instagram', 'reel' => 'instagram', 'stor' => 'instagram'] as $word => $type) {
+            if (str_contains($title, $word)) return $type;
+        }
+        if (($package['platform'] ?? null) === 'TikTok') return 'tiktok';
+        if (($package['platform'] ?? null) === 'Instagram') return 'instagram';
+        $formats = array_values(array_unique(array_map(static fn ($row): string => is_array($row) ? (string) ($row['format'] ?? '') : '', is_array($package['deliverables'] ?? null) ? $package['deliverables'] : [])));
+        if ($formats === ['photo']) return 'photo';
+        if (($package['mode'] ?? null) === 'content' && in_array('video', $formats, true)) return 'ugc';
+        return 'other';
     }
 
     public static function deliverables(mixed $value): array

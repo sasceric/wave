@@ -44,7 +44,9 @@
     "maintenanceDescription": "We’re improving Wave to make your next collaboration even simpler. We’ll be back soon. Thanks for your patience.",
     "creatorProfileTitleDetails": "{name} — {details} | Wave",
     "creatorProfileDescription": "{name} · {details}. See the portfolio, channels and collaboration packages on Wave.",
-    "companyProfileTitleDetails": "{name} — {details} | Wave"
+    "companyProfileTitleDetails": "{name} — {details} | Wave",
+    "servicesTitle": "Creator services: UGC video, Instagram, TikTok, photos | Wave",
+    "servicesDescription": "Find influencer and UGC creator services in the region. Priced or negotiable packages, directly from creators."
   },
   "legal": {
     "eyebrow": "LEGAL",
@@ -3120,7 +3122,10 @@
     ],
     "unspecified": "Availability not specified",
     "workTitle": "Work title",
-    "editPackage": "Edit package"
+    "editPackage": "Edit package",
+    "serviceType": "Service type",
+    "featuredPackage": "Featured package",
+    "featuredPackageHint": "Shown as your main service on the Services page and the homepage. If you don't pick one, we show your cheapest priced package."
   },
   "activation": {
     "signupHint": "To get started, we only need the basics. Complete the rest in your account.",
@@ -4425,5 +4430,95 @@
     "origin_invitation": "By invitation",
     "summaryHint": "Open requests, active engagements and completed collaborations are shown separately.",
     "countHelp": "How counts work"
+  },
+  "services": {
+    "eyebrow": "For brands",
+    "title": "Creator services",
+    "description": "UGC videos, Instagram posts, TikTok and photos from creators in the region. Order a priced package or send an offer when the price is negotiable.",
+    "homeTitle": "Creator services",
+    "homeText": "Order a priced package or send an offer when the price is negotiable.",
+    "all": "All services",
+    "agreement": "Negotiable",
+    "from": "from {price}",
+    "sendOffer": "Send offer",
+    "order": "Order",
+    "typeLabel": "Service type",
+    "allTypes": "All services",
+    "types": {
+      "ugc": "UGC video",
+      "instagram": "Instagram",
+      "tiktok": "TikTok",
+      "photo": "Photos",
+      "other": "Other",
+      "agreement": "Negotiable"
+    },
+    "priceLabel": "Price",
+    "price": {
+      "all": "All prices",
+      "to100": "Up to 100 KM",
+      "100to300": "100–300 KM",
+      "over300": "Over 300 KM"
+    },
+    "cityLabel": "City",
+    "allCities": "All cities",
+    "sortLabel": "Sort",
+    "sort": {
+      "recommended": "Recommended",
+      "price": "Lowest price",
+      "newest": "Newest"
+    },
+    "count": "{count} service | {count} services",
+    "empty": "No services match these filters.",
+    "campaignTitle": "Can't find the right service?",
+    "campaignText": "Publish a campaign and interested creators will apply to you.",
+    "campaignAction": "Publish a campaign",
+    "searchLabel": "Search services",
+    "searchPlaceholder": "Service, creator or field",
+    "headlineLead": "Creator services",
+    "headlineEmphasis": "for your brand",
+    "heroBadge": "Priced or negotiable packages",
+    "sheet": {
+      "close": "Close",
+      "viewProfile": "Profile",
+      "portfolio": "From the portfolio",
+      "orderTitle": "Order this package",
+      "offerTitle": "Send the creator an offer",
+      "messageLabel": "Message to the creator",
+      "messagePlaceholder": "Describe the product, deadline and what you need.",
+      "submitOrder": "Send order",
+      "viewInquiries": "View your requests",
+      "registerCompany": "Register your company for free",
+      "login": "Log in"
+    },
+    "typePages": {
+      "ugc": {
+        "title": "UGC video creators in the region",
+        "description": "Find UGC creators for your brand's video content. Priced or negotiable packages, directly from creators.",
+        "headlineLead": "UGC videos",
+        "headlineEmphasis": "for your brand",
+        "intro": "Authentic video content for your channels and ads. Compare UGC creator packages and order directly."
+      },
+      "instagram": {
+        "title": "Instagram influencers and creators in the region",
+        "description": "Instagram reels, posts and stories from influencers in the region. See packages and prices.",
+        "headlineLead": "Instagram promotion",
+        "headlineEmphasis": "with creators",
+        "intro": "Reels, posts and stories on creators' profiles. Compare packages and send a request."
+      },
+      "tiktok": {
+        "title": "TikTok creators in the region",
+        "description": "TikTok videos and promotion from creators in the region. Priced or negotiable packages.",
+        "headlineLead": "TikTok videos",
+        "headlineEmphasis": "with creators",
+        "intro": "Short video formats for TikTok, from idea to posting. Compare creator packages."
+      },
+      "photo": {
+        "title": "Product and brand photography",
+        "description": "Product photos and lifestyle content from creators and photographers in the region.",
+        "headlineLead": "Photos",
+        "headlineEmphasis": "for your brand",
+        "intro": "Product photos, lifestyle and social media content. Compare packages and order."
+      }
+    }
   }
 }

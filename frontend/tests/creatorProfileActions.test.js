@@ -27,6 +27,13 @@ async function profileView(user = null) {
       apiRequest: async (path, options) => { requests.push({ path, options }); return {} },
       formatDate: () => '', formatMoney: () => '',
     },
+    '../lib/creatorInquiry': {
+      sendCreatorInquiry: async (slug, { packageIds = [], other = false, message }) => {
+        const options = { method: 'POST', body: { packageIds, servicePackage: false, other, message } }
+        requests.push({ path: `/creators/${encodeURIComponent(slug)}/inquiries`, options })
+        return {}
+      },
+    },
   })
   view.documentTarget.getElementById = id => ({ scrollIntoView: options => scrolls.push({ id, options }) })
   await view.state.loadCreator()

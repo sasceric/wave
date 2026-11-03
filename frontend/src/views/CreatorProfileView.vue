@@ -27,6 +27,7 @@ import LoadingSkeleton from '../components/shared/LoadingSkeleton.vue'
 import StatusMessage from '../components/shared/StatusMessage.vue'
 import { useMarketplaceCatalog } from '../composables/useMarketplaceCatalog'
 import { apiGet, apiRequest, formatDate, formatMoney } from '../lib/api'
+import { sendCreatorInquiry } from '../lib/creatorInquiry'
 import { CREATOR_PLACEHOLDER } from '../lib/marketplace'
 import { formatAverageRating, startingPackagePrice } from '../lib/profileStats'
 import { getSeoOrigin, updateSeo } from '../lib/seo'
@@ -414,14 +415,10 @@ async function submitRequest() {
   requestBusy.value = true
   requestError.value = ''
   try {
-    await apiRequest(`/creators/${encodeURIComponent(creator.value.slug)}/inquiries`, {
-      method: 'POST',
-      body: {
-        packageIds: requestForm.value.packageIds,
-        servicePackage: false,
-        other: requestForm.value.other,
-        message,
-      },
+    await sendCreatorInquiry(creator.value.slug, {
+      packageIds: requestForm.value.packageIds,
+      other: requestForm.value.other,
+      message,
     })
     requestSubmitted.value = true
   } catch (cause) {

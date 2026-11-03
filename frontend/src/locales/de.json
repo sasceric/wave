@@ -44,7 +44,9 @@
     "maintenanceDescription": "Wir verbessern Wave, damit deine nächste Kooperation noch einfacher wird. Wir sind bald zurück. Danke für deine Geduld.",
     "creatorProfileTitleDetails": "{name} — {details} | Wave",
     "creatorProfileDescription": "{name} · {details}. Portfolio, Kanäle und Kooperationspakete auf Wave ansehen.",
-    "companyProfileTitleDetails": "{name} — {details} | Wave"
+    "companyProfileTitleDetails": "{name} — {details} | Wave",
+    "servicesTitle": "Creator-Leistungen: UGC-Video, Instagram, TikTok, Fotos | Wave",
+    "servicesDescription": "Finden Sie Leistungen von Influencern und UGC-Creatorn in der Region. Pakete mit Preis oder nach Vereinbarung, direkt von Creatorn."
   },
   "legal": {
     "eyebrow": "RECHTLICHES",
@@ -3120,7 +3122,10 @@
     ],
     "unspecified": "Verfügbarkeit nicht angegeben",
     "workTitle": "Projekttitel",
-    "editPackage": "Paket bearbeiten"
+    "editPackage": "Paket bearbeiten",
+    "serviceType": "Art der Leistung",
+    "featuredPackage": "Hervorgehobenes Paket",
+    "featuredPackageHint": "Wird auf der Seite Leistungen und auf der Startseite als Ihre Hauptleistung gezeigt. Ohne Auswahl zeigen wir das günstigste Paket mit Preis."
   },
   "activation": {
     "signupHint": "Für den Anfang brauchen wir nur die wichtigsten Angaben. Den Rest ergänzt du in deinem Konto.",
@@ -4425,5 +4430,95 @@
     "origin_invitation": "Auf Einladung",
     "summaryHint": "Offene Anfragen, aktive Engagements und abgeschlossene Kooperationen werden getrennt angezeigt.",
     "countHelp": "So wird gezählt"
+  },
+  "services": {
+    "eyebrow": "Für Marken",
+    "title": "Creator-Leistungen",
+    "description": "UGC-Videos, Instagram-Posts, TikTok und Fotos von Creatorn aus der Region. Buchen Sie ein Paket mit Preis oder senden Sie ein Angebot, wenn der Preis verhandelbar ist.",
+    "homeTitle": "Creator-Leistungen",
+    "homeText": "Paket mit Preis buchen oder Angebot senden, wenn der Preis verhandelbar ist.",
+    "all": "Alle Leistungen",
+    "agreement": "Nach Vereinbarung",
+    "from": "ab {price}",
+    "sendOffer": "Angebot senden",
+    "order": "Buchen",
+    "typeLabel": "Art der Leistung",
+    "allTypes": "Alle Leistungen",
+    "types": {
+      "ugc": "UGC-Video",
+      "instagram": "Instagram",
+      "tiktok": "TikTok",
+      "photo": "Fotos",
+      "other": "Sonstiges",
+      "agreement": "Nach Vereinbarung"
+    },
+    "priceLabel": "Preis",
+    "price": {
+      "all": "Alle Preise",
+      "to100": "Bis 100 KM",
+      "100to300": "100–300 KM",
+      "over300": "Über 300 KM"
+    },
+    "cityLabel": "Stadt",
+    "allCities": "Alle Städte",
+    "sortLabel": "Sortieren",
+    "sort": {
+      "recommended": "Empfohlen",
+      "price": "Niedrigster Preis",
+      "newest": "Neueste"
+    },
+    "count": "{count} Leistung | {count} Leistungen",
+    "empty": "Keine Leistungen für die gewählten Filter.",
+    "campaignTitle": "Keine passende Leistung gefunden?",
+    "campaignText": "Veröffentlichen Sie eine Kampagne, und interessierte Creator bewerben sich bei Ihnen.",
+    "campaignAction": "Kampagne veröffentlichen",
+    "searchLabel": "Leistungen durchsuchen",
+    "searchPlaceholder": "Leistung, Creator oder Bereich",
+    "headlineLead": "Creator-Leistungen",
+    "headlineEmphasis": "für Ihre Marke",
+    "heroBadge": "Pakete mit Preis oder nach Vereinbarung",
+    "sheet": {
+      "close": "Schließen",
+      "viewProfile": "Profil",
+      "portfolio": "Aus dem Portfolio",
+      "orderTitle": "Dieses Paket buchen",
+      "offerTitle": "Angebot an den Creator senden",
+      "messageLabel": "Nachricht an den Creator",
+      "messagePlaceholder": "Beschreiben Sie Produkt, Termin und Ihren Bedarf.",
+      "submitOrder": "Buchung senden",
+      "viewInquiries": "Ihre Anfragen ansehen",
+      "registerCompany": "Unternehmen kostenlos registrieren",
+      "login": "Anmelden"
+    },
+    "typePages": {
+      "ugc": {
+        "title": "UGC-Video-Creator in der Region",
+        "description": "Finden Sie UGC-Creator für Videoinhalte Ihrer Marke. Pakete mit Preis oder nach Vereinbarung.",
+        "headlineLead": "UGC-Videos",
+        "headlineEmphasis": "für Ihre Marke",
+        "intro": "Authentische Videoinhalte für Ihre Kanäle und Anzeigen. Vergleichen Sie Pakete und buchen Sie direkt."
+      },
+      "instagram": {
+        "title": "Instagram-Influencer und Creator in der Region",
+        "description": "Instagram-Reels, Posts und Stories von Influencern aus der Region. Pakete und Preise ansehen.",
+        "headlineLead": "Instagram-Promotion",
+        "headlineEmphasis": "mit Creatorn",
+        "intro": "Reels, Posts und Stories auf Creator-Profilen. Vergleichen Sie Pakete und senden Sie eine Anfrage."
+      },
+      "tiktok": {
+        "title": "TikTok-Creator in der Region",
+        "description": "TikTok-Videos und Promotion von Creatorn aus der Region. Pakete mit Preis oder nach Vereinbarung.",
+        "headlineLead": "TikTok-Videos",
+        "headlineEmphasis": "mit Creatorn",
+        "intro": "Kurze Videoformate für TikTok, von der Idee bis zur Veröffentlichung. Vergleichen Sie Pakete."
+      },
+      "photo": {
+        "title": "Produkt- und Markenfotografie",
+        "description": "Produktfotos und Lifestyle-Inhalte von Creatorn und Fotografen aus der Region.",
+        "headlineLead": "Fotos",
+        "headlineEmphasis": "für Ihre Marke",
+        "intro": "Produktfotos, Lifestyle und Inhalte für soziale Medien. Vergleichen Sie Pakete und buchen Sie."
+      }
+    }
   }
 }

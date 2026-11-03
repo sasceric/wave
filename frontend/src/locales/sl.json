@@ -44,7 +44,9 @@
     "maintenanceDescription": "Wave izboljšujemo, da bodo tvoja naslednja sodelovanja še preprostejša. Kmalu se vrnemo. Hvala za potrpljenje.",
     "creatorProfileTitleDetails": "{name} — {details} | Wave",
     "creatorProfileDescription": "{name} · {details}. Oglejte si portfelj, kanale in pakete sodelovanja na Waveu.",
-    "companyProfileTitleDetails": "{name} — {details} | Wave"
+    "companyProfileTitleDetails": "{name} — {details} | Wave",
+    "servicesTitle": "Storitve ustvarjalcev: UGC video, Instagram, TikTok, fotografije | Wave",
+    "servicesDescription": "Poiščite storitve vplivnežev in UGC ustvarjalcev v regiji. Paketi s ceno ali po dogovoru, neposredno od ustvarjalcev."
   },
   "legal": {
     "eyebrow": "PRAVNE INFORMACIJE",
@@ -3121,7 +3123,10 @@
     ],
     "unspecified": "Razpoložljivost ni navedena",
     "workTitle": "Naslov dela",
-    "editPackage": "Uredi paket"
+    "editPackage": "Uredi paket",
+    "serviceType": "Vrsta storitve",
+    "featuredPackage": "Izpostavljeni paket",
+    "featuredPackageHint": "Prikaže se kot vaša glavna storitev na strani Storitve in na začetni strani. Brez izbire prikažemo najcenejši paket s ceno."
   },
   "activation": {
     "signupHint": "Za začetek potrebujemo le osnovne podatke. Ostalo izpolniš v svojem računu.",
@@ -4426,5 +4431,95 @@
     "origin_invitation": "Po povabilu",
     "summaryHint": "Povpraševanja, aktivni angažmaji in zaključena sodelovanja so prikazani ločeno.",
     "countHelp": "Kako štejemo"
+  },
+  "services": {
+    "eyebrow": "Za blagovne znamke",
+    "title": "Storitve ustvarjalcev",
+    "description": "UGC video, objave na Instagramu, TikTok in fotografije ustvarjalcev iz regije. Naročite paket s ceno ali pošljite ponudbo, ko je cena po dogovoru.",
+    "homeTitle": "Storitve ustvarjalcev",
+    "homeText": "Naročite paket s ceno ali pošljite ponudbo, ko je cena po dogovoru.",
+    "all": "Vse storitve",
+    "agreement": "Po dogovoru",
+    "from": "od {price}",
+    "sendOffer": "Pošlji ponudbo",
+    "order": "Naroči",
+    "typeLabel": "Vrsta storitve",
+    "allTypes": "Vse storitve",
+    "types": {
+      "ugc": "UGC video",
+      "instagram": "Instagram",
+      "tiktok": "TikTok",
+      "photo": "Fotografije",
+      "other": "Drugo",
+      "agreement": "Po dogovoru"
+    },
+    "priceLabel": "Cena",
+    "price": {
+      "all": "Vse cene",
+      "to100": "Do 100 KM",
+      "100to300": "100–300 KM",
+      "over300": "Nad 300 KM"
+    },
+    "cityLabel": "Mesto",
+    "allCities": "Vsa mesta",
+    "sortLabel": "Razvrsti",
+    "sort": {
+      "recommended": "Priporočeno",
+      "price": "Najnižja cena",
+      "newest": "Najnovejše"
+    },
+    "count": "Rezultati: {count}",
+    "empty": "Ni storitev za izbrane filtre.",
+    "campaignTitle": "Ne najdete prave storitve?",
+    "campaignText": "Objavite kampanjo in zainteresirani ustvarjalci se bodo prijavili sami.",
+    "campaignAction": "Objavite kampanjo",
+    "searchLabel": "Išči storitve",
+    "searchPlaceholder": "Storitev, ustvarjalec ali področje",
+    "headlineLead": "Storitve ustvarjalcev",
+    "headlineEmphasis": "za vašo znamko",
+    "heroBadge": "Paketi s ceno ali po dogovoru",
+    "sheet": {
+      "close": "Zapri",
+      "viewProfile": "Profil",
+      "portfolio": "Iz portfelja",
+      "orderTitle": "Naročite ta paket",
+      "offerTitle": "Pošljite ponudbo ustvarjalcu",
+      "messageLabel": "Sporočilo ustvarjalcu",
+      "messagePlaceholder": "Opišite izdelek, rok in kaj potrebujete.",
+      "submitOrder": "Pošlji naročilo",
+      "viewInquiries": "Oglejte si svoja povpraševanja",
+      "registerCompany": "Brezplačno registrirajte podjetje",
+      "login": "Prijavite se"
+    },
+    "typePages": {
+      "ugc": {
+        "title": "UGC video ustvarjalci v regiji",
+        "description": "Poiščite UGC ustvarjalce za video vsebine vaše znamke. Paketi s ceno ali po dogovoru.",
+        "headlineLead": "UGC video",
+        "headlineEmphasis": "za vašo znamko",
+        "intro": "Pristne video vsebine za vaše kanale in oglase. Primerjajte pakete in naročite neposredno."
+      },
+      "instagram": {
+        "title": "Instagram vplivneži in ustvarjalci v regiji",
+        "description": "Instagram reels, objave in zgodbe vplivnežev iz regije. Oglejte si pakete in cene.",
+        "headlineLead": "Instagram promocija",
+        "headlineEmphasis": "z ustvarjalci",
+        "intro": "Reels, objave in zgodbe na profilih ustvarjalcev. Primerjajte pakete in pošljite povpraševanje."
+      },
+      "tiktok": {
+        "title": "TikTok ustvarjalci v regiji",
+        "description": "TikTok video in promocija ustvarjalcev iz regije. Paketi s ceno ali po dogovoru.",
+        "headlineLead": "TikTok video",
+        "headlineEmphasis": "z ustvarjalci",
+        "intro": "Kratki video formati za TikTok, od ideje do objave. Primerjajte pakete ustvarjalcev."
+      },
+      "photo": {
+        "title": "Fotografiranje izdelkov in znamk",
+        "description": "Fotografije izdelkov in lifestyle vsebine ustvarjalcev in fotografov iz regije.",
+        "headlineLead": "Fotografije",
+        "headlineEmphasis": "za vašo znamko",
+        "intro": "Fotografije izdelkov, lifestyle in vsebine za družbena omrežja. Primerjajte pakete in naročite."
+      }
+    }
   }
 }

@@ -61,6 +61,8 @@ const routeViews = {
   companies: () => import('./views/CompaniesView.vue'),
   'company-profile': () => import('./views/CompanyProfileView.vue'),
   campaigns: () => import('./views/CampaignsView.vue'),
+  services: () => import('./views/ServicesView.vue'),
+  'services-type': () => import('./views/ServicesView.vue'),
   'campaign-detail': () => import('./views/CampaignDetailView.vue'),
   moderation: () => import('./views/ModerationView.vue'),
   admin: adminDashboardView,
@@ -210,6 +212,12 @@ const router = createRouter({
   scrollBehavior(to, from, savedPosition) {
     if (savedPosition) {
       return savedPosition
+    }
+
+    // Service filters change the URL (/usluge/ugc-video?price=to100) but stay on the same screen.
+    const servicePages = ['services', 'services-type']
+    if (servicePages.includes(to.meta.routeName) && servicePages.includes(from.meta.routeName)) {
+      return false
     }
 
     if (

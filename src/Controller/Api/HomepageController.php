@@ -31,7 +31,7 @@ use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
 final class HomepageController
 {
     #[Route('/api/homepage', name: 'api_homepage', methods: ['GET'])]
-    public function homepage(Request $request, EntityManagerInterface $entityManager, CollaborationFeedback $feedback, \App\Safety\BlockPolicy $blocks, \App\Api\RecommendedProfiles $recommendations): JsonResponse
+    public function homepage(Request $request, EntityManagerInterface $entityManager, Security $security, \App\Listing\ServicePackages $services, CollaborationFeedback $feedback, \App\Safety\BlockPolicy $blocks, \App\Api\RecommendedProfiles $recommendations): JsonResponse
     {
         $locale = LocaleContext::fromRequest($request);
         if ($locale === null) {
@@ -89,6 +89,21 @@ final class HomepageController
         $campaignOrder = array_flip($campaignIds);
         usort($campaigns, static fn (Campaign $a, Campaign $b): int => $campaignOrder[$a->getId()] <=> $campaignOrder[$b->getId()]);
 
+        // "Usluge kreatora" row: one package per creator, skipping creators already in the featured row.
+        $viewer = $security->getUser();
+        $servicePackages = $services->find($locale, $viewer instanceof User ? $viewer->getCompany() : null, [
+            'excludeCreatorIds' => array_map(static fn (Creator $creator): int => (int) $creator->getId(), $creators),
+            'onePerCreator' => true,
+        ], 8)['items'];
+        if (count($servicePackages) < 4) {
+            // Small catalogues: top up with featured creators rather than showing a near-empty row.
+            $shown = array_flip(array_map(static fn (array $item): string => $item['creator']['slug'], $servicePackages));
+            foreach ($services->find($locale, $viewer instanceof User ? $viewer->getCompany() : null, ['onePerCreator' => true], 8)['items'] as $item) {
+                if (count($servicePackages) >= 8) break;
+                if (!isset($shown[$item['creator']['slug']])) $servicePackages[] = $item;
+            }
+        }
+
         $ratings = $feedback->summaries(array_values(array_filter(array_map(static fn (Creator $creator): ?int => $creator->getOwner()?->getId(), $creators))), 'provider');
         $companyRatings = $feedback->companySummaries($companies);
         $companyIds = array_map(static fn (Company $company): ?int => $company->getId(), $companies);
@@ -114,6 +129,7 @@ final class HomepageController
                 ),
                 'companies' => array_map(static fn (Company $company): array => \App\Api\CompanyResource::fromEntity($company, $locale, (int) ($campaignCounts[$company->getId()] ?? 0), card: true, categoryLabels: $categoryLabels) + ['rating' => $companyRatings[$company->getOwner()?->getId()] ?? ['average' => null, 'reviewCount' => 0, 'completedCampaigns' => 0]], $companies),
                 'campaigns' => array_map(static fn (Campaign $campaign): array => CampaignResource::fromEntity($campaign, $locale, card: true, categoryLabels: $categoryLabels, hiredCount: $hiredCounts[$campaign->getId()] ?? 0), $campaigns),
+                'packages' => $servicePackages,
             ],
         ]);
     }

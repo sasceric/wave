@@ -7,6 +7,13 @@ import { readFile } from 'node:fs/promises'
 import { accountAccessRedirect } from '../src/lib/accountAccess.js'
 import { profileKind, profileStrength, profileSteps } from '../src/lib/profileStrength.js'
 
+async function serviceTypesModule(context) {
+  const module = new vm.SourceTextModule(await readFile(new URL('../src/lib/serviceTypes.js', import.meta.url), 'utf8'), { context })
+  await module.link(() => { throw new Error('serviceTypes has no imports') })
+  await module.evaluate()
+  return module
+}
+
 async function routesFixture() {
   const context = vm.createContext({})
   const paths = new vm.SourceTextModule(await readFile(new URL('../src/routePaths.js', import.meta.url), 'utf8'), { context })
@@ -16,8 +23,10 @@ async function routesFixture() {
   })
   await paths.evaluate()
   const metadata = new vm.SourceTextModule(await readFile(new URL('../src/lib/routeMetadata.js', import.meta.url), 'utf8'), { context })
+  const serviceTypes = await serviceTypesModule(context)
   await metadata.link(async name => {
     if (name.endsWith('routePaths')) return paths
+    if (name.endsWith('serviceTypes')) return serviceTypes
     const data = JSON.parse(await readFile(new URL('../../config/seo_route_titles.json', import.meta.url), 'utf8'))
     return new vm.SyntheticModule(['default'], function () { this.setExport('default', data) }, { context })
   })

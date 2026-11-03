@@ -17,6 +17,7 @@ import StatusMessage from '../components/shared/StatusMessage.vue'
 import CampaignCard from '../components/campaigns/CampaignCard.vue'
 import CompanyCard from '../components/companies/CompanyCard.vue'
 import CreatorCard from '../components/creators/CreatorCard.vue'
+import HomeBrandServices from '../components/home/HomeBrandServices.vue'
 import { currentUser } from '../composables/useCurrentUser'
 import { unreadMessageCount } from '../composables/useUnreadMessages'
 import { apiGet } from '../lib/api'
@@ -27,6 +28,7 @@ import { localizedPath } from '../routePaths'
 const { t, locale } = useI18n()
 const creators = ref([])
 const campaigns = ref([])
+const servicePackages = ref([])
 const companies = ref([])
 const companiesSliderEnabled = ref(false)
 const creatorsError = ref('')
@@ -44,6 +46,7 @@ const siteFaqItems = computed(() => Array.from({ length: 5 }, (_, index) => ({
 })))
 const greetingName = computed(() => currentUser.value?.profile?.displayName || currentUser.value?.profile?.name || currentUser.value?.name || '')
 const isCompany = computed(() => currentUser.value?.accountType === 'company')
+const showBrandServices = computed(() => (currentUser.value?.isAdmin || currentUser.value?.accountType !== 'creator') && servicePackages.value.length > 0)
 const shortcuts = computed(() => {
   const messages = {
     key: 'messages',
@@ -127,6 +130,7 @@ async function loadHome() {
     creatorMode.value = response.data.creatorMode
     creators.value = response.data.creators
     campaigns.value = response.data.campaigns
+    servicePackages.value = response.data.packages || []
     companies.value = response.data.companies || []
     companiesSliderEnabled.value = response.data.companiesSliderEnabled === true
   } catch (cause) {
@@ -206,6 +210,12 @@ onMounted(loadHome)
       <DirectorySkeletonCard v-for="index in loading && !campaigns.length ? 4 : 0" :key="`loading-${index}`" kind="campaign" />
       <span v-if="loading" class="sr-only" role="status">{{ t('home.loadingCampaigns') }}</span>
     </CardRow>
+
+    <HomeBrandServices
+      v-if="showBrandServices"
+      class="home-row page-width"
+      :packages="servicePackages"
+    />
 
     <CardRow
       v-if="companiesSliderEnabled"

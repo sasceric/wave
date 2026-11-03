@@ -18,7 +18,7 @@ export function normalizePresentation(profile) {
   profile.presentation.availableFrom ||= ''
   profile.portfolio = (profile.portfolio || []).map(item => ({ ...emptyWork(), publicPermission: true, ...item, references: workReferences(item).map(row => ({ ...row })) }))
   profile.socialProfiles = (profile.socialProfiles || []).map(item => ({ averageViews: null, sampleSize: 10, engagementRate: null, engagementBasis: 'followers', audienceCountries: [], ...item }))
-  profile.packages = (profile.packages || []).map(item => ({ mode: 'posting', priceMode: item.price ? 'fixed' : 'agreement', deliveryDays: null, revisions: null, usage: 'agreement', usageDays: null, deliverables: [], ...item }))
+  profile.packages = (profile.packages || []).map(item => ({ mode: 'posting', priceMode: item.price ? 'fixed' : 'agreement', deliveryDays: null, revisions: null, usage: 'agreement', usageDays: null, deliverables: [], ...item, featured: item.featured === true, serviceType: packageServiceType(item) }))
   return profile
 }
 function deliveries(rows = []) { return rows.map(row => ({ ...row, quantity: number(row.quantity), duration: number(row.duration) })) }
@@ -33,4 +33,21 @@ export function presentationPayload(profile) {
 export function languageOptions(locale, translate) {
   const names = new Intl.DisplayNames([locale === 'cnr' ? 'bs' : locale === 'sr' ? 'sr-Latn' : locale], { type: 'language' })
   return CONTENT_LANGUAGES.map(value => ({ value, label: translate ? translate(`studio.contentLanguages.${value}`) : names.of(value) || value }))
+}
+
+export const SERVICE_TYPES = ['ugc', 'instagram', 'tiktok', 'photo', 'other']
+
+// Mirrors CreatorPresentation::serviceType() for packages saved before creators chose a type.
+export function packageServiceType(item = {}) {
+  if (SERVICE_TYPES.includes(item.serviceType)) return item.serviceType
+  const title = String(item.title || '').toLowerCase()
+  for (const [word, type] of [['ugc', 'ugc'], ['tiktok', 'tiktok'], ['foto', 'photo'], ['photo', 'photo'], ['instagram', 'instagram'], ['reel', 'instagram'], ['stor', 'instagram']]) {
+    if (title.includes(word)) return type
+  }
+  if (item.platform === 'TikTok') return 'tiktok'
+  if (item.platform === 'Instagram') return 'instagram'
+  const formats = [...new Set((item.deliverables || []).map(row => row?.format || ''))]
+  if (formats.length === 1 && formats[0] === 'photo') return 'photo'
+  if (item.mode === 'content' && formats.includes('video')) return 'ugc'
+  return 'other'
 }

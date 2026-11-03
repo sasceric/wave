@@ -7,12 +7,20 @@ import { createI18n } from 'vue-i18n'
 import * as vue from 'vue'
 import { setupView } from './setupView.js'
 
+async function serviceTypesModule(context) {
+  const module = new vm.SourceTextModule(await readFile(new URL('../src/lib/serviceTypes.js', import.meta.url), 'utf8'), { context })
+  await module.link(() => { throw new Error('serviceTypes has no imports') })
+  await module.evaluate()
+  return module
+}
+
 async function fixture() {
   const titles = JSON.parse(await readFile(new URL('../../config/seo_route_titles.json', import.meta.url), 'utf8'))
   const routes = JSON.parse(await readFile(new URL('../../config/localized_routes.json', import.meta.url), 'utf8'))
   const context = vm.createContext({})
   const module = new vm.SourceTextModule(await readFile(new URL('../src/lib/routeMetadata.js', import.meta.url), 'utf8'), { context })
-  await module.link(path => path.includes('seo_route_titles')
+  const serviceTypes = await serviceTypesModule(context)
+  await module.link(path => path.includes('serviceTypes') ? serviceTypes : path.includes('seo_route_titles')
     ? new vm.SyntheticModule(['default'], function () { this.setExport('default', titles) }, { context })
     : new vm.SyntheticModule(['routeSegments'], function () { this.setExport('routeSegments', routes) }, { context }))
   await module.evaluate()

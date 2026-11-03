@@ -1,0 +1,53 @@
+@use '../breakpoints';
+
+// Same structure as the creators and companies directories: hero, sticky toolbar, filter sidebar, results.
+.services-page { padding-bottom: 72px; }
+
+.services-page__content {
+  display: grid;
+  grid-template-columns: 280px minmax(0, 1fr);
+  align-items: start;
+  gap: 22px;
+
+  :deep(.directory-filter-panel fieldset) { margin: 0; padding: 0; border: 0; }
+
+  @include breakpoints.down(1200px) { grid-template-columns: 230px minmax(0, 1fr); gap: 18px; }
+  @include breakpoints.down(760px) { display: block; }
+}
+
+.services-page__results { min-width: 0; }
+.services-page__count { margin: 0 0 14px; min-height: 35px; display: flex; align-items: center; font-size: 13px; }
+
+// Chips scroll inside the toolbar's padding on phones.
+.services-page__chips {
+  @include breakpoints.down(760px) { margin-inline: -8px; padding-inline: 8px; }
+}
+
+.services-page__sidebar {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+
+  // The panel here holds only two short selects, so it doesn't need its own scroll area.
+  // Without clipping, open dropdowns float over the campaign box below instead of being cut off.
+  @include breakpoints.up(761px) {
+    :deep(.directory-filter-panel) { z-index: 3; max-height: none; overflow: visible; }
+  }
+}
+
+// Sits under the filters in the sidebar; on phones it comes before the cards.
+.services-page__campaign {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 20px;
+  @include breakpoints.down(760px) { margin-bottom: 16px; }
+  color: #fffdf8;
+  background: var(--forest);
+  border-radius: 20px;
+
+  // Global headings are forest green; on the dark panel the copy must be light.
+  h2 { margin: 0 0 6px; color: #fffdf8; font-size: 1.1rem; }
+  p { margin: 0; color: #fffdf8; opacity: .85; }
+}

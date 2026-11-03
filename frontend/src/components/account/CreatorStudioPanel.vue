@@ -15,7 +15,7 @@ import CreatorAudience from '../creators/CreatorAudience.vue'
 import CreatorWorks from '../creators/CreatorWorks.vue'
 import CreatorPackageFacts from '../creators/CreatorPackageFacts.vue'
 import CreatorMediaKit from '../creators/CreatorMediaKit.vue'
-import { emptyWork, PRESENTATION_PLATFORMS, workImage } from '../../lib/creatorPresentation'
+import { emptyWork, PRESENTATION_PLATFORMS, SERVICE_TYPES, workImage } from '../../lib/creatorPresentation'
 import { apiGet, formatMoney } from '../../lib/api'
 import { dateOnly } from '../../lib/datePicker'
 import { CURRENCIES } from '../../lib/marketplace'
@@ -31,6 +31,11 @@ const collection = computed(() => ({
 const { t, te } = useI18n()
 const step = ref(1)
 const panel = ref(null)
+// Only one package can be featured; it represents the creator on /usluge and the homepage.
+function setFeaturedPackage(item, featured) {
+  for (const row of profile.value.packages) row.featured = featured && row === item
+}
+
 async function revealInvalidField(field) {
     if (!panel.value?.contains(field)) return
     const section = field.closest('[data-studio-step]')
@@ -142,7 +147,7 @@ function removeSocial(index) {
 }
 function addPackage() {
     if (profile.value.packages.length >= 12) return
-    profile.value.packages.push({ id: '', platform: 'All', title: '', description: '', price: null, currency: 'BAM', mode: 'content', priceMode: 'agreement', deliveryDays: null, revisions: null, usage: 'agreement', usageDays: null, deliverables: [] })
+    profile.value.packages.push({ id: '', featured: false, serviceType: 'ugc', platform: 'All', title: '', description: '', price: null, currency: 'BAM', mode: 'content', priceMode: 'agreement', deliveryDays: null, revisions: null, usage: 'agreement', usageDays: null, deliverables: [] })
     selectedPackage.value = profile.value.packages.length - 1
 }
 function removePackage(index) {
@@ -525,6 +530,14 @@ watch(locale, language => { const names = new Intl.DisplayNames([language === 'c
             <span>{{ t('account.packageDescription') }}</span>
             <textarea v-model.trim="item.description" required minlength="10" maxlength="1200"></textarea>
           </label>
+          <SwitchField
+            class="form-field--wide"
+            :model-value="item.featured ? 1 : 0"
+            :label="t('studio.featuredPackage')"
+            :description="t('studio.featuredPackageHint')"
+            @update:model-value="setFeaturedPackage(item, $event === 1)"
+          />
+          <SingleSelect v-model="item.serviceType" :label="t('studio.serviceType')" :options="SERVICE_TYPES.map(value=>({value,label:t(`services.types.${value}`)}))" required />
           <SingleSelect v-model="item.mode" :label="t('studio.mode')" :options="choices(['content','posting'])" />
           <SingleSelect v-model="item.platform" :label="t('account.platform')" :options="allPlatforms" />
         </div>

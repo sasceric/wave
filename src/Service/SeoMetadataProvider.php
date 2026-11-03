@@ -67,7 +67,8 @@ final class SeoMetadataProvider
         if ((in_array($name, ['country-creators', 'country-topic'], true) && $countryCode === null)
             || ($name === 'country-topic' && $topic === null)
             || ($name === 'seo-guide' && !isset($regionalCopy['guides'][$params['guide']]))
-            || ($name === 'creator-guide' && !isset($regionalCopy['creatorGuides']['guides'][$params['guide']]))) {
+            || ($name === 'creator-guide' && !isset($regionalCopy['creatorGuides']['guides'][$params['guide']]))
+            || ($name === 'services-type' && \App\Listing\ServicePackages::typeForSlug($params['type']) === null)) {
             return $this->notFoundMetadata($locale);
         }
         $private = $name === 'account'
@@ -82,6 +83,7 @@ final class SeoMetadataProvider
             'creators', 'creator-profile' => 'creatorsTitle',
             'companies', 'company-profile' => 'companiesTitle',
             'campaigns', 'campaign-detail' => 'campaignsTitle',
+            'services', 'services-type' => 'servicesTitle',
             'imprint' => 'imprintTitle',
             'privacy-policy' => 'privacyTitle',
             'cookie-policy' => 'cookiesTitle',
@@ -94,6 +96,7 @@ final class SeoMetadataProvider
             'creators', 'creator-profile' => 'creatorsDescription',
             'companies', 'company-profile' => 'companiesDescription',
             'campaigns', 'campaign-detail' => 'campaignsDescription',
+            'services', 'services-type' => 'servicesDescription',
             'imprint' => 'imprintDescription',
             'privacy-policy' => 'privacyDescription',
             'cookie-policy' => 'cookiesDescription',
@@ -125,6 +128,12 @@ final class SeoMetadataProvider
         $indexable = !$private && !$searchResults;
         if ($name === 'search') $description = $this->catalogs[$locale]['seo']['searchDescription'];
         $contentHtml = null;
+        if ($name === 'services-type') {
+            $copy = $this->catalogs[$locale]['services']['typePages'][\App\Listing\ServicePackages::typeForSlug($params['type'])];
+            $title = $copy['title'].' | Wave';
+            $description = $copy['description'];
+            $contentHtml = '<main><h1>'.htmlspecialchars($copy['headlineLead'].' '.$copy['headlineEmphasis'], ENT_QUOTES).'</h1><p>'.htmlspecialchars($copy['intro'], ENT_QUOTES).'</p></main>';
+        }
         if (in_array($name, ['profile-guide-creator', 'profile-guide-agency', 'profile-guide-brand'], true)) {
             $kind = substr($name, strlen('profile-guide-'));
             $copy = $this->catalogs[$locale]['profileGuide'][$kind];
@@ -376,7 +385,7 @@ final class SeoMetadataProvider
         $page = [
             '@context' => 'https://schema.org',
             '@type' => match ($routeName) {
-                'creators', 'companies', 'campaigns', 'country-creators', 'country-topic', 'seo-guides', 'creator-guides' => 'CollectionPage',
+                'creators', 'companies', 'campaigns', 'services', 'services-type', 'country-creators', 'country-topic', 'seo-guides', 'creator-guides' => 'CollectionPage',
                 'creator-profile', 'company-profile' => 'ProfilePage',
                 'support' => 'ContactPage',
                 default => 'WebPage',
