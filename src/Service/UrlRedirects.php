@@ -23,7 +23,8 @@ final class UrlRedirects
             $entity instanceof Company => ['company-profile', 'companies', 'deleted-company'],
             default => ['campaign-detail', 'campaigns', 'deleted-campaign'],
         };
-        $sources = array_unique([$this->routes->localizedPath($detail, 'bs', ['slug' => $entity->getSlug()]), ...$this->routes->legacyDetailPaths($detail, $entity->getSlug())]);
+        // Language-prefixed legacy paths resolve through the canonical row.
+        $sources = $this->routes->redirectDetailSources($detail, $entity->getSlug());
         foreach ($sources as $source) {
             $locale = $this->routes->resolve($source)['locale'] ?? 'bs';
             // Keep any destination/disabled state an administrator already chose.

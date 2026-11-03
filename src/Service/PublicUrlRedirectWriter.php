@@ -20,7 +20,7 @@ final class PublicUrlRedirectWriter
                 $this->db->update('url_redirect', ['target_path' => $target.($query === null ? '' : '?'.$query), 'updated_at' => $now], ['id' => $row['id']]);
             }
         }
-        foreach ($sources as $source) {
+        foreach ($this->slugs->redirectSources($kind, $old) as $source) {
             if ($source === $target) continue;
             $existing = $this->db->fetchAssociative('SELECT id, origin FROM url_redirect WHERE source_path = ?', [$source]);
             if ($existing !== false) {

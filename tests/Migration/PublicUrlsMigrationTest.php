@@ -35,8 +35,10 @@ final class PublicUrlsMigrationTest extends KernelTestCase
                 self::assertSame(['amina-kovac', 'amina-kovac-1', 'custom-profile'], $db->fetchFirstColumn('SELECT slug FROM creator ORDER BY id'));
                 self::assertNull($db->fetchOne('SELECT public_url_changed_at FROM creator WHERE id=1'));
                 self::assertSame('amina kovac', $db->fetchOne("SELECT search_text FROM directory_index WHERE id='creator:1'"));
-                self::assertSame('/kreatori/amina-kovac', $db->fetchOne("SELECT target_path FROM url_redirect WHERE source_path='/en/creators/amina-kovac-123abc'"));
-                self::assertSame('/kampanje/kampanja', $db->fetchOne("SELECT target_path FROM url_redirect WHERE source_path='/en/campaigns/campaign-123abc'"));
+                self::assertSame('/kreatori/amina-kovac', $db->fetchOne("SELECT target_path FROM url_redirect WHERE source_path='/kreatori/amina-kovac-123abc'"));
+                self::assertSame('/kampanje/kampanja', $db->fetchOne("SELECT target_path FROM url_redirect WHERE source_path='/kampanje/campaign-123abc'"));
+                // Language-prefixed aliases resolve through the canonical row instead of their own.
+                self::assertFalse($db->fetchOne("SELECT 1 FROM url_redirect WHERE source_path='/en/creators/amina-kovac-123abc'"));
                 $count = (int) $db->fetchOne('SELECT COUNT(*) FROM url_redirect');
                 $migration->postUp($db->createSchemaManager()->introspectSchema());
                 self::assertSame($count, (int) $db->fetchOne('SELECT COUNT(*) FROM url_redirect'));

@@ -23,6 +23,12 @@ final class PublicUrlSlugs
         return array_values(array_unique([$this->path($kind, $slug), ...$this->routes->legacyDetailPaths(self::ROUTES[$kind], $slug)]));
     }
 
+    /** Sources that need their own redirect row; see LocalizedRouteMap::redirectDetailSources(). */
+    public function redirectSources(string $kind, string $slug): array
+    {
+        return $this->routes->redirectDetailSources(self::ROUTES[$kind], $slug);
+    }
+
     public function reserve(string $kind, string $name): string
     {
         $this->checkKind($kind);

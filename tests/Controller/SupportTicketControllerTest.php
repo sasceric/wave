@@ -282,9 +282,10 @@ final class SupportTicketControllerTest extends WebTestCase
         self::assertResponseStatusCodeSame(403);
         $this->post('/api/me/support-tickets/'.$id.'/messages', ['body' => 'Thanks. It works now.', 'submissionKey' => bin2hex(random_bytes(32))], $this->csrf());
         self::assertResponseStatusCodeSame(201); self::assertEmailCount(1);
+        self::assertSame('in_progress', $this->payload()['status']); self::assertNull($this->payload()['statusEvent']);
         self::assertSame(1, $em->getRepository(Notification::class)->count(['recipient' => $admin, 'supportTicket' => $ticket]));
         $this->post('/api/support/tickets/track', ['token' => $ticket->getTrackingToken()], $this->csrf());
-        self::assertCount(4, $this->payload()['data']['messages']);
+        self::assertCount(3, $this->payload()['data']['messages']);
         self::assertStringNotContainsString('Private debugging', $this->client->getResponse()->getContent());
     }
 
@@ -360,13 +361,14 @@ final class SupportTicketControllerTest extends WebTestCase
         self::assertResponseIsSuccessful(); self::assertSame([$event['id']], array_column($this->payload()['data'], 'id'));
         $key = bin2hex(random_bytes(32));
         $this->post($historyUrl, ['body' => 'It is still happening.', 'submissionKey' => $key], $this->csrf());
-        self::assertResponseStatusCodeSame(201); self::assertSame('open', $this->payload()['status']);
+        // A customer reply never changes the status; staff decide whether to reopen.
+        self::assertResponseStatusCodeSame(201); self::assertSame('resolved', $this->payload()['status']);
         $reply = $this->payload();
-        self::assertSame('open', $reply['statusEvent']['eventStatus']);
+        self::assertNull($reply['statusEvent']);
         $this->post($historyUrl, ['body' => 'It is still happening.', 'submissionKey' => $key], $this->csrf());
-        self::assertResponseIsSuccessful(); self::assertSame($reply['statusEvent']['id'], $this->payload()['statusEvent']['id']);
+        self::assertResponseIsSuccessful(); self::assertNull($this->payload()['statusEvent']);
         $this->client->request('GET', $historyUrl);
-        self::assertSame([$event['id'], $reply['data']['id'], $reply['statusEvent']['id']], array_column($this->payload()['data'], 'id'));
+        self::assertSame([$event['id'], $reply['data']['id']], array_column($this->payload()['data'], 'id'));
     }
 
     public function testReplyUploadsAreCompressedAndProtectedForBothAccountsAndInternalNotes(): void

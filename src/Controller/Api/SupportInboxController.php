@@ -161,7 +161,9 @@ final class SupportInboxController
             if (!$internal) {
                 $previousStatus = $ticket->getStatus();
                 $ticket->touch($body);
-                $ticket->setStatus($scope === 'me' ? 'open' : ($ticket->getStatus() === 'open' ? 'in_progress' : $ticket->getStatus()));
+                // Only the first staff reply moves a new ticket to "in progress". After
+                // that, replies never change the status; staff set it by hand.
+                if ($scope === 'admin' && $ticket->getStatus() === 'open') $ticket->setStatus('in_progress');
                 if ($previousStatus !== $ticket->getStatus()) $event = $this->statusEvent($ticket, $user, hash('sha256', 'status:'.$key));
             }
             $this->em->flush();

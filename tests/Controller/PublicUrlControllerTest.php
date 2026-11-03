@@ -52,10 +52,11 @@ final class PublicUrlControllerTest extends WebTestCase
         self::assertSame('new-url', $this->em->getConnection()->fetchOne('SELECT slug FROM creator'));
         $this->em->getConnection()->executeStatement("UPDATE creator SET public_url_changed_at = ?", [(new \DateTimeImmutable('-14 days -1 minute'))->format('Y-m-d H:i:s')]);
         $this->write('/api/me/public-url', ['slug' => 'third-url']); self::assertResponseIsSuccessful();
-        foreach (['/kreatori/old-url', '/en/creators/old-url', '/kreatori/new-url'] as $path) {
+        foreach (['/kreatori/old-url', '/en/creators/old-url', '/hr/kreatori/old-url', '/creators/old-url', '/kreatori/new-url', '/de/kreative/new-url'] as $path) {
             $this->client->request('GET', $path); self::assertResponseRedirects('/kreatori/third-url', 301);
-            self::assertSame('/kreatori/third-url', $this->em->getConnection()->fetchOne('SELECT target_path FROM url_redirect WHERE source_path = ?', [$path]));
         }
+        // Only canonical rows are stored; prefixed legacy paths resolve through them.
+        self::assertSame(['/kreatori/new-url' => '/kreatori/third-url', '/kreatori/old-url' => '/kreatori/third-url'], $this->em->getConnection()->fetchAllKeyValue('SELECT source_path, target_path FROM url_redirect ORDER BY source_path'));
         self::assertSame('old-url-1', self::getContainer()->get(PublicUrlSlugs::class)->reserve('creator', 'old-url'));
     }
     public function testCampaignUrlRequiresOwnerAndSharedRoutesKeepLocalizedDirectories(): void

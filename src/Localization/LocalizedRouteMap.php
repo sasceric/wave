@@ -82,6 +82,21 @@ final class LocalizedRouteMap
         return array_values(array_unique($paths));
     }
 
+    /**
+     * The redirect rows a detail URL needs. Language-prefixed legacy paths are
+     * folded into the canonical path by UrlRedirects::resolve(), so only the
+     * canonical path and legacy paths the route map cannot resolve need a row.
+     */
+    public function redirectDetailSources(string $name, string $slug): array
+    {
+        $canonical = $this->localizedPath($name, 'bs', ['slug' => $slug]);
+
+        return array_values(array_filter(
+            array_unique([$canonical, ...$this->legacyDetailPaths($name, $slug)]),
+            fn (string $path): bool => $path === $canonical || !$this->isShared($this->resolve($path)['name'] ?? ''),
+        ));
+    }
+
     public function localizedAlternates(string $routeName, array $params = []): array
     {
         if ($this->isShared($routeName)) return [];

@@ -188,7 +188,8 @@ final class RedirectControllerTest extends WebTestCase
         $this->em->flush();
         $campaignId = $campaign->getId();
         static::getContainer()->get(AccountDeletion::class)->delete([$owner, $creatorOwner]);
-        self::assertSame(33, $this->em->getRepository(UrlRedirect::class)->count([]));
+        // One canonical row per URL; language-prefixed legacy paths resolve through it.
+        self::assertSame(3, $this->em->getRepository(UrlRedirect::class)->count([]));
         self::assertNotNull($this->em->find(Campaign::class, $campaignId));
         self::assertSame(1, $this->em->getRepository(\App\Entity\Application::class)->count([]));
         $routes = static::getContainer()->get(LocalizedRouteMap::class);
@@ -198,8 +199,12 @@ final class RedirectControllerTest extends WebTestCase
                 self::assertResponseRedirects($routes->localizedPath($listing, 'bs'), 301);
             }
         }
-        $this->client->request('GET', '/sr/kreatori/old-creator');
-        self::assertResponseRedirects('/rs/kreatori', 301);
+        foreach (['/sr/kreatori/old-creator', '/hr/kreatori/old-creator', '/de/kreative/old-creator', '/si/ustvarjalci/old-creator', '/creators/old-creator'] as $legacy) {
+            $this->client->request('GET', $legacy);
+            self::assertResponseRedirects('/kreatori', 301);
+        }
+        $this->client->request('GET', '/en/companies/old-brand');
+        self::assertResponseRedirects('/kompanije', 301);
         $this->client->request('GET', '/api/creators/old-creator?locale=en');
         self::assertResponseStatusCodeSame(404);
         $this->client->request('GET', '/sitemap.xml');
@@ -221,9 +226,11 @@ final class RedirectControllerTest extends WebTestCase
         $this->client->request('GET', '/api/auth/csrf?locale=en');
         $this->client->jsonRequest('DELETE', '/api/admin/campaigns/bulk-delete?locale=en', ['ids' => [$campaign->getId()]], ['HTTP_X_CSRF_TOKEN' => $this->payload()['csrfToken']]);
         self::assertResponseIsSuccessful();
-        self::assertSame(11, $this->em->getRepository(UrlRedirect::class)->count([]));
-        $this->client->request('GET', '/kampanje/removed-campaign');
-        self::assertResponseRedirects('/kampanje', 301);
+        self::assertSame(1, $this->em->getRepository(UrlRedirect::class)->count([]));
+        foreach (['/kampanje/removed-campaign', '/en/campaigns/removed-campaign', '/de/kampagnen/removed-campaign'] as $path) {
+            $this->client->request('GET', $path);
+            self::assertResponseRedirects('/kampanje', 301);
+        }
     }
 
     public function testAutomaticDeletionCannotIntroduceACycleThroughAnExistingAdminRule(): void

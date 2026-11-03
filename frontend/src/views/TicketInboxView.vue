@@ -37,6 +37,7 @@ const detailBusy = ref(false)
 const detailError = ref('')
 const messages = ref([])
 const historyRoot = ref(null)
+const composerRoot = ref(null)
 const historyBusy = ref(false)
 const historyMore = ref(false)
 const historyCursor = ref(null)
@@ -148,6 +149,9 @@ async function loadDetail() {
       detailBusy.value = false
       await nextTick()
       if (historyRoot.value) historyRoot.value.scrollTop = historyRoot.value.scrollHeight
+      // On phones the conversation scrolls with the page, so bring the latest
+      // replies and the reply box into view instead of leaving it off-screen.
+      if (selected.value && window.matchMedia?.('(max-width: 760px)').matches) composerRoot.value?.scrollIntoView({ block: 'end' })
     }
   }
 }
@@ -321,7 +325,7 @@ onBeforeUnmount(() => { ++contextVersion; ++listVersion; ++detailVersion; window
                 </article>
                 </template>
               </div>
-              <form class="ticket-composer" @submit.prevent="sendReply">
+              <form ref="composerRoot" class="ticket-composer" @submit.prevent="sendReply">
                 <div v-if="admin" class="ticket-composer__tabs"><button type="button" :aria-pressed="!internal" :class="{ 'is-active': !internal }" @click="internal = false">{{ t('support.reply') }}</button><button type="button" :aria-pressed="internal" :class="{ 'is-active': internal }" @click="internal = true">{{ t('support.internalNote') }}</button></div>
                 <div class="ticket-composer__box">
                   <label class="sr-only" for="ticket-reply">{{ t(internal ? 'support.internalNote' : 'support.reply') }}</label>

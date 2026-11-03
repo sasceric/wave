@@ -235,11 +235,13 @@
   .ticket-inbox:not(.ticket-inbox--selected) .ticket-thread { display: none; }
   .ticket-list { height: min(650px, calc(100dvh - 280px)); min-height: 260px; }
   .ticket-list__row { grid-template-columns: 40px minmax(0, 1fr) auto; }
-  .ticket-thread { height: auto; }
+  // One page scroll on phones: a nested scroller hid the reply box under the bottom navigation.
+  .ticket-thread { height: auto; overflow: visible; }
+  .ticket-composer { scroll-margin-bottom: calc(96px + env(safe-area-inset-bottom)); }
   .ticket-thread__mobile-back { display: inline-flex; }
   .ticket-thread__heading { padding: 14px; gap: 7px; h2 { font-size: 18px; } }
   .ticket-thread__status { width: 105px; }
-  .ticket-thread__history { max-height: 50dvh; padding: 16px 12px; }
+  .ticket-thread__history { flex: none; max-height: none; overflow: visible; padding: 16px 12px; }
   .ticket-message > p { margin-left: 0; }
   .ticket-files { margin-left: 0; }
   .ticket-details { margin-top: 14px; }
