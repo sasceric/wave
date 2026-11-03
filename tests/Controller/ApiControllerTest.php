@@ -629,7 +629,7 @@ final class ApiControllerTest extends WebTestCase
         self::assertResponseIsSuccessful();
         $payload = json_decode($this->client->getResponse()->getContent(), true, flags: JSON_THROW_ON_ERROR);
         self::assertSame(
-            ['featured-new', 'featured-old'],
+            ['featured-new', 'featured-old', 'latest-one', 'latest-two', 'latest-three'],
             array_column($payload['data']['campaigns'], 'slug'),
         );
     }

@@ -1460,7 +1460,27 @@
     "notificationsHint": "Receive notifications about offers, messages and campaigns.",
     "visibilityPendingHint": "Your profile stays hidden until approval. Approval makes it public, and you can hide it afterward.",
     "profileApprovedHiddenNotice": "Your profile is approved and active. Turn off “Hide my account” to make it visible to others.",
-    "cancelled": "Canceled"
+    "cancelled": "Canceled",
+    "applicantFilters": {
+      "all": "All",
+      "new": "New applications",
+      "invited": "Invited",
+      "talk": "In discussion",
+      "offer": "Offer sent",
+      "work": "In progress",
+      "done": "Completed",
+      "declined": "Declined"
+    },
+    "applicantNext": {
+      "new": "Review the application",
+      "invited": "Waiting for the creator",
+      "talk": "Agree on the terms",
+      "offer": "Waiting for a reply to the offer",
+      "work": "The creator is working on the content",
+      "done": "Collaboration completed",
+      "declined": "No collaboration agreed"
+    },
+    "applicantNextStep": "Next step"
   },
   "moderation": {
     "eyebrow": "Wave catalogue",

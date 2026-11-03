@@ -186,7 +186,8 @@ final class AdminDashboardTest extends WebTestCase
         $this->client->request('GET', '/api/campaigns?locale=en');
         self::assertSame(['listing-old'], array_column($this->payload()['data'], 'slug'));
         $this->client->request('GET', '/api/homepage?locale=en');
-        self::assertSame([], array_column($this->payload()['data']['campaigns'], 'slug'));
+        // The unlisted campaign disappears; the listed one still fills a homepage slot.
+        self::assertSame(['listing-old'], array_column($this->payload()['data']['campaigns'], 'slug'));
         $this->client->request('GET', '/api/campaigns/filters?locale=en');
         self::assertSame([], $this->payload()['data']['countries']);
         $this->client->request('GET', '/api/campaigns/listing-new?locale=en');

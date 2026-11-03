@@ -68,12 +68,16 @@ final class HomepageController
         $companies = $profiles['company'];
         $categoryLabels = MarketplaceCategoryLabels::forLocale($entityManager, $locale);
         $campaignVisibility = $blocks->visible('owner.id');
-        // Select IDs before collection joins so multi-industry companies cannot consume card slots.
+        // Featured campaigns come first (by position), then the newest open ones fill the 12 slots.
+        // Unfeatured presentation demos never fill slots. Select IDs before collection joins so
+        // multi-industry companies cannot consume card slots.
         $campaignIds = $entityManager->getConnection()->fetchFirstColumn("SELECT c.id FROM campaign c
             JOIN company company ON company.id = c.company_id LEFT JOIN wave_user owner ON owner.id = company.owner_id
-            WHERE c.status = 'open' AND c.listed = TRUE AND c.featured = TRUE AND c.closes_at >= :today
+            WHERE c.status = 'open' AND c.listed = TRUE AND c.closes_at >= :today
+                AND (c.featured = TRUE OR c.presentation_demo_key IS NULL)
                 AND (owner.id IS NULL OR (owner.approved = TRUE AND owner.hide_my_account = FALSE)) AND $campaignVisibility
-            ORDER BY COALESCE(c.featured_position, 2147483647) ASC, c.published_at DESC, c.id DESC LIMIT 12",
+            ORDER BY CASE WHEN c.featured = TRUE THEN 0 ELSE 1 END ASC,
+                COALESCE(CASE WHEN c.featured = TRUE THEN c.featured_position END, 2147483647) ASC, c.published_at DESC, c.id DESC LIMIT 12",
             ['today' => (new \DateTimeImmutable('today'))->format('Y-m-d H:i:s')],
         );
         $campaigns = $campaignIds === [] ? [] : $entityManager->getRepository(Campaign::class)->createQueryBuilder('campaign')

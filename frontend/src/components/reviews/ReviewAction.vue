@@ -5,7 +5,7 @@ import { useI18n } from 'vue-i18n'
 import FormModal from '../shared/FormModal.vue'
 import StatusMessage from '../shared/StatusMessage.vue'
 import { apiGet, apiRequest, formatDate } from '../../lib/api'
-const props = defineProps({ applicationId: { type: Number, required: true }, autoOpen: { type: Boolean, default: false }, hideTrigger: { type: Boolean, default: false }, editOnOpen: { type: Boolean, default: false } })
+const props = defineProps({ applicationId: { type: Number, required: true }, autoOpen: { type: Boolean, default: false }, hideTrigger: { type: Boolean, default: false }, editOnOpen: { type: Boolean, default: false }, iconOnly: { type: Boolean, default: false } })
 const emit = defineEmits(['closed', 'saved'])
 const { t } = useI18n()
 const open = ref(false)
@@ -54,7 +54,8 @@ watch(() => [props.applicationId, props.autoOpen], () => { if (props.autoOpen) s
 watch(open, (value, previous) => { if (previous && !value) emit('closed') })
 </script>
 <template>
-  <button v-if="!hideTrigger" class="button button--outline" type="button" @click="show"><Star :size="15" aria-hidden="true" />{{ t('reviews.action') }}</button>
+  <button v-if="!hideTrigger && iconOnly" class="icon-action icon-action--review" type="button" :data-tip="t('reviews.action')" :aria-label="t('reviews.action')" @click="show"><Star :size="18" aria-hidden="true" /></button>
+  <button v-else-if="!hideTrigger" class="button button--outline" type="button" @click="show"><Star :size="15" aria-hidden="true" />{{ t('reviews.action') }}</button>
   <FormModal v-model:open="open" :title="t(editing ? 'reviews.editOwn' : 'reviews.action')" :description="t(editing ? 'reviews.editHint' : 'reviews.policy')" :busy="busy" @submit="submit">
     <StatusMessage v-if="error" variant="error">{{ error }}</StatusMessage>
     <p v-if="busy && !state" role="status">{{ t('reviews.loading') }}</p>

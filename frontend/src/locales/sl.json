@@ -1461,7 +1461,27 @@
     "notificationsHint": "Prejemaj obvestila o ponudbah, sporočilih in kampanjah.",
     "visibilityPendingHint": "Profil je skrit do odobritve. Po odobritvi bo javno viden, pozneje pa ga lahko skriješ.",
     "profileApprovedHiddenNotice": "Tvoj profil je odobren in aktiven. Izklopi »Skrij moj račun«, da bo viden drugim.",
-    "cancelled": "Preklicano"
+    "cancelled": "Preklicano",
+    "applicantFilters": {
+      "all": "Vse",
+      "new": "Nove prijave",
+      "invited": "Povabljeni",
+      "talk": "V pogovoru",
+      "offer": "Ponudba poslana",
+      "work": "V teku",
+      "done": "Zaključeno",
+      "declined": "Zavrnjeno"
+    },
+    "applicantNext": {
+      "new": "Preglej prijavo",
+      "invited": "Čaka na odgovor ustvarjalca",
+      "talk": "Dogovori pogoje",
+      "offer": "Čaka na odgovor na ponudbo",
+      "work": "Ustvarjalec pripravlja vsebino",
+      "done": "Sodelovanje je zaključeno",
+      "declined": "Sodelovanje ni bilo dogovorjeno"
+    },
+    "applicantNextStep": "Naslednji korak"
   },
   "moderation": {
     "eyebrow": "Wave katalog",

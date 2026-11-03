@@ -176,3 +176,165 @@
     width: auto;
   }
 }
+
+// Applicant stages: one colour per stage (dot, pill, row/card tint).
+.applicant-tone {
+  &--all { --tone-dot: #7a9b8c; }
+  &--new { --tone-bg: #e6eefb; --tone-fg: #1d4a8f; --tone-dot: #3b6fd1; --tone-card: #f7f9fe; }
+  &--invited, &--offer { --tone-bg: #e9eae6; --tone-fg: #454b47; --tone-dot: #8d938e; --tone-card: #fafaf8; }
+  &--talk { --tone-bg: #fde8cf; --tone-fg: #8a4300; --tone-dot: #f08a1c; --tone-card: #fff8ee; }
+  &--work { --tone-bg: #dcefea; --tone-fg: #0b5247; --tone-dot: #1f8a77; --tone-card: #f6fbfa; }
+  &--done { --tone-bg: #e2efe0; --tone-fg: #2c5f2f; --tone-dot: #4f9a55; --tone-card: #f8fbf6; }
+  &--declined { --tone-bg: #fbe0df; --tone-fg: #9b1c1c; --tone-dot: #dc3b3b; --tone-card: #fff7f6; }
+}
+
+.applicant-dot {
+  flex: 0 0 auto;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--tone-dot, #7a9b8c);
+}
+
+.applicant-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  max-width: 100%;
+  padding: 6px 10px;
+  border-radius: 24px;
+  color: var(--tone-fg);
+  background: var(--tone-bg);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+
+.company-campaign-applicants {
+  &__summary {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+    max-width: 560px;
+    margin: 0 0 16px;
+    padding: 0;
+    list-style: none;
+
+    li {
+      display: grid;
+      gap: 2px;
+      padding: 12px 14px;
+      border-radius: 14px;
+      color: var(--tone-fg);
+      background: var(--tone-bg);
+    }
+
+    strong { font-size: 22px; line-height: 1.1; }
+    span { font-size: 12px; line-height: 1.35; }
+  }
+
+  &__filters button.is-empty:not(.is-active) { color: #8b968f; }
+
+  &__row > td { background: var(--tone-card); }
+  &__row > td.creator-offers__action-cell { background: var(--tone-card); }
+
+  &__next {
+    color: var(--tone-fg);
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+  &__actions { align-items: center; }
+
+  :deep(.icon-action) {
+    position: relative;
+    display: inline-flex;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    border: 1px solid var(--hairline);
+    border-radius: 10px;
+    color: var(--forest);
+    background: var(--card);
+    cursor: pointer;
+
+    &:hover { background: #f1ede4; }
+    &:focus-visible { outline: 2px solid var(--forest); outline-offset: 2px; }
+
+    &[data-tip]:hover::after, &[data-tip]:focus-visible::after {
+      position: absolute;
+      bottom: calc(100% + 8px);
+      left: 50%;
+      z-index: 5;
+      padding: 7px 10px;
+      border-radius: 8px;
+      color: #fff;
+      background: var(--forest);
+      box-shadow: 0 6px 16px rgba(23, 61, 54, .2);
+      content: attr(data-tip);
+      font-size: 12px;
+      font-weight: 600;
+      line-height: 1;
+      white-space: nowrap;
+      pointer-events: none;
+      transform: translateX(-50%);
+    }
+
+    &[data-tip]:hover::before, &[data-tip]:focus-visible::before {
+      position: absolute;
+      bottom: calc(100% + 3px);
+      left: 50%;
+      z-index: 5;
+      border: 5px solid transparent;
+      border-top-color: var(--forest);
+      content: '';
+      pointer-events: none;
+      transform: translateX(-50%);
+    }
+  }
+
+  :deep(.icon-action--dark) {
+    border-color: var(--forest);
+    color: #fff;
+    background: var(--forest);
+    &:hover { background: #0d483e; }
+  }
+
+  :deep(.icon-action--review) {
+    border-color: #f3c9b6;
+    color: #8f3511;
+    background: #fff4ee;
+    &:hover { background: #fde6dc; }
+  }
+}
+
+@include breakpoints.down(760px) {
+  .company-campaign-applicants {
+    &__summary { max-width: none; }
+
+    &__filters {
+      flex-wrap: nowrap;
+      margin: 0 -16px;
+      padding: 0 16px 2px;
+      overflow-x: auto;
+      scrollbar-width: none;
+      &::-webkit-scrollbar { display: none; }
+      button { flex: none; white-space: nowrap; }
+    }
+
+    .creator-offers__table tr.company-campaign-applicants__row {
+      border-color: var(--tone-bg);
+      background: var(--tone-card);
+    }
+
+    &__row > td, &__row > td.creator-offers__action-cell { background: transparent; }
+
+    &__actions { justify-content: flex-end; }
+
+    :deep(.icon-action) { width: 44px; height: 44px; }
+  }
+}

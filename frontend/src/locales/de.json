@@ -1460,7 +1460,27 @@
     "notificationsHint": "Erhalte Benachrichtigungen zu Angeboten, Nachrichten und Kampagnen.",
     "visibilityPendingHint": "Dein Profil bleibt bis zur Genehmigung verborgen. Danach wird es öffentlich sichtbar und du kannst es später wieder verbergen.",
     "profileApprovedHiddenNotice": "Dein Profil ist genehmigt und aktiv. Deaktiviere „Mein Konto verbergen“, um es für andere sichtbar zu machen.",
-    "cancelled": "Abgesagt"
+    "cancelled": "Abgesagt",
+    "applicantFilters": {
+      "all": "Alle",
+      "new": "Neue Bewerbungen",
+      "invited": "Eingeladen",
+      "talk": "Im Gespräch",
+      "offer": "Angebot gesendet",
+      "work": "In Arbeit",
+      "done": "Abgeschlossen",
+      "declined": "Abgelehnt"
+    },
+    "applicantNext": {
+      "new": "Bewerbung prüfen",
+      "invited": "Wartet auf Antwort des Creators",
+      "talk": "Konditionen vereinbaren",
+      "offer": "Wartet auf Antwort zum Angebot",
+      "work": "Der Creator arbeitet am Inhalt",
+      "done": "Zusammenarbeit abgeschlossen",
+      "declined": "Keine Zusammenarbeit vereinbart"
+    },
+    "applicantNextStep": "Nächster Schritt"
   },
   "moderation": {
     "eyebrow": "Wave-Katalog",

@@ -2,7 +2,7 @@
 import CampaignCompensation from '../campaigns/CampaignCompensation.vue'
 import ReviewAction from '../reviews/ReviewAction.vue'
 import { computed, nextTick, ref, watch } from 'vue'
-import { ArrowRight, CalendarDays, MapPin, Megaphone, MessageCircle, Users } from '@lucide/vue'
+import { CalendarDays, Eye, MapPin, Megaphone, MessageCircle, Users } from '@lucide/vue'
 import { useI18n } from 'vue-i18n'
 import AccountProfileCard from './AccountProfileCard.vue'
 import CampaignHiringProgress from '../campaigns/CampaignHiringProgress.vue'
@@ -23,6 +23,7 @@ const props = defineProps({
 const emit = defineEmits(['edit', 'view-application'])
 const { t, locale } = useI18n()
 const query = ref('')
+const statusFilter = ref('all')
 const page = ref(1)
 const heading = ref(null)
 const pageSize = 10
@@ -30,16 +31,25 @@ const timeFormatter = computed(() => createChatTimeFormatter(locale.value, t))
 const campaignAreas = computed(() => props.campaign.categoryLabels?.length
   ? props.campaign.categoryLabels
   : props.campaign.categories?.length ? props.campaign.categories : [props.campaign.categoryLabel || props.campaign.category].filter(Boolean))
+const TONES = ['new', 'invited', 'talk', 'offer', 'work', 'done', 'declined']
+const statusFilters = computed(() => ['all', ...TONES].map(value => ({
+  value,
+  label: t(`account.applicantFilters.${value}`),
+  count: value === 'all' ? props.applications.length : props.applications.filter(application => tone(application) === value).length,
+})))
+const summary = computed(() => [
+  ['offer', 'hiring.offerWaiting'], ['work', 'work.in_progress'], ['done', 'work.completed'],
+].map(([value, label]) => ({ value, label: t(label), count: statusFilters.value.find(filter => filter.value === value).count })))
 const filteredApplications = computed(() => {
   const search = query.value.trim().toLocaleLowerCase(locale.value)
-  return props.applications.filter(({ creator, message }) => !search || [
-    creator.displayName, creator.categoryLabel || creator.category, creator.city, message,
-  ].some(value => (value || '').toLocaleLowerCase(locale.value).includes(search)))
+  return props.applications.filter(application => (statusFilter.value === 'all' || tone(application) === statusFilter.value) && (!search || [
+    application.creator.displayName, application.creator.categoryLabel || application.creator.category, application.creator.city, application.message,
+  ].some(value => (value || '').toLocaleLowerCase(locale.value).includes(search))))
 })
 const pageApplications = computed(() => filteredApplications.value.slice((page.value - 1) * pageSize, page.value * pageSize))
 
-watch(query, () => { page.value = 1 })
-watch(() => props.campaign.slug, () => { query.value = ''; page.value = 1 })
+watch([query, statusFilter], () => { page.value = 1 })
+watch(() => props.campaign.slug, () => { query.value = ''; statusFilter.value = 'all'; page.value = 1 })
 watch(() => filteredApplications.value.length, (count) => {
   page.value = Math.min(page.value, Math.max(1, Math.ceil(count / pageSize)))
 })
@@ -49,10 +59,24 @@ watch(page, async () => {
   heading.value?.scrollIntoView({ block: 'start' })
 })
 
-function statusGroup(application) {
-  if (application.status === 'accepted') return 'accepted'
-  if (['rejected', 'invitation_declined', 'cancelled'].includes(application.status)) return 'rejected'
-  return 'pending'
+// One colour and filter per stage of the collaboration, as seen by the company.
+function tone(application) {
+  if (application.status === 'invited') return 'invited'
+  if (['shortlisted', 'offer_declined'].includes(application.status)) return 'talk'
+  if (application.status === 'offered') return 'offer'
+  if (application.status === 'accepted') {
+    return props.campaign.status === 'finished' || application.offer?.workCompletedAt || application.offer?.workStatus === 'completed' ? 'done' : 'work'
+  }
+  if (['rejected', 'invitation_declined', 'cancelled'].includes(application.status)) return 'declined'
+  return 'new'
+}
+
+function canReview(application) {
+  return (props.campaign.status === 'finished' || application.offer?.workCompletedAt) && application.offer?.status === 'accepted' && !application.readOnly
+}
+
+function viewLabel(application) {
+  return t(application.source === 'invitation' ? 'hiring.viewCreator' : 'account.viewApplication')
 }
 
 function statusLabel(application) {
@@ -98,9 +122,19 @@ function chatRoute(application) {
         <h2 id="company-campaign-applicants-title" ref="heading" tabindex="-1">{{ t('account.campaignApplicants') }}</h2>
         <p>{{ t('account.campaignApplicantsIntro') }}</p>
       </header>
-      <div class="creator-offers__toolbar">
-        <DirectorySearch v-model="query" :label="t('hiring.searchCreators')" :placeholder="t('hiring.searchCreators')" />
-      </div>
+      <template v-if="applications.length">
+        <ul class="company-campaign-applicants__summary">
+          <li v-for="item in summary" :key="item.value" :class="`applicant-tone--${item.value}`"><strong>{{ item.count }}</strong><span>{{ item.label }}</span></li>
+        </ul>
+        <div class="creator-offers__toolbar">
+          <div class="creator-offers__filters company-campaign-applicants__filters" role="group" :aria-label="t('account.activityStatus')">
+            <button v-for="filter in statusFilters" :key="filter.value" type="button" :class="{ 'is-active': statusFilter === filter.value, 'is-empty': !filter.count }" :aria-pressed="statusFilter === filter.value" @click="statusFilter = filter.value">
+              <i :class="`applicant-dot applicant-tone--${filter.value}`" aria-hidden="true"></i>{{ filter.label }}<span>{{ filter.count }}</span>
+            </button>
+          </div>
+          <DirectorySearch v-model="query" :label="t('hiring.searchCreators')" :placeholder="t('hiring.searchCreators')" />
+        </div>
+      </template>
       <StatusMessage v-if="!applications.length" variant="empty">{{ t('account.noCampaignApplications') }}</StatusMessage>
       <StatusMessage v-else-if="!filteredApplications.length" variant="empty">{{ t('account.activityNoResults') }}</StatusMessage>
       <div v-else class="creator-offers__table-wrap">
@@ -110,10 +144,11 @@ function chatRoute(application) {
             <th scope="col">{{ t('auth.creator') }}</th>
             <th scope="col">{{ t('safety.date') }}</th>
             <th scope="col">{{ t('account.activityStatus') }}</th>
+            <th scope="col">{{ t('account.applicantNextStep') }}</th>
             <th scope="col" class="creator-offers__action-cell">{{ t('account.activityActions') }}</th>
           </tr></thead>
           <tbody>
-            <tr v-for="application in pageApplications" :key="application.id">
+            <tr v-for="application in pageApplications" :key="application.id" :class="`company-campaign-applicants__row applicant-tone--${tone(application)}`">
               <td class="creator-offers__campaign">
                 <div class="creator-offers__campaign-identity">
                   <CardImage :image="application.creator.avatarImage" :src="application.creator.avatarUrl || CREATOR_PLACEHOLDER" alt="" sizes="48px" />
@@ -121,11 +156,12 @@ function chatRoute(application) {
                 </div>
               </td>
               <td><span class="creator-offers__mobile-label">{{ t('safety.date') }}</span><span v-if="application.createdAt" class="creator-offers__deadline"><CalendarDays :size="17" aria-hidden="true" /><time :datetime="application.createdAt">{{ formatDate(application.createdAt) }}</time></span><small v-if="application.createdAt" class="company-campaign-applicants__time">{{ timeFormatter.ago(application.createdAt, Date.now()) }}</small></td>
-              <td><span class="creator-offer__status" :class="`creator-offer__status--${statusGroup(application)}`"><i :class="`activity-dot activity-dot--${statusGroup(application)}`" aria-hidden="true"></i>{{ statusLabel(application) }}</span></td>
-              <td class="creator-offers__action-cell"><div class="creator-offers__actions">
-                <ReviewAction v-if="(campaign.status === 'finished' || application.offer?.workCompletedAt) && application.offer?.status === 'accepted' && !application.readOnly" :application-id="application.id" />
-                <LocalizedLink v-if="application.conversationId" class="button button--outline" :to="chatRoute(application)"><MessageCircle :size="16" aria-hidden="true" />{{ t('account.activityChat') }}</LocalizedLink>
-                <button class="button button--dark" type="button" :aria-label="`${t('account.viewApplication')}: ${application.creator.displayName}`" @click="emit('view-application', application)">{{ t(application.source === 'invitation' ? 'hiring.viewCreator' : 'account.viewApplication') }}<ArrowRight :size="16" aria-hidden="true" /></button>
+              <td><span class="applicant-status" :class="`applicant-tone--${tone(application)}`"><i class="applicant-dot" aria-hidden="true"></i>{{ statusLabel(application) }}</span></td>
+              <td class="company-campaign-applicants__next"><span class="creator-offers__mobile-label">{{ t('account.applicantNextStep') }}</span>{{ t(`account.applicantNext.${tone(application)}`) }}</td>
+              <td class="creator-offers__action-cell"><div class="creator-offers__actions company-campaign-applicants__actions">
+                <ReviewAction v-if="canReview(application)" :application-id="application.id" icon-only />
+                <LocalizedLink v-if="application.conversationId" class="icon-action" :to="chatRoute(application)" :data-tip="t('account.activityChat')" :aria-label="`${t('account.activityChat')}: ${application.creator.displayName}`"><MessageCircle :size="18" aria-hidden="true" /></LocalizedLink>
+                <button class="icon-action icon-action--dark" type="button" :data-tip="viewLabel(application)" :aria-label="`${viewLabel(application)}: ${application.creator.displayName}`" @click="emit('view-application', application)"><Eye :size="18" aria-hidden="true" /></button>
               </div></td>
             </tr>
           </tbody>
