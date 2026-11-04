@@ -515,7 +515,8 @@
     "profileTab": "Profil",
     "installBrowserHint": "U izborniku preglednika odaberi Instaliraj aplikaciju ili Dodaj na početni zaslon.",
     "installSafariHint": "U Safariju odaberi Datoteka → Dodaj u Dock.",
-    "madeBy": "S ljubavlju izradio {studio}"
+    "madeBy": "S ljubavlju izradio {studio}",
+    "services": "Usluge"
   },
   "chatInteractions": {
     "actions": "Opcije poruke",
@@ -2888,7 +2889,9 @@
     "attentionHint": "Odobri nove račune i pregledaj otvorene prijave i tikete.",
     "currentWork": "Trenutno stanje, neovisno o odabranom razdoblju.",
     "latest": "Nedavno objavljeno",
-    "published": "Objavljeno"
+    "published": "Objavljeno",
+    "packageRequests": "Upiti za pakete",
+    "serviceOrders": "Narudžbe sa stranice Usluge"
   },
   "companyTypes": {
     "label": "Tip kompanije",

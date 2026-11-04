@@ -31,6 +31,9 @@ use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
 
 final class CreatorInquiryController
 {
+    /** Accepted request origins, used to measure orders from the services page. */
+    private const SOURCES = ['profile', 'services', 'homepage'];
+
     #[Route('/api/companies/{slug}/inquiries', name: 'api_agency_inquiry_create', methods: ['POST'])]
     #[Route('/api/creators/{slug}/inquiries', name: 'api_creator_inquiry_create', methods: ['POST'])]
     public function create(
@@ -173,6 +176,8 @@ final class CreatorInquiryController
             $singlePackage['currency'] ?? 'BAM',
             $selectedPackages,
         );
+        $source = is_string($data['source'] ?? null) ? $data['source'] : 'profile';
+        $inquiry->setSource(in_array($source, self::SOURCES, true) ? $source : 'profile');
         $entityManager->persist($inquiry);
         $entityManager->persist(new InquiryMessage($inquiry, $user, $message));
         $creatorOwner = $creator->getOwner();

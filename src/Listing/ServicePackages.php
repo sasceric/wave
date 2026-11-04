@@ -37,7 +37,7 @@ final class ServicePackages
     ) {}
 
     /**
-     * @param array{type?: string, q?: string, city?: string, category?: string, minPrice?: ?int, maxPrice?: ?int, sort?: string, excludeCreatorIds?: list<int>, onePerCreator?: bool} $filters
+     * @param array{type?: string, q?: string, city?: string, category?: string, minPrice?: ?int, maxPrice?: ?int, sort?: string, onePerCreator?: bool} $filters
      * @return array{items: list<array<string, mixed>>, counts: array<string, int>, total: int}
      */
     public function find(string $locale, ?Company $company, array $filters = [], int $limit = 24, int $offset = 0): array
@@ -53,8 +53,6 @@ final class ServicePackages
                     AND u.deleted_at IS NULL AND u.presentation_demo_key IS NULL AND $visibility
             ) ranked ORDER BY ".RecommendedProfiles::ORDER.' LIMIT '.self::CREATOR_LIMIT,
             $this->recommendations->parameters());
-        $exclude = array_flip($filters['excludeCreatorIds'] ?? []);
-        $ids = array_values(array_filter($ids, static fn ($id): bool => !isset($exclude[(int) $id])));
         if ($ids === []) return ['items' => [], 'counts' => array_fill_keys(self::FILTERS, 0), 'total' => 0];
 
         $creators = $this->entityManager->getRepository(Creator::class)->createQueryBuilder('profile')
@@ -62,9 +60,10 @@ final class ServicePackages
             ->where('profile.id IN (:ids)')->setParameter('ids', $ids)->getQuery()->getResult();
         $industries = $company?->getIndustries() ?? [];
         $order = array_flip($ids);
-        // Featured creators keep their admin order; below them a company sees its own fields first.
-        $rank = static fn (Creator $creator): int => $creator->isFeatured() ? 0
-            : ($industries !== [] && array_intersect($creator->getCategories(), $industries) !== [] ? 1 : 2);
+        // A company sees creators from its own fields first: featured matches, other featured,
+        // other matches, then everyone else. Within each tier the directory ranking is kept.
+        $rank = static fn (Creator $creator): int => ($creator->isFeatured() ? 0 : 2)
+            + ($industries === [] || array_intersect($creator->getCategories(), $industries) !== [] ? 0 : 1);
         usort($creators, static fn (Creator $a, Creator $b): int => [$rank($a), $order[$a->getId()]] <=> [$rank($b), $order[$b->getId()]]);
 
         $labels = MarketplaceCategoryLabels::forLocale($this->entityManager, $locale);

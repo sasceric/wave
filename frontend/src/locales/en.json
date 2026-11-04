@@ -514,7 +514,8 @@
     "profileTab": "Profile",
     "installBrowserHint": "In your browser menu, choose Install app or Add to Home Screen.",
     "installSafariHint": "In Safari, choose File → Add to Dock.",
-    "madeBy": "Made with love by {studio}"
+    "madeBy": "Made with love by {studio}",
+    "services": "Services"
   },
   "chatInteractions": {
     "actions": "Message options",
@@ -2887,7 +2888,9 @@
     "attentionHint": "Approve new accounts and review open reports and support tickets.",
     "currentWork": "Current workload, independent of the selected period.",
     "latest": "Recently published",
-    "published": "Published"
+    "published": "Published",
+    "packageRequests": "Package requests",
+    "serviceOrders": "Orders from Services"
   },
   "companyTypes": {
     "label": "Company type",

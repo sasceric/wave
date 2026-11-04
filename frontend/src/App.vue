@@ -1059,6 +1059,12 @@ async function signOut() {
           >
             {{ t('app.campaigns') }}
           </LocalizedLink>
+          <LocalizedLink
+            :to="{ name: 'services' }"
+            :class="{ 'is-active': ['services', 'services-type'].includes(route.meta.routeName) }"
+          >
+            {{ t('app.services') }}
+          </LocalizedLink>
         </nav>
         <HeaderCreatorSearch />
         <div class="site-header__actions">
@@ -1334,6 +1340,7 @@ async function signOut() {
                 <LocalizedLink to="/creators">{{ t('app.creatorsNav') }}</LocalizedLink>
                 <LocalizedLink to="/companies">{{ t('app.companies') }}</LocalizedLink>
                 <LocalizedLink to="/campaigns">{{ t('app.campaigns') }}</LocalizedLink>
+                <LocalizedLink :to="{ name: 'services' }">{{ t('app.services') }}</LocalizedLink>
                 <LocalizedLink :to="{ name: 'seo-guides' }">{{ t('regionalSeo.guideTitle') }}</LocalizedLink>
                 <LocalizedLink :to="{ name: 'creator-guides' }">{{ t('regionalSeo.creatorGuides.title') }}</LocalizedLink>
                 <LocalizedLink :to="{ name: 'how-it-works' }">

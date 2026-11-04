@@ -86,3 +86,10 @@ function sendPageView() {
   window.gtag('event', 'page_view', currentPage)
   lastPage = key
 }
+
+// Product events (e.g. service panel opened, order sent). Same consent rule as page views;
+// callers pass only non-personal parameters such as the service type.
+export function trackEvent(name, params = {}) {
+  if (!name || !analyticsConsent || !analyticsInitialized || !window.gtag) return
+  window.gtag('event', name, params)
+}

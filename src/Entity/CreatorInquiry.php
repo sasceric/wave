@@ -64,6 +64,10 @@ class CreatorInquiry
     public function getOffer(): ?InquiryOffer { return $this->offer; }
     public function setOffer(InquiryOffer $offer): void { $this->offer = $offer; }
 
+    /** Where the request was sent from: the creator profile, the /usluge page or the homepage row. */
+    #[ORM\Column(length: 20, options: ['default' => 'profile'])]
+    private string $source = 'profile';
+
     public function __construct(
         Creator $creator,
         Company $company,
@@ -164,4 +168,8 @@ class CreatorInquiry
         $this->status = $status;
         $this->respondedAt = new DateTimeImmutable();
     }
+
+    public function getSource(): string { return $this->source; }
+
+    public function setSource(string $source): void { $this->source = $source; }
 }

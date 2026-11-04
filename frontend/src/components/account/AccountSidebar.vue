@@ -24,6 +24,7 @@ import {
   UserRoundPlus,
   Handshake,
   Settings,
+  ShoppingBag,
 } from '@lucide/vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
@@ -97,6 +98,8 @@ const exploreItems = computed(() => props.user?.profileComplete === false && !pr
   props.user
     ? { route: 'companies', label: t('app.companies'), icon: Building2 }
     : { route: 'creators', label: t('app.creatorsNav'), icon: Users },
+  // Creator services are for brands, so creators don't get the shortcut.
+  ...(props.user?.accountType === 'creator' && !props.user?.isAdmin ? [] : [{ route: 'services', label: t('app.services'), icon: ShoppingBag }]),
 ])
 async function signOut() {
   if (signingOut.value) return

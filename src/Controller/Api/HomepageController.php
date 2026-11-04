@@ -89,20 +89,11 @@ final class HomepageController
         $campaignOrder = array_flip($campaignIds);
         usort($campaigns, static fn (Campaign $a, Campaign $b): int => $campaignOrder[$a->getId()] <=> $campaignOrder[$b->getId()]);
 
-        // "Usluge kreatora" row: one package per creator, skipping creators already in the featured row.
+        // "Usluge kreatora" row: creators in the creator directory order (featured by position, then
+        // the recommended ranking); a logged-in company sees creators from its own fields first.
+        // One package each: the featured package, else the cheapest priced one, else the first.
         $viewer = $security->getUser();
-        $servicePackages = $services->find($locale, $viewer instanceof User ? $viewer->getCompany() : null, [
-            'excludeCreatorIds' => array_map(static fn (Creator $creator): int => (int) $creator->getId(), $creators),
-            'onePerCreator' => true,
-        ], 8)['items'];
-        if (count($servicePackages) < 4) {
-            // Small catalogues: top up with featured creators rather than showing a near-empty row.
-            $shown = array_flip(array_map(static fn (array $item): string => $item['creator']['slug'], $servicePackages));
-            foreach ($services->find($locale, $viewer instanceof User ? $viewer->getCompany() : null, ['onePerCreator' => true], 8)['items'] as $item) {
-                if (count($servicePackages) >= 8) break;
-                if (!isset($shown[$item['creator']['slug']])) $servicePackages[] = $item;
-            }
-        }
+        $servicePackages = $services->find($locale, $viewer instanceof User ? $viewer->getCompany() : null, ['onePerCreator' => true], 12)['items'];
 
         $ratings = $feedback->summaries(array_values(array_filter(array_map(static fn (Creator $creator): ?int => $creator->getOwner()?->getId(), $creators))), 'provider');
         $companyRatings = $feedback->companySummaries($companies);

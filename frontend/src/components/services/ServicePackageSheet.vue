@@ -11,12 +11,15 @@ import RatingSummary from '../reviews/RatingSummary.vue'
 import { currentUser } from '../../composables/useCurrentUser'
 import { apiGet, formatMoney } from '../../lib/api'
 import { sendCreatorInquiry } from '../../lib/creatorInquiry'
+import { trackEvent } from '../../lib/privacyMetrics'
 import { CREATOR_PLACEHOLDER } from '../../lib/marketplace'
 import { localizedPath } from '../../routePaths'
 
 // Package details and ordering without leaving the list: a right-hand panel on desktop, a bottom sheet on phones.
 const props = defineProps({
   item: { type: Object, default: null },
+  // 'services' or 'homepage': stored with the request and sent with analytics events.
+  source: { type: String, default: 'services' },
 })
 const emit = defineEmits(['close'])
 const { t, locale } = useI18n()
@@ -68,9 +71,14 @@ watch(() => props.item, async (item) => {
   sendError.value = ''
   sent.value = false
   loadCreator(item.creator.slug)
+  trackEvent('service_panel_open', eventParams(item))
   await nextTick()
   if (!dialog.value?.open) dialog.value?.showModal()
 })
+
+function eventParams(item) {
+  return { service_type: item.serviceType, price_mode: item.priceMode, source: props.source }
+}
 
 function close() {
   if (busy.value) return
@@ -90,8 +98,9 @@ async function submit() {
   busy.value = true
   sendError.value = ''
   try {
-    await sendCreatorInquiry(props.item.creator.slug, { packageIds: [props.item.id], message: text })
+    await sendCreatorInquiry(props.item.creator.slug, { packageIds: [props.item.id], message: text, source: props.source })
     sent.value = true
+    trackEvent('service_order_sent', eventParams(props.item))
   } catch (cause) {
     sendError.value = cause.message
   } finally {

@@ -514,7 +514,8 @@
     "profileTab": "Profil",
     "installBrowserHint": "Wähle im Browsermenü „App installieren“ oder „Zum Startbildschirm hinzufügen“.",
     "installSafariHint": "Wähle in Safari Ablage → Zum Dock hinzufügen.",
-    "madeBy": "Mit Liebe gemacht von {studio}"
+    "madeBy": "Mit Liebe gemacht von {studio}",
+    "services": "Leistungen"
   },
   "chatInteractions": {
     "actions": "Nachrichtenoptionen",
@@ -2887,7 +2888,9 @@
     "attentionHint": "Genehmige neue Konten und prüfe offene Meldungen und Support-Tickets.",
     "currentWork": "Aktueller Arbeitsstand, unabhängig vom gewählten Zeitraum.",
     "latest": "Kürzlich veröffentlicht",
-    "published": "Veröffentlicht"
+    "published": "Veröffentlicht",
+    "packageRequests": "Paketanfragen",
+    "serviceOrders": "Buchungen über Leistungen"
   },
   "companyTypes": {
     "label": "Unternehmenstyp",

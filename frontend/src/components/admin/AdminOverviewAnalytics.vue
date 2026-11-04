@@ -1,7 +1,7 @@
 <script setup>
 import { computed, onBeforeUnmount, onMounted, ref, useId, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { ArrowUpRight, CalendarDays, Check, ClipboardCheck, Flag, LifeBuoy, Megaphone, Send, Users, Building2, UserRoundCheck, Activity, Share2, Images, Package } from '@lucide/vue'
+import { ArrowUpRight, CalendarDays, Check, ClipboardCheck, Flag, LifeBuoy, Megaphone, Send, Users, Building2, UserRoundCheck, Activity, Share2, Images, Package, MessageCircle, ShoppingBag } from '@lucide/vue'
 import SingleSelect from '../shared/SingleSelect.vue'
 import AdminChart from './AdminChart.vue'
 import LocalizedLink from '../shared/LocalizedLink.vue'
@@ -87,6 +87,7 @@ const attention = [
 const activity = [
   { key: 'applications', icon: ClipboardCheck }, { key: 'invitations', icon: Send },
   { key: 'hires', icon: Users }, { key: 'completed', icon: Check },
+  { key: 'packageRequests', icon: MessageCircle }, { key: 'serviceOrders', icon: ShoppingBag },
 ]
 const buckets = computed(() => bucketOverviewSeries(statistics.value?.series || []))
 const growth = computed(() => cumulativeOverviewSeries(statistics.value?.series || []))

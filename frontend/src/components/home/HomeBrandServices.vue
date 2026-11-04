@@ -35,7 +35,7 @@ const visible = computed(() => props.packages.filter(item => !type.value || item
     </template>
     <ServicePackageCard v-for="item in visible" :key="`${item.creator.slug}-${item.id}`" :item="item" @open="selected = $event" />
     <ServicePackageSkeleton v-for="index in loading && !packages.length ? 4 : 0" :key="`loading-${index}`" />
-    <template #after><ServicePackageSheet :item="selected" @close="selected = null" /></template>
+    <template #after><ServicePackageSheet :item="selected" source="homepage" @close="selected = null" /></template>
   </CardRow>
 </template>
 

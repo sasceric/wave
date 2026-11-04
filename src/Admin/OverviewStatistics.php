@@ -29,13 +29,15 @@ final class OverviewStatistics
             UNION ALL SELECT SUBSTR(CAST(created_at AS VARCHAR), 1, 10), 'invitations' FROM campaign_invitation WHERE created_at >= :from AND created_at < :until
             UNION ALL SELECT SUBSTR(CAST(responded_at AS VARCHAR), 1, 10), 'hires' FROM campaign_offer WHERE status = 'accepted' AND responded_at >= :from AND responded_at < :until
             UNION ALL SELECT SUBSTR(CAST(finished_at AS VARCHAR), 1, 10), 'completed' FROM campaign WHERE status = 'finished' AND finished_at >= :from AND finished_at < :until
+            UNION ALL SELECT SUBSTR(CAST(created_at AS VARCHAR), 1, 10), 'packageRequests' FROM creator_inquiry WHERE created_at >= :from AND created_at < :until
+            UNION ALL SELECT SUBSTR(CAST(created_at AS VARCHAR), 1, 10), 'serviceOrders' FROM creator_inquiry WHERE source IN ('services', 'homepage') AND created_at >= :from AND created_at < :until
         ) activity GROUP BY day, kind ORDER BY day", $parameters);
         $series = [];
         for ($index = 0; $index < $days; ++$index) {
             $day = $from->modify('+'.$index.' days')->format('Y-m-d');
-            $series[$day] = ['date' => $day, 'creators' => 0, 'campaigns' => 0, 'applications' => 0, 'invitations' => 0, 'hires' => 0, 'completed' => 0];
+            $series[$day] = ['date' => $day, 'creators' => 0, 'campaigns' => 0, 'applications' => 0, 'invitations' => 0, 'hires' => 0, 'completed' => 0, 'packageRequests' => 0, 'serviceOrders' => 0];
         }
-        $totals = ['creators' => 0, 'campaigns' => 0, 'applications' => 0, 'invitations' => 0, 'hires' => 0, 'completed' => 0];
+        $totals = ['creators' => 0, 'campaigns' => 0, 'applications' => 0, 'invitations' => 0, 'hires' => 0, 'completed' => 0, 'packageRequests' => 0, 'serviceOrders' => 0];
         foreach ($daily as $row) {
             $count = (int) $row['total'];
             $series[$row['day']][$row['kind']] = $count;

@@ -149,10 +149,13 @@ final class CreatorCollaborationTest extends WebTestCase
             'packageId' => 'food-package',
             'proposedAmount' => 650,
             'message' => 'We would love to feature our new local ingredients in your recipe series.',
+            'source' => 'services',
         ];
         $this->jsonRequest('POST', '/api/creators/inquiry-creator/inquiries', $requestBody, $this->csrfToken());
         self::assertResponseStatusCodeSame(201);
         $inquiry = $this->payload()['data'];
+        // Requests from the services page are recorded so they can be counted in the admin overview.
+        self::assertSame('services', $entityManager->find(\App\Entity\CreatorInquiry::class, $inquiry['id'])?->getSource());
         self::assertSame('pending', $inquiry['status']);
         self::assertSame(500, $inquiry['listedPrice']);
         self::assertSame(650, $inquiry['proposedAmount']);
