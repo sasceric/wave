@@ -13,6 +13,7 @@ import {
   Trash2,
   UserRoundX,
   Handshake,
+  ArrowRightLeft,
 } from '@lucide/vue'
 import { onBeforeRouteLeave, onBeforeRouteUpdate, useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
@@ -60,8 +61,9 @@ function updateCreatedAtClock() {
   createdAtNow.value = Date.now()
   createdAtTimer = window.setTimeout(updateCreatedAtClock, 60_000 - Date.now() % 60_000)
 }
-const reminderLabel = kind => t(kind === 'verification' ? 'adminProfiles.verificationReminder' : kind === 'pre_approval' ? 'adminProfiles.preApproval' : 'adminProfiles.profileTip')
-const reminderTemplate = kind => ({ verification: 'verification_reminder', pre_approval: 'pre_approval', profile: 'profile_tip' })[kind]
+const reminderLabel = kind => t({ verification: 'adminProfiles.verificationReminder', pre_approval: 'adminProfiles.preApproval', wrong_type: 'adminProfiles.wrongType' }[kind] ?? 'adminProfiles.profileTip')
+// Wrong account type picks the creator or brand/agency template from the recipient's role.
+const reminderTemplate = kind => ({ verification: 'verification_reminder', pre_approval: 'pre_approval', profile: 'profile_tip', wrong_type: 'wrong_account_type_creator' })[kind]
 const reminderConfirmation = computed(() => reminderRequest.value ? t('adminProfiles.reminderConfirm', {
   email: reminderRequest.value.email,
   type: reminderLabel(reminderRequest.value.kind),
@@ -719,6 +721,9 @@ onMounted(updateCreatedAtClock)
                 <button v-if="isProfileList && (section !== 'registrations' || !row.approved)" class="admin-row-actions__item" type="button" role="menuitem" :disabled="sendingReminder || !row.accountId || !row.email || !row.canChangeVisibility" :title="!row.accountId ? t('adminProfiles.noAccount') : undefined" @click="requestReminder(row, 'profile')">
                   <ClipboardList :size="15" aria-hidden="true" />{{ t('adminProfiles.profileTip') }}
                 </button>
+                <button v-if="isProfileList" class="admin-row-actions__item" type="button" role="menuitem" :disabled="sendingReminder || !row.accountId || !row.email || !row.canChangeVisibility" :title="!row.accountId ? t('adminProfiles.noAccount') : undefined" @click="requestReminder(row, 'wrong_type')">
+                  <ArrowRightLeft :size="15" aria-hidden="true" />{{ t('adminProfiles.wrongType') }}
+                </button>
                 <button v-if="section === 'campaigns'" class="admin-row-actions__item" type="button" role="menuitem" :disabled="visibilitySaving" @click="changeCampaignListing(row)">
                   <EyeOff v-if="row.listed" :size="15" aria-hidden="true" /><Eye v-else :size="15" aria-hidden="true" />{{ t(row.listed ? 'adminCampaigns.hide' : 'adminCampaigns.show') }}
                 </button>
@@ -771,6 +776,7 @@ onMounted(updateCreatedAtClock)
       @confirm="confirmReminder"
     >
       <p v-if="reminderRequest?.kind === 'pre_approval'">{{ t('adminProfiles.preApprovalHint') }}</p>
+      <p v-if="reminderRequest?.kind === 'wrong_type'">{{ t('adminProfiles.wrongTypeHint') }}</p>
       <p>{{ t('adminProfiles.reminderLimit') }}</p>
       <LocalizedLink :to="{ name: 'admin-email-templates', query: { template: reminderTemplate(reminderRequest?.kind) } }">{{ t('adminProfiles.editReminderTemplates') }}</LocalizedLink>
     </ConfirmationModal>

@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onBeforeUnmount, ref, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { ArrowRightLeft, Building2, ChevronRight } from '@lucide/vue'
 import FormModal from '../shared/FormModal.vue'
@@ -37,7 +37,11 @@ async function load() {
     const response = await apiGet('/me/account-type-requests')
     if (ticket === generation) requests.value = response.data
   } catch (cause) { if (ticket === generation) error.value = cause.message }
-  finally { if (ticket === generation) loading.value = false }
+  finally {
+    if (ticket === generation) loading.value = false
+    // The "wrong account type" email links here with #settings-account-type.
+    if (ticket === generation && globalThis.location?.hash === '#settings-account-type') nextTick(() => document.getElementById('settings-account-type')?.scrollIntoView({ block: 'start' }))
+  }
 }
 function openRequest() {
   targetType.value = targetOptions.value[0].value

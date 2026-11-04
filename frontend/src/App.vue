@@ -138,6 +138,9 @@ const mobileNavRole = computed(() => {
   if (!operational || user.isAdmin) return 'member'
   return user.accountType === 'creator' ? 'creator' : 'company'
 })
+// Brands (and guests) see the partner invitation in the footer; creators do not.
+const showFooterPartner = computed(() => mobileNavRole.value !== 'creator')
+const footerPartnerHref = computed(() => `mailto:info@wave.ba?subject=${encodeURIComponent(t('app.footerPartnerSubject'))}`)
 const accountStrengthScore = computed(() => profileStrength(currentUser.value)?.score ?? null)
 const meTabActive = computed(() => Boolean(
   ['account', 'verify-email', 'reset-password'].includes(route.meta.routeName)
@@ -1392,10 +1395,19 @@ async function signOut() {
                 <a class="site-footer__email" href="mailto:info@wave.ba">
                   info@wave.ba <ArrowRight class="link-arrow" :size="16" aria-hidden="true" />
                 </a>
+                <a v-if="showFooterPartner && !isMobileFooter" class="site-footer__partner" :href="footerPartnerHref">
+                  <img src="/images/partner-badge.svg" alt="" width="120" height="129" loading="lazy" decoding="async" />
+                  <span><strong>{{ t('app.footerPartnerTitle') }}</strong> {{ t('app.footerPartnerText') }}</span>
+                </a>
                 <span class="site-footer__operator">{{ t('app.footerOperator') }}</span>
               </div>
             </details>
           </div>
+
+          <a v-if="showFooterPartner && isMobileFooter" class="site-footer__partner site-footer__partner--mobile" :href="footerPartnerHref">
+            <img src="/images/partner-badge.svg" alt="" width="120" height="129" loading="lazy" decoding="async" />
+            <span><strong>{{ t('app.footerPartnerTitle') }}</strong> {{ t('app.footerPartnerText') }}</span>
+          </a>
 
           <div v-if="!isMobileFooter" class="site-footer__column site-footer__newsletter">
             <details

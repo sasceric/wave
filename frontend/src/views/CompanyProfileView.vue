@@ -149,14 +149,16 @@ import PartnerBadge from '../components/companies/PartnerBadge.vue'
       <div class="company-profile__hero-image" :style="{ backgroundImage: `url(${coverUrl})` }" aria-hidden="true" />
       <div class="company-profile__hero-card">
         <div class="company-profile__identity">
-          <div class="company-profile__logo">
-            <img v-if="company.logoUrl" :src="company.logoUrl" :alt="company.name" />
-            <WaveLogo v-else mark />
+          <div class="company-profile__logo-wrap">
+            <div class="company-profile__logo">
+              <img v-if="company.logoUrl" :src="company.logoUrl" :alt="company.name" />
+              <WaveLogo v-else mark />
+            </div>
+            <PartnerBadge v-if="company.partner" class="company-profile__partner" :size="78" />
           </div>
           <div class="company-profile__identity-copy">
             <p class="eyebrow">{{ t(`companyTypes.options.${company.companyType || 'brand'}`) }}<template v-if="industries.length"> · {{ industries.join(' · ') }}</template></p>
             <h1>{{ company.name }}<span v-if="company.verified" class="verified-mark" :aria-label="t('campaignCard.verified')">✓</span></h1>
-            <PartnerBadge v-if="company.partner" />
           </div>
         </div>
         <p class="company-profile__tagline">{{ t(company.about ? 'companyProfile.profileIntro' : 'companyProfile.profileLabel') }}</p>

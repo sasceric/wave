@@ -41,6 +41,8 @@ const templateLabels = computed(() => ({
   verification_reminder: { title: t('adminProfiles.verificationTemplateTitle'), description: t('adminProfiles.verificationTemplateHint') },
   approval_revoked: { title: t('adminProfiles.unapprovedTemplateTitle'), description: t('adminProfiles.unapprovedTemplateHint') },
   pre_approval: { title: t('adminProfiles.preApprovalTemplateTitle'), description: t('adminProfiles.preApprovalTemplateHint') },
+  wrong_account_type_creator: { title: t('adminProfiles.wrongTypeCreatorTemplateTitle'), description: t('adminProfiles.wrongTypeCreatorTemplateHint') },
+  wrong_account_type_company: { title: t('adminProfiles.wrongTypeCompanyTemplateTitle'), description: t('adminProfiles.wrongTypeCompanyTemplateHint') },
   profile_tip: { title: t('adminProfiles.profileTipTemplateTitle'), description: t('adminProfiles.profileTipTemplateHint') },
   credit_code_assigned: { title: t('credits.assignmentEmailTitle'), description: t('credits.assignmentEmailHint') },
   credits_activated: { title: t('credits.emailTitle'), description: t('credits.emailHint') },

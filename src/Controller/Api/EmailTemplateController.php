@@ -53,6 +53,8 @@ final class EmailTemplateController
         'admin_broadcast',
         'pre_approval',
         'approval_revoked',
+        'wrong_account_type_creator',
+        'wrong_account_type_company',
     ];
     /** Text variables admins can reword without HTML ("Tekst" tab). */
     private const TEXT_KEYS = [

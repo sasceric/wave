@@ -18,6 +18,7 @@ import PartnerBadge from './PartnerBadge.vue'
 
 <template>
   <article class="company-directory-card">
+    <PartnerBadge v-if="company.partner" class="company-directory-card__partner" :size="72" />
     <div class="company-directory-card__visual" aria-hidden="true">
       <CardImage :image="company.coverImage" :src="company.coverUrl || '/images/company-cover.webp'" alt="" :sizes="imageSizes" />
     </div>
@@ -30,7 +31,6 @@ import PartnerBadge from './PartnerBadge.vue'
         <span v-if="company.verified" class="company-directory-card__verified" :aria-label="t('companyDirectory.verified')"><BadgeCheck :size="15" aria-hidden="true" /></span>
         <div class="company-directory-card__heading"><h2>{{ company.name }}</h2><p>{{ t(`companyTypes.options.${company.companyType || 'brand'}`) }} · {{ company.industryLabels?.join(', ') || company.industry }}</p></div>
       </div>
-      <PartnerBadge v-if="company.partner" compact />
       <PresentationDemoBadge v-if="company.isPresentationDemo" compact />
       <RatingSummary :rating="company.rating" compact />
       <p v-if="company.summary || company.about" class="company-directory-card__description">{{ company.summary || company.about || '' }}</p>

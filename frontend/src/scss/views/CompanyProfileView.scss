@@ -44,6 +44,8 @@
 
   &__identity { display: flex; align-items: center; gap: 16px; min-width: 0; }
   &__identity-copy { min-width: 0; }
+  &__logo-wrap { position: relative; flex: 0 0 auto; }
+  &__partner { position: absolute; right: -26px; bottom: -22px; z-index: 1; }
 
   &__logo {
     display: grid;
@@ -147,6 +149,7 @@
     &__hero-card { gap: 12px; padding: 18px; border-radius: 22px; }
     &__identity { gap: 14px; }
     &__logo { width: 86px; height: 86px; border-radius: 20px; }
+    &__partner { right: -18px; bottom: -16px; img { width: 56px; height: auto; } }
     h1 { font-size: 30px; }
     &__tagline { font-size: 14px; }
     &__hero-actions { display: none; }

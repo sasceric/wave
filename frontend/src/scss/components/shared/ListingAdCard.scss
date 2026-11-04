@@ -30,7 +30,13 @@
   &__link svg { flex-shrink: 0; }
   &__image { height: 180px; flex: 0 0 auto; overflow: hidden; }
   &__image .card-image, &__image img { width: 100%; height: 100%; object-fit: cover; }
-  &--image &__label { margin-bottom: 18px; }
+  // Image ads share a row with ordinary cards, so the copy stays card-sized and the visual keeps a fixed, calm height.
+  &--image &__label { margin-bottom: 10px; }
+  &--image:not(&--wide) &__image { height: auto; aspect-ratio: 2 / 1; }
+  &--image:not(&--wide) &__content { padding: 18px 20px 20px; }
+  &--image:not(&--wide) h3 { font-size: clamp(21px, 1.6vw, 25px); margin-bottom: 8px; }
+  &--image:not(&--wide) p { font-size: 13px; line-height: 1.5; margin-bottom: 14px; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; white-space: normal; }
+  &--image:not(&--wide) &__link { min-height: 36px; }
   &--wide.listing-ad--image { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); }
   &--wide.listing-ad--image &__image { order: 2; height: 100%; min-height: 0; }
   &--wide.listing-ad--image &__content { order: 1; padding: 26px; }

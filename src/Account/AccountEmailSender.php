@@ -389,6 +389,16 @@ final class AccountEmailSender
         $this->deliver($user, 'approval_revoked', $locale, $copy['subject'], $url, $variables);
     }
 
+    /** Wrong account type: a creator who is really a brand/agency, or a brand/agency that is really a creator. */
+    public function sendWrongAccountType(User $user): void
+    {
+        $locale = $this->normalizedLocale($user->getPreferredLocale());
+        $template = $user->hasRole('ROLE_COMPANY') ? 'wrong_account_type_company' : 'wrong_account_type_creator';
+        $copy = $this->copyFor($template, $locale);
+        $url = rtrim($this->appBaseUrl, '/') . $this->localizedRoutePath('account-settings', $locale) . '#settings-account-type';
+        $this->deliver($user, $template, $locale, $copy['subject'], $url, $this->baseVariables($copy, $locale, $url));
+    }
+
     public function sendPreApproval(User $user): void
     {
         $this->send($user, null, $user->getPreferredLocale(), 'pre_approval', 'account');
@@ -896,6 +906,9 @@ final class AccountEmailSender
                 $this->copyFor($template === 'verification_reminder' ? 'verify' : 'registered', $locale),
                 RegistrationReminderEmailCopy::forLocale($template, $locale),
             );
+        }
+        if (in_array($template, WrongAccountTypeEmailCopy::TEMPLATES, true)) {
+            return WrongAccountTypeEmailCopy::forLocale($template, $locale) ?? throw new \InvalidArgumentException('Unknown account type notice.');
         }
         if (in_array($template, ['account_deleted', 'terms_updated'], true)) {
             return AccountNoticeEmailCopy::forLocale($template, $locale) ?? throw new \InvalidArgumentException('Unknown account notice.');

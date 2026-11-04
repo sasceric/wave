@@ -254,6 +254,55 @@ final class RegistrationReminderTest extends WebTestCase
         self::assertFalse($company->isApproved());
     }
 
+    public function testWrongAccountTypeTellsACreatorToSwitchToBrandOrAgencyWithoutChangingTheAccount(): void
+    {
+        $this->client->loginUser($this->admin);
+        $this->send('wrong_type');
+        self::assertResponseIsSuccessful();
+        $message = self::getMailerMessage();
+        self::assertInstanceOf(Email::class, $message);
+        self::assertSame('You chose the wrong account type on Wave', $message->getSubject());
+        self::assertEmailHtmlBodyContains($message, 'You registered as a content creator, but your profile belongs to a brand or agency.');
+        self::assertEmailHtmlBodyContains($message, 'register again as a brand or agency');
+        self::assertEmailHtmlBodyContains($message, '/en/account/settings#settings-account-type');
+        $this->pending = $this->em->find(User::class, $this->pending->getId());
+        self::assertTrue($this->pending->hasRole('ROLE_CREATOR'));
+        self::assertFalse($this->pending->isApproved());
+        $this->send('wrong_type'); self::assertResponseStatusCodeSame(429);
+    }
+
+    public function testWrongAccountTypeTellsABrandToSwitchToCreatorInItsOwnLanguage(): void
+    {
+        $company = new User('wrong-type-company@example.test', 'ROLE_COMPANY');
+        $company->setPassword('unused'); $company->setPreferredLocale('bs'); $company->setApproved(true);
+        $company->setCompany(new Company('wrong-type-company', 'Amina Vlog', 'Beauty'));
+        $this->em->persist($company); $this->em->flush();
+        $this->client->loginUser($this->admin);
+        $this->client->request('GET', '/api/auth/csrf');
+        $csrf = json_decode((string) $this->client->getResponse()->getContent(), true)['csrfToken'];
+        $this->client->jsonRequest('POST', '/api/admin/registrations/'.$company->getId().'/reminder?locale=en', ['kind' => 'wrong_type'], ['HTTP_X_CSRF_TOKEN' => $csrf]);
+        self::assertResponseIsSuccessful();
+        $message = self::getMailerMessage(); self::assertInstanceOf(Email::class, $message);
+        self::assertSame('Odabrali ste pogrešan tip računa na Waveu', $message->getSubject());
+        self::assertEmailHtmlBodyContains($message, 'promjenu tipa računa u kreatora');
+        self::assertEmailHtmlBodyContains($message, 'registrujte se ponovo kao kreator');
+        self::assertEmailHtmlBodyContains($message, '#settings-account-type');
+    }
+
+    public function testWrongAccountTypeTemplatesRenderInEverySupportedLanguage(): void
+    {
+        $sender = self::getContainer()->get(AccountEmailSender::class);
+        $renderer = self::getContainer()->get(EmailTemplateRenderer::class);
+        foreach (['bs', 'hr', 'sr', 'sl', 'en', 'cnr', 'de'] as $locale) {
+            foreach (\App\Account\WrongAccountTypeEmailCopy::TEMPLATES as $template) {
+                $html = $renderer->render($template, $sender->previewVariables($template, $locale));
+                self::assertNotSame('', $sender->defaultSubject($template, $locale));
+                self::assertStringNotContainsString('{{', $html);
+                self::assertStringContainsString('info@wave.ba', $html);
+            }
+        }
+    }
+
     public function testBothDefaultRemindersRenderInEverySupportedLanguage(): void
     {
         $sender = self::getContainer()->get(AccountEmailSender::class);
