@@ -21,7 +21,9 @@ final class CampaignOfferTimeline
             $conversation = new CampaignConversation($campaign, $application->getCreator(), $sender);
             $this->em->persist($conversation);
         }
-        $compensation = $campaign->isVoluntary() ? ApiMessages::get('campaign_voluntary', $locale) : $offer->getAmount().' '.($campaign->getCurrency() === 'BAM' ? 'KM' : $campaign->getCurrency());
+        $amount = $offer->getAmount().' '.($campaign->getCurrency() === 'BAM' ? 'KM' : $campaign->getCurrency());
+        $compensation = $campaign->isVoluntary() ? ApiMessages::get('campaign_voluntary', $locale)
+            : ($campaign->isPaidInProducts() ? sprintf(ApiMessages::get('campaign_products_value', $locale), $amount) : $amount);
         $body = ApiMessages::get('hiring_'.$type, $locale).' '.$campaign->getTitle().' · '.$compensation;
         $body .= $offer->getDueDate() ? ' · '.$offer->getDueDate()->format('d.m.Y') : '';
         if ($type === 'work_changes_requested') $body .= "\n".$offer->getWorkChangesReason();

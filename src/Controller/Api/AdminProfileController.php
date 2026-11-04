@@ -67,6 +67,27 @@ final class AdminProfileController
         return new JsonResponse(['data' => AdminProfileResource::details($item, $locale, MarketplaceCategoryLabels::forLocale($em, $locale))], headers: ['Cache-Control' => 'private, no-store']);
     }
 
+    /** Show or remove the "Partner Wave.ba" badge on a company profile and card. */
+    #[Route('/api/admin/catalog/companies/{id}/partner', requirements: ['id' => '\d+'], methods: ['PUT'])]
+    public function partner(int $id, Request $request, Security $security, EntityManagerInterface $em, CsrfTokenManagerInterface $csrf, \Psr\Log\LoggerInterface $logger): JsonResponse
+    {
+        $locale = LocaleContext::fromRequest($request);
+        if ($locale === null) return new JsonResponse(['error' => ApiMessages::get('unsupported_language', 'bs')], 400);
+        $admin = ApiAccess::requireRole($security, 'ROLE_ADMIN', $locale);
+        if ($admin instanceof JsonResponse) return $admin;
+        if ($error = ApiAccess::requireCsrf($request, $csrf, $locale)) return $error;
+        $company = $em->find(Company::class, $id);
+        if (!$company instanceof Company || AdminProfileResource::owner($company)?->isDeleted()) return $this->missing($locale);
+        $partner = JsonPayload::fromRequest($request)['partner'] ?? null;
+        if (!is_bool($partner)) return new JsonResponse(['error' => ApiMessages::get('invalid_request', $locale)], 400);
+
+        $company->setPartner($partner);
+        $em->flush();
+        $logger->notice('admin.company_partner_changed', ['actorId' => $admin->getId(), 'companyId' => $company->getId(), 'partner' => $partner]);
+
+        return new JsonResponse(['data' => AdminProfileResource::summary($company)], headers: ['Cache-Control' => 'private, no-store']);
+    }
+
     /** Give or remove administrator rights. Admins cannot change their own rights. */
     #[Route('/api/admin/catalog/{kind}/{id}/admin', requirements: ['kind' => 'creators|companies', 'id' => '\d+'], methods: ['PUT'])]
     public function administrator(string $kind, int $id, Request $request, Security $security, EntityManagerInterface $em, CsrfTokenManagerInterface $csrf, \Psr\Log\LoggerInterface $logger): JsonResponse

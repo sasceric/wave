@@ -138,7 +138,7 @@ final class CampaignInviteCreators
         $inviterId = (int) $campaign->getCompany()->getOwner()?->getId();
         $companyName = $campaign->getCompany()->getName();
         $campaignTitle = $campaign->getTitle();
-        $voluntary = $campaign->isVoluntary();
+        $compensationType = $campaign->getCompensationType();
         $sql = 'SELECT p.id FROM creator p JOIN wave_user u ON u.id = p.owner_id WHERE '.self::ELIGIBLE.' AND NOT '.self::TAKEN;
         $params = ['campaign' => $campaignId];
         $types = [];
@@ -171,7 +171,7 @@ final class CampaignInviteCreators
             // Same in-app notification and "campaign_invitation" email as a brand's invitation (emails are queued).
             foreach ($created as [$notification, $owner, $text]) {
                 $this->notifications->deliver($notification);
-                $this->emails->sendCampaignInvitation($owner, $campaignTitle, $companyName, $text, $voluntary);
+                $this->emails->sendCampaignInvitation($owner, $campaignTitle, $companyName, $text, $compensationType);
             }
             $invited += count($created);
             $this->entityManager->clear();

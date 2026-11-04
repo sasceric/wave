@@ -51,7 +51,9 @@ final class CampaignController
             $currency = $request->query->getString('currency');
             $budgetMin = $this->budgetBound($request, 'budgetMin');
             $budgetMax = $this->budgetBound($request, 'budgetMax');
+            $compensation = $request->query->getString('compensation');
             if (!in_array($sort, ['recommended', 'newest', 'closing'], true)
+                || ($compensation !== '' && !in_array($compensation, Campaign::COMPENSATION_TYPES, true))
                 || ($currency !== '' && !Currency::isSupported($currency))
                 || (($budgetMin !== null || $budgetMax !== null) && $currency === '')
                 || ($budgetMin !== null && $budgetMax !== null && $budgetMin > $budgetMax)) {
@@ -69,9 +71,14 @@ final class CampaignController
         $params = ['status' => 'open', 'today' => (new \DateTimeImmutable('today'))->format('Y-m-d H:i:s')];
         $types = [];
         $conditions = [$this->blocks->visible('owner.id'), 'c.status = :status', 'c.listed = TRUE', 'c.closes_at >= :today', '(owner.id IS NULL OR (owner.approved = TRUE AND owner.hide_my_account = FALSE))'];
+        // Campaign cities are a JSON list. PostgreSQL (production, CI) and SQLite (local tests)
+        // expand JSON arrays differently; wave_lower() is the SQLite Unicode-aware LOWER().
+        $sqlite = $entityManager->getConnection()->getDatabasePlatform() instanceof \Doctrine\DBAL\Platforms\SQLitePlatform;
+        $cityElements = $sqlite ? 'json_each(c.city) AS location' : 'json_array_elements_text(c.city) AS location(name)';
+        $cityElementLower = $sqlite ? 'wave_lower(location.value)' : 'LOWER(location.name)';
         $query = trim($request->query->getString('q'));
         if ($query !== '') {
-            $conditions[] = "(i.search_text LIKE :query OR (i.id IS NULL AND (LOWER(c.title) LIKE :query OR LOWER(c.summary) LIKE :query OR LOWER(c.description) LIKE :query OR LOWER(c.category) LIKE :query OR EXISTS (SELECT 1 FROM json_array_elements_text(c.city) AS location(name) WHERE LOWER(location.name) LIKE :query) OR LOWER(c.country_code) LIKE :query OR LOWER(CAST(c.categories AS TEXT)) LIKE :query)) OR LOWER(company.name) LIKE :query OR LOWER(company.industry) LIKE :query)";
+            $conditions[] = "(i.search_text LIKE :query OR (i.id IS NULL AND (LOWER(c.title) LIKE :query OR LOWER(c.summary) LIKE :query OR LOWER(c.description) LIKE :query OR LOWER(c.category) LIKE :query OR EXISTS (SELECT 1 FROM $cityElements WHERE $cityElementLower LIKE :query) OR LOWER(c.country_code) LIKE :query OR LOWER(CAST(c.categories AS TEXT)) LIKE :query)) OR LOWER(company.name) LIKE :query OR LOWER(company.industry) LIKE :query)";
             $params['query'] = '%' . mb_strtolower($query) . '%';
         }
         $category = trim($request->query->getString('category'));
@@ -99,7 +106,7 @@ final class CampaignController
         $city = trim($request->query->getString('city'));
         if ($city !== '') {
             // Campaigns open to every city in their country match any city filter.
-            $conditions[] = "(json_array_length(c.city) = 0 OR EXISTS (SELECT 1 FROM json_array_elements_text(c.city) AS location(name) WHERE LOWER(location.name) LIKE :city ESCAPE '!'))";
+            $conditions[] = "(json_array_length(c.city) = 0 OR EXISTS (SELECT 1 FROM $cityElements WHERE $cityElementLower LIKE :city ESCAPE '!'))";
             $params['city'] = '%' . strtr(mb_strtolower($city), ['!' => '!!', '%' => '!%', '_' => '!_']) . '%';
         }
         if ($countries !== []) {
@@ -111,7 +118,16 @@ final class CampaignController
             $conditions[] = 'c.currency = :currency';
             $params['currency'] = $currency;
         }
-        // Include campaigns whose offered budget overlaps the requested range.
+        if ($compensation !== '') {
+            $conditions[] = 'c.compensation_type = :compensation';
+            $params['compensation'] = $compensation;
+        }
+        // Include campaigns whose offered budget overlaps the requested range. A budget is money,
+        // so product and free campaigns never match a budget search.
+        if ($budgetMin !== null || $budgetMax !== null) {
+            $conditions[] = 'c.compensation_type = :paidCompensation';
+            $params['paidCompensation'] = Campaign::COMPENSATION_PAID;
+        }
         foreach (['budgetMin' => [$budgetMin, 'c.budget_max >='], 'budgetMax' => [$budgetMax, 'c.budget_min <=']] as $key => [$value, $comparison]) {
             if ($value !== null) {
                 $conditions[] = $comparison . ' :' . $key;

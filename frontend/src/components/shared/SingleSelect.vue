@@ -1,7 +1,7 @@
 <script setup>
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, useId } from 'vue'
 import { Check, ChevronDown } from '@lucide/vue'
-import { getDropdownPlacement } from '../../utils/dropdownPlacement'
+import { applyFloatingMenuPosition, getDropdownPlacement, needsFloatingMenu } from '../../utils/dropdownPlacement'
 
 const props = defineProps({
   modelValue: { type: [String, Number, Boolean], default: '' },
@@ -19,6 +19,8 @@ const trigger = ref(null)
 const menu = ref(null)
 const isOpen = ref(false)
 const opensAbove = ref(false)
+// True when the menu is moved to <body> so a clipping parent cannot cut it off.
+const floating = ref(false)
 const selectedOption = computed(() => props.options.find((option) => option.value === props.modelValue))
 
 function updateMenuPlacement() {
@@ -29,6 +31,7 @@ function updateMenuPlacement() {
   if (!placement) return
   opensAbove.value = placement.opensAbove
   menu.value.style.setProperty('--dropdown-available-height', `${placement.maxHeight}px`)
+  if (floating.value) applyFloatingMenuPosition(trigger.value, menu.value, placement.opensAbove)
   const bounds = menu.value.getBoundingClientRect()
   const viewport = window.visualViewport
   const left = (viewport?.offsetLeft ?? 0) + 8
@@ -52,6 +55,7 @@ function focusOption(index, step = 1) {
 }
 async function openMenu(last = false) {
   if (props.disabled) return
+  floating.value = needsFloatingMenu(root.value)
   isOpen.value = true
   await nextTick()
   updateMenuPlacement()
@@ -74,10 +78,10 @@ function moveOption(index, direction) {
   if (target >= 0 && target < props.options.length) focusOption(target)
 }
 function closeOnOutsideClick(event) {
-  if (root.value && event.target instanceof Node && !root.value.contains(event.target)) closeMenu()
+  if (root.value && event.target instanceof Node && !root.value.contains(event.target) && !menu.value?.contains(event.target)) closeMenu()
 }
 function closeOnFocusOut(event) {
-  if (!root.value?.contains(event.relatedTarget)) closeMenu()
+  if (!root.value?.contains(event.relatedTarget) && !menu.value?.contains(event.relatedTarget)) closeMenu()
 }
 function handleEscape(event) {
   if (!isOpen.value) return
@@ -122,7 +126,8 @@ onBeforeUnmount(() => {
       <span :id="`${id}-value`">{{ selectedOption?.label || placeholder || label }}</span>
       <ChevronDown :size="16" aria-hidden="true" />
     </button>
-    <div v-if="isOpen" :id="`${id}-options`" ref="menu" class="single-select__menu" role="listbox" :aria-labelledby="`${id}-label`">
+    <Teleport to="body" :disabled="!floating">
+    <div v-if="isOpen" :id="`${id}-options`" ref="menu" class="single-select__menu" :class="{ 'is-floating': floating }" role="listbox" :aria-labelledby="`${id}-label`" @focusout="closeOnFocusOut" @keydown.esc="handleEscape">
       <button
         v-for="(option, index) in options"
         :id="`${id}-option-${index}`"
@@ -144,6 +149,7 @@ onBeforeUnmount(() => {
         <Check v-if="modelValue === option.value" :size="16" aria-hidden="true" />
       </button>
     </div>
+    </Teleport>
   </div>
 </template>
 

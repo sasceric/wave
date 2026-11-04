@@ -708,7 +708,9 @@
     "verifiedAndFeatured": "Preverjena in izpostavljena",
     "searchIndustries": "Išči področja",
     "noIndustries": "Ni področij, ki bi ustrezala iskanju.",
-    "selectIndustries": "Izberi področja"
+    "selectIndustries": "Izberi področja",
+    "partner": "Partner Wave.ba",
+    "partnerHint": "Znamka, ki z Wave.ba sodeluje od začetka"
   },
   "registrationPrompts": {
     "companyDirectory": {
@@ -1912,7 +1914,12 @@
     "budgetHint": "Prikazane so kampanje, katerih proračun se prekriva z izbranim razponom.",
     "sortLabel": "Razvrsti kampanje",
     "sortClosing": "Kmalu se zaključijo",
-    "layoutLabel": "Prikaz kampanj"
+    "layoutLabel": "Prikaz kampanj",
+    "allCompensations": "Vse vrste plačila",
+    "compensation_paid": "Plačano (denar)",
+    "compensation_products": "V izdelkih",
+    "compensation_voluntary": "Brez plačila",
+    "budgetPaidOnly": "Proračun velja samo za plačane kampanje."
   },
   "validation": {
     "required": "To polje je obvezno.",
@@ -3355,7 +3362,13 @@
     "unapproveHint": "E-pošta zahteva fotografijo/logotip, opis, družbena omrežja in ustrezno vrsto ustvarjalca. Shranjeni podatki ostanejo, ponovna odobritev pa ostaja ročna odločitev skrbnika.",
     "unapproved": "Račun »{name}« je vrnjen v čakanje. E-pošta z navodili je predana v pošiljanje.",
     "unapprovedTemplateTitle": "Račun ponovno čaka na odobritev",
-    "unapprovedTemplateHint": "Obvestilo po tem, ko skrbnik vrne odobren račun v čakanje zaradi nepopolnega profila."
+    "unapprovedTemplateHint": "Obvestilo po tem, ko skrbnik vrne odobren račun v čakanje zaradi nepopolnega profila.",
+    "partner": {
+      "make": "Označi kot partnerja",
+      "remove": "Odstrani oznako partnerja",
+      "added": "{name} je označen kot partner Wave.ba.",
+      "removed": "{name} ni več označen kot partner."
+    }
   },
   "imageUpload": {
     "creator": "Priporočeno: 600 × 600 px (1:1). Obraz postavi na sredino in okoli njega pusti nekaj prostora.",
@@ -3420,7 +3433,15 @@
     "voluntaryHint": "Sodelovanje je prostovoljno, brez denarnega plačila. Pred sprejemom se v klepetu dogovorite o obsegu dela in roku.",
     "locked": "Vrste sodelovanja po prvi prijavi ali povabilu ni mogoče spremeniti.",
     "hireHint": "Potrdi obseg dela in rok oddaje, dogovorjena v pogovoru. Ustvarjalec sprejme prostovoljno sodelovanje brez plačila.",
-    "defaultHireMessage": "Potrjujemo dogovorjeno prostovoljno sodelovanje brez denarnega plačila."
+    "defaultHireMessage": "Potrjujemo dogovorjeno prostovoljno sodelovanje brez denarnega plačila.",
+    "productsLabel": "Plačilo v izdelkih",
+    "productsValue": "Izdelki v vrednosti {value}",
+    "productsHint": "Ustvarjalci namesto denarja prejmejo vaše izdelke. Vpišite razpon vrednosti izdelkov na ustvarjalca, v opisu pa navedite, katere izdelke ponujate.",
+    "productsValueMin": "Vrednost izdelkov od",
+    "productsValueMax": "Vrednost izdelkov do",
+    "productsHireHint": "Ustvarjalec za to sodelovanje prejme izdelke. Vpišite vrednost izdelkov, o kateri ste se dogovorili v pogovoru.",
+    "productsOfferValue": "Vrednost izdelkov",
+    "productsCreatorHint": "Plačilo je v izdelkih znamke, ne v denarju. Kateri izdelki in v kakšni vrednosti, piše v opisu kampanje in se dogovorite v pogovoru."
   },
   "emailLogs": {
     "open": "Predogled",

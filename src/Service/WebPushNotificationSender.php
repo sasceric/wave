@@ -193,7 +193,12 @@ final class WebPushNotificationSender
         }
         $campaign = $notification->getCampaign();
         if ($notification->getType() === 'campaign_invitation' && $campaign !== null) {
-            $badge = $campaign->isVoluntary() ? (\App\Account\MarketplaceEmailCopy::forLocale('campaign_invitation', $locale)['voluntaryBadge'] ?? null) : null;
+            $badgeKey = match ($campaign->getCompensationType()) {
+                \App\Entity\Campaign::COMPENSATION_VOLUNTARY => 'voluntaryBadge',
+                \App\Entity\Campaign::COMPENSATION_PRODUCTS => 'productsBadge',
+                default => null,
+            };
+            $badge = $badgeKey === null ? null : (\App\Account\MarketplaceEmailCopy::forLocale('campaign_invitation', $locale)[$badgeKey] ?? null);
 
             return $this->trimPreview($campaign->getTitle().(is_string($badge) ? ' · '.$badge : ''));
         }

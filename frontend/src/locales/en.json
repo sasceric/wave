@@ -707,7 +707,9 @@
     "verifiedAndFeatured": "Verified and featured",
     "searchIndustries": "Search categories",
     "noIndustries": "No categories match your search.",
-    "selectIndustries": "Select categories"
+    "selectIndustries": "Select categories",
+    "partner": "Wave.ba partner",
+    "partnerHint": "A brand working with Wave.ba from the start"
   },
   "registrationPrompts": {
     "companyDirectory": {
@@ -1911,7 +1913,12 @@
     "budgetHint": "Shows campaigns whose budget overlaps your selected range.",
     "sortLabel": "Sort campaigns",
     "sortClosing": "Closing soon",
-    "layoutLabel": "Campaign layout"
+    "layoutLabel": "Campaign layout",
+    "allCompensations": "All compensation types",
+    "compensation_paid": "Paid (money)",
+    "compensation_products": "In products",
+    "compensation_voluntary": "No fee",
+    "budgetPaidOnly": "The budget applies only to paid campaigns."
   },
   "validation": {
     "required": "This field is required.",
@@ -3354,7 +3361,13 @@
     "unapproveHint": "The email requests a photo/logo, bio, social profiles and the appropriate creator type. Saved data stays intact, and approval remains a manual admin decision.",
     "unapproved": "“{name}” is back in pending approval. The instructions email has been queued.",
     "unapprovedTemplateTitle": "Account awaiting approval again",
-    "unapprovedTemplateHint": "Sent after an admin returns an approved account to pending because its profile is incomplete."
+    "unapprovedTemplateHint": "Sent after an admin returns an approved account to pending because its profile is incomplete.",
+    "partner": {
+      "make": "Mark as partner",
+      "remove": "Remove partner label",
+      "added": "{name} is now marked as a Wave.ba partner.",
+      "removed": "{name} is no longer marked as a partner."
+    }
   },
   "imageUpload": {
     "creator": "Recommended: 600 × 600 px (1:1). Center your face and leave some space around it.",
@@ -3419,7 +3432,15 @@
     "voluntaryHint": "Participation is voluntary, with no monetary compensation. Agree on the scope and delivery date in chat before accepting.",
     "locked": "The collaboration type cannot change after the first application or invitation.",
     "hireHint": "Confirm the scope and delivery date agreed in chat. The creator accepts a voluntary collaboration without a monetary fee.",
-    "defaultHireMessage": "We confirm the agreed voluntary collaboration with no monetary compensation."
+    "defaultHireMessage": "We confirm the agreed voluntary collaboration with no monetary compensation.",
+    "productsLabel": "Paid in products",
+    "productsValue": "Products worth {value}",
+    "productsHint": "Creators receive your products instead of money. Enter the range of product value per creator and list in the description which products you offer.",
+    "productsValueMin": "Product value from",
+    "productsValueMax": "Product value up to",
+    "productsHireHint": "The creator receives products for this collaboration. Enter the product value you agreed on in the conversation.",
+    "productsOfferValue": "Product value",
+    "productsCreatorHint": "Compensation is in the brand's products, not money. Which products and their value are in the campaign description and agreed in the conversation."
   },
   "emailLogs": {
     "open": "Preview",

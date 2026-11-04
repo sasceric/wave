@@ -707,7 +707,9 @@
     "verifiedAndFeatured": "Verifiziert und hervorgehoben",
     "searchIndustries": "Themenbereiche suchen",
     "noIndustries": "Keine Themenbereiche entsprechen deiner Suche.",
-    "selectIndustries": "Themenbereiche auswählen"
+    "selectIndustries": "Themenbereiche auswählen",
+    "partner": "Partner von Wave.ba",
+    "partnerHint": "Marke, die von Anfang an mit Wave.ba zusammenarbeitet"
   },
   "registrationPrompts": {
     "companyDirectory": {
@@ -1911,7 +1913,12 @@
     "budgetHint": "Zeigt Kampagnen, deren Budget sich mit deiner Auswahl überschneidet.",
     "sortLabel": "Kampagnen sortieren",
     "sortClosing": "Bald endend",
-    "layoutLabel": "Kampagnendarstellung"
+    "layoutLabel": "Kampagnendarstellung",
+    "allCompensations": "Alle Vergütungsarten",
+    "compensation_paid": "Bezahlt (Geld)",
+    "compensation_products": "In Produkten",
+    "compensation_voluntary": "Ohne Vergütung",
+    "budgetPaidOnly": "Das Budget gilt nur für bezahlte Kampagnen."
   },
   "validation": {
     "required": "Dieses Feld ist erforderlich.",
@@ -3354,7 +3361,13 @@
     "unapproveHint": "Die E-Mail bittet um Foto/Logo, Beschreibung, soziale Profile und passende Creator-Typen. Gespeicherte Daten bleiben erhalten. Die erneute Freigabe erfolgt manuell durch einen Administrator.",
     "unapproved": "„{name}“ wartet erneut auf Freigabe. Die E-Mail mit Hinweisen wurde zum Versand übergeben.",
     "unapprovedTemplateTitle": "Konto wartet erneut auf Freigabe",
-    "unapprovedTemplateHint": "Nachricht, wenn ein Administrator ein freigegebenes Konto wegen eines unvollständigen Profils zurück in die Prüfung versetzt."
+    "unapprovedTemplateHint": "Nachricht, wenn ein Administrator ein freigegebenes Konto wegen eines unvollständigen Profils zurück in die Prüfung versetzt.",
+    "partner": {
+      "make": "Als Partner markieren",
+      "remove": "Partner-Kennzeichnung entfernen",
+      "added": "{name} ist jetzt Partner von Wave.ba.",
+      "removed": "{name} ist nicht mehr als Partner markiert."
+    }
   },
   "imageUpload": {
     "creator": "Empfohlen: 600 × 600 px (1:1). Platziere dein Gesicht mittig und lasse etwas Platz darum.",
@@ -3419,7 +3432,15 @@
     "voluntaryHint": "Die Teilnahme ist freiwillig und ohne finanzielle Vergütung. Vereinbart Umfang und Termin vor der Annahme im Chat.",
     "locked": "Die Art der Zusammenarbeit kann nach der ersten Bewerbung oder Einladung nicht geändert werden.",
     "hireHint": "Bestätige den im Chat vereinbarten Umfang und Liefertermin. Der Creator nimmt die freiwillige Zusammenarbeit ohne Vergütung an.",
-    "defaultHireMessage": "Wir bestätigen die vereinbarte freiwillige Zusammenarbeit ohne finanzielle Vergütung."
+    "defaultHireMessage": "Wir bestätigen die vereinbarte freiwillige Zusammenarbeit ohne finanzielle Vergütung.",
+    "productsLabel": "Vergütung in Produkten",
+    "productsValue": "Produkte im Wert von {value}",
+    "productsHint": "Creator erhalten Ihre Produkte statt Geld. Geben Sie die Wertspanne der Produkte pro Creator an und beschreiben Sie in der Kampagne, welche Produkte Sie anbieten.",
+    "productsValueMin": "Produktwert ab",
+    "productsValueMax": "Produktwert bis",
+    "productsHireHint": "Der Creator erhält für diese Zusammenarbeit Produkte. Geben Sie den im Gespräch vereinbarten Produktwert an.",
+    "productsOfferValue": "Produktwert",
+    "productsCreatorHint": "Die Vergütung erfolgt in Produkten der Marke, nicht in Geld. Welche Produkte und in welchem Wert, steht in der Kampagnenbeschreibung und wird im Gespräch vereinbart."
   },
   "emailLogs": {
     "open": "Vorschau",

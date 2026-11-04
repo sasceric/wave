@@ -20,7 +20,11 @@ final class DirectoryIndexer
         foreach ($ids as $id) {
             $id = (int) $id;
             $this->connection->transactional(function () use ($kind, $id): void {
-                $this->connection->executeQuery('SELECT pg_advisory_xact_lock(hashtext(?))', ['wave.index.' . $kind . ':' . $id]);
+                // PostgreSQL serializes concurrent indexing of one record; SQLite (local tests) has no
+                // advisory locks and already serializes writes.
+                if (!$this->connection->getDatabasePlatform() instanceof \Doctrine\DBAL\Platforms\SQLitePlatform) {
+                    $this->connection->executeQuery('SELECT pg_advisory_xact_lock(hashtext(?))', ['wave.index.' . $kind . ':' . $id]);
+                }
                 $row = $kind === 'creator'
                     ? $this->connection->fetchAssociative('SELECT c.*, COALESCE(u.city, c.city) AS city FROM creator c LEFT JOIN wave_user u ON u.id = c.owner_id WHERE c.id = ? AND c.agency_profile = FALSE', [$id])
                     : $this->connection->fetchAssociative('SELECT * FROM ' . $kind . ' WHERE id = ?' . ($kind === 'company' ? ' AND archived_profile = FALSE' : ''), [$id]);

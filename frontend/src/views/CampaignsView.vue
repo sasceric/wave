@@ -43,6 +43,11 @@ const countryOptions = computed(() => {
   return facets.value.countries.map(option => ({ ...option, label: ['BA', 'HR', 'RS', 'SI', 'ME', 'MK'].includes(option.value) ? t(`companyDirectory.countryNames.${option.value}`) : names.of(option.value) || option.value }))
 })
 const currency = ref('')
+// Compensation type filter; shareable as ?compensation=products. A budget only applies to money.
+const COMPENSATIONS = ['paid', 'products', 'voluntary']
+const compensation = ref(COMPENSATIONS.includes(route.query.compensation) ? route.query.compensation : '')
+const compensationOptions = computed(() => [{ value: '', label: t('campaignDirectory.allCompensations') }, ...COMPENSATIONS.map(value => ({ value, label: t(`campaignDirectory.compensation_${value}`) }))])
+const budgetAllowed = computed(() => !compensation.value || compensation.value === 'paid')
 const budgetMin = ref('')
 const budgetMax = ref('')
 const budgetRange = computed(() => [budgetMin.value === '' ? 0 : Number(budgetMin.value), budgetMax.value === '' ? 10000 : Number(budgetMax.value)])
@@ -52,7 +57,7 @@ const sort = ref('recommended')
 const layout = ref('grid')
 const filtersOpen = ref(false)
 const catalog = useMarketplaceCatalog(locale)
-const { items: campaigns, total, loading, error, hasMore, loadMore } = useInfiniteDirectory('/campaigns', locale, { q: search, categories, channels, countries, city, currency, budgetMin: budgetLower, budgetMax: budgetUpper, sort })
+const { items: campaigns, total, loading, error, hasMore, loadMore } = useInfiniteDirectory('/campaigns', locale, { q: search, categories, channels, countries, city, compensation, currency, budgetMin: budgetLower, budgetMax: budgetUpper, sort })
 const channelOptions = CAMPAIGN_PLATFORMS.map((value) => ({ value, label: value }))
 const currencyOptions = computed(() => [{ value: '', label: t('campaignDirectory.allCurrencies') }, ...CURRENCIES.map((value) => ({ value, label: value }))])
 const sortOptions = computed(() => [
@@ -60,7 +65,7 @@ const sortOptions = computed(() => [
   { value: 'newest', label: t('creatorDirectory.sortNewest') },
   { value: 'closing', label: t('campaignDirectory.sortClosing') },
 ])
-const activeFilterCount = computed(() => selectedCategories.value.length + selectedChannels.value.length + selectedCountries.value.length + [city.value, currency.value, budgetMin.value, budgetMax.value].filter((value) => value !== '').length)
+const activeFilterCount = computed(() => selectedCategories.value.length + selectedChannels.value.length + selectedCountries.value.length + [city.value, compensation.value, currency.value, budgetMin.value, budgetMax.value].filter((value) => value !== '').length)
 const imageSizes = '(max-width: 420px) calc((100vw - 44px) / 2), (max-width: 760px) calc((min(100vw - 40px, 560px) - 12px) / 2), (max-width: 1224px) calc((100vw - 336px) / 4), 210px'
 watch(locale, loadFacets)
 onMounted(loadFacets)
@@ -76,6 +81,7 @@ async function loadFacets() {
   }
 }
 watch(() => route.query.q, (value) => { search.value = queryString(value) })
+watch(compensation, (value) => { if (value && value !== 'paid') currency.value = '' })
 watch(currency, (value) => {
   budgetMin.value = value ? (budgetMin.value === '' ? 0 : budgetMin.value) : ''
   budgetMax.value = value ? (budgetMax.value === '' ? 10000 : budgetMax.value) : ''
@@ -92,6 +98,7 @@ function clearFilters() {
   selectedChannels.value = []
   city.value = ''
   selectedCountries.value = []
+  compensation.value = ''
   currency.value = ''
   budgetMin.value = ''
   budgetMax.value = ''
@@ -136,12 +143,15 @@ watch([campaigns, locale], () => {
           <StatusMessage v-if="facetError" variant="error">{{ facetError }} <button type="button" @click="loadFacets">{{ t('companyDirectory.retryFilters') }}</button></StatusMessage>
         </fieldset>
         <fieldset>
-          <SingleSelect v-model="currency" :options="currencyOptions" :label="t('campaignDirectory.currencyLabel')" />
+          <SingleSelect v-model="compensation" :options="compensationOptions" :label="t('compensation.type')" />
+        </fieldset>
+        <fieldset>
+          <SingleSelect v-model="currency" :options="currencyOptions" :label="t('campaignDirectory.currencyLabel')" :disabled="!budgetAllowed" />
         </fieldset>
         <fieldset>
           <legend>{{ t('campaignDirectory.budgetLabel') }}</legend>
           <RangeSlider :model-value="budgetRange" :max="30000" :disabled="!currency" :label="t('campaignDirectory.budgetLabel')" :from-label="t('campaignDirectory.budgetFrom')" :to-label="t('campaignDirectory.budgetTo')" :currency="currency" @update:model-value="updateBudget" />
-          <p class="campaign-directory__hint" :class="{ 'campaign-directory__hint--currency': !currency }">{{ t(currency ? 'campaignDirectory.budgetHint' : 'campaignDirectory.chooseCurrency') }}</p>
+          <p class="campaign-directory__hint" :class="{ 'campaign-directory__hint--currency': !currency }">{{ t(!budgetAllowed ? 'campaignDirectory.budgetPaidOnly' : currency ? 'campaignDirectory.budgetHint' : 'campaignDirectory.chooseCurrency') }}</p>
         </fieldset>
         <RegistrationPrompt audience="creator" variant="sidebar" />
         <template #mobile><fieldset><SingleSelect v-model="sort" :options="sortOptions" :label="t('campaignDirectory.sortLabel')" /></fieldset></template>

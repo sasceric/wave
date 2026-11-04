@@ -351,7 +351,7 @@ final class CampaignManagementController
         $deliverables = $this->stringList($data['deliverables'] ?? null, 10, 180);
         $compensationType = $data['compensationType'] ?? Campaign::COMPENSATION_PAID;
         $voluntary = $compensationType === Campaign::COMPENSATION_VOLUNTARY;
-        if (!in_array($compensationType, [Campaign::COMPENSATION_PAID, Campaign::COMPENSATION_VOLUNTARY], true)) {
+        if (!in_array($compensationType, Campaign::COMPENSATION_TYPES, true)) {
             $invalidFields[] = 'compensationType';
         }
         $budgetMin = $data['budgetMin'] ?? ($voluntary ? 0 : null);

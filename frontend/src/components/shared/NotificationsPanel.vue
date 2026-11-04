@@ -97,6 +97,7 @@ function relativeTime(date) {
             <span class="notifications-panel__copy">
               <I18nT :keypath="`campaignChat.notificationTypes.${notification.type}`" tag="span"><template #actor><strong>{{ notification.actorName }}</strong></template><template #campaign><strong>{{ notification.campaign?.title || '' }}</strong></template></I18nT>
               <span v-if="notification.type === 'campaign_invitation' && notification.campaign?.compensationType === 'voluntary'" class="notifications-panel__badge">{{ t('compensation.voluntaryLabel') }}</span>
+              <span v-if="notification.type === 'campaign_invitation' && notification.campaign?.compensationType === 'products'" class="notifications-panel__badge">{{ t('compensation.productsLabel') }}</span>
               <time :datetime="notification.createdAt">{{ relativeTime(notification.createdAt) }}</time>
             </span>
             <span v-if="!notification.readAt" class="notifications-panel__unread" :aria-label="t('app.unreadNotification')"></span>

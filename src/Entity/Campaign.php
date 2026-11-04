@@ -17,15 +17,19 @@ class Campaign
 {
     public const COMPENSATION_PAID = 'paid';
     public const COMPENSATION_VOLUNTARY = 'voluntary';
+    /** Paid in products: budget and offer amounts are the products' value, not money. */
+    public const COMPENSATION_PRODUCTS = 'products';
+    public const COMPENSATION_TYPES = [self::COMPENSATION_PAID, self::COMPENSATION_VOLUNTARY, self::COMPENSATION_PRODUCTS];
 
     #[ORM\Column(length: 16, options: ['default' => 'paid'])]
     private string $compensationType = self::COMPENSATION_PAID;
 
     public function getCompensationType(): string { return $this->compensationType; }
     public function isVoluntary(): bool { return $this->compensationType === self::COMPENSATION_VOLUNTARY; }
+    public function isPaidInProducts(): bool { return $this->compensationType === self::COMPENSATION_PRODUCTS; }
     public function setCompensationType(string $type): void
     {
-        if (!in_array($type, [self::COMPENSATION_PAID, self::COMPENSATION_VOLUNTARY], true)) {
+        if (!in_array($type, self::COMPENSATION_TYPES, true)) {
             throw new \InvalidArgumentException('Invalid campaign compensation type.');
         }
         $this->compensationType = $type;

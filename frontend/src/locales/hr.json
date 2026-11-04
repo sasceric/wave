@@ -708,7 +708,9 @@
     "verifiedAndFeatured": "Verificirane i istaknute",
     "searchIndustries": "Pretraži kategorije",
     "noIndustries": "Nema kategorija koje odgovaraju pretrazi.",
-    "selectIndustries": "Odaberi područja"
+    "selectIndustries": "Odaberi područja",
+    "partner": "Partner Wave.ba",
+    "partnerHint": "Brend koji surađuje s Wave.ba od početka"
   },
   "registrationPrompts": {
     "companyDirectory": {
@@ -1912,7 +1914,12 @@
     "budgetHint": "Prikazuju se kampanje čiji se budžet preklapa s odabranim rasponom.",
     "sortLabel": "Sortiraj kampanje",
     "sortClosing": "Uskoro završavaju",
-    "layoutLabel": "Prikaz kampanja"
+    "layoutLabel": "Prikaz kampanja",
+    "allCompensations": "Sve vrste naknade",
+    "compensation_paid": "Plaćeno (novac)",
+    "compensation_products": "U proizvodima",
+    "compensation_voluntary": "Bez naknade",
+    "budgetPaidOnly": "Budžet se odnosi samo na plaćene kampanje."
   },
   "validation": {
     "required": "Ovo je polje obavezno.",
@@ -3355,7 +3362,13 @@
     "unapproveHint": "E-pošta traži fotografiju/logotip, opis, društvene mreže i odgovarajuću vrstu kreatora. Spremljeni podaci ostaju, a ponovno odobrenje ostaje ručna odluka administratora.",
     "unapproved": "Račun „{name}” je vraćen na čekanje. E-pošta s uputama je predana na slanje.",
     "unapprovedTemplateTitle": "Račun ponovno čeka odobrenje",
-    "unapprovedTemplateHint": "Obavijest nakon što administrator vrati odobren račun na čekanje zbog nedopunjenog profila."
+    "unapprovedTemplateHint": "Obavijest nakon što administrator vrati odobren račun na čekanje zbog nedopunjenog profila.",
+    "partner": {
+      "make": "Označi kao partnera",
+      "remove": "Ukloni oznaku partnera",
+      "added": "{name} je označen kao partner Wave.ba.",
+      "removed": "{name} više nije označen kao partner."
+    }
   },
   "imageUpload": {
     "creator": "Preporučeno: 600 × 600 px (1:1). Lice postavi u sredinu i ostavi malo prostora oko njega.",
@@ -3420,7 +3433,15 @@
     "voluntaryHint": "Sudjelovanje je dobrovoljno, bez novčane naknade. Prije prihvaćanja dogovorite opseg posla i rok u razgovoru.",
     "locked": "Vrstu suradnje nije moguće promijeniti nakon prve prijave ili poziva.",
     "hireHint": "Potvrdi opseg posla i rok isporuke dogovorene u razgovoru. Kreator prihvaća dobrovoljni angažman bez novčane naknade.",
-    "defaultHireMessage": "Potvrđujemo dogovorenu dobrovoljnu suradnju bez novčane naknade."
+    "defaultHireMessage": "Potvrđujemo dogovorenu dobrovoljnu suradnju bez novčane naknade.",
+    "productsLabel": "Naknada u proizvodima",
+    "productsValue": "Proizvodi u vrijednosti {value}",
+    "productsHint": "Kreatori dobivaju vaše proizvode umjesto novca. Upišite raspon vrijednosti proizvoda po kreatoru, a u opisu navedite koje proizvode nudite.",
+    "productsValueMin": "Vrijednost proizvoda od",
+    "productsValueMax": "Vrijednost proizvoda do",
+    "productsHireHint": "Kreator za ovu suradnju dobiva proizvode. Upišite vrijednost proizvoda koju ste dogovorili u razgovoru.",
+    "productsOfferValue": "Vrijednost proizvoda",
+    "productsCreatorHint": "Naknada je u proizvodima brenda, ne u novcu. Koji proizvodi i u kojoj vrijednosti, piše u opisu kampanje i dogovarate u razgovoru."
   },
   "emailLogs": {
     "open": "Pregled",

@@ -35,6 +35,14 @@ test('no-fee labels are explicit and never inferred just from a missing or zero 
   assert.equal(paid.state.label.value, '0 KM – 0 KM')
 })
 
+test('product compensation is labelled as product value, never as money', async () => {
+  const formatter = amount => `${amount} KM`
+  const products = await setupView('../src/components/campaigns/CampaignCompensation.vue', {
+    '../../lib/api': { formatMoney: formatter },
+  }, { campaign: { compensationType: 'products', budgetMin: 600, budgetMax: 600, currency: 'BAM' }, amount: null })
+  assert.match(products.state.label.value, /^compensation\.productsValue/)
+})
+
 test('hiring confirms a negotiated amount outside the advertised budget and retains failed drafts', async () => {
   const currentUser = ref({ id: 10, accountType: 'company' })
   const calls = []

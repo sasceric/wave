@@ -93,6 +93,10 @@ class Company
     #[ORM\Column]
     private bool $verified;
 
+    /** "Partner Wave.ba" badge for founding brands, set by administrators. */
+    #[ORM\Column(options: ['default' => false])]
+    private bool $partner = false;
+
     #[ORM\Column(nullable: true)]
     private ?int $featuredPosition = null;
 
@@ -220,6 +224,16 @@ class Company
     public function isVerified(): bool
     {
         return $this->verified;
+    }
+
+    public function isPartner(): bool
+    {
+        return $this->partner;
+    }
+
+    public function setPartner(bool $partner): void
+    {
+        $this->partner = $partner;
     }
 
     public function isFeatured(): bool

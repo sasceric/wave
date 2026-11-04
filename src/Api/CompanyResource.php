@@ -42,6 +42,7 @@ final class CompanyResource
                 array_filter($company->getSocialLinks(), static fn (mixed $link): bool => is_array($link) && ($link['platform'] ?? '') !== '' && ($link['url'] ?? '') !== ''),
             )),
             'verified' => $company->isVerified(),
+            'partner' => $company->isPartner(),
             'featured' => $company->isFeatured(),
         ];
 

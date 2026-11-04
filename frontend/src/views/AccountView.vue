@@ -171,6 +171,7 @@ const editingCampaign = computed(() => campaigns.value.find(campaign => campaign
 // Free campaigns are for Wave administrators; an existing free campaign keeps its option while editing.
 const compensationOptions = computed(() => [
   { value: 'paid', label: t('compensation.paid') },
+  { value: 'products', label: t('compensation.productsLabel') },
   ...(user.value?.isAdmin || editingCampaign.value?.compensationType === 'voluntary' ? [{ value: 'voluntary', label: t('compensation.voluntaryLabel') }] : []),
 ])
 const campaignForm = ref(emptyCampaign())
@@ -1464,10 +1465,11 @@ onMounted(loadDashboard)
             <template v-else-if="campaignStep === 3">
             <SingleSelect v-if="compensationOptions.length > 1" v-model="campaignForm.compensationType" :disabled="Boolean(editingCampaign?.appliedCreatorIds?.length || editingCampaign?.invitedCreatorIds?.length || ['finished', 'cancelled'].includes(editingCampaign?.status))" :label="t('compensation.type')" :options="compensationOptions" required />
             <StatusMessage v-if="campaignForm.compensationType === 'voluntary'">{{ t('compensation.voluntaryHint') }}</StatusMessage>
+            <StatusMessage v-if="campaignForm.compensationType === 'products'">{{ t('compensation.productsHint') }}</StatusMessage>
             <p v-if="editingCampaign?.appliedCreatorIds?.length || editingCampaign?.invitedCreatorIds?.length" class="muted">{{ t('compensation.locked') }}</p>
             <div class="form-grid">
-              <label v-if="campaignForm.compensationType !== 'voluntary'" class="form-field"><span>{{ t('account.budgetMin') }}</span><input v-model.number="campaignForm.budgetMin" type="number" min="1" max="10000000" required /></label>
-              <label v-if="campaignForm.compensationType !== 'voluntary'" class="form-field"><span>{{ t('account.budgetMax') }}</span><input v-model.number="campaignForm.budgetMax" type="number" min="1" max="10000000" required /></label>
+              <label v-if="campaignForm.compensationType !== 'voluntary'" class="form-field"><span>{{ t(campaignForm.compensationType === 'products' ? 'compensation.productsValueMin' : 'account.budgetMin') }}</span><input v-model.number="campaignForm.budgetMin" type="number" min="1" max="10000000" required /></label>
+              <label v-if="campaignForm.compensationType !== 'voluntary'" class="form-field"><span>{{ t(campaignForm.compensationType === 'products' ? 'compensation.productsValueMax' : 'account.budgetMax') }}</span><input v-model.number="campaignForm.budgetMax" type="number" min="1" max="10000000" required /></label>
               <SingleSelect v-if="campaignForm.compensationType !== 'voluntary'" :disabled="Boolean(editingCampaign?.hiredCount)" v-model="campaignForm.currency" :label="t('account.currency')" :options="CURRENCIES.map(value => ({ value, label: value }))" />
               <label class="form-field"><span>{{ t('account.creatorCount') }}</span><input v-model.number="campaignForm.creatorCount" type="number" min="1" max="100" required /></label>
               <DatePicker v-model="campaignForm.closesAt" :label="t('account.closesAt')" required />
@@ -1482,7 +1484,7 @@ onMounted(loadDashboard)
                 <div><dt>{{ t('account.campaignLocation') }}</dt><dd>{{ campaignPlaceLabel }}</dd><button type="button" class="campaign-review__edit" @click="goCampaignStep(1)">{{ t('account.campaignEditStep') }}</button></div>
                 <div><dt>{{ t('account.channels') }}</dt><dd>{{ campaignForm.channels.join(', ') }}</dd><button type="button" class="campaign-review__edit" @click="goCampaignStep(1)">{{ t('account.campaignEditStep') }}</button></div>
                 <div><dt>{{ t('account.deliverables') }}</dt><dd>{{ campaignForm.deliverables.filter(Boolean).join(', ') }}</dd><button type="button" class="campaign-review__edit" @click="goCampaignStep(2)">{{ t('account.campaignEditStep') }}</button></div>
-                <div><dt>{{ t('compensation.type') }}</dt><dd><template v-if="campaignForm.compensationType === 'voluntary'">{{ t('compensation.voluntaryLabel') }}</template><template v-else>{{ campaignForm.budgetMin }} – {{ campaignForm.budgetMax }} {{ campaignForm.currency }}</template> · {{ t('account.creatorCount') }}: {{ campaignForm.creatorCount }} · {{ t('account.closesAt') }}: {{ formatDate(campaignForm.closesAt) }}</dd><button type="button" class="campaign-review__edit" @click="goCampaignStep(3)">{{ t('account.campaignEditStep') }}</button></div>
+                <div><dt>{{ t('compensation.type') }}</dt><dd><template v-if="campaignForm.compensationType === 'voluntary'">{{ t('compensation.voluntaryLabel') }}</template><template v-else-if="campaignForm.compensationType === 'products'">{{ t('compensation.productsValue', { value: `${campaignForm.budgetMin} – ${campaignForm.budgetMax} ${campaignForm.currency}` }) }}</template><template v-else>{{ campaignForm.budgetMin }} – {{ campaignForm.budgetMax }} {{ campaignForm.currency }}</template> · {{ t('account.creatorCount') }}: {{ campaignForm.creatorCount }} · {{ t('account.closesAt') }}: {{ formatDate(campaignForm.closesAt) }}</dd><button type="button" class="campaign-review__edit" @click="goCampaignStep(3)">{{ t('account.campaignEditStep') }}</button></div>
               </dl>
               <CreditActionNotice v-if="!editingCampaignId" action="campaign" />
             </template>

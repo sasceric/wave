@@ -53,6 +53,7 @@ final class MarketplaceEmailCopy
                 'footer' => 'Automatska poruka od Wavea. Molimo ne odgovaraj na ovu e-poruku.',
                 'voluntaryBadge' => 'Dobrovoljna saradnja — bez naknade',
                 'paidBadge' => 'Plaćena saradnja',
+                'productsBadge' => 'Naknada u proizvodima',
             ],
             'creator_hired' => [
                 'subject' => 'Ponuda je prihvaćena na Waveu',
@@ -130,6 +131,7 @@ final class MarketplaceEmailCopy
                 'footer' => 'Automatska poruka Wavea. Molimo ne odgovaraj na ovu poruku.',
                 'voluntaryBadge' => 'Dobrovoljna suradnja — bez naknade',
                 'paidBadge' => 'Plaćena suradnja',
+                'productsBadge' => 'Naknada u proizvodima',
             ],
             'creator_hired' => [
                 'subject' => 'Ponuda je prihvaćena na Waveu',
@@ -207,6 +209,7 @@ final class MarketplaceEmailCopy
                 'footer' => 'Automatska poruka od Wavea. Molimo te, ne odgovaraj na ovu e-poruku.',
                 'voluntaryBadge' => 'Dobrovoljna saradnja — bez naknade',
                 'paidBadge' => 'Plaćena saradnja',
+                'productsBadge' => 'Naknada u proizvodima',
             ],
             'creator_hired' => [
                 'subject' => 'Ponuda je prihvaćena na Waveu',
@@ -284,6 +287,7 @@ final class MarketplaceEmailCopy
                 'footer' => 'Automatska poruka od Wavea. Molimo te, ne odgovaraj na ovu e-poruku.',
                 'voluntaryBadge' => 'Dobrovoljna saradnja — bez naknade',
                 'paidBadge' => 'Plaćena saradnja',
+                'productsBadge' => 'Naknada u proizvodima',
             ],
             'creator_hired' => [
                 'subject' => 'Ponuda je prihvaćena na Waveu',
@@ -361,6 +365,7 @@ final class MarketplaceEmailCopy
                 'footer' => 'To je samodejno sporočilo Wave. Prosimo, ne odgovarjaj nanj.',
                 'voluntaryBadge' => 'Prostovoljno sodelovanje — brez plačila',
                 'paidBadge' => 'Plačano sodelovanje',
+                'productsBadge' => 'Plačilo v izdelkih',
             ],
             'creator_hired' => [
                 'subject' => 'Ponudba je sprejeta na Waveu',
@@ -438,6 +443,7 @@ final class MarketplaceEmailCopy
                 'footer' => 'This is an automated message from Wave. Please do not reply.',
                 'voluntaryBadge' => 'Voluntary collaboration — no fee',
                 'paidBadge' => 'Paid collaboration',
+                'productsBadge' => 'Paid in products',
             ],
             'creator_hired' => [
                 'subject' => 'Your offer was accepted on Wave',

@@ -541,7 +541,7 @@ final class AccountEmailSender
     }
 
     /** Sent with every campaign invitation, from a brand or from Admin → Pozivnice. */
-    public function sendCampaignInvitation(User $recipient, string $campaignTitle, string $companyName, string $message, bool $voluntary): void
+    public function sendCampaignInvitation(User $recipient, string $campaignTitle, string $companyName, string $message, string $compensationType): void
     {
         $locale = $this->normalizedLocale($recipient->getPreferredLocale());
         $copy = $this->copyFor('campaign_invitation', $locale);
@@ -549,8 +549,12 @@ final class AccountEmailSender
             'firstValue' => $campaignTitle,
             'secondValue' => $companyName,
             'details' => $message,
-            // Badge under the heading: free campaigns say so clearly.
-            'compensation' => $copy[$voluntary ? 'voluntaryBadge' : 'paidBadge'],
+            // Badge under the heading: free and product-paid campaigns say so clearly.
+            'compensation' => $copy[match ($compensationType) {
+                \App\Entity\Campaign::COMPENSATION_VOLUNTARY => 'voluntaryBadge',
+                \App\Entity\Campaign::COMPENSATION_PRODUCTS => 'productsBadge',
+                default => 'paidBadge',
+            }] ?? $copy['paidBadge'],
         ], locale: $locale);
     }
 

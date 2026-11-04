@@ -127,6 +127,7 @@ watch(
 )
 onMounted(loadCompany)
 onBeforeUnmount(() => { ++profileGeneration })
+import PartnerBadge from '../components/companies/PartnerBadge.vue'
 </script>
 
 <template>
@@ -155,6 +156,7 @@ onBeforeUnmount(() => { ++profileGeneration })
           <div class="company-profile__identity-copy">
             <p class="eyebrow">{{ t(`companyTypes.options.${company.companyType || 'brand'}`) }}<template v-if="industries.length"> · {{ industries.join(' · ') }}</template></p>
             <h1>{{ company.name }}<span v-if="company.verified" class="verified-mark" :aria-label="t('campaignCard.verified')">✓</span></h1>
+            <PartnerBadge v-if="company.partner" />
           </div>
         </div>
         <p class="company-profile__tagline">{{ t(company.about ? 'companyProfile.profileIntro' : 'companyProfile.profileLabel') }}</p>

@@ -103,7 +103,7 @@ final class CampaignInvitationController
         $entityManager->persist($notification);
         $entityManager->flush();
         $notificationDelivery->deliver($notification);
-        $emails->sendCampaignInvitation($creatorOwner, $campaign->getTitle(), $campaign->getCompany()->getName(), $message, $campaign->isVoluntary());
+        $emails->sendCampaignInvitation($creatorOwner, $campaign->getTitle(), $campaign->getCompany()->getName(), $message, $campaign->getCompensationType());
 
         return new JsonResponse(['data' => CampaignInvitationResource::fromEntity($invitation, $locale, CampaignHiredCounts::forCampaign($entityManager, $invitation->getCampaign()))], 201);
     }

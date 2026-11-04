@@ -13,10 +13,16 @@ final class DatabaseSearch
     public function search(string $term, string $locale, string $type, int $page, bool $suggest): array
     {
         $visible = '(u.id IS NULL OR (u.approved = TRUE AND u.hide_my_account = FALSE AND u.deleted_at IS NULL)) AND '.$this->blocks->visible('u.id');
+        // PostgreSQL in production; SQLite in local tests (wave_lower = Unicode LOWER, json_each = JSON list).
+        $sqlite = $this->db->getDatabasePlatform() instanceof \Doctrine\DBAL\Platforms\SQLitePlatform;
+        $lower = $sqlite ? 'wave_lower' : 'LOWER';
+        $cities = $sqlite
+            ? "(SELECT group_concat(location.value, ' ') FROM json_each(p.city) AS location)"
+            : "(SELECT string_agg(location.name, ' ') FROM json_array_elements_text(p.city) AS location(name))";
         $sources = [
-            "SELECT p.id, 'creators' AS kind, p.display_name AS title FROM creator p LEFT JOIN wave_user u ON u.id = p.owner_id WHERE p.agency_profile = FALSE AND $visible AND LOWER(p.display_name || ' ' || p.bio || ' ' || COALESCE(u.city, p.city, '') || ' ' || CAST(p.categories AS TEXT) || ' ' || CAST(p.tags AS TEXT) || ' ' || CAST(p.translations AS TEXT)) LIKE :query ESCAPE '!'",
-            "SELECT p.id, 'companies' AS kind, p.name AS title FROM company p LEFT JOIN wave_user u ON u.id = p.owner_id WHERE p.archived_profile = FALSE AND $visible AND LOWER(p.name || ' ' || COALESCE(p.about, '') || ' ' || p.industry || ' ' || COALESCE(u.city, '') || ' ' || CAST(p.services AS TEXT) || ' ' || CAST(p.translations AS TEXT)) LIKE :query ESCAPE '!'",
-            "SELECT p.id, 'campaigns' AS kind, p.title FROM campaign p JOIN company c ON c.id = p.company_id LEFT JOIN wave_user u ON u.id = c.owner_id WHERE p.status = 'open' AND p.listed = TRUE AND p.closes_at >= :today AND $visible AND LOWER(p.title || ' ' || p.summary || ' ' || p.description || ' ' || COALESCE((SELECT string_agg(location.name, ' ') FROM json_array_elements_text(p.city) AS location(name)), '') || ' ' || c.name || ' ' || CAST(p.categories AS TEXT) || ' ' || CAST(p.translations AS TEXT)) LIKE :query ESCAPE '!'",
+            "SELECT p.id, 'creators' AS kind, p.display_name AS title FROM creator p LEFT JOIN wave_user u ON u.id = p.owner_id WHERE p.agency_profile = FALSE AND $visible AND $lower(p.display_name || ' ' || p.bio || ' ' || COALESCE(u.city, p.city, '') || ' ' || CAST(p.categories AS TEXT) || ' ' || CAST(p.tags AS TEXT) || ' ' || CAST(p.translations AS TEXT)) LIKE :query ESCAPE '!'",
+            "SELECT p.id, 'companies' AS kind, p.name AS title FROM company p LEFT JOIN wave_user u ON u.id = p.owner_id WHERE p.archived_profile = FALSE AND $visible AND $lower(p.name || ' ' || COALESCE(p.about, '') || ' ' || p.industry || ' ' || COALESCE(u.city, '') || ' ' || CAST(p.services AS TEXT) || ' ' || CAST(p.translations AS TEXT)) LIKE :query ESCAPE '!'",
+            "SELECT p.id, 'campaigns' AS kind, p.title FROM campaign p JOIN company c ON c.id = p.company_id LEFT JOIN wave_user u ON u.id = c.owner_id WHERE p.status = 'open' AND p.listed = TRUE AND p.closes_at >= :today AND $visible AND $lower(p.title || ' ' || p.summary || ' ' || p.description || ' ' || COALESCE($cities, '') || ' ' || c.name || ' ' || CAST(p.categories AS TEXT) || ' ' || CAST(p.translations AS TEXT)) LIKE :query ESCAPE '!'",
         ];
         $sql = implode(' UNION ALL ', $sources);
         $params = ['query' => '%'.strtr(mb_strtolower($term), ['!' => '!!', '%' => '!%', '_' => '!_']).'%', 'today' => (new \DateTimeImmutable('today'))->format('Y-m-d H:i:s')];

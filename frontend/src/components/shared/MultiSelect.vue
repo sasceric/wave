@@ -1,7 +1,7 @@
 <script setup>
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, useId, watch } from 'vue'
 import { Check, ChevronDown, Search, X } from '@lucide/vue'
-import { getDropdownPlacement } from '../../utils/dropdownPlacement'
+import { applyFloatingMenuPosition, getDropdownPlacement, needsFloatingMenu } from '../../utils/dropdownPlacement'
 
 const props = defineProps({
   modelValue: { type: Array, default: () => [] },
@@ -31,6 +31,8 @@ const root = ref(null)
 const trigger = ref(null)
 const searchInput = ref(null)
 const menu = ref(null)
+// True when the menu is moved to <body> so a clipping parent cannot cut it off.
+const floating = ref(false)
 const isOpen = ref(false)
 const opensAbove = ref(false)
 const query = ref('')
@@ -67,6 +69,7 @@ function updateMenuPlacement() {
 
   opensAbove.value = placement.opensAbove
   menu.value.style.setProperty('--dropdown-available-height', `${placement.maxHeight}px`)
+  if (floating.value) applyFloatingMenuPosition(root.value, menu.value, placement.opensAbove, { matchWidth: true })
 }
 
 function normalize(value) {
@@ -118,6 +121,7 @@ async function openMenu() {
   }
 
   query.value = ''
+  floating.value = needsFloatingMenu(root.value)
   isOpen.value = true
   if (props.remote) emit('search', '')
   await nextTick()
@@ -162,7 +166,7 @@ function focusPreviousOption(index) {
 }
 
 function closeOnOutsideClick(event) {
-  if (root.value && event.target instanceof Node && !root.value.contains(event.target)) {
+  if (root.value && event.target instanceof Node && !root.value.contains(event.target) && !menu.value?.contains(event.target)) {
     closeMenu()
   }
 }
@@ -224,7 +228,8 @@ defineExpose({ openMenu })
         <span>{{ selectedOptions.length ? searchPlaceholder : placeholder }}</span>
         <ChevronDown :size="16" aria-hidden="true" />
       </button>
-      <div v-if="isOpen" ref="menu" class="multi-select__menu" :class="{ 'has-footer': loading || hasMore }" :aria-busy="loading">
+      <Teleport to="body" :disabled="!floating">
+      <div v-if="isOpen" ref="menu" class="multi-select__menu" :class="{ 'has-footer': loading || hasMore, 'is-floating': floating }" :aria-busy="loading">
         <label class="multi-select__search">
           <Search :size="15" aria-hidden="true" />
           <input
@@ -272,6 +277,7 @@ defineExpose({ openMenu })
         </div>
         <button v-if="loading || hasMore" type="button" class="multi-select__load-more" :disabled="disabled || loading || loadRequested" @click="requestMore">{{ loading ? loadingLabel : loadMoreLabel }}</button>
       </div>
+      </Teleport>
     </div>
   </div>
 </template>

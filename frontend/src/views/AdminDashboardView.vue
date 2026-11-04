@@ -12,6 +12,7 @@ import {
   ShieldOff,
   Trash2,
   UserRoundX,
+  Handshake,
 } from '@lucide/vue'
 import { onBeforeRouteLeave, onBeforeRouteUpdate, useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
@@ -193,6 +194,20 @@ async function changeVisibility(row) {
     notice.value = t('adminProfiles.visibilitySaved')
   } catch (cause) { if (!disposed && section.value === kind) error.value = cause.message || t('adminDashboard.saveError') }
   finally { visibilitySaving.value = false }
+}
+
+const partnerSaving = ref(false)
+// "Partner Wave.ba" badge for founding brands.
+async function changePartner(row) {
+  if (partnerSaving.value || section.value !== 'companies') return
+  partnerSaving.value = true; error.value = ''; notice.value = ''
+  try {
+    const { data } = await apiRequest(`/admin/catalog/companies/${row.id}/partner`, { method: 'PUT', body: { partner: !row.partner } })
+    if (disposed || section.value !== 'companies') return
+    Object.assign(row, data)
+    notice.value = t(data.partner ? 'adminProfiles.partner.added' : 'adminProfiles.partner.removed', { name: row.name ?? row.displayName ?? '' })
+  } catch (cause) { if (!disposed) error.value = cause.message || t('adminDashboard.saveError') }
+  finally { partnerSaving.value = false }
 }
 
 async function changeCampaignListing(row) {
@@ -709,6 +724,9 @@ onMounted(updateCreatedAtClock)
                 </button>
                 <button v-if="isProfileList" class="admin-row-actions__item" type="button" role="menuitem" :disabled="visibilitySaving || !row.canChangeVisibility || (!row.publicVisible && !row.canShowProfile)" :title="!row.canChangeVisibility ? t('adminProfiles.noAccount') : !row.publicVisible && !row.canShowProfile ? t('adminProfiles.showRequirements') : undefined" @click="changeVisibility(row)">
                   <EyeOff v-if="row.publicVisible" :size="15" aria-hidden="true" /><Eye v-else :size="15" aria-hidden="true" />{{ t(row.publicVisible ? 'adminProfiles.hide' : 'adminProfiles.show') }}
+                </button>
+                <button v-if="section === 'companies'" class="admin-row-actions__item" type="button" role="menuitem" :disabled="partnerSaving" @click="changePartner(row)">
+                  <Handshake :size="15" aria-hidden="true" />{{ t(row.partner ? 'adminProfiles.partner.remove' : 'adminProfiles.partner.make') }}
                 </button>
                 <button v-if="['creators', 'companies'].includes(section) && row.canChangeAdmin && row.accountId !== currentUser?.id" class="admin-row-actions__item" type="button" role="menuitem" :disabled="adminSaving" @click="requestAdminChange(row)">
                   <ShieldOff v-if="row.isAdmin" :size="15" aria-hidden="true" /><ShieldCheck v-else :size="15" aria-hidden="true" />{{ t(row.isAdmin ? 'adminProfiles.admin.remove' : 'adminProfiles.admin.make') }}

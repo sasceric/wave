@@ -124,7 +124,8 @@
     "maintenance_unavailable": "Wave wird gerade gewartet. Bitte versuche es in Kürze erneut.",
     "broadcast_invalid_email": "Eine der Adressen ist keine gültige E-Mail-Adresse.",
     "broadcast_unknown_variable": "Die Nachricht enthält eine unbekannte Variable. Verwenden Sie nur {{name}} und {{profileUrl}}.",
-    "unapproval_email_failed": "Die E-Mail mit Hinweisen konnte nicht gesendet werden. Der Kontostatus wurde nicht geändert. Bitte versuche es erneut."
+    "unapproval_email_failed": "Die E-Mail mit Hinweisen konnte nicht gesendet werden. Der Kontostatus wurde nicht geändert. Bitte versuche es erneut.",
+    "campaign_products_value": "Produkte im Wert von %s"
   },
   "account": {
     "verify": {
@@ -229,7 +230,8 @@
       "buttonLabel": "Einladung ansehen",
       "footer": "Dies ist eine automatische Nachricht von Wave. Bitte antworte nicht darauf.",
       "voluntaryBadge": "Freiwillige Zusammenarbeit — ohne Vergütung",
-      "paidBadge": "Bezahlte Zusammenarbeit"
+      "paidBadge": "Bezahlte Zusammenarbeit",
+      "productsBadge": "Vergütung in Produkten"
     },
     "creator_hired": {
       "subject": "Dein Angebot auf Wave wurde angenommen",

@@ -211,6 +211,7 @@ onMounted(loadCampaign)
           <h1 id="campaign-title">{{ campaign.title }}</h1>
           <p class="campaign-hero__summary">{{ campaign.summary }}</p>
           <StatusMessage v-if="campaign.compensationType === 'voluntary'">{{ t('compensation.voluntaryHint') }}</StatusMessage>
+          <StatusMessage v-if="campaign.compensationType === 'products'">{{ t('compensation.productsCreatorHint') }}</StatusMessage>
           <RouterLink
             v-if="!campaign.company.deleted"
             class="campaign-brand"
