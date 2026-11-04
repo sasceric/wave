@@ -197,3 +197,17 @@
     }
   }
 }
+
+// Compact header version (desktop, not the homepage hero): leaves room for the four main links.
+// Below 900px the header search collapses to an icon (rules above), so this stays desktop-only.
+@include breakpoints.up(901px) {
+  .header-creator-search:not(.header-creator-search--hero) {
+    width: min(340px, 26vw);
+    min-width: 200px;
+    height: 42px;
+    padding-left: 14px;
+
+    .header-creator-search__field input { height: 32px; font-size: 14px; }
+    > .header-creator-search__submit { width: 34px; height: 34px; flex-basis: 34px; }
+  }
+}
