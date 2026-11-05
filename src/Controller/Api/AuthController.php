@@ -28,6 +28,9 @@ use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\DependencyInjection\Attribute\Target;
 use Symfony\Component\RateLimiter\RateLimiterFactoryInterface;
+use Psr\Log\LoggerInterface;
+use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
+use Symfony\Component\Mime\Exception\RfcComplianceException;
 
 final class AuthController extends AbstractController
 {
@@ -217,6 +220,8 @@ final class AuthController extends AbstractController
         Request $request,
         UserActionTokenManager $actionTokens,
         CsrfTokenManagerInterface $tokenManager,
+        AccountEmailSender $emailSender,
+        LoggerInterface $logger,
     ): JsonResponse {
         $locale = LocaleContext::fromRequest($request);
         if ($locale === null) {
@@ -227,10 +232,20 @@ final class AuthController extends AbstractController
         }
         $data = JsonPayload::fromRequest($request);
         $token = is_string($data['token'] ?? null) ? $data['token'] : '';
-        if ($data === null || !$actionTokens->consume($token, 'verify_email', static function (User $user): void {
+        $verified = null;
+        if ($data === null || !$actionTokens->consume($token, 'verify_email', static function (User $user) use (&$verified): void {
             $user->setEmailVerified(true);
+            $verified = $user;
         })) {
             return new JsonResponse(['error' => ApiMessages::get('invalid_email_verification_link', $locale)], 400);
+        }
+        // "Registration received, awaiting approval" follows the confirmed address, like after Google/Apple sign-up.
+        if ($verified instanceof User && !$verified->isApproved()) {
+            try {
+                $emailSender->sendRegistrationReceived($verified, $verified->getPreferredLocale());
+            } catch (TransportExceptionInterface|RfcComplianceException $exception) {
+                $logger->warning('Unable to send the Wave registration received email.', ['userId' => $verified->getId(), 'exception' => $exception]);
+            }
         }
 
         return new JsonResponse([

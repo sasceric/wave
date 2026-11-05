@@ -67,15 +67,19 @@ jobs:
             # Stop through systemd so Restart=always cannot bring old consumers
             # back while Composer/migrations replace their code and container.
             deploy_workers="wave-worker@realtime.service wave-worker@mail.service wave-worker@push.service wave-worker@background.service"
-            deploy_resume_units=""
-            trap 'echo "Deployment failed; verify Wave service state, repair the release, and restart the previously active services: $deploy_resume_units" >&2' EXIT
+            # Workers and the scheduler always come back after a deploy, even after a failed step or a
+            # previous deploy that left them stopped; otherwise queued notifications and emails never send.
+            deploy_resume_units="wave-scheduler.timer $deploy_workers"
+            resume_services() {
+              for deploy_unit in $deploy_resume_units; do
+                if [ "$(systemctl show "$deploy_unit" --property=LoadState --value)" = loaded ]; then
+                  as_root systemctl start "$deploy_unit" || echo "Could not start $deploy_unit" >&2
+                fi
+              done
+            }
+            trap 'echo "Deployment failed; restarting Wave workers and scheduler. Repair the release." >&2; resume_services' EXIT
             for deploy_unit in wave-scheduler.timer wave-scheduler.service $deploy_workers; do
               if [ "$(systemctl show "$deploy_unit" --property=LoadState --value)" = loaded ]; then
-                if systemctl is-active --quiet "$deploy_unit"; then
-                  if [ "$deploy_unit" != wave-scheduler.service ]; then
-                    deploy_resume_units="$deploy_resume_units $deploy_unit"
-                  fi
-                fi
                 as_root systemctl stop "$deploy_unit"
               fi
             done
@@ -107,13 +111,13 @@ jobs:
             if systemctl is-active --quiet php8.4-fpm.service; then
               as_root systemctl reload php8.4-fpm.service
             fi
-            if [ -n "$deploy_resume_units" ]; then
-              as_root systemctl start $deploy_resume_units
-              for deploy_unit in $deploy_resume_units; do
-                systemctl is-active --quiet "$deploy_unit"
-              done
-            fi
             trap - EXIT
+            resume_services
+            for deploy_unit in $deploy_resume_units; do
+              if [ "$(systemctl show "$deploy_unit" --property=LoadState --value)" = loaded ]; then
+                systemctl is-active --quiet "$deploy_unit" || { echo "$deploy_unit is not running after deploy" >&2; exit 1; }
+              fi
+            done
             # Keep the deployed application and its workers available even if
             # the optional showcase preflight refuses an identity collision.
             if [ "$WAVE_SEED_AGENCY" = "1" ]; then

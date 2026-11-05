@@ -460,6 +460,58 @@ Follow [server setup](docs/server-operations.md) before enabling this release on
 production. Keep APP_SECRET stable and the existing notification/Mercure/VAPID
 configuration. No Redis or RabbitMQ service is required.
 
+### Notifications not arriving (workers stopped)
+
+Symptoms: a chat message is saved, but nobody gets a push notification, a live update or an email, on phone or PC. In **Admin → Alati** (`/admin/alati`) the queues (`SendWebPushMessage`, `PublishRealtimeMessage`, `messenger.transport.*`) keep counting up and **U toku** stays at 0. Sending a message only queues the notification; the workers below send it. If they are stopped, nothing goes out.
+
+Run on the server as root (drop `sudo` when you are already root).
+
+1. Start everything (safe to run at any time; already running services are left alone):
+
+   ```
+   systemctl start wave-worker@realtime wave-worker@push wave-worker@mail wave-worker@background wave-scheduler.timer
+   ```
+
+   Refresh Admin → Alati after a few seconds: the queued counts should drop to 0 and the waiting notifications are sent.
+
+2. Check that each one is running. Every line must say `active`:
+
+   ```
+   systemctl is-active wave-worker@realtime wave-worker@push wave-worker@mail wave-worker@background wave-scheduler.timer
+   ```
+
+   - `inactive`: stopped (usually by a deploy that failed halfway). Run step 1.
+   - `activating` or `failed`: it crashes on start. Read why in step 3.
+
+3. Read the log of a worker (replace `push` with `realtime`, `mail` or `background`):
+
+   ```
+   journalctl -u wave-worker@push -n 50 --no-pager
+   ```
+
+   A healthy worker shows `[OK] Consuming messages from transport "push"` and restarts by itself about once an hour (`--time-limit=3600`). A PHP error or stack trace here is the reason it does not run.
+
+4. Make sure they also start after a server reboot:
+
+   ```
+   systemctl enable wave-worker@realtime wave-worker@push wave-worker@mail wave-worker@background wave-scheduler.timer
+   ```
+
+   `enabled` only means "starts on boot"; it does not mean the worker is running now. Always check with step 2.
+
+5. Live updates only: the Mercure hub must be running too.
+
+   ```
+   systemctl is-active mercure
+   journalctl -u mercure -n 30 --no-pager
+   ```
+
+   `New subscriber` lines mean browsers are connected; Mercure only forwards what the `realtime` worker publishes.
+
+6. Jobs that failed (wrong VAPID keys, mail server down, etc.) are listed under **Admin → Alati → Neuspjeli poslovi**, with the error, **Pokušaj ponovo** and **Odbaci**.
+
+Each deploy stops the workers and the scheduler while code and migrations change, then always starts them again, also after a failed step. If a worker is not running at the end, the "Deploy production" run in GitHub Actions fails, so check there first after a push.
+
 ### Public search
 
 Global search supports database and Meilisearch backends through

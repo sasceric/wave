@@ -117,6 +117,11 @@ final class EmailAccountFlowTest extends WebTestCase
         self::assertResponseIsSuccessful();
         $verification = $this->payload();
         self::assertTrue($verification['data']['emailVerified']);
+        // Confirming the address sends "registration received, awaiting approval".
+        self::assertEmailCount(1);
+        $received = self::getMailerMessage();
+        self::assertSame('verify@example.test', $received->getTo()[0]->getAddress());
+        self::assertSame(static::getContainer()->get(\App\Account\AccountEmailSender::class)->defaultSubject('registered', 'bs'), $received->getSubject());
         self::assertStringContainsString('Tvoj račun sada čeka odobrenje administratora.', $verification['message']);
         $this->jsonRequest('POST', '/api/auth/verify-email', ['token' => $originalToken], $registration['csrfToken']);
         self::assertResponseStatusCodeSame(400);
