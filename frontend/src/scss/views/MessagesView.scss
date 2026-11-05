@@ -575,6 +575,22 @@
 
   &__edited { font-size: 11px; opacity: .7; }
   &__deleted { font-style: italic; opacity: .7; }
+  // Opening application or invitation text, above the first chat message.
+  &__intro {
+    align-self: flex-start;
+    max-width: min(560px, 86%);
+    margin: 4px 0 14px;
+    padding: 12px 14px;
+    border: 1px dashed rgba(23, 61, 54, .22);
+    border-radius: 16px;
+    background: var(--card);
+    color: var(--ink);
+    font-size: 14px;
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+  }
+  &__intro--mine { align-self: flex-end; }
+  &__intro-label { display: block; margin-bottom: 6px; color: var(--muted-text); font-size: 12px; font-weight: 600; }
 
   &__reply-draft {
     grid-column: 1 / -1;

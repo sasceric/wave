@@ -547,6 +547,7 @@
     "replyToYou": "Reply to your message"
   },
   "campaignChat": {
+    "intro": { "application": "Application message · {name}", "invitation": "Invitation message · {name}" },
     "unreadDivider": "New messages",
     "loadEarlierUnread": "Load earlier unread messages",
     "loadingMessages": "Loading messages…",

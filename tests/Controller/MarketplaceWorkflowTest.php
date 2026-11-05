@@ -894,6 +894,15 @@ final class MarketplaceWorkflowTest extends WebTestCase
         self::assertResponseIsSuccessful();
         self::assertSame('shortlisted', $this->payload()['data']['status']);
         $conversationId = $this->payload()['conversationId'];
+        // The application text opens the chat for both sides, without being copied into the history.
+        $this->client->request('GET', '/api/me/conversations/'.$conversationId.'/messages?locale=bs');
+        self::assertResponseIsSuccessful();
+        self::assertSame([], $this->payload()['data']);
+        self::assertCount(1, $this->payload()['intro']);
+        self::assertSame('application', $this->payload()['intro'][0]['kind']);
+        self::assertSame('Avery Creator', $this->payload()['intro'][0]['senderName']);
+        self::assertSame($creatorUser->getId(), $this->payload()['intro'][0]['senderId']);
+        self::assertSame('I create welcoming recipes and this campaign fits my community.', $this->payload()['intro'][0]['body']);
         $this->jsonRequest('POST', '/api/company/applications/'.$applicationId.'/offer', [
             'dueDate' => (new DateTimeImmutable('+14 days'))->format('Y-m-d'),
             'amount' => 500,

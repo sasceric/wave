@@ -183,6 +183,7 @@ final class CampaignMessagingController
             'data' => array_map(CampaignMessageResource::fromEntity(...), $page['messages']),
             'meta' => $page['meta'],
             'readReceipt' => $page['readReceipt'],
+            'intro' => $this->intro($entityManager, $conversation, $application, $invitation),
             'conversation' => array_replace(CampaignConversationResource::fromEntity(
                 $conversation,
                 $this->unreadCount($entityManager, $conversation, $user),
@@ -315,6 +316,36 @@ final class CampaignMessagingController
         }
 
         return new JsonResponse(['data' => CampaignMessageResource::fromEntity($message)], 201);
+    }
+
+    /**
+     * The application or invitation text that started this conversation, shown above the history.
+     * Accepting an application never copied its text into the chat, and an invitation accepted into an
+     * existing conversation skipped it too; this covers old and new threads without reordering messages.
+     *
+     * @return list<array{kind: string, senderId: ?int, senderName: string, body: string, createdAt: string}>
+     */
+    private function intro(EntityManagerInterface $entityManager, CampaignConversation $conversation, ?Application $application, ?CampaignInvitation $invitation): array
+    {
+        $entries = [];
+        $campaign = $conversation->getCampaign();
+        if ($application instanceof Application && trim($application->getMessage()) !== '') {
+            $entries[] = ['kind' => 'application', 'sender' => $conversation->getCreator()->getOwner(), 'senderName' => $conversation->getCreator()->getDisplayName(), 'body' => $application->getMessage(), 'createdAt' => $application->getCreatedAt()];
+        }
+        if ($invitation instanceof CampaignInvitation && trim($invitation->getMessage()) !== '') {
+            $entries[] = ['kind' => 'invitation', 'sender' => $invitation->getInviter(), 'senderName' => $campaign->getCompany()->getName(), 'body' => $invitation->getMessage(), 'createdAt' => $invitation->getCreatedAt()];
+        }
+        $entries = array_values(array_filter($entries, static fn (array $entry): bool => $entry['sender'] === null || (int) $entityManager->createQueryBuilder()
+            ->select('COUNT(message.id)')->from(CampaignMessage::class, 'message')
+            ->where('message.conversation = :conversation')->andWhere('message.sender = :sender')->andWhere('message.body = :body')
+            ->setParameter('conversation', $conversation)->setParameter('sender', $entry['sender'])->setParameter('body', $entry['body'])
+            ->getQuery()->getSingleScalarResult() === 0));
+        usort($entries, static fn (array $a, array $b): int => $a['createdAt'] <=> $b['createdAt']);
+
+        return array_map(static fn (array $entry): array => [
+            'kind' => $entry['kind'], 'senderId' => $entry['sender']?->getId(), 'senderName' => $entry['senderName'],
+            'body' => $entry['body'], 'createdAt' => $entry['createdAt']->format(DATE_ATOM),
+        ], $entries);
     }
 
     private function sendCompanyMessage(

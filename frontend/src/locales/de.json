@@ -547,6 +547,7 @@
     "replyToYou": "Antwort auf deine Nachricht"
   },
   "campaignChat": {
+    "intro": { "application": "Nachricht aus der Bewerbung · {name}", "invitation": "Nachricht aus der Einladung · {name}" },
     "unreadDivider": "Neue Nachrichten",
     "loadEarlierUnread": "Frühere ungelesene Nachrichten laden",
     "loadingMessages": "Nachrichten werden geladen…",

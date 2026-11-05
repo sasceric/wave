@@ -95,6 +95,8 @@ const unreadDividerMessageId = computed(() => firstUnreadMessageId.value === nul
 const hasEarlierUnreadMessages = computed(() => firstUnreadMessageId.value !== null
   && (conversationMessages.value[0]?.id || 0) > firstUnreadMessageId.value)
 const hasOlderMessages = ref(false)
+// Application or invitation text that opened a campaign chat, shown above the first message.
+const threadIntro = ref([])
 const loadingOlderMessages = ref(false)
 const historyError = ref('')
 const atLatestMessage = ref(true)
@@ -732,6 +734,7 @@ function backToInbox(syncRoute = true) {
 function resetHistory() {
   historyRequestVersion += 1
   conversationMessages.value = []
+  threadIntro.value = []
   firstUnreadMessageId.value = null
   unreadBoundaryAcknowledged = false
   hasOlderMessages.value = false
@@ -802,6 +805,7 @@ async function loadMessages(thread, forceScroll = false, startWithLatestPage = f
       rememberUnreadBoundary(response.data, response.meta?.firstUnreadId)
       mergeMessages(response.data)
       if (initial) hasOlderMessages.value = Boolean(response.meta?.hasMoreOlder)
+      if (initial) threadIntro.value = Array.isArray(response.intro) ? response.intro : []
       if (response.conversation) upsertConversation(response.conversation)
       if (response.inquiry) upsertInquiry(response.inquiry)
       hasMore = Boolean(response.meta?.hasMoreNewer)
@@ -1436,6 +1440,17 @@ function messageTimeDescription(value) {
               {{ t(loadingOlderMessages ? 'campaignChat.loadingOlder' : hasEarlierUnreadMessages ? 'campaignChat.loadEarlierUnread' : 'campaignChat.loadOlder') }}
             </button>
             <p v-if="historyError" class="campaign-messages__history-status" role="alert">{{ historyError }}</p>
+            <template v-if="!hasOlderMessages">
+              <div
+                v-for="entry in threadIntro"
+                :key="entry.kind"
+                class="campaign-messages__intro"
+                :class="{ 'campaign-messages__intro--mine': entry.senderId === currentUser?.id }"
+              >
+                <span class="campaign-messages__intro-label">{{ t(`campaignChat.intro.${entry.kind}`, { name: entry.senderName }) }} · <time :datetime="entry.createdAt">{{ formatDate(entry.createdAt) }}</time></span>
+                <ChatMessageText :text="entry.body" />
+              </div>
+            </template>
             <div v-for="day in messageDays" :key="day.key" class="campaign-messages__day">
               <div v-if="day.dateKey" class="campaign-messages__day-divider" aria-live="off">
                 <span>{{ chatTime.dayLabel(day.createdAt, chatClock) }}</span>

@@ -548,6 +548,7 @@
     "replyToYou": "Odgovor na tvoje sporočilo"
   },
   "campaignChat": {
+    "intro": { "application": "Sporočilo iz prijave · {name}", "invitation": "Sporočilo iz povabila · {name}" },
     "unreadDivider": "Nova sporočila",
     "loadEarlierUnread": "Naloži starejša neprebrana sporočila",
     "loadingMessages": "Nalaganje sporočil…",
