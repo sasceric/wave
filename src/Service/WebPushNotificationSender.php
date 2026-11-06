@@ -188,10 +188,13 @@ final class WebPushNotificationSender
 
     private function bodyFor(Notification $notification, string $locale): string
     {
-        if (in_array($notification->getType(), ['account_type_change_requested', 'account_type_changed', 'account_type_change_rejected', 'review_received', 'review_published'], true)) {
+        if (in_array($notification->getType(), ['account_type_change_requested', 'account_type_changed', 'account_type_change_rejected', 'review_received', 'review_published', 'referral_tier_reached', 'referral_reward_active'], true)) {
             return \App\Localization\ApiMessages::get($notification->getType(), $locale);
         }
         $campaign = $notification->getCampaign();
+        if ($notification->getType() === 'campaign_early_access' && $campaign !== null) {
+            return $this->trimPreview(\App\Localization\ApiMessages::get('campaign_early_access', $locale).' '.$campaign->getTitle());
+        }
         if ($notification->getType() === 'campaign_invitation' && $campaign !== null) {
             $badgeKey = match ($campaign->getCompensationType()) {
                 \App\Entity\Campaign::COMPENSATION_VOLUNTARY => 'voluntaryBadge',
@@ -276,6 +279,11 @@ final class WebPushNotificationSender
             'account_type_change_requested' => $this->routes?->localizedPath('admin-account-types', $notification->getRecipient()->getPreferredLocale()) ?? '/admin/promjene-racuna',
             'account_type_changed', 'account_type_change_rejected' => $this->routes?->localizedPath('account-settings', $notification->getRecipient()->getPreferredLocale()) ?? '/racun/postavke',
             'campaign_invitation', 'campaign_cancelled' => '/account/applications',
+            'referral_tier_reached' => $this->routes?->localizedPath('admin-referrals', $notification->getRecipient()->getPreferredLocale()) ?? '/admin/preporuke',
+            'referral_reward_active' => $this->routes?->localizedPath('account-referrals', $notification->getRecipient()->getPreferredLocale()) ?? '/racun/pozovi-kreatore',
+            'campaign_early_access' => $notification->getCampaign() !== null
+                ? ($this->routes?->localizedPath('campaign-detail', $notification->getRecipient()->getPreferredLocale(), ['slug' => $notification->getCampaign()->getSlug()]) ?? '/campaigns/'.rawurlencode($notification->getCampaign()->getSlug()))
+                : '/campaigns',
             'application_received', 'invitation_accepted', 'invitation_declined', 'offer_accepted', 'offer_declined' => '/account/campaigns',
             'application_shortlisted', 'application_rejected' => '/account/applications',
             'creator_inquiry_received', 'creator_inquiry_accepted', 'creator_inquiry_rejected' => '/account/inquiries',

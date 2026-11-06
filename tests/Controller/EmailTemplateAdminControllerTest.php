@@ -83,6 +83,7 @@ final class EmailTemplateAdminControllerTest extends WebTestCase
                 'wrong_account_type_company',
                 'email_added_verify',
                 'account_security_notice',
+                'referral_tier_reached',
             ],
             array_column($this->payload()['data']['templates'], 'key'),
         );

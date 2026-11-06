@@ -92,6 +92,10 @@ class Creator
     #[ORM\Column(nullable: true)]
     private ?\DateTimeImmutable $featuredUntil = null;
 
+    /** Highest approved ambassador tier from Pozovi kreatore: 0, 20 (bronze), 35 (silver) or 50 (gold). */
+    #[ORM\Column(type: 'smallint', options: ['default' => 0])]
+    private int $ambassadorTier = 0;
+
     #[ORM\Column(options: ['default' => '1970-01-01 00:00:00'])]
     private DateTimeImmutable $createdAt;
 
@@ -407,4 +411,7 @@ class Creator
         $this->creatorTypes = [];
         $this->clearPortfolioMedia();
     }
+
+    public function getAmbassadorTier(): int { return $this->ambassadorTier; }
+    public function setAmbassadorTier(int $tier): void { $this->ambassadorTier = in_array($tier, [0, 20, 35, 50], true) ? $tier : 0; }
 }

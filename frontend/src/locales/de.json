@@ -547,7 +547,10 @@
     "replyToYou": "Antwort auf deine Nachricht"
   },
   "campaignChat": {
-    "intro": { "application": "Nachricht aus der Bewerbung · {name}", "invitation": "Nachricht aus der Einladung · {name}" },
+    "intro": {
+      "application": "Nachricht aus der Bewerbung · {name}",
+      "invitation": "Nachricht aus der Einladung · {name}"
+    },
     "unreadDivider": "Neue Nachrichten",
     "loadEarlierUnread": "Frühere ungelesene Nachrichten laden",
     "loadingMessages": "Nachrichten werden geladen…",
@@ -638,7 +641,10 @@
       "discussion_reopening_rejected": "{actor}: Erneute Gesprächseröffnung für {campaign} abgelehnt.",
       "account_type_change_requested": "Neuer Antrag auf Kontotypwechsel.",
       "account_type_changed": "Dein Kontotyp wurde geändert. Prüfe dein Profil.",
-      "account_type_change_rejected": "Dein Antrag wurde abgelehnt. Die Antwort findest du in den Einstellungen."
+      "account_type_change_rejected": "Dein Antrag wurde abgelehnt. Die Antwort findest du in den Einstellungen.",
+      "referral_tier_reached": "Neue Botschafter-Stufe: {actor}. Prüfen und Prämie aktivieren.",
+      "referral_reward_active": "Ihre Botschafter-Prämien sind aktiv. Danke, dass Sie Wave weiterempfehlen!",
+      "campaign_early_access": "Neue Kampagne {campaign} von {actor}. Als Botschafter erfahren Sie es zuerst."
     },
     "closedNotice": "Diese Kampagne ist geschlossen. In diesem Gespräch können keine Nachrichten mehr gesendet werden.",
     "finishedNotice": "Diese Kampagne ist abgeschlossen. In diesem Gespräch können keine Nachrichten mehr gesendet werden.",
@@ -3276,7 +3282,12 @@
     "visibilitySaved": "Sichtbarkeit der Kampagne in Listen gespeichert."
   },
   "signIn": {
-    "templates": {"verifyTitle": "Bestätigung zusätzlicher E-Mail-Adresse", "verifyHint": "Wird an eine neue Adresse gesendet, wenn sie in den Einstellungen hinzugefügt wird.", "noticeTitle": "Sicherheitshinweis zu Kontoänderungen", "noticeHint": "Adresse hinzugefügt oder entfernt, neue Hauptadresse, Google/Apple-Konto verknüpft oder entfernt."},
+    "templates": {
+      "verifyTitle": "Bestätigung zusätzlicher E-Mail-Adresse",
+      "verifyHint": "Wird an eine neue Adresse gesendet, wenn sie in den Einstellungen hinzugefügt wird.",
+      "noticeTitle": "Sicherheitshinweis zu Kontoänderungen",
+      "noticeHint": "Adresse hinzugefügt oder entfernt, neue Hauptadresse, Google/Apple-Konto verknüpft oder entfernt."
+    },
     "mainLabel": "Hauptadresse",
     "options": "Optionen für {email}",
     "unlinkAction": "Verknüpfung entfernen",
@@ -4627,6 +4638,112 @@
         "headlineLead": "Fotos",
         "headlineEmphasis": "für Ihre Marke",
         "intro": "Produktfotos, Lifestyle und Inhalte für soziale Medien. Vergleichen Sie Pakete und buchen Sie."
+      }
+    }
+  },
+  "referrals": {
+    "nav": "Creator einladen",
+    "title": "Creator einladen",
+    "adminTitle": "Creator-Empfehlungen",
+    "eyebrow": "MEIN KONTO",
+    "intro": "Teilen Sie Ihren Link. Sobald 20, 35 und 50 eingeladene Creator auf Wave freigegeben sind, erreichen Sie eine Botschafter-Stufe und ihre Prämien.",
+    "linkLabel": "Ihr Einladungslink",
+    "copy": "Link kopieren",
+    "copied": "Kopiert",
+    "copiedToast": "Link kopiert",
+    "share": "Teilen",
+    "shareText": "Komm zu Wave, wo Creator mit Marken zusammenarbeiten.",
+    "qrDownload": "QR-Code herunterladen",
+    "qrShow": "QR-Code anzeigen",
+    "qrAlt": "QR-Code für {link}",
+    "codeLabel": "Code",
+    "linkNote": "Der Link merkt sich Ihre Einladung 30 Tage lang, auch wenn sich jemand mit Google oder Apple registriert.",
+    "counted": "Freigegebene Creator",
+    "next": "Noch {count} bis {tier}",
+    "allDone": "Sie haben alle Stufen erreicht. Danke!",
+    "pendingNote": "In Bearbeitung: {count}. Creator zählen, sobald sie ihre E-Mail bestätigen, das Profil ausfüllen und wir sie freigeben.",
+    "tiersTitle": "Stufen und Prämien",
+    "tierAt": "{count} Creator",
+    "tiers": {
+      "bronze": "Bronze-Botschafter",
+      "silver": "Silber-Botschafter",
+      "gold": "Gold-Botschafter"
+    },
+    "perks": {
+      "bronze1": "Bronze-Botschafter-Abzeichen auf Profil und Karten",
+      "bronze2": "2 Wochen hervorgehoben auf Wave",
+      "bronze3": "Benachrichtigung über neue Kampagnen, sobald sie erscheinen",
+      "silver1": "Silber-Botschafter-Abzeichen",
+      "silver2": "1 Monat hervorgehoben auf der Startseite",
+      "silver3": "Vorrang, wenn wir Partnermarken Creator vorschlagen",
+      "gold1": "Gold-Abzeichen als Gründungsbotschafter, für immer",
+      "gold2": "3 Monate hervorgehoben auf der Startseite und in der Creator-Liste",
+      "gold3": "Eine garantierte bezahlte Zusammenarbeit"
+    },
+    "state": {
+      "active": "Aktiv",
+      "waiting": "Erreicht · wird bald aktiviert",
+      "left": "Noch {count} Creator",
+      "locked": "Gesperrt"
+    },
+    "creditsNote": "Wenn Wave Credits einführt, erhalten Botschafter Gründungs-Credits für jeden geworbenen Creator.",
+    "invitedTitle": "Eingeladene Creator",
+    "total": "{count} insgesamt",
+    "empty": "Über Ihren Link hat sich noch niemand registriert. Teilen Sie ihn!",
+    "unnamed": "Creator",
+    "status": {
+      "counted": "Zählt",
+      "review": "Wartet auf Freigabe",
+      "profile": "Füllt Profil aus",
+      "email": "Wartet auf E-Mail-Bestätigung",
+      "rejected": "Zählt nicht"
+    },
+    "rulesTitle": "Was zählt",
+    "rule1": "Ein Creator registriert sich über Ihren Link oder gibt den Code {code} ein.",
+    "rule2": "Er bestätigt die E-Mail und füllt das Profil aus.",
+    "rule3": "Das Wave-Team gibt das Profil frei. Erst dann zählt es.",
+    "fraud": "Gefälschte, doppelte und eigene Konten zählen nicht. Solche Empfehlungen prüfen wir vor einer Prämie von Hand.",
+    "creatorsOnly": "Creator einladen ist für Creator verfügbar.",
+    "invitedBy": "{name} lädt Sie zu Wave ein. Registrieren Sie sich als Creator und arbeiten Sie mit Marken zusammen.",
+    "codeField": "Empfehlungscode",
+    "codeOptional": "(optional)",
+    "codeHint": "Der Code stammt aus dem Link. Er gilt auch bei der Registrierung mit Google oder Apple.",
+    "badge": {
+      "bronze": "Bronze-Botschafter",
+      "silver": "Silber-Botschafter",
+      "gold": "Gründungsbotschafter",
+      "short": "Botschafter"
+    },
+    "templates": {
+      "tierTitle": "Botschafter: neue Stufe",
+      "tierHint": "Ein Creator hat eine neue Stufe im Programm „Creator einladen“ erreicht."
+    },
+    "admin": {
+      "intro": "Creator, die andere einladen, Prämien zum Aktivieren und Empfehlungen zur Prüfung.",
+      "rewardsWaiting": "Prämien warten",
+      "flagged": "zur Prüfung",
+      "ambassadors": "Botschafter",
+      "creator": "Creator",
+      "counted": "Freigegeben",
+      "pending": "In Bearbeitung",
+      "tier": "Stufe",
+      "reward": "Prämie",
+      "approve": "Aktivieren: {tier}",
+      "active": "Prämien aktiv",
+      "leftTo": "Noch {count} bis {tier}",
+      "rejectedCount": "{count} zählen nicht",
+      "empty": "Noch hat niemand einen Creator geworben.",
+      "manual": "Abzeichen und Hervorhebung werden beim Aktivieren automatisch eingeschaltet. Vorrang bei Partnermarken (35) und die bezahlte Zusammenarbeit (50) vereinbaren Sie von Hand.",
+      "reviewTitle": "Zur Prüfung",
+      "reviewIntro": "Empfehlungen aus demselben Netzwerk wie der einladende Creator, mehrere Registrierungen aus einem Netzwerk in 24 Stunden oder eine ähnliche E-Mail.",
+      "reviewEmpty": "Keine Empfehlungen zur Prüfung.",
+      "invitedBy": "eingeladen von {name}",
+      "reject": "Nicht zählen",
+      "accept": "Zählen",
+      "flags": {
+        "same_network": "gleiches Netzwerk wie der einladende Creator",
+        "many_from_network": "mehrere Registrierungen aus einem Netzwerk",
+        "similar_email": "E-Mail ähnlich wie beim einladenden Creator"
       }
     }
   }

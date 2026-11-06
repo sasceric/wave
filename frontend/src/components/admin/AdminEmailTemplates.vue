@@ -45,6 +45,7 @@ const templateLabels = computed(() => ({
   wrong_account_type_company: { title: t('adminProfiles.wrongTypeCompanyTemplateTitle'), description: t('adminProfiles.wrongTypeCompanyTemplateHint') },
   email_added_verify: { title: t('signIn.templates.verifyTitle'), description: t('signIn.templates.verifyHint') },
   account_security_notice: { title: t('signIn.templates.noticeTitle'), description: t('signIn.templates.noticeHint') },
+  referral_tier_reached: { title: t('referrals.templates.tierTitle'), description: t('referrals.templates.tierHint') },
   profile_tip: { title: t('adminProfiles.profileTipTemplateTitle'), description: t('adminProfiles.profileTipTemplateHint') },
   credit_code_assigned: { title: t('credits.assignmentEmailTitle'), description: t('credits.assignmentEmailHint') },
   credits_activated: { title: t('credits.emailTitle'), description: t('credits.emailHint') },

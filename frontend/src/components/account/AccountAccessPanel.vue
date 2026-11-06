@@ -16,6 +16,7 @@ import {
   Mail,
   MailCheck,
   UserRound,
+  Gift,
 } from '@lucide/vue'
 import { I18nT, useI18n } from 'vue-i18n'
 import LocalizedLink from '../shared/LocalizedLink.vue'
@@ -26,6 +27,7 @@ import WaveWordmark from '../shared/WaveWordmark.vue'
 import { apiRequest } from '../../lib/api'
 import { trackRegistration } from '../../lib/metaTracking'
 import { localizedRouteName } from '../../routePaths'
+import { forgetReferral, normalizeReferralCode, storedReferral } from '../../lib/referral'
 
 const emit = defineEmits(['authenticated'])
 const route = useRoute()
@@ -46,7 +48,19 @@ const form = reactive({
   name: '',
   newsletter: false,
   termsAccepted: false,
+  referralCode: storedReferral(),
 })
+// Pozovi kreatore: "Amar Hodžić vas poziva na Wave" above the form when the visitor came through a link.
+const inviter = ref(null)
+let inviterTicket = 0
+watch(() => [mode.value, form.accountType, normalizeReferralCode(form.referralCode)], async ([currentMode, type, code]) => {
+  const ticket = ++inviterTicket
+  if (currentMode !== 'register' || type !== 'creator' || !code) { inviter.value = null; return }
+  try {
+    const response = await apiRequest(`/referrals/${code}`)
+    if (ticket === inviterTicket) inviter.value = response.data
+  } catch { if (ticket === inviterTicket) inviter.value = null }
+}, { immediate: true })
 
 watch(() => [route.meta?.authMode, route.query.mode], ([authMode, queryMode]) => {
   mode.value = authMode || (['register', 'reset'].includes(queryMode) ? queryMode : 'login')
@@ -121,6 +135,8 @@ function startOAuth(provider) {
     mode: mode.value,
     accountType: form.accountType,
   })
+  const referralCode = normalizeReferralCode(form.referralCode)
+  if (mode.value === 'register' && form.accountType === 'creator' && referralCode) query.set('ref', referralCode)
   window.location.assign(`/api/auth/oauth/${provider}/start?${query.toString()}`)
 }
 
@@ -158,6 +174,8 @@ async function submit() {
       termsAccepted: form.termsAccepted,
       termsVersion: legalDocuments.version,
     })
+    const referralCode = normalizeReferralCode(form.referralCode)
+    if (form.accountType === 'creator' && referralCode) body.referralCode = referralCode
   }
 
   try {
@@ -168,7 +186,7 @@ async function submit() {
       method: 'POST',
       body,
     })
-    if (isRegistration) trackRegistration(response.data, isSocialRegistration ? 'social' : 'email')
+    if (isRegistration) { trackRegistration(response.data, isSocialRegistration ? 'social' : 'email'); forgetReferral() }
     emit('authenticated', response.data)
   } catch (cause) {
     error.value = cause.message
@@ -239,6 +257,12 @@ function changeMode(nextMode) {
             <h1>{{ mode === 'login' ? t('auth.signInTitle') : mode === 'register' ? t('auth.registrationCardTitle') : t('authScreen.forgotTitle') }}</h1>
             <p>{{ mode === 'login' ? t('auth.loginFormDescription') : mode === 'register' ? t('activation.signupHint') : t('authScreen.forgotIntro') }}</p>
           </div>
+
+          <p v-if="mode === 'register' && inviter" class="auth-invite">
+            <img v-if="inviter.avatarUrl" :src="inviter.avatarUrl" alt="" width="40" height="40" />
+            <span v-else class="auth-invite__icon" aria-hidden="true"><Gift :size="18" /></span>
+            <span>{{ t('referrals.invitedBy', { name: inviter.name }) }}</span>
+          </p>
 
           <fieldset v-if="mode === 'register'" class="auth-types">
             <legend>{{ t('auth.accountType') }}</legend>
@@ -342,6 +366,14 @@ function changeMode(nextMode) {
                 <small id="auth-password-hint" class="auth-field__hint" aria-live="polite">{{ passwordStrengthText }}</small>
               </template>
             </div>
+            <label v-if="mode === 'register' && form.accountType === 'creator'" class="auth-field">
+              <span class="auth-field__label">{{ t('referrals.codeField') }} <small class="auth-field__optional">{{ t('referrals.codeOptional') }}</small></span>
+              <span class="auth-input">
+                <Gift :size="16" aria-hidden="true" />
+                <input v-model.trim="form.referralCode" maxlength="24" autocomplete="off" autocapitalize="characters" spellcheck="false" class="auth-input__code" />
+              </span>
+              <small v-if="inviter" class="auth-field__hint">{{ t('referrals.codeHint') }}</small>
+            </label>
           </div>
 
           <label v-if="mode === 'register'" class="auth-form__check">

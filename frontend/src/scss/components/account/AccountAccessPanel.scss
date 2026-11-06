@@ -215,3 +215,33 @@
 @media (prefers-reduced-motion: reduce) {
   .auth-type, .auth-type__icon, .auth-social__button, .auth-input, .auth-strength i { transition: none; }
 }
+
+// Pozovi kreatore: who invited the visitor, and the optional referral code.
+.auth-invite {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0;
+  padding: 12px 14px;
+  border-radius: 16px;
+  color: var(--forest);
+  background: #e7f0eb;
+  font-size: 14px;
+  line-height: 1.45;
+
+  img { flex: none; width: 40px; height: 40px; border-radius: 50%; object-fit: cover; }
+}
+
+.auth-invite__icon {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  color: #fffdf8;
+  background: var(--forest);
+}
+
+.auth-field__optional { color: var(--muted-text); font-size: 12px; font-weight: 400; }
+.auth-input__code { font-weight: 600; letter-spacing: .08em; text-transform: uppercase; }

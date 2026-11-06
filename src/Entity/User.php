@@ -9,6 +9,7 @@ use Symfony\Component\Security\Core\User\UserInterface;
 #[ORM\Entity]
 #[ORM\Table(name: 'wave_user')]
 #[ORM\UniqueConstraint(name: 'uniq_wave_user_email', columns: ['email'])]
+#[ORM\UniqueConstraint(name: 'uniq_wave_user_referral_code', columns: ['referral_code'])]
 class User implements UserInterface, PasswordAuthenticatedUserInterface
 {
     #[ORM\Id]
@@ -48,6 +49,14 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     /** False for Google/Apple sign-ups until the person sets a password; the hash is then random. */
     #[ORM\Column(options: ['default' => true])]
     private bool $passwordKnown = true;
+
+    /** Personal code for Pozovi kreatore (wave.ba/?ref=CODE); created the first time the page opens. */
+    #[ORM\Column(length: 24, nullable: true)]
+    private ?string $referralCode = null;
+
+    /** Hashed network address from the last visit to Pozovi kreatore, to flag self-referrals. */
+    #[ORM\Column(length: 64, nullable: true)]
+    private ?string $referralNetworkHash = null;
 
     #[ORM\Column(options: ['default' => true])]
     private bool $emailVerified = true;
@@ -381,4 +390,9 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         $this->company = $company;
         $company?->setOwner($this);
     }
+
+    public function getReferralCode(): ?string { return $this->referralCode; }
+    public function setReferralCode(?string $code): void { $this->referralCode = $code; }
+    public function getReferralNetworkHash(): ?string { return $this->referralNetworkHash; }
+    public function setReferralNetworkHash(?string $hash): void { $this->referralNetworkHash = $hash; }
 }

@@ -10,6 +10,9 @@ export function notificationDestination(notification) {
   if (notification.conversationId) {
     return { name: 'messages', query: { conversation: notification.conversationId } }
   }
+  if (notification.type === 'campaign_early_access' && notification.campaign?.slug) {
+    return { name: 'campaign-detail', params: { slug: notification.campaign.slug } }
+  }
   if (notification.type === 'application_received' && notification.campaign?.slug) {
     return { name: 'account-campaign-detail', params: { slug: notification.campaign.slug } }
   }
@@ -30,6 +33,9 @@ export function notificationDestination(notification) {
     creator_inquiry_received: 'account-inquiries',
     creator_inquiry_accepted: 'account-inquiries',
     creator_inquiry_rejected: 'account-inquiries',
+    referral_tier_reached: 'admin-referrals',
+    referral_reward_active: 'account-referrals',
+    campaign_early_access: 'campaigns',
   }
   return { name: destinations[notification.type] || 'account' }
 }

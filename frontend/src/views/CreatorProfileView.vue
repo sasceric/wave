@@ -2,6 +2,7 @@
 import RegistrationPrompt from '../components/shared/RegistrationPrompt.vue'
 import PublicShareButton from '../components/shared/PublicShareButton.vue'
 import PresentationDemoBadge from '../components/shared/PresentationDemoBadge.vue'
+import AmbassadorBadge from '../components/shared/AmbassadorBadge.vue'
 import { useCreatorProfileVisit } from '../composables/useCreatorProfileVisit'
 import MarketplaceSafetyActions from '../components/shared/MarketplaceSafetyActions.vue'
 import ProfileReviews from '../components/reviews/ProfileReviews.vue'
@@ -685,6 +686,7 @@ onBeforeUnmount(() => { ++profileGeneration; packageDescriptionObserver?.disconn
             <div class="profile-heading__copy">
               <p class="eyebrow"><RouterLink v-if="landing.category" class="profile-heading__landing" :to="landingPath(landing.category)">{{ categoryLabel }}</RouterLink><template v-else>{{ categoryLabel }}</template></p>
               <h1>{{ creator.displayName }}</h1>
+              <AmbassadorBadge v-if="creator.ambassadorTier" class="profile-heading__ambassador" :tier="creator.ambassadorTier" />
               <p v-if="creator.tagline" class="profile-tagline">{{ creator.tagline }}</p>
               <div class="profile-heading__meta">
                 <span v-if="creator.city">

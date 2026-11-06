@@ -168,11 +168,11 @@ test('closing a pending Mercure authorization prevents a stale connection from o
   assert.equal(connections, 0)
 })
 
-test('the sidebar keeps five account places and moves secondary pages into settings', async () => {
+test('the sidebar keeps the account places (plus Pozovi kreatore for creators) and moves secondary pages into settings', async () => {
   const { state } = await setupView('../src/components/account/AccountSidebar.vue', {}, {
     user: { accountType: 'creator', approved: true }, pendingRegistrations: 0, adminLayout: false,
   })
-  assert.deepEqual(Array.from(state.navigationItems.value, (item) => item.route), ['account-dashboard', 'account-applications', 'messages', 'account', 'account-settings'])
+  assert.deepEqual(Array.from(state.navigationItems.value, (item) => item.route), ['account-dashboard', 'account-applications', 'messages', 'account', 'account-referrals', 'account-settings'])
   const work = state.navigationItems.value.find((item) => item.route === 'account-applications')
   assert.ok(['account-inquiries', 'account-bookmarks'].every((name) => work.match.includes(name)))
   const settings = state.navigationItems.value.find((item) => item.route === 'account-settings')

@@ -90,6 +90,7 @@ final class OAuthController extends AbstractController
             'mode' => $mode,
             'accountType' => $accountType,
             'userId' => $linkUser instanceof User ? $linkUser->getId() : null,
+            'ref' => \App\Referral\ReferralProgram::normalizeCode($request->query->get('ref')),
             'createdAt' => time(),
         ]);
 
@@ -114,6 +115,7 @@ final class OAuthController extends AbstractController
         AccountEmailSender $emailSender,
         #[Target('wave_register_ip')] RateLimiterFactoryInterface $registrationLimiter,
         #[Autowire('%kernel.project_dir%/config/localized_routes.json')] string $localizedRoutesFile,
+        \App\Referral\ReferralProgram $referrals,
     ): RedirectResponse {
         $flowKey = 'wave_oauth_flow_'.$provider;
         $flow = $request->getSession()->get($flowKey);
@@ -201,6 +203,7 @@ final class OAuthController extends AbstractController
 
         $entityManager->persist($user);
         $entityManager->persist(new OAuthIdentity($user, $provider, $identity['subject'], $identity['email']));
+        $referrals->attach($user, $flow['ref'] ?? null, $request->getClientIp());
         $entityManager->flush();
         $request->getSession()->remove('wave_oauth_registration');
 
@@ -258,6 +261,7 @@ final class OAuthController extends AbstractController
         \App\Service\PublicUrlSlugs $publicSlugs,
         AccountEmailSender $emailSender,
         #[Target('wave_register_ip')] RateLimiterFactoryInterface $registrationLimiter,
+        \App\Referral\ReferralProgram $referrals,
     ): JsonResponse {
         $locale = LocaleContext::fromRequest($request);
         if ($locale === null) {
@@ -394,6 +398,7 @@ final class OAuthController extends AbstractController
         \App\Legal\LegalPolicies::registration($user, $locale, 'social_registration');
         $entityManager->persist($user);
         $entityManager->persist(new OAuthIdentity($user, $pending['provider'], $pending['subject']));
+        $referrals->attach($user, $data['referralCode'] ?? null, $request->getClientIp());
         try {
             $emailSender->sendRegistrationReceived($user, $locale);
         } catch (TransportExceptionInterface) {

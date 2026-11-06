@@ -1,5 +1,6 @@
 <script setup>
 import PresentationDemoBadge from '../shared/PresentationDemoBadge.vue'
+import AmbassadorBadge from '../shared/AmbassadorBadge.vue'
 import RatingSummary from '../reviews/RatingSummary.vue'
 import '../../scss/components/creators/CreatorCard.scss'
 import { computed } from 'vue'
@@ -52,8 +53,9 @@ const startingPrice = computed(() => {
         :src="creator.avatarUrl || CREATOR_PLACEHOLDER"
         :alt="creator.displayName"
       />
-      <div v-if="creator.featured || creator.isPresentationDemo" class="creator-card__badges">
+      <div v-if="creator.featured || creator.isPresentationDemo || creator.ambassadorTier" class="creator-card__badges">
         <span v-if="creator.featured" class="creator-card__featured">{{ t('campaignCard.featured') }}</span>
+        <AmbassadorBadge v-if="creator.ambassadorTier" :tier="creator.ambassadorTier" compact />
         <PresentationDemoBadge v-if="creator.isPresentationDemo" overlay />
       </div>
       <span

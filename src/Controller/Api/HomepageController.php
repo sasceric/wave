@@ -329,6 +329,7 @@ final class HomepageController
         CsrfTokenManagerInterface $tokenManager,
         AccountEmailSender $emailSender,
         LoggerInterface $logger,
+        \App\Referral\ReferralProgram $referrals,
     ): JsonResponse {
         $locale = LocaleContext::fromRequest($request);
         if ($locale === null) {
@@ -369,6 +370,7 @@ final class HomepageController
         $user->setHideMyAccount(false);
         $user->setApproved(true);
         $entityManager->flush();
+        $referrals->afterApproval($user);
 
         return new JsonResponse(['data' => ['id' => $id, 'approved' => true]]);
     }
@@ -381,6 +383,7 @@ final class HomepageController
         CsrfTokenManagerInterface $tokenManager,
         AccountEmailSender $emailSender,
         LoggerInterface $logger,
+        \App\Referral\ReferralProgram $referrals,
     ): JsonResponse {
         $locale = LocaleContext::fromRequest($request);
         if ($locale === null) {
@@ -450,6 +453,9 @@ final class HomepageController
         }
         if ($approved > 0) {
             $entityManager->flush();
+            foreach ($users as $user) {
+                if ($user->isApproved()) $referrals->afterApproval($user);
+            }
         }
 
         $summary = [

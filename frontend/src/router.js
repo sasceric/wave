@@ -6,6 +6,7 @@ import { ensureCurrentUser } from './composables/useCurrentUser'
 import { accountAccessRedirect, accountLanding } from './lib/accountAccess'
 import { resolvePublicRedirect } from './lib/publicRedirects'
 import { registrationReturn } from './lib/registrationIntent'
+import { rememberReferral } from './lib/referral'
 
 const accountView = () => import('./views/AccountView.vue')
 const adminDashboardView = () => import('./views/AdminDashboardView.vue')
@@ -39,6 +40,8 @@ const routeViews = {
   'creator-guide': () => import('./views/SeoGuidesView.vue'),
   'how-it-works': () => import('./views/HowItWorksView.vue'),
   'account-credits': () => import('./views/CreditsView.vue'),
+  'account-referrals': () => import('./views/AccountReferralsView.vue'),
+  'admin-referrals': () => import('./views/AdminReferralsView.vue'),
   'admin-credit-settings': () => import('./views/AdminCreditSettingsView.vue'),
   account: accountView,
   login: accountView,
@@ -95,6 +98,7 @@ const adminSections = {
   'admin-registrations': 'registrations',
   'admin-listing-ads': 'listing-ads',
   'admin-account-types': 'account-types',
+  'admin-referrals': 'referrals',
   'admin-homepage': 'homepage',
   'admin-creators': 'creators',
   'admin-companies': 'companies',
@@ -115,6 +119,7 @@ const accountSections = {
   'account-blocks': 'blocks',
   'account-support': 'support',
   'account-credits': 'credits',
+  'account-referrals': 'referrals',
   account: 'profile',
   'account-applications': 'applications',
   'account-offers': 'offers',
@@ -283,5 +288,8 @@ router.beforeEach(async (to, from) => {
   // Vite and subsequent SPA links need the public resolver.
   if (from.name || import.meta.env.DEV) return resolvePublicRedirect(to)
 })
+
+// Pozovi kreatore: remember wave.ba/?ref=CODE for the registration form.
+router.afterEach((to) => { if (typeof to.query.ref === 'string') rememberReferral(to.query.ref) })
 
 export default router

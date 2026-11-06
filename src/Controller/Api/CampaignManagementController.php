@@ -73,6 +73,7 @@ final class CampaignManagementController
         CsrfTokenManagerInterface $tokenManager,
         \App\Credits\CreditService $credits,
         \App\Service\PublicUrlSlugs $publicSlugs,
+        \App\Referral\ReferralProgram $referrals,
     ): JsonResponse {
         $locale = LocaleContext::fromRequest($request);
         if ($locale === null) {
@@ -141,6 +142,9 @@ final class CampaignManagementController
         } catch (\App\Credits\CreditException $error) {
             return new JsonResponse(['error' => ApiMessages::get($error->key, $locale), 'code' => $error->key], $error->status);
         }
+
+        // Ambassadors (Pozovi kreatore) hear about a new campaign first.
+        $referrals->notifyEarlyAccess($campaign, $user);
 
         return new JsonResponse(['data' => CampaignResource::fromEntity($campaign, $locale, categoryLabels: MarketplaceCategoryLabels::forLocale($entityManager, $locale), hiredCount: CampaignHiredCounts::forCampaign($entityManager, $campaign))], 201);
     }

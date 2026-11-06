@@ -548,7 +548,10 @@
     "replyToYou": "Odgovor na tvoje sporočilo"
   },
   "campaignChat": {
-    "intro": { "application": "Sporočilo iz prijave · {name}", "invitation": "Sporočilo iz povabila · {name}" },
+    "intro": {
+      "application": "Sporočilo iz prijave · {name}",
+      "invitation": "Sporočilo iz povabila · {name}"
+    },
     "unreadDivider": "Nova sporočila",
     "loadEarlierUnread": "Naloži starejša neprebrana sporočila",
     "loadingMessages": "Nalaganje sporočil…",
@@ -639,7 +642,10 @@
       "discussion_reopening_rejected": "{actor}: Ponovno odprtje pogovora za kampanjo {campaign} je zavrnjeno.",
       "account_type_change_requested": "Nova zahteva za spremembo vrste računa.",
       "account_type_changed": "Vrsta tvojega računa je spremenjena. Preglej svoj profil.",
-      "account_type_change_rejected": "Zahteva za spremembo vrste računa je zavrnjena. Odgovor je v nastavitvah."
+      "account_type_change_rejected": "Zahteva za spremembo vrste računa je zavrnjena. Odgovor je v nastavitvah.",
+      "referral_tier_reached": "Nova ambasadorska raven: {actor}. Preglejte in aktivirajte nagrado.",
+      "referral_reward_active": "Vaše ambasadorske nagrade so aktivne. Hvala, ker širite Wave!",
+      "campaign_early_access": "Nova kampanja {campaign} od {actor}. Kot ambasador izveste prvi."
     },
     "closedNotice": "Kampanja je zaprta. V tem pogovoru ni več mogoče pošiljati sporočil.",
     "finishedNotice": "Kampanja je končana. V tem pogovoru ni več mogoče pošiljati sporočil.",
@@ -3277,7 +3283,12 @@
     "visibilitySaved": "Vidnost kampanje na seznamu je shranjena."
   },
   "signIn": {
-    "templates": {"verifyTitle": "Potrditev dodatnega e-poštnega naslova", "verifyHint": "Pošlje se na nov naslov, ko ga uporabnik doda v Nastavitvah.", "noticeTitle": "Varnostno obvestilo o spremembi računa", "noticeHint": "Dodan ali odstranjen naslov, nov glavni naslov, povezan ali odstranjen račun Google/Apple."},
+    "templates": {
+      "verifyTitle": "Potrditev dodatnega e-poštnega naslova",
+      "verifyHint": "Pošlje se na nov naslov, ko ga uporabnik doda v Nastavitvah.",
+      "noticeTitle": "Varnostno obvestilo o spremembi računa",
+      "noticeHint": "Dodan ali odstranjen naslov, nov glavni naslov, povezan ali odstranjen račun Google/Apple."
+    },
     "mainLabel": "Glavni naslov",
     "options": "Možnosti za {email}",
     "unlinkAction": "Odstrani povezavo",
@@ -4628,6 +4639,112 @@
         "headlineLead": "Fotografije",
         "headlineEmphasis": "za vašo znamko",
         "intro": "Fotografije izdelkov, lifestyle in vsebine za družbena omrežja. Primerjajte pakete in naročite."
+      }
+    }
+  },
+  "referrals": {
+    "nav": "Povabi ustvarjalce",
+    "title": "Povabi ustvarjalce",
+    "adminTitle": "Priporočila ustvarjalcev",
+    "eyebrow": "MOJ RAČUN",
+    "intro": "Delite svojo povezavo. Ko je odobrenih 20, 35 in 50 ustvarjalcev, ki ste jih povabili, dosežete ambasadorsko raven in nagrade.",
+    "linkLabel": "Vaša povezava za vabila",
+    "copy": "Kopiraj povezavo",
+    "copied": "Kopirano",
+    "copiedToast": "Povezava je kopirana",
+    "share": "Deli",
+    "shareText": "Pridružite se Wave, kjer ustvarjalci sodelujejo z blagovnimi znamkami.",
+    "qrDownload": "Prenesi kodo QR",
+    "qrShow": "Pokaži kodo QR",
+    "qrAlt": "Koda QR za {link}",
+    "codeLabel": "Koda",
+    "linkNote": "Povezava si vabilo zapomni 30 dni, tudi ko se ustvarjalec registrira prek računa Google ali Apple.",
+    "counted": "Odobreni ustvarjalci",
+    "next": "Še {count} do ravni {tier}",
+    "allDone": "Dosegli ste vse ravni. Hvala!",
+    "pendingNote": "V teku: {count}. Ustvarjalci se štejejo, ko potrdijo e-pošto, izpolnijo profil in jih odobrimo.",
+    "tiersTitle": "Ravni in nagrade",
+    "tierAt": "{count} ustvarjalcev",
+    "tiers": {
+      "bronze": "Bronasti ambasador",
+      "silver": "Srebrni ambasador",
+      "gold": "Zlati ambasador"
+    },
+    "perks": {
+      "bronze1": "Bronasta ambasadorska značka na profilu in karticah",
+      "bronze2": "2 tedna izpostavljeni na Wave",
+      "bronze3": "Obvestilo o novih kampanjah takoj ob objavi",
+      "silver1": "Srebrna ambasadorska značka",
+      "silver2": "1 mesec izpostavljeni na začetni strani",
+      "silver3": "Prednost, ko partnerskim znamkam predlagamo ustvarjalce",
+      "gold1": "Zlata značka ustanovnega ambasadorja, za vedno",
+      "gold2": "3 mesece izpostavljeni na začetni strani in v seznamu ustvarjalcev",
+      "gold3": "Zagotovljeno plačano sodelovanje"
+    },
+    "state": {
+      "active": "Aktivno",
+      "waiting": "Doseženo · kmalu aktiviramo",
+      "left": "Še {count} ustvarjalcev",
+      "locked": "Zaklenjeno"
+    },
+    "creditsNote": "Ko Wave uvede kredite, ambasadorji prejmejo ustanovne kredite za vsakega ustvarjalca, ki so ga pripeljali.",
+    "invitedTitle": "Povabljeni ustvarjalci",
+    "total": "skupaj {count}",
+    "empty": "Prek vaše povezave se še nihče ni registriral. Delite jo!",
+    "unnamed": "Ustvarjalec",
+    "status": {
+      "counted": "Se šteje",
+      "review": "Čaka na odobritev",
+      "profile": "Izpolnjuje profil",
+      "email": "Čaka na potrditev e-pošte",
+      "rejected": "Se ne šteje"
+    },
+    "rulesTitle": "Kaj se šteje",
+    "rule1": "Ustvarjalec se registrira prek vaše povezave ali vnese kodo {code}.",
+    "rule2": "Potrdi e-pošto in izpolni profil.",
+    "rule3": "Ekipa Wave odobri profil. Šele takrat se šteje.",
+    "fraud": "Lažni, podvojeni in lastni računi se ne štejejo. Taka vabila pred nagrado ročno pregledamo.",
+    "creatorsOnly": "Vabila so na voljo ustvarjalcem.",
+    "invitedBy": "{name} vas vabi na Wave. Registrirajte se kot ustvarjalec in se povežite z znamkami.",
+    "codeField": "Koda priporočila",
+    "codeOptional": "(neobvezno)",
+    "codeHint": "Koda je izpolnjena iz povezave. Velja tudi pri registraciji prek računa Google ali Apple.",
+    "badge": {
+      "bronze": "Bronasti ambasador",
+      "silver": "Srebrni ambasador",
+      "gold": "Ustanovni ambasador",
+      "short": "Ambasador"
+    },
+    "templates": {
+      "tierTitle": "Ambasador: nova raven",
+      "tierHint": "Ustvarjalec je dosegel novo raven v programu Povabi ustvarjalce."
+    },
+    "admin": {
+      "intro": "Ustvarjalci, ki vabijo druge, nagrade za aktivacijo in vabila za pregled.",
+      "rewardsWaiting": "nagrad čaka",
+      "flagged": "za pregled",
+      "ambassadors": "Ambasadorji",
+      "creator": "Ustvarjalec",
+      "counted": "Odobreni",
+      "pending": "V teku",
+      "tier": "Raven",
+      "reward": "Nagrada",
+      "approve": "Aktiviraj: {tier}",
+      "active": "Nagrade aktivne",
+      "leftTo": "Še {count} do ravni {tier}",
+      "rejectedCount": "{count} se ne šteje",
+      "empty": "Nihče še ni pripeljal ustvarjalca.",
+      "manual": "Značka in izpostavitev se vklopita samodejno, ko aktivirate nagrado. Prednost pri partnerskih znamkah (35) in plačano sodelovanje (50) uredite ročno.",
+      "reviewTitle": "Za pregled",
+      "reviewIntro": "Vabila iz istega omrežja kot ustvarjalec, ki vabi, več registracij iz enega omrežja v 24 urah ali podoben e-poštni naslov.",
+      "reviewEmpty": "Ni vabil za pregled.",
+      "invitedBy": "vabilo: {name}",
+      "reject": "Ne štej",
+      "accept": "Štej",
+      "flags": {
+        "same_network": "isto omrežje kot ustvarjalec, ki vabi",
+        "many_from_network": "več registracij iz istega omrežja",
+        "similar_email": "e-pošta podobna ustvarjalcu, ki vabi"
       }
     }
   }

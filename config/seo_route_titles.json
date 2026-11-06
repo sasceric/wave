@@ -26,6 +26,8 @@
   "account-campaign-create": "account.createCampaign",
   "account-campaign-detail": "account.campaigns",
   "account-credits": "credits.title",
+  "account-referrals": "referrals.title",
+  "admin-referrals": "referrals.adminTitle",
   "account-support": "support.myTickets",
   "messages": "seo.messagesTitle",
   "verify-email": "seo.verifyEmailTitle",

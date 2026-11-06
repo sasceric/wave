@@ -1,0 +1,43 @@
+// Ambassador pill: tier colour on the medal, readable dark text in the same hue (4.5:1 on the tint).
+.ambassador-badge {
+  --ambassador-ring: #b8763f;
+  --ambassador-ink: #8a4f22;
+  --ambassador-tint: #f7ebdf;
+
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 12px 5px 5px;
+  border-radius: 999px;
+  color: var(--ambassador-ink);
+  background: var(--ambassador-tint);
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.2;
+  white-space: nowrap;
+
+  &--silver { --ambassador-ring: #8d9aa0; --ambassador-ink: #4f5d64; --ambassador-tint: #eef1f2; }
+  &--gold { --ambassador-ring: #c39a2c; --ambassador-ink: #7d5f0e; --ambassador-tint: #f8f0d9; }
+
+  &__medal {
+    display: grid;
+    flex: none;
+    place-items: center;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    color: #fffdf8;
+    background: var(--ambassador-ring);
+
+    svg { width: 12px; height: 12px; }
+  }
+
+  &--compact {
+    padding: 4px 10px 4px 4px;
+    font-size: 12px;
+    background: #fffdf8;
+    box-shadow: 0 2px 8px rgba(31, 42, 40, .15);
+
+    .ambassador-badge__medal { width: 20px; height: 20px; }
+  }
+}

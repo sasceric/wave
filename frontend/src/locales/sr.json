@@ -548,7 +548,10 @@
     "replyToYou": "Odgovor na tvoju poruku"
   },
   "campaignChat": {
-    "intro": { "application": "Poruka iz prijave · {name}", "invitation": "Poruka iz pozivnice · {name}" },
+    "intro": {
+      "application": "Poruka iz prijave · {name}",
+      "invitation": "Poruka iz pozivnice · {name}"
+    },
     "unreadDivider": "Nove poruke",
     "loadEarlierUnread": "Učitaj ranije nepročitane poruke",
     "loadingMessages": "Učitavanje poruka…",
@@ -639,7 +642,10 @@
       "discussion_reopening_rejected": "{actor}: Zahtjev za ponovno otvaranje razgovora za kampanju {campaign} je odbijen.",
       "account_type_change_requested": "Novi zahtev za promenu vrste naloga.",
       "account_type_changed": "Vrsta tvog naloga je promenjena. Pregledaj svoj profil.",
-      "account_type_change_rejected": "Zahtev za promenu vrste naloga je odbijen. Pogledaj odgovor u podešavanjima."
+      "account_type_change_rejected": "Zahtev za promenu vrste naloga je odbijen. Pogledaj odgovor u podešavanjima.",
+      "referral_tier_reached": "Novi ambasadorski nivo: {actor}. Pregledajte i aktivirajte nagradu.",
+      "referral_reward_active": "Vaše ambasadorske nagrade su aktivne. Hvala što širite Wave!",
+      "campaign_early_access": "Nova kampanja {campaign} od {actor}. Kao ambasador saznajete prvi."
     },
     "closedNotice": "Kampanja je zatvorena. Više nije moguće slati poruke u ovom razgovoru.",
     "finishedNotice": "Kampanja je završena. Više nije moguće slati poruke u ovom razgovoru.",
@@ -3277,7 +3283,12 @@
     "visibilitySaved": "Vidljivost kampanje u listi je sačuvana."
   },
   "signIn": {
-    "templates": {"verifyTitle": "Potvrda dodatne e-mail adrese", "verifyHint": "Šalje se na novu adresu kad je korisnik doda u Podešavanjima.", "noticeTitle": "Bezbednosno obaveštenje o promeni naloga", "noticeHint": "Dodata ili uklonjena adresa, nova glavna adresa, povezan ili uklonjen Google/Apple nalog."},
+    "templates": {
+      "verifyTitle": "Potvrda dodatne e-mail adrese",
+      "verifyHint": "Šalje se na novu adresu kad je korisnik doda u Podešavanjima.",
+      "noticeTitle": "Bezbednosno obaveštenje o promeni naloga",
+      "noticeHint": "Dodata ili uklonjena adresa, nova glavna adresa, povezan ili uklonjen Google/Apple nalog."
+    },
     "mainLabel": "Glavna adresa",
     "options": "Opcije za {email}",
     "unlinkAction": "Ukloni vezu",
@@ -4628,6 +4639,112 @@
         "headlineLead": "Fotografije",
         "headlineEmphasis": "za vaš brend",
         "intro": "Fotografije proizvoda, lifestyle i sadržaj za društvene mreže. Uporedite pakete i naručite."
+      }
+    }
+  },
+  "referrals": {
+    "nav": "Pozovi kreatore",
+    "title": "Pozovi kreatore",
+    "adminTitle": "Preporuke kreatora",
+    "eyebrow": "MOJ NALOG",
+    "intro": "Podijelite svoj link. Kad 20, 35 i 50 kreatora koje ste pozvali bude odobreno na Waveu, osvajate ambasadorski nivo i nagrade.",
+    "linkLabel": "Vaš link za pozivanje",
+    "copy": "Kopiraj link",
+    "copied": "Kopirano",
+    "copiedToast": "Link je kopiran",
+    "share": "Podijeli",
+    "shareText": "Pridružite se Waveu, mestu gdje kreatori sarađuju s brendovima.",
+    "qrDownload": "Preuzmi QR kod",
+    "qrShow": "Prikaži QR kod",
+    "qrAlt": "QR kod za {link}",
+    "codeLabel": "Kod",
+    "linkNote": "Link pamti vaš poziv 30 dana, i kad se kreator registruje preko Google ili Apple naloga.",
+    "counted": "Odobreni kreatori",
+    "next": "Još {count} do nivoa {tier}",
+    "allDone": "Osvojili ste sve nivoe. Hvala!",
+    "pendingNote": "U toku: {count}. Kreatori se računaju kad potvrde e-mail, popune profil i kad ih odobrimo.",
+    "tiersTitle": "Nivoi i nagrade",
+    "tierAt": "{count} kreatora",
+    "tiers": {
+      "bronze": "Bronzani ambasador",
+      "silver": "Srebrni ambasador",
+      "gold": "Zlatni ambasador"
+    },
+    "perks": {
+      "bronze1": "Bronzani ambasador bedž na profilu i karticama",
+      "bronze2": "2 sedmice istaknuti na Waveu",
+      "bronze3": "Obaveštenje o novim kampanjama čim se objave",
+      "silver1": "Srebrni ambasador bedž",
+      "silver2": "1 mesec istaknuti na početnoj stranici",
+      "silver3": "Prednost kad predlažemo kreatore partnerskim brendovima",
+      "gold1": "Zlatni bedž osnivačkog ambasadora, zauvek",
+      "gold2": "3 meseca istaknuti na početnoj i u listi kreatora",
+      "gold3": "Zagarantovana plaćena saradnja"
+    },
+    "state": {
+      "active": "Aktivno",
+      "waiting": "Osvojeno · aktiviramo uskoro",
+      "left": "Još {count} kreatora",
+      "locked": "Zaključano"
+    },
+    "creditsNote": "Kad Wave pokrene kredite, ambasadori dobijaju osnivačke kredite za svakog kreatora kojeg su doveli.",
+    "invitedTitle": "Pozvani kreatori",
+    "total": "{count} ukupno",
+    "empty": "Još se niko nije registrovao preko vašeg linka. Podijelite ga!",
+    "unnamed": "Kreator",
+    "status": {
+      "counted": "Računa se",
+      "review": "Čeka odobrenje",
+      "profile": "Popunjava profil",
+      "email": "Čeka potvrdu e-maila",
+      "rejected": "Ne računa se"
+    },
+    "rulesTitle": "Šta se računa",
+    "rule1": "Kreator se registruje preko vašeg linka ili unese kod {code}.",
+    "rule2": "Potvrdi e-mail i popuni profil.",
+    "rule3": "Wave tim odobri profil. Tek tada se računa.",
+    "fraud": "Lažni, dupli i vlastiti nalozi se ne računaju. Takve preporuke pregledamo ručno pre nagrade.",
+    "creatorsOnly": "Pozivanje kreatora je dostupno kreatorima.",
+    "invitedBy": "{name} vas poziva na Wave. Registrujte se kao kreator i povežite se s brendovima.",
+    "codeField": "Kod preporuke",
+    "codeOptional": "(neobavezno)",
+    "codeHint": "Kod je popunjen iz linka. Važi i ako se registrujete preko Google ili Apple naloga.",
+    "badge": {
+      "bronze": "Bronzani ambasador",
+      "silver": "Srebrni ambasador",
+      "gold": "Osnivački ambasador",
+      "short": "Ambasador"
+    },
+    "templates": {
+      "tierTitle": "Ambasador: novi nivo",
+      "tierHint": "Kreator je osvojio novi nivo u programu Pozovi kreatore."
+    },
+    "admin": {
+      "intro": "Kreatori koji pozivaju druge, nagrade za aktivaciju i preporuke za pregled.",
+      "rewardsWaiting": "nagrada čeka",
+      "flagged": "za pregled",
+      "ambassadors": "Ambasadori",
+      "creator": "Kreator",
+      "counted": "Odobreni",
+      "pending": "U toku",
+      "tier": "Nivo",
+      "reward": "Nagrada",
+      "approve": "Aktiviraj: {tier}",
+      "active": "Nagrade aktivne",
+      "leftTo": "Još {count} do nivoa {tier}",
+      "rejectedCount": "{count} ne računa se",
+      "empty": "Još niko nije doveo kreatora.",
+      "manual": "Bedž i istaknuto mesto se uključuju automatski kad aktivirate nagradu. Prednost za partnerske brendove (35) i plaćenu saradnju (50) dogovarate ručno.",
+      "reviewTitle": "Za pregled",
+      "reviewIntro": "Preporuke s iste mreže kao kreator koji poziva, više registracija s jedne mreže u 24 sata ili sličan e-mail.",
+      "reviewEmpty": "Nema preporuka za pregled.",
+      "invitedBy": "poziv: {name}",
+      "reject": "Ne računaj",
+      "accept": "Računaj",
+      "flags": {
+        "same_network": "ista mreža kao kreator koji poziva",
+        "many_from_network": "više registracija s iste mreže",
+        "similar_email": "e-mail sličan kreatoru koji poziva"
       }
     }
   }

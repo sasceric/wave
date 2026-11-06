@@ -1,0 +1,272 @@
+@use '../breakpoints';
+
+// Pozovi kreatore (creator's referral page). Tier colours: bronze, silver, gold; text uses the darker
+// shade of each so it stays readable on the light tints.
+.referrals {
+  --tier-bronze: #b8763f; --tier-bronze-ink: #8a4f22; --tier-bronze-tint: #f7ebdf;
+  --tier-silver: #8d9aa0; --tier-silver-ink: #4f5d64; --tier-silver-tint: #eef1f2;
+  --tier-gold: #c39a2c; --tier-gold-ink: #7d5f0e; --tier-gold-tint: #f8f0d9;
+
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  min-width: 0;
+}
+
+.referrals__heading {
+  display: grid;
+  gap: 8px;
+
+  h1 { margin: 0; color: var(--forest); font-family: var(--font-display, 'DM Serif Display', serif); font-size: clamp(36px, 5vw, 52px); font-weight: 400; line-height: 1.05; }
+  p:not(.eyebrow) { max-width: 640px; margin: 0; color: var(--muted-text); font-size: 17px; line-height: 1.55; }
+}
+
+.referrals-card {
+  border: 1px solid var(--hairline);
+  border-radius: 26px;
+  background: #fffdf8;
+}
+
+.referrals-section-title { margin: 0 4px; color: var(--muted-text); font-size: 13px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
+.referrals-note { margin: 0 4px; color: var(--muted-text); font-size: 13px; line-height: 1.5; }
+
+// Link card
+.referrals-link {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 190px;
+  align-items: center;
+  gap: 28px;
+  padding: 28px;
+  border-radius: 26px;
+  color: #fffdf8;
+  background: var(--forest);
+
+  &__main { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+  &__label { margin: 0; color: #cfe2d8; font-size: 12px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; }
+
+  &__field {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 8px 8px 18px;
+    border: 1px solid rgba(255, 253, 248, .18);
+    border-radius: 16px;
+    background: rgba(255, 253, 248, .1);
+  }
+
+  &__url { flex: 1; min-width: 0; overflow: hidden; font-size: 19px; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
+
+  &__copy {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    gap: 8px;
+    min-height: 44px;
+    padding: 0 18px;
+    border: 0;
+    border-radius: 12px;
+    color: var(--forest);
+    background: #fffdf8;
+    font: inherit;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  &__actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+  &__code { padding: 8px 14px; border-radius: 999px; background: rgba(255, 253, 248, .12); font-size: 14px; strong { letter-spacing: .08em; } }
+
+  &__ghost {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 40px;
+    padding: 0 16px;
+    border: 1px solid rgba(255, 253, 248, .3);
+    border-radius: 999px;
+    color: #fffdf8;
+    background: transparent;
+    font: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+
+    &:hover:not(:disabled) { background: rgba(255, 253, 248, .1); }
+    &:disabled { opacity: .55; cursor: wait; }
+  }
+
+  &__copy:focus-visible, &__ghost:focus-visible { outline: 2px solid #fffdf8; outline-offset: 2px; }
+  &__qr-toggle { display: none; }
+  &__note { margin: 0; color: #cfe2d8; font-size: 13px; line-height: 1.5; }
+
+  &__qr {
+    padding: 12px;
+    border-radius: 18px;
+    background: #fff;
+
+    img { display: block; width: 100%; height: auto; }
+  }
+}
+
+// Progress
+.referrals-progress {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 26px 28px;
+
+  &__top { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 16px; }
+  h2 { margin: 0; color: var(--muted-text); font-size: 13px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
+  &__count { margin: 4px 0 0; color: var(--forest); font-family: var(--font-display, 'DM Serif Display', serif); font-size: 56px; line-height: 1; span { color: #7f8f87; font-size: 28px; } }
+  &__next { margin: 0; padding: 10px 16px; border-radius: 14px; color: var(--forest); background: #f1f5ef; font-size: 15px; font-weight: 600; }
+  &__pending { margin: 0; color: var(--muted-text); font-size: 14px; }
+
+  &__bar { position: relative; height: 56px; margin: 0 16px 0 0; }
+  &__bar::before { position: absolute; top: 10px; right: 0; left: 0; height: 12px; border-radius: 999px; background: #e9e4d9; content: ''; }
+  &__fill { position: absolute; top: 10px; left: 0; height: 12px; border-radius: 999px; background: var(--forest); transition: width .4s ease; }
+
+  &__marker {
+    position: absolute;
+    top: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    transform: translateX(-50%);
+
+    i { width: 32px; height: 32px; box-sizing: border-box; border: 3px solid var(--ring); border-radius: 50%; background: #fffdf8; }
+    b { color: var(--muted-text); font-size: 13px; }
+    &.is-won i { background: var(--ring); }
+    &.is-won b { color: var(--ink-tier); }
+  }
+
+  &__marker--bronze { --ring: var(--tier-bronze); --ink-tier: var(--tier-bronze-ink); }
+  &__marker--silver { --ring: var(--tier-silver); --ink-tier: var(--tier-silver-ink); }
+  &__marker--gold { --ring: var(--tier-gold); --ink-tier: var(--tier-gold-ink); }
+}
+
+// Tiers
+.referrals-tiers { display: flex; flex-direction: column; gap: 14px; }
+.referrals-tiers__grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+
+.referrals-tier {
+  --ring: var(--tier-bronze); --ink-tier: var(--tier-bronze-ink); --tint: var(--tier-bronze-tint);
+
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 20px;
+  border: 1px solid var(--hairline);
+  border-radius: 22px;
+  background: #fffdf8;
+
+  &--silver { --ring: var(--tier-silver); --ink-tier: var(--tier-silver-ink); --tint: var(--tier-silver-tint); }
+  &--gold { --ring: var(--tier-gold); --ink-tier: var(--tier-gold-ink); --tint: var(--tier-gold-tint); }
+  &.is-active, &.is-waiting { background: var(--tint); }
+  &.is-next { border: 2px solid var(--ring); }
+  &.is-locked { opacity: .8; }
+
+  &__head { display: flex; align-items: center; gap: 14px; }
+  &__head small { color: var(--ink-tier); font-size: 13px; font-weight: 700; text-transform: uppercase; }
+  &__head h3 { margin: 2px 0 0; color: var(--forest); font-size: 19px; }
+
+  &__medal {
+    display: grid;
+    flex: none;
+    place-items: center;
+    width: 52px;
+    height: 52px;
+    box-sizing: border-box;
+    border: 3px solid var(--ring);
+    border-radius: 50%;
+    color: var(--ring);
+    background: var(--tint);
+
+    svg { width: 24px; height: 24px; }
+  }
+
+  &.is-active &__medal, &.is-waiting &__medal { color: #fffdf8; background: var(--ring); }
+
+  ul { display: grid; gap: 10px; margin: 0; padding: 0; list-style: none; }
+  li { display: flex; gap: 10px; font-size: 14px; line-height: 1.45; svg { flex: none; margin-top: 1px; color: var(--ink-tier); } }
+
+  &__state { margin: auto 0 0; padding: 9px 12px; border-radius: 12px; color: var(--muted-text); background: #f6f2ea; font-size: 14px; font-weight: 700; text-align: center; }
+  &.is-active &__state, &.is-waiting &__state { color: var(--ink-tier); background: #fffdf8; }
+}
+
+// Invited list + rules
+.referrals-bottom { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); align-items: start; gap: 16px; }
+
+.referrals-list {
+  overflow: hidden;
+
+  header { display: flex; align-items: center; justify-content: space-between; padding: 18px 20px 12px; }
+  h2 { margin: 0; color: var(--forest); font-size: 18px; }
+  header span { color: var(--muted-text); font-size: 13px; }
+  &__empty { margin: 0; padding: 16px 20px 22px; color: var(--muted-text); font-size: 14px; }
+
+  &__row { display: flex; align-items: center; gap: 14px; min-height: 62px; padding: 8px 20px; border-top: 1px solid var(--hairline); }
+  &__avatar { display: grid; flex: none; place-items: center; width: 38px; height: 38px; border-radius: 50%; color: var(--forest); background: #e7f0eb; font-size: 14px; font-weight: 700; }
+  &__text { display: flex; flex: 1; flex-direction: column; gap: 2px; min-width: 0; strong { overflow: hidden; font-size: 15px; text-overflow: ellipsis; white-space: nowrap; } small { color: var(--muted-text); font-size: 13px; } }
+
+  &__status {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    gap: 7px;
+    color: #4f5d64;
+    font-size: 13px;
+    font-weight: 600;
+    white-space: nowrap;
+
+    i { width: 8px; height: 8px; border-radius: 50%; background: #9aa7ad; }
+    &.is-counted { color: #1f6b45; i { background: #34a26b; } }
+    &.is-review { color: #8a4f22; i { background: #f08a24; } }
+    &.is-rejected { color: #a8432b; i { background: #c4553a; } }
+  }
+}
+
+.referrals-rules {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 20px;
+
+  h2 { margin: 0; color: var(--forest); font-size: 18px; }
+  ol { display: grid; gap: 12px; margin: 0; padding: 0; list-style: none; }
+  li { display: flex; gap: 12px; font-size: 14px; line-height: 1.45; }
+  li span { display: grid; flex: none; place-items: center; width: 26px; height: 26px; border-radius: 50%; color: var(--forest); background: #e7f0eb; font-size: 13px; font-weight: 700; }
+  &__warning { margin: 0; padding: 12px 14px; border-radius: 14px; color: #7a3c12; background: #fbf1e8; font-size: 13px; line-height: 1.5; }
+}
+
+@include breakpoints.down(980px) {
+  .referrals-tiers__grid, .referrals-bottom { grid-template-columns: minmax(0, 1fr); }
+}
+
+@include breakpoints.down(760px) {
+  .referrals { gap: 18px; }
+  .referrals__heading p:not(.eyebrow) { font-size: 15px; }
+
+  .referrals-link {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 14px;
+    padding: 18px;
+    border-radius: 22px;
+
+    &__url { font-size: 17px; }
+    &__field { flex-wrap: wrap; padding: 12px; }
+    &__field &__url { flex-basis: 100%; }
+    &__copy { flex: 1; justify-content: center; }
+    &__qr-toggle { display: inline-flex; }
+    &__qr { display: none; justify-self: center; width: 200px; }
+    &__qr.is-open { display: block; }
+  }
+
+  .referrals-progress { padding: 18px; border-radius: 22px; }
+  .referrals-progress__count { font-size: 44px; span { font-size: 22px; } }
+  .referrals-progress__next { width: 100%; box-sizing: border-box; font-size: 14px; }
+  .referrals-progress__marker i { width: 26px; height: 26px; }
+  .referrals-tier { padding: 16px; border-radius: 20px; }
+  .referrals-list__row { padding: 8px 14px; }
+  .referrals-list__status { font-size: 12px; }
+}

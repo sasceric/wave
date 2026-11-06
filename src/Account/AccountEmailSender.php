@@ -414,6 +414,16 @@ final class AccountEmailSender
         }
     }
 
+    /** Pozovi kreatore: the creator reached an ambassador tier (20, 35 or 50 approved referrals). */
+    public function sendReferralTier(User $user, int $tier): void
+    {
+        $locale = $this->normalizedLocale($user->getPreferredLocale());
+        $copy = $this->copyFor('referral_tier_reached', $locale);
+        $url = rtrim($this->appBaseUrl, '/') . $this->localizedRoutePath('account-referrals', $locale);
+        $variables = $this->baseVariables($copy, $locale, $url) + ['change' => \App\Referral\ReferralEmailCopy::tierName($tier, $locale)];
+        $this->deliver($user, 'referral_tier_reached', $locale, $copy['subject'], $url, $variables);
+    }
+
     /** Wrong account type: a creator who is really a brand/agency, or a brand/agency that is really a creator. */
     public function sendWrongAccountType(User $user): void
     {
@@ -698,6 +708,10 @@ final class AccountEmailSender
         $variables = $template === 'terms_updated'
             ? $this->termsCopy($locale, \App\Legal\LegalPolicies::effectiveDate())
             : $this->copyFor($template, $locale);
+        if ($template === 'referral_tier_reached') {
+            $tierName = \App\Referral\ReferralEmailCopy::tierName(35, $locale);
+            $variables = array_map(static fn (string $value): string => str_replace('{change}', $tierName, $value), $variables);
+        }
         if ($template === 'account_security_notice') {
             $change = AccountSecurityEmailCopy::change('email_added', 'posao@example.com', $locale);
             $variables = array_map(static fn (string $value): string => str_replace('{change}', $change, $value), $variables);
@@ -949,6 +963,9 @@ final class AccountEmailSender
         }
         if (in_array($template, AccountSecurityEmailCopy::TEMPLATES, true)) {
             return AccountSecurityEmailCopy::forLocale($template, $locale) ?? throw new \InvalidArgumentException('Unknown account security email.');
+        }
+        if (in_array($template, \App\Referral\ReferralEmailCopy::TEMPLATES, true)) {
+            return \App\Referral\ReferralEmailCopy::forLocale($locale);
         }
         if (in_array($template, WrongAccountTypeEmailCopy::TEMPLATES, true)) {
             return WrongAccountTypeEmailCopy::forLocale($template, $locale) ?? throw new \InvalidArgumentException('Unknown account type notice.');

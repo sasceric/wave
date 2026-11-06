@@ -57,6 +57,7 @@ final class EmailTemplateController
         'wrong_account_type_company',
         'email_added_verify',
         'account_security_notice',
+        'referral_tier_reached',
     ];
     /** Text variables admins can reword without HTML ("Tekst" tab). */
     private const TEXT_KEYS = [

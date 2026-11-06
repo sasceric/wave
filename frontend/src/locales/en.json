@@ -547,7 +547,10 @@
     "replyToYou": "Reply to your message"
   },
   "campaignChat": {
-    "intro": { "application": "Application message · {name}", "invitation": "Invitation message · {name}" },
+    "intro": {
+      "application": "Application message · {name}",
+      "invitation": "Invitation message · {name}"
+    },
     "unreadDivider": "New messages",
     "loadEarlierUnread": "Load earlier unread messages",
     "loadingMessages": "Loading messages…",
@@ -638,7 +641,10 @@
       "discussion_reopening_rejected": "{actor}: Reopening discussion declined for {campaign}.",
       "account_type_change_requested": "New account type change request.",
       "account_type_changed": "Your account type has changed. Review your profile.",
-      "account_type_change_rejected": "Your account type change request was rejected. See the response in settings."
+      "account_type_change_rejected": "Your account type change request was rejected. See the response in settings.",
+      "referral_tier_reached": "New ambassador level: {actor}. Review and activate the reward.",
+      "referral_reward_active": "Your ambassador rewards are active. Thank you for spreading Wave!",
+      "campaign_early_access": "New campaign {campaign} from {actor}. As an ambassador, you hear first."
     },
     "closedNotice": "This campaign is closed. You can no longer send messages in this conversation.",
     "finishedNotice": "This campaign is finished. You can no longer send messages in this conversation.",
@@ -3276,7 +3282,12 @@
     "visibilitySaved": "Campaign listing visibility saved."
   },
   "signIn": {
-    "templates": {"verifyTitle": "Extra email address confirmation", "verifyHint": "Sent to a new address when the user adds it in Settings.", "noticeTitle": "Account change security notice", "noticeHint": "Address added or removed, new main address, Google/Apple account linked or removed."},
+    "templates": {
+      "verifyTitle": "Extra email address confirmation",
+      "verifyHint": "Sent to a new address when the user adds it in Settings.",
+      "noticeTitle": "Account change security notice",
+      "noticeHint": "Address added or removed, new main address, Google/Apple account linked or removed."
+    },
     "mainLabel": "Main address",
     "options": "Options for {email}",
     "unlinkAction": "Remove link",
@@ -4627,6 +4638,112 @@
         "headlineLead": "Photos",
         "headlineEmphasis": "for your brand",
         "intro": "Product photos, lifestyle and social media content. Compare packages and order."
+      }
+    }
+  },
+  "referrals": {
+    "nav": "Invite creators",
+    "title": "Invite creators",
+    "adminTitle": "Creator referrals",
+    "eyebrow": "MY ACCOUNT",
+    "intro": "Share your link. When 20, 35 and 50 creators you invited are approved on Wave, you reach an ambassador level and its rewards.",
+    "linkLabel": "Your invite link",
+    "copy": "Copy link",
+    "copied": "Copied",
+    "copiedToast": "Link copied",
+    "share": "Share",
+    "shareText": "Join Wave, where creators work with brands.",
+    "qrDownload": "Download QR code",
+    "qrShow": "Show QR code",
+    "qrAlt": "QR code for {link}",
+    "codeLabel": "Code",
+    "linkNote": "The link remembers your invite for 30 days, also when a creator registers with Google or Apple.",
+    "counted": "Approved creators",
+    "next": "{count} more to {tier}",
+    "allDone": "You reached every level. Thank you!",
+    "pendingNote": "In progress: {count}. Creators count once they confirm their email, complete their profile and we approve them.",
+    "tiersTitle": "Levels and rewards",
+    "tierAt": "{count} creators",
+    "tiers": {
+      "bronze": "Bronze ambassador",
+      "silver": "Silver ambassador",
+      "gold": "Gold ambassador"
+    },
+    "perks": {
+      "bronze1": "Bronze ambassador badge on your profile and cards",
+      "bronze2": "Featured on Wave for 2 weeks",
+      "bronze3": "A notification about new campaigns as soon as they are published",
+      "silver1": "Silver ambassador badge",
+      "silver2": "Featured on the homepage for 1 month",
+      "silver3": "Priority when we suggest creators to partner brands",
+      "gold1": "Gold founding ambassador badge, forever",
+      "gold2": "Featured on the homepage and creator list for 3 months",
+      "gold3": "A guaranteed paid collaboration"
+    },
+    "state": {
+      "active": "Active",
+      "waiting": "Reached · activating soon",
+      "left": "{count} creators to go",
+      "locked": "Locked"
+    },
+    "creditsNote": "When Wave launches credits, ambassadors get founding credits for every creator they brought.",
+    "invitedTitle": "Invited creators",
+    "total": "{count} in total",
+    "empty": "Nobody has registered through your link yet. Share it!",
+    "unnamed": "Creator",
+    "status": {
+      "counted": "Counts",
+      "review": "Awaiting approval",
+      "profile": "Completing profile",
+      "email": "Awaiting email confirmation",
+      "rejected": "Does not count"
+    },
+    "rulesTitle": "What counts",
+    "rule1": "A creator registers through your link or enters the code {code}.",
+    "rule2": "They confirm their email and complete their profile.",
+    "rule3": "The Wave team approves the profile. Only then does it count.",
+    "fraud": "Fake, duplicate and own accounts do not count. We review such referrals by hand before a reward.",
+    "creatorsOnly": "Inviting creators is available to creators.",
+    "invitedBy": "{name} invites you to Wave. Register as a creator and connect with brands.",
+    "codeField": "Referral code",
+    "codeOptional": "(optional)",
+    "codeHint": "The code comes from the link. It also works if you register with Google or Apple.",
+    "badge": {
+      "bronze": "Bronze ambassador",
+      "silver": "Silver ambassador",
+      "gold": "Founding ambassador",
+      "short": "Ambassador"
+    },
+    "templates": {
+      "tierTitle": "Ambassador: new level",
+      "tierHint": "A creator reached a new level in the Invite creators program."
+    },
+    "admin": {
+      "intro": "Creators who invite others, rewards to activate and referrals to review.",
+      "rewardsWaiting": "rewards waiting",
+      "flagged": "to review",
+      "ambassadors": "Ambassadors",
+      "creator": "Creator",
+      "counted": "Approved",
+      "pending": "In progress",
+      "tier": "Level",
+      "reward": "Reward",
+      "approve": "Activate: {tier}",
+      "active": "Rewards active",
+      "leftTo": "{count} more to {tier}",
+      "rejectedCount": "{count} not counted",
+      "empty": "Nobody has brought a creator yet.",
+      "manual": "The badge and featured placement switch on automatically when you activate a reward. Arrange partner-brand priority (35) and the paid collaboration (50) by hand.",
+      "reviewTitle": "To review",
+      "reviewIntro": "Referrals from the same network as the inviting creator, several sign-ups from one network within 24 hours, or a look-alike email.",
+      "reviewEmpty": "No referrals to review.",
+      "invitedBy": "invited by {name}",
+      "reject": "Do not count",
+      "accept": "Count it",
+      "flags": {
+        "same_network": "same network as the inviting creator",
+        "many_from_network": "several sign-ups from one network",
+        "similar_email": "email similar to the inviting creator"
       }
     }
   }

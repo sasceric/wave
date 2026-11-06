@@ -11,6 +11,7 @@ export const EMAIL_TEMPLATE_CATALOG = {
   wrong_account_type_company: { group: 'account', recipient: 'company', frequency: 'manual' },
   email_added_verify: { group: 'account', recipient: 'user', frequency: 'perRequest' },
   account_security_notice: { group: 'account', recipient: 'user', frequency: 'everyEvent' },
+  referral_tier_reached: { group: 'account', recipient: 'creator', frequency: 'everyEvent' },
   reset: { group: 'account', recipient: 'user', frequency: 'perRequest' },
   registered: { group: 'account', recipient: 'newUser', frequency: 'once' },
   approval: { group: 'account', recipient: 'creator', frequency: 'once' },

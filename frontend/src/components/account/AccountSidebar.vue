@@ -1,31 +1,6 @@
 <script setup>
 import { computed, onBeforeUnmount, onMounted, watch } from 'vue'
-import {
-  ExternalLink,
-  Flag,
-  Coins,
-  LogOut,
-  Building2,
-  ClipboardCheck,
-  House,
-  LayoutDashboard,
-  Mail,
-  MailPlus,
-  Megaphone,
-  MessageCircle,
-  UserRound,
-  Users,
-  Wrench,
-  QrCode,
-  Send,
-  LifeBuoy,
-  CornerUpRight,
-  LogIn,
-  UserRoundPlus,
-  Handshake,
-  Settings,
-  ShoppingBag,
-} from '@lucide/vue'
+import { Building2, ClipboardCheck, Coins, CornerUpRight, ExternalLink, Flag, Gift, Handshake, House, LayoutDashboard, LifeBuoy, LogIn, LogOut, Mail, MailPlus, Megaphone, MessageCircle, QrCode, Send, Settings, ShoppingBag, UserRound, UserRoundPlus, Users, Wrench } from '@lucide/vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { ref } from 'vue'
@@ -159,6 +134,7 @@ const navigationItems = computed(() => {
   }
   if (canUseMarketplace && props.user) items.push({ route: 'messages', labelKey: 'app.messages', icon: MessageCircle, badge: unreadMessageCount.value || null })
   if (props.user) items.push({ route: 'account', labelKey: 'accountHub.profile', icon: UserRound, hint: profileHint.value })
+  if (creator) items.push({ route: 'account-referrals', labelKey: 'referrals.nav', icon: Gift })
 
   if (props.user?.isModerator) {
     items.push({ route: 'moderation', labelKey: 'moderation.title', icon: ClipboardCheck })
@@ -183,6 +159,7 @@ const navigationItems = computed(() => {
       { route: 'admin-invitations', labelKey: 'adminInvitations.nav', icon: Send, group: 'marketing' },
       { route: 'admin-emails', labelKey: 'adminBroadcast.nav', icon: MailPlus, group: 'marketing' },
       { route: 'admin-qr', labelKey: 'adminQr.title', icon: QrCode, group: 'marketing' },
+      { route: 'admin-referrals', labelKey: 'referrals.adminTitle', icon: Gift, group: 'marketing' },
       { route: 'admin-redirects', labelKey: 'adminRedirects.title', icon: CornerUpRight, group: 'marketing' },
       {
         route: 'admin-subscribers',

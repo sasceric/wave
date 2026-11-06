@@ -94,6 +94,7 @@ final class AuthController extends AbstractController
         UserActionTokenManager $actionTokens,
         AccountEmailSender $emailSender,
         #[Target('wave_register_ip')] RateLimiterFactoryInterface $registrationLimiter,
+        \App\Referral\ReferralProgram $referrals,
     ): JsonResponse {
         $locale = LocaleContext::fromRequest($request);
         if ($locale === null) {
@@ -205,6 +206,8 @@ final class AuthController extends AbstractController
 
         \App\Legal\LegalPolicies::registration($user, $locale, 'email_registration');
         $entityManager->persist($user);
+        // Pozovi kreatore: the code from wave.ba/?ref=… or typed on the form.
+        $referrals->attach($user, $data['referralCode'] ?? null, $request->getClientIp());
         $entityManager->flush();
         $verificationToken = $actionTokens->issue($user, 'verify_email');
         $emailSender->sendVerification($user, $verificationToken, $locale);
