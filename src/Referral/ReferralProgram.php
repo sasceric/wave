@@ -134,7 +134,7 @@ final class ReferralProgram
     public static function status(CreatorReferral $referral): string
     {
         $user = $referral->getReferred();
-        if ($referral->getDecision() === 'rejected' || $user->isDeleted()) return 'rejected';
+        if ($referral->getDecision() === 'rejected' || $user->isDeleted() || !$user->hasRole('ROLE_CREATOR') || $user->getCreator() === null) return 'rejected';
         if (!$user->isEmailVerified()) return 'email';
         if (!$user->isApproved()) return $user->hasCompleteProfile() ? 'review' : 'profile';
 
@@ -161,6 +161,7 @@ final class ReferralProgram
     /** After an approval or an administrator's decision: record newly reached tiers, email the creator, tell admins. */
     public function sync(User $referrer): void
     {
+        if ($referrer->isDeleted() || !$referrer->hasRole('ROLE_CREATOR') || $referrer->getCreator() === null) return;
         $counted = $this->countedFor($referrer);
         $existing = array_map(static fn (ReferralReward $reward): int => $reward->getTier(), $this->rewards($referrer));
         $reached = [];
@@ -196,37 +197,58 @@ final class ReferralProgram
 
     public function decide(CreatorReferral $referral, bool $accept): void
     {
-        $referral->decide($accept);
-        $this->em->flush();
+        $this->em->wrapInTransaction(function () use ($referral, $accept): void {
+            $this->em->lock($referral->getReferrer(), \Doctrine\DBAL\LockMode::PESSIMISTIC_WRITE);
+            $this->em->refresh($referral);
+            $referral->decide($accept);
+        });
         if ($accept) $this->sync($referral->getReferrer());
     }
 
     /** Activates a reached tier: badge on cards and profile, featured placement for the tier's period. */
-    public function approve(ReferralReward $reward): void
+    public function approve(ReferralReward $reward): bool
     {
-        if ($reward->isApproved()) return;
-        $reward->approve();
-        $creator = $reward->getUser()->getCreator();
-        if ($creator !== null) {
+        $notice = $this->em->wrapInTransaction(function () use ($reward): Notification|false|null {
+            $user = $reward->getUser();
+            // Share the inviter lock with referral decisions and serialize tier activations.
+            $this->em->lock($user, \Doctrine\DBAL\LockMode::PESSIMISTIC_WRITE);
+            $this->em->refresh($user);
+            $this->em->lock($reward, \Doctrine\DBAL\LockMode::PESSIMISTIC_WRITE);
+            $this->em->refresh($reward);
+            if ($reward->isApproved()) return null;
+            $creator = $user->getCreator();
+            if ($user->isDeleted() || !$user->hasRole('ROLE_CREATOR') || !$user->isApproved()
+                || !$user->isEmailVerified() || $creator === null || $this->countedFor($user) < $reward->getTier()) return false;
+            $this->em->lock($creator, \Doctrine\DBAL\LockMode::PESSIMISTIC_WRITE);
+            $this->em->refresh($creator);
+            $reward->approve();
             $creator->setAmbassadorTier(max($creator->getAmbassadorTier(), $reward->getTier()));
-            // Permanently featured creators stay so; otherwise extend from today or from the current end date.
+            // Permanently featured creators stay so; otherwise extend from today or the current end date.
             if (!($creator->isFeaturedConfigured() && $creator->getFeaturedUntil() === null)) {
                 $now = new \DateTimeImmutable();
                 $from = $creator->isFeatured() && $creator->getFeaturedUntil() > $now ? $creator->getFeaturedUntil() : $now;
                 $creator->setFeatured(true);
                 $creator->setFeaturedUntil($from->modify(self::FEATURED[$reward->getTier()]));
             }
-        }
-        $notice = new Notification($reward->getUser(), 'referral_reward_active');
-        $this->em->persist($notice);
-        $this->em->flush();
-        $this->deliver($notice);
+            $notice = new Notification($user, 'referral_reward_active');
+            $this->em->persist($notice);
+
+            return $notice;
+        });
+        if ($notice === false) return false;
+        if ($notice instanceof Notification) $this->deliver($notice);
+
+        return true;
     }
 
     /** Ambassadors hear about a new campaign the moment it is published. */
     public function notifyEarlyAccess(Campaign $campaign, User $actor): void
     {
-        $users = $this->em->createQuery('SELECT u FROM '.User::class.' u WHERE u.id IN (SELECT IDENTITY(r.user) FROM '.ReferralReward::class.' r WHERE r.approvedAt IS NOT NULL) AND u.deletedAt IS NULL')->getResult();
+        $owner = $campaign->getCompany()->getOwner();
+        if (!$campaign->isListed() || $campaign->getStatus() !== 'open' || $campaign->getClosesAt() < new \DateTimeImmutable('today')
+            || ($owner !== null && ($owner->isDeleted() || !$owner->isApproved() || $owner->isHideMyAccount()))) return;
+        $users = $this->em->createQuery('SELECT u FROM '.User::class.' u JOIN u.creator creator WHERE u.id IN (SELECT IDENTITY(r.user) FROM '.ReferralReward::class.' r WHERE r.approvedAt IS NOT NULL) AND u.deletedAt IS NULL AND u.role = :role AND u.approved = true AND u.emailVerified = true AND creator.agencyProfile = false')
+            ->setParameter('role', 'ROLE_CREATOR')->getResult();
         $notices = [];
         foreach ($users as $user) {
             if (!$user instanceof User || $user === $actor) continue;

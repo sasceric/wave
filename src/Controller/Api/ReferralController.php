@@ -81,7 +81,7 @@ final class ReferralController
         if ($admin instanceof JsonResponse) return $admin;
         $reward = $this->em->getRepository(ReferralReward::class)->find($id);
         if (!$reward instanceof ReferralReward || $reward->getUser()->isDeleted()) return $this->error('invalid_request', $locale, 404);
-        $this->referrals->approve($reward);
+        if (!$this->referrals->approve($reward)) return $this->error('referral_reward_unavailable', $locale, 409);
 
         return new JsonResponse(['message' => ApiMessages::get('referral_reward_approved', $locale), 'data' => $this->referrals->adminOverview()]);
     }

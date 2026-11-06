@@ -20,6 +20,13 @@ backups, supervised consumers and scheduled-task setup, see
 [server services, jobs and queues](server-operations.md). The deploy workflow
 does not provision those host services or schedules.
 
+## Creator referrals and ambassadors
+
+Deploy the referral entities and `Version20261107100000` together through the
+normal workflow. The additive migration preserves existing accounts and creates
+the referral/reward tables and uniqueness constraints. See [referrals](referrals.md)
+for eligibility, admin activation and checks. No new worker or schedule is needed.
+
 ## Verification reminders and links
 
 Migration `Version20261022140000` removes expiry from email-verification links

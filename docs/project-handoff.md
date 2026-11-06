@@ -90,6 +90,7 @@ Cloudflare location headers are accepted only from allowlisted edge peers; see
 | Tests | `tests/Controller/` plus API, OAuth, service, command, and migration tests |
 | Deployment and server jobs | `.github/workflows/deploy-production.yml`, `docs/deployment.md`, `docs/server-operations.md`, `docs/mercure-server-setup.md` |
 | Admin collaboration overview and activity counts | `src/Admin/Collaborations.php`, `AdminCollaborationsController.php`, `AdminCollaborationsView.vue`; [report semantics and charts](admin-collaborations.md) |
+| Creator referrals and ambassadors | `Referral/ReferralProgram.php`, `ReferralController.php`, `CreatorReferral`, `ReferralReward`, `AccountReferralsView.vue`, `AdminReferralsView.vue`; [referrals and deployment](referrals.md) |
 | Admin operational tools | `AdminToolsController.php`, `Background/TaskRegistry.php`, `Background/AdminWorker.php`, `QueueInspector.php`, `AdminLogReader.php`, `frontend/src/views/AdminToolsView.vue` |
 | Admin QR links | `AdminQrController.php`, `src/Controller/QrRedirectController.php`, `src/Entity/QrLink.php`, `frontend/src/views/AdminQrView.vue`; `docs/admin-qr-codes.md` |
 | Environment configuration | `config/packages/dev/`, `prod/`, `test/`; `docs/environment-configuration.md` |

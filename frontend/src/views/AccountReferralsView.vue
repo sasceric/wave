@@ -1,5 +1,5 @@
 <script setup>
-import { computed, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { Check, Copy, Download, QrCode, Share2 } from '@lucide/vue'
 import AccountSidebar from '../components/account/AccountSidebar.vue'
@@ -24,24 +24,33 @@ const creator = computed(() => currentUser.value?.accountType === 'creator')
 let ticket = 0
 let copiedTimer = 0
 
-watch([() => currentUser.value?.id, locale], load, { immediate: true })
+watch([() => currentUser.value?.id, () => currentUser.value?.accountType, locale], load, { immediate: true })
 
 async function load() {
   const current = ++ticket
+  data.value = null
+  qr.value = ''
+  qrOpen.value = false
+  copied.value = false
+  clearTimeout(copiedTimer)
+  error.value = ''
+  loading.value = false
   if (!currentUser.value || !creator.value) return
   loading.value = true
-  error.value = ''
   try {
     const response = await apiGet('/me/referrals')
     if (current !== ticket) return
     data.value = response.data
-    qr.value = (await qrImages(response.data.link)).png
+    const generated = await qrImages(response.data.link)
+    if (current === ticket) qr.value = generated.png
   } catch (cause) {
     if (current === ticket) error.value = cause.message
   } finally {
     if (current === ticket) loading.value = false
   }
 }
+
+onBeforeUnmount(() => { ++ticket; clearTimeout(copiedTimer) })
 
 const counted = computed(() => data.value?.counted ?? 0)
 const next = computed(() => (data.value?.tiers || []).find(tier => counted.value < tier.at) || null)

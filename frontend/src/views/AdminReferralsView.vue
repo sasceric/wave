@@ -1,5 +1,5 @@
 <script setup>
-import { computed, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import AdminPage from '../components/admin/AdminPage.vue'
 import AccountSidebar from '../components/account/AccountSidebar.vue'
@@ -19,19 +19,24 @@ const error = ref('')
 let ticket = 0
 const TIER = { 20: 'bronze', 35: 'silver', 50: 'gold' }
 
-watch([locale, () => currentUser.value?.isAdmin], load, { immediate: true })
+watch([locale, () => currentUser.value?.id, () => currentUser.value?.isAdmin], load, { immediate: true })
 
 async function load() {
-  if (!currentUser.value?.isAdmin) return
   const current = ++ticket
-  loading.value = true
+  data.value = null
   error.value = ''
+  loading.value = false
+  busy.value = false
+  if (!currentUser.value?.isAdmin) return
+  loading.value = true
   try {
     const response = await apiGet('/admin/referrals')
     if (current === ticket) data.value = response.data
   } catch (cause) { if (current === ticket) error.value = cause.message }
   finally { if (current === ticket) loading.value = false }
 }
+
+onBeforeUnmount(() => { ++ticket })
 
 const rows = computed(() => (data.value?.ambassadors || []).map((row) => {
   const approved = row.rewards.filter(reward => reward.approvedAt).map(reward => reward.tier)
@@ -44,11 +49,12 @@ const waitingCount = computed(() => rows.value.reduce((sum, row) => sum + row.wa
 async function run(path, body) {
   if (busy.value) return
   busy.value = true
+  const current = ticket
   try {
     const response = await apiRequest(path, { method: 'POST', body })
-    data.value = response.data
+    if (current === ticket) data.value = response.data
   } catch { /* The toast shows the reason. */ }
-  finally { busy.value = false }
+  finally { if (current === ticket) busy.value = false }
 }
 
 const approve = reward => run(`/admin/referral-rewards/${reward.id}/approve`, {})
