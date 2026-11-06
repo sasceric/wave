@@ -3,6 +3,7 @@ import { reactive, ref, watch } from 'vue'
 import { ChevronRight, LockKeyhole } from '@lucide/vue'
 import { useI18n } from 'vue-i18n'
 import FormModal from '../shared/FormModal.vue'
+import PasswordInput from '../shared/PasswordInput.vue'
 import StatusMessage from '../shared/StatusMessage.vue'
 
 import { apiRequest } from '../../lib/api'
@@ -62,9 +63,9 @@ async function save() {
     <span v-if="success" role="status">{{ t('passwordChange.success') }}</span>
   </div>
   <FormModal v-model:open="open" :title="t('passwordChange.title')" :description="t('passwordChange.hint')" :busy="busy" @submit="save">
-    <label><span>{{ t('passwordChange.current') }}</span><input v-model="fields.currentPassword" type="password" autocomplete="current-password" required maxlength="4096" /></label>
-    <label><span>{{ t('passwordChange.new') }}</span><input v-model="fields.newPassword" type="password" autocomplete="new-password" required minlength="8" maxlength="4096" /></label>
-    <label><span>{{ t('passwordChange.confirm') }}</span><input v-model="fields.confirmPassword" type="password" autocomplete="new-password" required minlength="8" maxlength="4096" /></label>
+    <label><span>{{ t('passwordChange.current') }}</span><PasswordInput v-model="fields.currentPassword" autocomplete="current-password" required maxlength="4096" /></label>
+    <label><span>{{ t('passwordChange.new') }}</span><PasswordInput v-model="fields.newPassword" autocomplete="new-password" required minlength="8" maxlength="4096" /></label>
+    <label><span>{{ t('passwordChange.confirm') }}</span><PasswordInput v-model="fields.confirmPassword" autocomplete="new-password" required minlength="8" maxlength="4096" /></label>
     <p class="password-change-recovery">{{ t('passwordChange.socialHint') }} <button type="button" :disabled="busy" @click="recover">{{ t('passwordChange.recovery') }}</button></p>
     <StatusMessage v-if="recoverySent">{{ t('auth.resetRequested') }}</StatusMessage>
     <StatusMessage v-if="error" variant="error">{{ error }}</StatusMessage>

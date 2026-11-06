@@ -171,3 +171,15 @@
 
   }
 }
+
+// Company ID / VAT / owner: private card under the two profile cards.
+.profile-details__business { grid-column: 1 / -1; }
+
+.profile-details__private {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: -4px 0 6px;
+  color: var(--muted-text);
+  font-size: 13px;
+}

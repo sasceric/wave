@@ -34,6 +34,7 @@ import StatusMessage from '../components/shared/StatusMessage.vue'
 import { currentUser } from '../composables/useCurrentUser'
 import RatingSummary from '../components/reviews/RatingSummary.vue'
 import { apiGet, apiRequest, formatMoney } from '../lib/api'
+import { actionToasts } from '../lib/toasts'
 
 const route = useRoute()
 const { locale, t } = useI18n()
@@ -52,7 +53,6 @@ const notice = ref('')
 const reviewRequest = ref(null)
 const visibilitySaving = ref(false)
 const deleteRequest = ref(null)
-const bulkApprovalRequest = ref(null)
 const reminderRequest = ref(null)
 const sendingReminder = ref(false)
 const createdAtNow = ref(Date.now())
@@ -160,15 +160,6 @@ function confirmCurationNavigation() {
 }
 onBeforeRouteLeave(confirmCurationNavigation)
 onBeforeRouteUpdate(confirmCurationNavigation)
-
-const bulkApprovalConfirmationMessage = computed(() => {
-  if (!bulkApprovalRequest.value) return ''
-
-  return t('adminDashboard.confirmBulkApprove', {
-    count: bulkApprovalRequest.value.ids.length,
-    skipped: bulkApprovalRequest.value.skipped,
-  })
-})
 
 
 const currentRows = computed(() => listRows.value)
@@ -511,49 +502,130 @@ async function approveRegistration(registration) {
   }
 }
 
-function requestBulkApproval(selectedIds) {
+// Bulk actions: each selected row runs the same request as its row action. Rows that do not qualify are
+// skipped before sending; at the end one toast says how many succeeded and an error toast names the rest.
+const bulkActionKey = ref('')
+const bulkActionRequest = ref(null)
+const bulkRunning = ref(false)
+const rowName = row => row.displayName ?? row.name ?? row.title ?? row.email ?? `#${row.id}`
+const rowAccountId = row => section.value === 'registrations' ? row.id : row.accountId
+const needsAccount = row => (!rowAccountId(row) || !row.email || !row.canChangeVisibility ? 'noAccount' : null)
+const reminder = kind => row => apiRequest(`/admin/registrations/${rowAccountId(row)}/reminder`, { method: 'POST', body: { kind }, feedback: false })
+const bulkActions = computed(() => {
+  const kind = section.value
+  if (kind === 'campaigns') {
+    const listing = listed => ({
+      skip: row => (row.listed === listed ? (listed ? 'alreadyVisible' : 'alreadyHidden') : null),
+      run: row => apiRequest(`/admin/catalog/campaigns/${row.id}/visibility`, { method: 'PUT', body: { listed }, feedback: false }),
+    })
+    return [
+      { key: 'campaignHide', label: t('adminCampaigns.hide'), ...listing(false) },
+      { key: 'campaignShow', label: t('adminCampaigns.show'), ...listing(true) },
+    ]
+  }
+  if (!isProfileList.value) return []
+  const self = row => rowAccountId(row) === currentUser.value?.id
+  const actions = [
+    {
+      key: 'approve', label: t('adminDashboard.approve'),
+      skip: row => !rowAccountId(row) ? 'noAccount' : row.approved ? 'alreadyApproved' : !row.emailVerified ? 'emailNotVerified' : !row.profileComplete ? 'profileIncomplete' : null,
+      run: row => apiRequest(`/admin/registrations/${rowAccountId(row)}/approve`, { method: 'POST', feedback: false }),
+    },
+    {
+      key: 'unapprove', label: t('adminProfiles.unapprove'),
+      skip: row => needsAccount(row) || (!row.approved ? 'notApproved' : self(row) ? 'yourAccount' : null),
+      run: row => apiRequest(`/admin/registrations/${rowAccountId(row)}/unapprove`, { method: 'POST', feedback: false }),
+    },
+    {
+      key: 'hide', label: t('adminProfiles.hide'),
+      skip: row => (!row.canChangeVisibility ? 'noAccount' : !row.publicVisible ? 'alreadyHidden' : null),
+      run: row => apiRequest(`/admin/catalog/${kind}/${row.id}/visibility`, { method: 'PUT', body: { hideMyAccount: true }, feedback: false }),
+    },
+    {
+      key: 'show', label: t('adminProfiles.show'),
+      skip: row => (!row.canChangeVisibility ? 'noAccount' : row.publicVisible ? 'alreadyVisible' : !row.canShowProfile ? 'requirements' : null),
+      run: row => apiRequest(`/admin/catalog/${kind}/${row.id}/visibility`, { method: 'PUT', body: { hideMyAccount: false }, feedback: false }),
+    },
+    {
+      key: 'verification', label: t('adminProfiles.verificationReminder'),
+      skip: row => needsAccount(row) || (row.approved || row.emailVerified ? 'alreadyVerified' : null),
+      run: reminder('verification'),
+    },
+    {
+      key: 'preApproval', label: t('adminProfiles.preApproval'),
+      skip: row => needsAccount(row) || (row.approved ? 'alreadyApproved' : null),
+      run: reminder('pre_approval'),
+    },
+    { key: 'profileTip', label: t('adminProfiles.profileTip'), skip: needsAccount, run: reminder('profile') },
+    { key: 'wrongType', label: t('adminProfiles.wrongType'), skip: needsAccount, run: reminder('wrong_type') },
+  ]
+  if (kind === 'companies') {
+    const partner = value => ({
+      skip: row => (Boolean(row.partner) === value ? (value ? 'alreadyPartner' : 'notPartner') : null),
+      run: row => apiRequest(`/admin/catalog/companies/${row.id}/partner`, { method: 'PUT', body: { partner: value }, feedback: false }),
+    })
+    actions.push({ key: 'partnerAdd', label: t('adminProfiles.partner.make'), ...partner(true) }, { key: 'partnerRemove', label: t('adminProfiles.partner.remove'), ...partner(false) })
+  }
+  return actions
+})
+watch(section, () => { bulkActionKey.value = '' })
+
+function listNames(entries) {
+  const shown = entries.slice(0, 8).map(({ name, reason }) => `${name} (${reason})`).join(', ')
+  return entries.length > 8 ? `${shown} ${t('adminBulk.more', { count: entries.length - 8 })}` : shown
+}
+
+function requestBulkAction(selectedIds) {
+  const action = bulkActions.value.find(({ key }) => key === bulkActionKey.value)
+  if (!action || bulkRunning.value) return
   const selected = listRows.value.filter(({ id }) => selectedIds.includes(id))
-  const eligible = selected.filter(({ approved, emailVerified, profileComplete }) => (
-    !approved && emailVerified && profileComplete
-  ))
-  if (eligible.length === 0) {
-    notice.value = t('adminDashboard.bulkApproveNoEligible')
+  const skipped = []
+  const rows = []
+  for (const row of selected) {
+    const reason = action.skip(row)
+    if (reason) skipped.push({ name: rowName(row), reason: t(`adminBulk.reasons.${reason}`) })
+    else rows.push(row)
+  }
+  if (!rows.length) {
+    actionToasts.notify(t('adminBulk.noneEligible', { action: action.label, list: listNames(skipped) }), 'error')
     return
   }
-
-  bulkApprovalRequest.value = {
-    ids: eligible.map(({ id }) => id),
-    skipped: selected.length - eligible.length,
-  }
+  bulkActionRequest.value = { action, rows, skipped }
 }
 
-function closeBulkApprovalModal(open) {
-  if (!open && !approving.value) bulkApprovalRequest.value = null
-}
+const bulkActionMessage = computed(() => {
+  const request = bulkActionRequest.value
+  if (!request) return ''
+  const message = t('adminBulk.confirm', { action: request.action.label, count: request.rows.length })
+  return request.skipped.length ? `${message} ${t('adminBulk.willSkip', { list: listNames(request.skipped) })}` : message
+})
 
-async function confirmBulkApproval() {
-  const request = bulkApprovalRequest.value
-  if (!request || approving.value) return
-
-  approving.value = true
-  error.value = ''
-  notice.value = ''
+async function confirmBulkAction() {
+  const request = bulkActionRequest.value
+  if (!request || bulkRunning.value) return
+  const adminId = currentUser.value?.id
+  bulkRunning.value = true
+  error.value = ''; notice.value = ''
+  const failed = [...request.skipped]
+  let done = 0
   try {
-    const { data } = await apiRequest('/admin/registrations/bulk-approve', {
-      method: 'POST',
-      body: { ids: request.ids },
-    })
+    // One at a time, so rate limits and per-account checks behave exactly like single row actions.
+    for (const row of request.rows) {
+      if (disposed || currentUser.value?.id !== adminId) return
+      try {
+        await request.action.run(row)
+        done += 1
+      } catch (cause) {
+        failed.push({ name: rowName(row), reason: cause?.message || t('adminDashboard.saveError') })
+      }
+    }
     await loadDashboard()
-    const skipped = request.skipped + data.skippedUnverified + data.skippedIncomplete
-    notice.value = skipped > 0
-      ? t('adminDashboard.bulkApprovedWithSkipped', { count: data.approved, skipped })
-      : t('adminDashboard.bulkApproved', { count: data.approved })
-  } catch (cause) {
-    await loadDashboard()
-    error.value = cause.message || t('adminDashboard.bulkApproveError')
   } finally {
-    approving.value = false
-    bulkApprovalRequest.value = null
+    bulkRunning.value = false
+    bulkActionRequest.value = null
+    const total = request.rows.length + request.skipped.length
+    if (done) actionToasts.notify(t('adminBulk.done', { action: request.action.label, count: done, total }), 'success')
+    if (failed.length) actionToasts.notify(t('adminBulk.failed', { count: failed.length, list: listNames(failed) }), 'error')
   }
 }
 
@@ -656,15 +728,16 @@ onMounted(updateCreatedAtClock)
             @delete-selected="requestDelete"
           >
             <template #bulk-actions="{ ids }">
-              <button
-                v-if="section === 'registrations' && ids.length"
-                class="button button--outline"
-                type="button"
-                @click="requestBulkApproval(ids)"
-              >
-                <Check :size="15" aria-hidden="true" />
-                {{ t('adminDashboard.bulkApproveSelected') }}
-              </button>
+              <div v-if="ids.length && bulkActions.length" class="admin-bulk-actions">
+                <label class="sr-only" for="admin-bulk-action">{{ t('adminBulk.choose') }}</label>
+                <select id="admin-bulk-action" v-model="bulkActionKey" class="admin-bulk-actions__select" :disabled="bulkRunning">
+                  <option value="" disabled>{{ t('adminBulk.choose') }}</option>
+                  <option v-for="action in bulkActions" :key="action.key" :value="action.key">{{ action.label }}</option>
+                </select>
+                <button class="button button--outline" type="button" :disabled="!bulkActionKey || bulkRunning" @click="requestBulkAction(ids)">
+                  <Check :size="15" aria-hidden="true" />{{ t('adminBulk.apply') }}
+                </button>
+              </div>
             </template>
             <template #toolbar>
               <LocalizedLink v-if="section === 'campaigns' && route.query.companyId" class="button button--outline" :to="{ name: 'admin-campaigns' }">{{ route.query.companyLabel }} · {{ t('adminCollaborations.clear') }}</LocalizedLink>
@@ -801,14 +874,14 @@ onMounted(updateCreatedAtClock)
       @confirm="confirmDelete"
     />
     <ConfirmationModal
-      :open="bulkApprovalRequest !== null"
-      :title="t('adminDashboard.confirmBulkApproveTitle')"
-      :message="bulkApprovalConfirmationMessage"
-      :confirm-label="t('adminDashboard.bulkApproveSelected')"
+      :open="bulkActionRequest !== null"
+      :title="t('adminBulk.confirmTitle', { action: bulkActionRequest?.action.label || '' })"
+      :message="bulkActionMessage"
+      :confirm-label="t('adminBulk.apply')"
       :cancel-label="t('adminDashboard.cancelAction')"
-      :loading="approving"
-      @update:open="closeBulkApprovalModal"
-      @confirm="confirmBulkApproval"
+      :loading="bulkRunning"
+      @update:open="!$event && !bulkRunning && (bulkActionRequest = null)"
+      @confirm="confirmBulkAction"
     />
   </AdminPage>
 </template>

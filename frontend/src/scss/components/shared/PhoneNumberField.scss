@@ -13,6 +13,16 @@
     margin-bottom: 0;
   }
 
+  // Both labels stay on one line, so the country picker and the number input line up on phones.
+  .searchable-select__label,
+  &__number > span {
+    display: block;
+    overflow: hidden;
+    line-height: 1.4;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
   .searchable-select__trigger {
     gap: 5px;
     padding-right: 13px;

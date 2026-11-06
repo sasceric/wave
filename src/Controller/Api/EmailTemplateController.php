@@ -55,6 +55,8 @@ final class EmailTemplateController
         'approval_revoked',
         'wrong_account_type_creator',
         'wrong_account_type_company',
+        'email_added_verify',
+        'account_security_notice',
     ];
     /** Text variables admins can reword without HTML ("Tekst" tab). */
     private const TEXT_KEYS = [

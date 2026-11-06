@@ -213,7 +213,7 @@
   .profile-edit-avatar .profile-image-field__image,
   .profile-edit-avatar .profile-image-field__empty { width: 145px; }
 
-  .form-field > span, .multi-select > span, .searchable-select > span {
+  .form-field > span, .multi-select > span, .searchable-select > span, .searchable-select__label {
     color: var(--muted);
     font-size: 12px;
     font-weight: 400;

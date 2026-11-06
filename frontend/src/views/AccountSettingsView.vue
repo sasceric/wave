@@ -9,7 +9,7 @@ import MaintenanceSettings from '../components/account/MaintenanceSettings.vue'
 import AccountTypeSettings from '../components/account/AccountTypeSettings.vue'
 import AccountDeletionAction from '../components/account/AccountDeletionAction.vue'
 import CampaignAlertSettings from '../components/account/CampaignAlertSettings.vue'
-import PasswordChangeAction from '../components/account/PasswordChangeAction.vue'
+import AccountSignInSettings from '../components/account/AccountSignInSettings.vue'
 import PublicUrlAction from '../components/account/PublicUrlAction.vue'
 import LanguageSwitcher from '../components/shared/LanguageSwitcher.vue'
 import LocalizedLink from '../components/shared/LocalizedLink.vue'
@@ -134,14 +134,11 @@ async function signOut() {
       <StatusMessage v-if="error" variant="error">{{ error }}</StatusMessage>
       <StatusMessage v-else-if="notice" variant="success">{{ notice }}</StatusMessage>
 
+      <AccountSignInSettings />
+
       <section class="account-settings__group" aria-labelledby="settings-account">
         <h2 id="settings-account">{{ t('accountHub.groupAccount') }}</h2>
         <div class="account-settings__card">
-          <div class="account-settings__row account-settings__row--static">
-            <span class="account-settings__icon"><Mail :size="18" aria-hidden="true" /></span>
-            <span class="account-settings__text">{{ t('accountHub.email') }}<small>{{ user.email }}</small></span>
-          </div>
-          <PasswordChangeAction :email="user.email" row />
           <PublicUrlAction v-if="profile?.slug && user.profileComplete !== false" :profile="profile" :kind="creator ? 'creator' : 'company'" row />
           <div class="account-settings__row account-settings__row--language">
             <span class="account-settings__text">{{ t('app.language') }}</span>

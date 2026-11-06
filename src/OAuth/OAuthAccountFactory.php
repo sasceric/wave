@@ -37,6 +37,7 @@ final class OAuthAccountFactory
         $role = $accountType === 'creator' ? 'ROLE_CREATOR' : 'ROLE_COMPANY';
         $user = new User($identity['email'], $role);
         $user->setPassword($this->passwordHasher->hashPassword($user, bin2hex(random_bytes(64))));
+        $user->markPasswordUnknown();
         $user->setPreferredLocale($locale);
         $user->setEmailVerified(true);
         $user->setApproved(false);

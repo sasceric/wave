@@ -3,6 +3,7 @@
 namespace App\Controller\Api;
 
 use App\Account\AccountEmailSender;
+use App\Account\AccountEmails;
 use App\Account\CreatorBirthday;
 use App\Account\UserActionTokenManager;
 use App\Api\ApiAccess;
@@ -150,7 +151,7 @@ final class AuthController extends AbstractController
         if ($rateLimitError = $this->rateLimitError($registrationLimiter->create($request->getClientIp() ?? 'unknown'), $locale)) {
             return $rateLimitError;
         }
-        if ($entityManager->getRepository(User::class)->findOneBy(['email' => $email]) instanceof User) {
+        if ((new AccountEmails($entityManager))->owner($email) instanceof User) {
             return new JsonResponse(['error' => ApiMessages::get('email_taken', $locale)], 409);
         }
 
@@ -316,10 +317,11 @@ final class AuthController extends AbstractController
             return $ipLimit ?? $identityLimit;
         }
 
-        $user = $entityManager->getRepository(User::class)->findOneBy(['email' => $email]);
+        // Any confirmed address of the account works; the link goes to the address that was typed.
+        $user = (new AccountEmails($entityManager))->signInUser($email);
         if ($user instanceof User) {
             $token = $actionTokens->issue($user, 'reset_password', new DateTimeImmutable('+1 hour'));
-            $emailSender->sendPasswordReset($user, $token, $locale);
+            $emailSender->sendPasswordReset($user, $token, $locale, $email);
         }
 
         return new JsonResponse(['message' => ApiMessages::get('password_reset_requested', $locale)], 202);
@@ -430,7 +432,7 @@ final class AuthController extends AbstractController
             return $ipLimit ?? $identityLimit;
         }
 
-        $user = $entityManager->getRepository(User::class)->findOneBy(['email' => $email]);
+        $user = (new AccountEmails($entityManager))->signInUser($email);
         if (!$user instanceof User || $user->isDeleted() || !$passwordHasher->isPasswordValid($user, $data['password'])) {
             return new JsonResponse(['error' => ApiMessages::get('invalid_credentials', $locale)], 401);
         }

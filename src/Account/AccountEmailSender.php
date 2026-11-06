@@ -370,9 +370,10 @@ final class AccountEmailSender
         $this->send($user, $token, $locale, 'verify', 'verify-email');
     }
 
-    public function sendPasswordReset(User $user, string $token, string $locale): void
+    /** $to: the confirmed address the person typed, when it is not the main one. */
+    public function sendPasswordReset(User $user, string $token, string $locale, ?string $to = null): void
     {
-        $this->send($user, $token, $locale, 'reset', 'reset-password');
+        $this->send($user, $token, $locale, 'reset', 'reset-password', $to);
     }
 
     public function sendVerificationReminder(User $user, string $token): void
@@ -387,6 +388,30 @@ final class AccountEmailSender
         $url = rtrim($this->appBaseUrl, '/') . $this->localizedRoutePath('account', $locale);
         $variables = $this->baseVariables($copy, $locale, $url);
         $this->deliver($user, 'approval_revoked', $locale, $copy['subject'], $url, $variables);
+    }
+
+    /** Confirmation link for an extra sign-in address, sent to that address. */
+    public function sendExtraEmailVerification(User $user, string $address, string $token): void
+    {
+        $locale = $this->normalizedLocale($user->getPreferredLocale());
+        $copy = $this->copyFor('email_added_verify', $locale);
+        $url = rtrim($this->appBaseUrl, '/') . $this->localizedRoutePath('verify-email', $locale) . '?extra=1#' . rawurlencode($token);
+        $this->deliverTo($address, EmailRecipient::name($user), 'email_added_verify', $locale, $copy['subject'], $url, $this->baseVariables($copy, $locale, $url));
+    }
+
+    /**
+     * Notice of a sign-in or address change, to the main address; $alsoTo (the previous main address) gets it too.
+     * $kind: email_added, email_removed, primary_changed, linked, unlinked.
+     */
+    public function sendSecurityNotice(User $user, string $kind, string $value, ?string $alsoTo = null): void
+    {
+        $locale = $this->normalizedLocale($user->getPreferredLocale());
+        $copy = $this->copyFor('account_security_notice', $locale);
+        $url = rtrim($this->appBaseUrl, '/') . $this->localizedRoutePath('account-settings', $locale);
+        $variables = $this->baseVariables($copy, $locale, $url) + ['change' => AccountSecurityEmailCopy::change($kind, $value, $locale)];
+        foreach (array_unique(array_filter([$user->getEmail(), $alsoTo])) as $address) {
+            $this->deliverTo($address, EmailRecipient::name($user), 'account_security_notice', $locale, $copy['subject'], $url, $variables);
+        }
     }
 
     /** Wrong account type: a creator who is really a brand/agency, or a brand/agency that is really a creator. */
@@ -673,6 +698,10 @@ final class AccountEmailSender
         $variables = $template === 'terms_updated'
             ? $this->termsCopy($locale, \App\Legal\LegalPolicies::effectiveDate())
             : $this->copyFor($template, $locale);
+        if ($template === 'account_security_notice') {
+            $change = AccountSecurityEmailCopy::change('email_added', 'posao@example.com', $locale);
+            $variables = array_map(static fn (string $value): string => str_replace('{change}', $change, $value), $variables);
+        }
         unset($variables['subject']);
         $variables['locale'] = match ($locale) {
             'sr' => 'sr-Latn',
@@ -733,7 +762,7 @@ final class AccountEmailSender
         return $variables;
     }
 
-    private function send(User $user, ?string $token, string $locale, string $type, string $routeName): void
+    private function send(User $user, ?string $token, string $locale, string $type, string $routeName, ?string $to = null): void
     {
         $locale = $this->normalizedLocale($locale);
         $copy = $this->copyFor($type, $locale);
@@ -751,6 +780,11 @@ final class AccountEmailSender
             },
             'actionUrl' => $url,
         ];
+        if ($to !== null && $to !== $user->getEmail()) {
+            $this->deliverTo($to, EmailRecipient::name($user), $type, $locale, $copy['subject'], $url, $variables);
+
+            return;
+        }
         $this->deliver($user, $type, $locale, $copy['subject'], $url, $variables);
     }
 
@@ -811,6 +845,12 @@ final class AccountEmailSender
             'locale' => $locale,
         ]);
         $variables = EmailTemplate::applyCopy($variables, $customization?->getCopy());
+        // Security notices name the change after any admin rewording of the text.
+        if (isset($variables['change'])) {
+            $change = $variables['change'];
+            unset($variables['change']);
+            $variables = array_map(static fn (string $value): string => str_replace('{change}', $change, $value), $variables);
+        }
         $variables['recipientName'] = $recipientName;
         $variables['greeting'] = EmailRecipient::greeting($variables['greeting'], $recipientName);
         $text = [
@@ -906,6 +946,9 @@ final class AccountEmailSender
                 $this->copyFor($template === 'verification_reminder' ? 'verify' : 'registered', $locale),
                 RegistrationReminderEmailCopy::forLocale($template, $locale),
             );
+        }
+        if (in_array($template, AccountSecurityEmailCopy::TEMPLATES, true)) {
+            return AccountSecurityEmailCopy::forLocale($template, $locale) ?? throw new \InvalidArgumentException('Unknown account security email.');
         }
         if (in_array($template, WrongAccountTypeEmailCopy::TEMPLATES, true)) {
             return WrongAccountTypeEmailCopy::forLocale($template, $locale) ?? throw new \InvalidArgumentException('Unknown account type notice.');

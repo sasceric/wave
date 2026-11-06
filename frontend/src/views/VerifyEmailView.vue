@@ -11,6 +11,7 @@ import { apiRequest } from '../lib/api'
 
 const { t } = useI18n()
 const status = ref('pending')
+const extraAddress = new URLSearchParams(window.location.search).get('extra') === '1'
 const error = ref('')
 
 onMounted(async () => {
@@ -22,7 +23,8 @@ onMounted(async () => {
   }
 
   try {
-    await apiRequest('/auth/verify-email', { method: 'POST', body: { token } })
+    // An extra sign-in address (Settings → E-mail adrese) has its own confirmation.
+    await apiRequest(extraAddress ? '/auth/verify-extra-email' : '/auth/verify-email', { method: 'POST', body: { token } })
     status.value = 'complete'
     // Verification may have happened in another tab; refresh the authenticated session, never infer its identity from the token.
     void loadCurrentUser().catch(() => {})
@@ -39,11 +41,12 @@ onMounted(async () => {
       <p class="eyebrow">Wave</p>
       <h1>{{ status === 'complete' ? t('auth.emailVerified') : t('auth.verifyTitle') }}</h1>
       <LoadingSkeleton v-if="status === 'pending'" :count="1" :label="t('auth.verifyingEmail')" />
-      <p v-else-if="status === 'complete'" role="status">{{ t('auth.emailVerifiedPendingApproval') }}</p>
+      <p v-else-if="status === 'complete'" role="status">{{ t(extraAddress ? 'signIn.extraVerified' : 'auth.emailVerifiedPendingApproval') }}</p>
       <StatusMessage v-else-if="status === 'invalid'" variant="error">
         {{ error || t('auth.verificationInvalid') }}
       </StatusMessage>
-      <RouterLink v-if="status !== 'pending'" class="button button--dark" :to="{ name: currentUser ? 'account-dashboard' : 'account' }">{{ t(currentUser ? 'activation.backToOverview' : 'auth.backToSignIn') }} <ArrowRight class="link-arrow" :size="16" aria-hidden="true" /></RouterLink>
+      <RouterLink v-if="status !== 'pending' && extraAddress && currentUser" class="button button--dark" :to="{ name: 'account-settings' }">{{ t('signIn.backToSettings') }} <ArrowRight class="link-arrow" :size="16" aria-hidden="true" /></RouterLink>
+      <RouterLink v-else-if="status !== 'pending'" class="button button--dark" :to="{ name: currentUser ? 'account-dashboard' : 'account' }">{{ t(currentUser ? 'activation.backToOverview' : 'auth.backToSignIn') }} <ArrowRight class="link-arrow" :size="16" aria-hidden="true" /></RouterLink>
     </div>
   </AccountPage>
 </template>

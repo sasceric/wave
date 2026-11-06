@@ -45,6 +45,10 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(length: 30)]
     private string $role;
 
+    /** False for Google/Apple sign-ups until the person sets a password; the hash is then random. */
+    #[ORM\Column(options: ['default' => true])]
+    private bool $passwordKnown = true;
+
     #[ORM\Column(options: ['default' => true])]
     private bool $emailVerified = true;
 
@@ -328,6 +332,18 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function setPassword(string $password): void
     {
         $this->password = $password;
+        $this->passwordKnown = true;
+    }
+
+    /** Call right after setting a random password for a Google/Apple sign-up. */
+    public function markPasswordUnknown(): void { $this->passwordKnown = false; }
+
+    public function isPasswordKnown(): bool { return $this->passwordKnown; }
+
+    /** Main address change; the previous one is kept by the caller as an extra address. */
+    public function changePrimaryEmail(string $email): void
+    {
+        $this->email = mb_strtolower(trim($email));
     }
 
     public function eraseCredentials(): void

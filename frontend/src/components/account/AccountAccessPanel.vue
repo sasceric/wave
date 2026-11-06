@@ -87,6 +87,8 @@ const credentialsInvalid = computed(() => mode.value === 'login' && Boolean(erro
 async function loadOAuthState() {
   if (route.query.oauth === 'error') {
     error.value = t('auth.socialAuthError')
+  } else if (route.query.oauth === 'email_taken') {
+    error.value = t('signIn.oauth.email_taken', { provider: 'Google/Apple' })
   }
 
   try {

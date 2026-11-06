@@ -24,12 +24,24 @@ class OAuthIdentity
     #[ORM\Column(length: 255)]
     private string $subject;
 
-    public function __construct(User $user, string $provider, string $subject)
+    /** The Google/Apple account's own address; it can differ from the Wave address. */
+    #[ORM\Column(length: 180, nullable: true)]
+    private ?string $email = null;
+
+    #[ORM\Column(nullable: true)]
+    private ?\DateTimeImmutable $linkedAt = null;
+
+    public function __construct(User $user, string $provider, string $subject, ?string $email = null)
     {
         $this->user = $user;
         $this->provider = $provider;
         $this->subject = $subject;
+        $this->email = $email === null ? null : mb_substr(mb_strtolower(trim($email)), 0, 180);
+        $this->linkedAt = new \DateTimeImmutable();
     }
+
+    public function getEmail(): ?string { return $this->email; }
+    public function getLinkedAt(): ?\DateTimeImmutable { return $this->linkedAt; }
 
     public function getUser(): User
     {

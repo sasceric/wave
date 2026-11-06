@@ -73,6 +73,7 @@ final class AccountDeletion
                         'user_push_subscription' => 'user_id',
                         'user_action_token' => 'user_id',
                         'oauth_identity' => 'user_id',
+                        'user_email' => 'user_id',
                         'campaign_bookmark' => 'user_id',
                         'credit_entry' => 'user_id',
                         'credit_wallet' => 'user_id',

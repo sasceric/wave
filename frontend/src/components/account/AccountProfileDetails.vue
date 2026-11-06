@@ -1,10 +1,12 @@
 <script setup>
-import { BadgeCheck, Building2, CalendarDays, ExternalLink, FileText, Globe, Handshake, Images, Pencil, Phone, Tags, UserRound, UsersRound } from '@lucide/vue'
+import { BadgeCheck, Building2, BriefcaseBusiness, LockKeyhole, CalendarDays, ExternalLink, FileText, Globe, Handshake, Images, Pencil, Phone, Tags, UserRound, UsersRound } from '@lucide/vue'
 import AccountProfileCard from './AccountProfileCard.vue'
 import ProfileFaqFields from './ProfileFaqFields.vue'
 import CreatorProfileExtras from './CreatorProfileExtras.vue'
 import RichTextContent from '../shared/RichTextContent.vue'
-import { computed } from 'vue'
+import CompanyBusinessDetailsModal from './CompanyBusinessDetailsModal.vue'
+import { computed, ref } from 'vue'
+import { currentUser } from '../../composables/useCurrentUser'
 import { useI18n } from 'vue-i18n'
 import { formatDate, formatMoney } from '../../lib/api'
 import { sanitizeRichText } from '../../lib/richText'
@@ -36,6 +38,15 @@ const basics = computed(() => [
   [Phone, t('auth.phone'), props.profile.phone],
   ...(isCreator.value ? [[CalendarDays, t('account.birthday'), props.profile.birthday ? formatDate(props.profile.birthday) : '']] : []),
 ])
+const businessOpen = ref(false)
+const business = computed(() => {
+  const values = currentUser.value?.profile?.businessDetails || props.profile.businessDetails || {}
+  return [
+    [BadgeCheck, t('accountType.registrationId'), values.registrationId],
+    [FileText, t('accountType.vatId'), values.vatId],
+    [UserRound, t('accountType.ownerFullName'), values.ownerFullName],
+  ]
+})
 const tagline = computed(() => props.profile.tagline || '')
 const aboutHtml = computed(() => sanitizeRichText(
   isCreator.value ? props.profile.bio : props.profile.about,
@@ -67,6 +78,16 @@ const aboutHtml = computed(() => sanitizeRichText(
             <div class="profile-details__row profile-details__row--content"><Pencil :size="20" aria-hidden="true" /><dt>{{ isCreator ? t('account.bio') : t('account.companyAbout') }}</dt><dd><RichTextContent v-if="aboutHtml" :html="aboutHtml" /><span v-else>{{ t('account.notProvided') }}</span></dd></div>
             <div v-if="isCreator" class="profile-details__row"><Tags :size="20" aria-hidden="true" /><dt>{{ t('account.tags') }}</dt><dd>{{ (profile.tags || []).join(', ') || t('account.notProvided') }}</dd></div>
             <div v-if="!isCreator && profile.socialLinks?.length" class="profile-details__row"><ExternalLink :size="20" aria-hidden="true" /><dt>{{ t('account.companySocialLinks') }}</dt><dd class="profile-details__links"><a v-for="link in profile.socialLinks" :key="link.platform" :href="link.url" target="_blank" rel="noopener noreferrer">{{ link.platform }} <ExternalLink :size="13" aria-hidden="true" /></a></dd></div>
+          </dl>
+        </AccountProfileCard>
+        <AccountProfileCard v-if="!isCreator" class="profile-details__business" :title="t('accountType.businessDetails')" :icon="BriefcaseBusiness" editable @edit="businessOpen = true">
+          <p class="profile-details__private"><LockKeyhole :size="14" aria-hidden="true" />{{ t('accountType.privateShort') }}</p>
+          <dl class="profile-details__grid">
+            <div v-for="[icon, label, value] in business" :key="label" class="profile-details__row">
+              <component :is="icon" :size="20" aria-hidden="true" />
+              <dt>{{ label }}</dt>
+              <dd>{{ value || t('account.notProvided') }}</dd>
+            </div>
           </dl>
         </AccountProfileCard>
       </div>
@@ -109,6 +130,7 @@ const aboutHtml = computed(() => sanitizeRichText(
     <template v-else-if="tab === 'faqs'">
       <ProfileFaqFields :model-value="profile.faqs" @edit="emit('edit', 'faqs')" />
     </template>
+    <CompanyBusinessDetailsModal v-if="!isCreator" v-model:open="businessOpen" />
   </section>
 </template>
 

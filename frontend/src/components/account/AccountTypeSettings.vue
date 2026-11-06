@@ -3,10 +3,11 @@ import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { ArrowRightLeft, Building2, ChevronRight } from '@lucide/vue'
 import FormModal from '../shared/FormModal.vue'
+import CompanyBusinessDetailsModal from './CompanyBusinessDetailsModal.vue'
 import SingleSelect from '../shared/SingleSelect.vue'
 import StatusMessage from '../shared/StatusMessage.vue'
 import { apiGet, apiRequest, formatDate } from '../../lib/api'
-import { currentUser, setCurrentUser } from '../../composables/useCurrentUser'
+import { currentUser } from '../../composables/useCurrentUser'
 
 const { t } = useI18n()
 const user = currentUser
@@ -20,7 +21,6 @@ const businessOpen = ref(false)
 const targetType = ref('brand')
 const profileName = ref('')
 const message = ref('')
-const details = ref({ registrationId: '', vatId: '', ownerFullName: '' })
 const pending = computed(() => requests.value.find(item => item.status === 'pending'))
 const latest = computed(() => requests.value[0])
 const targetOptions = computed(() => (source.value === 'creator' ? ['brand', 'agency'] : ['creator']).map(value => ({ value, label: t(`accountType.${value}`) })))
@@ -69,20 +69,7 @@ async function withdraw() {
   finally { busy.value = false }
 }
 function openBusiness() {
-  const values = user.value?.profile?.businessDetails || {}
-  details.value = { registrationId: values.registrationId || '', vatId: values.vatId || '', ownerFullName: values.ownerFullName || '' }
   businessOpen.value = true
-}
-async function saveBusiness() {
-  if (busy.value) return
-  const id = user.value?.id
-  busy.value = true
-  try {
-    const { data } = await apiRequest('/me/company-details', { method: 'PUT', body: { ...details.value } })
-    if (user.value?.id === id) setCurrentUser(data)
-    businessOpen.value = false
-  } catch { /* Shared action feedback. */ }
-  finally { busy.value = false }
 }
 </script>
 
@@ -102,12 +89,7 @@ async function saveBusiness() {
       <label><span>{{ t('accountType.message') }}</span><textarea v-model.trim="message" maxlength="1000" rows="3" :disabled="busy" /></label>
       <template #actions="{ close }"><button type="button" class="button button--outline" :disabled="busy" @click="close">{{ t('listingAds.cancel') }}</button><button type="submit" class="button button--dark" :disabled="busy">{{ t('accountType.send') }}</button></template>
     </FormModal>
-    <FormModal v-if="businessOpen" :open="businessOpen" :title="t('accountType.businessDetails')" :description="t('accountType.privateHint')" :busy="busy" @update:open="businessOpen = $event" @submit="saveBusiness">
-      <label><span>{{ t('accountType.registrationId') }}</span><input v-model.trim="details.registrationId" maxlength="60" :disabled="busy" /></label>
-      <label><span>{{ t('accountType.vatId') }}</span><input v-model.trim="details.vatId" maxlength="60" :disabled="busy" /></label>
-      <label><span>{{ t('accountType.ownerFullName') }}</span><input v-model.trim="details.ownerFullName" maxlength="120" autocomplete="name" :disabled="busy" /></label>
-      <template #actions="{ close }"><button type="button" class="button button--outline" :disabled="busy" @click="close">{{ t('listingAds.cancel') }}</button><button type="submit" class="button button--dark" :disabled="busy">{{ t('accountType.save') }}</button></template>
-    </FormModal>
+    <CompanyBusinessDetailsModal v-model:open="businessOpen" />
   </section>
 </template>
 

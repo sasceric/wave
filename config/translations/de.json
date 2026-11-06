@@ -1,5 +1,17 @@
 {
   "api": {
+    "email_added": "Wir haben einen Bestätigungslink an %s gesendet.",
+    "email_already_yours": "Diese Adresse ist bereits in Ihrem Konto.",
+    "email_belongs_to_other": "Diese E-Mail-Adresse gehört bereits zu einem anderen Wave-Konto.",
+    "email_limit": "Sie können höchstens 3 zusätzliche E-Mail-Adressen hinzufügen.",
+    "email_verification_resent": "Der Bestätigungslink wurde erneut gesendet.",
+    "email_extra_verified": "Adresse bestätigt. Sie können sich jetzt auch damit anmelden.",
+    "email_extra_link_invalid": "Der Bestätigungslink ist ungültig oder abgelaufen.",
+    "email_primary_changed": "%s ist jetzt Ihre Hauptadresse.",
+    "email_primary_unverified": "Bestätigen Sie zuerst die Adresse und legen Sie sie dann als Hauptadresse fest.",
+    "email_removed": "Die Adresse wurde entfernt.",
+    "oauth_unlinked": "Die Verknüpfung mit Ihrem %s-Konto wurde entfernt.",
+    "oauth_last_method": "Das ist Ihre einzige Anmeldemöglichkeit. Legen Sie zuerst ein Passwort fest oder verknüpfen Sie ein anderes Konto.",
     "search_unavailable": "Die Suche ist vorübergehend nicht verfügbar. Bitte versuche es in Kürze erneut.",
     "hiring_cancelled": "Kooperation abgesagt:",
     "campaign_cancelled": "Die Kampagne wurde abgesagt. Bewerbungen, Angebote und Einladungen können nicht mehr geändert werden.",

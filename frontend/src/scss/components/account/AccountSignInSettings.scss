@@ -1,0 +1,116 @@
+@use '../../breakpoints';
+
+// Settings → E-mail adrese / Načini prijave. Grouped list in the iOS settings style:
+// the main address sits on a tinted panel, status is a coloured dot, row actions live in a ⋯ menu.
+.sign-in-settings {
+  .loading-skeleton { padding: 14px 18px; }
+
+  &__main {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 16px 18px;
+    background: linear-gradient(135deg, #e7f0eb 0%, #f1f5ef 100%);
+  }
+
+  &__main-icon {
+    display: grid;
+    flex: none;
+    place-items: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    color: #fffdf8;
+    background: var(--forest);
+    box-shadow: 0 4px 12px rgba(23, 61, 54, .22);
+  }
+
+  &__eyebrow {
+    color: var(--forest);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+  }
+
+  &__main &__address { color: var(--forest); font-size: 16px; font-weight: 600; }
+
+  &__address {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__status {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+
+    &::before {
+      content: '';
+      flex: none;
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #34a26b;
+    }
+  }
+
+  &__status--pending { color: #a0561c !important; font-weight: 500 !important; }
+  &__status--pending::before { background: #f08a24; }
+
+  &__menu .action-menu__trigger {
+    width: 36px;
+    height: 36px;
+    border: 0;
+    border-radius: 50%;
+    color: var(--muted-text);
+  }
+
+  &__menu .action-menu__trigger:hover,
+  &__menu .action-menu__trigger[aria-expanded="true"] { color: var(--forest); background: rgba(23, 61, 54, .07); }
+
+  &__link {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    gap: 2px;
+    color: var(--forest);
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  &__row:disabled &__link { color: var(--muted-text); }
+  &__row:disabled { cursor: not-allowed; }
+
+  &__add { color: var(--forest); font-weight: 600; }
+  &__add .account-settings__icon { border: 1.5px dashed rgba(23, 61, 54, .3); background: transparent; }
+
+  &__logo { background: #fff; border: 1px solid var(--hairline); }
+  &__logo img { display: block; }
+}
+
+.sign-in-settings__note {
+  margin: 0 4px;
+  color: var(--muted-text);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+@include breakpoints.down(760px) {
+  .sign-in-settings {
+    .account-settings__row { min-height: 58px; gap: 12px; padding: 9px 12px 9px 14px; font-size: 15px; }
+    .account-settings__icon { width: 32px; height: 32px; border-radius: 10px; }
+    .account-settings__text small { font-size: 12.5px; }
+
+    &__main { gap: 12px; padding: 14px; }
+    &__main-icon { width: 36px; height: 36px; border-radius: 11px; }
+    &__main &__address { font-size: 15px; }
+    &__link { font-size: 13.5px; }
+  }
+
+  .sign-in-settings__note { font-size: 12.5px; }
+
+  // The shared password row keeps the same compact rhythm as the rows around it.
+  .account-settings .sign-in-settings .account-password-action.account-password-action--row > button { min-height: 58px; gap: 12px; padding: 9px 12px 9px 14px; }
+}

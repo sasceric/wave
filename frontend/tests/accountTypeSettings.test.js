@@ -33,11 +33,19 @@ test('private company details are editable and a failed request preserves the dr
   const user = { id: 2, accountType: 'company', profile: { companyType: 'brand', businessDetails: { registrationId: 'ID-1', ownerFullName: 'Private Name' } } }
   const view = await settings(user, async (_path, options) => ({ data: { ...user, profile: { ...user.profile, businessDetails: options.body } } }))
   view.state.openBusiness()
-  assert.equal(view.state.details.value.ownerFullName, 'Private Name')
-  view.state.details.value.vatId = 'VAT-2'
-  await view.state.saveBusiness()
-  assert.equal(view.calls[0][0], '/me/company-details')
-  assert.equal(view.currentUser.value.profile.businessDetails.vatId, 'VAT-2')
+  assert.equal(view.state.businessOpen.value, true)
+  const currentUser = vue.ref(user)
+  const calls = []
+  const modal = await setupView('../src/components/account/CompanyBusinessDetailsModal.vue', {
+    '../../composables/useCurrentUser': { currentUser, setCurrentUser: value => { currentUser.value = value } },
+    '../../lib/api': { apiRequest: async (path, options) => { calls.push([path, options]); return { data: { ...user, profile: { ...user.profile, businessDetails: options.body } } } } },
+  }, { open: true })
+  assert.equal(modal.state.details.value.ownerFullName, 'Private Name')
+  modal.state.details.value.vatId = 'VAT-2'
+  await modal.state.save()
+  assert.equal(calls[0][0], '/me/company-details')
+  assert.equal(currentUser.value.profile.businessDetails.vatId, 'VAT-2')
+  assert.deepEqual(modal.emitted.find(([name]) => name === 'update:open'), ['update:open', false])
   const failed = await settings(user, async () => { throw new Error('Server rejected') })
   failed.state.openRequest()
   failed.state.message.value = 'Keep this draft'

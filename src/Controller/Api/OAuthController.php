@@ -3,6 +3,7 @@
 namespace App\Controller\Api;
 
 use App\Account\AccountEmailSender;
+use App\Account\AccountEmails;
 use App\Account\CreatorBirthday;
 use App\Api\ApiAccess;
 use App\Api\JsonPayload;
@@ -56,19 +57,27 @@ final class OAuthController extends AbstractController
         string $provider,
         Request $request,
         OAuthProviderClient $providers,
+        Security $security,
         #[Autowire('%kernel.project_dir%/config/localized_routes.json')] string $localizedRoutesFile,
     ): RedirectResponse {
         $locale = LocaleContext::fromRequest($request) ?? 'bs';
         $mode = $request->query->getString('mode', 'login');
-        if (!in_array($mode, ['login', 'register'], true)) {
+        if (!in_array($mode, ['login', 'register', 'link'], true)) {
             $mode = 'login';
+        }
+        // Linking adds Google/Apple to the account that is signed in now (Settings → Načini prijave).
+        $linkUser = $mode === 'link' ? $security->getUser() : null;
+        if ($mode === 'link' && (!$linkUser instanceof User || $linkUser->isDeleted())) {
+            return $this->accountRedirect($localizedRoutesFile, $locale, 'login', 'error');
         }
         $accountType = $request->query->getString('accountType');
         if (!in_array($accountType, ['creator', 'company'], true)) {
             $accountType = null;
         }
         if (!$providers->isEnabled($provider)) {
-            return $this->accountRedirect($localizedRoutesFile, $locale, $mode, 'error');
+            return $mode === 'link'
+                ? $this->settingsRedirect($localizedRoutesFile, $locale, 'error', $provider)
+                : $this->accountRedirect($localizedRoutesFile, $locale, $mode, 'error');
         }
 
         $state = bin2hex(random_bytes(32));
@@ -80,13 +89,16 @@ final class OAuthController extends AbstractController
             'locale' => $locale,
             'mode' => $mode,
             'accountType' => $accountType,
+            'userId' => $linkUser instanceof User ? $linkUser->getId() : null,
             'createdAt' => time(),
         ]);
 
         try {
             return new RedirectResponse($providers->authorizationUrl($provider, $state, $nonce));
         } catch (OAuthProviderException) {
-            return $this->accountRedirect($localizedRoutesFile, $locale, $mode, 'error');
+            return $mode === 'link'
+                ? $this->settingsRedirect($localizedRoutesFile, $locale, 'error', $provider)
+                : $this->accountRedirect($localizedRoutesFile, $locale, $mode, 'error');
         }
     }
 
@@ -152,16 +164,21 @@ final class OAuthController extends AbstractController
             'provider' => $provider,
             'subject' => $identity['subject'],
         ]);
+        $addresses = new AccountEmails($entityManager);
+        if ($mode === 'link') {
+            return $this->settingsRedirect($localizedRoutesFile, $locale, $this->link($provider, $identity, $identityRecord, $flow, $security, $entityManager, $addresses, $emailSender, $logger), $provider);
+        }
         if ($identityRecord instanceof OAuthIdentity) {
             $security->login($identityRecord->getUser(), SessionAuthenticator::class, 'main');
 
             return $this->accountRedirect($localizedRoutesFile, $locale, 'login', 'success');
         }
 
-        $user = $entityManager->getRepository(User::class)->findOneBy(['email' => $identity['email']]);
+        // The provider confirmed this address: sign in the account whose main or confirmed extra address it is.
+        $user = $addresses->signInUser($identity['email']);
         if ($user instanceof User) {
-            $user->setEmailVerified(true);
-            $entityManager->persist(new OAuthIdentity($user, $provider, $identity['subject']));
+            if ($user->getEmail() === $identity['email']) $user->setEmailVerified(true);
+            $entityManager->persist(new OAuthIdentity($user, $provider, $identity['subject'], $identity['email']));
             $entityManager->flush();
             $security->login($user, SessionAuthenticator::class, 'main');
 
@@ -173,13 +190,17 @@ final class OAuthController extends AbstractController
             return $this->accountRedirect($localizedRoutesFile, $locale, $mode, 'error');
         }
 
+        // An address still waiting for confirmation on another account cannot start a new one.
+        if ($addresses->owner($identity['email']) instanceof User) {
+            return $this->accountRedirect($localizedRoutesFile, $locale, $mode, 'email_taken');
+        }
         $accountType = in_array($flow['accountType'] ?? null, ['creator', 'company'], true)
             ? $flow['accountType']
             : 'creator';
         $user = $accountFactory->create($identity, $accountType, $locale);
 
         $entityManager->persist($user);
-        $entityManager->persist(new OAuthIdentity($user, $provider, $identity['subject']));
+        $entityManager->persist(new OAuthIdentity($user, $provider, $identity['subject'], $identity['email']));
         $entityManager->flush();
         $request->getSession()->remove('wave_oauth_registration');
 
@@ -318,12 +339,13 @@ final class OAuthController extends AbstractController
                 ['Retry-After' => (string) $retryAfter],
             );
         }
-        if ($entityManager->getRepository(User::class)->findOneBy(['email' => $pending['email']]) instanceof User) {
+        if ((new AccountEmails($entityManager))->owner($pending['email']) instanceof User) {
             return new JsonResponse(['error' => ApiMessages::get('email_taken', $locale)], 409);
         }
 
         $user = new User($pending['email'], $type === 'creator' ? 'ROLE_CREATOR' : 'ROLE_COMPANY');
         $user->setPassword($passwordHasher->hashPassword($user, bin2hex(random_bytes(64))));
+        $user->markPasswordUnknown();
         $user->setPhone($phone);
         $user->setCity($city);
         $user->setCountryCode($countryCode);
@@ -389,6 +411,9 @@ final class OAuthController extends AbstractController
 
     private function accountRedirect(string $localizedRoutesFile, string $locale, string $mode, string $status): RedirectResponse
     {
+        if ($mode === 'link') {
+            return $this->settingsRedirect($localizedRoutesFile, $locale, $status === 'success' ? 'linked' : 'error', '');
+        }
         $routes = json_decode((string) file_get_contents($localizedRoutesFile), true, 32, JSON_THROW_ON_ERROR);
         $route = $mode === 'register' ? 'register' : 'login';
         $segment = is_array($routes) && is_array($routes[$locale] ?? null) && is_string($routes[$locale][$route] ?? null)
@@ -400,6 +425,43 @@ final class OAuthController extends AbstractController
         return new RedirectResponse($prefix.'/'.$segment.'?'.http_build_query(['oauth' => $status]));
     }
 
+    /**
+     * Adds the Google/Apple account to the signed-in Wave account. Returns the status for Settings:
+     * linked, already_linked, identity_taken (that Google/Apple account belongs to another Wave account),
+     * email_taken (its address belongs to another Wave account), provider_exists or error.
+     *
+     * @param array<string, mixed> $identity
+     */
+    private function link(string $provider, array $identity, ?OAuthIdentity $existing, array $flow, Security $security, EntityManagerInterface $entityManager, AccountEmails $addresses, AccountEmailSender $emailSender, LoggerInterface $logger): string
+    {
+        $user = $security->getUser();
+        if (!$user instanceof User || $user->isDeleted() || $user->getId() !== ($flow['userId'] ?? null)) return 'error';
+        if ($existing instanceof OAuthIdentity) return $existing->getUser() === $user ? 'already_linked' : 'identity_taken';
+        if ($entityManager->getRepository(OAuthIdentity::class)->findOneBy(['user' => $user, 'provider' => $provider]) instanceof OAuthIdentity) return 'provider_exists';
+        // Any Google/Apple account can be linked, unless its email belongs to a different Wave account.
+        $email = is_string($identity['email'] ?? null) ? AccountEmails::normalize($identity['email']) : null;
+        if ($email !== null && $addresses->owner($email, $user) instanceof User) return 'email_taken';
+        $entityManager->persist(new OAuthIdentity($user, $provider, (string) $identity['subject'], $email));
+        $entityManager->flush();
+        try {
+            $emailSender->sendSecurityNotice($user, 'linked', $provider === 'apple' ? 'Apple' : 'Google');
+        } catch (TransportExceptionInterface|RfcComplianceException $exception) {
+            $logger->warning('Unable to send the account link notice.', ['userId' => $user->getId(), 'exception' => $exception]);
+        }
+
+        return 'linked';
+    }
+
+    private function settingsRedirect(string $localizedRoutesFile, string $locale, string $status, string $provider): RedirectResponse
+    {
+        $routes = json_decode((string) file_get_contents($localizedRoutesFile), true, 32, JSON_THROW_ON_ERROR);
+        $segment = is_array($routes) && is_string($routes[$locale]['account-settings'] ?? null) ? $routes[$locale]['account-settings'] : 'racun/postavke';
+        $prefixes = json_decode((string) file_get_contents(dirname($localizedRoutesFile).'/localized_route_prefixes.json'), true, 32, JSON_THROW_ON_ERROR);
+        $prefix = $locale === 'bs' ? '' : '/'.$prefixes[$locale];
+
+        return new RedirectResponse($prefix.'/'.$segment.'?'.http_build_query(['oauth' => $status, 'provider' => in_array($provider, ['google', 'apple'], true) ? $provider : '']));
+    }
+
     private function flowLocale(mixed $flow): string
     {
         return is_array($flow) && in_array($flow['locale'] ?? null, LocaleContext::SUPPORTED, true)
@@ -409,7 +471,7 @@ final class OAuthController extends AbstractController
 
     private function flowMode(mixed $flow): string
     {
-        return is_array($flow) && in_array($flow['mode'] ?? null, ['login', 'register'], true)
+        return is_array($flow) && in_array($flow['mode'] ?? null, ['login', 'register', 'link'], true)
             ? $flow['mode']
             : 'login';
     }

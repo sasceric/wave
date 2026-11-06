@@ -81,6 +81,8 @@ final class EmailTemplateAdminControllerTest extends WebTestCase
                 'approval_revoked',
                 'wrong_account_type_creator',
                 'wrong_account_type_company',
+                'email_added_verify',
+                'account_security_notice',
             ],
             array_column($this->payload()['data']['templates'], 'key'),
         );
